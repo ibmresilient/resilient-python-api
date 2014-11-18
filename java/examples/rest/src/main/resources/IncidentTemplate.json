@@ -1,0 +1,44 @@
+{
+  "pii" : {
+    "data_source_ids" : [],
+    "harmstatus_id" : 3,
+    "data_compromised" : true,
+    "data_format" : 0,
+    "data_encrypted" : false,
+    "data_contained" : false
+  },
+  "dtm" : {
+  },
+  "cm" : {
+    "geo_counts": {
+    }
+  },
+  "jurisdiction_name" : null,
+  "is_scenario" : false,
+  "exposure_dept_id" : null,
+  "inc_training" : false,
+  "plan_status" : "A",
+  "confirmed" : true,
+  "exposure_vendor_id" : null,
+  "exposure_type_id" : 1,
+  "description" : "Static description",
+  "incident_type_ids" : [ ],
+  "name" : "This is the name",
+  "crimestatus_id" : 1,
+  "employee_involved" : false,
+  "hipaa" : {
+    "hipaa_acquired_comment" : null,
+    "hipaa_acquired" : null,
+    "hipaa_breach" : null,
+    "hipaa_additional_misuse_comment" : null,
+    "hipaa_adverse" : null,
+    "hipaa_breach_comment" : null,
+    "hipaa_adverse_comment" : null,
+    "hipaa_additional_misuse" : null,
+    "hipaa_misused_comment" : null,
+    "hipaa_misused" : null
+  },
+  "regulators" : {
+    "ids" : [ ]
+  }
+}

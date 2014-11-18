@@ -1,0 +1,20 @@
+{
+    "jdoe": {
+        "Name": "John Doe",
+        "Title": "CEO",
+        "Manager": "None",
+        "Extension": "1111"
+    },
+    "jschmoe": {
+        "Name": "Joe Schmoe",
+        "Title": "VP of Engineering",
+        "Manager": "John Doe",
+        "Extension": "2222"
+    },
+    "fjones": {
+        "Name": "Frank Jones",
+        "Title": "Software Architect",
+        "Manager": "Joe Schmoe",
+        "Extension": "3333"
+    }
+}

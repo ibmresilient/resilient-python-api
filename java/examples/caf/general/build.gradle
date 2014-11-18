@@ -1,0 +1,34 @@
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+apply plugin: 'gradle-one-jar'
+
+eclipse {
+	project {
+		name = 'Co3 CAF General Examples'
+	}
+}
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath libraries.one_jar
+	}
+}
+
+dependencies { 
+    compile project(':jms-util')
+    compile project(':client')
+
+	compile libraries.commons_cli
+	compile libraries.groovy
+}
+
+task javaExamplesJar(type: OneJar) {
+	mainClass = 'com.co3.examples.WatchDestination'
+	archiveName = 'co3-caf-examples.jar'
+	additionalDir = file('extra')
+}
+
+build.dependsOn javaExamplesJar

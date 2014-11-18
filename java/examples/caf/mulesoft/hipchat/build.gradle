@@ -1,0 +1,42 @@
+buildscript {
+    dependencies {
+        classpath group: 'org.mulesoft.build', name: 'mule-gradle-plugin', version: '1.1.0'
+    }
+
+    repositories {
+        maven {
+            url 'http://repository.mulesoft.org/releases'
+        }
+    }
+}
+
+repositories {
+    maven {
+        url 'http://repository.mulesoft.org/releases'
+    }
+}
+
+apply plugin: 'mulestudio'
+
+mule.version = '3.5.0'
+mule.muleEnterprise = false
+
+project.ext.jmsUtilProj = project(':jms-util')
+
+dependencies {
+    // This is a bit of a hack required because the Mulesoft Gradle plugin is not 
+    // supporting the following:
+    //
+    // compile project(':jms-util')
+    //
+    // Basically, referencing the project directly here in gradle will cause a project
+    // dependency in Mulesoft Anypoint Studio.  This could probably be made to work,
+    // but you'd have to import the jms-util project, which would require you to 
+    // add the Eclipse gradle plugin into Anypoint Studio.
+    //
+    compile files(jmsUtilProj.tasks.getByName('jar').outputs.files)
+    compile files(jmsUtilProj.configurations.runtime)
+}
+
+studio.dependsOn ':jms-util:jar'
+

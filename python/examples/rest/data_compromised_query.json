@@ -1,0 +1,19 @@
+{
+  "filters": [
+    {
+      "conditions": [
+        {
+          "field_name": "pii.data_compromised",
+          "method": "equals",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "sorts": [
+    {
+      "field_name": "name",
+      "type": "asc"
+    }
+  ]
+}

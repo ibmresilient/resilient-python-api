@@ -1,0 +1,19 @@
+{
+  "filters": [
+    {
+      "conditions": [
+        {
+          "field_name": "name",
+          "method": "contains",
+          "value": "test"
+        }
+      ]
+    }
+  ],
+  "sorts": [
+    {
+      "field_name": "name",
+      "type": "asc"
+    }
+  ]
+}

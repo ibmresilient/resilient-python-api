@@ -1,0 +1,11 @@
+{
+    "jmsUrl": "ssl://SERVER:65000",
+    "apiUrl": "https://SERVER",
+    "orgName": "ORG NAME",
+    "email": "API USER EMAIL ADDRESS",
+    "topic": "false",
+    "destinationName": "actions.<ORG ID>.<DESTINATION NAME>",
+    "password": null,
+    "trustStoreFile": "keystore",
+    "trustStorePassword": "changeit"
+}

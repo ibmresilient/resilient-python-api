@@ -1,0 +1,14 @@
+{
+  "name": "Test Automatic Action",
+  "type": 0,
+  "object_type": 0,
+  "conditions": [
+    {
+      "field_name": "incident.incident_type_ids",
+      "method": "contains",
+      "value": 19
+    }
+  ],
+  "message_destinations": [1]
+}
+

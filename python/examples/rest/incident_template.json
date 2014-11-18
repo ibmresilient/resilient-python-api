@@ -1,0 +1,12 @@
+{
+  "name" : "Default name",
+  "description" : "Default description",
+  "discovered_date": 0,
+  "regulators" : {
+    "ids" : [
+      149
+    ]
+  },
+  "crimestatus_id": 5,
+  "exposure_type_id": 1
+}

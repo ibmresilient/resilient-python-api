@@ -1,0 +1,58 @@
+subprojects {
+    version = '1.0'
+
+    project.ext.sourceCompatibility = JavaVersion.VERSION_1_7
+
+    repositories {
+        mavenCentral()
+   
+        // Repository for the Co3 artifacts (e.g. the rest-api jar which includes the DTOs) 
+        maven {
+            url "https://repo.co3sys.com/m2"
+        }
+    }
+
+    project.ext.buildNumber = project.hasProperty('buildNumber') ? buildNumber : 0
+}
+
+project.ext.co3RestAPIVersion = '19.0.475'
+project.ext.guavaVersion = '18.0'
+project.ext.httpclientVersion = '4.3.3'
+project.ext.slf4jVersion = '1.7.7'
+project.ext.jackson1Version = '1.9.13'
+project.ext.activemqVersion = '5.10.0'
+project.ext.fuseStompClientVersion = '1.19'
+project.ext.gradleOneJarVersion = '1.0.4'
+project.ext.commonsCliVersion = '1.2'
+project.ext.commonsLangVersion = '2.5'
+project.ext.junitVersion = '4.10'
+project.ext.mockitoVersion = '1.9.0'
+project.ext.jodaTimeVersion = '2.1'
+project.ext.oneJarVersion = '1.0.4'
+
+project.ext.libraries = [
+    co3_rest_api: "com.co3:rest-api:${co3RestAPIVersion}",
+    guava: "com.google.guava:guava:${guavaVersion}",
+    jackson1: ["org.codehaus.jackson:jackson-mapper-asl:${jackson1Version}"],
+    jackson1_guava: ["com.fasterxml.jackson:jackson-datatype-guava:${jackson1Version}"],
+    fuse_stomp_jms: "org.fusesource.stompjms:stompjms-client:${fuseStompClientVersion}",
+    activemq_client: "org.apache.activemq:activemq-client:${activemqVersion}",
+    http_client: ["org.apache.httpcomponents:httpcomponents-client:${httpclientVersion}",
+                  "org.apache.httpcomponents:httpmime:${httpclientVersion}"],
+    slf4j_api: "org.slf4j:slf4j-api:${slf4jVersion}",
+    slf4j_simple: "org.slf4j:slf4j-simple:${slf4jVersion}",
+    gradle_one_jar: "com.github.rholder:gradle-one-jar:${gradleOneJarVersion}",
+    commons_cli: "commons-cli:commons-cli:${commonsCliVersion}",
+    commons_lang: "commons-lang:commons-lang:${commonsLangVersion}",
+    joda_time: "joda-time:joda-time:${jodaTimeVersion}",
+    groovy: "org.codehaus.groovy:groovy-all:2.3.6",
+    one_jar: "com.github.rholder:gradle-one-jar:${oneJarVersion}",
+
+    junit: "junit:junit:${junitVersion}",
+    mockito: "org.mockito:mockito-all:${mockitoVersion}"
+]
+
+repositories {
+    mavenCentral()
+}
+

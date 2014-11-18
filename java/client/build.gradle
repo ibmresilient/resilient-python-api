@@ -1,0 +1,15 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+eclipse {
+	project {
+		name = 'Co3 Client Library'
+	}
+}
+dependencies { 
+    compile libraries.jackson1
+    compile libraries.http_client
+    compile libraries.guava
+    compile libraries.co3_rest_api
+}
+

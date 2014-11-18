@@ -1,0 +1,40 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'gradle-one-jar'
+
+eclipse {
+	project {
+		name = 'Co3 REST API Examples'
+	}
+}
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath libraries.one_jar
+	}
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies { 
+    compile project(":client") 
+    compile libraries.commons_cli
+    compile libraries.commons_lang
+    compile libraries.joda_time
+
+    testCompile libraries.junit
+    testCompile libraries.mockito
+}
+
+task javaExamplesJar(type: OneJar) {
+	mainClass = 'com.co3.examples.IncidentUtil'
+	archiveName = 'co3-rest-examples.jar'
+	additionalDir = file('extra')
+}
+
+build.dependsOn javaExamplesJar

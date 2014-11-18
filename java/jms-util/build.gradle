@@ -1,0 +1,34 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+eclipse {
+	project {
+		name = 'Co3 JMS Utilities'
+	}
+}
+
+dependencies { 
+    compile libraries.activemq_client
+    compile libraries.http_client
+	
+	testCompile libraries.junit
+}
+
+sourceSets {
+	test {
+		java {
+			srcDirs 'src/it/java'
+		}
+
+		resources {
+			srcDir 'src/it/resources'
+		}
+	}
+}
+
+test { exclude '**/*IT*' }
+
+task integrationTest(type: Test) {
+	ignoreFailures = true
+	include '**/*IT*'
+}
