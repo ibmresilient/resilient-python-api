@@ -2,4 +2,6 @@
 .gradle
 .project
 .settings
+build
+bin
 
