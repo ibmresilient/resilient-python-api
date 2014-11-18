@@ -13,7 +13,7 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
 http://www.mulesoft.org/schema/mule/https http://www.mulesoft.org/schema/mule/https/current/mule-https.xsd">
     <spring:beans>
         <context:property-placeholder 
-             system-properties-mode="FALLBACK"
+             
              location="classpath:co3-hipchat-app.properties,
                        file:${user.home}/co3/co3-hipchat-app.properties" />
     </spring:beans>
@@ -30,10 +30,10 @@ http://www.mulesoft.org/schema/mule/https http://www.mulesoft.org/schema/mule/ht
     <flow name="mule-configFlow1" doc:name="mule-configFlow1">
         <jms:inbound-endpoint connector-ref="Co3Connector" doc:name="JMS" queue="${co3.queueName}" exchange-pattern="request-response"/>
         <response>
-            <set-payload value="{&quot;message_type&quot;: 0, &quot;message&quot;: &quot;Completed processing&quot;, &quot;complete&quot;: true}" doc:name="Set Payload for Reply"/>
+            <set-payload value="{&quot;message_type&quot;: 0, &quot;message&quot;: &quot;Completed processing&quot;, &quot;complete&quot;: true}" doc:name="Set Payload for Co3 Reply"/>
         </response>
-        <json:json-to-object-transformer returnClass="java.util.LinkedHashMap" doc:name="JSON to Object"/>
-        <scripting:transformer doc:name="Make chat object">
+        <json:json-to-object-transformer returnClass="java.util.LinkedHashMap" doc:name="Convert Co3 JSON String to Map Object" mapper-ref="	"/>
+        <scripting:transformer doc:name="Make HipChat object with Groovy">
             <scripting:script engine="Groovy"><![CDATA[def inc = payload.incident
 
 // Convert the IDs to names using the metadata.
@@ -57,8 +57,8 @@ Map m = ["message": message, "message_format": "text"]
 return m
 ]]></scripting:script>
         </scripting:transformer>
-        <json:object-to-json-transformer doc:name="Make JSON string for HipChat"/>
+        <json:object-to-json-transformer doc:name="Make JSON string for HipChat object"/>
         <https:outbound-endpoint exchange-pattern="one-way" host="api.hipchat.com" port="443" path="v2/room/${co3.hipChat.room}/notification?auth_token=${co3.hipChat.authToken}" method="POST" mimeType="application/json"  doc:name="POST to HipChat" />
-        <echo-component doc:name="Echo"/>
+        <echo-component doc:name="Echo to console"/>
     </flow>
 </mule>
