@@ -114,7 +114,7 @@ class SimpleClient:
         orgs = session['orgs']
 
         if orgs is None or len(orgs) == 0:
-            raise Exception("User is a member of no groups")
+            raise Exception("User is a member of no orgs")
         elif self.org_name:
             org_names = []
 
