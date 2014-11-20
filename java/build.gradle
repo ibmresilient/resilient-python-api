@@ -23,7 +23,7 @@ eclipse {
     }
 }
 
-project.ext.co3RestAPIVersion = '19.0.475'
+project.ext.co3RestAPIVersion = '19.0.476'
 project.ext.guavaVersion = '18.0'
 project.ext.httpclientVersion = '4.3.3'
 project.ext.slf4jVersion = '1.7.7'
