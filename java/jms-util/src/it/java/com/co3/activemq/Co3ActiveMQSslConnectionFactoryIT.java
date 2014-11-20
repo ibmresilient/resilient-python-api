@@ -31,35 +31,31 @@
 
 package com.co3.activemq;
 
+import java.io.IOException;
+
 import org.junit.Before;
 import org.junit.Test;
 
-public class Co3ActiveMQSslConnectionFactoryIT {
-	private String url;
-	private String user;
-	private String password;
-	private String trustKeystore;
-	private String trustKeystorePassword;
+import com.co3.simpleclient.ServerConfig;
 
+public class Co3ActiveMQSslConnectionFactoryIT {
+	private ServerConfig sc;
+	
 	@Before
-	public void setup() {
-		url = System.getProperty("co3.url");
-		user = System.getProperty("co3.user");
-		password = System.getProperty("co3.password");
-		trustKeystore = System.getProperty("co3.trustkeystore");
-		trustKeystorePassword = System.getProperty("co3.trustkeystorepassword");
+	public void setup() throws IOException {
+		sc = ServerConfig.load("itconfig.json");
 	}
 	
 	@Test
 	public void testConnect() throws Exception {
 		Co3ActiveMQSslConnectionFactory factory = 
-				new Co3ActiveMQSslConnectionFactory(url);
+				new Co3ActiveMQSslConnectionFactory(sc.getJmsUrl());
 	
-		factory.setTrustStore(trustKeystore);
-		factory.setTrustStorePassword(trustKeystorePassword);
+		factory.setTrustStore(sc.getTrustStore());
+		factory.setTrustStorePassword(sc.getTrustStorePassword());
 		
-		factory.setUserName(user);
-		factory.setPassword(password);
+		factory.setUserName(sc.getUser());
+		factory.setPassword(sc.getPassword());
 		
 		factory.createQueueConnection();
 	}

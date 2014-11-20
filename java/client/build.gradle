@@ -11,5 +11,16 @@ dependencies {
     compile libraries.http_client
     compile libraries.guava
     compile libraries.co3_rest_api
+	compile libraries.commons_lang
+	
+	testCompile libraries.junit
 }
 
+// Don't execute *IT.java test for the test task (see integrationTest task below).
+test {
+	exclude '**/*IT.class'
+}
+
+task integrationTest(type: Test) {
+	include '**/*IT.class'
+}

@@ -79,8 +79,6 @@ class LookupUsername {
 	File trustStoreFile
 	String trustStorePassword
 	
-    ObjectMapper objectMapper
-
     SimpleClient getSimpleClient(String contextHeader = null) {
         if (!client) {
             client = new SimpleClient(new URL(apiUrl), orgName, email, password, trustStoreFile, trustStorePassword)
@@ -99,47 +97,7 @@ class LookupUsername {
     }
 
     ObjectMapper getObjectMapper() {
-        if (!objectMapper) {
-            objectMapper = new ObjectMapper()
-
-            // If the Co3 server sends something we don't understand, let's ignore it.  Perhaps
-            // we have an outdated DTO JAR.
-            objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-            SimpleModule co3Module = new SimpleModule("Co3", new Version(1, 0, 0, null));
-
-            co3Module.addDeserializer(MethodName.class, new JsonDeserializer<MethodName>() {
-
-                @Override
-                public MethodName deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    return MethodName.valueOf(jp.getText().toUpperCase());
-                }
-
-            });
-
-            co3Module.addDeserializer(InputType.class, new JsonDeserializer<InputType>() {
-
-                @Override
-                public InputType deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    return InputType.valueOf(jp.getText().toUpperCase());
-                }
-
-            })
-
-            co3Module.addDeserializer(FieldRequired.class, new JsonDeserializer<FieldRequired>() {
-
-                @Override
-                public FieldRequired deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    return FieldRequired.valueOf(jp.getText().toUpperCase());
-                }
-
-            })
-
-            objectMapper.registerModule(co3Module)
-
-        }
-
-        return objectMapper
+		return getSimpleClient().objectMapper
     }
 
     void processMessage(String messageText, String contextToken) {

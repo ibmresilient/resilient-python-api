@@ -66,6 +66,7 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -129,8 +130,8 @@ public class SimpleClient {
     /**
      * Jackson ObjectMapper that's used to convert objects to/from JSON.
      */
-    private ObjectMapper mapper = new ObjectMapper();
- 
+    private ObjectMapper mapper = newObjectMapper();
+
     /**
      * The Co3ContextHeader received from the custom actions framework.
      */
@@ -226,6 +227,22 @@ public class SimpleClient {
      * @param trustedStorePassword The password for trustedStore.
      */
     public SimpleClient(URL baseURL, String orgName, String email, String password, File trustedStoreFile, String trustedStorePassword) {
+    	init(baseURL, orgName, email, password, trustedStoreFile, trustedStorePassword);
+    }
+
+    /**
+     * Creates a SimpleClient with a ServerConfig object bean.
+     * @param config An object containing the configuration data.
+     * @throws MalformedURLException
+     */
+    public SimpleClient(ServerConfig config) throws MalformedURLException {
+		URL baseURL = new URL(config.getRestUrl());
+		File trustStore = new File(config.getTrustStore());
+		
+		init(baseURL, config.getOrgName(), config.getUser(), config.getPassword(), trustStore, config.getTrustStorePassword());
+    }
+   
+    private void init(URL baseURL, String orgName, String email, String password, File trustedStoreFile, String trustedStorePassword) {
         this.baseURL = baseURL;
         this.orgName = orgName;
         this.email = email;
@@ -243,7 +260,20 @@ public class SimpleClient {
         
         connect();
     }
-  
+   
+    /*
+     * Creates the Jackson ObjectMapper.
+     */
+    private ObjectMapper newObjectMapper() {
+    	ObjectMapper mapper = new ObjectMapper();
+    	
+        // If the Co3 server sends something we don't understand, let's ignore it.  Perhaps
+        // we have an outdated DTO JAR.
+        mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        return mapper;
+    }
+    
     /**
      * Sets the X-Co3ContextToken header  This is important if you are using this SimpleClient
      * object to respond to actions.
@@ -581,7 +611,14 @@ public class SimpleClient {
         
         sessionInfo = post("/rest/session", auth, new TypeReference<UserSessionDTO>(){});
     }
-   
+  
+    /**
+     * Gets the objectMapper that this client is using.
+     */
+    public ObjectMapper getObjectMapper() {
+    	return mapper;
+    }
+    
     /**
      * Gets the ID of the org this object is working on.  This uses orgName to find the correct org.
      * @return The org ID.
