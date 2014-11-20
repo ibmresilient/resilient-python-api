@@ -1,3 +1,5 @@
+apply plugin: 'eclipse'
+
 subprojects {
     version = '1.0'
 
@@ -13,6 +15,12 @@ subprojects {
     }
 
     project.ext.buildNumber = project.hasProperty('buildNumber') ? buildNumber : 0
+}
+
+eclipse {
+    project {
+        name = 'Co3 Root Project'
+    }
 }
 
 project.ext.co3RestAPIVersion = '19.0.475'
