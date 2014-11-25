@@ -23,7 +23,7 @@ eclipse {
     }
 }
 
-project.ext.co3RestAPIVersion = '19.0.476'
+project.ext.co3APIVersion = '19.0.479'
 project.ext.guavaVersion = '18.0'
 project.ext.httpclientVersion = '4.3.3'
 project.ext.slf4jVersion = '1.7.7'
@@ -39,7 +39,9 @@ project.ext.jodaTimeVersion = '2.1'
 project.ext.oneJarVersion = '1.0.4'
 
 project.ext.libraries = [
-    co3_rest_api: "com.co3:rest-api:${co3RestAPIVersion}",
+    co3_rest_api: [
+        "com.co3:rest-api:${co3APIVersion}",
+        "com.co3:simple-client:${co3APIVersion}"],
     guava: "com.google.guava:guava:${guavaVersion}",
     jackson1: ["org.codehaus.jackson:jackson-mapper-asl:${jackson1Version}"],
     jackson1_guava: ["com.fasterxml.jackson:jackson-datatype-guava:${jackson1Version}"],

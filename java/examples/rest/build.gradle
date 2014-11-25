@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies { 
-    compile project(":client") 
+    compile libraries.co3_rest_api
     compile libraries.commons_cli
     compile libraries.commons_lang
     compile libraries.joda_time
