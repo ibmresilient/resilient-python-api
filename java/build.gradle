@@ -12,6 +12,10 @@ subprojects {
         maven {
             url "https://repo.co3sys.com/m2"
         }
+
+        maven { 
+            url "http://repo.spring.io/libs-release" 
+        }
     }
 
     project.ext.buildNumber = project.hasProperty('buildNumber') ? buildNumber : 0
@@ -37,6 +41,7 @@ project.ext.junitVersion = '4.10'
 project.ext.mockitoVersion = '1.9.0'
 project.ext.jodaTimeVersion = '2.1'
 project.ext.oneJarVersion = '1.0.4'
+project.ext.camelVersion = '2.14.0'
 
 project.ext.libraries = [
     co3_rest_api: [
@@ -57,6 +62,9 @@ project.ext.libraries = [
     joda_time: "joda-time:joda-time:${jodaTimeVersion}",
     groovy: "org.codehaus.groovy:groovy-all:2.3.6",
     one_jar: "com.github.rholder:gradle-one-jar:${oneJarVersion}",
+    camel: ["org.apache.camel:camel-core:${camelVersion}",
+            "org.apache.camel:camel-jms:${camelVersion}",
+            "org.apache.camel:camel-jackson:${camelVersion}"],
 
     junit: "junit:junit:${junitVersion}",
     mockito: "org.mockito:mockito-all:${mockitoVersion}"

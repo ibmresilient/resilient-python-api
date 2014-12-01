@@ -1,1 +1,1 @@
-include "jms-util", "examples:rest", "examples:caf:general", "examples:caf:mulesoft:hipchat"
+include "jms-util", "examples:rest", "examples:caf:general", "examples:caf:mulesoft:hipchat", "examples:caf:camel"

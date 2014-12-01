@@ -1,0 +1,37 @@
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath libraries.one_jar
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'gradle-one-jar'
+
+eclipse {
+    project {
+        name = 'Co3 CAF Camel Examples'
+    }
+}
+
+dependencies {
+    compile libraries.jackson1
+    compile libraries.co3_rest_api    
+    compile libraries.slf4j_api
+    compile libraries.camel
+	compile project(':jms-util')
+	
+    testCompile libraries.junit
+}
+
+task javaExamplesJar(type: OneJar) {
+	mainClass = 'com.co3.examples.CalculateSeverity'
+	archiveName = 'co3-caf-camel.jar'
+	additionalDir = file('extra')
+}
+
+build.dependsOn javaExamplesJar

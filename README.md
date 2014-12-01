@@ -91,8 +91,7 @@ See the comments in each of the Groovy classes for more information.
 
 The output from the Gradle build is a "One JAR" file (http://one-jar.sourceforge.net) that can easily be run from the command line.
 
-You can also run and debug the examples directly from within Eclipse.  This assumes some level of familiarity with Eclipse, but debugging the examples
-can help quickly understand what's happening.
+You can also run and debug the examples directly from within Eclipse.  This assumes some level of familiarity with Eclipse, but debugging the examples can help quickly understand what's happening.
 
 The following illustrates how you can run the command line utilities from the command shell.
 
@@ -118,6 +117,24 @@ The LookupUsername is not the default "main class" for the co3-caf-examples.jar 
 ```
 $ java -Done-jar.main.class=com.co3.examples.LookupUsername -jar build/libs/co3-caf-examples.jar
 ```
+
+## Apache Camel Example (java/examples/caf/camel directory)
+
+This project illustrates how you can use Apache Camel to process CAF messages.
+
+The output from the Gradle build is a "One JAR" file (http://one-jar.sourceforge.net) that can easily be run from the command line.  The JAR file produced by the build is build/libs/co3-caf-camel.jar.  
+
+This example uses ~/co3/calcseverity.json as a configuration file.  That is, a calcseverity.json file in the co3 directory within the user's home directory.  This file tells the program how to connect to the Co3 server.  You can use the calcseverity.json.dist file as a starting point.
+
+Once you have the ~/co3/calcseverity.json file configured, you can run the CalculateSeverity program like this:
+
+```
+$ java -jar build/libs/co3-caf-camel.jar
+```
+
+As with the other examples, you can also run the class from within Eclipse.
+
+See http://camel.apache.org for details on Apache Camel.
 
 ## Mulesoft HipChat Example (java/examples/caf/mulesoft/hipchat directory)
 
