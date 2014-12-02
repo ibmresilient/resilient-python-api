@@ -69,7 +69,7 @@ See the [advanced.py](#advancedpy) section for more information.
 
 The Java examples are in the "java" directory.  The following subdirectories exist within that directory:
 
-* examples/caf/general - Groovy examples that read CAF actions from a destination and invoking Co3 REST API commands.  See the [Co3 CAF General Examples](#co3-caf-general-examples-javaexamplescafgeneral) section for details.
+* examples/caf/general - Groovy examples that read CAF actions from a destination and invoke Co3 REST API commands.  See the [Co3 CAF General Examples](#co3-caf-general-examples-javaexamplescafgeneral) section for details.
 * examples/caf/camel - Apache Camel example that reads CAF actions from a destination and adjusts the incident severity based on the incident type.  See the [Apache Camel Example](#apache-camel-example-javaexamplescafcamel-directory) section for details.
 * examples/caf/mulesoft - Mulesoft Anypoint Studio example that illustrates how to read from a message destination and post to HipChat; see the [Mulesoft HipChat Example](#mulesoft-hipchat-example-javaexamplescafmulesofthipchat-directory) section for details.  Note that you will need to install Mulesoft Anypoint Studio to use this example.
 * examples/rest - A collection of examples that illustrate various ways to use the Co3 REST API.  See the [Co3 REST API Examples](#co3-rest-api-examples-javaexamplesrest-directory) section for details.
@@ -91,9 +91,11 @@ We highly recommend that you use Eclipse for this.  You will need to have the Gr
 
 ***What is Mulesoft?***
 
-Mulesoft is an Enterprise Service Bus (ESB) that allows you to run multiple integrations (Co3-related or not) within a single environment.  An ESB can be helpful if you have many different systems that need to interace within your organization.  If you already have an ESB, you may want to consider having your applications run within it.
+Mulesoft is an Enterprise Service Bus (ESB) that allows you to run multiple integrations (Co3-related or not) within a single environment.  An ESB can be helpful if you have many different systems that need to interact with one anohter.  If you already have an ESB, you may want to consider having your Co3 integrations run within it.
 
-The Mulesoft ESB has a number of pre-built connectors that might simplify integrations with Co3.
+The Mulesoft ESB also has a number of pre-built connectors that might simplify integrations with Co3.
+
+See https://www.mulesoft.org for more information on Mulesoft.
 
 See the [Mulesoft HipChat Example](#mulesoft-hipchat-example-javaexamplescafmulesofthipchat-directory) section for an example of how you can use Mulesoft to integrate Co3 with a chat client (HipChat in our example).
 
