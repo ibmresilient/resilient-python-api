@@ -15,16 +15,7 @@ The Java examples can be built using the Gradle build system (see http://www.gra
 
   $ gradle build
 
-However, it is generally more useful to see the examples from within an IDE.  You can import the Gradle project into Eclipse if you have the Gradle 
-Integration for Eclipse installed.  It also assumes that you have Groovy support installed into Eclipse.
-
-## Co3 Client Library project (java/client directory)
-
-This project contains a wrapper around the Apache HTTP Client that simplifies the use of the Co3 REST API.  See the com.co3.simpleclient.SimpleClient
-class in the src/main/java source folder.
-
-Note that you could use the Apache HTTP Client directly, but the SimpleClient class handles some of the details of authentication and JSON parsing that 
-you would otherwise have to do yourself.
+However, it is generally more useful to see the examples from within an IDE.  You can import the Gradle project into Eclipse if you have the Gradle Integration for Eclipse installed.  It also assumes that you have Groovy support installed into Eclipse.
 
 ## Co3 REST API Examples (java/examples/rest directory)
 
