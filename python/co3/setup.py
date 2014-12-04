@@ -55,7 +55,11 @@ setup(
     url='https://www.co3sys.com/',
     license='Co3 License',
     author='Co3',
-    install_requires=['argparse'],
+    install_requires=[
+      'argparse', 
+      'stomp.py>=4.0.12',
+      'requests>=2.3.0'
+    ],
     author_email='support@co3sys.com',
     description='Co3 API',
     long_description=long_description,
