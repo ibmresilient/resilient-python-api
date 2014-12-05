@@ -102,7 +102,7 @@ def main(argv):
     host_port = (opts.shost, opts.sport)
 
     # Setup the STOMP connection.
-    conn = stomp.Connection(host_and_ports = [host_port])
+    conn = stomp.Connection(host_and_ports = [host_port], try_loopback_connect=False)
 
     # Configure a listener.
     conn.set_listener('', Co3Listener(conn))

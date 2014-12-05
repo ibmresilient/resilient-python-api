@@ -121,7 +121,7 @@ def main(argv):
     co3_client.connect(opts.email, opts.password)
 
     # Setup the STOMP stomp_connection.
-    stomp_conn = stomp.Connection(host_and_ports = [host_port])
+    stomp_conn = stomp.Connection(host_and_ports = [host_port], try_loopback_connect=False)
 
     # Configure a listener.
     stomp_conn.set_listener('', Co3Listener(stomp_conn, co3_client))
