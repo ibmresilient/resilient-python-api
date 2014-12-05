@@ -22,6 +22,7 @@ dependencies {
     compile libraries.jackson1
     compile libraries.co3_rest_api    
     compile libraries.slf4j_api
+	runtime libraries.slf4j_simple
     compile libraries.camel
 	compile project(':jms-util')
 	

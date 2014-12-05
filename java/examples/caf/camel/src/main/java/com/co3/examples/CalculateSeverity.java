@@ -45,8 +45,11 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.DataFormat;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.co3.activemq.Co3ActiveMQSslConnectionFactory;
 import com.co3.dto.action.json.ActionAcknowledgementDTO;
@@ -61,14 +64,19 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import org.codehaus.jackson.map.DeserializationConfig;
-
 /**
  * Example showing how you can use Apache Camel to process Co3 CAF messages.  This example
  * receives an action message, runs a calculation to determine a new severity then
  * saves the incident with the new severity.
  */
 public class CalculateSeverity {
+	private static final Logger logger = LoggerFactory.getLogger(CalculateSeverity.class);
+
+	/**
+	 * Sleep for 30 seconds before retrying to establish the route.
+	 */
+	private static final long ROUTE_RETRY_SLEEP_MILLIS = 30 * 1000;
+	
 	/**
 	 * Provide our own subclass of com.co3.simpleclient.ServerConfig so we can include a queueName property.
 	 */
@@ -154,7 +162,9 @@ public class CalculateSeverity {
 		
 		// Add the factory to the CamelContext so it can be used in the routes.
 		//
-		context.addComponent("co3jms", JmsComponent.jmsComponentAutoAcknowledge(factory));
+		JmsComponent jmsComponent = JmsComponent.jmsComponentAutoAcknowledge(factory);
+		
+		context.addComponent("co3jms", jmsComponent);
 		
 		// Build the route.
 		//
@@ -166,8 +176,33 @@ public class CalculateSeverity {
 			
 			@Override
 			public void configure() throws Exception {
+				// Setup basic global error handler.
+				errorHandler(
+						defaultErrorHandler()
+							// Try 5 times
+							.maximumRedeliveries(5)
+							
+							// Wait 5 seconds between retries.
+							.redeliveryDelay(5000)
+							
+							// Log using our SLF4J logger.
+							.log(logger)
+							
+							// Log when we've totally failed.
+							.logExhausted(true)
+							
+							// Log the message history when we've totally failed.
+							.logExhaustedMessageHistory(true)
+							
+							// Log the stack trace.
+							.logStackTrace(true)
+							
+							// Log the stack trace on retry failures.
+							.logRetryStackTrace(true));
+				
 				// Read from queue.
 				from(fullQueueName)
+			
 					// Send to local directory
 					.to("file://build/outdir")
 			
@@ -212,10 +247,22 @@ public class CalculateSeverity {
 	 * @param args
 	 * @throws Exception
 	 */
-	public static void main(String [] args) throws Exception {
-		CalculateSeverity calcSev = new CalculateSeverity();
+	public static void main(String[] args) throws Exception {
+		boolean started = false;
 		
-		calcSev.start();
+		while (!started) {
+			try {
+				CalculateSeverity calcSev = new CalculateSeverity();
+				
+				calcSev.start();
+				
+				started = true;
+			} catch (Exception e) {
+				logger.error("Error while processing route (sleeping before a retry)", e);
+		
+				Thread.sleep(ROUTE_RETRY_SLEEP_MILLIS);
+			}
+		}
 	}
 
 	/**
