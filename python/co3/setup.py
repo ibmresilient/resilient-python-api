@@ -34,8 +34,6 @@ import codecs
 import os
 import sys
 
-import co3
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 def read(*filenames, **kwargs):
@@ -51,7 +49,7 @@ long_description = read('README')
 
 setup(
     name='co3',
-    version=co3.__version__,
+    version='1.0',
     url='https://www.co3sys.com/',
     license='Co3 License',
     author='Co3',
@@ -70,4 +68,5 @@ setup(
         'Programming Language :: Python',
         ]
 )
+
 
