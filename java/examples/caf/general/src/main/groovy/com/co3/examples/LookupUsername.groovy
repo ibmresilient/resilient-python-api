@@ -120,7 +120,7 @@ class LookupUsername {
 
                 SimpleClient client = getSimpleClient(contextToken)
 
-                client.put(client.getOrgURL("/incidents/${incident.id}/artifacts/${artifact.id}"), artifact, new TypeReference<IncidentArtifactDTO>() {})
+                client.put("incidents/${incident.id}/artifacts/${artifact.id}", artifact, new TypeReference<IncidentArtifactDTO>() {})
                 println "Updated artifact description"
             }
         }
