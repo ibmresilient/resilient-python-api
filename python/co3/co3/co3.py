@@ -51,7 +51,7 @@ class SimpleHTTPException(Exception):
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(SimpleHTTPException, self).__init__(response.reason)
+        super(SimpleHTTPException, self).__init__("{}:  {}".format(response.reason, response.text))
 
         self.response = response
 

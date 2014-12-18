@@ -140,5 +140,4 @@ def main(argv):
         generic_delete(client, co3_opts.delete)
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
- 
+    main(sys.argv[1:])
