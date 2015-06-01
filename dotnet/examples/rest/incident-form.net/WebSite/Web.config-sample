@@ -12,7 +12,7 @@
     <httpRuntime targetFramework="4.5" />
   </system.web>
   <appSettings>
-    <add key="Co3ApiUrl" value="https://app.co3sys.com/rest"/>
+    <add key="Co3ApiUrl" value="https://app.resilientsystems.com/rest"/>
     <add key="Co3UserAccount" value="user@company.com"/>
     <add key="Co3UserPassword" value="password"/>
     

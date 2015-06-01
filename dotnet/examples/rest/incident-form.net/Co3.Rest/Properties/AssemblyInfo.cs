@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Co3 REST API")]
+[assembly: AssemblyTitle("Resilient REST API")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Co3 Systems, Inc")]
+[assembly: AssemblyCompany("Resilient Systems, Inc")]
 [assembly: AssemblyProduct("Co3.Rest")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]

@@ -19,7 +19,7 @@
   </div>
   <form id="IncidentForm" runat="server">
     <div class="Notice">
-      This form demonstrates how to create an incident using ASP.net and the Co3 Systems REST API.<br />
+      This form demonstrates how to create an incident using ASP.net and the Resilient Systems REST API.<br />
       Please customize the page before deploying it!
     </div>
     <p>
@@ -139,7 +139,7 @@
     
     // if the incident was created, send the user to somewhere
     if (Co3CreateIncident(incident))
-      Response.Redirect("http://www.co3systems.com");
+      Response.Redirect("http://www.resilientsystems.com");
   }
 
   // logic to display errors and exceptions to help with debugging
