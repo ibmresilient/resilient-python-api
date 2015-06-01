@@ -8,9 +8,9 @@ $ gradle build
 
 However, it is generally more useful to see the examples from within an IDE.  You can import the Gradle project into Eclipse if you have the Gradle Integration for Eclipse installed.  It also assumes that you have Groovy support installed into Eclipse.
 
-## Co3 REST API Examples (java/examples/rest directory)
+## Resilient REST API Examples (java/examples/rest directory)
 
-This project contains sample command line utilities that use the Co3 REST API (and SimpleClient class).
+This project contains sample command line utilities that use the Resilient REST API (and SimpleClient class).
 
 The output from the Gradle build is a "One JAR" file (http://one-jar.sourceforge.net) that can easily be run from the command line.
 
@@ -38,7 +38,7 @@ $ java -Done-jar.main.class=com.co3.examples.InviteUsers -jar build/libs/co3-res
 
 The current version of the ActiveMQ client library (5.10.0) does no validate that the host name you think you're connecting to is actually what is in the certificate commonName or subjectAltName (see https://issues.apache.org/jira/browse/AMQ-5443 for details).
 
-To workaround this issue, Co3 has provided a Co3ActiveMQSslConnectionFactory class that checks the host name.  Using this Co3ActiveMQSslConnectionFactory directly in Java code is relatively straightforward:
+To workaround this issue, Resilient has provided a Co3ActiveMQSslConnectionFactory class that checks the host name.  Using this Co3ActiveMQSslConnectionFactory directly in Java code is relatively straightforward:
 
 ```
 Co3ActiveMQSslConnectionFactory factory = new Co3ActiveMQSslConnectionFactory("ssl://co3:65000");
@@ -56,9 +56,9 @@ Connection con = factory.createConnection();
 
 There is an example of how this would translate to Mulesoft/Spring in the `java/examples/caf/mulesoft/hipchat` directory.
 
-In general, when connecting to a the Co3 server using JMS you should use the Co3ActiveMQSslConnectionFactory class to avoid man-in-the-middle vulnerabilities.  That is, unless you have some other way to ensure the integrity of the SSL connection.
+In general, when connecting to a the Resilient server using JMS you should use the Co3ActiveMQSslConnectionFactory class to avoid man-in-the-middle vulnerabilities.  That is, unless you have some other way to ensure the integrity of the SSL connection.
 
-## Co3 CAF General Examples (java/examples/caf/general)
+## Resilient CAF General Examples (java/examples/caf/general)
 
 This project contains example Groovy code to interact with message destinations.  The following table describes each example Groovy class in detail:
 
@@ -66,7 +66,7 @@ Class Name           | Description
 -------------------- | -----------
 DestinationWatcher   | A helper class that simplifies connecting to and reading from message destinations.
 WatchDestination     | A command line tool that uses DestinationWatcher.  This can be used to test that messages are being sent to a destination.
-LookupUsername       | A command line tool that watches a destination for "user name" artifact changes and updates them using the Co3 REST API.
+LookupUsername       | A command line tool that watches a destination for "user name" artifact changes and updates them using the Resilient REST API.
 
 See the comments in each of the Groovy classes for more information.
 
@@ -105,7 +105,7 @@ This project illustrates how you can use Apache Camel to process CAF messages.
 
 The output from the Gradle build is a "One JAR" file (http://one-jar.sourceforge.net) that can easily be run from the command line.  The JAR file produced by the build is build/libs/co3-caf-camel.jar.  
 
-This example uses ~/co3/calcseverity.json as a configuration file.  That is, a calcseverity.json file in the co3 directory within the user's home directory.  This file tells the program how to connect to the Co3 server.  You can use the calcseverity.json.dist file as a starting point.
+This example uses ~/co3/calcseverity.json as a configuration file.  That is, a calcseverity.json file in the co3 directory within the user's home directory.  This file tells the program how to connect to the Resilient server.  You can use the calcseverity.json.dist file as a starting point.
 
 Once you have the ~/co3/calcseverity.json file configured, you can run the CalculateSeverity program like this:
 
@@ -119,7 +119,7 @@ See http://camel.apache.org for details on Apache Camel.
 
 ## Mulesoft HipChat Example (java/examples/caf/mulesoft/hipchat directory)
 
-This project contains a Mulesoft Anypoint Studio example that reads a message from a queue (Co3 message destination) and posts it to HipChat.  In order to run the example, you will need a HipChat account.  However, even if you don't have HipChat this project can be a useful reference.
+This project contains a Mulesoft Anypoint Studio example that reads a message from a queue (Resilient message destination) and posts it to HipChat.  In order to run the example, you will need a HipChat account.  However, even if you don't have HipChat this project can be a useful reference.
 
 See http://www.mulesoft.com for more information about Mulesoft Anypoint Studio.
 
@@ -150,9 +150,9 @@ That is, create a "co3" directory in your home directory (e.g. ~/co3) with a fil
 ```
   co3.trustStore=<Path to keystore containing trusted certificates>
   co3.trustStorePassword=<keystore password>
-  co3.user=<User with which to connect to the Co3 server>
-  co3.password=<Password for the Co3 user>
-  co3.queueName=<The fully qualified name of the Co3 message destination (e.g. actions.201.mydest)>
+  co3.user=<User with which to connect to the Resilient server>
+  co3.password=<Password for the Resilient user>
+  co3.queueName=<The fully qualified name of the Resilient message destination (e.g. actions.201.mydest)>
   co3.hipChat.room=<The name or ID of the HipChat room>
   co3.hipChat.authToken=<The HipChat authentication token>
 ```

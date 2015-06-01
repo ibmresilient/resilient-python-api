@@ -1,31 +1,31 @@
 /*
- * Co3 Systems, Inc. ("Co3") is willing to license software or access to 
- * software to the company or entity that will be using or accessing the 
- * software and documentation and that you represent as an employee or 
- * authorized agent ("you" or "your" only on the condition that you 
- * accept all of the terms of this license agreement.
+ * Resilient Systems, Inc. ("Resilient") is willing to license software
+ * or access to software to the company or entity that will be using or
+ * accessing the software and documentation and that you represent as
+ * an employee or authorized agent ("you" or "your") only on the condition
+ * that you accept all of the terms of this license agreement.
  *
- * The software and documentation within Co3's Development Kit are 
- * copyrighted by and contain confidential information of Co3. By 
- * accessing and/or using this software and documentation, you agree 
- * that while you may make derivative works of them, you:
- * 
- * 1)   will not use the software and documentation or any derivative 
- *      works for anything but your internal business purposes in 
- *      conjunction your licensed used of Co3's software, nor
- * 2)   provide or disclose the software and documentation or any 
- *      derivative works to any third party.
- * 
- * THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS 
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL CO3 BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * The software and documentation within Resilient's Development Kit are
+ * copyrighted by and contain confidential information of Resilient. By
+ * accessing and/or using this software and documentation, you agree that
+ * while you may make derivative works of them, you:
+ *
+ * 1)  will not use the software and documentation or any derivative
+ *     works for anything but your internal business purposes in
+ *     conjunction your licensed used of Resilient's software, nor
+ * 2)  provide or disclose the software and documentation or any
+ *     derivative works to any third party.
+ *
+ * THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -65,7 +65,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
- * Example showing how you can use Apache Camel to process Co3 CAF messages.  This example
+ * Example showing how you can use Apache Camel to process Resilient CAF messages.  This example
  * receives an action message, runs a calculation to determine a new severity then
  * saves the incident with the new severity.
  */
@@ -112,7 +112,7 @@ public class CalculateSeverity {
 		private Jackson1DataFormat(Class<?> unmarshalType) {
 			mapper = new ObjectMapper();
 			
-            // If the Co3 server sends something we don't understand, let's ignore it.  Perhaps
+            // If the Resilient server sends something we don't understand, let's ignore it.  Perhaps
             // we have an outdated DTO JAR.
             mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             
@@ -141,7 +141,7 @@ public class CalculateSeverity {
 		//
 		serverConfig = CalcSeverityServerConfig.load("calcseverity.json");
 	
-		// Create a connection to the Co3 server.  This will validate the configuration.
+		// Create a connection to the Resilient server.  This will validate the configuration.
 		//
 		SimpleClient simpleClient = new SimpleClient(serverConfig);
 
@@ -218,7 +218,7 @@ public class CalculateSeverity {
 						}
 					})
 					
-					// Convert to Co3 ack format.  This content will get automatically sent
+					// Convert to Resilient ack format.  This content will get automatically sent
 					// back to the server because Camel uses the Reply-To JMS header in
 					// the message by default.
 					.process(new Processor() {
@@ -275,7 +275,7 @@ public class CalculateSeverity {
 
 	/**
 	 * Helper to create a success ActionAcknowledgementDTO.
-	 * @param message The text message that you want to appear in the action status in the Co3 UI.
+	 * @param message The text message that you want to appear in the action status in the Resilient UI.
 	 * @return An object that can be marshalled (using Jackson v1) into the JSON that the server is expecting.
 	 */
 	private Object newSuccessAckDTO(String message) {
