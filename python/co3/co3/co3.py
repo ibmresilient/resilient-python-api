@@ -37,12 +37,17 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 
 class TLSHttpAdapter(HTTPAdapter):
-    """Adapter that ensures that we use TLSv1 (some Pythons default to SSLv3)."""
+    """
+    Adapter that ensures that we use the best available SSL/TLS version.
+    Some environments default to SSLv3, so we need to specifically ask for
+    the highest protocol version that both the client and server support.
+    Despite the name, SSLv23 can select “TLS” protocols as well as “SSL”.
+    """
     def init_poolmanager(self, connections, maxsize, block=False):
         self.poolmanager = PoolManager(num_pools=connections,
                                        maxsize=maxsize,
                                        block=block,
-                                       ssl_version=ssl.PROTOCOL_TLSv1)
+                                       ssl_version=ssl.PROTOCOL_SSLv23)
 
 class SimpleHTTPException(Exception):
     """Exception for HTTP errors."""
