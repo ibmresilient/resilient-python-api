@@ -57,6 +57,11 @@ class FinfoArgumentParser(resilient.ArgumentParser):
             nargs = "?",
             help = "The field name.")
 
+        self.add_argument('--type',
+            default = "incident",
+            choices = ["incident", "task", "artifact", "milestone", "attachment", "note"],
+            help = "The object type (defaults to 'incident')")
+
         self.add_argument('--json',
             action = 'store_true',
             help = "Print the field definition in JSON format.")
@@ -97,16 +102,16 @@ def print_details(field):
                 label = value["label"]
                 print (u'{} {}={}'.format(default_flag, value["value"], label))
 
-def find_field(client, fieldname):
+def find_field(client, fieldname, type="incident"):
     trimname = fieldname[fieldname.rfind(".")+1:]
-    t = client.get("/types/incident/fields")
+    t = client.get("/types/{}/fields".format(type))
     for field in t:
         if field["name"]==trimname:
             return field
 
-def list_fields(client):
+def list_fields(client, type="incident"):
     print("Fields:")
-    t = client.get("/types/incident/fields")
+    t = client.get("/types/{}/fields".format(type))
     for field in sorted(t, key=lambda x : apiname(x)):
         required_flag = " "
         if "required" in field:
@@ -135,11 +140,11 @@ def main(argv):
 
     # If no field is specified, list them all
     if not opts.fieldname:
-        list_fields(client)
+        list_fields(client, opts.type)
         exit(0)
 
     # Find the field and display its properties
-    field_data = find_field(client, opts.fieldname)
+    field_data = find_field(client, opts.fieldname, opts.type)
     if field_data:
         if opts.json:
             print_json(field_data)
