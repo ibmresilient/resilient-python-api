@@ -132,10 +132,7 @@ def main(argv):
         verify = opts.cafile
     url = "https://{}:{}".format(opts.host, opts.port)
 
-    # Disable all the SSL warnings from requests
-    # because we're running commando, verify off
-    requests.packages.urllib3.disable_warnings()
-    client = resilient.SimpleClient(org_name=opts.org, proxies=opts.proxy, base_url=url, verify=False)
+    client = resilient.SimpleClient(org_name=opts.org, proxies=opts.proxy, base_url=url, verify=verify)
     client.connect(opts.email, opts.password)
 
     # If no field is specified, list them all
