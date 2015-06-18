@@ -1,30 +1,30 @@
-# Co3 Systems, Inc. ("Co3") is willing to license software or access to 
-# software to the company or entity that will be using or accessing the 
-# software and documentation and that you represent as an employee or 
-# authorized agent ("you" or "your" only on the condition that you 
-# accept all of the terms of this license agreement.
+# Resilient Systems, Inc. ("Resilient") is willing to license software
+# or access to software to the company or entity that will be using or
+# accessing the software and documentation and that you represent as
+# an employee or authorized agent ("you" or "your") only on the condition
+# that you accept all of the terms of this license agreement.
 #
-# The software and documentation within Co3's Development Kit are 
-# copyrighted by and contain confidential information of Co3. By 
-# accessing and/or using this software and documentation, you agree 
-# that while you may make derivative works of them, you:
+# The software and documentation within Resilient's Development Kit are
+# copyrighted by and contain confidential information of Resilient. By
+# accessing and/or using this software and documentation, you agree that
+# while you may make derivative works of them, you:
 #
-# 1)   will not use the software and documentation or any derivative 
-#      works for anything but your internal business purposes in 
-#      conjunction your licensed used of Co3's software, nor
-# 2)   provide or disclose the software and documentation or any 
-#      derivative works to any third party.
-# 
-# THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS 
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-# ARE DISCLAIMED. IN NO EVENT SHALL CO3 BE LIABLE FOR ANY DIRECT, 
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+# 1)  will not use the software and documentation or any derivative
+#     works for anything but your internal business purposes in
+#     conjunction your licensed used of Resilient's software, nor
+# 2)  provide or disclose the software and documentation or any
+#     derivative works to any third party.
+#
+# THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import requests 
@@ -61,13 +61,13 @@ class SimpleHTTPException(Exception):
         self.response = response
 
 class SimpleClient:
-    """Helper for using Co3 REST API."""
+    """Helper for using Resilient REST API."""
 
     headers = {'content-type': 'application/json'}
     cookies = None
     org_id = None
     org_name = None
-    base_url = 'https://app.co3sys.com'
+    base_url = 'https://app.resilientsystems.com/'
     verify = True
     proxies = None
     session = None
@@ -96,7 +96,7 @@ class SimpleClient:
           email - the email address to use for authentication.
           password - the password
         Returns:
-          The Co3 session object (dict)
+          The Resilient session object (dict)
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
@@ -154,9 +154,9 @@ class SimpleClient:
     def get(self, uri, co3_context_token=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
-   
-            https://app.co3sys.com/rest/orgs/201/incidents
-   
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
+
         Args:
           uri
           co3_context_token
@@ -179,8 +179,8 @@ class SimpleClient:
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you 
         specify a uri of /incidents, the actual URL would be something like this:
-   
-            https://app.co3sys.com/rest/orgs/201/incidents
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
         Args:
            uri
            payload
@@ -254,8 +254,8 @@ class SimpleClient:
         Puts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you 
         specify a uri of /incidents, the actual URL would be something like this:
-   
-            https://app.co3sys.com/rest/orgs/201/incidents
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
         Args:
            uri
            payload
@@ -283,8 +283,8 @@ class SimpleClient:
           co3_context_token
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you 
         specify a uri of /incidents, the actual URL would be something like this:
-   
-            https://app.co3sys.com/rest/orgs/201/incidents
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
         Args:
            uri
            co3_context_token

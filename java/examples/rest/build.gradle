@@ -4,7 +4,7 @@ apply plugin: 'gradle-one-jar'
 
 eclipse {
 	project {
-		name = 'Co3 REST API Examples'
+		name = 'Resilient REST API Examples'
 	}
 }
 

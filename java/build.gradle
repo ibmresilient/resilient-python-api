@@ -7,8 +7,8 @@ subprojects {
 
     repositories {
         mavenCentral()
-   
-        // Repository for the Co3 artifacts (e.g. the rest-api jar which includes the DTOs) 
+
+        // Repository for the Resilient artifacts (e.g. the rest-api jar which includes the DTOs)
         maven {
             url "https://repo.co3sys.com/m2"
         }
@@ -23,7 +23,7 @@ subprojects {
 
 eclipse {
     project {
-        name = 'Co3 Root Project'
+        name = 'Resilient Root Project'
     }
 }
 

@@ -4,7 +4,7 @@ apply plugin: 'gradle-one-jar'
 
 eclipse {
 	project {
-		name = 'Co3 CAF General Examples'
+		name = 'Resilient CAF General Examples'
 	}
 }
 
