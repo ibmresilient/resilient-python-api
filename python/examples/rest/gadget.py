@@ -55,6 +55,10 @@ class ExampleArgumentParser(co3.ArgumentParser):
                    'in the template file.  The JSON data of the created incident is '
                    'written to stdout.')
 
+        self.add_argument('--get',
+            help = "Generically get JSON at the specified URI.  The JSON data of the"
+                   "result is written to stdout.")
+
         self.add_argument('--post',
             nargs = 2,
             help = "Generically post the specified JSON file to the specified URI.  The "
@@ -98,6 +102,12 @@ def create_incident(client, template_file_name):
     print('Created incident:  ')
     print(json.dumps(incident, indent=4))
 
+def generic_get(client, uri):
+    incident = client.get(uri)
+
+    print('Response:  ')
+    print(json.dumps(incident, indent=4))
+
 def generic_post(client, uri, template_file_name):
     file = open(template_file_name, 'r')
 
@@ -132,6 +142,9 @@ def main(argv):
 
     if co3_opts.list: 
         show_incident_list(client, co3_opts.query)
+
+    if co3_opts.get:
+        generic_get(client, co3_opts.get)
 
     if co3_opts.post:
         generic_post(client, co3_opts.post[0], co3_opts.post[1])
