@@ -59,7 +59,7 @@ class FinfoArgumentParser(resilient.ArgumentParser):
 
         self.add_argument('--type',
             default = "incident",
-            choices = ["incident", "task", "artifact", "milestone", "attachment", "note"],
+            choices = ["incident", "task", "artifact", "milestone", "attachment", "note", "actioninvocation"],
             help = "The object type (defaults to 'incident')")
 
         self.add_argument('--json',
