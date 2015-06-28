@@ -30,12 +30,13 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import getopt
-import getpass
 import json
 from datetime import datetime
 from calendar import timegm
 import co3
+import logging
+
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
 
 class ExampleArgumentParser(co3.ArgumentParser):
     def __init__(self):
@@ -54,6 +55,10 @@ class ExampleArgumentParser(co3.ArgumentParser):
                    'note that the incident name and description are included directly '
                    'in the template file.  The JSON data of the created incident is '
                    'written to stdout.')
+
+        self.add_argument('--attach',
+            nargs='*',
+            help = 'Specifies file(s) to attach when creating an incident.')
 
         self.add_argument('--get',
             help = "Generically get JSON at the specified URI.  The JSON data of the"
@@ -88,7 +93,7 @@ def show_incident_list(client, query_template_file_name):
 def get_json_time(dt):
     return timegm(dt.utctimetuple()) * 1000
 
-def create_incident(client, template_file_name):
+def create_incident(client, template_file_name, attachments):
     file = open(template_file_name, 'r')
 
     template = json.loads(file.read())
@@ -98,9 +103,16 @@ def create_incident(client, template_file_name):
     template['discovered_date'] = get_json_time(datetime.utcnow())
 
     incident = client.post('/incidents', template)
-
     print('Created incident:  ')
     print(json.dumps(incident, indent=4))
+
+    incident_id = incident['id']
+    if isinstance(attachments, list) and len(attachments) > 0:
+        for attachment in attachments:
+            upload = client.upload('/incidents/{}/attachments'.format(incident_id), attachment)
+            print('Created attachment:  ')
+            print(json.dumps(upload, indent=4))
+
 
 def generic_get(client, uri):
     incident = client.get(uri)
@@ -138,7 +150,7 @@ def main(argv):
     client.connect(co3_opts.email, co3_opts.password)
  
     if co3_opts.create:
-        create_incident(client, co3_opts.create)
+        create_incident(client, co3_opts.create, co3_opts.attach)
 
     if co3_opts.list: 
         show_incident_list(client, co3_opts.query)
