@@ -29,14 +29,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
 import co3 as resilient
 import json
 import sys
 import codecs
-import locale
-import requests
+import csv
+import collections
+import StringIO
 
 def wrap_io(stream):
+    """Wrap the stream to always always output in utf-8"""
     if stream.encoding != 'UTF-8':
         if sys.version_info.major < 3:
             return codecs.getwriter('utf-8')(stream, 'strict')
@@ -66,8 +69,12 @@ class FinfoArgumentParser(resilient.ArgumentParser):
             action = 'store_true',
             help = "Print the field definition in JSON format.")
 
+        self.add_argument('--csv',
+            action = 'store_true',
+            help = "Print the field lists in CSV format.")
 
 def apiname(field):
+    """The full (qualified) programmatic name of a field"""
     if field["prefix"]:
         fieldname = u"{}.{}".format(field["prefix"], field["name"])
     else:
@@ -75,9 +82,11 @@ def apiname(field):
     return fieldname
 
 def print_json(field):
+    """Print the definition of one field, in JSON"""
     print(json.dumps(field, indent=4))
 
 def print_details(field):
+    """Print the definition of one field, in readable text"""
     print(u"Name:        {}".format(apiname(field)))
     print(u"Label:       {}".format(field["text"]))
     print(u"Type:        {}".format(field["input_type"]))
@@ -102,26 +111,48 @@ def print_details(field):
                 label = value["label"]
                 print (u'{} {}={}'.format(default_flag, value["value"], label))
 
-def find_field(client, fieldname, type="incident"):
+def find_field(client, fieldname, objecttype="incident"):
     trimname = fieldname[fieldname.rfind(".")+1:]
-    t = client.get("/types/{}/fields".format(type))
+    t = client.get("/types/{}/fields".format(objecttype))
     for field in t:
-        if field["name"]==trimname:
+        if field["name"] == trimname:
             return field
 
-def list_fields(client, type="incident"):
+def list_fields_csv(client, objecttype="incident"):
+    """Print a list of fields, in CSV format"""
+    iostr = StringIO.StringIO()
+    writer = None
+    t = client.get("/types/{}/fields".format(objecttype))
+    for field in sorted(t, key=apiname):
+        columns = collections.OrderedDict()
+        columns["name"] = apiname(field)
+        columns["required"] = field.get("required", "")
+        columns["input_type"] = field.get("input_type", "")
+        columns["text"] = field.get("text", "")
+        columns["tooltip"] = field.get("tooltip", "")
+        columns["placeholder"] = field.get("placeholder", "")
+        if not writer:
+            writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
+            writer.writeheader()
+        writer.writerow(columns)
+    print(iostr.getvalue())
+
+def list_fields(client, objecttype="incident"):
+    """Print a list of fields, in readable text"""
     print("Fields:")
-    t = client.get("/types/{}/fields".format(type))
-    for field in sorted(t, key=lambda x : apiname(x)):
+    t = client.get("/types/{}/fields".format(objecttype))
+    for field in sorted(t, key=apiname):
         required_flag = " "
         if "required" in field:
-            if field["required"]=="always":
+            if field["required"] == "always":
                 required_flag = "*"
-            if field["required"]=="close":
+            if field["required"] == "close":
                 required_flag = "c"
         print(u"{} {}".format(required_flag, apiname(field)))
 
+
 def main(argv):
+    """Main"""
     # Parse commandline arguments
     parser = FinfoArgumentParser()
     opts = parser.parse_args()
@@ -137,7 +168,10 @@ def main(argv):
 
     # If no field is specified, list them all
     if not opts.fieldname:
-        list_fields(client, opts.type)
+        if opts.csv:
+            list_fields_csv(client, opts.type)
+        else:
+            list_fields(client, opts.type)
         exit(0)
 
     # Find the field and display its properties
