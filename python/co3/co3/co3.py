@@ -175,7 +175,11 @@ class SimpleClient(object):
 
         self._raise_if_error(response)
 
-        return json.loads(response.text)
+        try:
+            return json.loads(response.text)
+        except ValueError:
+            # Return binary content for non-JSON, e.g. attachment contents
+            return response.content
 
     def post(self, uri, payload, co3_context_token = None):
         """
