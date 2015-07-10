@@ -68,6 +68,7 @@ class SimpleClient(object):
     cookies = None
     org_id = None
     org_name = None
+    user_id = None
     base_url = 'https://app.resilientsystems.com/'
     verify = True
     proxies = None
@@ -143,6 +144,7 @@ class SimpleClient(object):
         self.cookies = {
             'JSESSIONID': response.cookies['JSESSIONID']
         }
+        self.user_id = session["user_id"]
         return session
 
     def __make_headers(self, co3_context_token = None, additional_headers=None):
