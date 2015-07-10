@@ -211,7 +211,7 @@ class SimpleClient(object):
         return json.loads(response.text)
 
 
-    def upload(self, uri, filename, co3_context_token=None):
+    def post_attachment(self, uri, filename, co3_context_token=None):
         """Upload a file to the specified URI"""
         url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
 

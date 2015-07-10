@@ -109,7 +109,7 @@ def create_incident(client, template_file_name, attachments):
     incident_id = incident['id']
     if isinstance(attachments, list) and len(attachments) > 0:
         for attachment in attachments:
-            upload = client.upload('/incidents/{}/attachments'.format(incident_id), attachment)
+            upload = client.post_attachment('/incidents/{}/attachments'.format(incident_id), attachment)
             print('Created attachment:  ')
             print(json.dumps(upload, indent=4))
 
