@@ -166,8 +166,7 @@ class SimpleClient(object):
           uri
           co3_context_token
         Returns:
-          A dictionary or array with the value returned by the server,
-          or, for non-JSON resourcess (attachment contents), the binary data.
+          A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
@@ -178,10 +177,30 @@ class SimpleClient(object):
 
         self._raise_if_error(response)
 
-        try:
-            return json.loads(response.text)
-        except ValueError:
-            return response.content
+        return json.loads(response.text)
+
+    def get_content(self, uri, co3_context_token=None):
+        """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
+        for example, if you specify a uri of /incidents, the actual URL would be something like this:
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
+
+        Args:
+          uri
+          co3_context_token
+        Returns:
+          The raw value returned by the server for this resource.
+        Raises:
+          SimpleHTTPException - if an HTTP exception occurrs.
+        """
+
+        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
+
+        response = self.session.get(url, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
+
+        self._raise_if_error(response)
+
+        return response.content
 
     def post(self, uri, payload, co3_context_token = None):
         """
