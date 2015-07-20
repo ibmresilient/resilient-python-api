@@ -49,14 +49,15 @@ long_description = read('README')
 
 setup(
     name='co3',
-    version='1.1',
+    version='23.0.2',
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
     install_requires=[
       'argparse',
       'stomp.py>=4.0.12',
-      'requests>=2.3.0'
+      'requests>=2.6.0',
+      'requests-toolbelt>=0.4.0'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient API',
@@ -68,5 +69,3 @@ setup(
         'Programming Language :: Python',
         ]
 )
-
-

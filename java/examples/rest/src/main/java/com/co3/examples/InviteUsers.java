@@ -34,7 +34,7 @@ package com.co3.examples;
 import java.util.List;
 
 import org.apache.commons.cli.Options;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.co3.dto.json.GroupDTO;
 import com.co3.dto.json.InvitationDetailsDTO;

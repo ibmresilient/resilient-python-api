@@ -27,14 +27,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests 
+import requests
 import json
-import sys
-import traceback
 import ssl
+import mimetypes
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+
 
 class TLSHttpAdapter(HTTPAdapter):
     """
@@ -60,13 +61,14 @@ class SimpleHTTPException(Exception):
 
         self.response = response
 
-class SimpleClient:
+class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
     headers = {'content-type': 'application/json'}
     cookies = None
     org_id = None
     org_name = None
+    user_id = None
     base_url = 'https://app.resilientsystems.com/'
     verify = True
     proxies = None
@@ -142,13 +144,16 @@ class SimpleClient:
         self.cookies = {
             'JSESSIONID': response.cookies['JSESSIONID']
         }
+        self.user_id = session["user_id"]
         return session
 
-    def __make_headers(self, co3_context_token = None):
+    def __make_headers(self, co3_context_token = None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token
+        if isinstance(additional_headers, dict):
+            headers.update(additional_headers)
         return headers
 
     def get(self, uri, co3_context_token=None):
@@ -173,6 +178,29 @@ class SimpleClient:
         self._raise_if_error(response)
 
         return json.loads(response.text)
+
+    def get_content(self, uri, co3_context_token=None):
+        """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
+        for example, if you specify a uri of /incidents, the actual URL would be something like this:
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
+
+        Args:
+          uri
+          co3_context_token
+        Returns:
+          The raw value returned by the server for this resource.
+        Raises:
+          SimpleHTTPException - if an HTTP exception occurrs.
+        """
+
+        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
+
+        response = self.session.get(url, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
+
+        self._raise_if_error(response)
+
+        return response.content
 
     def post(self, uri, payload, co3_context_token = None):
         """
@@ -200,7 +228,26 @@ class SimpleClient:
         self._raise_if_error(response)
 
         return json.loads(response.text)
-   
+
+
+    def post_attachment(self, uri, filename, co3_context_token=None):
+        """Upload a file to the specified URI"""
+        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
+
+        mime_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+        with open(filename, 'rb') as filehandle:
+            multipart_data = {'file': (filename, filehandle, mime_type)}
+            encoder = MultipartEncoder(fields=multipart_data)
+
+            headers = self.__make_headers(co3_context_token, additional_headers={'content-type': encoder.content_type})
+            response = self.session.post(url, data=encoder, cookies=self.cookies, headers=headers, verify=self.verify)
+
+            self._raise_if_error(response)
+
+            return json.loads(response.text)
+
+
     def _get_put(self, uri, apply_func, co3_context_token):
         """Internal helper to do a get/apply/put loop (for situations where the put might return a 409/conflict status code"""
         url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
@@ -316,4 +363,3 @@ class SimpleClient:
         """
         if response.status_code != 200:
             raise SimpleHTTPException(response)
-
