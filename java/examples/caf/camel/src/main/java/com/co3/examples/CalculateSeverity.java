@@ -45,9 +45,8 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.DataFormat;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +62,9 @@ import com.co3.simpleclient.SimpleClient.ApplyChanges;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.*;
+
 
 /**
  * Example showing how you can use Apache Camel to process Resilient CAF messages.  This example
@@ -114,8 +116,8 @@ public class CalculateSeverity {
 			
             // If the Resilient server sends something we don't understand, let's ignore it.  Perhaps
             // we have an outdated DTO JAR.
-            mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            
+            mapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+
 			this.unmarshalType = unmarshalType;
 		}
 		
@@ -299,8 +301,8 @@ public class CalculateSeverity {
 	private void calcAndSetSeverity(ActionDataDTO actionData) {
 		// Determine if the incident is a Malware and/or Denial of Service incident.
 		boolean isMalware = false, isDoS = false;
-		
-		for (int itypeId : actionData.getIncident().getIncidentTypeIds()) {
+
+		for (Object itypeId : actionData.getIncident().getIncidentTypeIds()) {
 			// Use the typeInfo to get the value label.
 			String label = actionData.getTypeInfo().get("incident").getFields().get("incident_type_ids").getValues().get(String.valueOf(itypeId)).getLabel();
 		
@@ -311,7 +313,11 @@ public class CalculateSeverity {
 		// Get the severity_code field definition/metadata (which includes the valid values).
 		SimpleClient simpleClient = new SimpleClient(serverConfig);
 		FieldDefDTO field = getField(simpleClient, "incident", "severity_code");
-		Integer oldSeverity = actionData.getIncident().getSeverityCode();
+		// Severity code, like other 'object reference' data, can be expressed in various formats depending on context.
+		// In context of action data, and also when default GET from the REST API, it is an integer value e.g. 50.
+		// If obtained by REST GET with ?handle_format=names, the value will be a String e.g. "Low"
+		// If obtained by REST GET with ?handle_format=objects, the value will be a Map e.g. {name=Low, id=50}
+		Integer oldSeverity = (int)actionData.getIncident().getSeverityCode();
 		Integer newSeverity = oldSeverity;
 		
 		if (isDoS) {

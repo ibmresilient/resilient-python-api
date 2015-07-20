@@ -27,7 +27,7 @@ eclipse {
     }
 }
 
-project.ext.co3APIVersion = '19.0.480'
+project.ext.co3APIVersion = '23.0.848'
 project.ext.guavaVersion = '18.0'
 project.ext.httpclientVersion = '4.3.3'
 project.ext.slf4jVersion = '1.7.7'
