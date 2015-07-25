@@ -31,6 +31,7 @@ import requests
 import json
 import ssl
 import mimetypes
+import os
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -237,7 +238,7 @@ class SimpleClient(object):
         mime_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
 
         with open(filename, 'rb') as filehandle:
-            multipart_data = {'file': (filename, filehandle, mime_type)}
+            multipart_data = {'file': (os.path.basename(filename), filehandle, mime_type)}
             encoder = MultipartEncoder(fields=multipart_data)
 
             headers = self.__make_headers(co3_context_token, additional_headers={'content-type': encoder.content_type})
