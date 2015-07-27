@@ -42,7 +42,7 @@ from datetime import datetime
 
 
 class ReportOpts(dict):
-    """A dictionary of the commandline options and all the config 'query' options"""
+    """A dictionary of the commandline options"""
     def __init__(self, config, dictionary):
         super(ReportOpts, self).__init__()
         self.config = config
