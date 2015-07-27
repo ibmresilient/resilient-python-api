@@ -139,4 +139,7 @@ class ArgumentParser(argparse.ArgumentParser):
             password = getpass.getpass()
         args.password = password
 
+        if args.cafile:
+            args.cafile = os.path.expanduser(args.cafile)
+
         return args
