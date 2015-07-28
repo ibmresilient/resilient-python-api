@@ -126,17 +126,12 @@ def main():
     opts = parser.parse_args()
 
     # Create SimpleClient for a REST connection to the Resilient services
-    verify = True
-    if opts.get("cafile"):
-        verify = os.path.expanduser(opts["cafile"])
-        if verify.lower() == "false":
-            verify = False
     url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
 
     resilient_client = co3.SimpleClient(org_name=opts.get("org"),
                                         proxies=opts.get("proxy"),
                                         base_url=url,
-                                        verify=verify)
+                                        verify=opts.get("cafile") or True)
     userinfo = resilient_client.connect(opts["user"], opts["password"])
     logger.debug(json.dumps(userinfo, indent=2))
     if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:

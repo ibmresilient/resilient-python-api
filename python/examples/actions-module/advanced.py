@@ -47,14 +47,14 @@ class Co3Listener(object):
   def __init__(self, stomp_conn, co3_client):
     self.stomp_conn = stomp_conn
     self.co3_client = co3_client
-  
+
   def on_error(self, headers, message):
     print('received an error {}'.format(message))
 
   def on_message(self, headers, message):
     if message == "SHUTDOWN":
       print("Shutting down")
-      stomp_conn.disstomp_connect()
+      self.stomp_conn.disconnect()
       sys.exit(0)
 
     # Get the relevant headers.
@@ -97,7 +97,7 @@ def validate_cert(cert, hostname):
         return (False, str(ce))
 
     return (True, "Success")
- 
+
 def main(argv):
     # Parse out the command line options.
     parser = cafargparse.CafArgumentParser()
@@ -139,9 +139,8 @@ def main(argv):
     print("Waiting for messages...")
 
     # The listener gets called asynchronously, so we need to sleep here.
-    while 1: 
-        time.sleep(10) 
+    while 1:
+        time.sleep(10)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
- 
