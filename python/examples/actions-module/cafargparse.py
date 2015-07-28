@@ -35,12 +35,16 @@ class CafArgumentParser(co3.ArgumentParser):
     def __init__(self):
         super(CafArgumentParser, self).__init__()
 
+        default_stomp_host = self.getopt("resilient", "shost")
+        default_stomp_port = self.getopt("resilient", "sport") or self.DEFAULT_PORT
+
         self.add_argument('--shost',
+            default = default_stomp_host,
             help = "STOMP host name (default is to use the value specified in --host)")
 
-        self.add_argument('--sport', 
-            type = int, 
-            default = self.DEFAULT_PORT,
+        self.add_argument('--sport',
+            type = int,
+            default = default_stomp_port,
             help = "STOMP port number")
 
         self.add_argument('destination',
