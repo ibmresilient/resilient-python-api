@@ -65,16 +65,6 @@ class SimpleHTTPException(Exception):
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
-    headers = {'content-type': 'application/json'}
-    cookies = None
-    org_id = None
-    org_name = None
-    user_id = None
-    base_url = 'https://app.resilientsystems.com/'
-    verify = True
-    proxies = None
-    session = None
-
     def __init__(self, org_name = None, base_url = None, proxies = None, verify = None):
         """
         Args:
@@ -83,6 +73,13 @@ class SimpleClient(object):
           proxies - HTTP proxies to use, if any.
           verify - The name of a PEM file to use as the list of trusted CAs.
         """
+        self.headers = {'content-type': 'application/json'}
+        self.cookies = None
+        self.org_id = None
+        self.user_id = None
+        self.base_url = 'https://app.resilientsystems.com/'
+        self.verify = True
+
         self.org_name = org_name
         self.proxies = proxies
         if base_url:
