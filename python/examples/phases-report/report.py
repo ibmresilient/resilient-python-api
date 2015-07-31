@@ -132,7 +132,7 @@ def main():
                                         proxies=opts.get("proxy"),
                                         base_url=url,
                                         verify=opts.get("cafile") or True)
-    userinfo = resilient_client.connect(opts["user"], opts["password"])
+    userinfo = resilient_client.connect(opts["email"], opts["password"])
     logger.debug(json.dumps(userinfo, indent=2))
     if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:
         logger.error("User is a member of multiple organizations; please specify one.")

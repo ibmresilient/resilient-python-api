@@ -32,7 +32,7 @@
 """Parser for commandline arguments and config properties"""
 
 import sys
-import argparse
+import co3
 import getpass
 if sys.version_info.major < 3:
     import ConfigParser as configparser

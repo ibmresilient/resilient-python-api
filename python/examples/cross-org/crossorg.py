@@ -66,12 +66,11 @@ def main():
     opts = parser.parse_args()
 
     # Create SimpleClient for a REST connection to the Resilient services
-    verify = opts.get("cafile") or True
     url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
     resilient_client = co3.SimpleClient(org_name=opts.get("org"),
                                         proxies=opts.get("proxy"),
                                         base_url=url,
-                                        verify=verify)
+                                        verify=opts.get("cafile") or True)
     userinfo = resilient_client.connect(opts["email"], opts["password"])
 
     logger.debug(json.dumps(userinfo, indent=2))
@@ -90,7 +89,7 @@ def main():
     dest_resilient_client = co3.SimpleClient(org_name=opts.get("destorg"),
                                              proxies=opts.get("destproxy"),
                                              base_url=dest_url,
-                                             verify=verify)
+                                             verify=opts.get("cafile") or True)
     dest_resilient_client.connect(opts["destemail"], opts["destpassword"])
 
 
@@ -103,11 +102,8 @@ def main():
     conn = stomp.Connection(host_and_ports=[(host_port)], try_loopback_connect=False)
 
     # Give the STOMP library our TLS/SSL configuration.
-    cafile = None
-    if opts.get("cafile"):
-        cafile = os.path.expanduser(opts.get("cafile"))
     conn.set_ssl(for_hosts=[host_port],
-                 ca_certs=cafile,
+                 ca_certs=opts.get("cafile"),
                  ssl_version=ssl.PROTOCOL_TLSv1,
                  cert_validator=validate_cert)
 
