@@ -36,7 +36,10 @@ import sys
 import codecs
 import csv
 import collections
-import StringIO
+if sys.version_info.major < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
 def wrap_io(stream):
     """Wrap the stream to always always output in utf-8"""
@@ -120,7 +123,7 @@ def find_field(client, fieldname, objecttype="incident"):
 
 def list_fields_csv(client, objecttype="incident"):
     """Print a list of fields, in CSV format"""
-    iostr = StringIO.StringIO()
+    iostr = StringIO()
     writer = None
     t = client.get("/types/{}/fields".format(objecttype))
     for field in sorted(t, key=apiname):
