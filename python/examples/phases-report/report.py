@@ -37,6 +37,7 @@ from __future__ import absolute_import
 import co3
 import json
 import os
+import sys
 import logging
 import time
 import csv
@@ -49,6 +50,37 @@ FACTOR = (60*60*1000)
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class ReportOpts(dict):
+    """A dictionary of the commandline options"""
+    def __init__(self, config, dictionary):
+        super(ReportOpts, self).__init__()
+        self.config = config
+        if dictionary is not None:
+            self.update(dictionary)
+
+class ReportArgumentParser(co3.ArgumentParser):
+    """Helper to parse command line arguments."""
+
+    def __init__(self, config_file="report.config"):
+        super(ReportArgumentParser, self).__init__(config_file)
+
+        self.add_argument("--since",
+                          type=valid_date,
+                          help="Only report incidents created since this date (YYYY-MM-DD)")
+
+
+    def parse_args(self, args=None, namespace=None):
+        args = super(ReportArgumentParser, self).parse_args(args, namespace)
+        return ReportOpts(self.config, vars(args))
+
+def valid_date(s):
+    try:
+        return datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        msg = "Date must be YYYY-MM-DD: '{0}'.".format(s)
+        raise argparse.ArgumentTypeError(msg)
 
 def get_json_time(dt):
     """Epoch timestamp from datetime"""

@@ -63,7 +63,7 @@ class ParkActions(object):
 
         # Initialize a SOAP client for the Parks Service
         park_wsdl = park_url + "?wsdl"
-        logging.info(park_wsdl)
+        logger.info(park_wsdl)
         self.parks_service = suds.client.Client(park_wsdl,
                                                 location=park_url,
                                                 headers=dict(),
@@ -74,7 +74,7 @@ class ParkActions(object):
     def park_search(self, park_code):
         """Search for park code, return all park info"""
         park_info = self.parks_service.service.GetParkDetails(park_code)
-        logging.info(park_info)
+        logger.info(park_info)
 
         # Copy from the suds type into a dict() for easier handling
         park_dict = dict()
@@ -86,7 +86,7 @@ class ParkActions(object):
 
     def handle_message(self, message, context_token):
         """Handle a message from the Resilient queue"""
-        logging.debug("Received message\n%s", json.dumps(message, indent=2))
+        logger.debug("Received message\n%s", json.dumps(message, indent=2))
 
         # Validate the type of message
         object_type = message["object_type"]
@@ -97,7 +97,7 @@ class ParkActions(object):
         incident = message["incident"]
         incident_id = incident['id']
 
-        logging.info('Received action %s for incident %s: type=%s; name=%s',
+        logger.info('Received action %s for incident %s: type=%s; name=%s',
                      action_id, incident_id, action_type, incident['name'])
 
         park_code = None
@@ -109,10 +109,10 @@ class ParkActions(object):
             park_code_id = message["incident"]["properties"].get("park")
             park_code = message["type_info"]["incident"]["fields"]["park"]["values"][str(park_code_id)]["label"]
 
-        logging.info("Park code: %s", park_code)
+        logger.info("Park code: %s", park_code)
         park_info = self.park_search(park_code)
 
-        # logging.info('Uploading results as %s', result_file)
+        # logger.info('Uploading results as %s', result_file)
         # self.client.post_attachment('/incidents/{}/attachments'.format(incident_id), result_file)
         # os.remove(result_file)
 
@@ -144,10 +144,10 @@ class ParkActions(object):
         pinfo = formatted_info(park_info)
         update = (incident["properties"]["park_name"] != pinfo["park_name"]) or (incident["properties"]["park_bears"] != pinfo["park_bears"]) or (incident["properties"]["park"] != pinfo["park"])
         if update:
-            logging.info("Updated")
+            logger.info("Updated")
             self.client.get_put("/incidents/{}".format(incident["id"]), update_func)
         else:
-            logging.info("No change")
+            logger.info("No change")
 
 
 def test():

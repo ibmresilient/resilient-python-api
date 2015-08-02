@@ -41,8 +41,8 @@ import logging
 import time
 import stomp
 import ssl
-from crossorg_argparse import CrossOrgArgumentParser
 from stomp_listener import StompListener
+from crossorg_argparse import CrossOrgArgumentParser
 from crossorg_actions import CrossOrgActions
 
 
@@ -62,8 +62,7 @@ def main():
     """main"""
 
     # Parse commandline arguments
-    parser = CrossOrgArgumentParser()
-    opts = parser.parse_args()
+    opts = CrossOrgArgumentParser().parse_args()
 
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
