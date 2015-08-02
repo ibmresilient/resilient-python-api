@@ -64,7 +64,7 @@ class CrossOrgActions(object):
 
     def handle_message(self, message, context_token):
         """Handle a message from the Resilient queue"""
-        logging.debug("Received message\n%s", json.dumps(message, indent=2))
+        logger.debug("Received message\n%s", json.dumps(message, indent=2))
 
         # Validate the type of message
         object_type = message["object_type"]
@@ -76,8 +76,8 @@ class CrossOrgActions(object):
         incident_id = incident['id']
         incident = self.src_client.get("/incidents/{}?handle_format=names".format(incident_id))
 
-        logging.info('Received action %s for incident %s: type=%s; name=%s',
-                     action_id, incident_id, action_type, incident['name'])
+        logger.info('Received action %s for incident %s: type=%s; name=%s',
+                    action_id, incident_id, action_type, incident['name'])
 
         self.new_incident_from_artifact(incident, message)
 

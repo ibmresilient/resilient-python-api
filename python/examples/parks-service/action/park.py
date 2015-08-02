@@ -41,8 +41,8 @@ import logging
 import time
 import stomp
 import ssl
-from park_argparse import ParkArgumentParser
 from stomp_listener import StompListener
+from park_argparse import ParkArgumentParser
 from park_actions import ParkActions
 
 
@@ -62,8 +62,7 @@ def main():
     """main"""
 
     # Parse commandline arguments
-    parser = ParkArgumentParser()
-    opts = parser.parse_args()
+    opts = ParkArgumentParser().parse_args()
 
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
