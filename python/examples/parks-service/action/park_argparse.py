@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
@@ -27,30 +29,46 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""Parser for commandline arguments and config properties"""
+
 import co3
 
-class CafArgumentParser(co3.ArgumentParser):
-    DEFAULT_PORT = 65001
+
+class ParkOpts(dict):
+    """A dictionary of the commandline options"""
+    def __init__(self, config, dictionary):
+        super(ParkOpts, self).__init__()
+        self.config = config
+        if dictionary is not None:
+            self.update(dictionary)
+
+
+class ParkArgumentParser(co3.ArgumentParser):
+    """Helper to parse command line arguments."""
+
+    DEFAULT_STOMP_PORT = 65001
 
     def __init__(self):
-        super(CafArgumentParser, self).__init__()
+        super(ParkArgumentParser, self).__init__(config_file="park.config")
 
-        self.add_argument('--shost',
-            help = "STOMP host name (default is to use the value specified in --host)")
+        default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
+        default_queue = self.getopt("resilient", "queue")
 
-        self.add_argument('--sport', 
-            type = int, 
-            default = self.DEFAULT_PORT,
-            help = "STOMP port number")
+        default_park_url = self.getopt("park", "url")
 
-        self.add_argument('destination',
-            nargs = 1,
-            help = "The destination to connect to (e.g. actions.201.test)")
+        self.add_argument("--stomp-port",
+                          type=int,
+                          default=default_stomp_port,
+                          help="Resilient server STOMP port number")
 
-    def parse_args(self):
-        args = super(CafArgumentParser, self).parse_args()
+        self.add_argument("--queue",
+                          default=default_queue,
+                          help="Message destination API name")
 
-        if not args.shost:
-            args.shost = args.host
+        self.add_argument("--park",
+                          default=default_park_url,
+                          help="Parks Service URL")
 
-        return args
+    def parse_args(self, args=None, namespace=None):
+        args = super(ParkArgumentParser, self).parse_args(args, namespace)
+        return ParkOpts(self.config, vars(args))
