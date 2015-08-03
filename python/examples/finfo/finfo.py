@@ -36,7 +36,11 @@ import sys
 import codecs
 import csv
 import collections
-import StringIO
+if sys.version_info.major < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
 
 def wrap_io(stream):
     """Wrap the stream to always always output in utf-8"""
@@ -57,21 +61,28 @@ class FinfoArgumentParser(resilient.ArgumentParser):
         super(FinfoArgumentParser, self).__init__()
 
         self.add_argument('fieldname',
-            nargs = "?",
-            help = "The field name.")
+                          nargs="?",
+                          help="The field name.")
 
         self.add_argument('--type',
-            default = "incident",
-            choices = ["incident", "task", "artifact", "milestone", "attachment", "note", "actioninvocation"],
-            help = "The object type (defaults to 'incident')")
+                          default="incident",
+                          choices=["incident",
+                                   "task",
+                                   "artifact",
+                                   "milestone",
+                                   "attachment",
+                                   "note",
+                                   "actioninvocation"],
+                          help="The object type (defaults to 'incident')")
 
         self.add_argument('--json',
-            action = 'store_true',
-            help = "Print the field definition in JSON format.")
+                          action='store_true',
+                          help="Print the field definition in JSON format.")
 
         self.add_argument('--csv',
-            action = 'store_true',
-            help = "Print the field lists in CSV format.")
+                          action='store_true',
+                          help="Print the field lists in CSV format.")
+
 
 def apiname(field):
     """The full (qualified) programmatic name of a field"""
@@ -81,9 +92,11 @@ def apiname(field):
         fieldname = field["name"]
     return fieldname
 
+
 def print_json(field):
     """Print the definition of one field, in JSON"""
     print(json.dumps(field, indent=4))
+
 
 def print_details(field):
     """Print the definition of one field, in readable text"""
@@ -101,7 +114,7 @@ def print_details(field):
     if "values" in field:
         if field["values"]:
             print("Values:")
-            v = sorted(field["values"], key=lambda x : x["value"])
+            v = sorted(field["values"], key=lambda x: x["value"])
             for value in v:
                 default_flag = " "
                 if value["default"]:
@@ -111,6 +124,7 @@ def print_details(field):
                 label = value["label"]
                 print (u'{} {}={}'.format(default_flag, value["value"], label))
 
+
 def find_field(client, fieldname, objecttype="incident"):
     trimname = fieldname[fieldname.rfind(".")+1:]
     t = client.get("/types/{}/fields".format(objecttype))
@@ -118,9 +132,10 @@ def find_field(client, fieldname, objecttype="incident"):
         if field["name"] == trimname:
             return field
 
+
 def list_fields_csv(client, objecttype="incident"):
     """Print a list of fields, in CSV format"""
-    iostr = StringIO.StringIO()
+    iostr = StringIO()
     writer = None
     t = client.get("/types/{}/fields".format(objecttype))
     for field in sorted(t, key=apiname):
@@ -137,6 +152,7 @@ def list_fields_csv(client, objecttype="incident"):
         writer.writerow(columns)
     print(iostr.getvalue())
 
+
 def list_fields(client, objecttype="incident"):
     """Print a list of fields, in readable text"""
     print("Fields:")
@@ -151,7 +167,7 @@ def list_fields(client, objecttype="incident"):
         print(u"{} {}".format(required_flag, apiname(field)))
 
 
-def main(argv):
+def main():
     """Main"""
     # Parse commandline arguments
     parser = FinfoArgumentParser()
@@ -186,5 +202,6 @@ def main(argv):
         print(u"Field '{}' was not found.".format(opts.fieldname))
         exit(1)
 
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
