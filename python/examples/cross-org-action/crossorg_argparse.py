@@ -31,7 +31,6 @@
 
 """Parser for commandline arguments and config properties"""
 
-import sys
 import co3
 
 
@@ -42,6 +41,7 @@ class CrossOrgOpts(dict):
         self.config = config
         if dictionary is not None:
             self.update(dictionary)
+
 
 class CrossOrgArgumentParser(co3.ArgumentParser):
     """Helper to parse command line arguments."""
@@ -72,7 +72,6 @@ class CrossOrgArgumentParser(co3.ArgumentParser):
                           default=default_queue,
                           help="Message destination API name")
 
-
         self.add_argument("--destemail",
                           default=default_destemail,
                           help="The email address to use to authenticate to the destination Resilient server.")
@@ -95,8 +94,6 @@ class CrossOrgArgumentParser(co3.ArgumentParser):
                           default=default_destorg,
                           required=default_destorg is None,
                           help="The name of the destination organization.")
-
-
 
     def parse_args(self, args=None, namespace=None):
         args = super(CrossOrgArgumentParser, self).parse_args(args, namespace)

@@ -70,7 +70,6 @@ class ParkActions(object):
                                                 cache=suds.cache.NoCache(),
                                                 prefixes=True)
 
-
     def park_search(self, park_code):
         """Search for park code, return all park info"""
         park_info = self.parks_service.service.GetParkDetails(park_code)
@@ -82,7 +81,6 @@ class ParkActions(object):
             park_dict[name] = value
 
         return park_dict
-
 
     def handle_message(self, message, context_token):
         """Handle a message from the Resilient queue"""
@@ -98,7 +96,7 @@ class ParkActions(object):
         incident_id = incident['id']
 
         logger.info('Received action %s for incident %s: type=%s; name=%s',
-                     action_id, incident_id, action_type, incident['name'])
+                    action_id, incident_id, action_type, incident['name'])
 
         park_code = None
         if action_type == "Artifact":
@@ -129,7 +127,7 @@ class ParkActions(object):
             if park_info.get("hasPolarBear"):
                 park_bears_list.append("Polar")
             park_bears = ",".join(park_bears_list)
-            if park_bears == "": park_bears = "None"
+            park_bears = park_bears or "None"
             return {"park": park_code, "park_name": park_name, "park_bears": park_bears}
 
         def update_with_park_info(incident, park_info):
@@ -139,13 +137,14 @@ class ParkActions(object):
             incident["properties"]["park_name"] = info["park_name"]
             incident["properties"]["park_bears"] = info["park_bears"]
 
-        update_func = lambda incident: update_with_park_info(incident, park_info)
-
         pinfo = formatted_info(park_info)
-        update = (incident["properties"]["park_name"] != pinfo["park_name"]) or (incident["properties"]["park_bears"] != pinfo["park_bears"]) or (incident["properties"]["park"] != pinfo["park"])
+        update = (incident["properties"]["park_name"] != pinfo["park_name"]) \
+            or (incident["properties"]["park_bears"] != pinfo["park_bears"]) \
+            or (incident["properties"]["park"] != pinfo["park"])
         if update:
             logger.info("Updated")
-            self.client.get_put("/incidents/{}".format(incident["id"]), update_func)
+            self.client.get_put("/incidents/{}".format(incident["id"]),
+                                lambda incident: update_with_park_info(incident, park_info))
         else:
             logger.info("No change")
 

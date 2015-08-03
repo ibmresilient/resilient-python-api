@@ -32,8 +32,8 @@
 """Basic example with Actions Module; just subscribes to messages."""
 
 from __future__ import print_function
+
 import sys
-import os
 import stomp
 import ssl
 import json
@@ -41,8 +41,6 @@ import time
 import co3
 import cafargparse
 import logging
-
-logging.basicConfig()
 
 
 class Co3Listener(object):
@@ -70,12 +68,13 @@ class Co3Listener(object):
         # The metadata for the severity field is stored at:
         #
         #  json_obj.type_info.incident.fields.severity_code.values.ID
-        sev_field = json_obj['type_info'] \
-                            ['incident'] \
-                            ['fields'] \
-                            ['severity_code']
+        sev_field = json_obj['type_info']['incident']['fields']['severity_code']
 
-        text = sev_field['values'][str(sev_id)]['label']
+        sev_value = sev_field['values'].get(str(sev_id))
+        if sev_value:
+            text = sev_value['label']
+        else:
+            text = str(sev_id)
 
         # Pull out incident object.
         inc = json_obj['incident']
@@ -102,7 +101,7 @@ def validate_cert(cert, hostname):
     return (True, "Success")
 
 
-def main(argv):
+def main():
     # Parse out the command line options.
     parser = cafargparse.CafArgumentParser()
     opts = parser.parse_args()
@@ -135,5 +134,7 @@ def main(argv):
     while 1:
         time.sleep(10)
 
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    logging.basicConfig(level=logging.INFO)
+    main()

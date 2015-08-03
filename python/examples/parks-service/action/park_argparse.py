@@ -33,6 +33,7 @@
 
 import co3
 
+
 class ParkOpts(dict):
     """A dictionary of the commandline options"""
     def __init__(self, config, dictionary):
@@ -40,6 +41,7 @@ class ParkOpts(dict):
         self.config = config
         if dictionary is not None:
             self.update(dictionary)
+
 
 class ParkArgumentParser(co3.ArgumentParser):
     """Helper to parse command line arguments."""
