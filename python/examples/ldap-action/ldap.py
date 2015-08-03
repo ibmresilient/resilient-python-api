@@ -89,7 +89,6 @@ class LdapArgumentParser(co3.ArgumentParser):
                           default=default_queue,
                           help="Message destination API name")
 
-
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
         args = super(LdapArgumentParser, self).parse_args(args, namespace)
@@ -130,10 +129,8 @@ def main():
     else:
         org_id = userinfo["orgs"][0]["id"]
 
-
     # Class instance that will do the work
     worker = LdapActions(opts, resilient_client)
-
 
     # Set up a STOMP connection to the Resilient action services
     host_port = (opts["host"], opts["stomp_port"])

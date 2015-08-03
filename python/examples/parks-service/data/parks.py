@@ -59,7 +59,7 @@ for park in sorted(data.keys()):
         "properties": None,
         "label": park
         })
-fielddef["values"] = fieldvalues;
+fielddef["values"] = fieldvalues
 
 with open("../action/fielddef_park.json", 'wb') as temp:
     temp.write(json.dumps(fielddef, indent=4))

@@ -46,7 +46,7 @@ from datetime import datetime
 from calendar import timegm
 
 # Report times in hours, not milliseconds
-FACTOR = (60*60*1000)
+FACTOR = (60 * 60 * 1000)
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,6 +60,7 @@ class ReportOpts(dict):
         if dictionary is not None:
             self.update(dictionary)
 
+
 class ReportArgumentParser(co3.ArgumentParser):
     """Helper to parse command line arguments."""
 
@@ -70,10 +71,10 @@ class ReportArgumentParser(co3.ArgumentParser):
                           type=valid_date,
                           help="Only report incidents created since this date (YYYY-MM-DD)")
 
-
     def parse_args(self, args=None, namespace=None):
         args = super(ReportArgumentParser, self).parse_args(args, namespace)
         return ReportOpts(self.config, vars(args))
+
 
 def valid_date(s):
     try:
@@ -82,9 +83,11 @@ def valid_date(s):
         msg = "Date must be YYYY-MM-DD: '{0}'.".format(s)
         raise argparse.ArgumentTypeError(msg)
 
+
 def get_json_time(dt):
     """Epoch timestamp from datetime"""
     return timegm(dt.utctimetuple()) * 1000
+
 
 def all_incidents(resilient_client, created_since_date):
     """Yield all the incidents"""
@@ -92,12 +95,13 @@ def all_incidents(resilient_client, created_since_date):
     # But caution: it only returns the partial incident DTO.
     conditions = [{"field_name": "inc_training", "method": "equals", "value": False}]
     if created_since_date:
-        conditions.append({"field_name": "create_date", "method": "gt", "value":get_json_time(created_since_date)})
+        conditions.append({"field_name": "create_date", "method": "gt", "value": get_json_time(created_since_date)})
     query = {"filters": [{"conditions": conditions}]}
     logger.debug(json.dumps(query, indent=2))
     incidents = resilient_client.post("/incidents/query", query)
     for incident in incidents:
         yield incident
+
 
 def query_newsfeed(resilient_client, incident_id, query):
     """Yield newsfeed items that match a query"""
@@ -108,6 +112,7 @@ def query_newsfeed(resilient_client, incident_id, query):
     logger.debug(json.dumps(items, indent=2))
     for item in items:
         yield item
+
 
 def phases_report(opts, resilient_client):
     """Produce the report of time-on-phase for every incident"""

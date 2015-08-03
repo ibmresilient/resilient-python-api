@@ -53,7 +53,6 @@ LDAP_AUTH_TYPES = {"ANONYMOUS": ldap3.ANONYMOUS,
                    "NTLM": ldap3.NTLM}
 
 
-
 def update_with_result(artifact, result):
     """Function to update the artifact, adding result to its description"""
     desc = artifact["description"] or ""
@@ -77,11 +76,10 @@ class LdapActions(object):
         self.ldap_port = int(self.opts["ldap"]["port"] or LDAP_DEFAULT_PORT)
         self.ldap_user = self.opts["ldap"]["user"]
         self.ldap_password = self.opts["ldap"]["password"]
-        self.ldap_ssl = self.opts["ldap"]["ssl"] == "True" # anything else is false
+        self.ldap_ssl = self.opts["ldap"]["ssl"] == "True"  # anything else is false
         self.ldap_auth = LDAP_AUTH_TYPES[self.opts["ldap"]["auth"] or "ANONYMOUS"]
         self.ldap_search_base = self.opts["ldap"]["search_base"]
         self.ldap_search_filter = self.opts["ldap"]["search_filter"]
-
 
     def handle_message(self, message, context_token):
         """Handle a message from the Resilient queue"""
@@ -117,8 +115,9 @@ class LdapActions(object):
         logger.debug(result)
         if len(result) > 0:
             # Update the artifact description
-            update_fn = lambda artifact: update_with_result(artifact, result)
-            self.client.get_put("/incidents/{}/artifacts/{}".format(incident_id, artifact_id), update_fn, context_token)
+            self.client.get_put("/incidents/{}/artifacts/{}".format(incident_id, artifact_id),
+                                lambda artifact: update_with_result(artifact, result),
+                                context_token)
 
     def ldap_search(self, artifact_type_name, artifact_value):
         """Generates strings resulting from the LDAP search"""
@@ -153,7 +152,7 @@ class LdapActions(object):
                         attributes=attribs)
 
             entries = conn.entries
-            if entries == None:
+            if entries is None:
                 logger.error("No results")
             else:
                 yield json.dumps(json.loads(conn.response_to_json())["entries"])

@@ -61,7 +61,6 @@ class CrossOrgActions(object):
         self.src_client = resilient_client
         self.dest_client = dest_resilient_client
 
-
     def handle_message(self, message, context_token):
         """Handle a message from the Resilient queue"""
         logger.debug("Received message\n%s", json.dumps(message, indent=2))
@@ -80,7 +79,6 @@ class CrossOrgActions(object):
                     action_id, incident_id, action_type, incident['name'])
 
         self.new_incident_from_artifact(incident, message)
-
 
     def new_incident_from_artifact(self, incident, message=None):
         """Generate a new incident"""
@@ -153,7 +151,8 @@ class CrossOrgActions(object):
         logger.info("Created new artifact: %s on incident: %s", new_artifact, new_incident["id"])
 
         # Add a milestone to the original incident
-        mdesc = "Artifact '{}' was escalated to a new incident ({}) in '{}'".format(artifact_value, new_incident["id"], self.opts["destorg"])
+        mdesc = "Artifact '{}' was escalated to a new incident ({}) in '{}'" \
+            .format(artifact_value, new_incident["id"], self.opts["destorg"])
         tmp_milestone = {"date": now_ts,
                          "description": mdesc,
                          "title": "Artifact '{}' escalated".format(artifact_value)}
@@ -177,7 +176,6 @@ class CrossOrgActions(object):
 
         # Leave the original incident's fields unchanged
         return incident
-
 
     def copy_attachment(self, attachment, from_incident, to_incident):
         attname = attachment["name"]

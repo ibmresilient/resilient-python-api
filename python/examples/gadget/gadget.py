@@ -29,6 +29,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import sys
 import json
 from datetime import datetime
@@ -38,41 +40,43 @@ import logging
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
 
+
 class ExampleArgumentParser(co3.ArgumentParser):
     def __init__(self):
         super(ExampleArgumentParser, self).__init__()
 
-        self.add_argument('--list', 
-            action = 'store_true',
-            help = "Prints the list of incidents (including IDs and names).  See also --query.")
+        self.add_argument('--list',
+                          action='store_true',
+                          help="Prints the list of incidents (including IDs and names).  See also --query.")
 
         self.add_argument('--query',
-            help = "A template JSON file that contains a QueryDTO to limit and sort the results.")
+                          help="A template JSON file that contains a QueryDTO to limit and sort the results.")
 
         self.add_argument('--create',
-            help = 'Creates an incident using the specified JSON file as a template. '
-                   'Note that the "discovered date" is set to the current time.  Also '
-                   'note that the incident name and description are included directly '
-                   'in the template file.  The JSON data of the created incident is '
-                   'written to stdout.')
+                          help='Creates an incident using the specified JSON file as a template. '
+                               'Note that the "discovered date" is set to the current time.  Also '
+                               'note that the incident name and description are included directly '
+                               'in the template file.  The JSON data of the created incident is '
+                               'written to stdout.')
 
         self.add_argument('--attach',
-            nargs='*',
-            help = 'Specifies file(s) to attach when creating an incident.')
+                          nargs='*',
+                          help='Specifies file(s) to attach when creating an incident.')
 
         self.add_argument('--get',
-            help = "Generically get JSON at the specified URI.  The JSON data of the"
-                   "result is written to stdout.")
+                          help="Generically get JSON at the specified URI.  The JSON data of the"
+                               "result is written to stdout.")
 
         self.add_argument('--post',
-            nargs = 2,
-            help = "Generically post the specified JSON file to the specified URI.  The "
-                   "JSON data of the created object is written to stdout.  The first argument" 
-                   "for this option is the URI to send the POST.  The second argument is "
-                   "a template JSON file.")
+                          nargs=2,
+                          help="Generically post the specified JSON file to the specified URI.  The "
+                               "JSON data of the created object is written to stdout.  The first argument"
+                               "for this option is the URI to send the POST.  The second argument is "
+                               "a template JSON file.")
 
         self.add_argument('--delete',
-            help = "Generically delete the specified URI.")
+                          help="Generically delete the specified URI.")
+
 
 def show_incident_list(client, query_template_file_name):
     incidents = None
@@ -81,7 +85,7 @@ def show_incident_list(client, query_template_file_name):
 
         query = json.loads(file.read())
 
-        # Get the list of incidents 
+        # Get the list of incidents
         incidents = client.post('/incidents/query', query)
     else:
         incidents = client.get('/incidents')
@@ -90,15 +94,17 @@ def show_incident_list(client, query_template_file_name):
     for inc in incidents:
         print('{}: {}'.format(inc['id'], inc['name']))
 
+
 def get_json_time(dt):
     return timegm(dt.utctimetuple()) * 1000
+
 
 def create_incident(client, template_file_name, attachments):
     file = open(template_file_name, 'r')
 
     template = json.loads(file.read())
 
-    # Discovered date, which is required (and can't really be hardcoded 
+    # Discovered date, which is required (and can't really be hardcoded
     # in the template).
     template['discovered_date'] = get_json_time(datetime.utcnow())
 
@@ -120,6 +126,7 @@ def generic_get(client, uri):
     print('Response:  ')
     print(json.dumps(incident, indent=4))
 
+
 def generic_post(client, uri, template_file_name):
     file = open(template_file_name, 'r')
 
@@ -130,10 +137,12 @@ def generic_post(client, uri, template_file_name):
     print('Response:  ')
     print(json.dumps(incident, indent=4))
 
+
 def generic_delete(client, uri):
     print(client.delete(uri))
 
-def main(argv):
+
+def main():
     parser = ExampleArgumentParser()
 
     co3_opts = parser.parse_args()
@@ -144,15 +153,15 @@ def main(argv):
         verify = co3_opts.cafile
 
     url = "https://{}:{}".format(co3_opts.host, co3_opts.port)
-    
+
     client = co3.SimpleClient(org_name=co3_opts.org, proxies=co3_opts.proxy, base_url=url, verify=verify)
 
     client.connect(co3_opts.email, co3_opts.password)
- 
+
     if co3_opts.create:
         create_incident(client, co3_opts.create, co3_opts.attach)
 
-    if co3_opts.list: 
+    if co3_opts.list:
         show_incident_list(client, co3_opts.query)
 
     if co3_opts.get:
@@ -164,5 +173,6 @@ def main(argv):
     if co3_opts.delete:
         generic_delete(client, co3_opts.delete)
 
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

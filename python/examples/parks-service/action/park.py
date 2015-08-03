@@ -49,6 +49,7 @@ from park_actions import ParkActions
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
     try:
@@ -83,10 +84,8 @@ def main():
     else:
         org_id = userinfo["orgs"][0]["id"]
 
-
     # Make a ParkActions that will do the work
     worker = ParkActions(opts, resilient_client, opts.get("park"))
-
 
     # Set up a STOMP connection to the Resilient action services
     host_port = (opts["host"], opts["stomp_port"])

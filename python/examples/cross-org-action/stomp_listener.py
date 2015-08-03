@@ -92,7 +92,7 @@ class StompListener(object):
         except Exception as exc:
             logger.exception("Exception in handler")
             message = "ERROR: {}".format(exc)
-            status = 1 # error
+            status = 1  # error
 
         # Reply with a status message incidating error or completion
         reply_message = json.dumps({"message_type": status, "message": message, "complete": True})

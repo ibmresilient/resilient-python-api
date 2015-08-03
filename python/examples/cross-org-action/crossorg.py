@@ -49,6 +49,7 @@ from crossorg_actions import CrossOrgActions
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
     try:
@@ -91,10 +92,8 @@ def main():
                                              verify=opts.get("cafile") or True)
     dest_resilient_client.connect(opts["destemail"], opts["destpassword"])
 
-
     # Class instance that will do the work
     worker = CrossOrgActions(opts, resilient_client, dest_resilient_client)
-
 
     # Set up a STOMP connection to the Resilient action services
     host_port = (opts["host"], opts["stomp_port"])
