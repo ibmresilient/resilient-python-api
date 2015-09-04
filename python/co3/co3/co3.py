@@ -113,7 +113,6 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-
         self.authdata = {
             'email': email,
             'password': password
@@ -121,6 +120,7 @@ class SimpleClient(object):
         return self._connect()
 
     def _connect(self):
+        """Establish a session"""
         response = self.session.post("{0}/rest/session".format(self.base_url),
                                      data=json.dumps(self.authdata),
                                      proxies=self.proxies,
@@ -185,7 +185,6 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-
         url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
         response = self._execute_request(self.session.get,
                                          url,

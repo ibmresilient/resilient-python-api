@@ -29,6 +29,7 @@
 
 import ssl
 
+
 # Additional certificate validation function.  Called by the Python SSL library.
 #
 # cert is the certificate as returned by SSLSocket.getpeercert().
