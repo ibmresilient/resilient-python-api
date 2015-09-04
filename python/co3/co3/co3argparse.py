@@ -34,7 +34,7 @@ import sys
 import argparse
 import getpass
 import logging
-if sys.version_info.major < 3:
+if sys.version_info[0] < 3:
     import ConfigParser as configparser
 else:
     import configparser

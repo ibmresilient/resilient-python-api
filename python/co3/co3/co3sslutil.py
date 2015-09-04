@@ -56,5 +56,4 @@ def match_hostname(cert, hostname):
                     if value == hostname:
                         return
 
-    raise Exception("{} does not match the expected value in the certificate {}".format(hostname, str(names)))
-
+    raise Exception("{0} does not match the expected value in the certificate {1}".format(hostname, str(names)))

@@ -92,7 +92,7 @@ def show_incident_list(client, query_template_file_name):
 
     # Print the incident names
     for inc in incidents:
-        print('{}: {}'.format(inc['id'], inc['name']))
+        print('{0}: {1}'.format(inc['id'], inc['name']))
 
 
 def get_json_time(dt):
@@ -115,7 +115,7 @@ def create_incident(client, template_file_name, attachments):
     incident_id = incident['id']
     if isinstance(attachments, list) and len(attachments) > 0:
         for attachment in attachments:
-            upload = client.post_attachment('/incidents/{}/attachments'.format(incident_id), attachment)
+            upload = client.post_attachment('/incidents/{0}/attachments'.format(incident_id), attachment)
             print('Created attachment:  ')
             print(json.dumps(upload, indent=4))
 
@@ -148,11 +148,9 @@ def main():
     co3_opts = parser.parse_args()
 
     # Create SimpleClient and connect
-    verify = True
-    if co3_opts.cafile:
-        verify = co3_opts.cafile
+    verify = co3_opts.cafile or True
 
-    url = "https://{}:{}".format(co3_opts.host, co3_opts.port)
+    url = "https://{0}:{1}".format(co3_opts.host, co3_opts.port)
 
     client = co3.SimpleClient(org_name=co3_opts.org, proxies=co3_opts.proxy, base_url=url, verify=verify)
 
