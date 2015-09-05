@@ -31,7 +31,6 @@
 
 from __future__ import print_function
 
-import sys
 import json
 from datetime import datetime
 from calendar import timegm
@@ -74,6 +73,13 @@ class ExampleArgumentParser(co3.ArgumentParser):
                                "for this option is the URI to send the POST.  The second argument is "
                                "a template JSON file.")
 
+        self.add_argument('--update',
+                          nargs=2,
+                          help="Update the resource at the specified URI using the specified JSON file."
+                               "The JSON data of the updated object is written to stdout.  The first argument"
+                               "for this option is the URI to GET, update, then PUT.  The second argument is"
+                               "a JSON file that will be applied in the update.")
+
         self.add_argument('--delete',
                           help="Generically delete the specified URI.")
 
@@ -81,12 +87,10 @@ class ExampleArgumentParser(co3.ArgumentParser):
 def show_incident_list(client, query_template_file_name):
     incidents = None
     if query_template_file_name:
-        file = open(query_template_file_name, 'r')
-
-        query = json.loads(file.read())
-
-        # Get the list of incidents
-        incidents = client.post('/incidents/query', query)
+        with open(query_template_file_name, 'r') as template_file:
+            query = json.loads(template_file.read())
+            # Get the list of incidents
+            incidents = client.post('/incidents/query', query)
     else:
         incidents = client.get('/incidents')
 
@@ -100,9 +104,8 @@ def get_json_time(dt):
 
 
 def create_incident(client, template_file_name, attachments):
-    file = open(template_file_name, 'r')
-
-    template = json.loads(file.read())
+    with open(template_file_name, 'r') as template_file:
+        template = json.loads(template_file.read())
 
     # Discovered date, which is required (and can't really be hardcoded
     # in the template).
@@ -128,11 +131,24 @@ def generic_get(client, uri):
 
 
 def generic_post(client, uri, template_file_name):
-    file = open(template_file_name, 'r')
-
-    template = json.loads(file.read())
+    with open(template_file_name, 'r') as template_file:
+        template = json.loads(template_file.read())
 
     incident = client.post(uri, template)
+
+    print('Response:  ')
+    print(json.dumps(incident, indent=4))
+
+
+def generic_update(client, uri, template_file_name):
+
+    def update_func(json_data):
+        with open(template_file_name, 'r') as template_file:
+            template = json.loads(template_file.read())
+            json_data.update(template)
+        return json_data
+
+    incident = client.get_put(uri, update_func)
 
     print('Response:  ')
     print(json.dumps(incident, indent=4))
@@ -169,6 +185,9 @@ def main():
 
     if co3_opts.post:
         generic_post(client, co3_opts.post[0], co3_opts.post[1])
+
+    if co3_opts.update:
+        generic_update(client, co3_opts.update[0], co3_opts.update[1])
 
     if co3_opts.delete:
         generic_delete(client, co3_opts.delete)
