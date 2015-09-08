@@ -267,7 +267,7 @@ class SimpleClient(object):
             _raise_if_error(response)
             return json.loads(response.text)
 
-    def _get_put(self, uri, apply_func, co3_context_token):
+    def _get_put(self, uri, apply_func, co3_context_token=None):
         """Internal helper to do a get/apply/put loop
         (for situations where the put might return a 409/conflict status code)
         """
