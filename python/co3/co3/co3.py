@@ -51,6 +51,7 @@ class TLSHttpAdapter(HTTPAdapter):
                                        block=block,
                                        ssl_version=ssl.PROTOCOL_SSLv23)
 
+
 class SimpleHTTPException(Exception):
     """Exception for HTTP errors."""
     def __init__(self, response):
@@ -58,14 +59,27 @@ class SimpleHTTPException(Exception):
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(SimpleHTTPException, self).__init__("{}:  {}".format(response.reason, response.text))
+        super(SimpleHTTPException, self).__init__("{0}:  {1}".format(response.reason, response.text))
 
         self.response = response
+
+
+def _raise_if_error(response):
+    """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
+
+    Args:
+      response - the Response object from a get/put/etc.
+    Raises:
+      SimpleHTTPException - if response.status_code is not 200.
+    """
+    if response.status_code != 200:
+        raise SimpleHTTPException(response)
+
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
-    def __init__(self, org_name = None, base_url = None, proxies = None, verify = None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
         """
         Args:
           org_name - the name of the organization to use.
@@ -78,14 +92,13 @@ class SimpleClient(object):
         self.org_id = None
         self.user_id = None
         self.base_url = 'https://app.resilientsystems.com/'
-        self.verify = True
 
         self.org_name = org_name
         self.proxies = proxies
         if base_url:
             self.base_url = base_url
-        if verify != None:
-            self.verify = verify
+        self.verify = verify or True
+        self.authdata = None
         self.session = requests.Session()
         self.session.mount('https://', TLSHttpAdapter())
 
@@ -100,43 +113,37 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
+        self.authdata = {
+            'email': email,
+            'password': password
+        }
+        return self._connect()
 
-        data = { 
-            'email' : email,
-            'password' : password
-        } 
-
-        response = self.session.post("{}/rest/session".format(self.base_url), 
-            proxies=self.proxies, 
-            data=json.dumps(data), 
-            verify=self.verify, 
-            headers=self.__make_headers()) 
-
-        self._raise_if_error(response)
-
+    def _connect(self):
+        """Establish a session"""
+        response = self.session.post("{0}/rest/session".format(self.base_url),
+                                     data=json.dumps(self.authdata),
+                                     proxies=self.proxies,
+                                     headers=self.__make_headers(),
+                                     verify=self.verify)
+        _raise_if_error(response)
         session = json.loads(response.text)
-
         orgs = session['orgs']
-
         if orgs is None or len(orgs) == 0:
             raise Exception("User is a member of no orgs")
         elif self.org_name:
             org_names = []
-
             for org in orgs:
                 org_name = org['name']
-
                 org_names.append(org_name)
-
                 if org_name == self.org_name:
                     self.org_id = org['id']
-
             if self.org_id is None:
-                raise Exception("User is not a member of the organization {}; orgs = {}".format(self.org_name, ','.join(org_names)))
+                raise Exception("User is not a member of the organization {0}; orgs = {1}".format(
+                    self.org_name, ','.join(org_names)))
         else:
             # No org_name specified...use the first one that is returned.
             self.org_id = orgs[0]['id']
-
         # set the X-sess-id token, which is used to prevent CSRF attacks.
         self.headers['X-sess-id'] = session['csrf_token']
         self.cookies = {
@@ -145,7 +152,7 @@ class SimpleClient(object):
         self.user_id = session["user_id"]
         return session
 
-    def __make_headers(self, co3_context_token = None, additional_headers=None):
+    def __make_headers(self, co3_context_token=None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
         if co3_context_token is not None:
@@ -153,6 +160,16 @@ class SimpleClient(object):
         if isinstance(additional_headers, dict):
             headers.update(additional_headers)
         return headers
+
+    def _execute_request(self, operation, url, **kwargs):
+        """Execute a HTTP request.
+           If unauthorized (likely due to a session timeout), retry.
+        """
+        result = operation(url, **kwargs)
+        if result.status_code == 401:  # unauthorized, re-auth and try again
+            self._connect()
+            result = operation(url, **kwargs)
+        return result
 
     def get(self, uri, co3_context_token=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
@@ -168,13 +185,14 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-   
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
-        response = self.session.get(url, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
-        self._raise_if_error(response)
-
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
+        _raise_if_error(response)
         return json.loads(response.text)
 
     def get_content(self, uri, co3_context_token=None):
@@ -191,19 +209,20 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
-        response = self.session.get(url, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
-        self._raise_if_error(response)
-
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
+        _raise_if_error(response)
         return response.content
 
-    def post(self, uri, payload, co3_context_token = None):
+    def post(self, uri, payload, co3_context_token=None):
         """
         Posts to the specified URI.
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you 
+        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
         specify a uri of /incidents, the actual URL would be something like this:
 
             https://app.resilientsystems.com/rest/orgs/201/incidents
@@ -216,62 +235,68 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
         payload_json = json.dumps(payload)
-
-        response = self.session.post(url, data=payload_json, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
-        self._raise_if_error(response)
-
+        response = self._execute_request(self.session.post,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
+        _raise_if_error(response)
         return json.loads(response.text)
 
-
-    def post_attachment(self, uri, filename, co3_context_token=None):
+    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None):
         """Upload a file to the specified URI"""
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
-        mime_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-
-        with open(filename, 'rb') as filehandle:
-            multipart_data = {'file': (os.path.basename(filename), filehandle, mime_type)}
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        mime_type = mimetype or mimetypes.guess_type(filepath)[0] or "application/octet-stream"
+        with open(filepath, 'rb') as filehandle:
+            attachment_name = filename or os.path.basename(filename)
+            multipart_data = {'file': (attachment_name, filehandle, mime_type)}
             encoder = MultipartEncoder(fields=multipart_data)
-
-            headers = self.__make_headers(co3_context_token, additional_headers={'content-type': encoder.content_type})
-            response = self.session.post(url, data=encoder, cookies=self.cookies, headers=headers, verify=self.verify)
-
-            self._raise_if_error(response)
-
+            headers = self.__make_headers(co3_context_token,
+                                          additional_headers={'content-type': encoder.content_type})
+            response = self._execute_request(self.session.post,
+                                             url,
+                                             data=encoder,
+                                             proxies=self.proxies,
+                                             cookies=self.cookies,
+                                             headers=headers,
+                                             verify=self.verify)
+            _raise_if_error(response)
             return json.loads(response.text)
 
-
     def _get_put(self, uri, apply_func, co3_context_token):
-        """Internal helper to do a get/apply/put loop (for situations where the put might return a 409/conflict status code"""
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
-        response = self.session.get(url, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
-        self._raise_if_error(response)
-
+        """Internal helper to do a get/apply/put loop
+        (for situations where the put might return a 409/conflict status code)
+        """
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
+        _raise_if_error(response)
         payload = json.loads(response.text)
-
         apply_func(payload)
-
         payload_json = json.dumps(payload)
-
-        response = self.session.put(url, data=payload_json, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
+        response = self._execute_request(self.session.put,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
         if response.status_code == 200:
             return json.loads(response.text)
         elif response.status_code == 409:
             return None
-
-        self._raise_if_error(response)
-
+        _raise_if_error(response)
         return None
 
-    def get_put(self, uri, apply_func, co3_context_token = None):
+    def get_put(self, uri, apply_func, co3_context_token=None):
         """Performs a get, calls apply_func on the returned value, then calls self.put.
         If the put call returns a 409 error, then retry.
 
@@ -288,16 +313,14 @@ class SimpleClient(object):
         """
         while True:
             obj = self._get_put(uri, apply_func, co3_context_token)
-
             if obj:
                 return obj
-
         return None
 
-    def put(self, uri, payload, co3_context_token = None):
+    def put(self, uri, payload, co3_context_token=None):
         """
         Puts to the specified URI.
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you 
+        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
         specify a uri of /incidents, the actual URL would be something like this:
 
             https://app.resilientsystems.com/rest/orgs/201/incidents
@@ -309,24 +332,26 @@ class SimpleClient(object):
           A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
-        """        
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
+        """
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
         payload_json = json.dumps(payload)
-
-        response = self.session.put(url, data=payload_json, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
-        self._raise_if_error(response)
-
+        response = self._execute_request(self.session.put,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
+        _raise_if_error(response)
         return json.loads(response.text)
 
-    def delete(self, uri, co3_context_token = None):
+    def delete(self, uri, co3_context_token=None):
         """Deletes the specified URI.
 
         Args:
           uri
           co3_context_token
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you 
+        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
         specify a uri of /incidents, the actual URL would be something like this:
 
             https://app.resilientsystems.com/rest/orgs/201/incidents
@@ -338,26 +363,15 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-
-        url = "{}/rest/orgs/{}{}".format(self.base_url, self.org_id, uri)
-
-        response = self.session.delete(url, cookies=self.cookies, headers=self.__make_headers(co3_context_token), verify=self.verify)
-
-        if (response.status_code == 204):
+        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        response = self._execute_request(self.session.delete,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify)
+        if response.status_code == 204:
             # 204 - No content is OK for a delete
             return None
-
-        self._raise_if_error(response)
-
+        _raise_if_error(response)
         return json.loads(response.text)
-
-    def _raise_if_error(self, response):
-        """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
-
-        Args:
-          response - the Response object from a get/put/etc.
-        Raises:
-          SimpleHTTPException - if response.status_code is not 200.
-        """
-        if response.status_code != 200:
-            raise SimpleHTTPException(response)

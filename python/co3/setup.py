@@ -49,7 +49,7 @@ long_description = read('README')
 
 setup(
     name='co3',
-    version='23.0.3',
+    version='23.0.4',  # also __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',

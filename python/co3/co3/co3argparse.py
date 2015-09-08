@@ -34,12 +34,13 @@ import sys
 import argparse
 import getpass
 import logging
-if sys.version_info.major < 3:
+if sys.version_info[0] < 3:
     import ConfigParser as configparser
 else:
     import configparser
 
 logger = logging.getLogger(__name__)
+
 
 class ArgumentParser(argparse.ArgumentParser):
     """Helper to parse common Resilient command line arguments.
@@ -129,7 +130,6 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument("--cafile",
                           default=default_cafile,
                           help="The name of a file that contains trusted certificates.")
-
 
     def parse_args(self, args=None, namespace=None):
         args = super(ArgumentParser, self).parse_args(args, namespace)
