@@ -252,7 +252,7 @@ class SimpleClient(object):
         url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
         mime_type = mimetype or mimetypes.guess_type(filepath)[0] or "application/octet-stream"
         with open(filepath, 'rb') as filehandle:
-            attachment_name = filename or os.path.basename(filename)
+            attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.__make_headers(co3_context_token,
