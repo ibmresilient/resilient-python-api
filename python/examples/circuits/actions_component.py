@@ -157,7 +157,7 @@ class ActionMessage(Event):
         try:
             return self.message[name]
         except KeyError:
-            raise AttributeError
+            raise AttributeError()
 
     def hdr(self):
         """Get the headers (dict)"""
