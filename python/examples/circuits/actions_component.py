@@ -152,6 +152,8 @@ class ActionMessage(Event):
            ("incident", "task", "note", "milestone". "task", "artifact";
            and "properties" for the action fields on manual actions)
         """
+        if name=="message":
+            raise AttributeError()
         try:
             return self.message[name]
         except KeyError:
