@@ -27,7 +27,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
+__version__ = "23.0.4"
+
 from .co3 import SimpleClient
 from .co3argparse import ArgumentParser
 from .co3sslutil import match_hostname
-

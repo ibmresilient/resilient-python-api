@@ -36,11 +36,10 @@ from __future__ import absolute_import
 
 import co3
 import json
-import os
-import sys
 import logging
 import time
 import csv
+import argparse
 from datetime import datetime
 from calendar import timegm
 
@@ -93,6 +92,7 @@ class ReportArgumentParser(co3.ArgumentParser):
 
 
 def valid_date(s):
+    """Validation function for date parameters, expects YYYY-MM-DD"""
     try:
         return datetime.strptime(s, "%Y-%m-%d")
     except ValueError:
@@ -106,6 +106,7 @@ def get_json_time(dt):
 
 
 def get_datetime(ts):
+    """datetime from epoch timestamp"""
     if ts:
         return datetime.fromtimestamp(int(int(ts)/1000))
 

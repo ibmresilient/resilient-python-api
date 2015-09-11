@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
@@ -27,34 +29,39 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import ssl
+"""Global accessor for the Resilient REST API"""
+
+import co3
+import json
+import logging
+LOG = logging.getLogger(__name__)
+resilient_client = None
 
 
-# Additional certificate validation function.  Called by the Python SSL library.
-#
-# cert is the certificate as returned by SSLSocket.getpeercert().
-#
-# If you're running with Python 3, we will make use of ssl.match_hostname which is consistent
-# with RFC 2818.
-#
-# Pyton 2.7.8 and before does not have that function so we will do a
-# relatively lame version of it.  It appears that ssl.match_hostname will
-# appear in Python 2.7.9 and if it's available, we will use it.
-#
-def match_hostname(cert, hostname):
-    names = []
+def get_resilient_client(opts):
+    """Get a connected instance of SimpleClient for Resilient REST API"""
+    global resilient_client
+    if resilient_client:
+        return resilient_client
 
-    # Python 3 has an ssl.match_hostname method, which does hostname validation.  It will allow
-    # more certificates than we do in our else clause (which is a very simplified version).
-    if "match_hostname" in dir(ssl):
-        ssl.match_hostname(cert, hostname)
-        return
+    # Create SimpleClient for a REST connection to the Resilient services
+    url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
+    resilient_client = co3.SimpleClient(org_name=opts.get("org"),
+                                        proxies=opts.get("proxy"),
+                                        base_url=url,
+                                        verify=opts.get("cafile") or True)
+
+    userinfo = resilient_client.connect(opts["email"], opts["password"])
+
+    # Validate the org, and store org_id in the opts dictionary
+    LOG.debug(json.dumps(userinfo, indent=2))
+    if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:
+        raise Exception("User is a member of multiple organizations; please specify one.")
+    if(len(userinfo["orgs"])) > 1:
+        for org in userinfo["orgs"]:
+            if org["name"] == opts.get("org"):
+                opts["org_id"] = org["id"]
     else:
-        for sub in cert.get('subject', ()):
-            for key, value in sub:
-                if key == 'commonName':
-                    names.append(value)
-                    if value == hostname:
-                        return
+        opts["org_id"] = userinfo["orgs"][0]["id"]
 
-    raise Exception("{0} does not match the expected value in the certificate {1}".format(hostname, str(names)))
+    return resilient_client
