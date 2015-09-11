@@ -139,11 +139,14 @@ class SimpleClient(object):
                 if org_name == self.org_name:
                     self.org_id = org['id']
             if self.org_id is None:
-                raise Exception("User is not a member of the organization {0}; orgs = {1}".format(
-                    self.org_name, ','.join(org_names)))
+                msg = "The user is not a member of the specified organization '{0}'."
+                raise Exception(msg.format(self.org_name, ', '.join(org_names)))
         else:
-            # No org_name specified...use the first one that is returned.
-            self.org_id = orgs[0]['id']
+            org_names = [org['name'] for org in orgs]
+            msg = "Please specify the organization name to which you want to connect.  " + \
+                  "The user is a member of the following organizations: '{0}'"
+            raise Exception(msg.format("', '".join(org_names)))
+
         # set the X-sess-id token, which is used to prevent CSRF attacks.
         self.headers['X-sess-id'] = session['csrf_token']
         self.cookies = {

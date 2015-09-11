@@ -59,6 +59,6 @@ Then run the action script:
 
     python app.py
 
-To trigger actions:  open an incident, then pen the custom actions menu for this
-incident or its tasks or artifacts, then select the actions defined above.
+To trigger actions:  open an incident, then open the custom actions menu for
+this incident or its tasks or artifacts, then select the actions defined above.
 The action script log will print a message for each action that is processed.

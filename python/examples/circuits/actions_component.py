@@ -87,7 +87,7 @@ class ActionMessage(Event):
     # The parameters for your event-handler method are:
     #   event: this event object
     #   source: the component that fired the event
-    #   message: the Actions Module message headers (dict)
+    #   headers: the Actions Module message headers (dict)
     #   message: the Actions Module message (dict)
     # For convenience, the message is also broken out onto event properties,
     #   event.incident: the incident that the event relates to
@@ -117,26 +117,22 @@ class ActionMessage(Event):
         LOG.debug("Headers: %s", json.dumps(headers, indent=2))
         LOG.debug("Message: %s", json.dumps(message, indent=2))
 
-        assert isinstance(source, Actions)
+        self.message = message
         self.context = headers.get("Co3ContextToken")
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")
 
-        self.displayname = source.action_name(self.action_id)
+        if source is None:
+            self.displayname = "Unknown"
+        else:
+            assert isinstance(source, Actions)
+            self.displayname = source.action_name(self.action_id)
 
         # The name of this event (=the function that subscribers implement)
         # is determined from the name of the action.
         # In future, this should be the action's "programmatic name",
         # but for now it's the downcased displayname with underscores.
         self.name = re.sub(r'\W+', '_', self.displayname.strip().lower())
-
-        self.incident = message.get("incident")
-        self.task = message.get("task")
-        self.note = message.get("note")
-        self.milestone = message.get("milestone")
-        self.artifact = message.get("artifact")
-        self.attachment = message.get("attachment")
-        self.actionfields = message["properties"]
 
         # Fire a {name}_success event when this event is successfully processed
         self.success = True
@@ -150,6 +146,16 @@ class ActionMessage(Event):
         else:
             channels = ""
         return "<%s[%s] (%s)>" % (self.name, channels, self.action_id)
+
+    def __getattr__(self, name):
+        """Message attributes are made accessible as properties
+           ("incident", "task", "note", "milestone". "task", "artifact";
+           and "properties" for the action fields on manual actions)
+        """
+        try:
+            return self.message[name]
+        except KeyError:
+            raise AttributeError
 
     def hdr(self):
         """Get the headers (dict)"""
@@ -250,6 +256,7 @@ class Actions(ResilientComponent):
         """STOMP produced a message."""
         # Find the queue name from the subscription id (stomp_listener_xxx)
         subscription = headers["subscription"]
+        LOG.debug('STOMP listener: message for %s', subscription)
         queue_name = subscription.partition("-")[2]
         channel = "actions." + queue_name
 
@@ -349,8 +356,8 @@ class Actions(ResilientComponent):
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
+        LOG.error("exception! %s, %s", str(value), str(fevent))
         if fevent and isinstance(fevent, ActionMessage):
-            LOG.info("exception! %s, %s", str(value), str(fevent))
             fevent.stop()  # Stop further event processing
             message = str(value or "Processing failed")
             status = 1
@@ -371,7 +378,7 @@ class Actions(ResilientComponent):
         if isinstance(event.parent, ActionMessage) and event.name.endswith("_success"):
             fevent = event.parent
             value = event.parent.value
-            LOG.info("success! %s, %s", str(value), str(fevent))
+            LOG.debug("success! %s, %s", str(value), str(fevent))
             fevent.stop()  # Stop further event processing
             message = str(value or "Processing complete")
             status = 0
