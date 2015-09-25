@@ -2,7 +2,7 @@
 
 This directory contains a command line utility [finfo.py](finfo.py) that uses
 the Resilient REST API (using the `SimpleClient` class from the `co3` module)
-do read and display metadata about fields defined in the Resilient application.
+to read and display metadata about fields defined in the Resilient application.
 
 ### Usage
 
