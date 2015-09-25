@@ -8,7 +8,7 @@ This example is a demonstrator for a CMDB-like system.  It consists of
   it would typically be a configuration-management, IT service management
   or master-data management system, depending on the application.
 
-- Two styles of custom action that are commonly in this type of integration:
+- Two styles of custom action that are common in this type of integration:
 
   - An automatic *Incident* Action.  When the incident is updated, if the
     'Park' field is changed, the action triggers.  The integration code
