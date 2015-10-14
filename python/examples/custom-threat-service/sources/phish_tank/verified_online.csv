@@ -1,0 +1,11 @@
+phish_id,url,phish_detail_url,submission_time,verified,verification_time,online,target
+1,http://phishingsite.com,http://www.phishtank.com/phish_detail.php?phish_id=1,2015-07-20T12:45:49+00:00,yes,2015-07-20T12:47:35+00:00,yes,Other
+2,http://phishingsite.com/minimal/atx/atxcm1.html,http://www.phishtank.com/phish_detail.php?phish_id=2,2015-07-20T12:44:41+00:00,yes,2015-07-20T12:46:21+00:00,yes,Other
+3,http://phishingsite.com/caixa/BLS/,http://www.phishtank.com/phish_detail.php?phish_id=3,2015-07-20T12:04:42+00:00,yes,2015-07-20T12:10:55+00:00,yes,Other
+4,http://phishingsite.com/scn/neb.rec/csn/rnop.php,http://www.phishtank.com/phish_detail.php?phish_id=4,2015-07-20T10:29:04+00:00,yes,2015-07-20T11:06:53+00:00,yes,"Fancy Bank"
+5,http://phishingsite.com/atoc.php,http://www.phishtank.com/phish_detail.php?phish_id=5,2015-07-20T10:26:54+00:00,yes,2015-07-20T11:08:07+00:00,yes,"Fancy Bank"
+6,http://phishingsite.ru/tmp/standardbank5/inet.php,http://www.phishtank.com/phish_detail.php?phish_id=6,2015-07-20T10:16:38+00:00,yes,2015-07-20T11:08:43+00:00,yes,Other
+7,http://phishingsite.ru/tmp/standardbank4/inet.php,http://www.phishtank.com/phish_detail.php?phish_id=7,2015-07-20T10:16:35+00:00,yes,2015-07-20T11:08:43+00:00,yes,Other
+8,http://phishingsite.de/language/en-GB/verification/online.htm,http://www.phishtank.com/phish_detail.php?phish_id=8,2015-07-20T10:11:21+00:00,yes,2015-07-20T10:36:36+00:00,yes,Other
+9,http://phishingsite.com/nadt.php,http://www.phishtank.com/phish_detail.php?phish_id=9,2015-07-20T10:02:29+00:00,yes,2015-07-20T10:33:07+00:00,yes,"Fancy Bank"
+10,http://phishingsite.com/bankofamerica.com/c085df4e7658bc11f9ff33fe5ec7942e/,http://www.phishtank.com/phish_detail.php?phish_id=10,2015-07-20T10:01:56+00:00,yes,2015-07-20T10:33:07+00:00,yes,Other
