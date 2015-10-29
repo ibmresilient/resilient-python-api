@@ -19,13 +19,27 @@ standard arguments such as `--host` and `--email` that Resilient-oriented
 command line tools will generally need.  The ArgumentParser can read defaults
 from a configuration file, and override them from the command line.
 
-To install this module, run these commands:
+### Install from this repository
+
+To install the module from this repository, run these commands:
 ```
 $ python setup.py build
 $ sudo python setup.py install
 ```
 Note that if you are using Python 3, then use `python3` instead of `python`.
 
+### Install as a package
+
+To package the Python client module for installation on another machine, use:
+```
+$ python setup.py sdist --formats=gztar
+```
+This creates a single file `dist/co3-x.x.x.tar.gz` (filename will vary according
+to the current version of this repository) that can be copied to your target
+environment and installed using `pip`:
+```
+$ pip install ./co3-x.x.x.tar.gz
+```
 
 ## Certificates
 
