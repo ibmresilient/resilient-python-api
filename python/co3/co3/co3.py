@@ -97,7 +97,9 @@ class SimpleClient(object):
         self.proxies = proxies
         if base_url:
             self.base_url = base_url
-        self.verify = verify or True
+        self.verify = verify
+        if verify is None:
+            self.verify = True
         self.authdata = None
         self.session = requests.Session()
         self.session.mount('https://', TLSHttpAdapter())
