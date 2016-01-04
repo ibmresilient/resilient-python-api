@@ -58,7 +58,7 @@ Unpack the integration's files into the location where you will run them.
 ## Configuring the Integration
 
 The script reads configuration parameters from a file.
-The configuration file is named `resilient_splunk_search.config`, in the same
+The configuration file is named `app.config`, in the same
 directory as the scripts.  Edit this file to provide appropriate values
 appropriate for your environment (server URL and authentication credentials).
 Verify that the logging directory has been created.
