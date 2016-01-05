@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
@@ -29,39 +27,48 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Global accessor for the Resilient REST API"""
+from __future__ import print_function
+from setuptools import setup, find_packages
+import io
+import codecs
+import os
+import sys
 
-import co3
-import json
-import logging
-LOG = logging.getLogger(__name__)
-resilient_client = None
+here = os.path.abspath(os.path.dirname(__file__))
 
+def read(*filenames, **kwargs):
+    encoding = kwargs.get('encoding', 'utf-8')
+    sep = kwargs.get('sep', '\n')
+    buf = []
+    for filename in filenames:
+        with io.open(filename, encoding=encoding) as f:
+            buf.append(f.read())
+    return sep.join(buf)
 
-def get_resilient_client(opts):
-    """Get a connected instance of SimpleClient for Resilient REST API"""
-    global resilient_client
-    if resilient_client:
-        return resilient_client
+long_description = read('README.md')
 
-    # Create SimpleClient for a REST connection to the Resilient services
-    url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
-    resilient_client = co3.SimpleClient(org_name=opts.get("org"),
-                                        proxies=opts.get("proxy"),
-                                        base_url=url,
-                                        verify=opts.get("cafile") or True)
-
-    userinfo = resilient_client.connect(opts["email"], opts["password"])
-
-    # Validate the org, and store org_id in the opts dictionary
-    LOG.debug(json.dumps(userinfo, indent=2))
-    if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:
-        raise Exception("User is a member of multiple organizations; please specify one.")
-    if(len(userinfo["orgs"])) > 1:
-        for org in userinfo["orgs"]:
-            if org["name"] == opts.get("org"):
-                opts["org_id"] = org["id"]
-    else:
-        opts["org_id"] = userinfo["orgs"][0]["id"]
-
-    return resilient_client
+setup(
+    name='resilient_circuits',
+    version='24.0.1',  # also __version__ in __init__.py
+    url='https://www.resilientsystems.com/',
+    license='Resilient License',
+    author='Resilient',
+    install_requires=[
+      'stomp.py>=4.0.12',
+      'requests>=2.6.0',
+      'circuits',
+      'pytz',
+      'keyring',
+      'jinja2'
+    ],
+    author_email='support@resilientsystems.com',
+    description='Resilient Circuits Framework for Custom Apps',
+    long_description=long_description,
+    packages=['resilient_circuits'],
+    package_dir={'resilient_circuits': 'resilient_circuits'},
+    include_package_data=True,
+    platforms='any',
+    classifiers = [
+        'Programming Language :: Python',
+    ]
+)
