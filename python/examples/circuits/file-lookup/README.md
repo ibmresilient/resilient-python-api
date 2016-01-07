@@ -1,15 +1,15 @@
 Lookup in Local File from Resilient
 ===================================
 
-Use Case:  Lookup up the value of a Resilient incident field in a CSV 
-file on the local file system and store the result in another field in 
+Use Case:  Lookup up the value of a Resilient incident field in a CSV
+file on the local file system and store the result in another field in
 that incident.  This automatic action is triggered whenever the
 specified field value changes.
 
 This integration can be run on the Resilient appliance or anywhere else.  
 The code is written in Python, and can be extended for your own purposes.
 
-Requires: Python version 2.7.x or 3.4.x or later.<br/>
+Requires: Python version 2.7.x or 3.4.x or later.
 Requires: Resilient Server or hosted Application, version 23 or later.
 
 ## Resilient server setup
@@ -17,7 +17,7 @@ Requires: Resilient Server or hosted Application, version 23 or later.
 You must configure the following customizations to the Resilient server.
 Open the Administrator Settings --> Actions, then:
 
-## Message Destination
+### Message Destination
 
 Create a Queue message destination with programmatic name `filelookup`.
 Select Yes for "expect acknowledgement", and add the integration user
@@ -25,15 +25,15 @@ to its users list.
 
 ![Custom message destination](documentation/messagedestination.png)
 
-## Custom Fields
+### Custom Fields
 
-Create 2 custom fields called 'custom1' and 'custom2', both of type
+Create two custom fields called 'custom1' and 'custom2', both of type
 'Text'.  Add the new fields to the incident details so that you can
-view them. 
+view them.
 ![Custom Fields](documentation/customfield.png)
 ![Edit Incident Details](documentation/incidentdetails.png)
 
-## Automatic Action
+### Automatic Action
 
 Create an automatic action named 'lookup_value', associated with object type
 "Incident".  Choose `filelookup` as the message destination. Add condition
@@ -48,7 +48,7 @@ used for all Python client applications.  The 'co3' module is a part of the
 Resilient REST API utilities 'co3-api'.  Download and install that first,
 following its instructions.
 
-This application is built using the circuits library.  The 'resilient-circuits' 
+This application is built using the circuits library.  The 'resilient-circuits'
 framework should be downloaded and installed, following its instructions.
 
 ## Installing the Integration
@@ -66,7 +66,7 @@ Verify that the logging directory has been created.
 The custom fields you wish to read from and write to can be updated here
 in the 'source_field' and 'dest_field' sections.
 
-## Certificates
+### Certificates
 
 If your Resilient server uses a self-signed TLS certificate, or some
 other certificate that is not automatically trusted by your machine,
@@ -89,7 +89,7 @@ In the script directory, run the custom action application with:
 The script will start running, and wait for messages.  When users in Resilient
 update the value of 'custom1' on any incident, the application will look
 up the value in sample.csv and, if found, will store the associated value
-into 'custom2'. 
+into 'custom2'.
 
 ![Search Results](documentation/results.png)
 
@@ -100,12 +100,12 @@ To stop the script running, interrupt it with `Ctrl+C`.
 ### Mapping Multiple Fields
 
 If you need to populate more than one field via a local file lookup,
-you can add another component to the existing application. Start by 
+you can add another component to the existing application. Start by
 duplicating the 'lookup' section of the config file and giving
 the queue and the duplicated section itself a new name.  Update the
 other fields to the their required values as well.  Make a copy of
 file_lookup.py and store it in the components directory with a new
-name, updating the 'CONFIG_DATA_SECTION' line to match what you created 
+name, updating the 'CONFIG_DATA_SECTION' line to match what you created
 in the config file.  Add the new queue and action to the Resilient system.
 Now when you run the application, it will handle mapping both fields.
 
