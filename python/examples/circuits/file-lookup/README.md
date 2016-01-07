@@ -1,10 +1,10 @@
 Lookup in Local File from Resilient
 ===================================
 
-This example shows a simple integration between Resilient incidents and
-the local file system.  We create an automatic action to lookup a value in 
-a CSV file whenever a specified field value changes. The result of that lookup
-is stored in a different specified field in the incident.
+Use Case:  Lookup up the value of a Resilient incident field in a CSV 
+file on the local file system and store the result in another field in 
+that incident.  This automatic action is triggered whenever the
+specified field value changes.
 
 This integration can be run on the Resilient appliance or anywhere else.  
 The code is written in Python, and can be extended for your own purposes.
@@ -63,6 +63,9 @@ directory as the scripts.  Edit this file to provide appropriate values
 appropriate for your environment (server URL and authentication credentials).
 Verify that the logging directory has been created.
 
+The custom fields you wish to read from and write to can be updated here
+in the 'source_field' and 'dest_field' sections.
+
 ## Certificates
 
 If your Resilient server uses a self-signed TLS certificate, or some
@@ -94,5 +97,18 @@ To stop the script running, interrupt it with `Ctrl+C`.
 
 ## Extending the example
 
+### Mapping Multiple Fields
+
+If you need to populate more than one field via a local file lookup,
+you can add another component to the existing application. Start by 
+duplicating the 'lookup' section of the config file and giving
+the queue and the duplicated section itself a new name.  Update the
+other fields to the their required values as well.  Make a copy of
+file_lookup.py and store it in the components directory with a new
+name, updating the 'CONFIG_DATA_SECTION' line to match what you created 
+in the config file.  Add the new queue and action to the Resilient system.
+Now when you run the application, it will handle mapping both fields.
+
+### More
 For more extensive integrations with stored data files, contact
 [success@resilientsystems.com](success@resilientsystems.com).
