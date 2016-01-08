@@ -12,6 +12,7 @@ import csv
 import logging
 LOG = logging.getLogger(__name__)
 
+CONFIG_DATA_SECTION = 'lookup'
 
 class FileLookupComponent(ResilientComponent):
     """Lookup a value in a CSV file"""
@@ -21,7 +22,7 @@ class FileLookupComponent(ResilientComponent):
 
     def __init__(self, opts):
         super(FileLookupComponent, self).__init__(opts)
-        self.options = opts.get("lookup", {})
+        self.options = opts.get(CONFIG_DATA_SECTION, {})
         LOG.debug(self.options)
 
         # The queue name can be specified in the config file, or default to 'filelookup'
@@ -56,6 +57,13 @@ class FileLookupComponent(ResilientComponent):
                 if row[0] == source_value:
                     value = row[1]
                     break
+            else:
+                # Value not present in CSV file
+                LOG.warning("No entry for [%s] in [%s]" % (
+                    source_value, 
+                    self.options["reference_file"]))
+                yield "field %s not updated" % dest_fieldname
+                return
                     
         LOG.info("READ %s:%s  STORED %s:%s", 
                  source_fieldname, source_value,
@@ -67,4 +75,6 @@ class FileLookupComponent(ResilientComponent):
         # Store value in specified incident field
         self.rest_client().get_put("/incidents/{0}".format(inc_id),
                                    lambda incident: update_field(incident, dest_fieldname, value))
+
+        yield "field %s updated" % dest_fieldname
     #end _lookup_action
