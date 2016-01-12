@@ -31,15 +31,20 @@
 
 from __future__ import print_function
 import co3 as resilient
+import os
 import json
 import sys
 import codecs
 import csv
 import collections
+import logging
 if sys.version_info.major < 3:
     from StringIO import StringIO
 else:
     from io import StringIO
+
+
+LOG = logging.getLogger(__name__)
 
 
 def wrap_io(stream):
@@ -65,6 +70,7 @@ class FinfoArgumentParser(resilient.ArgumentParser):
                           help="The field name.")
 
         self.add_argument('--type',
+                          dest="field_type",
                           default="incident",
                           choices=["incident",
                                    "task",
@@ -83,6 +89,10 @@ class FinfoArgumentParser(resilient.ArgumentParser):
                           action='store_true',
                           help="Print the field lists in CSV format.")
 
+        self.add_argument('--values',
+                          dest="field_values",
+                          action='store_true',
+                          help="Print the list of valid values for all fields.")
 
 def apiname(field):
     """The full (qualified) programmatic name of a field"""
@@ -102,6 +112,7 @@ def print_details(field):
     """Print the definition of one field, in readable text"""
     print(u"Name:        {}".format(apiname(field)))
     print(u"Label:       {}".format(field["text"]))
+    print(u"ID:          {}".format(field["id"]))
     print(u"Type:        {}".format(field["input_type"]))
     if "tooltip" in field:
         if field["tooltip"]:
@@ -143,14 +154,42 @@ def list_fields_csv(client, objecttype="incident"):
         columns["name"] = apiname(field)
         columns["required"] = field.get("required", "")
         columns["input_type"] = field.get("input_type", "")
-        columns["text"] = field.get("text", "")
-        columns["tooltip"] = field.get("tooltip", "")
-        columns["placeholder"] = field.get("placeholder", "")
+        columns["text"] = field.get("text", "").encode("utf-8")
+        columns["tooltip"] = field.get("tooltip", "").encode("utf-8")
+        columns["placeholder"] = field.get("placeholder", "").encode("utf-8")
         if not writer:
             writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
             writer.writeheader()
         writer.writerow(columns)
-    print(iostr.getvalue())
+    print(iostr.getvalue().decode("utf-8"))
+
+
+def list_fields_values(client, objecttype="incident"):
+    """Print a list of fields' valid values, in CSV format"""
+    LOG.info("values")
+    iostr = StringIO()
+    writer = None
+    t = client.get("/types/{}/fields".format(objecttype))
+    for field in sorted(t, key=apiname):
+        if field.get("input_type", "") not in ["multiselect_members", "select_owner"]:
+            if "values" in field:
+                if field["values"]:
+                    v = sorted(field["values"], key=lambda x: x["value"])
+                    for value in v:
+                        e = ""
+                        if not value["enabled"]:
+                            e = "False"
+                        columns = collections.OrderedDict()
+                        columns["name"] = apiname(field)
+                        columns["default"] = str(value["default"] or "").encode("utf-8")
+                        columns["enabled"] = e
+                        columns["value"] = value["value"]
+                        columns["label"] = (value["label"] or "").encode("utf-8")
+                        if not writer:
+                            writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
+                            writer.writeheader()
+                        writer.writerow(columns)
+    print(iostr.getvalue().decode("utf-8"))
 
 
 def list_fields(client, objecttype="incident"):
@@ -184,14 +223,16 @@ def main():
 
     # If no field is specified, list them all
     if not opts.fieldname:
-        if opts.csv:
-            list_fields_csv(client, opts.type)
+        if opts.field_values:
+            list_fields_values(client, opts.field_type)
+        elif opts.csv:
+            list_fields_csv(client, opts.field_type)
         else:
-            list_fields(client, opts.type)
+            list_fields(client, opts.field_type)
         exit(0)
 
     # Find the field and display its properties
-    field_data = find_field(client, opts.fieldname, opts.type)
+    field_data = find_field(client, opts.fieldname, opts.field_type)
     if field_data:
         if opts.json:
             print_json(field_data)
@@ -204,4 +245,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARN)
     main()
