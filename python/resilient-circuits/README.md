@@ -10,14 +10,19 @@ used for all Python client applications.  Install that module before you start.
 Installing this module
 ======================
 
-To package this Python module for installation, use:
+To install directly into your local Python environment:
+
+    python setup.py install
+
+Alternatively it is possible to build an installable package file,
+for example to distribute the module to another machine.  To do this:
 
     python setup.py bdist_wheel --universal
 
 This creates a single file `dist/resilient_circuits-x.x.x-py2.py3-none-any.whl`
 (the filename will vary according to the current version of this repository).
 
-Install the package file using `pip`:
+Then install the package file using `pip`:
 
     pip install resilient_circuits-x.x.x-py2.py3-none-any.whl
 

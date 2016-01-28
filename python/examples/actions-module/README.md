@@ -67,3 +67,27 @@ You start the processor from the command line.  To print the usage, do this:
 The usage is identical to the basic.py script, except that since it connects to
 the Resilient server using the REST API, you may need to specify the `--org`
 option (if your user is in multiple Resilient organizations).
+
+
+## Topics and Queues
+
+Queues are referenced as `actions.<org_id>.<queue_programmatic_name>`.
+For example, `actions.201.test`.
+
+Topic message destinations are also supported, for cases where you want to
+send Action Module messages to all active subscribers, and drop the messages
+if no subscribers are active.  To refer to a topic, use the name:
+
+    /topic/actions.<org_id>.<queue_programmatic_name>
+
+
+## Resilient-Circuits Framework
+
+The 'basic' and 'advanced' examples in this directory show how to interact with
+Action Module message destinations directly, subscribing with the STOMP
+protocol.
+
+For production applications, we recommend using the [/python/resilient-circuits](../../resilient-circuits/)
+framework.  This is a simple event-based application framework that manages
+the queue and message handling functions, and just calls methods in your
+Python class when an event arrives.
