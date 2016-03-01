@@ -33,6 +33,7 @@ import io
 import codecs
 import os
 import sys
+import resilient_circuits # from the subdirectory of this current directory
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -45,11 +46,11 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = read('README.md')
+long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version='24.0.1',  # also __version__ in __init__.py
+    version=resilient_circuits.__version__,  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
