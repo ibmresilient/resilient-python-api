@@ -100,11 +100,16 @@ class ParkActions(object):
 
         park_code = None
         if action_type == "Artifact":
-            # Search for artifact and produce a set of results
+            # Action was initiated from an artifact.
+            # Search for the artifact value and produce a set of results
             park_code = message["artifact"]["value"]
 
         if action_type == "Incident":
+            # Action was initiated from an incident.
+            # The park code is in the custom field "park" (custom fields within the 'properties' dict)
             park_code_id = message["incident"]["properties"].get("park")
+            # In an action message, SELECT fields are delivered as their integer (id) value.
+            # To find the text of this field, look up the value in the "type_info" which has the field definition.
             park_code = message["type_info"]["incident"]["fields"]["park"]["values"][str(park_code_id)]["label"]
 
         logger.info("Park code: %s", park_code)
