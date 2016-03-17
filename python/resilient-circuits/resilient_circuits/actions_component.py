@@ -503,7 +503,7 @@ class Actions(ResilientComponent):
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.conn.is_connected() and self.listeners[queue_name]:
-            LOG.info("Subscribe to '%s'", queue_name)
+            LOG.info("Subscribe to message destination '%s'", queue_name)
             self.conn.subscribe(id='stomp-{}'.format(queue_name),
                                 destination="actions.{}.{}".format(self.org_id, queue_name),
                                 ack='client-individual')
@@ -511,7 +511,7 @@ class Actions(ResilientComponent):
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
         if self.conn.is_connected() and self.listeners[queue_name]:
-            LOG.info("Unsubscribe from '%s'", queue_name)
+            LOG.info("Unsubscribe from message destination '%s'", queue_name)
             self.conn.unsubscribe(id='stomp-{}'.format(queue_name),
                                   destination="actions.{}.{}".format(self.org_id, queue_name))
 
@@ -549,7 +549,7 @@ class Actions(ResilientComponent):
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        LOG.error("%s", str(fevent))
+        LOG.error("%s (%s): %s", repr(fevent), repr(etype), repr(value))
         if fevent and isinstance(fevent, ActionMessage):
             fevent.stop()  # Stop further event processing
             message = str(value or "Processing failed")
