@@ -66,6 +66,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_COMPONENTS_DIR = 'components'
     DEFAULT_LOG_DIR = 'log'
     DEFAULT_LOG_LEVEL = 'INFO'
+    DEFAULT_LOG_FILE = 'app.log'
 
     def __init__(self):
         super(AppArgumentParser, self).__init__(config_file=APP_CONFIG_FILE)
@@ -73,6 +74,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
         default_log_dir = self.getopt("resilient", "logdir") or self.DEFAULT_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
+        default_log_file = self.getopt("resilient","logfile") or self.DEFAULT_LOG_FILE
 
         self.add_argument("--stomp-port",
                           type=int,
@@ -90,6 +92,11 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_log_level,
                           help="Log level")
+        self.add_argument("--logfile",
+                          type=str,
+                          default=default_log_file,
+                          help="File to log to")
+
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
@@ -113,7 +120,7 @@ class App(Component):
         # Read the configuration options
         self.opts = AppArgumentParser().parse_args()
 
-        self.config_logging(self.opts["logdir"], self.opts["loglevel"])
+        self.config_logging(self.opts["logdir"], self.opts["loglevel"],self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
         LOG.info("Resilient user: %s", self.opts["email"])
         # Connect to events from Actions Module.
@@ -127,10 +134,10 @@ class App(Component):
             LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
             ComponentLoader(self.opts).register(self)
 
-    def config_logging(self, logdir, loglevel):
+    def config_logging(self, logdir, loglevel,logfile):
         """ set up some logging """
         global LOG_PATH, LOG
-        LOG_PATH = os.path.join(logdir, "app.log")
+        LOG_PATH = os.path.join(logdir, logfile)
 
         # Ignore syslog errors from message-too-long
         logging.raiseExceptions=False
