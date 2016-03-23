@@ -163,6 +163,14 @@ class ResilientOrg(object):
             return None
         return self.users
 
+    def GetGroups(self):
+        uri = "/groups"
+        try:
+            self.groups = self.client().get(uri)
+        except Exception as e:
+            self.groups = None
+            return False
+        return self.groups
 
     def GetIncidentTasks(self,incidentid):
         '''
