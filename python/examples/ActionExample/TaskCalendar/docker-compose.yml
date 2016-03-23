@@ -1,0 +1,7 @@
+web:
+  build: .
+  command: python /code/run.py
+  volumes:
+    - .:/code
+  ports:
+    - "8000:8000"
