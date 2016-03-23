@@ -1,0 +1,11 @@
+Contained within this directory tree are several action processor examples and some utility functions.
+All of the examples depend on the python library ResilientOrg, which is contained in the ResOrg directory.
+Follow the instructions there for the installation.  
+
+Included with most are Dockerfile's which can be used to run the action in a docker container.  All of the docker builds depend 
+on having the installation packages for the resilient api (co3 module) and the resilient circuits module.  These need to be built
+as pip installable packages so that the build can install them into the docker image.
+
+If you choose to go down the docker path, I recommend that you map a system directory for the configuration and logging of each integration using
+the docker -v localpath:containerpath construct.  doing so enables the logging to happen to a system level file (as opposed to within the 
+docker container) 
