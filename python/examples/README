@@ -9,3 +9,6 @@ as pip installable packages so that the build can install them into the docker i
 If you choose to go down the docker path, I recommend that you map a system directory for the configuration and logging of each integration using
 the docker -v localpath:containerpath construct.  doing so enables the logging to happen to a system level file (as opposed to within the 
 docker container) 
+
+many have scripts called dockerrun.sh  these are examples of executing the docker container, and need to be modified for your specific
+environment.
