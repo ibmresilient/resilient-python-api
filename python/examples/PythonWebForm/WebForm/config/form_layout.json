@@ -1,0 +1,13 @@
+[
+{"fieldlabel":"Name","fieldname":"name","fieldtype":"Text","resapi":"name"}
+,{"fieldlabel":"Description","fieldname":"description","fieldtype":"TextArea",
+        "rows":10,"cols":80,"resapi":"description"}
+,{"fieldlabel":"Incident Type","fieldname":"incidenttype","fieldtype":"Select","choosefrom":"incident_type_ids","resapi":"incident_type_ids"}
+,{"fieldlabel":"SB Test Multi","fieldname":"sb_test_multi",
+        "fieldtype":"MultiSelect","choosefrom":"sb_test_multi","resapi":"properties.sb_test_multi"}
+,{"fieldlabel":"SB Date","fieldname":"sb_date","fieldtype":"Date","resapi":"properties.sb_date"}
+,{"fieldlabel":"SB Number","fieldname":"sb_number","fieldtype":"Number","resapi":"properties.sb_number"}
+,{"fieldlabel":"SB Boolean","fieldname":"sb_boolean","fieldtype":"Boolean","resapi":"properties.sb_boolean"}
+
+,{"fieldlabel":"SB timestamp","fieldname":"sb_timestamp","fieldtype":"DateTime","resapi":"properties.sb_timestamp"}
+]
