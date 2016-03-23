@@ -1,0 +1,294 @@
+#!/usr/bin/env python
+
+# -*- coding: utf-8 -*-
+# Resilient Systems, Inc. ("Resilient") is willing to license software
+# or access to software to the company or entity that will be using or
+# accessing the software and documentation and that you represent as
+# an employee or authorized agent ("you" or "your") only on the condition
+# that you accept all of the terms of this license agreement.
+#
+# The software and documentation within Resilient's Development Kit are
+# copyrighted by and contain confidential information of Resilient. By
+# accessing and/or using this software and documentation, you agree that
+# while you may make derivative works of them, you:
+#
+# 1)  will not use the software and documentation or any derivative
+#     works for anything but your internal business purposes in
+#     conjunction your licensed used of Resilient's software, nor
+# 2)  provide or disclose the software and documentation or any
+#     derivative works to any third party.
+#
+# THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from __future__ import print_function
+from circuits import Component, Debugger
+from circuits.core.handlers import handler
+from resilient_circuits.actions_component import ResilientComponent, ActionMessage
+import os
+import logging
+
+
+import json
+import arrow   # improved Date/Time handling
+import tempfile
+
+from pprint import pprint
+import json
+
+#from lib.ResOrg import ResOrg
+
+#import ResilientOrg as ResOrg
+from ResilientOrg import ResilientOrg as ResOrg
+from pprint import pprint
+from copy import deepcopy
+
+import requests
+requests.packages.urllib3.disable_warnings()
+
+# Lower the logging threshold for requests
+logging.getLogger("requests.packages.urllib3").setLevel(logging.ERROR)
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+logging.Formatter('%(asctime)s:%(name)s:%(levelname)-8s %(message)s')
+
+
+#log.setLevel(logging.DEBUG)  # force logging level to be DEBUG
+CONFIG_DATA_SECTION = 'dtaction'
+CONFIG_SOURCE_SECTION = 'resilient'
+CONFIG_ACTION_SECTION = 'actiondata'
+
+
+class DTAction(ResilientComponent):
+
+    # this component recieves and email address as a new row in a data table
+    # it then looks up the email address and gets the name from a local json file
+    # and updates the table row with the name
+
+    #the function map maps the action name to a specific handling method within
+    # this object.  The mapping table is used to determine if the action has
+    # an associated function in the handler
+    # the function/method name MUST be the same as the action as defined in resilient
+    # Note action names are not the same as the Display Name in the action definition
+    #
+    # The display name for this action is "Table Action", it's system level name is 
+    # table_action
+    functionmap = [
+        "stubfunction"
+        ,"table_action"
+    ] 
+
+    def __init__(self, opts):
+        super(DTAction, self).__init__(opts)
+        self.options = opts.get(CONFIG_DATA_SECTION, {})
+        self.actiondata = opts.get(CONFIG_ACTION_SECTION,{})
+
+        #self.sync_file = os.path.dirname(os.path.abspath(self.sync_opts.get('mapfile')))
+        self.lookupfile = os.path.abspath(self.actiondata.get('lookupfile'))
+        self.table_name = self.actiondata.get('tablename')
+
+        # The queue name can be specified in the config file, or default to 'filelookup'
+        self.channel = "actions." + self.options.get("queue", "dt_action")
+
+        self.reso = ResOrg(client=self.rest_client)  # set up the resilient connection for the source which 
+                                              # is where the action will get fired from
+                                              # destination will open a unique resorg object each Time
+                                              # a connection needs to be made.
+
+        # the table definition is needed to map the columns for a row to an ID
+
+        self.table_def = self.reso.get_table_definition(self.table_name)
+        #log.debug("Table def {}".format(json.dumps(self.table_def,indent=5)))
+
+    @handler()
+    def _table_lookup_action(self, event, *args, **kwargs):
+        """The @handler() annotation without an event name makes this
+           a default handler - for all events on this component's queue.
+           This will be called with some "internal" events from Circuits,
+           so you must declare the method with the generic parameters
+           (event, *args, **kwargs), and ignore any messages that are not
+           from the Actions module.
+        """
+        if not isinstance(event, ActionMessage):
+            # Some event we are not interested in
+            return
+
+        log.debug("Event Name {}".format(event.name))
+
+        func = self.get_action_function(event.name) # determine which method to invoke based on the event name
+
+        if func is not None:
+            rv =func(event)
+            if rv:
+                yield rv
+            else:
+                yield "event handled"
+        else:
+            # an action without a handling method was put onto the queue
+            raise Exception("Invalid event - no function to handle")
+
+        #end _invite_action
+
+    def stubfunction(self,args):
+        # stub function, can be used to test if the action processor has connected properly
+        # create a manual action called "stubfunction" associated with the configured queue
+        # and invoke the manual action.  The log will show that the stub function was invoked
+        log.debug("Stub Function")
+        return "Stub invoked"
+
+    def table_action(self,args):
+        log.debug("table_action function")
+        
+        incident = self.reso.GetIncidentById(args.incident.get('id'))
+       
+        log.debug("Table id for {} is {}".format(self.table_name,self.table_def.get('id')))
+
+        (tabledata,error) = self.reso.get_table_data(args.incident.get('id'),self.table_def.get('id'))
+
+        if error is not None:
+            raise Exception("Data table specified could not be gotten: {}".format(error))
+      
+
+        '''
+        Get the numeric value for the cell definition. This is needed to map the cell data 
+        passed in the message to the different named fields in the table's definition
+        '''
+        cellid = self.get_cell_id("email_address")   # get the cell id from the field definition
+
+        if cellid is None:
+            # could not map the named field to a cell id value
+            return "Cell label {} does not exist".format("email_address")
+
+
+        '''
+        Get the cell id of the cell that we are going to update. 
+        More complex processing will need to handle cell updates differently
+        '''
+        namecell = self.get_cell_id("user_name")
+
+        rowdata = args.row  # for ease of reference point to the event row data
+
+        isnewrow = self.check_row_data(rowdata) # check if we have a row removal event
+        if not isnewrow:
+            # row removal event return a meaningful completion string
+            log.debug("Row Deleted")
+            rv = "action fired on row deletion.. ignore"
+            return rv
+
+        lookfor = rowdata.get('cells').get(str(cellid))
+        log.debug("lookfor = {}".format(lookfor))
+
+        # look up the users name based on the email address
+        lookedup = self.lookup_data(lookfor.get('value'))
+
+        if lookedup is None:
+            # if we failed to lookup, put User Not Found into the user_name cell for the row
+            lookedup = "User Not Found"
+
+        # need to do the table update here
+        
+        # find the row id from the event to map to the table data row
+        rid = rowdata.get('id')
+        tablerows = tabledata.get('rows')
+
+        '''
+        Walk through all the table rows until the right row is found
+        This probably could actually be skipped since its a simple example, and we
+        can construct the update information based on what was passed, however 
+        this is just an example
+        '''
+        for tr in tablerows:
+            log.debug("tr {}".format(tr))
+
+            # fetch the information for the cell id
+            cv = tr.get('cells').get(str(cellid))
+
+            if cv.get('row_id') == rid:
+           
+                nv = tr.get('cells').get(str(namecell))
+                nv['value'] = lookedup
+                #log.debug("new tr {}".format(tr))
+
+                updatedrow = deepcopy(tr)  # make a copy of the data
+
+                # remove the uneeded elements from the dictionary
+                del updatedrow['id']
+                del updatedrow['actions']
+                (ntable,error) = self.reso.PutTableRow(args.incident.get('id'),
+                                                    self.table_def.get('id'),
+                                                    updatedrow,
+                                                    rid
+                                                    )  
+                if ntable is None:
+                    raise Exception(error)
+                break  # get out of the loop, since only one row is passed on an action event
+
+        else:
+            raise Exception("Data to be looked up does not exist in repository")
+
+        return "table action completed"
+
+
+    def check_row_data(self,rd):
+        '''
+        Check the row data passed in the action message
+        If there are no "value" elements in the dictionary, then the operation was
+        the deletion of the field
+        '''
+        for cell in rd.get('cells'):
+            cd = rd.get('cells').get(cell)
+            log.debug("celldata {}".format(cd))
+            if cd.get('value',None) is None:
+                return False
+        return True
+
+    def get_cell_id(self,apiname):
+        '''
+        map the apiname of a cell to the numeric id value.  id's are what are passed in
+        to the action in the message, api_names are how we as humans view the world.  id's are unique
+        for a given configuration of resilient
+        '''
+        f = self.table_def.get('fields').get(apiname,None)
+        if f is not None:
+            return f.get('id')
+        return None
+
+
+    def get_action_function(self,funcname):
+        '''
+        map the name passed in to a method within the object
+        '''
+        if funcname in DTAction.functionmap:
+            log.debug("get function {}".format(funcname))
+            return getattr(self,'%s'%funcname)
+        log.debug("get function none")
+        return None
+
+    def lookup_data(self,lookfor):
+        '''
+        Lookup the passed in email address and return the name
+        if there is no match, None is returned.
+
+        The file is loaded each time the action is invoked to allow for changing
+        the file content while the action processor is being run
+        '''
+        with open(self.lookupfile) as jdata:
+            lookupdata = json.load(jdata)
+        for data in lookupdata:
+            if data.get('email') == lookfor:
+                return data.get('name')
+        return None
+
+
+
+
