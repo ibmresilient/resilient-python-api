@@ -186,15 +186,9 @@ class CSIRTAction(ResilientComponent):
         '''
         map the name passed in to a method within the object
         '''
-        functionmap = [
-                "stubfunction"
-                ,"csirtaction"
-            ] 
-        if funcname in functionmap:
-            log.debug("get function {}".format(funcname))
-            return getattr(self,'%s'%funcname)
-        log.debug("get function none")
-        return None
+
+        log.debug("get function {}".format(funcname))
+        return getattr(self,'%s'%funcname,None)
 
 
 
