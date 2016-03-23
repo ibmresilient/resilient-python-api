@@ -88,6 +88,10 @@ class ResilientOrg(object):
         self.enums = get_field_enums_by_type('incident')
         return self.enums
 
+    def get_incident_types(self):
+        t = self.client().get("/incident_types")
+        return t
+
 
     # build dictionary of fields for a specific DTO definition
     def get_field_enums_by_type(self,ftype):
