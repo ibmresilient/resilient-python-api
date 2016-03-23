@@ -48,7 +48,9 @@ Configuration information for the action.
 ## Resilient Configuration
 The default configuration expects an action queue named *csirt_action*, and an automatic action for an incident named 
 *csirtaction*.  The automatic action should have have a condition of the Boolean field *csirt_action_required* being changed to Yes.
+### Custom Field definition
+![Custom field definition](Documents/fielddefinition.png)
 ### Messaged Destination 
-![Custom message destination](Documents/messagedestination.png)
+![message destination](Documents/messagedestination.png)
 ### Automatic Action
 ![Automatic Action](Documents/automaticaction.png)
