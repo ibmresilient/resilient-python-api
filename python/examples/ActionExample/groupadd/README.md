@@ -1,11 +1,11 @@
-# Action handler for looking adding an incident type based on a custom field being changed.
-In this case a Boolean field *CSIRT Action Required* is configured with an automatic action to add the 
-incident type *CSIRT* when set to Yes.
-
+# Action handler for adding a group to an incident based on the addition of a specific incident type.
+In this case an incident type of *CSIRT* is added, and a group *CSIRT* is created.  When the incident type is
+added to a case, the action will check if the group is already a member (or owner) of the case and add the group 
+if it is not.  
 
 ## Execution
 ```
-python csirtaction.py
+python groupadd.py
 ```
 OR
 ```
@@ -43,13 +43,14 @@ The destination queue for the action.
 
 ### actiondata
 Configuration information for the action.  
-+ incidenttype = text in the Name of the incident type
++ group= name of the group to add
++ incidenttype= incident type to trigger the addition of membership.
 
 ## Resilient Configuration
 The default configuration expects an action queue named *csirt_action*, and an automatic action for an incident named 
 *csirtaction*.  The automatic action should have have a condition of the Boolean field *csirt_action_required* being changed to Yes.
-### Custom Field definition
-![Custom field definition](Documents/fielddefinition.png)
+### Custom incident type definition
+![Incident Type definition](Documents/incidenttype.png)
 ### Messaged Destination 
 ![message destination](Documents/messagedestination.png)
 ### Automatic Action
