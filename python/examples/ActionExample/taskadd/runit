@@ -1,0 +1,4 @@
+#!/bin/bash
+set -x
+APP_CONFIG_FILE=./Config/app.config python taskadd.py "$@"
+set +x
