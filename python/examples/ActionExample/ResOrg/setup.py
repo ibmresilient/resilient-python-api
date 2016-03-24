@@ -45,11 +45,11 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = 'Long description goes here'
+long_description = read('README')
 
 setup(
     name='ResilientOrg',
-    version=read('version.text'), #'0.0.3',  # also __version__ in __init__.py
+    version='0.0.6',  #'0.0.3',  # also __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
