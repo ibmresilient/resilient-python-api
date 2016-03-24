@@ -113,6 +113,15 @@ class ResilientOrg(object):
                 return p.get('name')
         return None
 
+    def map_phase_name_to_id(self,pname,plist):
+        self.log.debug("map phase name to id {}".format(pname))
+        for p in plist.get('entities'):
+            self.log.debug(p)
+            if p.get('name') == pname:
+                return p.get('id')
+        return None
+
+
     # build dictionary of fields for a specific DTO definition
     def get_field_enums_by_type(self,ftype):
         # get a simple dictionary list of the field enumerations
@@ -338,5 +347,47 @@ class ResilientOrg(object):
         nnote = self.client().post("/incidents/{}/comments".format(incident_id),note)
         return nnote
 
+    def CreateTask(self,incident_id,taskname,instructions,phasename):
+        task_template = {
+            "inc_id": incident_id,
+            "name": taskname,
+            "phase_id": None,
+            "instr_text": instructions,
+            "active": True,
+            "auto_task_id": None,
+            "cat_name": "",
+            "custom": False,
+            "creator": {},
+            "description": None,
+            "frozen": False,
+            "fullname": "Unassigned",
+            "id": None,
+            "inc_name": "",
+            "inc_owner_id": None,
+            "inc_training": False,
+            "init_date": None,
+            "last_update": None,
+            "owner_fname": None,
+            "owner_lname": None,
+            "members": None,
+            "perms": {},
+            "regs": None,
+            "required": True,
+        }
 
-        
+        plist = self.get_phases() 
+        self.log.debug("Phasename {}".format(phasename))
+        pid = self.map_phase_name_to_id(phasename,plist)
+        self.log.debug("Phase id = {}".format(pid))
+        if pid:
+            task_template['phase_id'] = pid
+        else:
+            self.log.error("Phase name specified does not match phases defined in the system")
+            return None
+
+        nt = self.client().post("/incidents/{}/tasks".format(incident_id),task_template) 
+        return nt
+
+
+
+
