@@ -1,8 +1,14 @@
-# Action handler for adding a note to the incident via a manual action field
+# Action handler for adding a task to the incident
+Expects three action fields to be defined.  *Task Instructions* as a Text Area, *Task Name* as a Text field, and
+*Task Phase* as a Text field.
+
+The user is expected to type the phase in correctly (a production implementation would create a select field and
+put the configurations phases into the field, however since this is generic and can run against any organization 
+definition, manual entry is chosen)
 
 ## Execution
 ```
-python noteadd.py
+python taskadd.py
 ```
 OR
 ```
@@ -41,11 +47,13 @@ The destination queue for the action.
 
 
 ## Resilient Configuration
-The default configuration expects an action queue named *milestoneadd*, and an automatic action for an incident named 
-*add_mile_stone_on_phase_change*.  The automatic action should have have a condition of the the field Phase changing.
+The default configuration expects an action queue named *add_task*, and a manual action for an incident named 
+*Add Task on Manual Action*. Three fields as noted before are expected 
 ### Messaged Destination 
 ![message destination](Documents/messagedestination.png)
 ### Manual Action
 ![Manual Action](Documents/automaticaction.png)
-### Action Field definition
+### Action Fields definition
 ![Manual Action Field](Documents/actionfield.png)
+![Manual Action Field](Documents/actionfield1.png)
+![Manual Action Field](Documents/actionfield2.png)

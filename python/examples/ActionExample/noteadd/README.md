@@ -41,8 +41,8 @@ The destination queue for the action.
 
 
 ## Resilient Configuration
-The default configuration expects an action queue named *milestoneadd*, and an automatic action for an incident named 
-*add_mile_stone_on_phase_change*.  The automatic action should have have a condition of the the field Phase changing.
+The default configuration expects an action queue named *noteadd*, and a manual action for an incident named 
+*Add Note on Manual Action*. The action expects a single text area field called "NoteContent" 
 ### Messaged Destination 
 ![message destination](Documents/messagedestination.png)
 ### Manual Action

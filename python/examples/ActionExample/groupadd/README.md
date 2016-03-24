@@ -47,8 +47,8 @@ Configuration information for the action.
 + incidenttype= incident type to trigger the addition of membership.
 
 ## Resilient Configuration
-The default configuration expects an action queue named *csirt_action*, and an automatic action for an incident named 
-*csirtaction*.  The automatic action should have have a condition of the Boolean field *csirt_action_required* being changed to Yes.
+The default configuration expects an action queue named *Group add on incident type*, and an automatic action for an incident named 
+*group add*.  The automatic action should have have a condition of the Boolean field *csirt_action_required* being changed to Yes.
 ### Custom incident type definition
 ![Incident Type definition](Documents/incidenttype.png)
 ### Messaged Destination 
