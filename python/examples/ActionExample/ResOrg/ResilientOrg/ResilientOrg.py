@@ -85,15 +85,21 @@ class ResilientOrg(object):
 
 
     def get_phases(self):
+        '''
+        Get the phase configuration from the org
+        '''
         phase = self.client().get("/phases")
         return phase
 
     # build a dictionary of just the enumerations for  incident fields.
     def get_field_enums(self):
+        # get the field enumerations as a simple json structure of
+        # enumeration and id value
         self.enums = get_field_enums_by_type('incident')
         return self.enums
 
     def get_incident_types(self):
+        # get the incident type enumerations
         t = self.client().get("/incident_types")
         return t
 
@@ -109,6 +115,8 @@ class ResilientOrg(object):
 
     # build dictionary of fields for a specific DTO definition
     def get_field_enums_by_type(self,ftype):
+        # get a simple dictionary list of the field enumerations
+        # for a given type
         fields = self.client().get('/types/{}/fields'.format(ftype))
 
         jstring = "{"  
@@ -288,6 +296,7 @@ class ResilientOrg(object):
             return(None,e)
 
     def get_incident_type_id(self,itypes,itstring):
+        # convert from a label to the numeric value of the incident typ
         for it in itypes:
             itdict = itypes.get(it)
             if itdict.get('name') == itstring:
@@ -295,12 +304,14 @@ class ResilientOrg(object):
         return None
 
     def map_incident_type_id_to_name(self,itypes,id):
+        # convert from an incident type id to the label
         if itypes.get(str(id),None) is not None:
             return itypes.get(str(id)).get('name')
         return None
 
 
     def get_user_id(self,userlist,name):
+        # get the specified user or group name in id format
         self.log.debug("name {} >userlist {}".format(name,userlist))
         for user in userlist:
             if user.get('name') == name:
@@ -308,6 +319,7 @@ class ResilientOrg(object):
         return None
 
     def CreateMilestone(self,incidentid,title,description):
+        # create a milestone on an incident using the current time
         mtemp = {"date":int(time.time()*1000),
                  "description":description,
                  "title":title}

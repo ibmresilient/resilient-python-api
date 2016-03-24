@@ -73,17 +73,8 @@ CONFIG_ACTION_SECTION = 'actiondata'
 class MileStoneAddAction(ResilientComponent):
     '''
 
-    # invoked when a field CSIRT changes to True, adding an incident Type of CSIRT
-    # to the incident
+     invoked when the phase field is changed
 
-    #the function map maps the action name to a specific handling method within
-    # this object.  The mapping table is used to determine if the action has
-    # an associated function in the handler
-    # the function/method name MUST be the same as the action as defined in resilient
-    # Note action names are not the same as the Display Name in the action definition
-    #
-    # The display name for this action is "CSIRTAction", it's system level name is 
-    # csirtaction
     '''
 
     def __init__(self, opts):
