@@ -34,6 +34,7 @@ from collections import OrderedDict
 from pprint import pprint
 
 import logging
+import time
 
 # Object class for dealing with the resilient organization 
 
@@ -83,6 +84,10 @@ class ResilientOrg(object):
         return self._client
 
 
+    def get_phases(self):
+        phase = self.client().get("/phases")
+        return phase
+
     # build a dictionary of just the enumerations for  incident fields.
     def get_field_enums(self):
         self.enums = get_field_enums_by_type('incident')
@@ -92,6 +97,15 @@ class ResilientOrg(object):
         t = self.client().get("/incident_types")
         return t
 
+
+    def map_phase_id(self,pid,plist):
+        self.log.debug("Phase id {}".format(pid))
+        self.log.debug("Phase List".format(plist))
+        for p in plist.get('entities'):
+            self.log.debug(p)
+            if p.get('id') == pid:
+                return p.get('name')
+        return None
 
     # build dictionary of fields for a specific DTO definition
     def get_field_enums_by_type(self,ftype):
@@ -272,3 +286,31 @@ class ResilientOrg(object):
             return(td,None)
         except Exception as e:
             return(None,e)
+
+    def get_incident_type_id(self,itypes,itstring):
+        for it in itypes:
+            itdict = itypes.get(it)
+            if itdict.get('name') == itstring:
+                return itdict.get('id')
+        return None
+
+    def map_incident_type_id_to_name(self,itypes,id):
+        if itypes.get(str(id),None) is not None:
+            return itypes.get(str(id)).get('name')
+        return None
+
+
+    def get_user_id(self,userlist,name):
+        self.log.debug("name {} >userlist {}".format(name,userlist))
+        for user in userlist:
+            if user.get('name') == name:
+                return user.get('id')
+        return None
+
+    def CreateMilestone(self,incidentid,title,description):
+        mtemp = {"date":int(time.time()*1000),
+                 "description":description,
+                 "title":title}
+
+        nmst = self.client().post("/incidents/{}/milestones".format(incidentid),mtemp)
+        return nmst
