@@ -45,8 +45,6 @@ Configuration information for the action.
 ## Resilient Configuration
 The default configuration expects an action queue named *milestoneadd*, and an automatic action for an incident named 
 *add_mile_stone_on_phase_change*.  The automatic action should have have a condition of the the field Phase changing.
-### Custom incident type definition
-![Incident Type definition](Documents/incidenttype.png)
 ### Messaged Destination 
 ![message destination](Documents/messagedestination.png)
 ### Automatic Action

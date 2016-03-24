@@ -130,11 +130,7 @@ class MileStoneAddAction(ResilientComponent):
         return "Stub invoked"
 
     def add_milestone_on_phase_change(self,args):
-        log.debug("Invoked function")
-        log.debug("{}".format( json.dumps(args.message,indent=5)))
-
         phase_enum = self.reso.get_phases()
-        log.debug("{}".format(json.dumps(phase_enum,indent=5)))
 
         phase_name = self.reso.map_phase_id(args.message.get('incident').get('phase_id'),phase_enum)
         if phase_name:
