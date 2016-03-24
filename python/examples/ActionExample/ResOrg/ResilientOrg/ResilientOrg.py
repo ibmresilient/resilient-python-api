@@ -326,3 +326,17 @@ class ResilientOrg(object):
 
         nmst = self.client().post("/incidents/{}/milestones".format(incidentid),mtemp)
         return nmst
+
+    def CreateNote(self,incident_id,content):
+        note = {
+            "parent_id":None,
+            "mentioned_users":[],
+            "text":content,
+            "inc_id":incident_id,
+            "id":None
+        }
+        nnote = self.client().post("/incidents/{}/comments".format(incident_id),note)
+        return nnote
+
+
+        
