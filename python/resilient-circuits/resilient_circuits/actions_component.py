@@ -43,7 +43,7 @@ import json
 import re
 import random
 from functools import wraps
-from rest_helper import get_resilient_client, reset_resilient_client
+from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
 import logging
 LOG = logging.getLogger(__name__)
