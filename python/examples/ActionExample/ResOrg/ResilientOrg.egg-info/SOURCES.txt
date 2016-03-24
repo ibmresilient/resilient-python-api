@@ -1,9 +1,0 @@
-README
-setup.py
-ResilientOrg/ResilientOrg.py
-ResilientOrg/__init__.py
-ResilientOrg.egg-info/PKG-INFO
-ResilientOrg.egg-info/SOURCES.txt
-ResilientOrg.egg-info/dependency_links.txt
-ResilientOrg.egg-info/requires.txt
-ResilientOrg.egg-info/top_level.txt
