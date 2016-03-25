@@ -123,7 +123,7 @@ class AddTaskAction(ResilientComponent):
         task_instructions = args.properties.get('task_instructions')
         task_phase = args.properties.get('task_phase')
 
-        task = self.reso.CreateTask(args.message.get('incident').get('id'), tname, task_instructions, task_phase)
+        task = self.reso.create_task(args.message.get('incident').get('id'), tname, task_instructions, task_phase)
         if task is None:
             raise Exception("Task Creation Failed Check logs")
 

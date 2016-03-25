@@ -79,7 +79,7 @@ class ResilientOrg(object):
                 return None
 
 
-        self.GetUsers()
+        self.get_users()
         self.alltasks = None
         self.groups = None
 
@@ -189,14 +189,14 @@ class ResilientOrg(object):
                 return (None, ecode)
 
 
-    def GetIncidentById(self, incidentid):
+    def get_incident_by_id(self, incidentid):
         """
         Obtain the full content of an incident based on its incident id
         """
         uri = "/incidents/{}".format(incidentid)
         return self.client().get(uri)
 
-    def GetUsers(self):
+    def get_users(self):
         """
         Get the users of an organization
         Used when assigning users to an incidents membership
@@ -211,7 +211,7 @@ class ResilientOrg(object):
             return None
         return self.users
 
-    def GetGroups(self):
+    def get_groups(self):
         """
         Get the groups configured in the system
         """
@@ -224,20 +224,20 @@ class ResilientOrg(object):
             return False
         return self.groups
 
-    def GetIncidentTasks(self, incidentid):
+    def get_incident_tasks(self, incidentid):
         """
         Get the task list for a given incident.  pulls only the current list of tasks
         """
         uri = "/incidents/{}/tasktree".format(incidentid)
         try:
             itasks = self.client().get(uri)
-        except resilient.co3.SimpleHTTPException as e:
-            self.log.error("Failed to get incident tasks {}".format(e))
+        except resilient.co3.SimpleHTTPException as ecode:
+            self.log.error("Failed to get incident tasks {}".format(ecode))
             return None
 
         return itasks
 
-    def GetAllTasks(self):
+    def get_all_tasks(self):
         """
         Get all of the tasks in an org
         """
@@ -249,19 +249,19 @@ class ResilientOrg(object):
             self.alltasks = None
         return self.alltasks
 
-    def GetTask(self, taskid):
+    def get_task(self, taskid):
         """
         Get a specific tasks definition based on the task id
         """
         uri = "/tasks/{}".format(taskid)
         try:
-            t = self.client().get(uri)
-        except resilient.co3.SimpleHTTPException as e:
-            self.log.error("Failed to get task {} \n {}".format(taskid, e))
+            task = self.client().get(uri)
+        except resilient.co3.SimpleHTTPException as ecode:
+            self.log.error("Failed to get task {} \n {}".format(taskid, ecode))
             return None
-        return t
+        return task
 
-    def PutTask(self, taskid, task):
+    def put_task(self, taskid, task):
         """
         update a task's definition
         """
@@ -282,7 +282,7 @@ class ResilientOrg(object):
             fieldname = field["name"]
         return fieldname
 
-    def PutCase(self, case):
+    def put_case(self, case):
         """
         update an incident and return the full data after the update
         """
@@ -292,7 +292,7 @@ class ResilientOrg(object):
         except resilient.co3.SimpleHTTPException as ecode:
             return (None, ecode)
 
-    def CreateCase(self, tplate):
+    def create_case(self, tplate):
         """
         Create a new incident in resilient based on the template provided
         Assumes that the template meets the minimum requirements for fields for a given org
@@ -308,7 +308,7 @@ class ResilientOrg(object):
         return (incident, None)
 
 
-    def PutTableRow(self, incidentid, tableid, rowdata, rowid):
+    def put_table_row(self, incidentid, tableid, rowdata, rowid):
         """
         update an existing row of a table within an incident
         """
@@ -350,7 +350,7 @@ class ResilientOrg(object):
                 return user.get('id')
         return None
 
-    def CreateMilestone(self, incidentid, title, description):
+    def create_milestone(self, incidentid, title, description):
         """
         create a milestone on an incident using the current time
         """
@@ -361,12 +361,12 @@ class ResilientOrg(object):
         try:
             nmst = self.client().post("/incidents/{}/milestones".format(incidentid), mtemp)
         except resilient.co3.SimpleHTTPException as ecode:
-            log.error("Resilient server error {}".format(ecode))
+            self.log.error("Resilient server error {}".format(ecode))
             return None
 
         return nmst
 
-    def CreateNote(self, incident_id, content):
+    def create_note(self, incident_id, content):
         """
         Create a note in an incident
         """
@@ -380,11 +380,11 @@ class ResilientOrg(object):
         try:
             nnote = self.client().post("/incidents/{}/comments".format(incident_id), note)
         except resilient.co3.SimpleHTTPException as ecode:
-            log.error("Note Creation failed {}".format(ecode))
+            self.log.error("Note Creation failed {}".format(ecode))
             return None
         return nnote
 
-    def CreateTask(self, incident_id, taskname, instructions, phasename):
+    def create_task(self, incident_id, taskname, instructions, phasename):
         """
         Create a task in the incident
         """

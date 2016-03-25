@@ -95,7 +95,7 @@ class PushHandler(ResilientComponent):
         self.source_reso = ResOrg(client=self.rest_client)
 
         self.enums = self.source_reso.get_field_enums()
-        self.users = self.source_reso.GetUsers()
+        self.users = self.source_reso.get_users()
 
     @handler()
     def _sync_action(self, event, *args, **kwargs):
@@ -135,7 +135,7 @@ class PushHandler(ResilientComponent):
 
         # create connection to the destination
         dest_reso = ResOrg(opts=self.dest_opts)
-        source_incident = self.source_reso.GetIncidentById(args.incident.get('id'))
+        source_incident = self.source_reso.get_incident_by_id(args.incident.get('id'))
         source_crosslink = source_incident.get('properties').get(fieldmap.get('crosslink').get('sourcefield'))
         if source_crosslink == "" or source_crosslink == 0 or source_crosslink is None:
             log.debug("Cross link is not set >{}<".format(source_crosslink))
@@ -250,7 +250,7 @@ class PushHandler(ResilientComponent):
         # if the cross link in the source has already been set, then just skip.  Probably should move thie earlier in the handler since
         # there is no need to do the mapping.
         if source_incident['properties'][crosslinks.get('sourcefield')] is None or source_incident['properties'][crosslinks.get('sourcefield')] == "":
-            (dest_incident, error) = dest_reso.CreateCase(destdata)
+            (dest_incident, error) = dest_reso.create_case(destdata)
             #if the incident was created, then update the source incident cross link
             if dest_incident is None:
                 log.error("ERROR creating destination incident: {}".format(error))
@@ -258,7 +258,7 @@ class PushHandler(ResilientComponent):
                 log.debug("Incident id {} created".format(dest_incident.get('id')))
                 source_incident['properties'][crosslinks.get('sourcefield')] = dest_incident.get('id')
                 # this really should be a get_put of the source incident in case something changed
-                self.source_reso.PutCase(source_incident)
+                self.source_reso.put_case(source_incident)
         else:
             log.info("source cross link has already been set")
             return "Destination case already created"

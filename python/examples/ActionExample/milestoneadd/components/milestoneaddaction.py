@@ -116,7 +116,7 @@ class MileStoneAddAction(ResilientComponent):
         phase_name = self.reso.map_phase_id(args.message.get('incident').get('phase_id'), phase_enum)
         if phase_name:
             log.debug("phase name {}".format(phase_name))
-            mst = self.reso.CreateMilestone(args.message.get('incident').get('id'),
+            mst = self.reso.create_milestone(args.message.get('incident').get('id'),
                                 "Phase Changed to {}".format(phase_name),
                                 '''
                                 The phase was changed

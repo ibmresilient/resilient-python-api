@@ -134,7 +134,7 @@ class CSIRTAction(ResilientComponent):
         log.debug("csirt action function")
 
         # get the full incident
-        incident = self.reso.GetIncidentById(args.incident.get('id'))
+        incident = self.reso.get_incident_by_id(args.incident.get('id'))
         incident_types = self.reso.get_incident_types()
 
         log.debug("looking for incident type {}".format(self.new_incident_type))

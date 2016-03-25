@@ -209,7 +209,7 @@ class DTAction(ResilientComponent):
                 # remove the uneeded elements from the dictionary
                 del updatedrow['id']
                 del updatedrow['actions']
-                (ntable, error) = self.reso.PutTableRow(args.incident.get('id'),
+                (ntable, error) = self.reso.put_table_row(args.incident.get('id'),
                                                         self.table_def.get('id'),
                                                         updatedrow,
                                                         rid

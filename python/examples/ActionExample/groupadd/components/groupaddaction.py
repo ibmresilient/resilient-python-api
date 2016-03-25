@@ -94,8 +94,8 @@ class GroupAddAction(ResilientComponent):
 
         self.group_to_add = self.actiondata.get("group")
         self.incidenttype = self.actiondata.get("incidenttype")
-        self.userlist = self.reso.GetUsers()
-        self.grouplist = self.reso.GetGroups()
+        self.userlist = self.reso.get_users()
+        self.grouplist = self.reso.get_groups()
 
     @handler()
     def _group_action(self, event, *args, **kwargs):
@@ -141,7 +141,7 @@ class GroupAddAction(ResilientComponent):
         log.debug("group_add action function")
 
         # get the full incident
-        incident = self.reso.GetIncidentById(args.incident.get('id'))
+        incident = self.reso.get_incident_by_id(args.incident.get('id'))
         
         incident_types = self.reso.get_incident_types()
        
