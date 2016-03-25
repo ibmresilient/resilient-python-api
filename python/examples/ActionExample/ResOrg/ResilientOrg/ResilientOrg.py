@@ -358,7 +358,12 @@ class ResilientOrg(object):
                  "description":description,
                  "title":title}
 
-        nmst = self.client().post("/incidents/{}/milestones".format(incidentid), mtemp)
+        try:
+            nmst = self.client().post("/incidents/{}/milestones".format(incidentid), mtemp)
+        except resilient.co3.SimpleHTTPException as ecode:
+            log.error("Resilient server error {}".format(ecode))
+            return None
+
         return nmst
 
     def CreateNote(self, incident_id, content):
