@@ -18,16 +18,19 @@
 # THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
 # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
+# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT, 
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Form object definitions here.
+"""
+Form handling for the web page
+"""
 
 from flask.ext.wtf import Form
 #from wtforms import StringField, BooleanField1
@@ -42,7 +45,7 @@ from wtforms.widgets import HTMLString, html_params
 
 class DatePickerWidget(object):
     """
-    Date Time picker from Eonasdan GitHub
+    Date Picker widget for proper calendar view
     """
     data_template = (
         '''
@@ -66,7 +69,7 @@ class DatePickerWidget(object):
             </div>
         </div>
         '''     
-                    )
+        )
 
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', 'datetimepicker1') #field.id)
@@ -76,11 +79,13 @@ class DatePickerWidget(object):
         template = self.data_template
 
         return HTMLString(template % {
-                    'text': html_params(type='text', value=field.data, **kwargs),
-                    'id':field.id
-                    })
+                    'text': html_params(type='text', value=field.data, **kwargs), 
+                    'id':field.id})
 
 class DateTimePickerWidget(object):
+    """
+    Date Time Picker widget for page
+    """
     data_template = (
         '''
         <div class="container">
@@ -115,30 +120,37 @@ class DateTimePickerWidget(object):
         template = deepcopy(self.data_template)
 
         return HTMLString(template % {
-                                    'text': html_params(type='text', value=field.data, **kwargs),
-                                    'id':field.id
-                                })
+                            'text': html_params(type='text', value=field.data, **kwargs), 
+                            'id':field.id})
 # SAB end widget playing
 
 
 
 # Define the login form for authentication
 class LoginForm(Form):
-    userid = wtf.StringField('User:',validators=[DataRequired()])
+    """
+    Form the the login form
+    """
+    userid = wtf.StringField('User:', validators=[DataRequired()])
     password = wtf.PasswordField('Password')
 
 # Scaffold for the dynamicaly created case form
 class CaseForm(Form):
-    
+    """
+    form object for case form
+    """ 
     @classmethod
-    def append_field(cls,name,field):
-        setattr(cls,name,field)
+    def append_field(cls, name, field):
+        setattr(cls, name, field)
         return cls
 
 class TestForm(Form):
-    foo = wtf.DateTimeField("Date Time Sample",widget=DateTimePickerWidget())
-    bar = wtf.DateField("Date Sample",widget=DatePickerWidget())
-    select = wtf.SelectMultipleField("Multi Select",choices=[('A','a'),('B','b'),('C','c')])
+    """
+    Test form for testing widgets with test page
+    """
+    dtfield = wtf.DateTimeField("Date Time Sample", widget=DateTimePickerWidget())
+    dfield = wtf.DateField("Date Sample", widget=DatePickerWidget())
+    select = wtf.SelectMultipleField("Multi Select", choices=[('A', 'a'), ('B', 'b'), ('C', 'c')])
     check = wtf.BooleanField("Boolean")
 
 

@@ -18,34 +18,39 @@
 # THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
 # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
+# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT, 
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import co3 as resilient
 import os
 import json
-from WebForm import app
-from collections import OrderedDict
-from pprint import pprint
 
+import co3 as resilient
+from WebForm import app
+
+"""
+Utility module
+"""
 
 # Object class for dealing with the resilient organization 
 
 class ResOrg(object):
+    """
+    utility object
+    """
     def __init__(self):
         self.config = app.config
         self.form_config = None
 
         config = self.config
-        self.client = resilient.SimpleClient(org_name=config['RES_ORG'],
-            base_url="https://{}:{}".format(config['RES_HOST'],config['RES_PORT']),verify=config['RES_CA'])
-        self.client.connect(config['RES_ID'],config['RES_PW'])
+        self.client = resilient.SimpleClient(org_name=config['RES_ORG'], 
+            base_url="https://{}:{}".format(config['RES_HOST'], config['RES_PORT']), verify=config['RES_CA'])
+        self.client.connect(config['RES_ID'], config['RES_PW'])
         self.enums = None
         self.enums = self.get_field_enums()
         self.form_config = self.get_form_config()
@@ -55,6 +60,9 @@ class ResOrg(object):
 
     # build a dictionary of just the enumerations for fields.
     def get_field_enums(self):
+        """
+        get the field enumerations for the incident type for mapping
+        """
         if self.enums is None:
             fields = self.client.get('/types/incident/fields')
             jstring = "{"
@@ -64,9 +72,9 @@ class ResOrg(object):
                     jstring += "\"{}\":[" .format(name)
                     for values in majorkey["values"]:
                         label = values["label"].encode('utf-8')
-                        jstring += "{{ \"{}\" : \"{}\" }},".format(label,values["value"])
+                        jstring += "{{ \"{}\" : \"{}\" }}, ".format(label, values["value"])
                     jstring = jstring[:-1]
-                    jstring += "],"
+                    jstring += "], "
 
             jstring = jstring[:-1]
             jstring += "}"
@@ -76,32 +84,40 @@ class ResOrg(object):
 
     # read the configuration for the input form
     def get_form_config(self):
+        """ read the configuration file for the input form"""
         if self.form_config is None:
             aproot = os.path.dirname(os.path.abspath(__file__))
-            formfile = os.path.join(aproot,'config','form_layout.json')
-            with open(formfile,'rb') as ff:
-                self.form_config = json.load(ff)
+            formfile = os.path.join(aproot, 'config', 'form_layout.json')
+            with open(formfile, 'rb') as ffconfig:
+                self.form_config = json.load(ffconfig)
 
         return self.form_config
 
     def get_enums(self):
+        """ get the field enumerations"""
         if self.enums is None:
             self.enums = self.get_field_enums()
 
         return self.enums
 
-    def get_template(self,tempname):
+    def get_template(self, tempname):
+        """
+        Read the template for incident creation
+        """
         if self.create_template is None:
             aproot = os.path.dirname(os.path.abspath(__file__))
-            formfile = os.path.join(aproot,'config',tempname+'.json')
-            with open(formfile,'rb') as ff:
-               template  = json.load(ff)
+            formfile = os.path.join(aproot, 'config', tempname+'.json')
+            with open(formfile, 'rb') as ffinput:
+                template  = json.load(ffinput)
         return template
 
 
-    def get_config(self,configelement):
+    def get_config(self, configelement):
+        """
+        Get the configuration 
+        """
         for i in self.form_config:
-            if i.get('fieldname',None) == configelement:
+            if i.get('fieldname', None) == configelement:
                 return i
         return None
 
