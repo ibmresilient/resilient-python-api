@@ -30,3 +30,4 @@
 __version__ = "24.0.1"
 
 from .ResilientOrg import ResilientOrg
+from .ResilientOrg import ResilientIncident

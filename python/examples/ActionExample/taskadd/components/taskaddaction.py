@@ -41,6 +41,8 @@ import logging
 import requests
 
 from ResilientOrg import ResilientOrg as ResOrg
+from ResilientOrg import ResilientIncident as ResInc
+
 from circuits import Component, Debugger
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
@@ -118,12 +120,12 @@ class AddTaskAction(ResilientComponent):
         log.debug("Invoked function")
 
 
-        
+        incident = ResInc(self.reso,incident=args.message.get('incident'))        
         tname = args.properties.get('task_name')
         task_instructions = args.properties.get('task_instructions')
         task_phase = args.properties.get('task_phase')
 
-        task = self.reso.create_task(args.message.get('incident').get('id'), tname, task_instructions, task_phase)
+        task = incident.create_task(tname, task_instructions, task_phase)
         if task is None:
             raise Exception("Task Creation Failed Check logs")
 

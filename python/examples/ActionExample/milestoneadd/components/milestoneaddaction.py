@@ -39,6 +39,7 @@ import requests
 
 
 from ResilientOrg import ResilientOrg as ResOrg
+from ResilientOrg import ResilientIncident as ResInc
 from circuits import Component, Debugger
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
@@ -114,10 +115,11 @@ class MileStoneAddAction(ResilientComponent):
         phase_enum = self.reso.get_phases()
 
         phase_name = self.reso.map_phase_id(args.message.get('incident').get('phase_id'), phase_enum)
+
+        incident = ResInc(self.reso,incident=args.message.get('incident'))
         if phase_name:
             log.debug("phase name {}".format(phase_name))
-            mst = self.reso.create_milestone(args.message.get('incident').get('id'),
-                                "Phase Changed to {}".format(phase_name),
+            mst = incident.create_milestone( "Phase Changed to {}".format(phase_name),
                                 '''
                                 The phase was changed
                                 '''

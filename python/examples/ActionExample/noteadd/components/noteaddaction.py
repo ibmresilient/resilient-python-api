@@ -46,6 +46,7 @@ from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
 
 from ResilientOrg import ResilientOrg as ResOrg
+from ResilientOrg import ResilientIncident as ResInc
 
 requests.packages.urllib3.disable_warnings()
 
@@ -119,7 +120,9 @@ class AddNoteAction(ResilientComponent):
 
         action_content = args.properties
 
-        note = self.reso.create_note(args.message.get('incident').get('id'), args.properties.get('notecontent'))
+        incident = ResInc(self.reso,incident=args.message.get('incident'))
+        note = incident.create_note(incident.get('id'), 
+                                    args.properties.get('notecontent'))
 
         return "action complete action completed"
 

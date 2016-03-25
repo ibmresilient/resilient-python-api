@@ -48,6 +48,7 @@ from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
 
 from ResilientOrg import ResilientOrg as ResOrg
+from ResilientOrg import ResilientIncident as ResInc
 
 requests.packages.urllib3.disable_warnings()
 
@@ -139,8 +140,9 @@ class DTAction(ResilientComponent):
 
         log.debug("Table id for {} is {}".format(self.table_name, self.table_def.get('id')))
 
-        (tabledata, error) = self.reso.get_table_data(args.incident.get('id'),
-                                                      self.table_def.get('id'))
+        incident = ResInc(self.reso,incident=args.message.get('incident'))
+
+        (tabledata, error) = incident.get_table_data(self.table_def.get('id'))
 
         if error is not None:
             raise Exception("Data table specified could not be gotten: {}".format(error))
@@ -209,8 +211,7 @@ class DTAction(ResilientComponent):
                 # remove the uneeded elements from the dictionary
                 del updatedrow['id']
                 del updatedrow['actions']
-                (ntable, error) = self.reso.put_table_row(args.incident.get('id'),
-                                                        self.table_def.get('id'),
+                (ntable, error) = incident.put_table_row(self.table_def.get('id'),
                                                         updatedrow,
                                                         rid
                                                        )
