@@ -10,19 +10,10 @@ pip install -r requirements.txt
 ```
 Note, the Resilient API is not available via public python repositories and will have to be manually installed.
 
-### Docker Installation
-Two docker files (Dockerfile and docker-compose.yml) are provided should one wish to run this in a docker container.  This example depends on
-the resilient api python module, which is available via the Resilient Success Hub.  Download the api code from git, and then follow the build instructions in the README file.  These instructions build a .tar.gz file that can be installed by pip.  Copy this tar.gz file to the top level 
-directory of this project and modify the Dockerfile to specify the filename for pip to install.
 
-You will need to build the docker image, and give it an name
-```
-docker build -t <image tag> .
-docker  run -p 8000:8000 -t <image tag>
-```
 
 ## Authentication
-Authentication handled by a simple SQLite database for the user.  Passwords are stored in the DB as SHA256 hash values.  Prior to running the web server, you must run the db_create.py which will create the database.  If run from the top level directory of the project, it will create the database in app/db/webform.db.  Note:  If using Docker, the database needs to be created and populated before the image is created.  Docker images are ephemeral, and have no persistent storage.  Docker persistence of storage is an advanced function, refer to the docker documentaiton,
+Authentication handled by a simple SQLite database for the user.  Passwords are stored in the DB as SHA256 hash values.  Prior to running the web server, you must run the db_create.py which will create the database.  If run from the top level directory of the project, it will create the database in app/db/webform.db.  
 ```
 python db_create.py
 ```
@@ -42,12 +33,7 @@ Run the server with
 ```
 python runserver.py
 ```
-or
-Rebuild the docker image and run it
-```
-docker build -t <previously used image tag>
-docker run -p 8000:8000 -t <image tag>
-```
+
 
 This will run on the localhost interface a test server instance.
 
