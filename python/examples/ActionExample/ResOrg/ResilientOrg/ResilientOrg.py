@@ -377,7 +377,11 @@ class ResilientOrg(object):
             "inc_id":incident_id,
             "id":None
         }
-        nnote = self.client().post("/incidents/{}/comments".format(incident_id), note)
+        try:
+            nnote = self.client().post("/incidents/{}/comments".format(incident_id), note)
+        except resilient.co3.SimpleHTTPException as ecode:
+            log.error("Note Creation failed {}".format(ecode))
+            return None
         return nnote
 
     def CreateTask(self, incident_id, taskname, instructions, phasename):
