@@ -95,7 +95,7 @@ class PushHandler(ResilientComponent):
                                               # destination will open a unique resorg object each Time
                                               # a connection needs to be made.
 
-        self.enums = self.source_reso.get_enums()
+        self.enums = self.source_reso.get_field_enums()
         self.users = self.source_reso.GetUsers()
 
     @handler()
