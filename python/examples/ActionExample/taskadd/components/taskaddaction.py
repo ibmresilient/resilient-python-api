@@ -30,30 +30,21 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""
+Action to add a task through a manual action with
+3 fields defined for the manual action
+"""
+
 from __future__ import print_function
+import logging
+
+import requests
+
+from ResilientOrg import ResilientOrg as ResOrg
 from circuits import Component, Debugger
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
-import os
-import logging
 
-
-import json
-import arrow   # improved Date/Time handling
-import tempfile
-
-from pprint import pprint
-import json
-
-#from lib.ResOrg import ResOrg
-
-#import ResilientOrg as ResOrg
-from ResilientOrg import ResilientOrg as ResOrg
-from pprint import pprint
-from copy import deepcopy
-import time
-
-import requests
 requests.packages.urllib3.disable_warnings()
 
 # Lower the logging threshold for requests
@@ -71,27 +62,23 @@ CONFIG_ACTION_SECTION = 'actiondata'
 
 
 class AddTaskAction(ResilientComponent):
-    '''
+    """
 
-     invoked when the phase field is changed
+    Manual action to add a task to a phase
 
-    '''
+    """
 
     def __init__(self, opts):
         super(AddTaskAction, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
-        self.actiondata = opts.get(CONFIG_ACTION_SECTION,{})
+        self.actiondata = opts.get(CONFIG_ACTION_SECTION, {})
 
         #self.sync_file = os.path.dirname(os.path.abspath(self.sync_opts.get('mapfile')))
 
         # The queue name can be specified in the config file, or default to 'filelookup'
         self.channel = "actions." + self.options.get("queue", "dt_action")
 
-        self.reso = ResOrg(client=self.rest_client)  # set up the resilient connection for the source which 
-                                              # is where the action will get fired from
-                                              # destination will open a unique resorg object each Time
-                                              # a connection needs to be made.
-
+        self.reso = ResOrg(client=self.rest_client)
 
     @handler()
     def _add_task_action(self, event, *args, **kwargs):
@@ -108,12 +95,13 @@ class AddTaskAction(ResilientComponent):
 
         log.debug("Event Name {}".format(event.name))
 
-        func = self.get_action_function(event.name) # determine which method to invoke based on the event name
+         # determine which method to invoke based on the event name
+        func = self.get_action_function(event.name)
 
         if func is not None:
-            rv =func(event)
-            if rv:
-                yield rv
+            retv = func(event)
+            if retv:
+                yield retv
             else:
                 yield "event handled"
         else:
@@ -122,36 +110,33 @@ class AddTaskAction(ResilientComponent):
 
         #end _invite_action
 
-    def stubfunction(self,args):
-        # stub function, can be used to test if the action processor has connected properly
-        # create a manual action called "stubfunction" associated with the configured queue
-        # and invoke the manual action.  The log will show that the stub function was invoked
-        log.debug("Stub Function")
-        return "Stub invoked"
 
-    def add_task_on_manual_action(self,args):
+    def add_task_on_manual_action(self, args):
+        """
+        Method invoked based on action name
+        """
         log.debug("Invoked function")
 
 
-        action_content = args.properties
+        
         tname = args.properties.get('task_name')
         task_instructions = args.properties.get('task_instructions')
         task_phase = args.properties.get('task_phase')
 
-        task = self.reso.CreateTask(args.message.get('incident').get('id'),tname,task_instructions,task_phase)
+        task = self.reso.CreateTask(args.message.get('incident').get('id'), tname, task_instructions, task_phase)
         if task is None:
             raise Exception("Task Creation Failed Check logs")
 
         return "action complete action completed"
 
 
-    def get_action_function(self,funcname):
-        '''
+    def get_action_function(self, funcname):
+        """
         map the name passed in to a method within the object
-        '''
+        """
 
         log.debug("get function {}".format(funcname))
-        return getattr(self,'%s'%funcname,None)
+        return getattr(self, '%s'%funcname, None)
 
 
 

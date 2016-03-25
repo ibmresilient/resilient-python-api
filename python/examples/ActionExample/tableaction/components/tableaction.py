@@ -29,30 +29,26 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+Action to update a table field when a row is added
+"""
 
 from __future__ import print_function
+import os
+import logging
+from copy import deepcopy
+
+
+import json
+
+import requests
+
 from circuits import Component, Debugger
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
-import os
-import logging
 
-
-import json
-import arrow   # improved Date/Time handling
-import tempfile
-
-from pprint import pprint
-import json
-
-#from lib.ResOrg import ResOrg
-
-#import ResilientOrg as ResOrg
 from ResilientOrg import ResilientOrg as ResOrg
-from pprint import pprint
-from copy import deepcopy
 
-import requests
 requests.packages.urllib3.disable_warnings()
 
 # Lower the logging threshold for requests
@@ -71,27 +67,26 @@ CONFIG_ACTION_SECTION = 'actiondata'
 
 class DTAction(ResilientComponent):
 
-    # this component recieves and email address as a new row in a data table
-    # it then looks up the email address and gets the name from a local json file
-    # and updates the table row with the name
+    """
+    this component recieves and email address as a new row in a data table
+    it then looks up the email address and gets the name from a local json file
+    and updates the table row with the name
 
     #the function map maps the action name to a specific handling method within
-    # this object.  The mapping table is used to determine if the action has
-    # an associated function in the handler
-    # the function/method name MUST be the same as the action as defined in resilient
-    # Note action names are not the same as the Display Name in the action definition
-    #
-    # The display name for this action is "Table Action", it's system level name is 
-    # table_action
-    functionmap = [
-        "stubfunction"
-        ,"table_action"
-    ] 
+    this object.  The mapping table is used to determine if the action has
+    an associated function in the handler
+    the function/method name MUST be the same as the action as defined in resilient
+    Note action names are not the same as the Display Name in the action definition
+
+    The display name for this action is "Table Action", it's system level name is
+    table_action
+    """
+
 
     def __init__(self, opts):
         super(DTAction, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
-        self.actiondata = opts.get(CONFIG_ACTION_SECTION,{})
+        self.actiondata = opts.get(CONFIG_ACTION_SECTION, {})
 
         #self.sync_file = os.path.dirname(os.path.abspath(self.sync_opts.get('mapfile')))
         self.lookupfile = os.path.abspath(self.actiondata.get('lookupfile'))
@@ -100,15 +95,11 @@ class DTAction(ResilientComponent):
         # The queue name can be specified in the config file, or default to 'filelookup'
         self.channel = "actions." + self.options.get("queue", "dt_action")
 
-        self.reso = ResOrg(client=self.rest_client)  # set up the resilient connection for the source which 
-                                              # is where the action will get fired from
-                                              # destination will open a unique resorg object each Time
-                                              # a connection needs to be made.
-
+        self.reso = ResOrg(client=self.rest_client)
         # the table definition is needed to map the columns for a row to an ID
 
         self.table_def = self.reso.get_table_definition(self.table_name)
-        #log.debug("Table def {}".format(json.dumps(self.table_def,indent=5)))
+        #log.debug("Table def {}".format(json.dumps(self.table_def, indent=5)))
 
     @handler()
     def _table_lookup_action(self, event, *args, **kwargs):
@@ -125,12 +116,13 @@ class DTAction(ResilientComponent):
 
         log.debug("Event Name {}".format(event.name))
 
-        func = self.get_action_function(event.name) # determine which method to invoke based on the event name
+        # determine which method to invoke based on the event name
+        func = self.get_action_function(event.name)
 
         if func is not None:
-            rv =func(event)
-            if rv:
-                yield rv
+            retv = func(event)
+            if retv:
+                yield retv
             else:
                 yield "event handled"
         else:
@@ -139,25 +131,20 @@ class DTAction(ResilientComponent):
 
         #end _invite_action
 
-    def stubfunction(self,args):
-        # stub function, can be used to test if the action processor has connected properly
-        # create a manual action called "stubfunction" associated with the configured queue
-        # and invoke the manual action.  The log will show that the stub function was invoked
-        log.debug("Stub Function")
-        return "Stub invoked"
-
-    def table_action(self,args):
+    def table_action(self, args):
+        """
+        Method invoked based on action name
+        """
         log.debug("table_action function")
-        
-        incident = self.reso.GetIncidentById(args.incident.get('id'))
-       
-        log.debug("Table id for {} is {}".format(self.table_name,self.table_def.get('id')))
 
-        (tabledata,error) = self.reso.get_table_data(args.incident.get('id'),self.table_def.get('id'))
+        log.debug("Table id for {} is {}".format(self.table_name, self.table_def.get('id')))
+
+        (tabledata, error) = self.reso.get_table_data(args.incident.get('id'),
+                                                      self.table_def.get('id'))
 
         if error is not None:
             raise Exception("Data table specified could not be gotten: {}".format(error))
-      
+
 
         '''
         Get the numeric value for the cell definition. This is needed to map the cell data 
@@ -182,8 +169,7 @@ class DTAction(ResilientComponent):
         if not isnewrow:
             # row removal event return a meaningful completion string
             log.debug("Row Deleted")
-            rv = "action fired on row deletion.. ignore"
-            return rv
+            return "action fired on row deletion.. ignore"
 
         lookfor = rowdata.get('cells').get(str(cellid))
         log.debug("lookfor = {}".format(lookfor))
@@ -196,7 +182,7 @@ class DTAction(ResilientComponent):
             lookedup = "User Not Found"
 
         # need to do the table update here
-        
+
         # find the row id from the event to map to the table data row
         rid = rowdata.get('id')
         tablerows = tabledata.get('rows')
@@ -204,31 +190,30 @@ class DTAction(ResilientComponent):
         '''
         Walk through all the table rows until the right row is found
         This probably could actually be skipped since its a simple example, and we
-        can construct the update information based on what was passed, however 
+        can construct the update information based on what was passed, however
         this is just an example
         '''
-        for tr in tablerows:
-            log.debug("tr {}".format(tr))
+        for trow in tablerows:
+            log.debug("tr {}".format(trow))
 
             # fetch the information for the cell id
-            cv = tr.get('cells').get(str(cellid))
+            cellval = trow.get('cells').get(str(cellid))
 
-            if cv.get('row_id') == rid:
-           
-                nv = tr.get('cells').get(str(namecell))
-                nv['value'] = lookedup
-                #log.debug("new tr {}".format(tr))
+            if cellval.get('row_id') == rid:
 
-                updatedrow = deepcopy(tr)  # make a copy of the data
+                newval = trow.get('cells').get(str(namecell))
+                newval['value'] = lookedup
+
+                updatedrow = deepcopy(trow)  # make a copy of the data
 
                 # remove the uneeded elements from the dictionary
                 del updatedrow['id']
                 del updatedrow['actions']
-                (ntable,error) = self.reso.PutTableRow(args.incident.get('id'),
-                                                    self.table_def.get('id'),
-                                                    updatedrow,
-                                                    rid
-                                                    )  
+                (ntable, error) = self.reso.PutTableRow(args.incident.get('id'),
+                                                        self.table_def.get('id'),
+                                                        updatedrow,
+                                                        rid
+                                                       )
                 if ntable is None:
                     raise Exception(error)
                 break  # get out of the loop, since only one row is passed on an action event
@@ -239,42 +224,38 @@ class DTAction(ResilientComponent):
         return "table action completed"
 
 
-    def check_row_data(self,rd):
+    def check_row_data(self, rowdata):
         '''
         Check the row data passed in the action message
         If there are no "value" elements in the dictionary, then the operation was
         the deletion of the field
         '''
-        for cell in rd.get('cells'):
-            cd = rd.get('cells').get(cell)
-            log.debug("celldata {}".format(cd))
-            if cd.get('value',None) is None:
+        for cell in rowdata.get('cells'):
+            celldata = rowdata.get('cells').get(cell)
+            log.debug("celldata {}".format(celldata))
+            if celldata.get('value', None) is None:
                 return False
         return True
 
-    def get_cell_id(self,apiname):
+    def get_cell_id(self, apiname):
         '''
         map the apiname of a cell to the numeric id value.  id's are what are passed in
-        to the action in the message, api_names are how we as humans view the world.  id's are unique
-        for a given configuration of resilient
+        to the action in the message, api_names are how we as humans view the world.
+        id's are unique for a given configuration of resilient
         '''
-        f = self.table_def.get('fields').get(apiname,None)
-        if f is not None:
-            return f.get('id')
+        field = self.table_def.get('fields').get(apiname, None)
+        if field is not None:
+            return field.get('id')
         return None
 
 
-    def get_action_function(self,funcname):
+    def get_action_function(self, funcname):
         '''
         map the name passed in to a method within the object
         '''
-        if funcname in DTAction.functionmap:
-            log.debug("get function {}".format(funcname))
-            return getattr(self,'%s'%funcname)
-        log.debug("get function none")
-        return None
+        return getattr(self, '%s'%funcname, None)
 
-    def lookup_data(self,lookfor):
+    def lookup_data(self, lookfor):
         '''
         Lookup the passed in email address and return the name
         if there is no match, None is returned.
