@@ -402,7 +402,7 @@ class ResilientIncident(object):
         """
         log.debug(rowdata)
         log.debug(rowid)
-        url = "/incidents/{}/table_data/{}/row_data/{}".format(incidentid, tableid, rowid)
+        url = "/incidents/{}/table_data/{}/row_data/{}".format(self.inc_id, tableid, rowid)
         try:
             tdata = self.reso.client().put(url, rowdata)
             return(tdata, None)
@@ -440,6 +440,9 @@ class ResilientIncident(object):
         Tables within an incident are updated and manipulated as separate editable objects
         They are fetched from the server in separate http GET operations
         Returns a tuple
+
+        If a 404 is returned, this means that the table has no data in this incident,
+        return 404 to indicate that any operation will have to do a POST instead of a put
         """
         url = "/incidents/{}/table_data/{}".format(self.inc_id, tableid)
         log.debug(url)
@@ -450,4 +453,19 @@ class ResilientIncident(object):
                 return (None, ecode.response.status_code)
             else:
                 return (None, ecode)
+
+    def add_table_row(self,tabletemplate,tableid,newtable=False):
+        """
+        Adds a new row to a table.  
+        newtable == True indicates that the table has no content so a
+        POST has to be done
+        the url is /incidents/<incidentnum>/table_data/1003/row_data
+        {"cells":{"139":{"value":"AAAAA"},"140":{"value":"BBBBB"}}}
+        """
+
+
+
+
+
+
 
