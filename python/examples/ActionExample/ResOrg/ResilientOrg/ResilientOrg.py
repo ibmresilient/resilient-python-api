@@ -36,6 +36,9 @@ import json
 
 import co3 as resilient
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 
 class ResilientOrg(object):
     """
@@ -45,8 +48,8 @@ class ResilientOrg(object):
         # when no client is passed we need to establish the connection.  However
         # to work with the circuits package the client needs to be a method/function
         # that gets called
-        self.log = logging.getLogger(__name__)
-        self.log.setLevel(logging.DEBUG)
+        #self.log = logging.getLogger(__name__)
+        #self.log.setLevel(logging.DEBUG)
 
         self.enums = None
         if client:
@@ -141,10 +144,10 @@ class ResilientOrg(object):
         """
         Map a numeric phase id to its name
         """
-        self.log.debug("Phase id {}".format(pid))
-        self.log.debug("Phase List {}".format(plist))
+        log.debug("Phase id {}".format(pid))
+        log.debug("Phase List {}".format(plist))
         for phase in plist.get('entities'):
-            self.log.debug(phase)
+            log.debug(phase)
             if phase.get('id') == pid:
                 return phase.get('name')
         return None
@@ -153,9 +156,9 @@ class ResilientOrg(object):
         """
         Map a phase name to its associated id
         """
-        self.log.debug("map phase name to id {}".format(pname))
+        log.debug("map phase name to id {}".format(pname))
         for phase in plist.get('entities'):
-            self.log.debug(phase)
+            log.debug(phase)
             if phase.get('name') == pname:
                 return phase.get('id')
         return None
@@ -184,9 +187,9 @@ class ResilientOrg(object):
         try:
             self.users = self.client().get(uri)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Failed to get users from system {}".format(ecode))
+            log.error("Failed to get users from system {}".format(ecode))
             self.users = None
-            self.log.error("Failed to get users {}".format(ecode))
+            log.error("Failed to get users {}".format(ecode))
             return None
         return self.users
 
@@ -198,7 +201,7 @@ class ResilientOrg(object):
         try:
             self.groups = self.client().get(uri)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Failed to get groups from system {}".format(ecode))
+            log.error("Failed to get groups from system {}".format(ecode))
             self.groups = None
             return False
         return self.groups
@@ -211,7 +214,7 @@ class ResilientOrg(object):
         try:
             self.alltasks = self.client().get(uri)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Failed to get all tasks {}".format(ecode))
+            log.error("Failed to get all tasks {}".format(ecode))
             self.alltasks = None
         return self.alltasks
 
@@ -223,7 +226,7 @@ class ResilientOrg(object):
         try:
             task = self.client().get(uri)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Failed to get task {} \n {}".format(taskid, ecode))
+            log.error("Failed to get task {} \n {}".format(taskid, ecode))
             return None
         return task
 
@@ -235,7 +238,7 @@ class ResilientOrg(object):
         try:
             ntask = self.client().put(uri, task)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Failed to update task \n{}".format(ecode))
+            log.error("Failed to update task \n{}".format(ecode))
             return None
         return ntask
 
@@ -253,9 +256,9 @@ class ResilientOrg(object):
         Create a new incident in resilient based on the template provided
         Assumes that the template meets the minimum requirements for fields for a given org
         """
-        self.log.debug(tplate)
+        log.debug(tplate)
         url = "/incidents/?want_full_data=true"
-        self.log.debug(url)
+        log.debug(url)
         try:
             incident = self.client().post(url, tplate)
         except resilient.co3.SimpleHTTPException as ecode:
@@ -285,7 +288,7 @@ class ResilientOrg(object):
         """
         get the specified user or group name in id format
         """
-        self.log.debug("name {} >userlist {}".format(name, userlist))
+        log.debug("name {} >userlist {}".format(name, userlist))
         for user in userlist:
             if user.get('name') == name:
                 return user.get('id')
@@ -294,8 +297,8 @@ class ResilientOrg(object):
  
 
 
-class ResilientIncident(object)
-   """
+class ResilientIncident(object):
+    """
     Utility class for operations against an incident 
     Expects that a ResilientOrg object will be passed in
     if an Incident is passed in, then operations are against that
@@ -310,7 +313,7 @@ class ResilientIncident(object)
         if incident:
             self.incident = incident
         else:
-            self.incident self.reso.get_incident_by_id(incidentid)
+            self.incident = self.reso.get_incident_by_id(incidentid)
 
         self.inc_id = self.incident.get('id')
 
@@ -329,7 +332,7 @@ class ResilientIncident(object)
             nnote = self.reso.client().post("/incidents/{}/comments".format(self.inc_id),
                                             note)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Note Creation failed {}".format(ecode))
+            log.error("Note Creation failed {}".format(ecode))
             return None
         return nnote
 
@@ -365,13 +368,13 @@ class ResilientIncident(object)
         }
 
         plist = self.get_phases()
-        self.log.debug("Phasename {}".format(phasename))
+        log.debug("Phasename {}".format(phasename))
         pid = self.map_phase_name_to_id(phasename, plist)
-        self.log.debug("Phase id = {}".format(pid))
+        log.debug("Phase id = {}".format(pid))
         if pid:
             task_template['phase_id'] = pid
         else:
-            self.log.error("Phase name specified does not match phases defined in the system")
+            log.error("Phase name specified does not match phases defined in the system")
             return None
 
         ntask = self.reso.client().post("/incidents/{}/tasks".format(self.inc_id), task_template)
@@ -388,7 +391,7 @@ class ResilientIncident(object)
         try:
             nmst = self.reso.client().post("/incidents/{}/milestones".format(self.inc_id), mtemp)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Resilient server error {}".format(ecode))
+            log.error("Resilient server error {}".format(ecode))
             return None
 
         return nmst
@@ -397,8 +400,8 @@ class ResilientIncident(object)
         """
         update an existing row of a table within an incident
         """
-        self.log.debug(rowdata)
-        self.log.debug(rowid)
+        log.debug(rowdata)
+        log.debug(rowid)
         url = "/incidents/{}/table_data/{}/row_data/{}".format(incidentid, tableid, rowid)
         try:
             tdata = self.reso.client().put(url, rowdata)
@@ -427,7 +430,7 @@ class ResilientIncident(object)
         try:
             itasks = self.reso.client().get(uri)
         except resilient.co3.SimpleHTTPException as ecode:
-            self.log.error("Failed to get incident tasks {}".format(ecode))
+            log.error("Failed to get incident tasks {}".format(ecode))
             return None
 
         return itasks
@@ -439,7 +442,7 @@ class ResilientIncident(object)
         Returns a tuple
         """
         url = "/incidents/{}/table_data/{}".format(self.inc_id, tableid)
-        self.log.debug(url)
+        log.debug(url)
         try:
             return (self.reso.client().get(url), None)
         except resilient.co3.SimpleHTTPException as ecode:
