@@ -131,8 +131,9 @@ class DTAction(ResilientComponent):
                 yield "event handled"
         else:
             # an action without a handling method was put onto the queue
-            log.error("Invalid event no function to handle")
+            log.error("Invalid event no function to handle {}".format(event.name))
             raise Exception("Invalid event - no function to handle {}".format(event.name))
+
 
         #end _invite_action
 
@@ -146,15 +147,12 @@ class DTAction(ResilientComponent):
         log.debug("table_action function")
 
         table_def = self.reso.get_table_definition(self.table_name)
-        log.debug("table definition {}".format(table_def))
 
         log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
 
         incident = ResInc(self.reso,incident=args.message.get('incident'))
 
-        log.debug("before get table data")
         (tabledata, error) = incident.get_table_data(table_def.get('id'))
-        log.debug("after get table data")
 
         if error is not None:
             if type(error) is int:
@@ -163,7 +161,6 @@ class DTAction(ResilientComponent):
                     return ("empty table ")
             else:
                 raise Exception("table_action Data table specified could not be gotten: {}".format(error))
-                return
 
 
         '''
@@ -183,7 +180,6 @@ class DTAction(ResilientComponent):
         '''
         namecell = self.get_cell_id("user_name",table_def)
 
-        log.debug("XXXXX 1")
         rowdata = args.row  # for ease of reference point to the event row data
 
         isnewrow = self.check_row_data(rowdata) # check if we have a row removal event
@@ -208,7 +204,6 @@ class DTAction(ResilientComponent):
         rid = rowdata.get('id')
         tablerows = tabledata.get('rows')
 
-        log.debug("XXXXX 2 {}".format(table_def))
 
         '''
         Walk through all the table rows until the right row is found
@@ -232,53 +227,56 @@ class DTAction(ResilientComponent):
                 # remove the uneeded elements from the dictionary
                 del updatedrow['id']
                 del updatedrow['actions']
-                log.debug("before put row")
                 (ntable, error) = incident.put_table_row(table_def.get('id'),
                                                         updatedrow,
                                                         rid
                                                        )
-                log.debug("after put row")
                 if ntable is None:
                     raise Exception(error)
-                    return
                 break  # get out of the loop, since only one row is passed on an action event
 
         else:
             raise Exception("Data to be looked up does not exist in repository")
-            return
 
         return "table action completed"
 
 
     def add_row_to_table(self,args):
         log.debug("add table row")
-        log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
 
         # get the definition of the table from the org
         table_def = self.reso.get_table_definition(self.add_table_name)
-        log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
+
+        log.debug("Table id for {} is {}".format(self.add_table_name, table_def.get('id')))
+
 
         incident = ResInc(self.reso,incident=args.message.get('incident'))
-
-        newtable = False   # assume that the table has content
-        (tabledata, error) = incident.get_table_data(table_def.get('id'))
-
-        if error is not None:
-            if type(error) is int:
-                if error == 404:
-                    log.debug("404 returned.. new table")
-                    newtable = True
-                else:
-                    raise Exception("table data operation returned {}".format(error))
-                    return
-            else:
-                raise Exception("Get of table data failed: {}".format(error))
-                return
 
         rowtemplate = { "cells":{
                       }}
         action_fields = args.properties               
         log.debug("argproperties {}".format(action_fields))
+
+        for actfield in action_fields:
+            log.debug(actfield)
+            mapped_cell = self.get_table_column_map(actfield)
+            if mapped_cell is None:
+                log.error("Invalid mapping of {} to the table".format(actfield))
+                raise Exception("Add Row to table feild - {} does not map to a table cell".format(actfield))
+
+            log.debug("mapped_cell is {}".format(mapped_cell))
+            mapped_id = self.get_cell_id(mapped_cell,table_def)
+            log.debug("mapped id = {}".format(mapped_id))
+            rowtemplate['cells'][str(mapped_id)] = {"value":action_fields.get(actfield)}
+
+        (tablerow,ecode) = incident.add_table_row(rowtemplate,table_def.get('id'))
+        if ecode is not None:
+            raise Exception("Table addition failed: {}".format(ecode))
+
+        return "Row added to table"
+
+
+         
 
     def get_table_column_map(self,tabcolname):
         """

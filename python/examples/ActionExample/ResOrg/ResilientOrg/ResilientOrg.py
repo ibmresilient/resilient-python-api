@@ -403,6 +403,7 @@ class ResilientIncident(object):
         log.debug(rowdata)
         log.debug(rowid)
         url = "/incidents/{}/table_data/{}/row_data/{}".format(self.inc_id, tableid, rowid)
+        log.debug(url)
         try:
             tdata = self.reso.client().put(url, rowdata)
             return(tdata, None)
@@ -454,14 +455,27 @@ class ResilientIncident(object):
             else:
                 return (None, ecode)
 
-    def add_table_row(self,tabletemplate,tableid,newtable=False):
+
+    def add_table_row(self,tabletemplate,tableid):
         """
         Adds a new row to a table.  
         newtable == True indicates that the table has no content so a
         POST has to be done
-        the url is /incidents/<incidentnum>/table_data/1003/row_data
+        the url is /incidents/<incidentnum>/table_data/<tableid>/row_data
         {"cells":{"139":{"value":"AAAAA"},"140":{"value":"BBBBB"}}}
         """
+
+        url = "/incidents/{}/table_data/{}/row_data".format(self.inc_id,tableid)
+        log.debug(url)
+
+        try:
+            return (self.reso.client().post(url,tabletemplate),None)
+        except resilient.co3.SimpleHTTPException as ecode:
+            log.error("failed to add row to table {}".format(ecode))
+            return (None,ecode)
+
+
+
 
 
 
