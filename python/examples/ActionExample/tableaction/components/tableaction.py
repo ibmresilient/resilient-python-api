@@ -99,8 +99,11 @@ class DTAction(ResilientComponent):
         self.reso = ResOrg(client=self.rest_client)
         # the table definition is needed to map the columns for a row to an ID
 
-        self.table_def = self.reso.get_table_definition(self.table_name)
-        #log.debug("Table def {}".format(json.dumps(self.table_def, indent=5)))
+
+        # setup for the manual action to add a row to the table
+        self.rowmap = os.path.abspath(self.actiondata.get('rowmap'))
+        self.add_table_name = self.actiondata.get("tabletoadd")
+
 
     @handler()
     def _table_lookup_action(self, event, *args, **kwargs):
@@ -128,31 +131,46 @@ class DTAction(ResilientComponent):
                 yield "event handled"
         else:
             # an action without a handling method was put onto the queue
-            raise Exception("Invalid event - no function to handle")
+            log.error("Invalid event no function to handle")
+            raise Exception("Invalid event - no function to handle {}".format(event.name))
 
         #end _invite_action
 
+
+    # Methods that are mapped based on action name to handle the logic of
+    # the action
     def table_action(self, args):
         """
         Method invoked based on action name
         """
         log.debug("table_action function")
 
-        log.debug("Table id for {} is {}".format(self.table_name, self.table_def.get('id')))
+        table_def = self.reso.get_table_definition(self.table_name)
+        log.debug("table definition {}".format(table_def))
+
+        log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
 
         incident = ResInc(self.reso,incident=args.message.get('incident'))
 
-        (tabledata, error) = incident.get_table_data(self.table_def.get('id'))
+        log.debug("before get table data")
+        (tabledata, error) = incident.get_table_data(table_def.get('id'))
+        log.debug("after get table data")
 
         if error is not None:
-            raise Exception("Data table specified could not be gotten: {}".format(error))
+            if type(error) is int:
+                if error == 404:
+                    log.debug("Empty Table")
+                    return ("empty table ")
+            else:
+                raise Exception("table_action Data table specified could not be gotten: {}".format(error))
+                return
 
 
         '''
         Get the numeric value for the cell definition. This is needed to map the cell data 
         passed in the message to the different named fields in the table's definition
         '''
-        cellid = self.get_cell_id("email_address")   # get the cell id from the field definition
+        cellid = self.get_cell_id("email_address",table_def)   # get the cell id from the field definition
 
         if cellid is None:
             # could not map the named field to a cell id value
@@ -163,8 +181,9 @@ class DTAction(ResilientComponent):
         Get the cell id of the cell that we are going to update. 
         More complex processing will need to handle cell updates differently
         '''
-        namecell = self.get_cell_id("user_name")
+        namecell = self.get_cell_id("user_name",table_def)
 
+        log.debug("XXXXX 1")
         rowdata = args.row  # for ease of reference point to the event row data
 
         isnewrow = self.check_row_data(rowdata) # check if we have a row removal event
@@ -189,6 +208,8 @@ class DTAction(ResilientComponent):
         rid = rowdata.get('id')
         tablerows = tabledata.get('rows')
 
+        log.debug("XXXXX 2 {}".format(table_def))
+
         '''
         Walk through all the table rows until the right row is found
         This probably could actually be skipped since its a simple example, and we
@@ -211,19 +232,62 @@ class DTAction(ResilientComponent):
                 # remove the uneeded elements from the dictionary
                 del updatedrow['id']
                 del updatedrow['actions']
-                (ntable, error) = incident.put_table_row(self.table_def.get('id'),
+                log.debug("before put row")
+                (ntable, error) = incident.put_table_row(table_def.get('id'),
                                                         updatedrow,
                                                         rid
                                                        )
+                log.debug("after put row")
                 if ntable is None:
                     raise Exception(error)
+                    return
                 break  # get out of the loop, since only one row is passed on an action event
 
         else:
             raise Exception("Data to be looked up does not exist in repository")
+            return
 
         return "table action completed"
 
+
+    def add_row_to_table(self,args):
+        log.debug("add table row")
+        log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
+
+        # get the definition of the table from the org
+        table_def = self.reso.get_table_definition(self.add_table_name)
+        log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
+
+        incident = ResInc(self.reso,incident=args.message.get('incident'))
+
+        newtable = False   # assume that the table has content
+        (tabledata, error) = incident.get_table_data(table_def.get('id'))
+
+        if error is not None:
+            if type(error) is int:
+                if error == 404:
+                    log.debug("404 returned.. new table")
+                    newtable = True
+                else:
+                    raise Exception("table data operation returned {}".format(error))
+                    return
+            else:
+                raise Exception("Get of table data failed: {}".format(error))
+                return
+
+        rowtemplate = { "cells":{
+                      }}
+        action_fields = args.properties               
+        log.debug("argproperties {}".format(action_fields))
+
+    def get_table_column_map(self,tabcolname):
+        """
+        gets the mapping of the action variable to the table column name
+        """
+        with open(self.rowmap) as jdata:
+            lookup = json.load(jdata)
+
+        return lookup.get(tabcolname,None)
 
     def check_row_data(self, rowdata):
         '''
@@ -231,6 +295,7 @@ class DTAction(ResilientComponent):
         If there are no "value" elements in the dictionary, then the operation was
         the deletion of the field
         '''
+        log.debug("check_for row data")
         for cell in rowdata.get('cells'):
             celldata = rowdata.get('cells').get(cell)
             log.debug("celldata {}".format(celldata))
@@ -238,17 +303,17 @@ class DTAction(ResilientComponent):
                 return False
         return True
 
-    def get_cell_id(self, apiname):
+    @staticmethod
+    def get_cell_id(apiname, tabledef):
         '''
         map the apiname of a cell to the numeric id value.  id's are what are passed in
         to the action in the message, api_names are how we as humans view the world.
         id's are unique for a given configuration of resilient
         '''
-        field = self.table_def.get('fields').get(apiname, None)
+        field = tabledef.get('fields').get(apiname, None)
         if field is not None:
             return field.get('id')
         return None
-
 
     def get_action_function(self, funcname):
         '''
