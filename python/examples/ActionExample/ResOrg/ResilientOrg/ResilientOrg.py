@@ -368,9 +368,9 @@ class ResilientIncident(object):
             "required": True,
         }
 
-        plist = self.get_phases()
+        plist = self.reso.get_phases()
         log.debug("Phasename {}".format(phasename))
-        pid = self.map_phase_name_to_id(phasename, plist)
+        pid = self.reso.map_phase_name_to_id(phasename, plist)
         log.debug("Phase id = {}".format(pid))
         if pid:
             task_template['phase_id'] = pid
