@@ -150,7 +150,7 @@ class DTAction(ResilientComponent):
 
         log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
 
-        incident = ResInc(self.reso,incident=args.message.get('incident'))
+        incident = ResInc(self.reso, incident=args.message.get('incident'))
 
         (tabledata, error) = incident.get_table_data(table_def.get('id'))
 
@@ -158,7 +158,7 @@ class DTAction(ResilientComponent):
             if type(error) is int:
                 if error == 404:
                     log.debug("Empty Table")
-                    return ("empty table ")
+                    return "empty table "
             else:
                 raise Exception("table_action Data table specified could not be gotten: {}".format(error))
 
@@ -167,7 +167,7 @@ class DTAction(ResilientComponent):
         Get the numeric value for the cell definition. This is needed to map the cell data 
         passed in the message to the different named fields in the table's definition
         '''
-        cellid = self.get_cell_id("email_address",table_def)   # get the cell id from the field definition
+        cellid = self.get_cell_id("email_address", table_def)   # get the cell id from the field definition
 
         if cellid is None:
             # could not map the named field to a cell id value
@@ -178,7 +178,7 @@ class DTAction(ResilientComponent):
         Get the cell id of the cell that we are going to update. 
         More complex processing will need to handle cell updates differently
         '''
-        namecell = self.get_cell_id("user_name",table_def)
+        namecell = self.get_cell_id("user_name", table_def)
 
         rowdata = args.row  # for ease of reference point to the event row data
 
@@ -228,9 +228,9 @@ class DTAction(ResilientComponent):
                 del updatedrow['id']
                 del updatedrow['actions']
                 (ntable, error) = incident.put_table_row(table_def.get('id'),
-                                                        updatedrow,
-                                                        rid
-                                                       )
+                                                         updatedrow,
+                                                         rid
+                                                        )
                 if ntable is None:
                     raise Exception(error)
                 break  # get out of the loop, since only one row is passed on an action event
@@ -241,7 +241,7 @@ class DTAction(ResilientComponent):
         return "table action completed"
 
 
-    def add_row_to_table(self,args):
+    def add_row_to_table(self, args):
         log.debug("add table row")
 
         # get the definition of the table from the org
@@ -250,10 +250,9 @@ class DTAction(ResilientComponent):
         log.debug("Table id for {} is {}".format(self.add_table_name, table_def.get('id')))
 
 
-        incident = ResInc(self.reso,incident=args.message.get('incident'))
+        incident = ResInc(self.reso, incident=args.message.get('incident'))
 
-        rowtemplate = { "cells":{
-                      }}
+        rowtemplate = {"cells":{}}
         action_fields = args.properties               
         log.debug("argproperties {}".format(action_fields))
 
@@ -265,27 +264,28 @@ class DTAction(ResilientComponent):
                 raise Exception("Add Row to table feild - {} does not map to a table cell".format(actfield))
 
             log.debug("mapped_cell is {}".format(mapped_cell))
-            mapped_id = self.get_cell_id(mapped_cell,table_def)
+            mapped_id = self.get_cell_id(mapped_cell, table_def)
             log.debug("mapped id = {}".format(mapped_id))
             rowtemplate['cells'][str(mapped_id)] = {"value":action_fields.get(actfield)}
 
-        (tablerow,ecode) = incident.add_table_row(rowtemplate,table_def.get('id'))
+        (tablerow, ecode) = incident.add_table_row(rowtemplate, table_def.get('id'))
         if ecode is not None:
             raise Exception("Table addition failed: {}".format(ecode))
+        log.debug("row added {}".format(tablerow))
 
         return "Row added to table"
 
 
          
 
-    def get_table_column_map(self,tabcolname):
+    def get_table_column_map(self, tabcolname):
         """
         gets the mapping of the action variable to the table column name
         """
         with open(self.rowmap) as jdata:
             lookup = json.load(jdata)
 
-        return lookup.get(tabcolname,None)
+        return lookup.get(tabcolname, None)
 
     def check_row_data(self, rowdata):
         '''
