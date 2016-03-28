@@ -32,6 +32,7 @@ import json
 
 import co3 as resilient
 from WebForm import app
+from pprint import pprint
 
 """
 Utility module
@@ -61,26 +62,46 @@ class ResOrg(object):
     # build a dictionary of just the enumerations for fields.
     def get_field_enums(self):
         """
-        get the field enumerations for the incident type for mapping
+        get a simple dictionary list of the field enumerations
+        for a given type
         """
-        if self.enums is None:
-            fields = self.client.get('/types/incident/fields')
-            jstring = "{"
-            for majorkey in fields:
-                name = majorkey["name"].encode('ascii')
-                if majorkey['values']:
-                    jstring += "\"{}\":[" .format(name)
-                    for values in majorkey["values"]:
-                        label = values["label"].encode('utf-8')
-                        jstring += "{{ \"{}\" : \"{}\" }}, ".format(label, values["value"])
-                    jstring = jstring[:-1]
-                    jstring += "], "
+        ftype = 'incident'
+        fields = self.client.get('/types/{}/fields'.format(ftype))
 
-            jstring = jstring[:-1]
-            jstring += "}"
-            self.enums = json.loads(jstring)
-            return self.enums
-        return self.enums
+
+        # Re- factor
+        field_enums = {}
+        for majorkey in fields:
+            vlist = []
+            name = majorkey['name'].encode('ascii')
+            if majorkey['values']:
+                pass
+                for values in majorkey['values']:
+                    vdict = {}
+                    vdict[values.get('label').encode('utf-8')] = values.get('value')
+                    vlist.append(vdict)
+                field_enums[name] = vlist
+
+        return field_enums
+         
+
+        '''
+        jstring = "{"
+        for majorkey in fields:
+            name = majorkey["name"].encode('ascii')
+            if majorkey['values']:
+                jstring += "\"{}\":[" .format(name)
+                for values in majorkey["values"]:
+                    label = values["label"].encode('utf-8')
+                    jstring += "{{ \"{}\" : \"{}\" }}, ".format(label, values["value"])
+                jstring = jstring[:-1]
+                jstring += "], "
+
+        jstring = jstring[:-1]
+        jstring += "}"
+        field_enums = json.loads(jstring)
+        return field_enums
+        '''
 
     # read the configuration for the input form
     def get_form_config(self):
