@@ -121,8 +121,7 @@ class AddNoteAction(ResilientComponent):
         action_content = args.properties
 
         incident = ResInc(self.reso,incident=args.message.get('incident'))
-        note = incident.create_note(incident.get('id'), 
-                                    args.properties.get('notecontent'))
+        note = incident.create_note(args.properties.get('notecontent'))
 
         return "action complete action completed"
 
