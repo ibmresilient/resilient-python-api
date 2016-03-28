@@ -198,7 +198,18 @@ class DTAction(ResilientComponent):
         '''
         namecell = self.get_cell_id("user_name", table_def)
 
+
+        # row data is passed in the message of the action. it represents 
+        # an existing row within the table.  If the values are empty then 
+        # the action was triggered by a row deletion, which is ignored
+        # the row is in the format of
+        #{'cells': {'cellnumid': {'row_id': 67, 'id': cellnumid, 'value': cellvalue}, 
+        #           'cellnumid': {'row_id': 67, 'id': cellnumid, 'value': cellvalue}}, 
+        #            ....
+        #           'id': rownumid, 'actions': []}
+
         rowdata = args.row  # for ease of reference point to the event row data
+        log.debug("Row passed in message {}".format(args.row))
 
         # the action fires when there is an update to the table, so a deletion of a 
         # row within the table will trigger the action.  hence the need to check
