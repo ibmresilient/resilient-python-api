@@ -67,9 +67,9 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.*;
 
 
 /**
- * Example showing how you can use Apache Camel to process Resilient CAF messages.  This example
- * receives an action message, runs a calculation to determine a new severity then
- * saves the incident with the new severity.
+ * Example showing how you can use Apache Camel to process Resilient Action Module messages.
+ * This example receives an action message, runs a calculation to determine a new severity
+ * then saves the incident with the new severity.
  */
 public class CalculateSeverity {
 	private static final Logger logger = LoggerFactory.getLogger(CalculateSeverity.class);

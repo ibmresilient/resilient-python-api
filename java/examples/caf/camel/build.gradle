@@ -14,7 +14,7 @@ apply plugin: 'gradle-one-jar'
 
 eclipse {
     project {
-        name = 'Resilient CAF Camel Examples'
+        name = 'Resilient Action Module Camel Examples'
     }
 }
 

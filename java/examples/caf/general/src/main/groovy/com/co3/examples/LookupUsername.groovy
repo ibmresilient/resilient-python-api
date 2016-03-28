@@ -47,7 +47,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * Sample showing how you can call back into the Resilient REST API when responding to
- * CAF messages.  
+ * Action Module messages.  
  * 
  * It reads from a message destination and if it finds a change to a user name
  * artifact, it tries to find the user name in the user-db.json JSON file.  If 
