@@ -204,7 +204,6 @@ class DTAction(ResilientComponent):
         rid = rowdata.get('id')
         tablerows = tabledata.get('rows')
 
-
         '''
         Walk through all the table rows until the right row is found
         This probably could actually be skipped since its a simple example, and we
@@ -274,9 +273,6 @@ class DTAction(ResilientComponent):
         log.debug("row added {}".format(tablerow))
 
         return "Row added to table"
-
-
-         
 
     def get_table_column_map(self, tabcolname):
         """
