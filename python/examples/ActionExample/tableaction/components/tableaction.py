@@ -146,14 +146,28 @@ class DTAction(ResilientComponent):
         """
         log.debug("table_action function")
 
+        # The only way to get the id of the table is from its definition
+        # this is done based on the api_name of the table within the
+        # resilient org.
+        # the table defintion also gets us the fields (cells/columns) of the table
+        # referenced within the definition by the api_name of the field
         table_def = self.reso.get_table_definition(self.table_name)
 
         log.debug("Table id for {} is {}".format(self.table_name, table_def.get('id')))
 
         incident = ResInc(self.reso, incident=args.message.get('incident'))
 
+        # since thie action updates a row in the table, we need to get the
+        # data of the table.  This actually is not really required, since the
+        # action message contains the row information for the table and this
+        # example does not really do any checking, however getting the table
+        # is a good example and values in the data could drive additional logic
         (tabledata, error) = incident.get_table_data(table_def.get('id'))
 
+        # if the table has no content in the incident, then a 404 error is returned
+        # by the api.  so we need to check for this.  
+        # this action should not get invoked with an empty table, but 
+        # as this is an example, we will do this any way
         if error is not None:
             if type(error) is int:
                 if error == 404:
@@ -166,6 +180,10 @@ class DTAction(ResilientComponent):
         '''
         Get the numeric value for the cell definition. This is needed to map the cell data 
         passed in the message to the different named fields in the table's definition
+
+        cells are referenced based on a numeric id that is assigned to them.  we need to 
+        map the api_name of the cell/field/column within the table to its id so we
+        can manipulate the information send in the event message
         '''
         cellid = self.get_cell_id("email_address", table_def)   # get the cell id from the field definition
 
@@ -182,12 +200,16 @@ class DTAction(ResilientComponent):
 
         rowdata = args.row  # for ease of reference point to the event row data
 
+        # the action fires when there is an update to the table, so a deletion of a 
+        # row within the table will trigger the action.  hence the need to check
+        # for empty data sent in the actions message and handle accordingly
         isnewrow = self.check_row_data(rowdata) # check if we have a row removal event
         if not isnewrow:
             # row removal event return a meaningful completion string
             log.debug("Row Deleted")
             return "action fired on row deletion.. ignore"
 
+        # pull the data from the row that drives the file lookup handling 
         lookfor = rowdata.get('cells').get(str(cellid))
         log.debug("lookfor = {}".format(lookfor))
 
@@ -241,15 +263,27 @@ class DTAction(ResilientComponent):
 
 
     def add_row_to_table(self, args):
+        """
+        Method invoked by manual action that adds a row to a table
+        """
         log.debug("add table row")
+
 
         # get the definition of the table from the org
         table_def = self.reso.get_table_definition(self.add_table_name)
 
         log.debug("Table id for {} is {}".format(self.add_table_name, table_def.get('id')))
 
-
         incident = ResInc(self.reso, incident=args.message.get('incident'))
+
+        # this is a basic template for adding a row.  A new row has no row index, so it is
+        # specified with
+        # {"cells":{
+        #           "<cellid>":{"value":<cell value>"}, 
+        #           "<cellid>":{"value":"cellvalue"},
+        #            ...
+        #          }
+        # }
 
         rowtemplate = {"cells":{}}
         action_fields = args.properties               
@@ -257,6 +291,7 @@ class DTAction(ResilientComponent):
 
         for actfield in action_fields:
             log.debug(actfield)
+            # use a json file to map action fields to table columns
             mapped_cell = self.get_table_column_map(actfield)
             if mapped_cell is None:
                 log.error("Invalid mapping of {} to the table".format(actfield))
