@@ -58,7 +58,7 @@ There is an example of how this would translate to Mulesoft/Spring in the `java/
 
 In general, when connecting to a the Resilient server using JMS you should use the Co3ActiveMQSslConnectionFactory class to avoid man-in-the-middle vulnerabilities.  That is, unless you have some other way to ensure the integrity of the SSL connection.
 
-## Resilient CAF General Examples (java/examples/caf/general)
+## Resilient Action Module General Examples (java/examples/caf/general)
 
 This project contains example Groovy code to interact with message destinations.  The following table describes each example Groovy class in detail:
 
@@ -101,7 +101,7 @@ $ java -Done-jar.main.class=com.co3.examples.LookupUsername -jar build/libs/co3-
 
 ## Apache Camel Example (java/examples/caf/camel directory)
 
-This project illustrates how you can use Apache Camel to process CAF messages.
+This project illustrates how you can use Apache Camel to process Action Module messages.
 
 The output from the Gradle build is a "One JAR" file (http://one-jar.sourceforge.net) that can easily be run from the command line.  The JAR file produced by the build is build/libs/co3-caf-camel.jar.  
 
