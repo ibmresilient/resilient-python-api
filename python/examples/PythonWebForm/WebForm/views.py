@@ -18,47 +18,41 @@
 # THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
 # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT, 
+# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Flask views for the project
-"""
-
-
-import logging
-
-import hashlib
+from flask import render_template,request,redirect,url_for,g,session,flash
+from flask.ext.login import LoginManager,UserMixin,login_user,logout_user,current_user,login_required
+from WebForm import app
 
 import wtforms as wtf
 import wtforms.widgets.core
 
-from flask import render_template, request, redirect, url_for, g, session, flash
-from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
-from WebForm import app
-from .build_form import build_form, CreateIncident
+import co3 as resilient
+import json
+import os
+from .build_form import build_form,CreateIncident
 from .ResOrg import ResOrg
-from .forms import LoginForm, TestForm
-from .models import db, User
+from .forms import LoginForm,TestForm
+from .models import db,User
+import hashlib
 
 
+import logging
 LOG = logging.getLogger(__name__)
 
 # View for the login form
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
+@app.route('/',methods=['GET','POST'])
+@app.route('/index',methods=['GET','POST'])
 @login_required
 def index():
-    """
-    view for the index page
-    """
-    if getattr(g, 'res_org', None) is None:
+    if getattr(g,'res_org',None) is None:
         g.res_org = ResOrg()
 
 
@@ -66,44 +60,38 @@ def index():
     # the page is loaded, the form is not rendered.
     form = build_form()
     if form is not None:
-        form.append_field("Submit", wtf.SubmitField("Submit"))
+        form.append_field("Submit",wtf.SubmitField("Submit"))
 
     if request.method == 'POST':
-        #invoke function to create incident based on form
-        (incident, error) = CreateIncident(request)  
-        if incident is None:
-            LOG.error("failed to create incident: {}".format(error))
+        (incident,error) = CreateIncident(request)  #invoke function to create incident based on form
         return redirect(url_for('index'))
 
     form = build_form() # build the dynamic form
     if form is not None:
-        form.append_field("Submit", wtf.SubmitField("Submit"))
+        form.append_field("Submit",wtf.SubmitField("Submit"))
 
     if form is not None:
-        return render_template('index.html', title='Case Form', form=form)
+        return render_template('index.html',title='Case Form',form=form)
     else:
-        render_template('error.html', title="CaseForm Error", error="Case Form Layout def error")
+        render_template('error.html',title="CaseForm Error",error="Case Form Layout def error")
 
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login',methods=['GET','POST'])
 def login():
-    """
-    view for the login page
-    """
     LOG.debug("Entering Login")
     error = None
     form = LoginForm()
-    if getattr(g, 'res_org', None) is None:
+    if getattr(g,'res_org',None) is None:
         g.res_org = ResOrg()
 
     if request.method == 'POST':
         # the below could be done in one line, but this is for clarity in
         # the example
-        hashv = hashlib.sha256()
-        hashv.update(request.form['password'])
-        hdigest = hashv.hexdigest()
-        user = User.query.filter_by(username=request.form['userid'], password=hdigest)
+        h = hashlib.sha256()
+        h.update(request.form['password'])
+        hd = h.hexdigest()
+        user = User.query.filter_by(username=request.form['userid'],password=hd)
         if user.count() == 0:
             flash("Invalid User Name")
 
@@ -117,33 +105,27 @@ def login():
             error(404)
 
 
-    return render_template('login.html', error=error, title='Login', form=form)
+    return render_template('login.html',error=error,title='Login',form=form)
         
 
 @app.route('/logout')
 def logout():
-    """
-    view for the logout page
-    """
     logout_user()
     return redirect(url_for('login'))
 
 
 
-@app.route("/test", methods=['GET', 'POST'])
+@app.route("/test",methods=['GET','POST'])
 def tester():
-    """
-    test view to load test form
-    """
     if request.method == 'POST':
-        for form in request.form:
-            print "{} Tester {}".format(form, request.form[form])
-            if form == 'select':
-                print "In MultiSelect"
-                print "{}".format(request.form.getlist(form))
+        for f in request.form:
+            print("{} Tester {}".format(f,request.form[f]))
+            if f == 'select':
+                print("In MultiSelect")
+                print("{}".format(request.form.getlist(f)))
         redirect(url_for('tester'))
-    nform = TestForm()
-    return render_template('test.html', form=nform)
+    form = TestForm()
+    return render_template('test.html',form=form)
 
 
 

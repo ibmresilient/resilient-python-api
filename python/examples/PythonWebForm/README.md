@@ -11,9 +11,8 @@ pip install -r requirements.txt
 Note, the Resilient API is not available via public python repositories and will have to be manually installed.
 
 
-
 ## Authentication
-Authentication handled by a simple SQLite database for the user.  Passwords are stored in the DB as SHA256 hash values.  Prior to running the web server, you must run the db_create.py which will create the database.  If run from the top level directory of the project, it will create the database in app/db/webform.db.  
+Authentication handled by a simple SQLite database for the user.  Passwords are stored in the DB as SHA256 hash values.  Prior to running the web server, you must run the db_create.py which will create the database.  If run from the top level directory of the project, it will create the database in app/db/webform.db. 
 ```
 python db_create.py
 ```

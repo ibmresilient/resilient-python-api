@@ -18,19 +18,20 @@
 # THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
 # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT, 
+# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask.ext.login import LoginManager, UserMixin
+from flask.ext.login import LoginManager,UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
+import os
 
-from WebForm import app, login_manager, db
+from WebForm import app,login_manager,db
 
 #db = SQLAlchemy(app)
 
@@ -39,16 +40,12 @@ from WebForm import app, login_manager, db
 # this should happen before even running
 @app.before_first_request
 def init_request():
-    """ initialize the database if needed"""
     db.create_all()
 
 
 # Simple User DB model. Passwords are stored as a sha256 hash
-class User(db.Model, UserMixin):
-    """
-    user class for the database model
-    """
-    id = db.Column(db.Integer, primary_key=True)
+class User(db.Model,UserMixin):
+    id = db.Column(db.Integer,primary_key=True)
     username = db.Column(db.String)
     password = db.Column(db.String)
 
@@ -56,11 +53,7 @@ class User(db.Model, UserMixin):
 # Basic loader of the user information
 @login_manager.user_loader
 def user_loader(user_id):
-    """
-    function to load the user from the database
-    """
     user = User.query.filter_by(id=user_id)
     if user.count() == 1:
         return user.one()
     return None
-
