@@ -108,21 +108,22 @@ class ResilientOrg(object):
         """
         fields = self.client().get('/types/{}/fields'.format(ftype))
 
-        jstring = "{"
-        for majorkey in fields:
-            name = majorkey["name"].encode('ascii')
-            if majorkey['values']:
-                jstring += "\"{}\":[" .format(name)
-                for values in majorkey["values"]:
-                    label = values["label"].encode('utf-8')
-                    jstring += "{{ \"{}\" : \"{}\" }}, ".format(label, values["value"])
-                jstring = jstring[:-1]
-                jstring += "], "
 
-        jstring = jstring[:-1]
-        jstring += "}"
-        field_enums = json.loads(jstring)
+        # Re- factor
+        field_enums = {}
+        for majorkey in fields:
+            vlist = []
+            name = majorkey['name'].encode('ascii')
+            if majorkey['values']:
+                pass
+                for values in majorkey['values']:
+                    vdict = {}
+                    vdict[values.get('label').encode('utf-8')] = values.get('value')
+                    vlist.append(vdict)
+                field_enums[name] = vlist
+
         return field_enums
+
 
     # build a dictionary of just the enumerations for  incident fields.
     def get_field_enums(self):
