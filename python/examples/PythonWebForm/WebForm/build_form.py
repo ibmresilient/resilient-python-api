@@ -137,6 +137,8 @@ def convert_multi_select(ilist):
     for i in ilist:
         values.append(int(i))
 
+    return values
+
 # Create incident based on form and  resapi
 #  Does not do anyting about wether a field is required in resilient or not
 def CreateIncident(request):
