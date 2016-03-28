@@ -29,30 +29,21 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+Action to add a group based on the change of a boolean field
+"""
 
 from __future__ import print_function
-from circuits import Component, Debugger
-from circuits.core.handlers import handler
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
-import os
 import logging
 
-
-import json
-import arrow   # improved Date/Time handling
-import tempfile
-
-from pprint import pprint
-import json
-
-#from lib.ResOrg import ResOrg
-
-#import ResilientOrg as ResOrg
-from ResilientOrg import ResilientOrg as ResOrg
-from pprint import pprint
-from copy import deepcopy
-
 import requests
+
+from circuits import Component
+from circuits.core.handlers import handler
+from resilient_circuits.actions_component import ResilientComponent, ActionMessage
+
+from ResilientOrg import ResilientOrg as ResOrg
+
 requests.packages.urllib3.disable_warnings()
 
 # Lower the logging threshold for requests
@@ -81,29 +72,30 @@ class GroupAddAction(ResilientComponent):
     # the function/method name MUST be the same as the action as defined in resilient
     # Note action names are not the same as the Display Name in the action definition
     #
-    # The display name for this action is "CSIRTAction", it's system level name is 
+    # The display name for this action is "CSIRTAction", it's system level name is
     # csirtaction
     '''
 
     def __init__(self, opts):
         super(GroupAddAction, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
-        self.actiondata = opts.get(CONFIG_ACTION_SECTION,{})
+        self.actiondata = opts.get(CONFIG_ACTION_SECTION, {})
 
         #self.sync_file = os.path.dirname(os.path.abspath(self.sync_opts.get('mapfile')))
 
         # The queue name can be specified in the config file, or default to 'filelookup'
         self.channel = "actions." + self.options.get("queue", "dt_action")
 
-        self.reso = ResOrg(client=self.rest_client)  # set up the resilient connection for the source which 
-                                              # is where the action will get fired from
-                                              # destination will open a unique resorg object each Time
-                                              # a connection needs to be made.
+        # set up the resilient connection for the source which
+        # is where the action will get fired from
+        # destination will open a unique resorg object each Time
+        # a connection needs to be made.
+        self.reso = ResOrg(client=self.rest_client)
 
         self.group_to_add = self.actiondata.get("group")
         self.incidenttype = self.actiondata.get("incidenttype")
-        self.userlist = self.reso.GetUsers()
-        self.grouplist = self.reso.GetGroups()
+        self.userlist = self.reso.get_users()
+        self.grouplist = self.reso.get_groups()
 
     @handler()
     def _group_action(self, event, *args, **kwargs):
@@ -123,9 +115,9 @@ class GroupAddAction(ResilientComponent):
         func = self.get_action_function(event.name) # determine which method to invoke based on the event name
 
         if func is not None:
-            rv =func(event)
-            if rv:
-                yield rv
+            retv = func(event)
+            if retv:
+                yield retv
             else:
                 yield "event handled"
         else:
@@ -134,52 +126,51 @@ class GroupAddAction(ResilientComponent):
 
         #end _invite_action
 
-    def stubfunction(self,args):
-        # stub function, can be used to test if the action processor has connected properly
-        # create a manual action called "stubfunction" associated with the configured queue
-        # and invoke the manual action.  The log will show that the stub function was invoked
-        log.debug("Stub Function")
-        return "Stub invoked"
-
-    def group_add(self,args):
+    def group_add(self, args):
+        """
+        Method invoked by action MUST be the action name as defined in the system
+        """
         def apply_change(incident):
+            """
+            function invoked by get_put to update the incident fields
+            """
             log.debug("Applying change for get put")
             incident['members'].append(gid)
 
 
         log.debug("group_add action function")
-        
+
         # get the full incident
-        incident = self.reso.GetIncidentById(args.incident.get('id'))
+        incident = self.reso.get_incident_by_id(args.incident.get('id'))
         
         incident_types = self.reso.get_incident_types()
        
         # get the current incident type id's and map them to the name
         named_itypes = []
-        for it in incident.get('incident_type_ids'):
-            name = self.map_incident_type_id_to_name(incident_types,it)
+        for itype in incident.get('incident_type_ids'):
+            name = self.reso.map_incident_type_id_to_name(incident_types, itype)
             if name is not None:
-                log.debug("incident type id {} == {}".format(it,name))
+                log.debug("incident type id {} == {}".format(itype, name))
                 named_itypes.append(name)
 
         if named_itypes and self.incidenttype in named_itypes:
             # need to chedk for the group being in the member list or
             # being the owner id.. no reason to update the membership
             # incident['members'] and incident['owner_id']
-            gid = self.get_user_id(self.grouplist,self.group_to_add)
+            gid = self.reso.get_user_id(self.grouplist, self.group_to_add)
             if gid is None:
                 log.error("Group specified in the configuration does not exist {}".format(self.group_to_add))
                 raise Exception("Group specified in the configuration does not exist {}".format(self.group_to_add))
 
             if  incident.get('owner_id') == gid or gid in incident.get('members'):
                 log.info("{} is already a member or the owner of the case".format(self.group_to_add))
-                return("Action complete already member" )
+                return "Action complete already member"
 
             try:
-                t = self.reso.client().get_put('/incidents/{}'.format(incident.get('id')),apply_change)
-            except Exception as e:
-                log.error("Failed to update incident {} with error: {}".format(incident.get('id'),e))
-                raise Exception("Failed to update incident {} with error: {}".format(incident.get('id'),e))
+                self.reso.client().get_put('/incidents/{}'.format(incident.get('id')), apply_change)
+            except Exception as ecode:
+                log.error("Failed to update incident {} with error: {}".format(incident.get('id'), ecode))
+                raise Exception("Failed to update incident {} with error: {}".format(incident.get('id'), ecode))
 
 
         else:
@@ -187,33 +178,14 @@ class GroupAddAction(ResilientComponent):
 
         return "action complete action completed"
 
-    def get_incident_type_id(self,itypes,itstring):
-        for it in itypes:
-            itdict = itypes.get(it)
-            if itdict.get('name') == itstring:
-                return itdict.get('id')
-        return None
 
-    def map_incident_type_id_to_name(self,itypes,id):
-        if itypes.get(str(id),None) is not None:
-            return itypes.get(str(id)).get('name')
-        return None
-
-
-    def get_user_id(self,userlist,name):
-        log.debug("name {} >userlist {}".format(name,userlist))
-        for user in userlist:
-            if user.get('name') == name:
-                return user.get('id')
-        return None
-
-    def get_action_function(self,funcname):
+    def get_action_function(self, funcname):
         '''
         map the name passed in to a method within the object
         '''
 
         log.debug("get function {}".format(funcname))
-        return getattr(self,'%s'%funcname,None)
+        return getattr(self, '%s'%funcname, None)
 
 
 

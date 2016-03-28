@@ -27,11 +27,18 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flask.ext.login import LoginManager,UserMixin
-from flask.ext.sqlalchemy import SQLAlchemy
-import os
 
-from WebForm import app,login_manager,db
+"""
+Flask database model definition
+The database is for user authentication only
+"""
+
+#from flask.ext.login import LoginManager, UserMixin
+from flask.ext.login import UserMixin
+
+#from flask.ext.sqlalchemy import SQLAlchemy
+
+from WebForm import app, login_manager, db
 
 #db = SQLAlchemy(app)
 
@@ -40,12 +47,18 @@ from WebForm import app,login_manager,db
 # this should happen before even running
 @app.before_first_request
 def init_request():
+    """
+    initialize the DB on startup.
+    """
     db.create_all()
 
 
 # Simple User DB model. Passwords are stored as a sha256 hash
-class User(db.Model,UserMixin):
-    id = db.Column(db.Integer,primary_key=True)
+class User(db.Model, UserMixin):
+    """
+    class for the DB model of the user table
+    """
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String)
     password = db.Column(db.String)
 
@@ -53,7 +66,11 @@ class User(db.Model,UserMixin):
 # Basic loader of the user information
 @login_manager.user_loader
 def user_loader(user_id):
+    """
+    Loaded by the login manager to query the user
+    """
     user = User.query.filter_by(id=user_id)
     if user.count() == 1:
         return user.one()
     return None
+

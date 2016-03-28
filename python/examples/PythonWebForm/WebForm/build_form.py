@@ -27,28 +27,36 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""
+Module for handling the dynamic form building 
+"""
 
 # Methods and functions for building the dynamic web form and for handling the creation of an incident
 
-from flask import render_template,request,redirect,url_for,g,session,flash
-import wtforms as wtf
-import wtforms.widgets.core
-
-from WebForm import app
-from .forms import LoginForm,CaseForm,DatePickerWidget,DateTimePickerWidget
-
-from .ResOrg import ResOrg
-import os
 import datetime
 import time
 import re
 from copy import deepcopy
 from pprint import pprint
 
+from flask import render_template, request, redirect, url_for, g, session, flash
+import wtforms as wtf
+import wtforms.widgets.core
+
+from WebForm import app
+#from .forms import LoginForm, CaseForm, DatePickerWidget, DateTimePickerWidget
+from .forms import CaseForm, DatePickerWidget, DateTimePickerWidget
+
+from .ResOrg import ResOrg
+
 # allows specifying width and height in creation
 # wtforms default TextArea requires that you specify the width and height in the
 # jinja 2 template
 class TextArea(wtforms.widgets.core.TextArea):
+    """
+    Extend the textarea object to allow for specifying the height and width
+    of the area
+    """
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
@@ -62,7 +70,10 @@ class TextArea(wtforms.widgets.core.TextArea):
 # Simple function to create the form dynamically
 # Needs to have validation etc added to the form fields
 def build_form():
-    if getattr(g,'res_org') is None:
+    """
+    Simple function that builds the web form
+    """
+    if getattr(g, 'res_org') is None:
         g.res_org = ResOrg()
 
     form = CaseForm()
@@ -74,19 +85,20 @@ def build_form():
         if f['fieldtype'] == 'Text':
             field = wtf.TextField(f['fieldlabel'])
         elif f['fieldtype'] == 'TextArea':
-            field = wtf.TextAreaField(f['fieldlabel'],
-                widget=TextArea(rows=f.get('rows',20),cols=f.get('cols',80)))
+            field = wtf.TextAreaField(f['fieldlabel'], widget=TextArea(rows=f.get('rows', 20), cols=f.get('cols', 80)))
         elif f['fieldtype'] == 'Select':
             selections = get_selections(f['choosefrom'])
-            field = wtf.SelectField(f['fieldlabel'],choices=selections)
+            field = wtf.SelectField(f['fieldlabel'], choices=selections)
 
         elif f['fieldtype'] == 'MultiSelect':
             selections = get_selections(f['choosefrom'])
-            field = wtf.SelectMultipleField(f['fieldlabel'],choices=selections)
+            field = wtf.SelectMultipleField(f['fieldlabel'], choices=selections)
         elif f['fieldtype'] == "Date":
-            field = wtf.DateField(f['fieldlabel'],widget=DatePickerWidget()) #Need to specify a widget to allow for selecting from calendar
+            #Need to specify a widget to allow for selecting from calendar
+            field = wtf.DateField(f['fieldlabel'], widget=DatePickerWidget()) 
         elif f['fieldtype'] == "DateTime":
-            field = wtf.DateTimeField(f['fieldlabel'],widget=DateTimePickerWidget()) #Need to specify a widget to allow for selecting from calendar
+            #Need to specify a widget to allow for selecting from calendar
+            field = wtf.DateTimeField(f['fieldlabel'], widget=DateTimePickerWidget()) 
         elif f['fieldtype'] == "Boolean":
             field = wtf.BooleanField(f['fieldlabel'])
         elif f['fieldtype'] == "Number":
@@ -96,36 +108,45 @@ def build_form():
 
         if field is not None:
             # Append the field to the object
-            CaseForm.append_field(f['fieldname'],field)
+            CaseForm.append_field(f['fieldname'], field)
 
     return form
 
 
 # Build the list of select values from the Resilient system configuration
 def get_selections(resfield):
+    """
+    build the select list from the resilient system configuration incident enumerations
+    """
     enums = g.res_org.get_enums()
 
-    fenum = enums.get(resfield,None)
+    fenum = enums.get(resfield, None)
     if fenum is not None:
         choices = []
         for e in fenum:
-            for key,value in e.iteritems():
-                nt = convert_selection(key,value)
+            for key, value in e.iteritems():
+                nt = convert_selection(key, value)
                 choices.append(nt)
         return choices
     else:
-        raise Exception
+        raise Exception("{} not found".format(resfield))
 
-# Swap the key and value pair to a tuple of Value,key so that it is
+# Swap the key and value pair to a tuple of Value, key so that it is
 # represented in select and multi select fields
-def convert_selection(key,value):
-    return (value,key)
-    pass
+def convert_selection(key, value):
+    """
+    invert the key,value tuple for handling in the form correctly
+    """
+    return (value, key)
 
 
 # Convert the date/time string to the time since the epoch in miliseconds
 def convert_date(item):
-    date = datetime.datetime.strptime(item,"%Y-%m-%d %H:%M:%S")
+    """
+    Convert a date time string into a time sinze epoch
+    The form returns a date time string of the format below
+    """
+    date = datetime.datetime.strptime(item, "%Y-%m-%d %H:%M:%S")
     epoch = int(time.mktime(date.timetuple())) * 1000
     return epoch
 
@@ -136,6 +157,8 @@ def convert_multi_select(ilist):
     values = []
     for i in ilist:
         values.append(int(i))
+
+    return values
 
 # Create incident based on form and  resapi
 #  Does not do anyting about wether a field is required in resilient or not
@@ -153,14 +176,14 @@ def CreateIncident(request):
         ce = res.get_config(f)
         if ce is not None:
             # get mapping 
-            if ce.get('fieldtype') == 'DateTime':  #re.match('DateTime',ce.get('fieldtype')):
+            if ce.get('fieldtype') == 'DateTime':  #re.match('DateTime', ce.get('fieldtype')):
                 value = convert_date(request.form[f])
-            elif ce.get('fieldtype') == 'Date':  #re.match('Date',ce.get('fieldtype')):
+            elif ce.get('fieldtype') == 'Date':  #re.match('Date', ce.get('fieldtype')):
                 # Date only fields have time of 00am
                 value = convert_date(request.form[f]+" 00:00:00")
-            elif re.match(ce.get('fieldtype'),"Select"):
+            elif re.match(ce.get('fieldtype'), "Select"):
                 value = int(request.form[f])
-            elif re.match(ce.get('fieldtype'),"MultiSelect"):
+            elif re.match(ce.get('fieldtype'), "MultiSelect"):
                 value = convert_multi_select(request.form.getlist(f))
             elif 'Boolean' in ce.get('fieldtype'):
                 if request.form[f] == 'y':
@@ -184,15 +207,16 @@ def CreateIncident(request):
     # we will make the discovered date the current date/time
     template['discovered_date'] = int(time.mktime(datetime.datetime.utcnow().timetuple())) * 1000
 
+    pprint("incident template {}".format(template))
 
     try:
         incident = res.client.post('/incidents/?want_full_data=true', template)
         flash("Case Created {}".format(incident.get('id')))
-        return(incident,None)
+        return(incident, None)
     except Exception as e:
         exceptcode = e
         flash("CREATION ERROR - {}".format(e))
-        return(None,exceptcode)
+        return(None, exceptcode)
 
 
 

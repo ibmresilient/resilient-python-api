@@ -63,26 +63,6 @@ Unpack the integration's files into the location where you will run them.  Depen
 The resilient api, and resilient-circuits modules are also required, referr to the documentation for each of these modules.
 
 
-### Docker setup
-The integration provides both a Dockerfile and docker-compose file.  To use docker to run the integration (this assumes you have
-docker installed and setup)
-
-#### Build a docker image
-- Create pip installable packages of the resilient api and resilient-circuits modules (referr to the documentation for this)
-- Copy these to the directory where the integration is located (they are needed to build the docker image)
-- Edit Dockerfile to specify the package names for the resilient api and the resilient-circuits package
-- Create an app.config file for your connection to resilient and your smtp setup. Refer to the *Configuring the Integration* section below.
-- Build a docker image 
-    ``` 
-    docker build -t <tagname>
-    ```
-- Run the integration docker
-    ```
-    docker run -i -t <tagname>   # run interactive Ctl-C exits the integraiton
-            or
-    docker run -t <tagname>  # runs integration in background
-    ```
-
 
 ## Configuring the Integration
 

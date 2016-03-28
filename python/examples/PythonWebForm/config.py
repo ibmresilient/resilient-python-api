@@ -31,13 +31,15 @@
 WTF_CSRF_ENABLED = True
 SECRET_KEY = 'aWnqJSXpDRZn1iET0j7frEBy'   # used for CSRF protection under FLASK
 
-RES_ID="admin@resilientsystems.com"
-RES_PW="Mp24zq!a"
-RES_HOST = "resv24base.dev"
+RES_ID="actionauto@resilientsystems.com"
+RES_PW="Dr3noZx4"
+RES_HOST = "resv24base"
 RES_PORT = 443
-RES_ORG = "ResPS"
+RES_ORG = "DTAction"
 RES_PROXY = None
 RES_CA = False
+
+
 
 # Temp database is kept in /tmp/webform.cb
 # it will be created as and empty DB if it does not exist

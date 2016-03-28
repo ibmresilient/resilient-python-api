@@ -29,26 +29,26 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+Action to synchronize configured fields from one org to another org/instance
+of resilient
+"""
 
 from __future__ import print_function
-from circuits import Component, Debugger
-from circuits.core.handlers import handler
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
 import os
 import logging
 
 
-import json
-import arrow   # improved Date/Time handling
-import tempfile
+import requests
 
-from pprint import pprint
 import json
 
 from ResilientOrg import ResilientOrg as ResOrg
-from pprint import pprint
 
-import requests
+from circuits import Component, Debugger
+from circuits.core.handlers import handler
+from resilient_circuits.actions_component import ResilientComponent, ActionMessage
+
 requests.packages.urllib3.disable_warnings()
 
 # Lower the logging threshold for requests
@@ -67,19 +67,21 @@ CONFIG_SYNC_SECTION = 'syncconfig'
 
 
 class PushHandler(ResilientComponent):
-
+    """
+    Object for resilient_circuits to invoke for push
+    """
     # This component receives custom actions from Resilient and
     # executes searches in a local CSV file and stores it
     functionmap = [
         "stubfunction"
-    ] 
+    ]
 
     def __init__(self, opts):
         super(PushHandler, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
-        self.source_opts = opts.get(CONFIG_SOURCE_SECTION,{})
-        self.dest_opts = opts.get(CONFIG_DEST_SECTION,{})
-        self.sync_opts = opts.get(CONFIG_SYNC_SECTION,{})
+        self.source_opts = opts.get(CONFIG_SOURCE_SECTION, {})
+        self.dest_opts = opts.get(CONFIG_DEST_SECTION, {})
+        self.sync_opts = opts.get(CONFIG_SYNC_SECTION, {})
         log.debug("In init")
         log.debug(self.sync_opts)
 
@@ -90,13 +92,10 @@ class PushHandler(ResilientComponent):
         # The queue name can be specified in the config file, or default to 'filelookup'
         self.channel = "actions." + self.options.get("queue", "pushhandler")
 
-        self.source_reso = ResOrg(client=self.rest_client)  # set up the resilient connection for the source which 
-                                              # is where the action will get fired from
-                                              # destination will open a unique resorg object each Time
-                                              # a connection needs to be made.
+        self.source_reso = ResOrg(client=self.rest_client)
 
-        self.enums = self.source_reso.get_enums()
-        self.users = self.source_reso.GetUsers()
+        self.enums = self.source_reso.get_field_enums()
+        self.users = self.source_reso.get_users()
 
     @handler()
     def _sync_action(self, event, *args, **kwargs):
@@ -115,25 +114,28 @@ class PushHandler(ResilientComponent):
 
         func = self.get_function(event.name)
         if func is not None:
-            rv =func(event)
+            retv = func(event)
             log.debug("-------------------------")
-            if rv:
-                yield rv
+            if retv:
+                yield retv
         else:
             raise Exception("Invalid event - no function to handle")
 
-        yield "event handled" 
+        yield "event handled"
         #end _invite_action
 
 
-    def stubfunction(self,args):
+    def stubfunction(self, args):
+        """
+        method invoked based on the action name
+        """
         log.debug("Stub function")
         with open(self.sync_file) as jdata:
             fieldmap = json.load(jdata)
 
         # create connection to the destination
-        dest_reso = ResOrg(opts = self.dest_opts)
-        source_incident = self.source_reso.GetIncidentById(args.incident.get('id'))
+        dest_reso = ResOrg(opts=self.dest_opts)
+        source_incident = self.source_reso.get_incident_by_id(args.incident.get('id'))
         source_crosslink = source_incident.get('properties').get(fieldmap.get('crosslink').get('sourcefield'))
         if source_crosslink == "" or source_crosslink == 0 or source_crosslink is None:
             log.debug("Cross link is not set >{}<".format(source_crosslink))
@@ -149,31 +151,31 @@ class PushHandler(ResilientComponent):
             source_loc = field.get('sourceloc')  # get the source location
             s_type = field.get('sourcetype')
             s_field = field.get('sourcefield')
-            if source_loc  not in ['action','incident']:
+            if source_loc  not in ['action', 'incident']:
                 # only handle source data from Action fields and Incident fields
                 log.warn("invalid source location in mapping:{}".format(field))
-                continue  # just ignore this mapping definition  
+                continue  # just ignore this mapping definition
 
-            if field.get('destcustom',False) is True:
+            if field.get('destcustom', False) is True:
                 destinfo = destdata.get('properties')
             else:
                 destinfo = destdata
 
-            if  s_type in ['select','multiselect']:
+            if  s_type in ['select', 'multiselect']:
                 # set up the source of information
                 if source_loc == 'action':
                     s_enum_defs = args['message']['type_info']['actioninvocation']['fields'].get(s_field)['values']
-                    # there is a separate function for mapping action fields to their string value 
+                    # there is a separate function for mapping action fields to their string value
                     # so the source list is the same as the enum definitions
                     slist = s_enum_defs
                     sourceinfo = args.properties
-                    source_map_fcn = self.map_action_enum  # specify the mapping function for the source
+                    source_map_fcn = self.map_action_enum  # specify the mapping function for the
                     log.debug("source is action, info is args properties")
                 elif source_loc == 'incident':
                     s_enum_defs = self.source_reso.get_field_enums_by_type(field.get('sourceloc'))
                     # get the list of enumeration values for the source field
                     slist = s_enum_defs.get(field.get('sourcefield'))
-                    if field.get('sourcecustom',False) is True:
+                    if field.get('sourcecustom', False) is True:
                         sourceinfo = source_incident.get('properties')
                         log.debug("Source info is incident properties")
                     else:
@@ -191,63 +193,64 @@ class PushHandler(ResilientComponent):
 
                 if s_type == 'select':
                     # select is mapping a single value
-                    s_enum = source_map_fcn(sourceinfo.get(field.get('sourcefield')),slist) 
-                    d_enum = self.map_map_incident_enum(s_enum,dlist)
-                       
+                    s_enum = source_map_fcn(sourceinfo.get(field.get('sourcefield')), slist)
+                    d_enum = self.map_incident_enum(s_enum, dlist)
+
                 elif s_type == 'multiselect':
-                    # multi select needs to build a list of the enumerations 
+                    # multi select needs to build a list of the enumerations
                     s_enum = []
                     svals = sourceinfo.get(field.get('sourcefield'))
                     # convert the numeric values to their string values for the source data
-                    for v in svals:
-                        a = source_map_fcn(v,slist)
-                        if a is not None:
-                            s_enum.append(a)
+                    for val in svals:
+                        mapv = source_map_fcn(val, slist)
+                        if mapv is not None:
+                            s_enum.append(mapv)
 
                     d_enum = []
                     # map the source strings to their destination numeric values
-                    for v in s_enum:
-                        z = self.map_incident_enum(v,dlist)
-                        if z is not None:
-                            d_enum.append(z)
+                    for val in s_enum:
+                        mapv = self.map_incident_enum(val, dlist)
+                        if mapv is not None:
+                            d_enum.append(mapv)
                 else:
                     d_enum = sourceinfo.get(field.get('sourcefield'))
 
                 destinfo[field.get('destfield')] = d_enum
                 log.debug("destdata {}".format(destdata))
-                
+
             else:  # just copy the field data
-                log.debug("Source field = {} val {}".format(field.get('sourcefield'),sourceinfo.get(field.get('sourcefield'))))
+                log.debug("Source field = {} val {}".format(field.get('sourcefield'), sourceinfo.get(field.get('sourcefield'))))
                 destinfo[field.get('destfield')] = sourceinfo.get(field.get('sourcefield'))
                 log.debug("destdata {}".format(destdata))
 
- 
+
 
         # check if name and description have been mapped.  if not, always mapp name and description
-        if destdata.get('name',None) is None:
+        if destdata.get('name', None) is None:
             # name was not mapped, so we always map Name and Description
             destdata['name'] = source_incident.get('name')
-        if destdata.get('description',None) is None:
+        if destdata.get('description', None) is None:
             # description was not mapped, so we force the mapping
             destdata['description'] = source_incident.get('description')
 
         # set up the cross link information
         # if its not set, then we don't do a cross link.  NOTE: not having a cross link could result in multiple
         # records being created in the destination org
-        crosslinks = fieldmap.get('crosslink',None)
-        if croslinks is not None:
-            destdata['properties'][crosslinks.get('destfield')] = source_incident.get('id') # cross link is always an incident id
+        crosslinks = fieldmap.get('crosslink', None)
+        if crosslinks is not None:
+            # cross link is always set in destination
+            destdata['properties'][crosslinks.get('destfield')] = source_incident.get('id')
 
         # Force discovered_date for new case to be the same as the originating case
         # regardless of mapping
         destdata['discovered_date'] = source_incident.get('discovered_date')
         log.debug(destdata)
 
-        
+
         # if the cross link in the source has already been set, then just skip.  Probably should move thie earlier in the handler since
         # there is no need to do the mapping.
         if source_incident['properties'][crosslinks.get('sourcefield')] is None or source_incident['properties'][crosslinks.get('sourcefield')] == "":
-            (dest_incident,error) = dest_reso.CreateCase(destdata)
+            (dest_incident, error) = dest_reso.create_case(destdata)
             #if the incident was created, then update the source incident cross link
             if dest_incident is None:
                 log.error("ERROR creating destination incident: {}".format(error))
@@ -255,7 +258,7 @@ class PushHandler(ResilientComponent):
                 log.debug("Incident id {} created".format(dest_incident.get('id')))
                 source_incident['properties'][crosslinks.get('sourcefield')] = dest_incident.get('id')
                 # this really should be a get_put of the source incident in case something changed
-                self.source_reso.PutCase(source_incident)
+                self.source_reso.put_case(source_incident)
         else:
             log.info("source cross link has already been set")
             return "Destination case already created"
@@ -263,30 +266,33 @@ class PushHandler(ResilientComponent):
         return "Destination case {} created".format(dest_incident.get('id'))
 
 
-    def map_incident_enum(self,value,enums):
+    def map_incident_enum(self, value, enums):
+        """
+        map enumerations
+        """
         log.debug("map incident enum")
-        for e in enums:
-            if e.get(value,None) is not None:
-                return int(e.get(value))
+        for enum in enums:
+            if enum.get(value, None) is not None:
+                return int(enum.get(value))
         return None
 
-    def map_action_enum(self,value,typeinfo):
+    def map_action_enum(self, value, typeinfo):
         log.debug("Map action enum {}".format(typeinfo))
-        for i in typeinfo:  #walk through the values and find the one that matches
-            if i == str(value):
-                t = typeinfo.get(i)
-                log.debug(t)
+        for itypeinfo in typeinfo:  #walk through the values and find the one that matches
+            if itypeinfo == str(value):
+                tinfo = typeinfo.get(itypeinfo)
+                log.debug(tinfo)
 
-                z = t.get('label')
-                log.debug("MapAction enum {}".format(z))
-                return z
+                ilabel = tinfo.get('label')
+                log.debug("MapAction enum {}".format(ilabel))
+                return ilabel
         return None
 
-    def get_function(self,funcname):
+    def get_function(self, funcname):
         if funcname in PushHandler.functionmap:
             log.debug("get function {}".format(funcname))
-            return getattr(self,'%s'%funcname)
+            return getattr(self, '%s'%funcname)
         log.debug("get function none")
         return None
 
-             
+

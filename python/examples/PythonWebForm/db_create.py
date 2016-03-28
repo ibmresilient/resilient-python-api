@@ -29,8 +29,8 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from config import SQLALCHEMY_DATABASE_URI
+#from config import SQLALCHEMY_DATABASE_URI
 from WebForm import db  # bring in the local db module
 
 # SQLAlchemy  this will create the DB if it does not exist
-rv = db.create_all()
+rvalue = db.create_all()

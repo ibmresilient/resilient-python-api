@@ -29,11 +29,15 @@
 
 # Form object definitions here.
 
+"""
+Flask web form definitions and widgets
+"""
+from copy import deepcopy
+
 from flask.ext.wtf import Form
 #from wtforms import StringField, BooleanField1
 import wtforms as wtf
 from wtforms.validators import DataRequired
-from copy import deepcopy
 
 
 # SAB Start widget playings  from Flask App Builder
@@ -42,7 +46,7 @@ from wtforms.widgets import HTMLString, html_params
 
 class DatePickerWidget(object):
     """
-    Date Time picker from Eonasdan GitHub
+    Date picker 
     """
     data_template = (
         '''
@@ -66,7 +70,7 @@ class DatePickerWidget(object):
             </div>
         </div>
         '''     
-                    )
+        )
 
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', 'datetimepicker1') #field.id)
@@ -76,11 +80,14 @@ class DatePickerWidget(object):
         template = self.data_template
 
         return HTMLString(template % {
-                    'text': html_params(type='text', value=field.data, **kwargs),
+                    'text': html_params(type='text', value=field.data, **kwargs), 
                     'id':field.id
                     })
 
 class DateTimePickerWidget(object):
+    """
+    Date time picker widget definition
+    """
     data_template = (
         '''
         <div class="container">
@@ -115,7 +122,7 @@ class DateTimePickerWidget(object):
         template = deepcopy(self.data_template)
 
         return HTMLString(template % {
-                                    'text': html_params(type='text', value=field.data, **kwargs),
+                                    'text': html_params(type='text', value=field.data, **kwargs), 
                                     'id':field.id
                                 })
 # SAB end widget playing
@@ -124,21 +131,33 @@ class DateTimePickerWidget(object):
 
 # Define the login form for authentication
 class LoginForm(Form):
-    userid = wtf.StringField('User:',validators=[DataRequired()])
+    """
+    Form for login to the page.
+    """
+    userid = wtf.StringField('User:', validators=[DataRequired()])
     password = wtf.PasswordField('Password')
 
 # Scaffold for the dynamicaly created case form
 class CaseForm(Form):
-    
+    """
+    Class for the case creation form.
+    """ 
     @classmethod
-    def append_field(cls,name,field):
-        setattr(cls,name,field)
+    def append_field(cls, name, field):
+        """
+        Class method to add a field to the form as 
+        this form is a dynamicly built construct
+        """
+        setattr(cls, name, field)
         return cls
 
 class TestForm(Form):
-    foo = wtf.DateTimeField("Date Time Sample",widget=DateTimePickerWidget())
-    bar = wtf.DateField("Date Sample",widget=DatePickerWidget())
-    select = wtf.SelectMultipleField("Multi Select",choices=[('A','a'),('B','b'),('C','c')])
+    """
+    Test form object
+    """
+    dtsample = wtf.DateTimeField("Date Time Sample", widget=DateTimePickerWidget())
+    datesample = wtf.DateField("Date Sample", widget=DatePickerWidget())
+    select = wtf.SelectMultipleField("Multi Select", choices=[('A', 'a'), ('B', 'b'), ('C', 'c')])
     check = wtf.BooleanField("Boolean")
 
 

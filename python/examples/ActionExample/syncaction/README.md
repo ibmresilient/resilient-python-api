@@ -5,12 +5,6 @@ This action handler will take incident fields from one org and replicate them in
 ```
 python syncaction.py
 ```
-OR
-```
-docker build -t <imagename> .  # builds from the Dockerfile
-docker run --name <descriptive name for the container> -v <path to log directory>:/code/logs  -d --restart=always <imagename from build>
-#Note, the volume specified in the -v option must NOT be within the build directory of the docker file
-```
 
 ## Configuration
 The configuration is contained within *app.config*, to change which configuration file is loaded specify in the *APP_CONFIG_FILE* environment variable the full path to the filename e.g

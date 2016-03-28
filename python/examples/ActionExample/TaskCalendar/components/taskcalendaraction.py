@@ -130,7 +130,7 @@ class TaskCalendar(ResilientComponent):
         # The queue name can be specified in the config file, or default to 'filelookup'
         self.channel = "actions." + self.options.get("queue", "taskcalendar")
 
-    def GetUsers(self):
+    def get_users(self):
         uri = "/users"
         try:
             self.users = self.rest_client().get(uri)
@@ -185,7 +185,7 @@ class TaskCalendar(ResilientComponent):
             tfile.close()
 
 
-            rv = self.GetUsers()
+            rv = self.get_users()
             if rv:
                 # handle getting the email
                 uemail = None
