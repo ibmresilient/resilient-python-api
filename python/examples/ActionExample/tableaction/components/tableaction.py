@@ -204,9 +204,10 @@ class DTAction(ResilientComponent):
         # the action was triggered by a row deletion, which is ignored
         # the row is in the format of
         #{'cells': {'cellnumid': {'row_id': 67, 'id': cellnumid, 'value': cellvalue}, 
-        #           'cellnumid': {'row_id': 67, 'id': cellnumid, 'value': cellvalue}}, 
-        #            ....
-        #           'id': rownumid, 'actions': []}
+        #           'cellnumid': {'row_id': 67, 'id': cellnumid, 'value': cellvalue}
+        #            ...
+        #           }, 
+        #'id': rownumid, 'actions': []}
 
         rowdata = args.row  # for ease of reference point to the event row data
         log.debug("Row passed in message {}".format(args.row))
