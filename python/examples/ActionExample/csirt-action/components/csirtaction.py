@@ -96,7 +96,7 @@ class CSIRTAction(ResilientComponent):
         self.new_incident_type = self.actiondata.get("incidenttype")
 
 
-    @handler()
+    @handler("csirtaction")
     def _csirt_action(self, event, *args, **kwargs):
         """
            The @handler() annotation without an event name makes this

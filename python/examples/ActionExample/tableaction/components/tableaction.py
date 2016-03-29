@@ -105,6 +105,7 @@ class DTAction(ResilientComponent):
         self.add_table_name = self.actiondata.get("tabletoadd")
 
 
+    # use the generic handler notation, as this processor handles 2 actions
     @handler()
     def _table_lookup_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this

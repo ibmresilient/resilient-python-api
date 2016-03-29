@@ -97,7 +97,7 @@ class GroupAddAction(ResilientComponent):
         self.userlist = self.reso.get_users()
         self.grouplist = self.reso.get_groups()
 
-    @handler()
+    @handler("group_add")
     def _group_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.

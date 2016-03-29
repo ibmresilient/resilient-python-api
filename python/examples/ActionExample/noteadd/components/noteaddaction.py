@@ -83,7 +83,7 @@ class AddNoteAction(ResilientComponent):
 
         self.reso = ResOrg(client=self.rest_client)
 
-    @handler()
+    @handler("add_note_on_manual_action")
     def _add_note_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.
