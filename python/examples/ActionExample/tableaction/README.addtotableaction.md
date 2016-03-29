@@ -13,13 +13,13 @@ Configuration information for the action.
 
 ## Row Mapping
 Simple json structure of the action field api name to the table column
-'''
+```
 {
 "action_api_name":"table column api name"
 ...
 "action_api_name":"table column api name"
 }
-'''
+```
 
 
 ## Resilient Configuration

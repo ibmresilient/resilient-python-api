@@ -29,12 +29,12 @@ Configuration information for the action.
 
 ## Lookup file format
 a simple json structure is used for the lookup file.  It is an array of structures which contain two elements, the name of the user and the email address.
-'''
+```
 [
 {"name":"XXX User","email":"xxx@yy.com"}
 ,{"name":"YYY User","email":"yyy@yy.com"}
 ]
-'''
+```
 
 ## Resilient Configuration
 The default configuration expects an action queue named *dt_action*, and an automatic action for a table named *dt_action_table*.  The automatic action should have no conditions. 
