@@ -44,9 +44,10 @@ from wtforms.validators import DataRequired
 from wtforms.widgets import HTMLString, html_params
 #from flask.ext.wtf import fields, widgets, TextField
 
+
 class DatePickerWidget(object):
     """
-    Date picker 
+    Date picker
     """
     data_template = (
         '''
@@ -69,20 +70,21 @@ class DatePickerWidget(object):
                 </script>
             </div>
         </div>
-        '''     
-        )
+        '''
+    )
 
     def __call__(self, field, **kwargs):
-        kwargs.setdefault('id', 'datetimepicker1') #field.id)
+        kwargs.setdefault('id', 'datetimepicker1')  # field.id)
         kwargs.setdefault('name', field.name)
         if not field.data:
             field.data = ""
         template = self.data_template
 
         return HTMLString(template % {
-                    'text': html_params(type='text', value=field.data, **kwargs), 
-                    'id':field.id
-                    })
+            'text': html_params(type='text', value=field.data, **kwargs),
+            'id': field.id
+        })
+
 
 class DateTimePickerWidget(object):
     """
@@ -112,7 +114,7 @@ class DateTimePickerWidget(object):
             </div>
         </div>
         '''
-        )
+    )
 
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', field.id)
@@ -122,11 +124,10 @@ class DateTimePickerWidget(object):
         template = deepcopy(self.data_template)
 
         return HTMLString(template % {
-                                    'text': html_params(type='text', value=field.data, **kwargs), 
-                                    'id':field.id
-                                })
+            'text': html_params(type='text', value=field.data, **kwargs),
+            'id': field.id
+        })
 # SAB end widget playing
-
 
 
 # Define the login form for authentication
@@ -138,26 +139,28 @@ class LoginForm(Form):
     password = wtf.PasswordField('Password')
 
 # Scaffold for the dynamicaly created case form
+
+
 class CaseForm(Form):
     """
     Class for the case creation form.
-    """ 
+    """
     @classmethod
     def append_field(cls, name, field):
         """
-        Class method to add a field to the form as 
+        Class method to add a field to the form as
         this form is a dynamicly built construct
         """
         setattr(cls, name, field)
         return cls
 
+
 class TestForm(Form):
     """
     Test form object
     """
-    dtsample = wtf.DateTimeField("Date Time Sample", widget=DateTimePickerWidget())
+    dtsample = wtf.DateTimeField(
+        "Date Time Sample", widget=DateTimePickerWidget())
     datesample = wtf.DateField("Date Sample", widget=DatePickerWidget())
     select = wtf.SelectMultipleField("Multi Select", choices=[('A', 'a'), ('B', 'b'), ('C', 'c')])
     check = wtf.BooleanField("Boolean")
-
-
