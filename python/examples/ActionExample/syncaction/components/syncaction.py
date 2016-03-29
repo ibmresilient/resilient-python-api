@@ -97,7 +97,7 @@ class PushHandler(ResilientComponent):
         self.enums = self.source_reso.get_field_enums()
         self.users = self.source_reso.get_users()
 
-    @handler()
+    @handler("stubfunction")
     def _sync_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.

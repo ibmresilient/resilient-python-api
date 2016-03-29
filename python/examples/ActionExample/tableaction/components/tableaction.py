@@ -105,7 +105,8 @@ class DTAction(ResilientComponent):
         self.add_table_name = self.actiondata.get("tabletoadd")
 
 
-    @handler()
+    # use the generic handler notation, as this processor handles 2 actions
+    @handler("table_action")
     def _table_lookup_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.
@@ -120,20 +121,16 @@ class DTAction(ResilientComponent):
 
         log.debug("Event Name {}".format(event.name))
 
-        # determine which method to invoke based on the event name
-        func = self.get_action_function(event.name)
 
-        if func is not None:
-            retv = func(event)
-            if retv:
-                yield retv
-            else:
-                yield "event handled"
+        # using the handler decorator ensures that only this
+        # event gets processed
+
+        retv = self.table_action(event)
+        
+        if retv:
+            yield retv
         else:
-            # an action without a handling method was put onto the queue
-            log.error("Invalid event no function to handle {}".format(event.name))
-            raise Exception("Invalid event - no function to handle {}".format(event.name))
-
+            yield "event handled"
 
         #end _invite_action
 
@@ -274,53 +271,7 @@ class DTAction(ResilientComponent):
         return "table action completed"
 
 
-    def add_row_to_table(self, args):
-        """
-        Method invoked by manual action that adds a row to a table
-        """
-        log.debug("add table row")
-
-
-        # get the definition of the table from the org
-        table_def = self.reso.get_table_definition(self.add_table_name)
-
-        log.debug("Table id for {} is {}".format(self.add_table_name, table_def.get('id')))
-
-        incident = ResInc(self.reso, incident=args.message.get('incident'))
-
-        # this is a basic template for adding a row.  A new row has no row index, so it is
-        # specified with
-        # {"cells":{
-        #           "<cellid>":{"value":<cell value>"}, 
-        #           "<cellid>":{"value":"cellvalue"},
-        #            ...
-        #          }
-        # }
-
-        rowtemplate = {"cells":{}}
-        action_fields = args.properties               
-        log.debug("argproperties {}".format(action_fields))
-
-        for actfield in action_fields:
-            log.debug(actfield)
-            # use a json file to map action fields to table columns
-            mapped_cell = self.get_table_column_map(actfield)
-            if mapped_cell is None:
-                log.error("Invalid mapping of {} to the table".format(actfield))
-                raise Exception("Add Row to table feild - {} does not map to a table cell".format(actfield))
-
-            log.debug("mapped_cell is {}".format(mapped_cell))
-            mapped_id = self.get_cell_id(mapped_cell, table_def)
-            log.debug("mapped id = {}".format(mapped_id))
-            rowtemplate['cells'][str(mapped_id)] = {"value":action_fields.get(actfield)}
-
-        (tablerow, ecode) = incident.add_table_row(rowtemplate, table_def.get('id'))
-        if ecode is not None:
-            raise Exception("Table addition failed: {}".format(ecode))
-        log.debug("row added {}".format(tablerow))
-
-        return "Row added to table"
-
+ 
     def get_table_column_map(self, tabcolname):
         """
         gets the mapping of the action variable to the table column name
