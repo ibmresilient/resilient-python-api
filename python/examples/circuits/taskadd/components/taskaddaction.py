@@ -108,12 +108,15 @@ class AddTaskAction(ResilientComponent):
         incident_id=args.message['incident']['id']
         tname = args.properties.get('task_name')
         task_instructions = args.properties.get('task_instructions')
-        task_phase = args.properties.get('task_phase')
+        task_phase_key = args.properties.get('task_phase')
+        task_phase = args.message.get('type_info', {}).get(
+            'actioninvocation', {}).get('fields', {}).get(
+                'task_phase', {}).get('values', {}).get(
+                    str(task_phase_key), {}).get('label', None)
 
         task = {"name": tname or '',
                 "instr_text": task_instructions or '',
                 "inc_id": incident_id,
-                #"active": True,
                 "phase_id": task_phase or ''}
 
         posted_task = self.rest_client().post("/incidents/%s/tasks" % incident_id, task)
