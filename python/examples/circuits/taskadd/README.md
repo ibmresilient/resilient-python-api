@@ -20,7 +20,7 @@ Create a Queue message destination with programmatic name `add_task`.
 Select Yes for "expect acknowledgement", and add the integration user
 to its users list.
 
-![Custom message destination](documentation/messagedestination.png)
+![Custom message destination](Documents/messagedestination.png)
 
 ### Action Fields
 
@@ -38,7 +38,7 @@ Several action fields need to be created.
 
 Create a manual action named 'add_task', associated with object type "Incident".  Choose `add_task` as the message destination.  Add the 3 custom action fields created above to the layout.
 
-![Custom Automatic Action](documentation/manualaction.png)
+![Custom Automatic Action](Documents/manualaction.png)
 
 ## Python setup
 
@@ -84,7 +84,7 @@ Run the custom action application with:
 
 The script will start running, and wait for messages.  When users in Resilient select the 'Add Task' action from the Actions dropdown, a new task will be added to the incident.
 
-![Task List](documentation/results.png)
+![Task List](Documents/results.png)
 
 To stop the script running, interrupt it with `Ctrl+C` or kill the process.
 
