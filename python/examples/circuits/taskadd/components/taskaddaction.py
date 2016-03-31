@@ -38,9 +38,9 @@ Action to add a task through a manual action with
 import logging
 import requests
 
-from circuits import Component, Debugger
 from circuits.core.handlers import handler
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
+from resilient_circuits.actions_component import ResilientComponent
+from resilient_circuits.actions_component import ActionMessage
 
 requests.packages.urllib3.disable_warnings()
 
@@ -64,8 +64,8 @@ class AddTaskAction(ResilientComponent):
         super(AddTaskAction, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
 
-        # The queue name can be specified in the config file, or default to 'filelookup'
-        self.channel = "actions." + self.options.get("queue", "dt_action")
+        # The queue name can be specified in the config file or use default
+        self.channel = "actions." + self.options.get("queue", "add_task")
 
     @handler()
     def add_task_action(self, event, *args, **kwargs):
@@ -78,12 +78,12 @@ class AddTaskAction(ResilientComponent):
         """
         if not isinstance(event, ActionMessage):
             # Some event we are not interested in
-            log.debug("Ignoring Event: ", str(event))
+            log.debug("Ignoring Event: %s", str(event))
             return
 
-        log.debug("Event Name {}".format(event.name))
+        log.debug("Event Name %s", event.name)
 
-         # determine which method to invoke based on the event name
+        # determine which method to invoke based on the event name
         func = self.get_action_function(event.name)
 
         if func is not None:
@@ -96,8 +96,7 @@ class AddTaskAction(ResilientComponent):
             # an action without a handling method was put onto the queue
             raise Exception("Invalid event - no function to handle")
 
-        #end add_task_action
-
+    # end add_task_action
 
     def add_task(self, args):
         """
@@ -105,7 +104,7 @@ class AddTaskAction(ResilientComponent):
         """
         log.debug("Invoked function")
 
-        incident_id=args.message['incident']['id']
+        incident_id = args.message['incident']['id']
         tname = args.properties.get('task_name')
         task_instructions = args.properties.get('task_instructions')
         task_phase_key = args.properties.get('task_phase')
@@ -119,27 +118,19 @@ class AddTaskAction(ResilientComponent):
                 "inc_id": incident_id,
                 "phase_id": task_phase or ''}
 
-        posted_task = self.rest_client().post("/incidents/%s/tasks" % incident_id, task)
+        posted_task = self.rest_client().post("/incidents/%s/tasks" %
+                                              incident_id, task)
         if not posted_task:
             log.error("Failed to post task!")
             return "Error posting task"
         else:
             log.info("Task Posted: %s", posted_task)
             return "action complete. task posted"
-    
 
     def get_action_function(self, funcname):
         """
         map the name passed in to a method within the object
         """
 
-        log.debug("get function {}".format(funcname))
-        return getattr(self, '%s'%funcname, None)
-
-
-
-
-
-
-
-
+        log.debug("get function %s", funcname)
+        return getattr(self, '%s' % funcname, None)
