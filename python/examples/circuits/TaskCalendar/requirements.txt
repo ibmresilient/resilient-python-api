@@ -1,2 +1,1 @@
- python-dateutil >=2.4
  arrow >= 0.4.2

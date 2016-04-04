@@ -44,6 +44,7 @@ import arrow   # improved Date/Time handling
 import tempfile
 
 import smtplib
+from smtplib import SMTP_SSL, SMTP
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -53,7 +54,7 @@ from email import encoders
 
 LOG = logging.getLogger(__name__)
 
-#LOG.setLevel(logging.DEBUG)  # force logging level to be DEBUG
+LOG.setLevel(logging.DEBUG)  # force logging level to be DEBUG
 CONFIG_DATA_SECTION = 'taskcalendar'
 
 
@@ -141,7 +142,7 @@ class TaskCalendar(ResilientComponent):
 
 
     @handler()
-    def _invite_action(self, event, *args, **kwargs):
+    def _calendar_invite_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.
            This will be called with some "internal" events from Circuits,
@@ -192,21 +193,32 @@ class TaskCalendar(ResilientComponent):
                 for user in self.users:
                     if user.get('id') == taskinfo.get('owner_id'):
                         uemail = user.get('email')
+                        LOG.debug("Task owner is {}".format(uemail))
                         break
-                LOG.debug("Task owner is {}".format(uemail))
             if uemail is not None:
                 # Build the Mail 
                 msg = MIMEMultipart()
                 msg['Subject'] = "New task for incident {} assigned to you".format(inc_id)
 
-                smtp = smtplib.SMTP(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
-                if self.options.get('smtpport') == '587':
+                
+                if self.options.get('sslrequired'):
+                    smtp = SMTP_SSL(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
+                elif self.options.get('tlsrequired'):
+                    LOG.info("SSL connection to mailbox required")
                     smtp.ehlo()
                     smtp.starttls()
+                    mailserver.ehlo()
+                else:
+                    smtp = SMTP(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
 
                 if self.options.get('smtpuser',None) is not None:
-                    smtp.login(self.options.get('smtpuser'),self.options.get('smtppw'))
+                    try:
+                        smtp.login(self.options.get('smtpuser'),self.options.get('smtppw'))
+                    except smtplib.SMTPException:
+                        smtp = SMTP_SSL(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
+                        smtp.login(self.options.get('smtpuser'),self.options.get('smtppw'))
 
+                        
                 msg['From'] = self.options.get('smtpfrom')
 
                 part = MIMEBase('application',"octet-stream")
