@@ -29,27 +29,21 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
-"""Action Module circuits component to lookup a value in a local CSV file"""
+"""Action Module circuits component to mail out an ics calendar file for tasks"""
 
-from __future__ import print_function
-from circuits import Component, Debugger
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
 import os
 import logging
 
-
-import json
 import arrow   # improved Date/Time handling
 import tempfile
 
 import smtplib
 from smtplib import SMTP_SSL, SMTP
-from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
-from email.utils import COMMASPACE, formatdate
+from email.utils import formatdate
 from email import encoders
 
 LOG = logging.getLogger(__name__)
@@ -59,6 +53,7 @@ CONFIG_DATA_SECTION = 'taskcalendar'
 
 
 class Vcal(object):
+    ''' For creating data for ics files '''
     def __init__(self):
         self.header = '''BEGIN:VCALENDAR
 VERSION:2.0
@@ -120,15 +115,12 @@ END:VCALENDAR
 
 
 class TaskCalendar(ResilientComponent):
-
-    # This component receives custom actions from Resilient and
-    # executes searches in a local CSV file and stores it
-
+    ''' for handling task calendar events from Resilient'''
     def __init__(self, opts):
         super(TaskCalendar, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
 
-        # The queue name can be specified in the config file, or default to 'filelookup'
+        # The queue name can be specified in the config file, or default to 'taskcalendar'
         self.channel = "actions." + self.options.get("queue", "taskcalendar")
 
     def get_users(self):
@@ -187,6 +179,9 @@ class TaskCalendar(ResilientComponent):
 
 
             rv = self.get_users()
+            if not rv:
+                LOG.error("Failed to retrieve users from Resilient")
+                return
             if rv:
                 # handle getting the email
                 uemail = None
@@ -194,7 +189,7 @@ class TaskCalendar(ResilientComponent):
                     if user.get('id') == taskinfo.get('owner_id'):
                         uemail = user.get('email')
                         LOG.debug("Task owner is {}".format(uemail))
-                        break
+                        yield "Failed to retrieve users from resilient"
             if uemail is not None:
                 # Build the Mail 
                 msg = MIMEMultipart()
