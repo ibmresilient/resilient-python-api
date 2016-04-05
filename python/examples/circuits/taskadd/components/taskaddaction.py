@@ -35,17 +35,12 @@ Action to add a task through a manual action with
 3 fields defined for the manual action
 """
 
-from __future__ import print_function
 import logging
-
 import requests
 
-from ResilientOrg import ResilientOrg as ResOrg
-from ResilientOrg import ResilientIncident as ResInc
-
-from circuits import Component, Debugger
 from circuits.core.handlers import handler
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
+from resilient_circuits.actions_component import ResilientComponent
+from resilient_circuits.actions_component import ActionMessage
 
 requests.packages.urllib3.disable_warnings()
 
@@ -56,34 +51,24 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 logging.Formatter('%(asctime)s:%(name)s:%(levelname)-8s %(message)s')
 
-
-#log.setLevel(logging.DEBUG)  # force logging level to be DEBUG
-CONFIG_DATA_SECTION = 'action'
+CONFIG_DATA_SECTION = 'task_add'
 CONFIG_SOURCE_SECTION = 'resilient'
-CONFIG_ACTION_SECTION = 'actiondata'
 
 
 class AddTaskAction(ResilientComponent):
     """
-
-    Manual action to add a task to a phase
-
+    Manual action to add an incident task to a phase
     """
 
     def __init__(self, opts):
         super(AddTaskAction, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
-        self.actiondata = opts.get(CONFIG_ACTION_SECTION, {})
 
-        #self.sync_file = os.path.dirname(os.path.abspath(self.sync_opts.get('mapfile')))
-
-        # The queue name can be specified in the config file, or default to 'filelookup'
-        self.channel = "actions." + self.options.get("queue", "dt_action")
-
-        self.reso = ResOrg(client=self.rest_client)
+        # The queue name can be specified in the config file or use default
+        self.channel = "actions." + self.options.get("queue", "add_task")
 
     @handler()
-    def _add_task_action(self, event, *args, **kwargs):
+    def add_task_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.
            This will be called with some "internal" events from Circuits,
@@ -93,11 +78,12 @@ class AddTaskAction(ResilientComponent):
         """
         if not isinstance(event, ActionMessage):
             # Some event we are not interested in
+            log.debug("Ignoring Event: %s", str(event))
             return
 
-        log.debug("Event Name {}".format(event.name))
+        log.debug("Event Name %s", event.name)
 
-         # determine which method to invoke based on the event name
+        # determine which method to invoke based on the event name
         func = self.get_action_function(event.name)
 
         if func is not None:
@@ -110,40 +96,41 @@ class AddTaskAction(ResilientComponent):
             # an action without a handling method was put onto the queue
             raise Exception("Invalid event - no function to handle")
 
-        #end _invite_action
+    # end add_task_action
 
-
-    def add_task_on_manual_action(self, args):
+    def add_task(self, args):
         """
         Method invoked based on action name
         """
         log.debug("Invoked function")
 
-
-        incident = ResInc(self.reso,incident=args.message.get('incident'))        
+        incident_id = args.message['incident']['id']
         tname = args.properties.get('task_name')
         task_instructions = args.properties.get('task_instructions')
-        task_phase = args.properties.get('task_phase')
+        task_phase_key = args.properties.get('task_phase')
+        task_phase = args.message.get('type_info', {}).get(
+            'actioninvocation', {}).get('fields', {}).get(
+                'task_phase', {}).get('values', {}).get(
+                    str(task_phase_key), {}).get('label', None)
 
-        task = incident.create_task(tname, task_instructions, task_phase)
-        if task is None:
-            raise Exception("Task Creation Failed Check logs")
+        task = {"name": tname or '',
+                "instr_text": task_instructions or '',
+                "inc_id": incident_id,
+                "phase_id": task_phase or ''}
 
-        return "action complete action completed"
-
+        posted_task = self.rest_client().post("/incidents/%s/tasks" %
+                                              incident_id, task)
+        if not posted_task:
+            log.error("Failed to post task!")
+            return "Error posting task"
+        else:
+            log.info("Task Posted: %s", posted_task)
+            return "action complete. task posted"
 
     def get_action_function(self, funcname):
         """
         map the name passed in to a method within the object
         """
 
-        log.debug("get function {}".format(funcname))
-        return getattr(self, '%s'%funcname, None)
-
-
-
-
-
-
-
-
+        log.debug("get function %s", funcname)
+        return getattr(self, '%s' % funcname, None)
