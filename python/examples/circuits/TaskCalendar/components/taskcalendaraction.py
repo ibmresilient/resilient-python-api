@@ -182,7 +182,7 @@ class TaskCalendar(ResilientComponent):
         if smtp_options.get('smtpuser', None) is not None:
             try:
                 smtp.login(smtp_options.get('smtpuser'), smtp_options.get('smtppw'))
-            except smtplib.SMTPException, e:
+            except smtplib.SMTPException as e:
                 smtp = SMTP_SSL(smtp_options.get('smtpserver') +
                                 ":"+smtp_options.get('smtpport'))
                 smtp.login(smtp_options.get('smtpuser'), smtp_options.get('smtppw'))
@@ -230,7 +230,7 @@ class TaskCalendar(ResilientComponent):
 
                 # create the file, but don't delete on close
                 tfile = tempfile.NamedTemporaryFile(dir='/tmp', suffix='.ics', delete=False)
-                tfile.write(estring)
+                tfile.write(estring.encode('utf-8'))
                 tfile.close()
 
                 success = self.get_users()
@@ -262,7 +262,7 @@ class TaskCalendar(ResilientComponent):
 
             yield "task %s updated" % taskinfo.get('name')
 
-        except Exception, e:
+        except Exception as e:
             LOG.error("Unexpected error creating and sending calendar invite: %s", str(e))
             LOG.error(traceback.format_exc())
             yield "error creating calendar invite %s" % str(e)
