@@ -36,14 +36,12 @@ from resilient_circuits.actions_component import ResilientComponent, ActionMessa
 import os
 import logging
 
-import arrow   # improved Date/Time handling
+from datetime import datetime
 import tempfile
-
 import smtplib
 from smtplib import SMTP_SSL, SMTP
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
-from email.utils import formatdate
 from email import encoders
 
 LOG = logging.getLogger(__name__)
@@ -157,15 +155,16 @@ class TaskCalendar(ResilientComponent):
         if taskinfo.get('owner_id',None) is not None:
             event = Vcal()
             event.add_uid("{}{}@resilientsystems.com".format(inc_id,task_id))
-            event.add_start(arrow.now().format('YYYYMMDD'))
+            event_date = datetime.now().strftime("%Y%m%dT%H%M%SZ")
+            event.add_start(event_date)
             if taskinfo['due_date'] is not None:
-                LOG.debug("Duedate is {}".format(arrow.get(int(taskinfo.get('due_date')/1000)).replace(days=+1).format('YYYYMMDD')))
-                event.add_end(arrow.get(int(taskinfo.get('due_date')/1000)).replace(days=+1).format('YYYYMMDD'))
+                due_date = datetime.utcfromtimestamp(int(taskinfo.get('due_date')/1000)).strftime("%Y%m%dT%H%M%SZ")
+                LOG.debug("Duedate is {}".format(due_date))
+                event.add_end(due_date)
             else:
-                LOG.debug("No Due Date, setting to current {}".format(arrow.now().format('YYYYMMDD')))
-                event.add_end(arrow.now().format('YYYYMMDD'))
+                LOG.warn("No Due Date, setting to current {}".format(event_date))
+                event.add_end(event_date)
 
-            #event.add_summary(taskinfo.get('name'))
             event.add_summary("Task {} for Incident {} <{}>".format(task_id,inc_id,taskinfo.get('name')))
 
             event.add_url("https://{}/#incidents/{}?tab=tasks&task_id={}".format(self.opts.get('host'),inc_id,task_id))
@@ -238,4 +237,4 @@ class TaskCalendar(ResilientComponent):
             yield "task {} for incident {} was not assigned to a user".format(taskinfo.get('name'),inc_id)
 
         yield "task %s updated" % taskinfo.get('name')
-    #end _invite_action
+    # end _calendar_invite_action
