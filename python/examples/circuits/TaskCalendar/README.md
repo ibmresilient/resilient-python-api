@@ -40,11 +40,6 @@ For the action 'DueDate change' add condition
 ![Due Date Change custom action](Documents/duedatechange.png)
 
 ## Python setup
-There are two modes of setup for the integration.  Native and Docker.  Docker allows for the integration to run in an isolated
-container without access to filesystems or the rest of the server which it is running on.  Docker also provides for mechanisms to restart
-containers if they terminate.  Native runs the integration on the system directly as a Linux process.
-
-### Native Python
 
 The Resilient REST API is accessed with a helper module 'co3' that should be
 used for all Python client applications.  The 'co3' module is a part of the
@@ -56,13 +51,9 @@ framework should be downloaded and installed, following its instructions.
 
 #### Installing the Integration
 
-Unpack the integration's files into the location where you will run them.  Dependencies can be installed with
-    ```
-    pip install -f requirements.txt
-    ```
+Unpack the integration's files into the location where you will run them. The generic run.py script that is used for all circuits integrations can be found in the main examples directory.
 The resilient api, and resilient-circuits modules are also required, referr to the documentation for each of these modules.
-
-
+Create the `logs` directory that the log file will be written to
 
 ## Configuring the Integration
 
@@ -78,10 +69,12 @@ for accessing the resilient server via the api.  The 'taskcalendar' section conf
 Within the 'taskcalendar' section the following information is required:
 * queue - this should be 'taskcalendar' 
 * smtpserver - the server which will send the email with the .ics file as an attachment
-* smtpfrom - the email address which the email should be send from
-* smtpuser - login credential for the user on the smtp server
+* smtpfrom - the email address which the email should be shown as from
+* smtpuser - login credential for the user on the smtp server. Usually an email address
 * smtppw - password for the 'smtpuser' on the smtp server
-* smtpport - port on the smtp server.  If port 587 is specified the action processor will use starttls
+* smtpport - port on the smtp server.
+* tlsrequired - Only include and set to True if using TLS, usually with port 587
+* sslrequired - Only include and set to True if using SSL, usually with port 465
 
 ### Certificates
 
@@ -113,6 +106,7 @@ To stop the script running, interrupt it with `Ctrl+C`.
 
 * Some calendar applications will not display the embedded url
 * Updating an existing calendar event may not work properly depending on the calendar application you are using
+* If you update the Task's owner and due date at the same time in Resilient, the result will be 2 separate identical calendar invites being sent out.
 
 
 ### More
