@@ -31,20 +31,18 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 """Action Module circuits component to mail out an ics calendar file for tasks"""
 
-from circuits.core.handlers import handler
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
 import os
 import logging
-
-import arrow   # improved Date/Time handling
+from datetime import datetime
 import tempfile
-
 import smtplib
 from smtplib import SMTP_SSL, SMTP
+import traceback
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
-from email.utils import formatdate
 from email import encoders
+from circuits.core.handlers import handler
+from resilient_circuits.actions_component import ResilientComponent, ActionMessage
 
 LOG = logging.getLogger(__name__)
 
@@ -54,17 +52,19 @@ CONFIG_DATA_SECTION = 'taskcalendar'
 
 class Vcal(object):
     ''' For creating data for ics files '''
-    def __init__(self):
-        self.header = '''BEGIN:VCALENDAR
+    end = '''END:VEVENT
+END:VCALENDAR
+'''
+    header = '''BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-/resilientsystems.com/Resilient IRT
 METHOD:PUBLISH
 BEGIN:VEVENT
 FBTYPE:BUSY
 '''
-        self.end = '''END:VEVENT
-END:VCALENDAR
-'''
+
+    def __init__(self):
+        ''' Initialize Vcal calendar data object '''
         self.content = ""
         # variables to keep track of what components have been added
 
@@ -76,54 +76,59 @@ END:VCALENDAR
         self.location = False
         self.summary = False
 
-
-    def add_start(self,startdate):
+    def add_start(self, startdate):
+        ''' add start datetime to calendar data '''
         if not self.startd:
-            self.content +="DTSTART:{}\n".format(startdate)
+            self.content += "DTSTART:{}\n".format(startdate)
             self.startd = True
 
-    def add_end(self,enddate):
+    def add_end(self, enddate):
+        ''' add end datetime to calendar data '''
         if not self.endd:
             self.content += "DTEND:{}\n".format(enddate)
             self.endd = True
 
-    def add_summary(self,summary):
+    def add_summary(self, summary):
+        ''' add summary to calendar data '''
         if not self.summary:
             self.content += "SUMMARY:{}\n".format(summary)
             self.summary = True
 
-    def add_uid(self,uid):
+    def add_uid(self, uid):
+        ''' add unique identifier to calendar data '''
         if not self.uid:
-            self.content+= "UID:{}\n".format(uid)
+            self.content += "UID:{}\n".format(uid)
             self.uid = True
 
     def build_event(self):
+        ''' construct the completed calendar data string '''
         return self.header+self.content+self.end
 
-    def add_url(self,url):
+    def add_url(self, url):
+        ''' add start URL to calendar data '''
         if not self.url:
             self.content += "URL:{}\n".format(url)
             self.url = True
 
-    def add_location(self,location):
+    def add_location(self, location):
+        ''' add task location to calendar data '''
         if not self.location:
             self.content += "LOCATION:{}".format(location)
             self.location = True
 
 
-
-
-
 class TaskCalendar(ResilientComponent):
-    ''' for handling task calendar events from Resilient'''
+    ''' for handling task update events from Resilient'''
     def __init__(self, opts):
         super(TaskCalendar, self).__init__(opts)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
 
         # The queue name can be specified in the config file, or default to 'taskcalendar'
         self.channel = "actions." + self.options.get("queue", "taskcalendar")
+        self.users = None
 
     def get_users(self):
+        ''' Retrieve list of all system users from Resilient instance '''
         uri = "/users"
         try:
             self.users = self.rest_client().get(uri)
@@ -132,6 +137,68 @@ class TaskCalendar(ResilientComponent):
             return False
         return True
 
+    def create_event(self, task_info, inc_id):
+        ''' Create ics data from Resilient task info '''
+        event = Vcal()
+        task_id = task_info['id']
+        event.add_uid("{}{}@resilientsystems.com".format(inc_id, task_id))
+        event_date = datetime.now().strftime("%Y%m%dT%H%M%SZ")
+        event.add_start(event_date)
+        if task_info['due_date'] is not None:
+            due_date = datetime.utcfromtimestamp(int(task_info.get('due_date')/1000))
+            due_date = due_date.strftime("%Y%m%dT%H%M%SZ")
+            LOG.debug("Duedate is %s", due_date)
+            event.add_end(due_date)
+        else:
+            LOG.warn("No Due Date, setting to current %s", event_date)
+            event.add_end(event_date)
+
+        event.add_summary("Task %s for Incident %s <%s>" % (task_id, inc_id, task_info.get('name')))
+
+        event.add_url("https://%s/#incidents/%s?tab=tasks&task_id=%s" %
+                      (self.opts.get('host'), inc_id, task_id))
+
+        return event
+
+    @staticmethod
+    def send_email(inc_id, smtp_options, ics_file, send_to):
+        ''' Construct and send email with event to task owner '''
+        msg = MIMEMultipart()
+        msg['Subject'] = "New task for incident %s assigned to you" % inc_id
+
+        if smtp_options.get('sslrequired'):
+            LOG.info("SLS connection to mailbox required")
+            smtp = SMTP_SSL(smtp_options.get('smtpserver')+":" +
+                            smtp_options.get('smtpport'))
+        elif smtp_options.get('tlsrequired'):
+            LOG.info("TLS connection to mailbox required")
+            smtp = SMTP(smtp_options.get('smtpserver')+":"+smtp_options.get('smtpport'))
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+        else:
+            smtp = SMTP(smtp_options.get('smtpserver')+":"+smtp_options.get('smtpport'))
+
+        if smtp_options.get('smtpuser', None) is not None:
+            try:
+                smtp.login(smtp_options.get('smtpuser'), smtp_options.get('smtppw'))
+            except smtplib.SMTPException as e:
+                smtp = SMTP_SSL(smtp_options.get('smtpserver') +
+                                ":"+smtp_options.get('smtpport'))
+                smtp.login(smtp_options.get('smtpuser'), smtp_options.get('smtppw'))
+
+        msg['From'] = smtp_options.get('smtpfrom')
+
+        part = MIMEBase('application', "octet-stream")
+        part.set_payload(open(ics_file.name, "rb").read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment; filename="%s"' %
+                        os.path.basename(ics_file.name))
+        msg.attach(part)
+
+        smtp.sendmail(smtp_options.get('smtpfrom'), send_to, msg.as_string())
+        smtp.quit()
+        LOG.info("Mail sent")
 
     @handler()
     def _calendar_invite_action(self, event, *args, **kwargs):
@@ -142,100 +209,66 @@ class TaskCalendar(ResilientComponent):
            (event, *args, **kwargs), and ignore any messages that are not
            from the Actions module.
         """
-        if not isinstance(event, ActionMessage):
-            # Some event we are not interested in
-            return
-
-        LOG.debug("Event Name {}".format(event.name))
-      
-        incident = event.message["incident"]
-        taskinfo = event.message["task"]
-
-        inc_id = incident["id"]
-        task_id = taskinfo['id']
-
-        if taskinfo.get('owner_id',None) is not None:
-            event = Vcal()
-            event.add_uid("{}{}@resilientsystems.com".format(inc_id,task_id))
-            event.add_start(arrow.now().format('YYYYMMDD'))
-            if taskinfo['due_date'] is not None:
-                LOG.debug("Duedate is {}".format(arrow.get(int(taskinfo.get('due_date')/1000)).replace(days=+1).format('YYYYMMDD')))
-                event.add_end(arrow.get(int(taskinfo.get('due_date')/1000)).replace(days=+1).format('YYYYMMDD'))
-            else:
-                LOG.debug("No Due Date, setting to current {}".format(arrow.now().format('YYYYMMDD')))
-                event.add_end(arrow.now().format('YYYYMMDD'))
-
-            #event.add_summary(taskinfo.get('name'))
-            event.add_summary("Task {} for Incident {} <{}>".format(task_id,inc_id,taskinfo.get('name')))
-
-            event.add_url("https://{}/#incidents/{}?tab=tasks&task_id={}".format(self.opts.get('host'),inc_id,task_id))
-
-
-            estring = event.build_event()
-            LOG.debug(estring)
-            tfile = tempfile.NamedTemporaryFile(dir='/tmp',suffix='.ics',delete=False) # create the file, but don't delete on close
-            tfile.write(estring)
-            tfile.close()
-
-
-            rv = self.get_users()
-            if not rv:
-                LOG.error("Failed to retrieve users from Resilient")
+        tfile = None
+        try:
+            if not isinstance(event, ActionMessage):
+                # Some event we are not interested in
                 return
-            if rv:
-                # handle getting the email
+
+            LOG.debug("Event Name %s", event.name)
+
+            incident = event.message["incident"]
+            taskinfo = event.message["task"]
+
+            inc_id = incident["id"]
+
+            if taskinfo.get('owner_id'):
+                event = self.create_event(taskinfo, inc_id)
+
+                estring = event.build_event()
+                LOG.debug(estring)
+
+                # create the file, but don't delete on close
+                tfile = tempfile.NamedTemporaryFile(dir='/tmp', suffix='.ics', delete=False)
+                tfile.write(estring.encode('utf-8'))
+                tfile.close()
+
+                success = self.get_users()
+                if not success:
+                    LOG.error("Failed to retrieve users from Resilient")
+                    yield "Failed to retrieve users from resilient"
+                    return
+
+                # Find task owner
                 uemail = None
                 for user in self.users:
                     if user.get('id') == taskinfo.get('owner_id'):
                         uemail = user.get('email')
-                        LOG.debug("Task owner is {}".format(uemail))
-                        yield "Failed to retrieve users from resilient"
-            if uemail is not None:
-                # Build the Mail 
-                msg = MIMEMultipart()
-                msg['Subject'] = "New task for incident {} assigned to you".format(inc_id)
+                        LOG.debug("Task owner is %s", uemail)
 
-                
-                if self.options.get('sslrequired'):
-                    LOG.info("SLS connection to mailbox required")
-                    smtp = SMTP_SSL(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
-                elif self.options.get('tlsrequired'):
-                    LOG.info("TLS connection to mailbox required")
-                    smtp = SMTP(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
-                    smtp.ehlo()
-                    smtp.starttls()
-                    smtp.ehlo()
+                if uemail is not None:
+                    # Build the Mail
+                    self.send_email(inc_id, self.options, tfile, uemail)
+                    yield "User %s emailed for task %s in incident %s" % (
+                        uemail, taskinfo.get('id'), inc_id)
                 else:
-                    smtp = SMTP(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
-
-                if self.options.get('smtpuser',None) is not None:
-                    try:
-                        smtp.login(self.options.get('smtpuser'),self.options.get('smtppw'))
-                    except smtplib.SMTPException:
-                        smtp = SMTP_SSL(self.options.get('smtpserver')+":"+self.options.get('smtpport'))
-                        smtp.login(self.options.get('smtpuser'),self.options.get('smtppw'))
-
-                        
-                msg['From'] = self.options.get('smtpfrom')
-
-                part = MIMEBase('application',"octet-stream")
-                part.set_payload(open(tfile.name,"rb").read())
-                encoders.encode_base64(part)
-                part.add_header('Content-Disposition','attachment; filename="{}"'.format(os.path.basename(tfile.name)))
-                msg.attach(part)
-
-                smtp.sendmail(self.options.get('smtpfrom'),uemail,msg.as_string())
-                smtp.quit()
-                os.remove(tfile.name) # remove the temporary file.
-                LOG.info("Mail sent")
-
-                yield "User {} emailed for task {} in incident {}".format(uemail,task_id,inc_id)
+                    LOG.error("Userid %s not found in the Resilient System",
+                              taskinfo.get('owner_id'))
+                    yield "Userid %s not found in the Resilient System" % taskinfo.get('owner_id')
             else:
-                LOG.error("Userid {} not found in the Resilient System".format(taskinfo.get('owner_id')))
-                yield "Userid {} not found in the Resilient System".format(taskinfo.get('owner_id'))
-        else:
-            LOG.error("Task Due Date updated without owner set")
-            yield "task {} for incident {} was not assigned to a user".format(taskinfo.get('name'),inc_id)
+                LOG.error("Task Due Date updated without owner set")
+                yield "task %s for incident %s was not assigned to a user" % (
+                    taskinfo.get('name'), inc_id)
 
-        yield "task %s updated" % taskinfo.get('name')
-    #end _invite_action
+            yield "task %s updated" % taskinfo.get('name')
+
+        except Exception as e:
+            LOG.error("Unexpected error creating and sending calendar invite: %s", str(e))
+            LOG.error(traceback.format_exc())
+            yield "error creating calendar invite %s" % str(e)
+
+        finally:
+            if tfile:
+                os.remove(tfile.name)  # remove the temporary file.
+
+        # end _calendar_invite_action
