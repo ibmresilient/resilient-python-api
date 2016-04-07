@@ -30,154 +30,77 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-Action to add incident type of CSIRT when a boolean field changes
+Action to add incident type.
+
+A typical use case is to have a Boolean field such as "CSIRT Incident",
+available on the New Incident wizard or on the Details form,
+to mark the incident as being raised to a CSIRT team from the normal
+incident or alert that is handled in triage.
+
+When this field is set: the action sets an Incident Type of "CSIRT"
+automatically,  Then Resilient adds the appropriate set of tasks
+into the incident.
+
+To configure this action:
+- Make an automatic action, named "csirt" with the requisite conditions.
+  For example, when "CSIRT Confirmed?" equals "Yes".
+  This action script doesn't test any conditions itself!
+- Use message destination "incident_type".
+
 """
 
 from __future__ import print_function
 import logging
-
-import requests
-
-from circuits import Component, Debugger
 from circuits.core.handlers import handler
-
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
-from ResilientOrg import ResilientOrg as ResOrg
-
-requests.packages.urllib3.disable_warnings()
-
-# Lower the logging threshold for requests
-logging.getLogger("requests.packages.urllib3").setLevel(logging.ERROR)
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-logging.Formatter('%(asctime)s:%(name)s:%(levelname)-8s %(message)s')
+from resilient_circuits.actions_component import ResilientComponent
 
 
-#log.setLevel(logging.DEBUG)  # force logging level to be DEBUG
-CONFIG_DATA_SECTION = 'action'
-CONFIG_SOURCE_SECTION = 'resilient'
-CONFIG_ACTION_SECTION = 'actiondata'
+logger = logging.getLogger(__name__)
 
 
-class CSIRTAction(ResilientComponent):
-    """
-    invoked when a field CSIRT changes to True, adding an incident Type of CSIRT
-    to the incident
-
-    the function map maps the action name to a specific handling method within
-    this object.  The mapping table is used to determine if the action has
-    an associated function in the handler
-    the function/method name MUST be the same as the action as defined in resilient
-    Note action names are not the same as the Display Name in the action definition
-
-    The display name for this action is "CSIRTAction", it's system level name is
-    csirtaction
-    """
+class IncidentTypeAction(ResilientComponent):
+    """Add incident types from custom action"""
 
     def __init__(self, opts):
-        super(CSIRTAction, self).__init__(opts)
-        self.options = opts.get(CONFIG_DATA_SECTION, {})
-        self.actiondata = opts.get(CONFIG_ACTION_SECTION, {})
+        super(IncidentTypeAction, self).__init__(opts)
+        # This action listens to the message destination named "incident_type"
+        self.channel = "actions.incident_type"
 
-        #self.sync_file = os.path.dirname(os.path.abspath(self.sync_opts.get('mapfile')))
-
-        # The queue name can be specified in the config file, or default to 'filelookup'
-        self.channel = "actions." + self.options.get("queue", "dt_action")
-
-        '''
-        set up the resilient connection for the source which
-        is where the action will get fired from
-        destination will open a unique resorg object each Time
-        a connection needs to be made.
-        '''
-        self.reso = ResOrg(client=self.rest_client)
-
-        self.new_incident_type = self.actiondata.get("incidenttype")
-
-
-    @handler("csirtaction")
+    @handler("csirt")
     def _csirt_action(self, event, *args, **kwargs):
-        """
-           The @handler() annotation without an event name makes this
-           a default handler - for all events on this component's queue.
-           This will be called with some "internal" events from Circuits,
-           so you must declare the method with the generic parameter
-           (event, *args, **kwargs), and ignore any messages that are not
-           from the Actions module.
-        """
-        if not isinstance(event, ActionMessage):
-            # Some event we are not interested in
-            return
+        """Handler for action named 'csirt' (ignoring case)"""
+        return self._add_incident_type(event, "CSIRT")
 
-        log.debug("Event Name {}".format(event.name))
+# Extend this script by adding new handlers for the specific types you want.
+# For any Automatic Action, the handler with the same name (lowercase) is run.
+#    @handler("apt")
+#    def _apt_action(self, event, *args, **kwargs):
+#        return self._add_incident_type(event, "APT")
 
-        # determine which method to invoke based on the event name
-        func = self.get_action_function(event.name)
-        if func is not None:
-            retv = func(event)
-            if retv:
-                yield retv
-            else:
-                yield "event handled"
-        else:
-            # an action without a handling method was put onto the queue
-            raise Exception("Invalid event - no function to handle")
+    def _add_incident_type(self, event, incident_type_name):
+        """Add incident type to the set of types in the incident"""
+        # Here we could verify the incident_type_name,
+        # by fetching all the valid values with the Types service.
+        # But Resilient will reject the update if the type is not valid,
+        # so it's OK (and easier!) to simply let the action fail on error.
 
-        #end _invite_action
+        # The get_put() calls this function with the incident to update
+        def update_function(incident):
+            """Callback function to add `incident_type_name` to the incident types"""
+            existing_types = set(incident["incident_type_ids"])
+            existing_types.add(incident_type_name)
+            new_types = list(existing_types)
+            logger.debug("Incident types: " + repr(new_types))
+            incident['incident_type_ids'] = new_types
+            return incident
 
+        # We want the incident type names as a list of strings,
+        # not as a list of IDs, so specify "handle_format=names" in the URL.
+        inc_id = event.message["incident"]["id"]
+        update_url = "/incidents/{}?handle_format=names".format(inc_id)
 
-    def csirtaction(self, args):
-        """
-        Method to invoke based on action name in system
-        """
-        log.debug("csirt action function")
+        # Update the incident
+        newincident = self.rest_client().get_put(update_url, update_function)
 
-        # get the full incident
-        incident = self.reso.get_incident_by_id(args.incident.get('id'))
-        incident_types = self.reso.get_incident_types()
-
-        log.debug("looking for incident type {}".format(self.new_incident_type))
-        new_itype_id = self.reso.get_incident_type_id(incident_types, self.new_incident_type)
-        log.debug("new incident type id: {}".format(new_itype_id))
-
-        # if the new incident type does not exist, raise exception so the action will faile
-        if new_itype_id is  None:
-            log.error("New incident type specified is not in the Resilient org configuration")
-            raise Exception("Can not find incident type {} that is configured".format(self.new_incident_type))
-
-
-        def apply_change(incident):
-            log.debug("Applying change for get put")
-            incident['incident_type_ids'].append(new_itype_id)
-
-        if new_itype_id in incident.get('incident_type_ids'):
-            log.info("Action completed new type already exists")
-            return "Action completed >{}< type already exists in case".format(self.new_incident_type)
-
-        try:
-            log.debug("Attempting to get_put the incident")
-            newincident = self.reso.client().get_put('/incidents/{}'.format(incident.get('id')),
-                                                     apply_change)
-        except Exception as ecode:
-            log.error("Failed to update the incident {} with the new incident type:{}".format(incident.get('id'),
-                      self.new_incident_type))
-            log.error("Get/Put failed with {}".format(ecode))
-            raise Exception("Failed to update incident")
-
-        return "action complete action completed"
-
-
-    def get_action_function(self, funcname):
-        """
-        map the name passed in to a method within the object
-        """
-
-        log.debug("get function {}".format(funcname))
-        return getattr(self, '%s'%funcname, None)
-
-
-
-
-
-
+        # Return a useful message (visible using the "Action Status" menuitem)
+        return "Incident types set to: " + repr(newincident["incident_type_ids"])
