@@ -33,52 +33,63 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
         <style type="text/css">
 * { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5 }
 select { font-size:12pt; width: 100%; display: block; margin-bottom: 20px }
-input.txt { width: 100%; display: block; margin-bottom: 20px }
+.txt { margin-bottom: 20px; width: 100%; display: block }
+.chk { margin-bottom: 20px }
 .btn { cursor: pointer; border: none; border-radius: 5px; color: #333; width: 200px }
         </style>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
         <script type="text/javascript">
 
 function updateLink() {
-    var baseurl = $("#base").val()
-    var artifacttype = $("#artifacttype").val()
-    var artifactvalue = $("#artifactvalue").val()
+    var artifacttype = $("#artifacttype").val();
+    var artifactvalue = $("#artifactvalue").val();
 
     // Encode 'name=value'
     // Note that the field name and value are URI-encoded (because they will be part of a URL).
     // The field name will never contain special characters, but the value often will.
     var t = "artifacts[]=" + encodeURIComponent(artifacttype) + "," + encodeURIComponent(artifactvalue);
+    rebuildAndAdd(t);
+}
 
+function rebuildAndAdd(t) {
+    var baseurl = $("#base").val();
     // Get the current URL
-    var url = $("#link").attr("href")
+    var url = $("#link").attr("href");
     // Query-string is everything past the "?"
     url = url.slice(url.indexOf("?")+1);
     // Query string consists of arguments (name=value), separated by ampersand
     var params = url.split("&");
     // Throw away the last of these arguments
     params.pop();
-    // Replace it with the current values from the form.
-    params.push(t);
+    if(t !== null) {
+        // Replace it with the current values from the form.
+        params.push(t);
+    }
 
     // Reconstruct the whole URL and set it onto the page
-    var url = baseurl + "?" + params.join("&")
+    var url = baseurl + "?" + params.join("&");
     $("#linkurl").text(url);
     $("#link").attr("href", url);
 }
 
 function addAnother() {
     // Add an ampersand to the end of the URL
-    var url = $("#link").attr("href")
+    var url = $("#link").attr("href");
     $("#link").attr("href", url + "&");
     // Clear the name and value fields, ready to add as a new parameter
-    $("#artifacttype").val("")
-    $("#artifactvalue").val("")
-    updateLink();
+    $("#artifacttype").val("");
+    $("#artifactvalue").val("");
+    rebuildAndAdd("");
+}
+
+function delLast() {
+    rebuildAndAdd(null);
 }
 
 $("document").ready(function() {
     $("#form").keyup(updateLink);
-    $("#btn").click(addAnother);
+    $("#add").click(addAnother);
+    $("#del").click(delLast);
 });
 
         </script>
@@ -147,7 +158,10 @@ Refer to the &quot;Web URL Integration Guide&quot; for full description of the W
                     <td><input class="txt" type="text" id="artifactvalue"></td>
                 </tr>
                 <tr>
-                    <td colspan="2"><input class="btn" type="button" id="btn" value="Add another artifact"></td>
+                    <td colspan="2"><input class="btn" type="button" id="add" value="Add another artifact"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><input class="btn" type="button" id="del" value="Remove last artifact"></td>
                 </tr>
             </table>
         </form>
