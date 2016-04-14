@@ -49,16 +49,22 @@ namespace Co3.Rest.Dto
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        [JsonProperty("custom")]
+        public bool Custom { get; set; }
+
         [JsonProperty("tos_agreement_date")]
         public DateTime TosAgreementDate { get; set; }
 
         [JsonProperty("prompt_license")]
-        public bool PromptLicense { get; set; }
+        public bool PromptForLicense { get; set; }
 
         [JsonProperty("license")]
         public string License { get; set; }
 
         [JsonProperty("properties")]
-        public SortedList<string, string> Properties { get; set; }
+        public Dictionary<string, string> Properties { get; set; }
+
+        [JsonProperty("tos")]
+        public ThreatSourceTosDto Tos { get; set; }
     }
 }

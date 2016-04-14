@@ -40,13 +40,16 @@ namespace Co3.Rest.Dto
         public JustOrgDto OrgInfo { get; set; }
 
         [JsonProperty("us_enabled")]
-        public bool UsEnabled { get; set; }
+        public bool UsRegulatorsEnabled { get; set; }
 
         [JsonProperty("canada_enabled")]
-        public bool CanadaEnabled { get; set; }
+        public bool CanadaRegulatorsEnabled { get; set; }
 
         [JsonProperty("eu_enabled")]
-        public bool EuEnabled { get; set; }
+        public bool EuRegulatorsEnabled { get; set; }
+
+        [JsonProperty("actions_framework_enabled")]
+        public bool ActionsFrameworkEnabled { get; set; }
 
         [JsonProperty("attachments_enabled")]
         public bool AttachmentsEnabled { get; set; }
@@ -55,49 +58,54 @@ namespace Co3.Rest.Dto
         public bool BreachEnabled { get; set; }
 
         [JsonProperty("sir_enabled")]
-        public bool SirEnabled { get; set; }
+        public bool SecurityIncidentEnabled { get; set; }
 
         [JsonProperty("threat_sources")]
-        public SortedList<int, ThreatSourceDto> ThreatSources { get; set; }
+        public Dictionary<int, ThreatSourceDto> ThreatSources { get; set; }
 
         [JsonProperty("phases")]
-        public SortedList<int, PhaseDto> Phases { get; set; }
+        public Dictionary<int, PhaseDto> Phases { get; set; }
 
         [JsonProperty("attachments_used_bytes")]
         public long AttachmentsUsedBytes { get; set; }
 
         [JsonProperty("users")]
-        public SortedList<int, UserDto> Users { get; set; }
+        public Dictionary<int, UserDto> Users { get; set; }
+
+        [JsonProperty("unknown_users")]
+        public Dictionary<string, UserDto> UnknownUsers { get; set; }
 
         [JsonProperty("geos")]
-        public SortedList<int, OrgGeoDto> Geos { get; set; }
+        public Dictionary<int, OrgGeoDto> Geos { get; set; }
 
         [JsonProperty("groups")]
-        public SortedList<int, GroupDto> Groups { get; set; }
+        public Dictionary<int, GroupDto> Groups { get; set; }
 
         [JsonProperty("data_sources")]
-        public SortedList<int, DataSourceDto> DataSources { get; set; }
+        public Dictionary<int, DataSourceDto> DataSources { get; set; }
 
         [JsonProperty("exposure_vendors")]
-        public SortedList<int, ExposureVendorDto> ExposureVendors { get; set; }
+        public Dictionary<int, ExposureVendorDto> ExposureVendors { get; set; }
 
         [JsonProperty("exposure_departments")]
-        public SortedList<int, ExposureDepartmentDto> ExposureDepartments { get; set; }
+        public Dictionary<int, ExposureDepartmentDto> ExposureDepartments { get; set; }
 
         [JsonProperty("regs")]
-        public SortedList<int, bool> Regs { get; set; }
+        public Dictionary<int, bool> Regs { get; set; }
 
         [JsonProperty("properties")]
         public List<OrganizationPropertyDto> Properties { get; set; }
 
         [JsonProperty("incident_types")]
-        public SortedList<int, IncidentTypeDto> IncidentTypes { get; set; }
+        public Dictionary<int, IncidentTypeDto> IncidentTypes { get; set; }
 
         [JsonProperty("id")]
         public int Id { get; set; }
 
         [JsonProperty("incident_severities")]
-        public SortedList<int, IncSeverityDto> IncidentSeverities { get; set; }
+        public Dictionary<int, IncSeverityDto> IncidentSeverities { get; set; }
 
+        [JsonProperty("task_categories")]
+        public Dictionary<int, TaskCategoryDto> TaskCategories { get; set; }
     }
 }

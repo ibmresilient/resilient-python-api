@@ -34,21 +34,12 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for NamedEntityDTO
-    /// </summary>
-    public class OrganizationPropertyDto
+    public class ThreatSourceTosDto
     {
-        [JsonProperty("id")]
-        public int Id { get; set; }
+        [JsonProperty("tos_url")]
+        public string TosUrl { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
-        [JsonProperty("value")]
-        public string Value { get; set; }
-
-        [JsonProperty("client_property")]
-        public bool ClientProperty { get; set; }
+        [JsonProperty("fields")]
+        public List<ThreatSourceTosElementDto> Fields { get; set; }
     }
 }

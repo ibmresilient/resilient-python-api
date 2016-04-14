@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,26 +29,63 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for NamedEntityDTO
-    /// </summary>
-    public class OrganizationPropertyDto
+    public class IncidentArtifactDto
     {
         [JsonProperty("id")]
         public int Id { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("type")]
+        public IncidentArtifactTypeDto Type { get; set; }
 
         [JsonProperty("value")]
         public string Value { get; set; }
 
-        [JsonProperty("client_property")]
-        public bool ClientProperty { get; set; }
+        [JsonProperty("description")]
+        public object Description { get; set; }
+
+        [JsonProperty("creator")]
+        public JustUserDto Creator { get; set; }
+
+        [JsonProperty("hits")]
+        public List<ThreatHitDto> Hits { get; set; }
+
+        [JsonProperty("attachment")]
+        public AttachmentDto Attachment { get; set; }
+
+        [JsonProperty("parent_id")]
+        public int ParentId { get; set; }
+
+        [JsonProperty("inc_id")]
+        public int IncId { get; set; }
+
+        [JsonProperty("inc_name")]
+        public string IncName { get; set; }
+
+        [JsonProperty("created")]
+        public DateTime Created { get; set; }
+
+        [JsonProperty("pending_sources")]
+        public List<object> PendingSources { get; set; }
+
+        [JsonProperty("perms")]
+        public IncidentArtifactPermsDto Perms { get; set; }
+
+        [JsonProperty("properties")]
+        public List<IncidentArtifactPropertyDto> Properties { get; set; }
+
+        [JsonProperty("location")]
+        public IncidentArtifactLocationDto Location { get; set; }
+
+        [JsonProperty("whois")]
+        public WhoisDto Whois { get; set; }
+
+        [JsonProperty("actions")]
+        public List<ActionInfoDto> Actions { get; set; }
     }
 }

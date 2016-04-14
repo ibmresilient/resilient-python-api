@@ -37,6 +37,6 @@ namespace Co3.Rest.Dto
     public class RegulatorsDto
     {
         [JsonProperty("ids")]
-        public List<int> Ids { get; set; }
+        public List<object> Ids { get; set; }
     }
 }

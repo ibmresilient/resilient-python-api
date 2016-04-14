@@ -29,19 +29,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class FieldDefValueDto
+    public class FieldDefValueDto : PartialFieldDefValueDto
     {
-        [JsonProperty("value")]
-        public object Value { get; set; }
-
-        [JsonProperty("label")]
-        public string Label { get; set; }
-
         [JsonProperty("default")]
         [DefaultValue(false)]
         public bool Default { get; set; }
@@ -49,5 +45,11 @@ namespace Co3.Rest.Dto
         [JsonProperty("enabled")]
         [DefaultValue(false)]
         public bool Enabled { get; set; }
+
+        [JsonProperty("properties")]
+        public Dictionary<string, object> Properties { get; set; }
+
+        [JsonProperty("uuid")]
+        public Guid Uuid { get; set; }
     }
 }

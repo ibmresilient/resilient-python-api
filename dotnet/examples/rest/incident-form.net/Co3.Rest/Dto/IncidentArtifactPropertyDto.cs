@@ -29,26 +29,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for NamedEntityDTO
-    /// </summary>
-    public class OrganizationPropertyDto
+    public class IncidentArtifactPropertyDto
     {
-        [JsonProperty("id")]
-        public int Id { get; set; }
-
         [JsonProperty("name")]
         public string Name { get; set; }
 
         [JsonProperty("value")]
         public string Value { get; set; }
-
-        [JsonProperty("client_property")]
-        public bool ClientProperty { get; set; }
     }
 }

@@ -29,26 +29,19 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for NamedEntityDTO
-    /// </summary>
-    public class OrganizationPropertyDto
+    public class MethodNamePermsDto
     {
-        [JsonProperty("id")]
-        public int Id { get; set; }
+        [JsonProperty("show_in_manual_actions")]
+        public bool ShowInManualActions { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("show_in_auto_actions")]
+        public bool ShowInAutomaticActions { get; set; }
 
-        [JsonProperty("value")]
-        public string Value { get; set; }
-
-        [JsonProperty("client_property")]
-        public bool ClientProperty { get; set; }
+        [JsonProperty("show_in_notifications")]
+        public bool ShowInNotifications { get; set; }
     }
 }

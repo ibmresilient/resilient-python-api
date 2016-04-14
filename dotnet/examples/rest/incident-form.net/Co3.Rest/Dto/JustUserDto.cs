@@ -60,13 +60,13 @@ namespace Co3.Rest.Dto
     public class JustUserDto
     {
         [JsonProperty("id")]
-        public string Id { get; set; }
+        public int Id { get; set; }
 
         [JsonProperty("fname")]
-        public string GivenName { get; set; }
+        public string FirstName { get; set; }
 
         [JsonProperty("lname")]
-        public string FamilyName { get; set; }
+        public string LastName { get; set; }
 
         [JsonProperty("status")]
         public JustUserStatus Status { get; set; }
@@ -80,9 +80,6 @@ namespace Co3.Rest.Dto
         [JsonProperty("cell")]
         public string CellNumber { get; set; }
 
-        [JsonProperty("initial_password")]
-        public string InitialPassword { get; set; }
-
         [JsonProperty("title")]
         public string JobTitle { get; set; }
 
@@ -94,5 +91,8 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("locked")]
         public bool Locked { get; set; }
+
+        [JsonProperty("is_external")]
+        public bool IsExternal { get; set; }
     }
 }

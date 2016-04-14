@@ -37,10 +37,10 @@ namespace Co3.Rest.Dto
     public class FullIncidentDataDto : IncidentDto
     {
         [JsonProperty("dtm")]
-        public IncidentDataTypesDto Dtm { get; set; }
+        public Dictionary<object, bool> DataTypesModel { get; set; }
 
         [JsonProperty("cm")]
-        public IncidentCountsDto Cm { get; set; }
+        public IncidentCountsDto CountsModel { get; set; }
 
         [JsonProperty("regulators")]
         public RegulatorsDto Regulators { get; set; }
@@ -53,5 +53,14 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("tasks")]
         public List<TaskDto> Tasks { get; set; }
+
+        [JsonProperty("artifacts")]
+        public List<IncidentArtifactDto> Artifacts { get; set; }
+
+        [JsonProperty("comments")]
+        public List<IncidentCommentDto> Comments { get; set; }
+
+        [JsonProperty("actions")]
+        public List<ActionInfoDto> Actions { get; set; }
     }
 }

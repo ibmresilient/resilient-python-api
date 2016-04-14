@@ -29,11 +29,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class GeoUnassignedDto : SortedList<string, int>
+    public class GeoUnassignedDto
     {
+        [JsonProperty("geo")]
+        public object Geo { get; set; }
+
+        [JsonProperty("count")]
+        public int Count { get; set; }
     }
 }

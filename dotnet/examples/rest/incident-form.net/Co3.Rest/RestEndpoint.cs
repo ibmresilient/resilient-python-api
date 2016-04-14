@@ -34,9 +34,8 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Text;
 using System.Net;
-using Newtonsoft.Json.Serialization;
-using Co3.Rest.Dto;
 using Co3.Rest.JsonConverters;
+using Newtonsoft.Json;
 
 namespace Co3.Rest
 {
@@ -97,13 +96,13 @@ namespace Co3.Rest
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Co3ApiUrl + endPointUrl);
             request.CookieContainer = new CookieContainer();
-            
+
             request.ContentType = "application/json";
             request.Method = method;
 
             NameValueCollection appSettings
                 = System.Configuration.ConfigurationManager.AppSettings;
-            if (appSettings != null && appSettings["Co3ProxyUser"] != null)
+            if (appSettings["Co3ProxyUser"] != null)
             {
                 request.Proxy.Credentials = new NetworkCredential(appSettings["Co3ProxyUser"],
                     appSettings["Co3ProxyPassword"], appSettings["Co3ProxyDomain"]);
@@ -119,7 +118,7 @@ namespace Co3.Rest
             {
                 request.Headers.Add("X-sess-id", m_session.CsrfToken);
             }
-            
+
             if (postData == null)
                 request.ContentLength = 0;
             else
@@ -146,19 +145,17 @@ namespace Co3.Rest
 
         public static T FromJson<T>(string json)
         {
-            Newtonsoft.Json.JsonSerializerSettings settings
-                = new Newtonsoft.Json.JsonSerializerSettings()
+            JsonSerializerSettings settings = new JsonSerializerSettings
                 {
-
-                DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
-                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
-            };
+                    DefaultValueHandling = DefaultValueHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
 
             settings.Converters.Add(new UnixTimeConverter());
 
             try
             {
-                T t = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json, settings);
+                T t = JsonConvert.DeserializeObject<T>(json, settings);
                 return t;
             }
             catch
@@ -172,10 +169,10 @@ namespace Co3.Rest
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
 
-            Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer()
+            JsonSerializer serializer = new JsonSerializer
             {
-                DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
-                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore
             };
 
             serializer.Converters.Add(new UnixTimeConverter());

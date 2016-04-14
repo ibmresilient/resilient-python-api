@@ -29,9 +29,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using Co3.Rest.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -75,7 +77,13 @@ namespace Co3.Rest.Dto
         MultiSelectMembers,
 
         [EnumMember(Value = "datetimepicker")]
-        DateTimePicker
+        DateTimePicker,
+
+        [EnumMember(Value = "select_user")]
+        SelectUser,
+
+        [EnumMember(Value = "none")]
+        None
     }
 
     [DataContract]
@@ -98,60 +106,60 @@ namespace Co3.Rest.Dto
     {
         [EnumMember(Value = "CHANGED")]
         Changed,
-        
+
         [EnumMember(Value = "EQUALS")]
         Equals,
-        
+
         [EnumMember(Value = "CHANGED_TO")]
         ChangedTo,
-        
+
+        [EnumMember(Value = "CHANGED_FROM")]
+        ChangedFrom,
+
         [EnumMember(Value = "OBJECT_REMOVED")]
         ObjectRemoved,
-        
+
         [EnumMember(Value = "OBJECT_ADDED")]
         ObjectAdded,
-        
+
         [EnumMember(Value = "VALUE_ADDED")]
         ValueAdded,
-        
+
         [EnumMember(Value = "CONTAINS")]
         Contains,
-        
+
         [EnumMember(Value = "DUE_WITHIN")]
         DueWithin,
-        
+
         [EnumMember(Value = "OVERDUE_BY")]
         OverdueBy,
-        
+
         [EnumMember(Value = "GT")]
         Gt,
-        
+
         [EnumMember(Value = "LT")]
         Lt,
-        
+
         [EnumMember(Value = "GTE")]
         Gte,
-        
+
         [EnumMember(Value = "LTE")]
         Lte,
-        
+
         [EnumMember(Value = "CONTAINS_USER")]
         ContainsUser,
-        
+
         [EnumMember(Value = "IN")]
-        In
+        In,
+
+        [EnumMember(Value = "VALUE_REMOVED")]
+        ValueRemoved
     }
 
-    public class FieldDefDto
+    public class FieldDefDto : PartialFieldDefDto
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
-        [JsonProperty("text")]
-        public string Text { get; set; }
-
-        [JsonProperty("prefix")]
-        public string Prefix { get; set; }
+        [JsonProperty("type_id")]
+        public int TypeId { get; set; }
 
         [JsonProperty("tooltip")]
         public string Tooltip { get; set; }
@@ -185,22 +193,37 @@ namespace Co3.Rest.Dto
         public List<FieldDefValueDto> Values { get; set; }
 
         [JsonProperty("uuid")]
-        public string Uuid { get; set; }
+        public Guid Uuid { get; set; }
 
         [JsonProperty("perms")]
         public FieldDefPermsDto Perms { get; set; }
 
-        [JsonProperty("id")]
-        public int Id { get; set; }
-
         [JsonProperty("read_only")]
         public bool ReadOnly { get; set; }
+
+        [JsonProperty("operation_perms")]
+        public Dictionary<string, MethodNamePermsDto> OperationPerms { get; set; }
+
+        [JsonProperty("changeable")]
+        public bool Changeable { get; set; }
+
+        [JsonProperty("label_false")]
+        public string LabelFalse { get; set; }
 
         [JsonProperty("label_true")]
         public string LabelTrue { get; set; }
 
-        [JsonProperty("label_false")]
-        public string LabelFalse { get; set; }
+        [JsonProperty("rich_text")]
+        public bool RichText { get; set; }
+
+        [JsonProperty("export_key")]
+        public string ExportKey { get; set; }
+
+        [JsonProperty("order")]
+        public int Order { get; set; }
+
+        [JsonProperty("width")]
+        public int Width { get; set; }
 
         public override string ToString()
         {

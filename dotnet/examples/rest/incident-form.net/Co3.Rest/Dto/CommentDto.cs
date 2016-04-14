@@ -44,13 +44,13 @@ namespace Co3.Rest.Dto
         public int ParentId { get; set; }
 
         [JsonProperty("user_id")]
-        public int UserId { get; set; }
+        public object UserId { get; set; }
 
         [JsonProperty("user_fname")]
-        public string UserFname { get; set; }
+        public string FirstName { get; set; }
 
         [JsonProperty("user_lname")]
-        public string UserLname { get; set; }
+        public string LastName { get; set; }
 
         [JsonProperty("create_date")]
         public DateTime CreateDate { get; set; }
@@ -62,18 +62,21 @@ namespace Co3.Rest.Dto
         public ModifyUserDto ModifyUser { get; set; }
 
         [JsonProperty("text")]
-        public string Text { get; set; }
+        public object Text { get; set; }
 
         [JsonProperty("children")]
         public CommentDto Children { get; set; }
 
         [JsonProperty("mentioned_users")]
-        public List<int> MentionedUsers { get; set; }
+        public List<object> MentionedUsers { get; set; }
 
         [JsonProperty("comment_perms")]
-        public CommentPermsDto CommentPerms { get; set; }
+        public CommentPermsDto CommentPermissions { get; set; }
 
         [JsonProperty("is_deleted")]
         public bool IsDeleted { get; set; }
+
+        [JsonProperty("actions")]
+        public List<ActionInfoDto> Actions { get; set; }
     }
 }
