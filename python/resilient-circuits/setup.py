@@ -33,9 +33,9 @@ import io
 import codecs
 import os
 import sys
-import resilient_circuits # from the subdirectory of this current directory
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -50,17 +50,17 @@ long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version=resilient_circuits.__version__,  # __version__ in __init__.py
+    version="25.0.2",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
     install_requires=[
-      'stomp.py>=4.0.12',
-      'requests>=2.6.0',
-      'circuits',
-      'pytz',
-      'keyring',
-      'jinja2'
+        'stomp.py>=4.0.12',
+        'requests>=2.6.0',
+        'circuits',
+        'pytz',
+        'keyring',
+        'jinja2'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
@@ -69,7 +69,7 @@ setup(
     package_dir={'resilient_circuits': 'resilient_circuits'},
     include_package_data=True,
     platforms='any',
-    classifiers = [
+    classifiers=[
         'Programming Language :: Python',
     ]
 )

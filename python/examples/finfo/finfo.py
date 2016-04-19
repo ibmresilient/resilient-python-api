@@ -72,14 +72,10 @@ class FinfoArgumentParser(resilient.ArgumentParser):
         self.add_argument('--type',
                           dest="field_type",
                           default="incident",
-                          choices=["incident",
-                                   "task",
-                                   "artifact",
-                                   "milestone",
-                                   "attachment",
-                                   "note",
-                                   "actioninvocation"],
-                          help="The object type (defaults to 'incident')")
+                          help="The object type.  This can be the API Access Name of a "
+                               "Data Table, or one of the standard types: 'incident' "
+                               "(the default), 'task', 'artifact', 'milestone', "
+                               "'attachment', 'note', or 'actioninvocation'.")
 
         self.add_argument('--json',
                           action='store_true',

@@ -33,10 +33,9 @@ import io
 import codecs
 import os
 import sys
-import co3 # from the subdirectory of this current directory
-
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -51,15 +50,15 @@ long_description = read('README')
 
 setup(
     name='co3',
-    version=co3.__version__,  # __version__ in __init__.py
+    version="25.0.2",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
     install_requires=[
-      'argparse',
-      'stomp.py>=4.0.12',
-      'requests>=2.6.0',
-      'requests-toolbelt>=0.6.0'
+        'argparse',
+        'stomp.py>=4.0.12',
+        'requests>=2.6.0',
+        'requests-toolbelt>=0.6.0'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient API',
@@ -67,7 +66,7 @@ setup(
     packages=['co3'],
     include_package_data=True,
     platforms='any',
-    classifiers = [
+    classifiers=[
         'Programming Language :: Python',
         ]
 )
