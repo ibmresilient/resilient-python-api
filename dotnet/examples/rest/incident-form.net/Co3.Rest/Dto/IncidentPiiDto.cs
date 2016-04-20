@@ -40,7 +40,7 @@ namespace Co3.Rest.Dto
         public bool DataCompromised { get; set; }
 
         [JsonProperty("harmstatus_id")]
-        public object HarmstatusId { get; set; }
+        public int HarmstatusId { get; set; }
 
         [JsonProperty("data_encrypted")]
         public bool DataEncrypted { get; set; }
@@ -49,7 +49,7 @@ namespace Co3.Rest.Dto
         public bool DataContained { get; set; }
 
         [JsonProperty("data_source_ids")]
-        public List<object> DataSourceIds { get; set; }
+        public List<int> DataSourceIds { get; set; }
 
         [JsonProperty("data_format")]
         public int DataFormat { get; set; }

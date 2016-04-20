@@ -46,7 +46,7 @@ namespace Co3.Rest.Dto
         public string Name { get; set; }
 
         [JsonProperty("members")]
-        public List<object> Members { get; set; }
+        public List<int> Members { get; set; }
 
         [JsonProperty("is_assignable")]
         public bool Assignable { get; set; }
@@ -56,17 +56,5 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("ldap_members")]
         public LdapGroupMembersDto LdapMembers { get; set; }
-    }
-
-    public class LdapGroupMembersDto
-    {
-        [JsonProperty("dn")]
-        public string Dn { get; set; }
-
-        [JsonProperty("has_unauthorized")]
-        public bool HasUnauthorizedUsers { get; set; }
-
-        [JsonProperty("authorized_users")]
-        public List<JustUserDto> Users { get; set; }
     }
 }

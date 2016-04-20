@@ -56,7 +56,7 @@ namespace Co3.Rest.Dto
         public DateTime TosAgreementDate { get; set; }
 
         [JsonProperty("prompt_license")]
-        public bool PromptForLicense { get; set; }
+        public bool PromptLicense { get; set; }
 
         [JsonProperty("license")]
         public string License { get; set; }

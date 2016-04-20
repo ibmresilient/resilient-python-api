@@ -43,6 +43,6 @@ namespace Co3.Rest.Dto
         public int Total { get; set; }
 
         [JsonProperty("geo_counts")]
-        public Dictionary<object, int> GeoCounts { get; set; }
+        public Dictionary<string, int> GeoCounts { get; set; }
     }
 }

@@ -44,7 +44,7 @@ namespace Co3.Rest.Dto
         public string Name { get; set; }
 
         [JsonProperty("regs")]
-        public Dictionary<object, string> Regs { get; set; }
+        public Dictionary<string, string> Regs { get; set; }
 
         [JsonProperty("custom")]
         public bool Custom { get; set; }
@@ -53,7 +53,7 @@ namespace Co3.Rest.Dto
         public int IncId { get; set; }
 
         [JsonProperty("inc_owner_id")]
-        public object IncOwnerId { get; set; }
+        public int IncOwnerId { get; set; }
 
         [JsonProperty("due_date")]
         public DateTime DueDate { get; set; }
@@ -62,7 +62,7 @@ namespace Co3.Rest.Dto
         public bool Required { get; set; }
 
         [JsonProperty("owner_id")]
-        public object OwnerId { get; set; }
+        public int OwnerId { get; set; }
 
         [JsonProperty("id")]
         public int Id { get; set; }
@@ -98,13 +98,13 @@ namespace Co3.Rest.Dto
         public string InstrText { get; set; }
 
         [JsonProperty("auto_task_id")]
-        public object AutoTaskId { get; set; }
+        public int AutoTaskId { get; set; }
 
         [JsonProperty("active")]
         public bool Active { get; set; }
 
         [JsonProperty("members")]
-        public List<object> Members { get; set; }
+        public List<int> Members { get; set; }
 
         [JsonProperty("perms")]
         public TaskPermsDto Perms { get; set; }

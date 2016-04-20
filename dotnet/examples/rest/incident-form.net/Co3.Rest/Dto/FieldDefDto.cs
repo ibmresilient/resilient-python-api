@@ -29,11 +29,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using Co3.Rest.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -93,10 +91,10 @@ namespace Co3.Rest.Dto
         [JsonIgnore]
         Optional,
 
-        [EnumMember(Value = "ALWAYS")]
+        [EnumMember(Value = "always")]
         Always,
 
-        [EnumMember(Value = "CLOSE")]
+        [EnumMember(Value = "close")]
         Close
     }
 
@@ -104,55 +102,55 @@ namespace Co3.Rest.Dto
     [JsonConverter(typeof(StringEnumConverter))]
     public enum MethodName
     {
-        [EnumMember(Value = "CHANGED")]
+        [EnumMember(Value = "changed")]
         Changed,
 
-        [EnumMember(Value = "EQUALS")]
+        [EnumMember(Value = "equals")]
         Equals,
 
-        [EnumMember(Value = "CHANGED_TO")]
+        [EnumMember(Value = "changed_to")]
         ChangedTo,
 
-        [EnumMember(Value = "CHANGED_FROM")]
+        [EnumMember(Value = "changed_from")]
         ChangedFrom,
 
-        [EnumMember(Value = "OBJECT_REMOVED")]
+        [EnumMember(Value = "object_removed")]
         ObjectRemoved,
 
-        [EnumMember(Value = "OBJECT_ADDED")]
+        [EnumMember(Value = "object_added")]
         ObjectAdded,
 
-        [EnumMember(Value = "VALUE_ADDED")]
+        [EnumMember(Value = "value_added")]
         ValueAdded,
 
-        [EnumMember(Value = "CONTAINS")]
+        [EnumMember(Value = "contains")]
         Contains,
 
-        [EnumMember(Value = "DUE_WITHIN")]
+        [EnumMember(Value = "due_within")]
         DueWithin,
 
-        [EnumMember(Value = "OVERDUE_BY")]
+        [EnumMember(Value = "overdue_by")]
         OverdueBy,
 
-        [EnumMember(Value = "GT")]
+        [EnumMember(Value = "gt")]
         Gt,
 
-        [EnumMember(Value = "LT")]
+        [EnumMember(Value = "lt")]
         Lt,
 
-        [EnumMember(Value = "GTE")]
+        [EnumMember(Value = "gte")]
         Gte,
 
-        [EnumMember(Value = "LTE")]
+        [EnumMember(Value = "lte")]
         Lte,
 
-        [EnumMember(Value = "CONTAINS_USER")]
+        [EnumMember(Value = "contains_user")]
         ContainsUser,
 
-        [EnumMember(Value = "IN")]
+        [EnumMember(Value = "in")]
         In,
 
-        [EnumMember(Value = "VALUE_REMOVED")]
+        [EnumMember(Value = "value_removed")]
         ValueRemoved
     }
 
@@ -193,7 +191,7 @@ namespace Co3.Rest.Dto
         public List<FieldDefValueDto> Values { get; set; }
 
         [JsonProperty("uuid")]
-        public Guid Uuid { get; set; }
+        public string Uuid { get; set; }
 
         [JsonProperty("perms")]
         public FieldDefPermsDto Perms { get; set; }

@@ -29,7 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Newtonsoft.Json;
@@ -50,6 +49,6 @@ namespace Co3.Rest.Dto
         public Dictionary<string, object> Properties { get; set; }
 
         [JsonProperty("uuid")]
-        public Guid Uuid { get; set; }
+        public string Uuid { get; set; }
     }
 }

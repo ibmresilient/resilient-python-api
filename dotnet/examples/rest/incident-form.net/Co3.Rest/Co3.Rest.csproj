@@ -61,10 +61,7 @@
     <Compile Include="Dto\ConstDto.cs" />
     <Compile Include="Dto\CrimeStatusDto.cs" />
     <Compile Include="Dto\DataFormatTypeDto.cs" />
-    <Compile Include="Dto\DataSourceDto.cs" />
     <Compile Include="Dto\DataTypeDto.cs" />
-    <Compile Include="Dto\ExposureDepartmentDto.cs" />
-    <Compile Include="Dto\ExposureVendorDto.cs" />
     <Compile Include="Dto\FieldDefDto.cs" />
     <Compile Include="Dto\FieldDefPermsDto.cs" />
     <Compile Include="Dto\FieldDefValueDto.cs" />
@@ -88,6 +85,7 @@
     <Compile Include="Dto\IncSeverityDto.cs" />
     <Compile Include="Dto\IndustryDto.cs" />
     <Compile Include="Dto\LatLngDto.cs" />
+    <Compile Include="Dto\LdapGroupMembersDto.cs" />
     <Compile Include="Dto\MethodNamePermsDto.cs" />
     <Compile Include="Dto\ModifyUserDto.cs" />
     <Compile Include="Dto\ObjectPermsDto.cs" />

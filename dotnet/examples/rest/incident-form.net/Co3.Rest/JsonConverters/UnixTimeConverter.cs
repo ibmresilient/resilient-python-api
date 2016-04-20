@@ -48,10 +48,11 @@ namespace Co3.Rest.JsonConverters
 
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(DateTime);
+            return objectType.Equals(typeof(DateTime));
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType,
+            object existingValue, Newtonsoft.Json.JsonSerializer serializer)
         {
             if (reader.Value == null)
                 return existingValue;
@@ -59,14 +60,16 @@ namespace Co3.Rest.JsonConverters
             return Epoch.AddMilliseconds((long)reader.Value);
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value,
+            JsonSerializer serializer)
         {
             writer.WriteValue(ToEpochTimeMsec((DateTime)value));
         }
 
         public static long ToEpochTimeMsec(DateTime value)
         {
-            return (long)Math.Round((value - Epoch).TotalSeconds * 1000, MidpointRounding.AwayFromZero);
+            return (long)System.Math.Round(((DateTime)value - Epoch).TotalSeconds * 1000,
+                MidpointRounding.AwayFromZero);
         }
     }
 }

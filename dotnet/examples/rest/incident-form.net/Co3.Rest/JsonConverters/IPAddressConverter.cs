@@ -45,17 +45,18 @@ namespace Co3.Rest.JsonConverters
             return objectType.IsAssignableFrom(typeof(IPAddress));
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType,
+            object existingValue, Newtonsoft.Json.JsonSerializer serializer)
         {
             IPAddress ip = null;
-            if (reader != null && reader.Value != null)
-                IPAddress.TryParse(reader.Value.ToString(), out ip);
+            IPAddress.TryParse(reader.Value as string, out ip);
             return ip;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value,
+            JsonSerializer serializer)
         {
-            writer.WriteValue(value.ToString());
+            writer.WriteValue(((IPAddress)value).ToString());
         }
     }
 }

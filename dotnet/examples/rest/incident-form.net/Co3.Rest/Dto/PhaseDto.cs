@@ -29,7 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
@@ -49,7 +48,7 @@ namespace Co3.Rest.Dto
         public PhasePermsDto Perms { get; set; }
 
         [JsonProperty("uuid")]
-        public Guid Uuid { get; set; }
+        public string Uuid { get; set; }
 
         [JsonProperty("order")]
         public int Order { get; set; }

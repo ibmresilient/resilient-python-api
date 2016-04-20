@@ -32,6 +32,7 @@
 
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using Co3.Rest;
 using Co3.Rest.Dto;
 using Newtonsoft.Json;
@@ -97,13 +98,13 @@ public partial class CreateIncident : System.Web.UI.Page
     /// <param name="cph"></param>
     private void FindContentPlaceHolders(ControlCollection controls, List<ContentPlaceHolder> cph)
     {
-        for (var i = 0; i < controls.Count; ++i)
+        foreach (Control control in controls)
         {
-            if (controls[i] is ContentPlaceHolder)
-                cph.Add((ContentPlaceHolder)controls[i]);
+            if (control is ContentPlaceHolder)
+                cph.Add((ContentPlaceHolder)control);
 
-            if (controls[i].Controls.Count > 0)
-                FindContentPlaceHolders(controls[i].Controls, cph);
+            if (control.Controls.Count > 0)
+                FindContentPlaceHolders(control.Controls, cph);
         }
     }
 
@@ -115,13 +116,13 @@ public partial class CreateIncident : System.Web.UI.Page
         // the proper local date and time.
         m_utcOffsetField = new HiddenField
         {
-            ID = '_' + FieldPrefix + "time_offset"
+            ID = string.Format("{0}{1}time_offset", '_', FieldPrefix)
         };
         Form.Controls.Add(m_utcOffsetField);
 
         // create JavaScript to capture the timezone offset
         ClientScript.RegisterStartupScript(m_utcOffsetField.GetType(), m_utcOffsetField.ID,
-            "document.getElementById(\"" + m_utcOffsetField.ClientID + "\").value=(new Date()).getTimezoneOffset();", true);
+            string.Format("document.getElementById(\"{0}\").value=(new Date()).getTimezoneOffset();", m_utcOffsetField.ClientID), true);
 
         // create credentials to connect to the REST API
         AuthenticationDto credentials = new AuthenticationDto
@@ -154,9 +155,9 @@ public partial class CreateIncident : System.Web.UI.Page
             // verify that the control on the page are of the expected
             // data type
             m_instantiatedFields = new Dictionary<string, WebControl>();
-            foreach (var field in m_fields)
+            foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
             {
-                var ctrl = (WebControl)FindControl(FieldPrefix + field.Key);
+                WebControl ctrl = (WebControl)FindControl(FieldPrefix + field.Key);
                 if (ctrl == null)
                     continue;
 
@@ -215,7 +216,7 @@ public partial class CreateIncident : System.Web.UI.Page
 
         // master page is in use, look in content place holders
         Control ctrl = null;
-        for (var i = 0; i < m_contentPlaceHolders.Count && ctrl == null; ++i)
+        for (int i = 0; i < m_contentPlaceHolders.Count && ctrl == null; ++i)
             ctrl = m_contentPlaceHolders[i].FindControl(id);
 
         return ctrl;
@@ -224,12 +225,11 @@ public partial class CreateIncident : System.Web.UI.Page
     private void HandleException(Exception ex)
     {
         string strMessage = null;
-        if (ex is System.Net.WebException && ((System.Net.WebException)ex).Response != null)
+        if (ex is WebException && ((WebException)ex).Response != null)
         {
-
-            using (Stream stream = ((System.Net.WebException)ex).Response.GetResponseStream())
+            using (Stream stream = ((WebException)ex).Response.GetResponseStream())
                 if (stream != null)
-                    using (var reader = new StreamReader(stream))
+                    using (StreamReader reader = new StreamReader(stream))
                     {
                         strMessage = reader.ReadToEnd();
                     }
@@ -249,16 +249,16 @@ public partial class CreateIncident : System.Web.UI.Page
         // CSS class added to required fields
         string cssRequired = ConfigurationManager.AppSettings["Co3CssRequired"];
 
-        foreach (var field in m_fields)
+        foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
         {
-            var ctrl = (WebControl)FindControl(FieldPrefix + field.Key);
+            WebControl ctrl = (WebControl)FindControl(FieldPrefix + field.Key);
 
             // this field doesn't have a matching control on the page
             if (ctrl == null)
             {
                 // if the field is required, we can't continue.
                 if (field.Value.Required == FieldRequired.Always)
-                    throw new MissingFieldException(FieldPrefix + field.Key + " is required");
+                    throw new MissingFieldException(string.Format("{0}{1} is required", FieldPrefix, field.Key));
 
                 continue;
             }
@@ -305,7 +305,7 @@ public partial class CreateIncident : System.Web.UI.Page
     {
         foreach (FieldDefValueDto fieldDefValue in field.Values)
         {
-            var item = new ListItem(fieldDefValue.Label, fieldDefValue.Value.ToString(), fieldDefValue.Enabled)
+            ListItem item = new ListItem(fieldDefValue.Label, fieldDefValue.Value.ToString(), fieldDefValue.Enabled)
             {
                 Selected = fieldDefValue.Default
             };
@@ -338,17 +338,15 @@ public partial class CreateIncident : System.Web.UI.Page
                 incident.CreatorId = m_sessionInfo.UserId;
                 incident.Regulators = new RegulatorsDto
                 {
-                    Ids = new List<object>
+                    Ids = new List<int>
                     {
+                        // 149: Securities incident best practices regulator
+                        // This value must be hard coded in order to generate tasks
                         149
                     }
                 };
 
-                // 149: Securities incident best practices regulator
-                // This value must be hard coded in order to generate tasks
-
-                IncidentDto incidentResult = m_sessionRest.GetIncidentRest()
-                    .CreateIncident(org.Id, incident, true, false);
+                IncidentDto incidentResult = m_sessionRest.GetIncidentRest().CreateIncident(org.Id, incident, true, false);
 
                 m_sessionRest.LogOut();
                 return true;
@@ -372,7 +370,7 @@ public partial class CreateIncident : System.Web.UI.Page
         // on the page using reflection
         foreach (PropertyInfo property in incident.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            var jsonProperty = property.GetCustomAttribute<JsonPropertyAttribute>();
+            JsonPropertyAttribute jsonProperty = property.GetCustomAttribute<JsonPropertyAttribute>();
             if (jsonProperty == null)
                 continue;
 
@@ -394,30 +392,30 @@ public partial class CreateIncident : System.Web.UI.Page
             if (!bValidated)
                 return false;
 
-            if (value == null)
-                continue;
-
-            // the property has a value, check if it's the default value
-            // or one specified by the caller of Co3CreateIncident()
-            if (property.PropertyType.IsValueType)
+            if (value != null)
             {
-                // if the property has the default value, then we'll apply
-                // the value we got from the web control.
-                if (Activator.CreateInstance(property.PropertyType)
-                    .Equals(property.GetValue(incident)))
+                // the property has a value, check if it's the default value
+                // or one specified by the caller of Co3CreateIncident()
+                if (property.PropertyType.IsValueType)
                 {
-                    property.SetValue(incident, value);
+                    // if the property has the default value, then we'll apply
+                    // the value we got from the web control.
+                    if (Activator.CreateInstance(property.PropertyType)
+                        .Equals(property.GetValue(incident)))
+                    {
+                        property.SetValue(incident, value);
+                    }
                 }
+                else if (property.GetValue(incident) == null)
+                    property.SetValue(incident, value);
             }
-            else if (property.GetValue(incident) == null)
-                property.SetValue(incident, value);
         }
 
         // process custom properties
         if (incident.Properties == null)
             incident.Properties = new SortedList<string, object>();
 
-        foreach (var field in m_fields)
+        foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
         {
             if (field.Value.Internal)
                 continue;
@@ -491,10 +489,10 @@ public partial class CreateIncident : System.Web.UI.Page
                 }
             case InputType.MultiSelect:
                 {
-                    var list = (ListControl)ctrl;
-                    var vecStrValues = new List<string>();
+                    ListControl list = (ListControl)ctrl;
+                    List<string> vecStrValues = new List<string>();
 
-                    for (var j = 0; j < list.Items.Count; ++j)
+                    for (int j = 0; j < list.Items.Count; ++j)
                     {
                         if (list.Items[j].Selected)
                             vecStrValues.Add(list.Items[j].Value);
@@ -573,7 +571,7 @@ public partial class CreateIncident : System.Web.UI.Page
     private static string RemoveToken(string value, string token)
     {
         string[] tokens = value.Split(' ');
-        for (var i = 0; i < tokens.Length; ++i)
+        for (int i = 0; i < tokens.Length; ++i)
         {
             if (tokens[i] == token)
                 Array.Clear(tokens, i, 1);

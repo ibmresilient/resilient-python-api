@@ -40,13 +40,13 @@ namespace Co3.Rest.Dto
         public JustOrgDto OrgInfo { get; set; }
 
         [JsonProperty("us_enabled")]
-        public bool UsRegulatorsEnabled { get; set; }
+        public bool UsEnabled { get; set; }
 
         [JsonProperty("canada_enabled")]
-        public bool CanadaRegulatorsEnabled { get; set; }
+        public bool CanadaEnabled { get; set; }
 
         [JsonProperty("eu_enabled")]
-        public bool EuRegulatorsEnabled { get; set; }
+        public bool EuEnabled { get; set; }
 
         [JsonProperty("actions_framework_enabled")]
         public bool ActionsFrameworkEnabled { get; set; }
@@ -58,7 +58,7 @@ namespace Co3.Rest.Dto
         public bool BreachEnabled { get; set; }
 
         [JsonProperty("sir_enabled")]
-        public bool SecurityIncidentEnabled { get; set; }
+        public bool SirEnabled { get; set; }
 
         [JsonProperty("threat_sources")]
         public Dictionary<int, ThreatSourceDto> ThreatSources { get; set; }
@@ -80,15 +80,6 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("groups")]
         public Dictionary<int, GroupDto> Groups { get; set; }
-
-        [JsonProperty("data_sources")]
-        public Dictionary<int, DataSourceDto> DataSources { get; set; }
-
-        [JsonProperty("exposure_vendors")]
-        public Dictionary<int, ExposureVendorDto> ExposureVendors { get; set; }
-
-        [JsonProperty("exposure_departments")]
-        public Dictionary<int, ExposureDepartmentDto> ExposureDepartments { get; set; }
 
         [JsonProperty("regs")]
         public Dictionary<int, bool> Regs { get; set; }
