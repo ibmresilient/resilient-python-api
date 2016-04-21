@@ -29,26 +29,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class RollupDto
+    public class ObjectHandle
     {
-        [JsonProperty("rollup_tree")]
-        public List<RollupDto> RollupTree { get; set; }
-
         [JsonProperty("id")]
-        public int Id { get; set; }
-
-        [JsonProperty("parent_id")]
-        public int ParentId { get; set; }
+        public object Id { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }
-
-        [JsonProperty("children")]
-        public List<RollupDto> Children { get; set; }
     }
 }

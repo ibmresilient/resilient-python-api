@@ -36,6 +36,9 @@ namespace Co3.Rest.Dto
 {
     public class TypeDto
     {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
         [JsonProperty("type_id")]
         public int TypeId { get; set; }
 
@@ -43,9 +46,33 @@ namespace Co3.Rest.Dto
         public string TypeName { get; set; }
 
         [JsonProperty("fields")]
-        public SortedList<string, FieldDefDto> Fields { get; set; }
+        public Dictionary<string, FieldDefDto> Fields { get; set; }
 
         [JsonProperty("properties")]
         public TypePropertiesDto Properties { get; set; }
+
+        [JsonProperty("parent_types")]
+        public List<string> ParentTypes { get; set; }
+
+        [JsonProperty("display_name")]
+        public string DisplayName { get; set; }
+
+        [JsonProperty("for_notifications")]
+        public bool ForNotifications { get; set; }
+
+        [JsonProperty("for_actions")]
+        public bool ForActions { get; set; }
+
+        [JsonProperty("for_custom_fields")]
+        public bool ForCustomFields { get; set; }
+
+        [JsonProperty("export_key")]
+        public string ExportKey { get; set; }
+
+        [JsonProperty("uuid")]
+        public string Uuid { get; set; }
+
+        [JsonProperty("actions")]
+        public List<PartialActionDto> Actions { get; set; }
     }
 }

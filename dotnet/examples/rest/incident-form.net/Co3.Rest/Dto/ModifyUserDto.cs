@@ -36,7 +36,7 @@ namespace Co3.Rest.Dto
     public class ModifyUserDto
     {
         [JsonProperty("id")]
-        public int Id { get; set; }
+        public ObjectHandle Id { get; set; }
 
         [JsonProperty("first_name ")]
         public string FirstName { get; set; }

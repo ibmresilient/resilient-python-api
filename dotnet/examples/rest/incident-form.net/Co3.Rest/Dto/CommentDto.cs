@@ -44,7 +44,7 @@ namespace Co3.Rest.Dto
         public int ParentId { get; set; }
 
         [JsonProperty("user_id")]
-        public int UserId { get; set; }
+        public ObjectHandle UserId { get; set; }
 
         [JsonProperty("user_fname")]
         public string UserFname { get; set; }
@@ -62,13 +62,13 @@ namespace Co3.Rest.Dto
         public ModifyUserDto ModifyUser { get; set; }
 
         [JsonProperty("text")]
-        public string Text { get; set; }
+        public TextContentDto Text { get; set; }
 
         [JsonProperty("children")]
         public List<CommentDto> Children { get; set; }
 
         [JsonProperty("mentioned_users")]
-        public List<int> MentionedUsers { get; set; }
+        public List<ObjectHandle> MentionedUsers { get; set; }
 
         [JsonProperty("comment_perms")]
         public CommentPermsDto CommentPerms { get; set; }

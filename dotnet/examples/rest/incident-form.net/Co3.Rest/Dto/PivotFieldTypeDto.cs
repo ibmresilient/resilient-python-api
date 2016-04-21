@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,25 +29,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class TaskStatusDto
+    public enum BucketBy
     {
-        [JsonProperty("id")]
-        public ushort Id { get; set; }
+        [EnumMember(Value = "MINUTE")]
+        Minute,
+        [EnumMember(Value = "HOUR")]
+        Hour,
+        [EnumMember(Value = "DAY")]
+        Day,
+        [EnumMember(Value = "WEEK")]
+        Week,
+        [EnumMember(Value = "MONTH")]
+        Month,
+        [EnumMember(Value = "YEAR")]
+        Year,
+        [EnumMember(Value = "DEFAULT_RESOLUTION")]
+        DefaultResolution,
+        [EnumMember(Value = "MINUTE_RESOLUTION")]
+        MinuteResolution
+    }
 
-        [JsonProperty("enabled")]
-        public bool Enabled { get; set; }
+    public class PivotFieldTypeDto
+    {
+        [JsonProperty("value")]
+        public string Value { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("label")]
+        public string Label { get; set; }
 
-        [JsonProperty("description")]
-        public string Description { get; set; }
+        [JsonProperty("bucket_bys")]
+        public List<BucketBy> BucketBys { get; set; }
 
-        [JsonProperty("closed")]
-        public bool Closed { get; set; }
+        [JsonProperty("input_types")]
+        public List<InputType> InputTypes { get; set; }
     }
 }

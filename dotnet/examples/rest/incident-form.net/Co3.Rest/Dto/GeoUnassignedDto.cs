@@ -36,7 +36,7 @@ namespace Co3.Rest.Dto
     public class GeoUnassignedDto
     {
         [JsonProperty("geo")]
-        public string Geo { get; set; }
+        public ObjectHandle Geo { get; set; }
 
         [JsonProperty("count")]
         public int Count { get; set; }

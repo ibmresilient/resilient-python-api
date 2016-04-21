@@ -41,13 +41,13 @@ namespace Co3.Rest.Dto
         public int Id { get; set; }
 
         [JsonProperty("type")]
-        public IncidentArtifactTypeDto Type { get; set; }
+        public ObjectHandle Type { get; set; }
 
         [JsonProperty("value")]
         public string Value { get; set; }
 
         [JsonProperty("description")]
-        public object Description { get; set; }
+        public TextContentDto Description { get; set; }
 
         [JsonProperty("creator")]
         public JustUserDto Creator { get; set; }
@@ -71,7 +71,7 @@ namespace Co3.Rest.Dto
         public DateTime Created { get; set; }
 
         [JsonProperty("pending_sources")]
-        public List<object> PendingSources { get; set; }
+        public List<ObjectHandle> PendingSources { get; set; }
 
         [JsonProperty("perms")]
         public IncidentArtifactPermsDto Perms { get; set; }

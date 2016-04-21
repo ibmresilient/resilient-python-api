@@ -30,6 +30,7 @@
  */
 
 
+using System.Collections;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -334,15 +335,15 @@ public partial class CreateIncident : System.Web.UI.Page
                 FullOrgDto org = orgRest.GetOrg();
                 incident.OrgId = org.Id;
                 incident.CreateDate = DateTime.UtcNow;
-                incident.OwnerId = m_sessionInfo.UserId;
-                incident.CreatorId = m_sessionInfo.UserId;
+                incident.OwnerId = new ObjectHandle { Id = m_sessionInfo.UserId };
+                incident.CreatorId = new ObjectHandle { Id = m_sessionInfo.UserId };
                 incident.Regulators = new RegulatorsDto
                 {
-                    Ids = new List<int>
+                    Ids = new List<ObjectHandle>
                     {
                         // 149: Securities incident best practices regulator
                         // This value must be hard coded in order to generate tasks
-                        149
+                        new ObjectHandle { Id = 149 }
                     }
                 };
 
@@ -386,6 +387,7 @@ public partial class CreateIncident : System.Web.UI.Page
             bValidated &= GetControlValue(
                 m_instantiatedFields[jsonProperty.PropertyName],
                 m_fields[jsonProperty.PropertyName],
+                property.PropertyType,
                 out value);
 
             // the value is not in the expected format
@@ -413,7 +415,7 @@ public partial class CreateIncident : System.Web.UI.Page
 
         // process custom properties
         if (incident.Properties == null)
-            incident.Properties = new SortedList<string, object>();
+            incident.Properties = new Dictionary<string, object>();
 
         foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
         {
@@ -428,7 +430,10 @@ public partial class CreateIncident : System.Web.UI.Page
                 continue;
 
             bValidated &= GetControlValue(
-                m_instantiatedFields[field.Value.Name], field.Value, out value);
+                m_instantiatedFields[field.Value.Name],
+                field.Value,
+                null,
+                out value);
             if (!bValidated)
                 return false;
 
@@ -440,7 +445,7 @@ public partial class CreateIncident : System.Web.UI.Page
     }
 
     // get the control's value
-    private bool GetControlValue(WebControl ctrl, FieldDefDto field, out object value)
+    private bool GetControlValue(WebControl ctrl, FieldDefDto field, Type propertyType, out object value)
     {
         bool bParsed = true;
         value = null;
@@ -560,12 +565,38 @@ public partial class CreateIncident : System.Web.UI.Page
                 throw new NotImplementedException();
         }
 
-        ctrl.CssClass = RemoveToken(ctrl.CssClass, "co3_invalid");
+        if (bParsed)
+        {
+            if (propertyType != null)
+            {
+                if (propertyType.Equals(typeof(TextContentDto)))
+                {
+                    value = new TextContentDto { Content = Convert.ToString(value), Format = TextFormat.Text };
+                }
+                else if (propertyType.Equals(typeof(ObjectHandle)))
+                {
+                    value = CreateObjectHandle(value);
+                }
+                else if (propertyType.Equals(typeof(List<ObjectHandle>)))
+                {
+                    value = ((IList)value).Cast<object>().Select(CreateObjectHandle).ToList();
+                }
+            }
 
-        if (!bParsed)
-            ctrl.CssClass += " co3_invalid";
+            ctrl.CssClass = RemoveToken(ctrl.CssClass, "co3_invalid");
+        }
 
         return bParsed;
+    }
+
+    private ObjectHandle CreateObjectHandle(object obj)
+    {
+        ObjectHandle objectHandle = null;
+        if (obj is int)
+            objectHandle = new ObjectHandle { Id = obj };
+        if (obj is string)
+            objectHandle = new ObjectHandle { Name = Convert.ToString(obj) };
+        return objectHandle;
     }
 
     private static string RemoveToken(string value, string token)

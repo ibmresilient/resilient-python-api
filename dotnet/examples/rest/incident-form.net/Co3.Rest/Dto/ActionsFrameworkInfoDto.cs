@@ -29,25 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class TaskStatusDto
+    public class ActionsFrameworkInfoDto
     {
-        [JsonProperty("id")]
-        public ushort Id { get; set; }
-
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("destination_types")]
+        public Dictionary<int, string> DestinationTypes { get; set; }
 
-        [JsonProperty("description")]
-        public string Description { get; set; }
+        [JsonProperty("action_types")]
+        public Dictionary<int, string> ActionTypes { get; set; }
 
-        [JsonProperty("closed")]
-        public bool Closed { get; set; }
+        [JsonProperty("action_object_types")]
+        public Dictionary<int, string> ActionObjectTypes { get; set; }
+
+        [JsonProperty("action_invocation_statuses")]
+        public Dictionary<int, string> ActionInvocationStatuses { get; set; }
+
+        [JsonProperty("action_invocation_message_types")]
+        public Dictionary<int, string> ActionInvocationMessageTypes { get; set; }
     }
 }

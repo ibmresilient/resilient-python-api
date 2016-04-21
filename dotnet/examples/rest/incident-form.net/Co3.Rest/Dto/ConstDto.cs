@@ -37,51 +37,72 @@ namespace Co3.Rest.Dto
     public class ConstDto
     {
         [JsonProperty("nist_attack_vectors")]
-        public SortedList<int, NistAttackVectorDto> NistAttackVectors { get; set; }
+        public Dictionary<int, NistAttackVectorDto> NistAttackVectors { get; set; }
 
         [JsonProperty("period_types")]
         public List<string> PeriodTypes { get; set; }
 
         [JsonProperty("task_statuses")]
-        public SortedList<string, TaskStatusDto> TaskStatuses { get; set; }
+        public Dictionary<string, TaskStatusDto> TaskStatuses { get; set; }
 
         [JsonProperty("states")]
-        public SortedList<int, StateDto> States { get; set; }
+        public Dictionary<int, StateDto> States { get; set; }
 
         [JsonProperty("incident_statuses")]
-        public SortedList<string, IncidentStatusDto> IncidentStatuses { get; set; }
+        public Dictionary<string, IncidentStatusDto> IncidentStatuses { get; set; }
 
         [JsonProperty("harm_statuses")]
-        public SortedList<int, HarmStatusDto> HarmStatuses { get; set; }
+        public Dictionary<int, HarmStatusDto> HarmStatuses { get; set; }
 
         [JsonProperty("crime_statuses")]
-        public SortedList<int, CrimeStatusDto> CrimeStatuses { get; set; }
+        public Dictionary<int, CrimeStatusDto> CrimeStatuses { get; set; }
 
         [JsonProperty("regulators")]
-        public SortedList<int, RegulatorDto> Regulators { get; set; }
+        public Dictionary<int, RegulatorDto> Regulators { get; set; }
 
         [JsonProperty("industries")]
-        public SortedList<int, IndustryDto> Industries { get; set; }
+        public Dictionary<int, IndustryDto> Industries { get; set; }
 
         [JsonProperty("industry_regulators_map")]
-        public SortedList<int, List<int>> IndustryRegulatorsMap { get; set; }
+        public Dictionary<int, List<int>> IndustryRegulatorsMap { get; set; }
 
         [JsonProperty("timeframes")]
-        public SortedList<int, TimeFrameDto> Timeframes { get; set; }
+        public Dictionary<int, TimeFrameDto> Timeframes { get; set; }
 
         [JsonProperty("data_types")]
-        public SortedList<int, DataTypeDto> DataTypes { get; set; }
-
-        [JsonProperty("rollups")]
-        public List<RollupDto> Rollups { get; set; }
+        public Dictionary<int, DataTypeDto> DataTypes { get; set; }
 
         [JsonProperty("geos")]
-        public SortedList<int, GeoDto> Geos { get; set; }
+        public Dictionary<int, GeoDto> Geos { get; set; }
 
         [JsonProperty("data_formats")]
-        public SortedList<int, DataFormatTypeDto> DataFormats { get; set; }
+        public Dictionary<int, DataFormatTypeDto> DataFormats { get; set; }
 
         [JsonProperty("artifact_types")]
         public List<IncidentArtifactTypeDto> ArtifactTypes { get; set; }
+
+        [JsonProperty("actions_framework")]
+        public ActionsFrameworkInfoDto ActionsFrameworkInfo { get; set; }
+
+        [JsonProperty("max_attachment_mb")]
+        public int MaxAttachmentMb { get; set; }
+
+        [JsonProperty("input_types")]
+        public Dictionary<string, InputTypeDto> InputTypes { get; set; }
+
+        [JsonProperty("action_types")]
+        public Dictionary<int, string> ActionTypes { get; set; }
+
+        [JsonProperty("message_destination_types")]
+        public Dictionary<int, string> DestinationTypes { get; set; }
+
+        [JsonProperty("pivot")]
+        public PivotConstDto PivotConstants { get; set; }
+
+        [JsonProperty("time_units")]
+        public List<TimeUnitDto> TimeUnits { get; set; }
+
+        [JsonProperty("server_version")]
+        public ServerVersionDto ServerVersion { get; set; }
     }
 }

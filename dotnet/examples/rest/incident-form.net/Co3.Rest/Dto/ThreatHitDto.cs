@@ -43,10 +43,10 @@ namespace Co3.Rest.Dto
         public string Value { get; set; }
 
         [JsonProperty("threat_source_id")]
-        public Dictionary<int, ThreatSourceDto> ThreatSourceId { get; set; }
+        public ObjectHandle ThreatSourceId { get; set; }
 
         [JsonProperty("artifact_type_id")]
-        public int ArtifactTypeId { get; set; }
+        public ObjectHandle ArtifactTypeId { get; set; }
 
         [JsonProperty("active")]
         public bool Active { get; set; }

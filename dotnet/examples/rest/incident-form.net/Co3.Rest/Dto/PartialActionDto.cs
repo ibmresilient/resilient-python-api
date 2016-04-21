@@ -33,21 +33,15 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class TaskStatusDto
+    public class PartialActionDto
     {
         [JsonProperty("id")]
-        public ushort Id { get; set; }
-
-        [JsonProperty("enabled")]
-        public bool Enabled { get; set; }
+        public int Id { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }
 
-        [JsonProperty("description")]
-        public string Description { get; set; }
-
-        [JsonProperty("closed")]
-        public bool Closed { get; set; }
+        [JsonProperty("type")]
+        public int Type { get; set; }
     }
 }

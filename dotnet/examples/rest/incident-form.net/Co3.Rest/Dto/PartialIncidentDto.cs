@@ -52,16 +52,16 @@ namespace Co3.Rest.Dto
         public DateTime CreateDate { get; set; }
 
         [JsonProperty("description")]
-        public string Description { get; set; }
+        public TextContentDto Description { get; set; }
 
         [JsonProperty("owner_id")]
-        public int OwnerId { get; set; }
+        public ObjectHandle OwnerId { get; set; }
 
         [JsonProperty("phase_id")]
-        public int PhaseId { get; set; }
+        public ObjectHandle PhaseId { get; set; }
 
         [JsonProperty("severity_code")]
-        public int SeverityCode { get; set; }
+        public ObjectHandle SeverityCode { get; set; }
 
         [JsonProperty("plan_status")]
         public string PlanStatus { get; set; }
