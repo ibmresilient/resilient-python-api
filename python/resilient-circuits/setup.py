@@ -60,7 +60,8 @@ setup(
         'circuits',
         'pytz',
         'keyring',
-        'jinja2'
+        'jinja2',
+        'filelock>=2.0.5'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',

@@ -49,6 +49,11 @@ from resilient_circuits.actions_component import Actions
 from circuits import Component, Debugger, Timer, Event, handler
 import resilient_circuits.keyring_arguments as keyring_arguments
 
+# deps needed for filelock
+# https://pypi.python.org/pypi/filelock
+import filelock
+APP_LOCK_FILE = os.environ.get("APP_LOCK_FILE", "resilient_circuits_lockfile")
+
 def log(log_level):
     logging.getLogger().setLevel(log_level)
 
@@ -185,16 +190,27 @@ class App(Component):
 def run(*args, **kwargs):
     """Main app"""
 
+    # define lock
+    # this prevents multiple, identical circuits from running at the same time
+    lock = filelock.FileLock(APP_LOCK_FILE)
+
     # The main app component initializes the Resilient services
     global application
     try:
-        application = App(*args, **kwargs)
-        # Debugger is useful to see all the messages (at DEBUG level)
-        # Debugger(logger=logging.getLogger("debugger")).register(application)
-        # Run until interrupted
-        application.run()
-    except ValueError as exc:
-        LOG.error(exc)
+        # attempt to lock file, wait 1 second for lock
+        with lock.acquire(timeout=1):
+            assert lock.is_locked
+
+            application = App(*args, **kwargs)
+            # Debugger is useful to see all the messages (at DEBUG level)
+            # Debugger(logger=logging.getLogger("debugger")).register(application)
+            # Run until interrupted
+            application.run()
+    except filelock.Timeout:
+        # file is probably already locked
+        print("Failed to aquire lock on lockfile - you may have another instance of Resilient Circuits running")
+    except ValueError:
+        LOG.exception()
     #finally:
     #    LOG.info("App finished.")
 
