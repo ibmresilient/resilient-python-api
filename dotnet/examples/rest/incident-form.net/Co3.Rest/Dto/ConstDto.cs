@@ -87,6 +87,9 @@ namespace Co3.Rest.Dto
         [JsonProperty("max_attachment_mb")]
         public int MaxAttachmentMb { get; set; }
 
+        [JsonProperty("max_artifacts")]
+        public int MaxArtifacts { get; set; }
+
         [JsonProperty("input_types")]
         public Dictionary<string, InputTypeDto> InputTypes { get; set; }
 
