@@ -65,5 +65,14 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("sort")]
         public bool Sort { get; set; }
+
+        [JsonProperty("show_in_manual_actions")]
+        public bool ShowInManualActions { get; set; }
+
+        [JsonProperty("show_in_auto_actions")]
+        public bool ShowInAutomaticActions { get; set; }
+
+        [JsonProperty("show_in_notifications")]
+        public bool ShowInNotifications { get; set; }
     }
 }

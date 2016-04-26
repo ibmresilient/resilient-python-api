@@ -40,5 +40,20 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("name")]
         public string Name { get; set; }
+
+        [JsonProperty("enabled")]
+        public bool Enabled { get; set; }
+
+        [JsonProperty("perms")]
+        public PhasePermsDto Perms { get; set; }
+
+        [JsonProperty("uuid")]
+        public string Uuid { get; set; }
+
+        [JsonProperty("order")]
+        public int Order { get; set; }
+
+        [JsonProperty("export_key")]
+        public string ExportKey { get; set; }
     }
 }

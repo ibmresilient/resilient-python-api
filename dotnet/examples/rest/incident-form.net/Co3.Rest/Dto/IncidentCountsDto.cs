@@ -37,12 +37,12 @@ namespace Co3.Rest.Dto
     public class IncidentCountsDto
     {
         [JsonProperty("unassigneds")]
-        public List<GeoUnassignedDto> Unassigneds { get; set; }
+        public List<GeoUnassignedDto> GeoUnassigneds { get; set; }
 
         [JsonProperty("total")]
         public int Total { get; set; }
 
         [JsonProperty("geo_counts")]
-        public SortedList<string, int> GeoCounts { get; set; }
+        public Dictionary<string, int> GeoCounts { get; set; }
     }
 }

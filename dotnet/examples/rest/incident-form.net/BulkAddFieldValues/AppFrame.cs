@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using Co3.Rest;
 using Co3.Rest.Dto;
@@ -66,13 +67,13 @@ namespace BulkAddFieldValues
 
         private void OnCredentialsChanged(object sender, EventArgs e)
         {
-            ConnectBtn.Enabled = HasCredentials;   
+            ConnectBtn.Enabled = HasCredentials;
         }
 
         private void ConnectBtn_Click(object sender, EventArgs e)
         {
             RestEndpoint.Co3ApiUrl = ApiUrl.Text.Trim();
-            AuthenticationDto credentials = new AuthenticationDto()
+            AuthenticationDto credentials = new AuthenticationDto
             {
                 Email = UserEmail.Text.Trim(),
                 Password = Password.Text
@@ -87,15 +88,14 @@ namespace BulkAddFieldValues
             }
             catch
             {
-                MessageBox.Show("Invalid user credentials or API URL",
-                    "Authentication Error", MessageBoxButtons.OK);
+                MessageBox.Show("Invalid user credentials or API URL", "Authentication Error", MessageBoxButtons.OK);
                 return;
             }
 
             Orgs.Items.Clear();
-            for (int i = 0; i < m_session.Orgs.Count; ++i)
+            foreach (SessionOrgInfoDto sessionOrgInfoDto in m_session.Orgs)
             {
-                Orgs.Items.Add(m_session.Orgs[i]);
+                Orgs.Items.Add(sessionOrgInfoDto);
             }
 
             Orgs.SelectedIndex = 0;
@@ -113,26 +113,26 @@ namespace BulkAddFieldValues
             FieldNames.Items.Clear();
             FieldRest fieldRest = m_sessionRest.GetFieldRest();
             FieldDefDto[] vecFields = fieldRest.GetFieldTypes(((SessionOrgInfoDto)Orgs.SelectedItem).Id);
-            FieldDefDto field;
-            for (int i = 0; i < vecFields.Length; ++i)
+            foreach (FieldDefDto fieldDefDto in vecFields)
             {
-                field = vecFields[i];
-                if (field.Internal
-                    || field.InputType != InputType.MultiSelect
-                    && field.InputType != InputType.Select)
+                if (fieldDefDto.Internal
+                    || fieldDefDto.InputType != InputType.MultiSelect
+                    && fieldDefDto.InputType != InputType.Select)
                 {
                     continue;
                 }
 
-                FieldNames.Items.Add(field);
+                FieldNames.Items.Add(fieldDefDto);
             }
         }
 
         private void BrowseBtn_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.ShowDialog();
-            ValuesFile.Text = dlg.FileName;
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.ShowDialog();
+                ValuesFile.Text = dlg.FileName;
+            }
             OnFieldDataChanged(sender, e);
         }
 
@@ -147,11 +147,11 @@ namespace BulkAddFieldValues
         {
             if (!File.Exists(ValuesFile.Text))
             {
-                MessageBox.Show("\"" + ValuesFile.Text + "\" does not exist");
+                MessageBox.Show(string.Format("\"{0}\" does not exist", ValuesFile.Text));
                 return;
             }
 
-            string[] vecLines = null;
+            string[] vecLines;
 
             try
             {
@@ -159,38 +159,32 @@ namespace BulkAddFieldValues
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error reading file: " + ex.Message);
+                MessageBox.Show(string.Format("Error reading file: {0}", ex.Message));
                 return;
             }
 
-            if (vecLines == null || vecLines.Length == 0)
+            if (vecLines.Length == 0)
             {
                 MessageBox.Show("File contains no data");
                 return;
             }
 
             FieldDefDto field = (FieldDefDto)FieldNames.SelectedItem;
-            SortedList<string, FieldDefValueDto> mapExistingValues
-                = new SortedList<string, FieldDefValueDto>();
 
             // cache existing values for faster lookup
-            for (int i = 0; i < field.Values.Count; ++i)
-            {
-                mapExistingValues.Add(field.Values[i].Label.ToLower(),
-                    field.Values[i]);
-            }
+            Dictionary<string, FieldDefValueDto> mapExistingValues = field.Values.ToDictionary(fieldDefValueDto => fieldDefValueDto.Label.ToLower());
 
-            string strValue;
-            FieldDefValueDto value;
-            for (int i = 0; i < vecLines.Length; ++i)
+
+            foreach (string line in vecLines)
             {
-                strValue = vecLines[i];
-                if (!string.IsNullOrEmpty(strValue)
-                    && !string.IsNullOrEmpty(strValue = strValue.Trim())
-                    && !mapExistingValues.ContainsKey(strValue.ToLower()))
+                if (!string.IsNullOrEmpty(line))
                 {
-                    value = new FieldDefValueDto() { Label = strValue };
-                    field.Values.Add(value);
+                    string strValue = line.Trim();
+                    if (!string.IsNullOrEmpty(strValue)
+                        && !mapExistingValues.ContainsKey(strValue.ToLower()))
+                    {
+                        field.Values.Add(new FieldDefValueDto { Label = strValue });
+                    }
                 }
             }
 
@@ -204,8 +198,7 @@ namespace BulkAddFieldValues
             try
             {
                 FieldRest fieldRest = m_sessionRest.GetFieldRest();
-                FieldDefDto savedField
-                    = fieldRest.SaveField(((SessionOrgInfoDto)Orgs.SelectedItem).Id, field);
+                FieldDefDto savedField = fieldRest.SaveField(((SessionOrgInfoDto)Orgs.SelectedItem).Id, field);
 
                 if (savedField.Id == field.Id)
                 {
@@ -213,7 +206,7 @@ namespace BulkAddFieldValues
                     // it would contain the new values
                     FieldNames.Items[FieldNames.SelectedIndex] = savedField;
 
-                    MessageBox.Show("Added new values to field \"" + field.Name + "\"");
+                    MessageBox.Show(string.Format("Added new values to field \"{0}\"", field.Name));
                     return;
                 }
 
@@ -222,7 +215,6 @@ namespace BulkAddFieldValues
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                return;
             }
         }
 
