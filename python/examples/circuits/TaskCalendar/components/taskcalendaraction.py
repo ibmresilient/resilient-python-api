@@ -107,12 +107,12 @@ class TaskCalendar(ResilientComponent):
         if port:
             args['port'] = port
             
-        if smtp_options.get('sslrequired'):
-            LOG.info("SLS connection to mailbox required")
+        if smtp_options.get('use_ssl'):
+            LOG.info("SSL connection to mailbox required")
             server = send_email.connect_smtp_ssl(smtp_options.get('smtpuser'),
                                                  smtp_options.get('smtppw'), **args)
 
-        elif smtp_options.get('tlsrequired'):
+        elif smtp_options.get('use_start_tls'):
             LOG.info("TLS connection to mailbox required")
             server = send_email.connect_smtp(smtp_options.get('smtpuser'),
                                              smtp_options.get('smtppw'), **args)
