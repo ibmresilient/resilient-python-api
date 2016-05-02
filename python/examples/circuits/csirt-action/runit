@@ -1,4 +1,0 @@
-#!/bin/bash
-set -x
-APP_CONFIG_FILE=./Config/app.config python csirtaction.py "$@"
-set +x
