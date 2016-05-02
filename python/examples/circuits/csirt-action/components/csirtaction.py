@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # -*- coding: utf-8 -*-
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
@@ -42,10 +40,10 @@ automatically,  Then Resilient adds the appropriate set of tasks
 into the incident.
 
 To configure this action:
-- Make an automatic action, named "csirt" with the requisite conditions.
+- Make an automatic action, named "csirtaction" with the requisite conditions.
   For example, when "CSIRT Confirmed?" equals "Yes".
   This action script doesn't test any conditions itself!
-- Use message destination "incident_type".
+- Use message destination "csirt_action".
 
 """
 
@@ -57,19 +55,24 @@ from resilient_circuits.actions_component import ResilientComponent
 
 logger = logging.getLogger(__name__)
 
+CONFIG_DATA_SECTION = "csirt_action"
+
 
 class IncidentTypeAction(ResilientComponent):
     """Add incident types from custom action"""
 
     def __init__(self, opts):
         super(IncidentTypeAction, self).__init__(opts)
-        # This action listens to the message destination named "incident_type"
-        self.channel = "actions.incident_type"
+        self.options = opts.get(CONFIG_DATA_SECTION, {})
+        # This action listens to the message destination named "csirt_action"
+        self.channel = "actions." + self.options.get("queue", "csirt_action")
 
-    @handler("csirt")
-    def _csirt_action(self, event, *args, **kwargs):
+    @handler("csirtaction")
+    def csirt_action(self, event, *args, **kwargs):
         """Handler for action named 'csirt' (ignoring case)"""
-        return self._add_incident_type(event, "CSIRT")
+        msg = self._add_incident_type(event, self.options.get("incidenttype", "CSIRT"))
+        logger.info(msg)
+        yield msg
 
 # Extend this script by adding new handlers for the specific types you want.
 # For any Automatic Action, the handler with the same name (lowercase) is run.
