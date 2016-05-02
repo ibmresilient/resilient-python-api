@@ -36,16 +36,9 @@ Action to add a task through a manual action with
 """
 
 import logging
-import requests
-
+import traceback
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent
-from resilient_circuits.actions_component import ActionMessage
-
-requests.packages.urllib3.disable_warnings()
-
-# Lower the logging threshold for requests
-logging.getLogger("requests.packages.urllib3").setLevel(logging.ERROR)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -67,70 +60,40 @@ class AddTaskAction(ResilientComponent):
         # The queue name can be specified in the config file or use default
         self.channel = "actions." + self.options.get("queue", "add_task")
 
-    @handler()
+    @handler("add_task")
     def add_task_action(self, event, *args, **kwargs):
-        """The @handler() annotation without an event name makes this
-           a default handler - for all events on this component's queue.
-           This will be called with some "internal" events from Circuits,
-           so you must declare the method with the generic parameters
-           (event, *args, **kwargs), and ignore any messages that are not
-           from the Actions module.
         """
-        if not isinstance(event, ActionMessage):
-            # Some event we are not interested in
-            log.debug("Ignoring Event: %s", str(event))
-            return
+        The string passed to @handler must match the action name in Resilient
+        """
+        log.info("Starting add_task_function")
+        log.debug("ARGS: " + repr(args))
+        log.debug("KWARGS: " + repr(kwargs))
 
-        log.debug("Event Name %s", event.name)
+        try:
+            incident_id = event.message['incident']['id']
+            tname = kwargs["message"]["properties"].get('task_name')
+            task_instructions = kwargs["message"]["properties"].get('task_instructions')
+            task_phase_key = kwargs["message"]["properties"].get('task_phase')
+            task_phase = kwargs["message"]["type_info"].get(
+                'actioninvocation', {}).get('fields', {}).get(
+                    'task_phase', {}).get('values', {}).get(
+                        str(task_phase_key), {}).get('label', None)
 
-        # determine which method to invoke based on the event name
-        func = self.get_action_function(event.name)
+            task = {"name": tname or '',
+                    "instr_text": task_instructions or '',
+                    "inc_id": incident_id,
+                    "phase_id": task_phase or ''}
+            log.debug("Submitting task %s", repr(task))
 
-        if func is not None:
-            retv = func(event)
-            if retv:
-                yield retv
+            posted_task = self.rest_client().post("/incidents/%s/tasks" %
+                                                  incident_id, task)
+            if not posted_task:
+                raise Exception("Failed to post task")
             else:
-                yield "event handled"
-        else:
-            # an action without a handling method was put onto the queue
-            raise Exception("Invalid event - no function to handle")
+                log.info("Task Posted: %s", posted_task)
+                yield "action complete. task posted. ID %s" % posted_task["id"]
 
-    # end add_task_action
-
-    def add_task(self, args):
-        """
-        Method invoked based on action name
-        """
-        log.debug("Invoked function")
-
-        incident_id = args.message['incident']['id']
-        tname = args.properties.get('task_name')
-        task_instructions = args.properties.get('task_instructions')
-        task_phase_key = args.properties.get('task_phase')
-        task_phase = args.message.get('type_info', {}).get(
-            'actioninvocation', {}).get('fields', {}).get(
-                'task_phase', {}).get('values', {}).get(
-                    str(task_phase_key), {}).get('label', None)
-
-        task = {"name": tname or '',
-                "instr_text": task_instructions or '',
-                "inc_id": incident_id,
-                "phase_id": task_phase or ''}
-
-        posted_task = self.rest_client().post("/incidents/%s/tasks" %
-                                              incident_id, task)
-        if not posted_task:
-            log.error("Failed to post task!")
-            return "Error posting task"
-        else:
-            log.info("Task Posted: %s", posted_task)
-            return "action complete. task posted"
-
-    def get_action_function(self, funcname):
-        """
-        map the name passed in to a method within the object
-        """
-
-        log.debug("get function %s", funcname)
-        return getattr(self, '%s' % funcname, None)
+        except Exception as e:
+            # Reraise exception for handling by framework
+            log.error(traceback.format_exc())
+            raise
