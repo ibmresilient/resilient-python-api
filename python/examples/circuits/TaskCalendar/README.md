@@ -73,8 +73,8 @@ Within the 'taskcalendar' section the following information is required:
 * smtpuser - login credential for the user on the smtp server. Usually an email address
 * smtppw - password for the 'smtpuser' on the smtp server
 * smtpport - port on the smtp server.
-* tlsrequired - Only include and set to True if using TLS, usually with port 587
-* sslrequired - Only include and set to True if using SSL, usually with port 465
+* use_start_tls - Only include and set to True if using TLS, usually with port 587
+* use_ssl - Only include and set to True if using legacy SMTP over SSL, usually with port 465
 
 ### Certificates
 
