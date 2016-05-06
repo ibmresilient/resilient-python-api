@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Basic example with Actions Module; just subscribes to messages."""
+"""Basic example with Action Module; just subscribes to messages."""
 
 from __future__ import print_function
 

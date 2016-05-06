@@ -1,20 +1,23 @@
-Resilient SimpleClient Python module.  Used to connect with Resilient servers.
+Resilient SimpleClient Python module.
+Used to connect with Resilient servers.
+
 
 Installing this module
 ======================
+
+To install a pre-built package file:
+
+    pip install dist/co3-x.x.x.tar.gz
+
 
 To install directly into your local Python environment:
 
     python setup.py install
 
-Alternatively it is possible to build an installable package file,
-for example to distribute the module to another machine.  To do this:
+
+To build the installable package file:
 
     python setup.py sdist --formats=gztar
 
 This creates a single file `dist/co3-x.x.x.tar.gz` (the filename will
 vary according to the current version of this repository).
-
-Then install the package file using `pip`:
-
-    pip install co3-x.x.x.tar.gz

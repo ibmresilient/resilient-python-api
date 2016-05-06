@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Slightly advanced example with Actions Module; includes REST API usage."""
+"""Slightly advanced example with Action Module; includes REST API usage."""
 
 from __future__ import print_function
 
@@ -80,7 +80,7 @@ class Co3Listener(object):
         now = str(datetime.now())
 
         def apply_change(incident):
-            incident['description'] = incident['description'] + "\n\nUpdate from Actions Module example {}.".format(now)
+            incident['description'] = incident['description'] + "\n\nUpdate from Action Module example {}.".format(now)
 
         # get_put will do a GET on the URL, call apply_change the do a PUT on the resulting object.
         # If the operation fails with a 409 (conflict) error, the operation is retried.

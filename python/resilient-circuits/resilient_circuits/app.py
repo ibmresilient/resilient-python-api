@@ -30,7 +30,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Actions Module server
+"""Action Module server
 
 This uses the `Circuits <http://circuitsframework.com/>` framework to
 listen on multiple message destinations, send their events to the relevant
@@ -123,7 +123,7 @@ class App(Component):
         self.config_logging(self.opts["logdir"], self.opts["loglevel"],self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
         LOG.info("Resilient user: %s", self.opts["email"])
-        # Connect to events from Actions Module.
+        # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
         Actions(self.opts).register(self)

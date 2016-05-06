@@ -52,7 +52,7 @@ class CrossOrgArgumentParser(co3.ArgumentParser):
     def __init__(self):
         super(CrossOrgArgumentParser, self).__init__(config_file="crossorg.config")
 
-        # Actions Module connecion
+        # Action Module connecion
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
         default_queue = self.getopt("resilient", "queue")
 

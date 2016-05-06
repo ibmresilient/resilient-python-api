@@ -1,6 +1,6 @@
-# Actions Module Examples
+# Action Module Examples
 
-This directory contains simple example Actions Module processors written in
+This directory contains simple example Action Module processors written in
 Python.  It assumes you have installed the `co3` helper module (see
 [/python/co3/README](../../co3/README) for instructions on how to install
 the `co3` module).

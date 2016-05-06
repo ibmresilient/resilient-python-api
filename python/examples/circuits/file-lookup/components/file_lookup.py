@@ -36,7 +36,7 @@ class FileLookupComponent(ResilientComponent):
            This will be called with some "internal" events from Circuits,
            so you must declare the method with the generic parameters
            (event, *args, **kwargs), and ignore any messages that are not
-           from the Actions module.
+           from the Action Module.
         """
         if not isinstance(event, ActionMessage):
             # Some event we are not interested in
