@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
 # -*- coding: utf-8 -*-
+
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
@@ -29,7 +29,9 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
-"""Action Module circuits component to mail out an ics calendar file for tasks"""
+"""
+Action Module circuits component to mail out a .ics calendar file for tasks
+"""
 
 import os
 import logging

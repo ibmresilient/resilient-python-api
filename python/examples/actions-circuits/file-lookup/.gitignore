@@ -1,9 +1,0 @@
-__pycache__
-.DS_Store
-.settings
-.idea
-*.iml
-*.pem
-*.pyc
-*.log
-*.log.*

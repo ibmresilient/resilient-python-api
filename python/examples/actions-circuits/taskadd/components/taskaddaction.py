@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
 # -*- coding: utf-8 -*-
+
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
