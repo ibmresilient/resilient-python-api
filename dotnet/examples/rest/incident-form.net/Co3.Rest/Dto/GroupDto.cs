@@ -46,6 +46,15 @@ namespace Co3.Rest.Dto
         public string Name { get; set; }
 
         [JsonProperty("members")]
-        public List<int> Members { get; set; }
+        public List<ObjectHandle> Members { get; set; }
+
+        [JsonProperty("is_assignable")]
+        public bool Assignable { get; set; }
+
+        [JsonProperty("ldap_dn")]
+        public string LdapDn { get; set; }
+
+        [JsonProperty("ldap_members")]
+        public LdapGroupMembersDto LdapMembers { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -34,18 +34,24 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for NamedEntityDTO
-    /// </summary>
-    public class ExposureVendorDto
+    public class ActionsFrameworkInfoDto
     {
-        [JsonProperty("id")]
-        public int Id { get; set; }
-
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("destination_types")]
+        public Dictionary<int, string> DestinationTypes { get; set; }
+
+        [JsonProperty("action_types")]
+        public Dictionary<int, string> ActionTypes { get; set; }
+
+        [JsonProperty("action_object_types")]
+        public Dictionary<int, string> ActionObjectTypes { get; set; }
+
+        [JsonProperty("action_invocation_statuses")]
+        public Dictionary<int, string> ActionInvocationStatuses { get; set; }
+
+        [JsonProperty("action_invocation_message_types")]
+        public Dictionary<int, string> ActionInvocationMessageTypes { get; set; }
     }
 }

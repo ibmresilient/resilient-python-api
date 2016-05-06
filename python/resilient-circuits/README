@@ -1,41 +1,56 @@
-Resilient Circuits Python module.  This provides a convenient framework for
-Action Module applications.
+Resilient Circuits Python module.
+This provides a convenient framework for Action Module applications.
 
-Installing the 'co3' module
-===========================
 
-The Resilient REST API is accessed by a helper module 'co3' that should be
+Requirements
+============
+
+The Resilient REST API is accessed by a helper module `co3` that should be
 used for all Python client applications.  Install that module before you start.
+
+Other requirements are installed when you install the package or setup.
+
 
 Installing this module
 ======================
+
+To install a pre-built package file:
+
+    pip install dist/resilient_circuits-x.x.x.tar.gz
+
 
 To install directly into your local Python environment:
 
     python setup.py install
 
-Alternatively it is possible to build an installable package file,
-for example to distribute the module to another machine.  To do this:
 
-    python setup.py bdist_wheel --universal
+To build the installable package file:
 
-This creates a single file `dist/resilient_circuits-x.x.x-py2.py3-none-any.whl`
-(the filename will vary according to the current version of this repository).
+    python setup.py sdist --formats=gztar
 
-Then install the package file using `pip`:
-
-    pip install resilient_circuits-x.x.x-py2.py3-none-any.whl
+This creates a single file `dist/co3-x.x.x.tar.gz` (the filename will
+vary according to the current version of this repository).
 
 
-## Configuration
+
+Configuration
+=============
 
 Configuration parameters for the server URLs, user credentials and so on
 should be provided using a configuration file.  They can optionally also
-be provided on the command-line.  This package includes a configuration
-file template, which should be copied and edited for your environment.
+be provided on the command-line.
 
 If the environment variable `APP_CONFIG_FILE` is set, it defines the path
-to your configuration file.  The default configuration file is named `app.config`.
+to your configuration file.  The default configuration file is named
+`app.config`.
+
+The example projects includes a configuration file template, which should
+be copied and edited for your environment.
+
+
+
+Project Structure
+=================
 
 Your project should be structured as follows:
 ```
@@ -51,9 +66,11 @@ project/
 ├── run.py
 ```
 
-## Running the example integration
 
-After installing the resilient-circuits package, copy the provided components, lib, and scripts directories and also the run.py and app.config files.
+### Running an example
+
+After installing the resilient-circuits module, copy the provided components,
+lib, and scripts directories and also the run.py and app.config files.
 Edit the `app.config` file with parameters appropriate to your environment.
 Then run the action script:
 

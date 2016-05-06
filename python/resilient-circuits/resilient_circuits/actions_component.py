@@ -30,7 +30,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Circuits component for Actions Module subscription and message handling"""
+"""Circuits component for Action Module subscription and message handling"""
 
 from circuits import BaseComponent, Event, Timer, Worker
 from circuits.core.handlers import handler
@@ -117,7 +117,7 @@ class ResilientComponent(BaseComponent):
     """A Circuits base component with a connection to the Resilient REST API
 
        This is a convenient superclass for custom components that use the
-       Resilient Actions Module.
+       Resilient Action Module.
     """
 
     def __init__(self, opts):
@@ -205,9 +205,9 @@ class ResilientComponent(BaseComponent):
 
 
 class ActionMessage(Event):
-    """A Circuits event for a Resilient Actions Module message"""
+    """A Circuits event for a Resilient Action Module message"""
 
-    # This is a generic event that holds details of the Actions Module message,
+    # This is a generic event that holds details of the Action Module message,
     # including its context (the incident, task, artifact... where the action
     # was triggered).
     #
@@ -220,8 +220,8 @@ class ActionMessage(Event):
     # The parameters for your event-handler method are:
     #   event: this event object
     #   source: the component that fired the event
-    #   headers: the Actions Module message headers (dict)
-    #   message: the Actions Module message (dict)
+    #   headers: the Action Module message headers (dict)
+    #   message: the Action Module message (dict)
     # For convenience, the message is also broken out onto event properties,
     #   event.incident: the incident that the event relates to
     #   event.artifact: the artifact that the event was triggered from (if any)
@@ -322,10 +322,10 @@ class ActionMessage(Event):
 
 
 class Actions(ResilientComponent):
-    """Component that subscribes to Resilient Actions Module queues and fires message events"""
+    """Component that subscribes to Resilient Action Module queues and fires message events"""
 
     # Whenever a component in the circuit is registered to a channel name "actions.xxxx",
-    # this component will subscribe to the corresponding Actions Module queue (xxxx)
+    # this component will subscribe to the corresponding Action Module queue (xxxx)
     # and then fire events for each message that arrives from the queue.
     # After the message is handled, or fails, it acks the message and updates the action status.
 

@@ -29,7 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Specialized;
 using Co3.Rest.Dto;
 
@@ -54,6 +53,7 @@ namespace Co3.Rest
             bool wantFullData, bool wantTasks)
         {
             NameValueCollection parameters = new NameValueCollection();
+
             if (wantTasks)
                 parameters.Add(ParamWantTask, "true");
 
@@ -62,7 +62,7 @@ namespace Co3.Rest
                 parameters.Add(ParamWantFullData, "true");
                 return HttpPost<FullIncidentDataDto>(string.Format(Endpoint, orgId), parameters, incident);
             }
-            
+
             return HttpPost<IncidentDto>(string.Format(Endpoint, orgId), parameters, incident);
         }
     }

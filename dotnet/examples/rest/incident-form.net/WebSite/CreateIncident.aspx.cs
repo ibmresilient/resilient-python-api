@@ -30,24 +30,21 @@
  */
 
 
+using System.Collections;
+using System.Globalization;
+using System.Linq;
+using System.Net;
+using Co3.Rest;
+using Co3.Rest.Dto;
+using Newtonsoft.Json;
+using Resources;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
-using System.Text;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
-using Co3.Rest;
-using Co3.Rest.Dto;
-
-using Resources;
 
 public partial class CreateIncident : System.Web.UI.Page
 {
@@ -60,13 +57,13 @@ public partial class CreateIncident : System.Web.UI.Page
 
     // hidden field used to get the UTC offset from the browser so that we can
     // properly calculate the datetime relative to the user.
-    System.Web.UI.WebControls.HiddenField m_utcOffsetField;
+    HiddenField m_utcOffsetField;
 
     // a map of field IDs to the corresponding controls on the page
-    SortedList<string, WebControl> m_instantiatedFields;
+    Dictionary<string, WebControl> m_instantiatedFields;
 
     // list of field IDs to all available fields received from the server
-    SortedList<string, FieldDefDto> m_fields;
+    Dictionary<string, FieldDefDto> m_fields;
 
     // REST API session object
     SessionRest m_sessionRest;
@@ -100,15 +97,15 @@ public partial class CreateIncident : System.Web.UI.Page
     /// </summary>
     /// <param name="controls"></param>
     /// <param name="cph"></param>
-    void FindContentPlaceHolders(ControlCollection controls, List<ContentPlaceHolder> cph)
+    private void FindContentPlaceHolders(ControlCollection controls, List<ContentPlaceHolder> cph)
     {
-        for (int i = 0; i < controls.Count; ++i)
+        foreach (Control control in controls)
         {
-            if (controls[i] is ContentPlaceHolder)
-                cph.Add((ContentPlaceHolder)controls[i]);
+            if (control is ContentPlaceHolder)
+                cph.Add((ContentPlaceHolder)control);
 
-            if (controls[i].Controls.Count > 0)
-                FindContentPlaceHolders(controls[i].Controls, cph);
+            if (control.Controls.Count > 0)
+                FindContentPlaceHolders(control.Controls, cph);
         }
     }
 
@@ -118,16 +115,18 @@ public partial class CreateIncident : System.Web.UI.Page
 
         // create a hidden field to store the timezone offset needed to determine
         // the proper local date and time.
-        m_utcOffsetField = new HiddenField();
-        m_utcOffsetField.ID = '_' + FieldPrefix + "time_offset";
+        m_utcOffsetField = new HiddenField
+        {
+            ID = string.Format("{0}{1}time_offset", '_', FieldPrefix)
+        };
         Form.Controls.Add(m_utcOffsetField);
 
         // create JavaScript to capture the timezone offset
         ClientScript.RegisterStartupScript(m_utcOffsetField.GetType(), m_utcOffsetField.ID,
-            "document.getElementById(\"" + m_utcOffsetField.ClientID + "\").value=(new Date()).getTimezoneOffset();", true);
+            string.Format("document.getElementById(\"{0}\").value=(new Date()).getTimezoneOffset();", m_utcOffsetField.ClientID), true);
 
         // create credentials to connect to the REST API
-        AuthenticationDto credentials = new AuthenticationDto()
+        AuthenticationDto credentials = new AuthenticationDto
         {
             Email = ConfigurationManager.AppSettings["Co3UserAccount"],
             Password = ConfigurationManager.AppSettings["Co3UserPassword"]
@@ -147,27 +146,23 @@ public partial class CreateIncident : System.Web.UI.Page
             FullOrgDto org = orgRest.GetOrg();
 
             // load field data
-            m_fields = new SortedList<string, FieldDefDto>();
+            m_fields = new Dictionary<string, FieldDefDto>();
             FieldDefDto[] fieldTypes = m_sessionRest.GetFieldRest().GetFieldTypes(org.Id);
 
             // create a map of field names to fields for lookups later
-            for (int i = 0; i < fieldTypes.Length; ++i)
-                m_fields.Add(fieldTypes[i].Name, fieldTypes[i]);
+            foreach (FieldDefDto fieldDef in fieldTypes)
+                m_fields.Add(fieldDef.Name, fieldDef);
 
             // verify that the control on the page are of the expected
             // data type
-            WebControl ctrl;
-            m_instantiatedFields = new SortedList<string, WebControl>();
-            IEnumerator<KeyValuePair<string, FieldDefDto>> it = m_fields.GetEnumerator();
-            InputType inputType;
-            while (it.MoveNext())
+            m_instantiatedFields = new Dictionary<string, WebControl>();
+            foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
             {
-                ctrl = (WebControl)FindControl(FieldPrefix + it.Current.Key);
+                WebControl ctrl = (WebControl)FindControl(FieldPrefix + field.Key);
                 if (ctrl == null)
                     continue;
 
-                inputType = it.Current.Value.InputType;
-                switch (inputType)
+                switch (field.Value.InputType)
                 {
                     case InputType.DatePicker:
                     case InputType.DateTimePicker:
@@ -177,7 +172,7 @@ public partial class CreateIncident : System.Web.UI.Page
                         // these fields must be text boxes
                         if (!(ctrl is TextBox))
                             throw new ArgumentException(string.Format(Strings.InputTypeMismatch,
-                                FieldPrefix + it.Current.Key, ctrl.GetType().Name, "TextBox"));
+                                FieldPrefix + field.Key, ctrl.GetType().Name, "TextBox"));
                         break;
                     case InputType.Boolean:
                     case InputType.Select:
@@ -185,22 +180,22 @@ public partial class CreateIncident : System.Web.UI.Page
                         // these fields must support multiple choices single answer
                         if (!(ctrl is DropDownList) && !(ctrl is RadioButtonList))
                             throw new ArgumentException(string.Format(Strings.InputTypeMismatch,
-                                FieldPrefix + it.Current.Key, ctrl.GetType().Name, "DropDownList or RadioButtonList"));
+                                FieldPrefix + field.Key, ctrl.GetType().Name, "DropDownList or RadioButtonList"));
                         break;
                     case InputType.MultiSelect:
                         // these fields must support multiple choices multiple answers
                         if (!(ctrl is CheckBoxList))
                             throw new ArgumentException(string.Format(Strings.InputTypeMismatch,
-                                FieldPrefix + it.Current.Key, ctrl.GetType().Name, "CheckBoxList"));
+                                FieldPrefix + field.Key, ctrl.GetType().Name, "CheckBoxList"));
                         break;
                     case InputType.MultiSelectIncident:
                     case InputType.MultiSelectMembers:
                     case InputType.MultiSelectTask:
                     default:
-                        throw new NotImplementedException(it.Current.Key + " is not supported");
+                        throw new NotImplementedException(field.Key + " is not supported");
                 }
 
-                m_instantiatedFields.Add(it.Current.Key, (WebControl)ctrl);
+                m_instantiatedFields.Add(field.Key, ctrl);
             }
 
             if (!IsPostBack)
@@ -231,14 +226,14 @@ public partial class CreateIncident : System.Web.UI.Page
     private void HandleException(Exception ex)
     {
         string strMessage = null;
-        if (ex is System.Net.WebException && ((System.Net.WebException)ex).Response != null)
+        if (ex is WebException && ((WebException)ex).Response != null)
         {
-
-            using (Stream stream = ((System.Net.WebException)ex).Response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                strMessage = reader.ReadToEnd();
-            }
+            using (Stream stream = ((WebException)ex).Response.GetResponseStream())
+                if (stream != null)
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        strMessage = reader.ReadToEnd();
+                    }
         }
 
         OnHandleException(ex, strMessage);
@@ -250,45 +245,41 @@ public partial class CreateIncident : System.Web.UI.Page
     }
 
     // populate controls with data and specify whether they're required
-    void InitializeControls()
+    private void InitializeControls()
     {
-        FieldDefDto field;
-        WebControl ctrl;
-
         // CSS class added to required fields
         string cssRequired = ConfigurationManager.AppSettings["Co3CssRequired"];
-        IEnumerator<KeyValuePair<string, FieldDefDto>> it = m_fields.GetEnumerator();
-        while (it.MoveNext())
+
+        foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
         {
-            field = it.Current.Value;
-            ctrl = (WebControl)FindControl(FieldPrefix + it.Current.Key);
+            WebControl ctrl = (WebControl)FindControl(FieldPrefix + field.Key);
 
             // this field doesn't have a matching control on the page
             if (ctrl == null)
             {
                 // if the field is required, we can't continue.
-                if (field.Required == FieldRequired.Always)
-                    throw new MissingFieldException(FieldPrefix + it.Current.Key + " is required");
+                if (field.Value.Required == FieldRequired.Always)
+                    throw new MissingFieldException(string.Format("{0}{1} is required", FieldPrefix, field.Key));
 
                 continue;
             }
-            
+
             // add the tool tip
-            ctrl.ToolTip = field.Tooltip;
+            ctrl.ToolTip = field.Value.Tooltip;
 
             // add the required CSS class
-            if (field.Required == FieldRequired.Always && !string.IsNullOrEmpty(cssRequired))
-                ctrl.CssClass += " " + cssRequired;
-            
+            if (field.Value.Required == FieldRequired.Always && !string.IsNullOrEmpty(cssRequired))
+                ctrl.CssClass += string.Format(" {0}", cssRequired);
+
             // populate according to the field type
-            switch (field.InputType)
+            switch (field.Value.InputType)
             {
                 case InputType.Boolean:
-                    PopulateBoolean((ListControl)ctrl, field);
+                    PopulateBoolean((ListControl)ctrl, field.Value);
                     break;
                 case InputType.Text:
                 case InputType.TextArea:
-                    ctrl.Attributes["placeholder"] = field.Text;
+                    ctrl.Attributes["placeholder"] = field.Value.Text;
                     break;
                 case InputType.MultiSelect:
                 case InputType.MultiSelectIncident:
@@ -296,13 +287,13 @@ public partial class CreateIncident : System.Web.UI.Page
                 case InputType.MultiSelectTask:
                 case InputType.Select:
                 case InputType.SelectOwner:
-                    PopulateSelect((ListControl)ctrl, field);
+                    PopulateSelect((ListControl)ctrl, field.Value);
                     break;
             }
         }
     }
 
-    void PopulateBoolean(ListControl list, FieldDefDto field)
+    private void PopulateBoolean(ListControl list, FieldDefDto field)
     {
         list.Items.Add(new ListItem(string.IsNullOrEmpty(field.LabelTrue) ? Strings.Yes : field.LabelTrue, "1"));
         list.Items.Add(new ListItem(string.IsNullOrEmpty(field.LabelFalse) ? Strings.No : field.LabelFalse, "0"));
@@ -311,15 +302,14 @@ public partial class CreateIncident : System.Web.UI.Page
             list.Items.Add(new ListItem(Strings.Unknown, ""));
     }
 
-    void PopulateSelect(ListControl list, FieldDefDto field)
+    private void PopulateSelect(ListControl list, FieldDefDto field)
     {
-        ListItem item;
-        FieldDefValueDto value;
-        for (int i = 0; i < field.Values.Count; ++i)
+        foreach (FieldDefValueDto fieldDefValue in field.Values)
         {
-            value = field.Values[i];
-            item = new ListItem(value.Label, value.Value.ToString(), value.Enabled);
-            item.Selected = value.Default;
+            ListItem item = new ListItem(fieldDefValue.Label, fieldDefValue.Value.ToString(), fieldDefValue.Enabled)
+            {
+                Selected = fieldDefValue.Default
+            };
             list.Items.Add(item);
         }
     }
@@ -333,6 +323,7 @@ public partial class CreateIncident : System.Web.UI.Page
     public bool Co3CreateIncident(FullIncidentDataDto incident)
     {
         float.TryParse(m_utcOffsetField.Value, out m_utcOffset);
+
         if (incident == null)
             incident = new FullIncidentDataDto();
 
@@ -344,17 +335,19 @@ public partial class CreateIncident : System.Web.UI.Page
                 FullOrgDto org = orgRest.GetOrg();
                 incident.OrgId = org.Id;
                 incident.CreateDate = DateTime.UtcNow;
-                incident.OwnerId = m_sessionInfo.UserId;
-                incident.CreatorId = m_sessionInfo.UserId;
-                incident.Regulators = new RegulatorsDto();
-                incident.Regulators.Ids = new List<int>();
+                incident.OwnerId = new ObjectHandle { Id = m_sessionInfo.UserId };
+                incident.CreatorId = new ObjectHandle { Id = m_sessionInfo.UserId };
+                incident.Regulators = new RegulatorsDto
+                {
+                    Ids = new List<ObjectHandle>
+                    {
+                        // 149: Securities incident best practices regulator
+                        // This value must be hard coded in order to generate tasks
+                        new ObjectHandle { Id = 149 }
+                    }
+                };
 
-                // 149: Securities incident best practices regulator
-                // This value must be hard coded in order to generate tasks
-                incident.Regulators.Ids.Add(149);
-
-                IncidentDto incidentResult = m_sessionRest.GetIncidentRest()
-                    .CreateIncident(org.Id, incident, true, false);
+                IncidentDto incidentResult = m_sessionRest.GetIncidentRest().CreateIncident(org.Id, incident, true, false);
 
                 m_sessionRest.LogOut();
                 return true;
@@ -369,22 +362,16 @@ public partial class CreateIncident : System.Web.UI.Page
     }
 
     // collect data from the form
-    bool CollectData(IncidentDto incident)
+    private bool CollectData(IncidentDto incident)
     {
         bool bValidated = true;
-        PropertyInfo property;
-        JsonPropertyAttribute jsonProperty;
-        FieldDefDto field;
-        WebControl ctrl;
         object value;
 
         // match the incident object's properties against the fields/controls
         // on the page using reflection
-        PropertyInfo[] vecProperties = incident.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
-        for (int i = 0; i < vecProperties.Length; ++i)
+        foreach (PropertyInfo property in incident.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            property = vecProperties[i];
-            jsonProperty = property.GetCustomAttribute<JsonPropertyAttribute>();
+            JsonPropertyAttribute jsonProperty = property.GetCustomAttribute<JsonPropertyAttribute>();
             if (jsonProperty == null)
                 continue;
 
@@ -396,12 +383,12 @@ public partial class CreateIncident : System.Web.UI.Page
             if (!m_fields.ContainsKey(jsonProperty.PropertyName))
                 continue;
 
-            value = null;
-            ctrl = m_instantiatedFields[jsonProperty.PropertyName];
-            field = m_fields[jsonProperty.PropertyName];
-
             // get the value from the control
-            bValidated &= GetControlValue(ctrl, field, out value);
+            bValidated &= GetControlValue(
+                m_instantiatedFields[jsonProperty.PropertyName],
+                m_fields[jsonProperty.PropertyName],
+                property.PropertyType,
+                out value);
 
             // the value is not in the expected format
             if (!bValidated)
@@ -427,39 +414,42 @@ public partial class CreateIncident : System.Web.UI.Page
         }
 
         // process custom properties
-        IEnumerator<KeyValuePair<string, FieldDefDto>> it
-            = m_fields.GetEnumerator();
         if (incident.Properties == null)
-            incident.Properties = new SortedList<string, object>();
-        while (it.MoveNext())
+            incident.Properties = new Dictionary<string, object>();
+
+        foreach (KeyValuePair<string, FieldDefDto> field in m_fields)
         {
-            field = it.Current.Value;
-            if (field.Internal)
+            if (field.Value.Internal)
                 continue;
 
-            if (!m_instantiatedFields.ContainsKey(field.Name))
+            if (!m_instantiatedFields.ContainsKey(field.Value.Name))
                 continue;
 
             // we do not overwrite existing data
-            if (incident.Properties.ContainsKey(it.Current.Key))
+            if (incident.Properties.ContainsKey(field.Key))
                 continue;
 
-            bValidated &= GetControlValue(m_instantiatedFields[field.Name], field, out value);
+            bValidated &= GetControlValue(
+                m_instantiatedFields[field.Value.Name],
+                field.Value,
+                null,
+                out value);
             if (!bValidated)
                 return false;
 
             if (value != null)
-                incident.Properties.Add(it.Current.Key, value);
+                incident.Properties.Add(field.Key, value);
         }
 
         return bValidated;
     }
 
     // get the control's value
-    bool GetControlValue(WebControl ctrl, FieldDefDto field, out object value)
+    private bool GetControlValue(WebControl ctrl, FieldDefDto field, Type propertyType, out object value)
     {
         bool bParsed = true;
         value = null;
+
         switch (field.InputType)
         {
             case InputType.Boolean:
@@ -470,66 +460,66 @@ public partial class CreateIncident : System.Web.UI.Page
                 break;
             case InputType.DatePicker:
             case InputType.DateTimePicker:
-            {
-                DateTime dt;
-                if (!string.IsNullOrEmpty(((TextBox)ctrl).Text))
                 {
-                    bParsed = DateTime.TryParse(((TextBox)ctrl).Text, out dt);
-
-                    if (bParsed)
+                    if (!string.IsNullOrEmpty(((TextBox)ctrl).Text))
                     {
-                        // convert time to UTC because that's what the server expects
-                        dt = DateTime.SpecifyKind(dt.AddMinutes(m_utcOffset), DateTimeKind.Utc);
+                        DateTime dt;
+                        bParsed = DateTime.TryParseExact(((TextBox)ctrl).Text,
+                            "MM/dd/yyyy HH:mm",
+                            CultureInfo.CurrentCulture,
+                            DateTimeStyles.None,
+                            out dt);
 
-                        if (field.Internal)
+                        if (bParsed)
                         {
-                            // discovered date cannot be in the future
-                            if (field.Name == "discovered_date" && DateTime.UtcNow < dt)
-                                bParsed = false;
+                            // convert time to UTC because that's what the server expects
+                            dt = DateTime.SpecifyKind(dt.AddMinutes(m_utcOffset), DateTimeKind.Utc);
+
+                            if (field.Internal)
+                            {
+                                // occurred and discovered date cannot be in the future
+                                if (new[] { "start_date", "discovered_date" }.Contains(field.Name) && DateTime.UtcNow < dt)
+                                    bParsed = false;
+                                else
+                                    value = dt;
+                            }
                             else
-                                value = dt;
+                                value = Co3.Rest.JsonConverters.UnixTimeConverter.ToEpochTimeMsec(dt);
                         }
-                        else
-                            value = Co3.Rest.JsonConverters.UnixTimeConverter.ToEpochTimeMsec(dt);
                     }
-                }
-                else
-                    bParsed = field.Required != FieldRequired.Always;
+                    else
+                        bParsed = field.Required != FieldRequired.Always;
 
-                break;
-            }
-            case InputType.MultiSelect:
-            {
-                ListControl list = (ListControl)ctrl;
-                List<string> vecStrValues = new List<string>();
-
-                for (int j = 0; j < list.Items.Count; ++j)
-                {
-                    if (list.Items[j].Selected)
-                        vecStrValues.Add(list.Items[j].Value);
-                }
-
-                if (vecStrValues.Count == 0)
-                {
-                    // no selected values, determine if it's required
-                    bParsed = field.Required != FieldRequired.Always;
                     break;
                 }
-
-                // if the field should be a number, convert it to a number
-                if (field.Values[0].Value.GetType() == typeof(Int64)
-                    || field.Values[0].Value.GetType() == typeof(int))
+            case InputType.MultiSelect:
                 {
-                    List<int> vecIntValues = new List<int>();
-                    for (int j = 0; j < vecStrValues.Count; ++j)
-                        vecIntValues.Add(int.Parse(vecStrValues[j]));
+                    ListControl list = (ListControl)ctrl;
+                    List<string> vecStrValues = new List<string>();
 
-                    value = vecIntValues;
+                    for (int j = 0; j < list.Items.Count; ++j)
+                    {
+                        if (list.Items[j].Selected)
+                            vecStrValues.Add(list.Items[j].Value);
+                    }
+
+                    if (vecStrValues.Count == 0)
+                    {
+                        // no selected values, determine if it's required
+                        bParsed = field.Required != FieldRequired.Always;
+                        break;
+                    }
+
+                    // if the field should be a number, convert it to a number
+                    if (field.Values[0].Value is long
+                        || field.Values[0].Value is int)
+                    {
+                        value = vecStrValues.Select(int.Parse).ToList();
+                    }
+                    else
+                        value = vecStrValues;
+                    break;
                 }
-                else
-                    value = vecStrValues;
-                break;
-            }
             case InputType.MultiSelectIncident:
                 break;
             case InputType.MultiSelectMembers:
@@ -537,9 +527,9 @@ public partial class CreateIncident : System.Web.UI.Page
             case InputType.MultiSelectTask:
                 break;
             case InputType.Number:
-                int intValue;
                 if (!string.IsNullOrEmpty(((TextBox)ctrl).Text))
                 {
+                    int intValue;
                     bParsed = int.TryParse(((TextBox)ctrl).Text, out intValue);
                     if (bParsed)
                         value = intValue;
@@ -553,8 +543,8 @@ public partial class CreateIncident : System.Web.UI.Page
                 else
                 {
                     // convert to a number if the field is a number
-                    if (field.Values[0].Value.GetType() == typeof(Int64)
-                        || field.Values[0].Value.GetType() == typeof(int))
+                    if (field.Values[0].Value is long
+                        || field.Values[0].Value is int)
                     {
                         value = int.Parse(((ListControl)ctrl).SelectedValue);
                     }
@@ -575,14 +565,41 @@ public partial class CreateIncident : System.Web.UI.Page
                 throw new NotImplementedException();
         }
 
-        ctrl.CssClass = RemoveToken(ctrl.CssClass, "co3_invalid");
-        if (!bParsed)
-            ctrl.CssClass += " co3_invalid";
+        if (bParsed)
+        {
+            if (propertyType != null)
+            {
+                if (propertyType.Equals(typeof(TextContentDto)))
+                {
+                    value = new TextContentDto { Content = Convert.ToString(value), Format = TextFormat.Text };
+                }
+                else if (propertyType.Equals(typeof(ObjectHandle)))
+                {
+                    value = CreateObjectHandle(value);
+                }
+                else if (propertyType.Equals(typeof(List<ObjectHandle>)))
+                {
+                    value = ((IList)value).Cast<object>().Select(CreateObjectHandle).ToList();
+                }
+            }
+
+            ctrl.CssClass = RemoveToken(ctrl.CssClass, "co3_invalid");
+        }
 
         return bParsed;
     }
 
-    static string RemoveToken(string value, string token)
+    private ObjectHandle CreateObjectHandle(object obj)
+    {
+        ObjectHandle objectHandle = null;
+        if (obj is int)
+            objectHandle = new ObjectHandle { Id = obj };
+        if (obj is string)
+            objectHandle = new ObjectHandle { Name = Convert.ToString(obj) };
+        return objectHandle;
+    }
+
+    private static string RemoveToken(string value, string token)
     {
         string[] tokens = value.Split(' ');
         for (int i = 0; i < tokens.Length; ++i)
@@ -590,6 +607,6 @@ public partial class CreateIncident : System.Web.UI.Page
             if (tokens[i] == token)
                 Array.Clear(tokens, i, 1);
         }
-        return String.Join(" ", tokens);
+        return string.Join(" ", tokens);
     }
 }

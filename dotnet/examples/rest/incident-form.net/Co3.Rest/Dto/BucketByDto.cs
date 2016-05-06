@@ -34,18 +34,15 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for NamedEntityDTO
-    /// </summary>
-    public class DataSourceDto
+    public class BucketByDto
     {
-        [JsonProperty("id")]
-        public int Id { get; set; }
+        [JsonProperty("value")]
+        public string Value { get; set; }
 
-        [JsonProperty("enabled")]
-        public bool Enabled { get; set; }
+        [JsonProperty("label")]
+        public string Label { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("bucket_values")]
+        public List<string> BucketValues { get; set; }
     }
 }
