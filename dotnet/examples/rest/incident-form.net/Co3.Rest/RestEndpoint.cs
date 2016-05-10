@@ -34,8 +34,6 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Text;
 using System.Net;
-using Newtonsoft.Json.Serialization;
-using Co3.Rest.Dto;
 using Co3.Rest.JsonConverters;
 
 namespace Co3.Rest
@@ -97,7 +95,7 @@ namespace Co3.Rest
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Co3ApiUrl + endPointUrl);
             request.CookieContainer = new CookieContainer();
-            
+
             request.ContentType = "application/json";
             request.Method = method;
 
@@ -118,8 +116,10 @@ namespace Co3.Rest
             if (m_session != null)
             {
                 request.Headers.Add("X-sess-id", m_session.CsrfToken);
+                request.Headers.Add("handle_format", "objects");
+                request.Headers.Add("text_content_output_format", "objects_convert");
             }
-            
+
             if (postData == null)
                 request.ContentLength = 0;
             else
@@ -150,9 +150,9 @@ namespace Co3.Rest
                 = new Newtonsoft.Json.JsonSerializerSettings()
                 {
 
-                DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
-                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
-            };
+                    DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
+                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
+                };
 
             settings.Converters.Add(new UnixTimeConverter());
 

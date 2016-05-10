@@ -41,13 +41,16 @@ namespace Co3.Rest.Dto
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
-        [JsonProperty("default_days")]
-        public int DefaultDays { get; set; }
-
         [JsonProperty("name")]
         public string Name { get; set; }
 
         [JsonProperty("description")]
         public string Description { get; set; }
+
+        [JsonProperty("default_offset")]
+        public int DefaultOffset { get; set; }
+
+        [JsonProperty("default_units")]
+        public string DefaultUnits { get; set; }
     }
 }

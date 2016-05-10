@@ -75,7 +75,13 @@ namespace Co3.Rest.Dto
         MultiSelectMembers,
 
         [EnumMember(Value = "datetimepicker")]
-        DateTimePicker
+        DateTimePicker,
+
+        [EnumMember(Value = "select_user")]
+        SelectUser,
+
+        [EnumMember(Value = "none")]
+        None
     }
 
     [DataContract]
@@ -85,10 +91,10 @@ namespace Co3.Rest.Dto
         [JsonIgnore]
         Optional,
 
-        [EnumMember(Value = "ALWAYS")]
+        [EnumMember(Value = "always")]
         Always,
 
-        [EnumMember(Value = "CLOSE")]
+        [EnumMember(Value = "close")]
         Close
     }
 
@@ -96,62 +102,62 @@ namespace Co3.Rest.Dto
     [JsonConverter(typeof(StringEnumConverter))]
     public enum MethodName
     {
-        [EnumMember(Value = "CHANGED")]
+        [EnumMember(Value = "changed")]
         Changed,
-        
-        [EnumMember(Value = "EQUALS")]
+
+        [EnumMember(Value = "equals")]
         Equals,
-        
-        [EnumMember(Value = "CHANGED_TO")]
+
+        [EnumMember(Value = "changed_to")]
         ChangedTo,
-        
-        [EnumMember(Value = "OBJECT_REMOVED")]
+
+        [EnumMember(Value = "changed_from")]
+        ChangedFrom,
+
+        [EnumMember(Value = "object_removed")]
         ObjectRemoved,
-        
-        [EnumMember(Value = "OBJECT_ADDED")]
+
+        [EnumMember(Value = "object_added")]
         ObjectAdded,
-        
-        [EnumMember(Value = "VALUE_ADDED")]
+
+        [EnumMember(Value = "value_added")]
         ValueAdded,
-        
-        [EnumMember(Value = "CONTAINS")]
+
+        [EnumMember(Value = "contains")]
         Contains,
-        
-        [EnumMember(Value = "DUE_WITHIN")]
+
+        [EnumMember(Value = "due_within")]
         DueWithin,
-        
-        [EnumMember(Value = "OVERDUE_BY")]
+
+        [EnumMember(Value = "overdue_by")]
         OverdueBy,
-        
-        [EnumMember(Value = "GT")]
+
+        [EnumMember(Value = "gt")]
         Gt,
-        
-        [EnumMember(Value = "LT")]
+
+        [EnumMember(Value = "lt")]
         Lt,
-        
-        [EnumMember(Value = "GTE")]
+
+        [EnumMember(Value = "gte")]
         Gte,
-        
-        [EnumMember(Value = "LTE")]
+
+        [EnumMember(Value = "lte")]
         Lte,
-        
-        [EnumMember(Value = "CONTAINS_USER")]
+
+        [EnumMember(Value = "contains_user")]
         ContainsUser,
-        
-        [EnumMember(Value = "IN")]
-        In
+
+        [EnumMember(Value = "in")]
+        In,
+
+        [EnumMember(Value = "value_removed")]
+        ValueRemoved
     }
 
-    public class FieldDefDto
+    public class FieldDefDto : PartialFieldDefDto
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
-        [JsonProperty("text")]
-        public string Text { get; set; }
-
-        [JsonProperty("prefix")]
-        public string Prefix { get; set; }
+        [JsonProperty("type_id")]
+        public int TypeId { get; set; }
 
         [JsonProperty("tooltip")]
         public string Tooltip { get; set; }
@@ -190,17 +196,32 @@ namespace Co3.Rest.Dto
         [JsonProperty("perms")]
         public FieldDefPermsDto Perms { get; set; }
 
-        [JsonProperty("id")]
-        public int Id { get; set; }
-
         [JsonProperty("read_only")]
         public bool ReadOnly { get; set; }
+
+        [JsonProperty("operation_perms")]
+        public Dictionary<string, MethodNamePermsDto> OperationPerms { get; set; }
+
+        [JsonProperty("changeable")]
+        public bool Changeable { get; set; }
+
+        [JsonProperty("label_false")]
+        public string LabelFalse { get; set; }
 
         [JsonProperty("label_true")]
         public string LabelTrue { get; set; }
 
-        [JsonProperty("label_false")]
-        public string LabelFalse { get; set; }
+        [JsonProperty("rich_text")]
+        public bool RichText { get; set; }
+
+        [JsonProperty("export_key")]
+        public string ExportKey { get; set; }
+
+        [JsonProperty("order")]
+        public int Order { get; set; }
+
+        [JsonProperty("width")]
+        public int Width { get; set; }
 
         public override string ToString()
         {

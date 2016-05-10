@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Co3.Rest", "Co3.Rest\Co3.Rest.csproj", "{26C99A2A-961D-4B03-B95D-F4BDA2C9184E}"
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebSite", "http://localhost:3916", "{478D42EA-40FF-42B5-AAA9-79649395DF5F}"
 	ProjectSection(WebsiteProperties) = preProject
 		UseIISExpress = "true"
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5.1"
 		ProjectReferences = "{26c99a2a-961d-4b03-b95d-f4bda2c9184e}|Co3.Rest.dll;"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_3916"
 		Debug.AspNetCompiler.PhysicalPath = "WebSite\"
@@ -32,8 +32,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{5851607A-90B0-4F2B-9F0F-02CC06DC7703}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulkAddFieldValues", "BulkAddFieldValues\BulkAddFieldValues.csproj", "{766525A3-0014-4E1B-829A-B2FE5609B5F1}"

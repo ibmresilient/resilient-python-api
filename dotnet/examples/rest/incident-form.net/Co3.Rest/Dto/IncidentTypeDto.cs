@@ -55,12 +55,18 @@ namespace Co3.Rest.Dto
         public DateTime UpdateDate { get; set; }
 
         [JsonProperty("parent_id")]
-        public int ParentId { get; set; }
+        public ObjectHandle ParentId { get; set; }
 
         [JsonProperty("hidden")]
         public bool Hidden { get; set; }
 
         [JsonProperty("system")]
         public bool System { get; set; }
+
+        [JsonProperty("uuid")]
+        public string Uuid { get; set; }
+
+        [JsonProperty("export_key")]
+        public string ExportKey { get; set; }
     }
 }

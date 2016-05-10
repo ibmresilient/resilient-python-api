@@ -45,5 +45,8 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("group_ids")]
         public List<int> GroupIds { get; set; }
+
+        [JsonProperty("enabled")]
+        public bool Enabled { get; set; }
     }
 }

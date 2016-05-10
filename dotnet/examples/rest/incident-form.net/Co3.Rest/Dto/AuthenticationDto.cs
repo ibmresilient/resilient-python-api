@@ -40,5 +40,8 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("password")]
         public string Password { get; set; }
+
+        [JsonProperty("interactive")]
+        public bool Interactive { get; set; }
     }
 }

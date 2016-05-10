@@ -50,13 +50,13 @@ namespace Co3.Rest.Dto
         public string City { get; set; }
 
         [JsonProperty("creator_id")]
-        public int CreatorId { get; set; }
+        public ObjectHandle CreatorId { get; set; }
 
         [JsonProperty("creator")]
         public JustUserDto Creator { get; set; }
 
         [JsonProperty("crimestatus_id")]
-        public int CrimestatusId { get; set; }
+        public ObjectHandle CrimestatusId { get; set; }
 
         [JsonProperty("employee_involved")]
         public bool EmployeeInvolved { get; set; }
@@ -65,16 +65,16 @@ namespace Co3.Rest.Dto
         public DateTime EndDate { get; set; }
 
         [JsonProperty("exposure_dept_id")]
-        public int ExposureDeptId { get; set; }
+        public ObjectHandle ExposureDeptId { get; set; }
 
         [JsonProperty("exposure_individual_name")]
         public string ExposureIndividualName { get; set; }
 
         [JsonProperty("exposure_vendor_id")]
-        public int ExposureVendorId { get; set; }
+        public ObjectHandle ExposureVendorId { get; set; }
 
         [JsonProperty("incident_type_ids")]
-        public List<int> IncidentTypeIds { get; set; }
+        public List<ObjectHandle> IncidentTypeIds { get; set; }
 
         [JsonProperty("jurisdiction_name")]
         public string JurisdictionName { get; set; }
@@ -89,10 +89,10 @@ namespace Co3.Rest.Dto
         public DateTime StartDate { get; set; }
 
         [JsonProperty("state")]
-        public int State { get; set; }
+        public ObjectHandle State { get; set; }
 
         [JsonProperty("country")]
-        public int Country { get; set; }
+        public ObjectHandle Country { get; set; }
 
         [JsonProperty("zip")]
         public string Zip { get; set; }
@@ -107,7 +107,7 @@ namespace Co3.Rest.Dto
         public bool IsScenario { get; set; }
 
         [JsonProperty("members")]
-        public List<int> Members { get; set; }
+        public List<ObjectHandle> Members { get; set; }
 
         [JsonProperty("negative_pr_likely")]
         public bool NegativePrLikely { get; set; }
@@ -122,7 +122,7 @@ namespace Co3.Rest.Dto
         public TaskChangeDto TaskChanges { get; set; }
 
         [JsonProperty("exposure_type_id")]
-        public int ExposureTypeId { get; set; }
+        public ObjectHandle ExposureTypeId { get; set; }
 
         [JsonProperty("assessment")]
         public string Assessment { get; set; }
@@ -131,15 +131,15 @@ namespace Co3.Rest.Dto
         public bool DataCompromised { get; set; }
 
         [JsonProperty("nist_attack_vectors")]
-        public List<int> NistAttackVectors { get; set; }
+        public List<ObjectHandle> NistAttackVectors { get; set; }
 
         [JsonProperty("properties")]
-        public SortedList<string, object> Properties { get; set; }
+        public Dictionary<string, object> Properties { get; set; }
 
         [JsonProperty("resolution_id")]
-        public int ResolutionId { get; set; }
+        public ObjectHandle ResolutionId { get; set; }
 
         [JsonProperty("resolution_summary")]
-        public string ResolutionSummary { get; set; }
+        public TextContentDto ResolutionSummary { get; set; }
     }
 }

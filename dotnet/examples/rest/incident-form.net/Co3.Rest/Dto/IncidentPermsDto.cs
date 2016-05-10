@@ -33,10 +33,7 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    /// <summary>
-    /// Summary description for PermissionsDTO
-    /// </summary>
-    public class IncidentPermsDto
+    public class IncidentPermsDto : ObjectPermsDto
     {
         [JsonProperty("create_milestones")]
         public bool CreateMilestones { get; set; }
@@ -49,32 +46,5 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("list_artifacts")]
         public bool ListArtifacts { get; set; }
-
-        [JsonProperty("read")]
-        public bool Read { get; set; }
-
-        [JsonProperty("write")]
-        public bool Write { get; set; }
-
-        [JsonProperty("comment")]
-        public bool Comment { get; set; }
-
-        [JsonProperty("assign")]
-        public bool Assign { get; set; }
-
-        [JsonProperty("close")]
-        public bool Close { get; set; }
-
-        [JsonProperty("change_members")]
-        public bool ChangeMembers { get; set; }
-
-        [JsonProperty("attach_file")]
-        public bool AttachFile { get; set; }
-
-        [JsonProperty("read_attachments")]
-        public bool ReadAttachments { get; set; }
-
-        [JsonProperty("delete_attachments")]
-        public bool DeleteAttachments { get; set; }
     }
 }

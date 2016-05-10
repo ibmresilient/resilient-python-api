@@ -62,6 +62,24 @@ namespace Co3.Rest.Dto
         [JsonProperty("tasks_private")]
         public bool TasksPrivate { get; set; }
 
+        [JsonProperty("has_saml")]
+        public bool HasSaml { get; set; }
+
+        [JsonProperty("require_saml")]
+        public bool RequireSaml { get; set; }
+
+        [JsonProperty("twofactor_auth_domain")]
+        public TwoFactorAuthDomainDto TwoFactorAuthDomain { get; set; }
+
+        [JsonProperty("has_available_twofactor")]
+        public bool HasAvailableTwoFactorAuthDomains { get; set; }
+
+        [JsonProperty("authorized_ldap_group")]
+        public string AuthorizedLdapGroup { get; set; }
+
+        [JsonProperty("supports_ldap")]
+        public bool SupportsLdap { get; set; }
+
         public override string ToString()
         {
             return Name;

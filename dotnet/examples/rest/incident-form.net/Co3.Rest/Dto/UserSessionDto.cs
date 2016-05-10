@@ -30,6 +30,7 @@
  */
 
 using System.Collections.Generic;
+using System.Net;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
@@ -54,14 +55,17 @@ namespace Co3.Rest.Dto
         [JsonProperty("is_saml")]
         public bool IsSaml { get; set; }
 
-        [JsonProperty("saml_url")]
-        public string SamlUrl { get; set; }
+        [JsonProperty("saml_alias")]
+        public string SamlAlias { get; set; }
 
         [JsonProperty("csrf_token")]
         public string CsrfToken { get; set; }
 
         [JsonProperty("session_ip")]
         [JsonConverter(typeof(JsonConverters.IPAddressConverter))]
-        public System.Net.IPAddress SessionIp { get; set; }
+        public IPAddress SessionIp { get; set; }
+
+        [JsonProperty("is_ldap")]
+        public bool Ldap { get; set; }
     }
 }

@@ -44,7 +44,7 @@ namespace Co3.Rest.Dto
         public string Name { get; set; }
 
         [JsonProperty("regs")]
-        public SortedList<string, string> Regs { get; set; }
+        public Dictionary<string, string> Regs { get; set; }
 
         [JsonProperty("custom")]
         public bool Custom { get; set; }
@@ -53,10 +53,7 @@ namespace Co3.Rest.Dto
         public int IncId { get; set; }
 
         [JsonProperty("inc_owner_id")]
-        public int IncOwnerId { get; set; }
-
-        [JsonProperty("rollup_id")]
-        public int RollupId { get; set; }
+        public ObjectHandle IncOwnerId { get; set; }
 
         [JsonProperty("due_date")]
         public DateTime DueDate { get; set; }
@@ -65,7 +62,7 @@ namespace Co3.Rest.Dto
         public bool Required { get; set; }
 
         [JsonProperty("owner_id")]
-        public int OwnerId { get; set; }
+        public ObjectHandle OwnerId { get; set; }
 
         [JsonProperty("id")]
         public int Id { get; set; }
@@ -101,13 +98,13 @@ namespace Co3.Rest.Dto
         public string InstrText { get; set; }
 
         [JsonProperty("auto_task_id")]
-        public int AutoTaskId { get; set; }
+        public ObjectHandle AutoTaskId { get; set; }
 
         [JsonProperty("active")]
         public bool Active { get; set; }
 
         [JsonProperty("members")]
-        public List<int> Members { get; set; }
+        public List<ObjectHandle> Members { get; set; }
 
         [JsonProperty("perms")]
         public TaskPermsDto Perms { get; set; }
@@ -120,5 +117,14 @@ namespace Co3.Rest.Dto
 
         [JsonProperty("closed_date")]
         public DateTime ClosedDate { get; set; }
+
+        [JsonProperty("actions")]
+        public List<ActionInfoDto> Actions { get; set; }
+
+        [JsonProperty("phase_id")]
+        public ObjectHandle PhaseId { get; set; }
+
+        [JsonProperty("category_id")]
+        public ObjectHandle CategoryId { get; set; }
     }
 }

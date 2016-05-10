@@ -9,10 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Co3.Rest</RootNamespace>
     <AssemblyName>Co3.Rest</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
   </PropertyGroup>
@@ -24,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,11 +32,11 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -53,43 +53,68 @@
   <ItemGroup>
     <Compile Include="Co3Context.cs" />
     <Compile Include="ConstRest.cs" />
+    <Compile Include="Dto\ActionInfoDto.cs" />
+    <Compile Include="Dto\ActionsFrameworkInfoDto.cs" />
+    <Compile Include="Dto\AttachmentDto.cs" />
     <Compile Include="Dto\AuthenticationDto.cs" />
+    <Compile Include="Dto\BucketByDto.cs" />
     <Compile Include="Dto\CommentDto.cs" />
     <Compile Include="Dto\CommentPermsDto.cs" />
     <Compile Include="Dto\ConstDto.cs" />
     <Compile Include="Dto\CrimeStatusDto.cs" />
     <Compile Include="Dto\DataFormatTypeDto.cs" />
-    <Compile Include="Dto\DataSourceDto.cs" />
     <Compile Include="Dto\DataTypeDto.cs" />
-    <Compile Include="Dto\ExposureDepartmentDto.cs" />
-    <Compile Include="Dto\ExposureVendorDto.cs" />
     <Compile Include="Dto\FieldDefDto.cs" />
     <Compile Include="Dto\FieldDefPermsDto.cs" />
     <Compile Include="Dto\FieldDefValueDto.cs" />
     <Compile Include="Dto\FullIncidentDataDto.cs" />
     <Compile Include="Dto\FullOrgDto.cs" />
+    <Compile Include="Dto\FunctionTypeDto.cs" />
     <Compile Include="Dto\GeoDto.cs" />
     <Compile Include="Dto\GeoUnassignedDto.cs" />
     <Compile Include="Dto\GroupDto.cs" />
     <Compile Include="Dto\HarmStatusDto.cs" />
     <Compile Include="Dto\HipaaRiskDto.cs" />
+    <Compile Include="Dto\IncidentArtifactDto.cs" />
+    <Compile Include="Dto\IncidentArtifactLocationDto.cs" />
+    <Compile Include="Dto\IncidentArtifactPermsDto.cs" />
+    <Compile Include="Dto\IncidentArtifactPropertyDto.cs" />
     <Compile Include="Dto\IncidentArtifactTypeDto.cs" />
     <Compile Include="Dto\IncidentCommentDto.cs" />
     <Compile Include="Dto\IncidentCountsDto.cs" />
-    <Compile Include="Dto\IncidentDataTypesDto.cs" />
     <Compile Include="Dto\IncidentPiiDto.cs" />
     <Compile Include="Dto\IncidentStatusDto.cs" />
     <Compile Include="Dto\IncidentTypeDto.cs" />
     <Compile Include="Dto\IncSeverityDto.cs" />
     <Compile Include="Dto\IndustryDto.cs" />
+    <Compile Include="Dto\InputTypeDto.cs" />
+    <Compile Include="Dto\LatLngDto.cs" />
+    <Compile Include="Dto\LdapGroupMembersDto.cs" />
+    <Compile Include="Dto\MethodNamePermsDto.cs" />
     <Compile Include="Dto\ModifyUserDto.cs" />
+    <Compile Include="Dto\ObjectHandle.cs" />
     <Compile Include="Dto\ObjectPermsDto.cs" />
+    <Compile Include="Dto\PartialActionDto.cs" />
+    <Compile Include="Dto\PartialFieldDefDto.cs" />
+    <Compile Include="Dto\PartialFieldDefValueDto.cs" />
+    <Compile Include="Dto\PhasePermsDto.cs" />
+    <Compile Include="Dto\PivotConstDto.cs" />
+    <Compile Include="Dto\PivotFieldTypeDto.cs" />
     <Compile Include="Dto\RegulatorsDto.cs" />
+    <Compile Include="Dto\ServerVersionDto.cs" />
+    <Compile Include="Dto\TaskCategoryDto.cs" />
     <Compile Include="Dto\TaskCommentDto.cs" />
     <Compile Include="Dto\TaskDto.cs" />
     <Compile Include="Dto\TaskPermsDto.cs" />
+    <Compile Include="Dto\TextContentDto.cs" />
+    <Compile Include="Dto\ThreatHitDto.cs" />
+    <Compile Include="Dto\ThreatSourceTosDto.cs" />
+    <Compile Include="Dto\ThreatSourceTosElementDto.cs" />
+    <Compile Include="Dto\TimeUnitDto.cs" />
+    <Compile Include="Dto\TwoFactorAuthDomainDto.cs" />
     <Compile Include="Dto\TypeDto.cs" />
     <Compile Include="Dto\TypePropertiesDto.cs" />
+    <Compile Include="Dto\WhoisDto.cs" />
     <Compile Include="FieldRest.cs" />
     <Compile Include="IncidentRest.cs" />
     <Compile Include="JsonConverters\IPAddressConverter.cs" />
@@ -102,7 +127,6 @@
     <Compile Include="Dto\PermsDto.cs" />
     <Compile Include="Dto\PhaseDto.cs" />
     <Compile Include="Dto\RegulatorDto.cs" />
-    <Compile Include="Dto\RollupDto.cs" />
     <Compile Include="Dto\SessionOrgInfoDto.cs" />
     <Compile Include="Dto\StateDto.cs" />
     <Compile Include="Dto\TaskStatusDto.cs" />
@@ -124,13 +148,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
