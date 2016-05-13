@@ -108,7 +108,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         opts = super(AppArgumentParser, self).parse_args(args, namespace)
         if self.config:
             for section in self.config.sections():
-                items = {item.lower(): self.config.get(section, item) for item in self.config.options(section)}
+                items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
                 opts.update({section: items})
         return opts
 

@@ -59,7 +59,7 @@ setup(
         'requests>=2.6.0',
         'circuits',
         'pytz',
-        'keyring',
+        'keyring==5.4',
         'jinja2',
         'filelock>=2.0.5'
     ],

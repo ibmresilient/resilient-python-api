@@ -125,8 +125,8 @@ class ResilientComponent(BaseComponent):
         assert isinstance(opts, dict)
         self.opts = opts
         client = self.rest_client()
-        self._fields = {field["name"]: field for field in client.get("/types/incident/fields")}
-        self._action_fields = {field["name"]: field for field in client.get("/types/actioninvocation/fields")}
+        self._fields = dict((field["name"], field) for field in client.get("/types/incident/fields"))
+        self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
         # Check that decorated requirements are met
         callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
         for name, func in callables:
@@ -342,7 +342,7 @@ class Actions(ResilientComponent):
         rest_client = self.rest_client()
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
-        self.action_defs = {int(action["id"]): action for action in list_action_defs}
+        self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
 
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
@@ -399,7 +399,7 @@ class Actions(ResilientComponent):
             LOG.warn("Action %s is unknown.", action_id)
             # Refresh the list of action definitions
             list_action_defs = self.rest_client().get("/actions")["entities"]
-            self.action_defs = {int(action["id"]): action for action in list_action_defs}
+            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
             try:
                 defn = self.action_defs[action_id]
             except KeyError:
