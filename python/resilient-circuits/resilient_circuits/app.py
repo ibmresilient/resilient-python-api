@@ -205,7 +205,11 @@ def run(*args, **kwargs):
             # Debugger is useful to see all the messages (at DEBUG level)
             # Debugger(logger=logging.getLogger("debugger")).register(application)
             # Run until interrupted
-            application.run()
+            if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                LOG.info("Running circuits with Debugger enabled")
+                (application + Debugger()).run()
+            else:
+                application.run()
     except filelock.Timeout:
         # file is probably already locked
         print("Failed to aquire lock on lockfile - you may have another instance of Resilient Circuits running")
