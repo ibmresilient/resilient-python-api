@@ -50,7 +50,7 @@ long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version="25.0.2",  # __version__ in __init__.py
+    version="25.0.3",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
