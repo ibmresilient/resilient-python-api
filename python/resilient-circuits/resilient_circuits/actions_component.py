@@ -138,20 +138,20 @@ class ResilientComponent(BaseComponent):
                 try:
                     fielddef = self._fields[field_name]
                 except KeyError:
-                    raise Exception("Field '{}' (required by '{}') is not defined in the Resilient appliance.".format(field_name, name))
+                    raise Exception("Field '{0}' (required by '{1}') is not defined in the Resilient appliance.".format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
-                        raise Exception("Field '{}' (required by '{}') must be type '{}'.".format(field_name, name, input_type))
+                        raise Exception("Field '{0}' (required by '{1}') must be type '{2}'.".format(field_name, name, input_type))
             # Do all the action fields exist?
             fields = getattr(func, "required_action_fields", {})
             for (field_name, input_type) in fields.items():
                 try:
                     fielddef = self._action_fields[field_name]
                 except KeyError:
-                    raise Exception("Action field '{}' (required by '{}') is not defined in the Resilient appliance.".format(field_name, name))
+                    raise Exception("Action field '{0}' (required by '{1}') is not defined in the Resilient appliance.".format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
-                        raise Exception("Action field '{}' (required by '{}') must be type '{}'.".format(field_name, name, input_type))
+                        raise Exception("Action field '{0}' (required by '{1}') must be type '{2}'.".format(field_name, name, input_type))
 
     def rest_client(self):
         """Return a connected instance of the Resilient REST SimpleClient"""
@@ -504,8 +504,8 @@ class Actions(ResilientComponent):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
-            self.conn.subscribe(id='stomp-{}'.format(queue_name),
-                                destination="actions.{}.{}".format(self.org_id, queue_name),
+            self.conn.subscribe(id='stomp-{0}'.format(queue_name),
+                                destination="actions.{0}.{1}".format(self.org_id, queue_name),
                                 ack='client-individual')
 
     def _unsubscribe(self, queue_name):
@@ -513,7 +513,7 @@ class Actions(ResilientComponent):
         if self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Unsubscribe from message destination '%s'", queue_name)
             self.conn.unsubscribe(id='stomp-{}'.format(queue_name),
-                                  destination="actions.{}.{}".format(self.org_id, queue_name))
+                                  destination="actions.{0}.{1}".format(self.org_id, queue_name))
 
     @handler("started")
     def started(self, event, component):
