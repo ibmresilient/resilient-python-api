@@ -148,7 +148,12 @@ class App(Component):
         # Ignore syslog errors from message-too-long
         logging.raiseExceptions=False
 
-        logging.getLogger().setLevel(loglevel)
+        try:
+            numeric_level = getattr(logging, loglevel)
+            logging.getLogger().setLevel(numeric_level)
+        except AttributeError, e:
+            LOG.exception("Invalid logging level specified. Using INFO level")
+            logging.getLogger().setLevel(logging.INFO)
 
         logging.getLogger("stomp.py").setLevel(logging.WARN)
         file_handler = logging.handlers.RotatingFileHandler(LOG_PATH, maxBytes=10000000, backupCount=10)
