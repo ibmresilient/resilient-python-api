@@ -139,6 +139,7 @@ class App(Component):
             LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
             ComponentLoader(self.opts).register(self)
 
+
     def config_logging(self, logdir, loglevel,logfile):
         """ set up some logging """
         global LOG_PATH, LOG
@@ -214,7 +215,7 @@ def run(*args, **kwargs):
         # file is probably already locked
         print("Failed to aquire lock on lockfile - you may have another instance of Resilient Circuits running")
     except ValueError:
-        LOG.exception()
+        LOG.exception("ValueError Raised. Application not running.")
     #finally:
     #    LOG.info("App finished.")
 
