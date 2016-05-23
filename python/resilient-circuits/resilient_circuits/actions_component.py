@@ -512,7 +512,7 @@ class Actions(ResilientComponent):
         """Unsubscribe the STOMP queue"""
         if self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Unsubscribe from message destination '%s'", queue_name)
-            self.conn.unsubscribe(id='stomp-{}'.format(queue_name),
+            self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
                                   destination="actions.{0}.{1}".format(self.org_id, queue_name))
 
     @handler("started")
