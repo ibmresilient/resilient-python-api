@@ -108,7 +108,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         opts = super(AppArgumentParser, self).parse_args(args, namespace)
         if self.config:
             for section in self.config.sections():
-                items = {item.lower(): self.config.get(section, item) for item in self.config.options(section)}
+                items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
                 opts.update({section: items})
         return opts
 
@@ -139,6 +139,7 @@ class App(Component):
             LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
             ComponentLoader(self.opts).register(self)
 
+
     def config_logging(self, logdir, loglevel,logfile):
         """ set up some logging """
         global LOG_PATH, LOG
@@ -147,7 +148,12 @@ class App(Component):
         # Ignore syslog errors from message-too-long
         logging.raiseExceptions=False
 
-        logging.getLogger().setLevel(loglevel)
+        try:
+            numeric_level = getattr(logging, loglevel)
+            logging.getLogger().setLevel(numeric_level)
+        except AttributeError, e:
+            LOG.exception("Invalid logging level specified. Using INFO level")
+            logging.getLogger().setLevel(logging.INFO)
 
         logging.getLogger("stomp.py").setLevel(logging.WARN)
         file_handler = logging.handlers.RotatingFileHandler(LOG_PATH, maxBytes=10000000, backupCount=10)
@@ -214,7 +220,7 @@ def run(*args, **kwargs):
         # file is probably already locked
         print("Failed to aquire lock on lockfile - you may have another instance of Resilient Circuits running")
     except ValueError:
-        LOG.exception()
+        LOG.exception("ValueError Raised. Application not running.")
     #finally:
     #    LOG.info("App finished.")
 

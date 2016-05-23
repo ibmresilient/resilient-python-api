@@ -51,7 +51,7 @@ def get_resilient_client(opts):
         return resilient_client
 
     # Create SimpleClient for a REST connection to the Resilient services
-    url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
+    url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
     resilient_client = co3.SimpleClient(org_name=opts.get("org"),
                                         proxies=opts.get("proxy"),
                                         base_url=url,
