@@ -59,10 +59,17 @@ setup(
         'requests>=2.6.0',
         'circuits',
         'pytz',
-        'keyring==5.4',
         'jinja2',
         'filelock>=2.0.5'
     ],
+    extras_require={
+        ':python_version == "2.7"': [
+            'keyring'
+        ],
+        ':python_version == "2.6"': [
+            'keyring==5.4'
+        ],
+    },
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
     long_description=long_description,
