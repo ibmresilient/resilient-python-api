@@ -125,8 +125,8 @@ class ResilientComponent(BaseComponent):
         assert isinstance(opts, dict)
         self.opts = opts
         client = self.rest_client()
-        self._fields = {field["name"]: field for field in client.get("/types/incident/fields")}
-        self._action_fields = {field["name"]: field for field in client.get("/types/actioninvocation/fields")}
+        self._fields = dict((field["name"], field) for field in client.get("/types/incident/fields"))
+        self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
         # Check that decorated requirements are met
         callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
         for name, func in callables:
@@ -138,20 +138,20 @@ class ResilientComponent(BaseComponent):
                 try:
                     fielddef = self._fields[field_name]
                 except KeyError:
-                    raise Exception("Field '{}' (required by '{}') is not defined in the Resilient appliance.".format(field_name, name))
+                    raise Exception("Field '{0}' (required by '{1}') is not defined in the Resilient appliance.".format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
-                        raise Exception("Field '{}' (required by '{}') must be type '{}'.".format(field_name, name, input_type))
+                        raise Exception("Field '{0}' (required by '{1}') must be type '{2}'.".format(field_name, name, input_type))
             # Do all the action fields exist?
             fields = getattr(func, "required_action_fields", {})
             for (field_name, input_type) in fields.items():
                 try:
                     fielddef = self._action_fields[field_name]
                 except KeyError:
-                    raise Exception("Action field '{}' (required by '{}') is not defined in the Resilient appliance.".format(field_name, name))
+                    raise Exception("Action field '{0}' (required by '{1}') is not defined in the Resilient appliance.".format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
-                        raise Exception("Action field '{}' (required by '{}') must be type '{}'.".format(field_name, name, input_type))
+                        raise Exception("Action field '{0}' (required by '{1}') must be type '{2}'.".format(field_name, name, input_type))
 
     def rest_client(self):
         """Return a connected instance of the Resilient REST SimpleClient"""
@@ -342,7 +342,7 @@ class Actions(ResilientComponent):
         rest_client = self.rest_client()
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
-        self.action_defs = {int(action["id"]): action for action in list_action_defs}
+        self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
 
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
@@ -399,7 +399,7 @@ class Actions(ResilientComponent):
             LOG.warn("Action %s is unknown.", action_id)
             # Refresh the list of action definitions
             list_action_defs = self.rest_client().get("/actions")["entities"]
-            self.action_defs = {int(action["id"]): action for action in list_action_defs}
+            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
             try:
                 defn = self.action_defs[action_id]
             except KeyError:
@@ -504,16 +504,16 @@ class Actions(ResilientComponent):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
-            self.conn.subscribe(id='stomp-{}'.format(queue_name),
-                                destination="actions.{}.{}".format(self.org_id, queue_name),
+            self.conn.subscribe(id='stomp-{0}'.format(queue_name),
+                                destination="actions.{0}.{1}".format(self.org_id, queue_name),
                                 ack='client-individual')
 
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
         if self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Unsubscribe from message destination '%s'", queue_name)
-            self.conn.unsubscribe(id='stomp-{}'.format(queue_name),
-                                  destination="actions.{}.{}".format(self.org_id, queue_name))
+            self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
+                                  destination="actions.{0}.{1}".format(self.org_id, queue_name))
 
     @handler("started")
     def started(self, event, component):
