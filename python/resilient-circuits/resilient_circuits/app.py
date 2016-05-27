@@ -129,7 +129,9 @@ class App(Component):
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
-        LOG.info("Resilient user: %s", self.opts["email"])
+        LOG.info("Resilient user: %s", self.opts.get("email"))
+        LOG.info("Resilient org: %s", self.opts.get("org"))
+
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.

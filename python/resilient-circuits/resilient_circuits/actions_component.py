@@ -42,6 +42,7 @@ import ssl
 import json
 import re
 import random
+import datetime
 from functools import wraps
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
@@ -261,6 +262,11 @@ class ActionMessage(Event):
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")
 
+        self.timestamp = None
+        ts = headers.get("timestamp")
+        if ts is not None:
+            self.timestamp = datetime.datetime.utcfromtimestamp(float(ts)/1000)
+
         if source is None:
             # fallback
             self.displayname = "Unknown"
@@ -288,7 +294,7 @@ class ActionMessage(Event):
             channels = str(self.channels[0])
         else:
             channels = ""
-        return "<%s[%s] (%s)>" % (self.name, channels, self.action_id)
+        return "<%s[%s] (%s) %s>" % (self.name, channels, self.action_id, self.timestamp)
 
     def __getattr__(self, name):
         """Message attributes are made accessible as properties
