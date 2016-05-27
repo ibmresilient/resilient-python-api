@@ -42,11 +42,17 @@ import ssl
 import json
 import re
 import random
+import datetime
 from functools import wraps
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
 import logging
 LOG = logging.getLogger(__name__)
+
+
+STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
+STOMP_SERVER_HEARTBEAT = 10000      # 10-second heartbeat from server to client
+STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 
 
 def validate_cert(cert, hostname):
@@ -98,6 +104,7 @@ class defer(object):
     def __call__(self, func):
         """Called at decoration time, with function"""
         LOG.debug("@defer %s", func)
+
         @wraps(func)
         def decorated(itself, event, *args, **kwargs):
             LOG.debug("decorated")
@@ -256,6 +263,11 @@ class ActionMessage(Event):
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")
 
+        self.timestamp = None
+        ts = headers.get("timestamp")
+        if ts is not None:
+            self.timestamp = datetime.datetime.utcfromtimestamp(float(ts)/1000)
+
         if source is None:
             # fallback
             self.displayname = "Unknown"
@@ -283,7 +295,7 @@ class ActionMessage(Event):
             channels = str(self.channels[0])
         else:
             channels = ""
-        return "<%s[%s] (%s)>" % (self.name, channels, self.action_id)
+        return "<%s[%s] (%s) %s>" % (self.name, channels, self.action_id, self.timestamp)
 
     def __getattr__(self, name):
         """Message attributes are made accessible as properties
@@ -346,7 +358,11 @@ class Actions(ResilientComponent):
 
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
-        self.conn = stomp.Connection(host_and_ports=[(host_port)], try_loopback_connect=False)
+        self.conn = stomp.Connection(host_and_ports=[(host_port)],
+                                     heartbeats=(STOMP_CLIENT_HEARTBEAT, STOMP_SERVER_HEARTBEAT),
+                                     timeout=STOMP_TIMEOUT,
+                                     keepalive=True,
+                                     try_loopback_connect=False)
 
         # Give the STOMP library our TLS/SSL configuration.
         validator = validate_cert
@@ -371,6 +387,9 @@ class Actions(ResilientComponent):
                 """STOMP produced an error."""
                 self.component.on_stomp_error(headers, message)
 
+            def on_connecting(self, host_and_port):
+                pass
+
             def on_connected(self, headers, message):
                 """Client has connected to the STOMP server"""
                 self.component.on_stomp_connected(headers, message)
@@ -382,6 +401,14 @@ class Actions(ResilientComponent):
             def on_message(self, headers, message):
                 """STOMP produced a message."""
                 self.component.on_stomp_message(headers, message)
+
+            def on_heartbeat(self):
+                """STOMP heartbeat"""
+                pass
+
+            def on_heartbeat_timeout(self):
+                """STOMP heartbeat timed out"""
+                self.component.on_heartbeat_timeout()
 
         # When queued events happen, the listener shim will handle them
         self.conn.set_listener('', StompListener(self))
@@ -420,6 +447,12 @@ class Actions(ResilientComponent):
     def on_stomp_disconnected(self):
         """Client has disconnected from the STOMP server"""
         LOG.info("STOMP disconnected!")
+        # Set a timer to automatically reconnect
+        Timer(5, Event.create("reconnect")).register(self)
+
+    def on_heartbeat_timeout(self):
+        """Heartbeat timed out from the STOMP server"""
+        LOG.info("STOMP heartbeat timeout!")
         # Set a timer to automatically reconnect
         Timer(5, Event.create("reconnect")).register(self)
 
@@ -510,10 +543,13 @@ class Actions(ResilientComponent):
 
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
-        if self.conn.is_connected() and self.listeners[queue_name]:
-            LOG.info("Unsubscribe from message destination '%s'", queue_name)
-            self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
-                                  destination="actions.{0}.{1}".format(self.org_id, queue_name))
+        try:
+            if self.conn.is_connected() and self.listeners[queue_name]:
+                LOG.info("Unsubscribe from message destination '%s'", queue_name)
+                self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
+                                      destination="actions.{0}.{1}".format(self.org_id, queue_name))
+        except:
+            pass
 
     @handler("started")
     def started(self, event, component):

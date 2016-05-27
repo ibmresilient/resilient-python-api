@@ -42,17 +42,19 @@ from __future__ import print_function
 
 import logging
 import os
-import co3
+import filelock
 from logging.handlers import RotatingFileHandler
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions
 from circuits import Component, Debugger, Timer, Event, handler
 import resilient_circuits.keyring_arguments as keyring_arguments
 
-# deps needed for filelock
-# https://pypi.python.org/pypi/filelock
-import filelock
+
+# The run() method uses a file lock to prevent multiple simultaneous processes
+# running in the same directory.  You can override the lockfile name in the
+# (and so allow multiple) by setting APP_LOCK_FILE in the environment.
 APP_LOCK_FILE = os.environ.get("APP_LOCK_FILE", "resilient_circuits_lockfile")
+
 
 def log(log_level):
     logging.getLogger().setLevel(log_level)
@@ -79,7 +81,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
         default_log_dir = self.getopt("resilient", "logdir") or self.DEFAULT_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
-        default_log_file = self.getopt("resilient","logfile") or self.DEFAULT_LOG_FILE
+        default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
 
         self.add_argument("--stomp-port",
                           type=int,
@@ -102,7 +104,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           default=default_log_file,
                           help="File to log to")
 
-
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
         opts = super(AppArgumentParser, self).parse_args(args, namespace)
@@ -111,6 +112,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
                 opts.update({section: items})
         return opts
+
 
 # Main component for our application
 class App(Component):
@@ -125,9 +127,11 @@ class App(Component):
         # Read the configuration options
         self.opts = AppArgumentParser().parse_args()
 
-        self.config_logging(self.opts["logdir"], self.opts["loglevel"],self.opts['logfile'])
+        self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
-        LOG.info("Resilient user: %s", self.opts["email"])
+        LOG.info("Resilient user: %s", self.opts.get("email"))
+        LOG.info("Resilient org: %s", self.opts.get("org"))
+
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
@@ -139,14 +143,13 @@ class App(Component):
             LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
             ComponentLoader(self.opts).register(self)
 
-
-    def config_logging(self, logdir, loglevel,logfile):
+    def config_logging(self, logdir, loglevel, logfile):
         """ set up some logging """
         global LOG_PATH, LOG
         LOG_PATH = os.path.join(logdir, logfile)
 
         # Ignore syslog errors from message-too-long
-        logging.raiseExceptions=False
+        logging.raiseExceptions = False
 
         try:
             numeric_level = getattr(logging, loglevel)
@@ -155,8 +158,13 @@ class App(Component):
             LOG.exception("Invalid logging level specified. Using INFO level")
             logging.getLogger().setLevel(logging.INFO)
 
-        logging.getLogger("stomp.py").setLevel(logging.WARN)
-        file_handler = logging.handlers.RotatingFileHandler(LOG_PATH, maxBytes=10000000, backupCount=10)
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            logging.getLogger("stomp.py").setLevel(logging.DEBUG)
+        else:
+            # STOMP is too noisy by default
+            logging.getLogger("stomp.py").setLevel(logging.WARN)
+
+        file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000, backupCount=10)
         file_handler.setFormatter(logging.Formatter(self.FILE_LOG_FORMAT))
         logging.getLogger().addHandler(file_handler)
         syslog = logging.handlers.SysLogHandler()
@@ -167,8 +175,6 @@ class App(Component):
         logging.getLogger().addHandler(stderr)
 
         LOG = logging.getLogger(__name__)
-
-
 
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
@@ -218,10 +224,10 @@ def run(*args, **kwargs):
                 application.run()
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to aquire lock on lockfile - you may have another instance of Resilient Circuits running")
+        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
     except ValueError:
         LOG.exception("ValueError Raised. Application not running.")
-    #finally:
+    # finally:
     #    LOG.info("App finished.")
 
 
