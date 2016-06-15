@@ -154,7 +154,7 @@ class App(Component):
         try:
             numeric_level = getattr(logging, loglevel)
             logging.getLogger().setLevel(numeric_level)
-        except AttributeError, e:
+        except AttributeError as e:
             LOG.exception("Invalid logging level specified. Using INFO level")
             logging.getLogger().setLevel(logging.INFO)
 
