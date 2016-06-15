@@ -514,6 +514,7 @@ class Actions(ResilientComponent):
     @handler("unregistered")
     def unregistered(self, event, component, parent):
         """A component has unregistered.  Unsubscribe its message queue(s)."""
+        LOG.info("component %s has unregistered", component)
         for channel in event.channels:
             if not channel.startswith("actions."):
                 continue
@@ -554,13 +555,13 @@ class Actions(ResilientComponent):
     @handler("started")
     def started(self, event, component):
         """Started Event Handler"""
-        LOG.debug("Started")
+        LOG.debug("Actions Component Started")
         self.reconnect()
 
     @handler("stopped")
     def stopped(self, event, component):
         """Started Event Handler"""
-        LOG.debug("Stopped")
+        LOG.debug("Actions Component Stopped")
         if self.conn.is_connected():
             for queue_name in self.listeners:
                 self._unsubscribe(queue_name)

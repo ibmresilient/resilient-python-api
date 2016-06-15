@@ -42,11 +42,14 @@ from __future__ import print_function
 
 import logging
 import os
+import signal
 import filelock
 from logging.handlers import RotatingFileHandler
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions
 from circuits import Component, Debugger, Timer, Event, handler
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
 import resilient_circuits.keyring_arguments as keyring_arguments
 
 
@@ -65,6 +68,9 @@ APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
 
 
 application = None
+
+class restarting(Event):
+    """ request application restart """
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
@@ -103,6 +109,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_log_file,
                           help="File to log to")
+        self.add_argument("--restart_on_config_change",
+                          action="store_true",
+                          help="Monitor config file for changes and restart")
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
@@ -113,6 +122,41 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 opts.update({section: items})
         return opts
 
+
+
+class ConfigFileUpdateHandler(PatternMatchingEventHandler):
+    patterns = ["*" + os.path.basename(APP_CONFIG_FILE), ]
+
+    def __init__(self, app):
+        super(ConfigFileUpdateHandler, self).__init__()
+        self.app = app
+        
+    def on_modified(self, event):
+        """ reload data from config file and restart components """
+        LOG.info("configuration file has changed! restarting all components!")
+        self.app.stop_observer()
+        
+        # We need to shut things down in the right order
+        for component in self.app.components:
+            if component is not self.app.action_component and component is not self.app.component_loader:
+                LOG.info("stopping component %s", component)
+                component.unregister()
+                component.stop()
+
+        if self.app.component_loader:
+            for component in self.app.component_loader.components:
+                LOG.info("stopping component %s", component)
+                component.unregister()
+                component.stop()
+            self.app.component_loader.unregister()
+            self.app.component_loader.stop()
+
+        if self.app.action_component:
+            self.app.action_component.unregister()
+            self.app.action_component.stop()
+
+        self.app.fire(restarting())
+        
 
 # Main component for our application
 class App(Component):
@@ -125,8 +169,26 @@ class App(Component):
     def __init__(self, auto_load_components=True):
         super(App, self).__init__()
         # Read the configuration options
+        self.action_component = None
+        self.component_loader = None
         self.opts = AppArgumentParser().parse_args()
+        self.auto_load_components = auto_load_components
+        self.do_initialization()
 
+        if self.opts["resilient"].get("restart_on_config_change", False):
+            LOG.info("Monitoring config file for changes.")
+            event_handler = ConfigFileUpdateHandler(self)
+            self.observer = Observer()
+            config_dir = os.path.dirname(APP_CONFIG_FILE) or os.getcwd()
+            
+            self.observer.schedule(event_handler, path=config_dir, recursive=False)
+            self.observer.daemon=True
+            signal.signal(signal.SIGINT, self.stop_observer)
+            signal.signal(signal.SIGTERM, self.stop_observer)
+            self.observer.start()
+
+        
+    def do_initialization(self):
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
         LOG.info("Resilient user: %s", self.opts.get("email"))
@@ -135,13 +197,18 @@ class App(Component):
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
-        Actions(self.opts).register(self)
+        self.action_component = Actions(self.opts)
+        self.action_component.register(self)
 
         # Register a `loader` to dynamically load
         # all Circuits components in the 'componentsdir' directory
-        if auto_load_components:
+        if self.auto_load_components:
             LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
-            ComponentLoader(self.opts).register(self)
+            self.component_loader = ComponentLoader(self.opts)
+            self.component_loader.register(self)
+
+        LOG.info("THE COMPONENTS ARE:")
+        LOG.info(self.components)
 
     def config_logging(self, logdir, loglevel, logfile):
         """ set up some logging """
@@ -176,6 +243,13 @@ class App(Component):
 
         LOG = logging.getLogger(__name__)
 
+    def stop_observer(self):
+        """ stop monitoring config file for changes """
+        if self.observer:
+            self.observer.unschedule_all()
+            self.observer.stop()
+
+
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
         LOG.info("Components loaded")
@@ -197,8 +271,17 @@ class App(Component):
     def stopped(self, event, component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
+        self.stop_observer()
+        
+    def restarting(self, *args, **kwargs):
+        """ Restart Event Handler """
+        self.stop_observer()
+        logging.getLogger().handlers=[]
+        self.opts = AppArgumentParser().parse_args()
+        self.do_initialization()
 
 
+        
 def run(*args, **kwargs):
     """Main app"""
 
