@@ -175,7 +175,7 @@ class App(Component):
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
-        LOG.info("Ressilient user: %s", self.opts.get("email"))
+        LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
 
         self.restart_on_config_change = True if self.opts["resilient"].get("restart_on_config_change", "False").lower() in ("true", "yes", "y", "t", "1") else False
