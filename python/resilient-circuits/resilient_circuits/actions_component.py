@@ -351,6 +351,7 @@ class Actions(ResilientComponent):
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
+        self.reconnect_stomp = True
         rest_client = self.rest_client()
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
@@ -448,7 +449,8 @@ class Actions(ResilientComponent):
         """Client has disconnected from the STOMP server"""
         LOG.info("STOMP disconnected!")
         # Set a timer to automatically reconnect
-        Timer(5, Event.create("reconnect")).register(self)
+        if self.reconnect_stomp:
+            Timer(5, Event.create("reconnect")).register(self)
 
     def on_heartbeat_timeout(self):
         """Heartbeat timed out from the STOMP server"""
@@ -515,6 +517,11 @@ class Actions(ResilientComponent):
     def unregistered(self, event, component, parent):
         """A component has unregistered.  Unsubscribe its message queue(s)."""
         LOG.info("component %s has unregistered", component)
+        if isinstance(component, Actions):
+            LOG.info("disconnecting Actions component from stomp queue")
+            component.reconnect_stomp = False
+            component.disconnect()
+
         for channel in event.channels:
             if not channel.startswith("actions."):
                 continue
@@ -552,6 +559,14 @@ class Actions(ResilientComponent):
         except:
             pass
 
+    def disconnect(self):
+        """disconnect stomp connection"""
+        if self.conn.is_connected():
+            for queue_name in self.listeners:
+                self._unsubscribe(queue_name)
+            self.conn.disconnect()
+
+
     @handler("started")
     def started(self, event, component):
         """Started Event Handler"""
@@ -562,10 +577,7 @@ class Actions(ResilientComponent):
     def stopped(self, event, component):
         """Started Event Handler"""
         LOG.debug("Actions Component Stopped")
-        if self.conn.is_connected():
-            for queue_name in self.listeners:
-                self._unsubscribe(queue_name)
-            self.conn.disconnect()
+        self.disconnect()
 
     @handler("reconnect")
     def reconnect(self):
