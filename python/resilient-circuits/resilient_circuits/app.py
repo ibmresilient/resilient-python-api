@@ -46,7 +46,7 @@ import filelock
 from logging.handlers import RotatingFileHandler
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions
-from circuits import Component, Debugger, Event
+from circuits import Component, Debugger
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import resilient_circuits.keyring_arguments as keyring_arguments
@@ -67,9 +67,6 @@ APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
 
 
 application = None
-
-class restarting(Event):
-    """ request application restart """
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
