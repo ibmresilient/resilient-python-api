@@ -369,6 +369,10 @@ class Actions(ResilientComponent):
         cert_file = opts.get("cafile")
         if cert_file is None:
             validator = None
+        elif cert_file == "false":
+            LOG.warn("Unverified HTTPS requests (cafile=false).")
+            validator = None
+            cert_file = None
         self.conn.set_ssl(for_hosts=[host_port],
                           ca_certs=cert_file,
                           ssl_version=ssl.PROTOCOL_TLSv1,

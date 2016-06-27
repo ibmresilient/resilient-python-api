@@ -50,12 +50,18 @@ def get_resilient_client(opts):
     if resilient_client:
         return resilient_client
 
+    # Allow explicit setting "do not verify certificates"
+    verify = opts.get("cafile")
+    if verify == "false":
+        LOG.warn("Unverified HTTPS requests (cafile=false).")
+        verify = False
+
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
     resilient_client = co3.SimpleClient(org_name=opts.get("org"),
                                         proxies=opts.get("proxy"),
                                         base_url=url,
-                                        verify=opts.get("cafile") or True)
+                                        verify=verify)
 
     userinfo = resilient_client.connect(opts["email"], opts["password"])
 
