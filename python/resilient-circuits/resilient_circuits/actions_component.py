@@ -602,11 +602,12 @@ class Actions(ResilientComponent):
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        LOG.error("%s (%s): %s", repr(fevent), repr(etype), repr(value))
+        message = str(value or "Processing failed")
+        if traceback and isinstance(traceback, list):
+            message = message + "\n" + ("".join(traceback))
+        LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
         if fevent and isinstance(fevent, ActionMessage):
             fevent.stop()  # Stop further event processing
-            message = str(value or "Processing failed")
-            LOG.warn(message)
             status = 1
             headers = fevent.hdr()
             # Ack the message
