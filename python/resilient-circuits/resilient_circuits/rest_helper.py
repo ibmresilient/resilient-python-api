@@ -58,10 +58,6 @@ def get_resilient_client(opts):
 
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
-    verify = opts.get("cafile")
-    if not verify:
-        verify = True if opts.get("verify", "").upper() == "TRUE" else False
-    print "VERIFY IS " + str(verify)
     resilient_client = co3.SimpleClient(org_name=opts.get("org"),
                                         proxies=opts.get("proxy"),
                                         base_url=url,
