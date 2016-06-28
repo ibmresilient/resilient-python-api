@@ -47,8 +47,6 @@ from logging.handlers import RotatingFileHandler
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions
 from circuits import Component, Debugger
-from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
 import resilient_circuits.keyring_arguments as keyring_arguments
 
 
@@ -105,9 +103,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_log_file,
                           help="File to log to")
-        self.add_argument("--restart_on_config_change",
-                          action="store_true",
-                          help="Monitor config file for changes and restart")
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
@@ -117,40 +112,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
                 opts.update({section: items})
         return opts
-
-
-
-class ConfigFileUpdateHandler(PatternMatchingEventHandler):
-    """ Restarts application when config file is modified """
-    patterns = ["*" + os.path.basename(APP_CONFIG_FILE), ]
-
-    def __init__(self, app):
-        super(ConfigFileUpdateHandler, self).__init__()
-        self.app = app
-
-    def on_modified(self, event):
-        """ reload data from config file and restart components """
-        LOG.info("configuration file has changed! restarting all components!")
-        self.app._stop_observer()
-
-        # We need to shut things down in the right order
-        for component in self.app.components:
-            if component is not self.app.action_component and component is not self.app.component_loader:
-                LOG.info("stopping component %s", component)
-                component.unregister()
-                component.stop()
-
-        if self.app.component_loader:
-            for component in self.app.component_loader.components:
-                LOG.info("stopping component %s", component)
-                component.unregister()
-            self.app.component_loader.unregister()
-
-        if self.app.action_component:
-            self.app.action_component.unregister()
-
-        self.app.restarting = True
-        self.app.stop()
 
 
 # Main component for our application
@@ -166,7 +127,6 @@ class App(Component):
         # Read the configuration options
         self.action_component = None
         self.component_loader = None
-        self.restarting = False
         self.auto_load_components = auto_load_components
         self.do_initialization()
 
@@ -177,17 +137,6 @@ class App(Component):
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
-
-        self.restart_on_config_change = True if self.opts["resilient"].get("restart_on_config_change", "False").lower() in ("true", "yes", "y", "t", "1") else False
-        if self.restart_on_config_change:
-            LOG.info("Monitoring config file for changes.")
-            event_handler = ConfigFileUpdateHandler(self)
-            self.observer = Observer()
-            config_dir = os.path.dirname(APP_CONFIG_FILE) or os.getcwd()
-
-            self.observer.schedule(event_handler, path=config_dir, recursive=False)
-            self.observer.daemon=True
-            self.observer.start()
 
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
@@ -206,6 +155,7 @@ class App(Component):
         """ set up some logging """
         global LOG_PATH, LOG
         LOG_PATH = os.path.join(logdir, logfile)
+        LOG = logging.getLogger(__name__)
 
         # Ignore syslog errors from message-too-long
         logging.raiseExceptions = False
@@ -214,8 +164,8 @@ class App(Component):
             numeric_level = getattr(logging, loglevel)
             logging.getLogger().setLevel(numeric_level)
         except AttributeError as e:
-            LOG.exception("Invalid logging level specified. Using INFO level")
             logging.getLogger().setLevel(logging.INFO)
+            LOG.warning("Invalid logging level specified. Using INFO level")
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             self += Debugger()
@@ -234,15 +184,6 @@ class App(Component):
         stderr = logging.StreamHandler()
         stderr.setFormatter(logging.Formatter(self.STDERR_LOG_FORMAT))
         logging.getLogger().addHandler(stderr)
-
-        LOG = logging.getLogger(__name__)
-
-    def _stop_observer(self):
-        """ stop monitoring config file for changes """
-        if self.observer:
-            LOG.info("Stopping config file monitoring")
-            self.observer.unschedule_all()
-            self.observer.stop()
 
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
@@ -265,18 +206,6 @@ class App(Component):
     def stopped(self, event, component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
-        self._stop_observer()
-        LOG.info("In stopped handler for %s", event)
-        if self.restarting:
-            self.restarting = False
-            self._restart()
-            self.run()
-
-    def _restart(self):
-        """ Restart Event Handler """
-        LOG.info("Restarting")
-        logging.getLogger().handlers = []
-        self.do_initialization()
 
       
 def run(*args, **kwargs):
