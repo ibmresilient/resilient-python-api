@@ -46,6 +46,7 @@ import datetime
 from functools import wraps
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
+from signal import SIGINT, SIGTERM
 import logging
 LOG = logging.getLogger(__name__)
 
@@ -620,6 +621,14 @@ class Actions(ResilientComponent):
             correlation_id = headers['correlation-id']
             reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
             self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+
+    @handler("signal")
+    def _on_signal(self, signo, stack):
+        """We implement a default-event handler, which means we don't get default signal handling - add it back
+           (see FallBackSignalHandler in circuits/core/helpers.py)
+        """
+        if signo in [SIGINT, SIGTERM]:
+            raise SystemExit(0)
 
     @handler()
     def _on_event(self, event, *args, **kwargs):
