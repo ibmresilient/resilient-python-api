@@ -50,6 +50,12 @@ def get_resilient_client(opts):
     if resilient_client:
         return resilient_client
 
+    # Allow explicit setting "do not verify certificates"
+    verify = opts.get("cafile")
+    if verify == "false":
+        LOG.warn("Unverified HTTPS requests (cafile=false).")
+        verify = False
+
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
     verify = opts.get("cafile")

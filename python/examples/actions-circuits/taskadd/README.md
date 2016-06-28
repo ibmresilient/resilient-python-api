@@ -25,10 +25,10 @@ to its users list.
 ### Action Fields
 
 Several action fields need to be created.
-# `Text field` called "Task Name"
-# `Text area field` called "Task Instructions"
-# `Select field` called "Task Phase", whose options match your system's defined incident phases.
-'Text'.  
+* `Text field` called "Task Name"
+* `Text area field` called "Task Instructions"
+* `Select field` called "Task Phase", whose options match your organizations's defined incident phases.
+
 ![Manual Action Field](Documents/actionfield.png)
 ![Manual Action Field](Documents/actionfield1.png)
 ![Manual Action Field](Documents/actionfield2.png)
@@ -36,7 +36,9 @@ Several action fields need to be created.
 
 ### Manual Action
 
-Create a manual action named 'add_task', associated with object type "Incident".  Choose `add_task` as the message destination.  Add the 3 custom action fields created above to the layout.
+Create a manual action named 'add_task', associated with object type "Incident".
+Choose `add_task` as the message destination.  Add the 3 custom action fields
+created above to the layout.
 
 ![Custom Automatic Action](Documents/manualaction.png)
 
@@ -77,12 +79,16 @@ Then specify the path to this certificate in the config file.
 
 
 ## Running the example
-A generic script is used to run all resilient-circuits integrations.  Copy this run.py file from the examples/circuits directory into your project directory at the same level as the components directory and app.config file.
+A generic script is used to run all resilient-circuits integrations.  Copy this
+`run.py` file from the examples/circuits directory into your project directory
+at the same level as the `components` directory and `app.config` file.
 Run the custom action application with:
 
     python run.py
 
-The script will start running, and wait for messages.  When users in Resilient select the 'Add Task' action from the Actions dropdown, a new task will be added to the incident.
+The script will start running, and wait for messages.  When users in Resilient
+select the 'Add Task' action from the Actions dropdown, a new task will be added
+to the incident.
 
 ![Task List](Documents/results.png)
 
@@ -91,12 +97,15 @@ To stop the script running, interrupt it with `Ctrl+C` or kill the process.
 ## Extending the example
 
 ### Pre-configured tasks
-Rather than a single "add task" action with user-entered instructions, you could define a number of tasks with pre-conconfigured instructions available to be added via manual action.
+Rather than a single "add task" action with user-entered instructions, you could
+define a number of tasks with pre-configured instructions available to be
+added via manual action.
 
 ### Automatically add tasks
-This could be adjusted to be an automatic action to add pre-configured tasks based on whatever trigger conditions are applicable.  For example, add a specified task whenever a certain custom field is changed.
-
+This could be adjusted to be an automatic action to add pre-configured tasks
+based on whatever trigger conditions are applicable.  For example, add a
+specified task whenever a certain custom field is changed.
 
 ### More
-For more extensive integrations with stored data files, contact
+For more extensive integrations with tasks, contact
 [success@resilientsystems.com](success@resilientsystems.com).

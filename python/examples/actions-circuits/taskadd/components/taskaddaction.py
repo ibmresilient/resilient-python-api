@@ -70,19 +70,66 @@ class AddTaskAction(ResilientComponent):
         log.debug("KWARGS: " + repr(kwargs))
 
         try:
-            incident_id = event.message['incident']['id']
-            tname = kwargs["message"]["properties"].get('task_name')
-            task_instructions = kwargs["message"]["properties"].get('task_instructions')
-            task_phase_key = kwargs["message"]["properties"].get('task_phase')
-            task_phase = kwargs["message"]["type_info"].get(
+            message = event.message
+            incident = message['incident']
+            incident_id = message['incident']['id']
+
+            # Get the action-field values.  Note that task_phase is an ID.
+            tname = message["properties"].get('task_name')
+            task_instructions = message["properties"].get('task_instructions')
+            task_phase_key = message["properties"].get('task_phase')
+
+            # Resolve the label of the phase, from its ID,
+            # using the type-information supplied with the action message
+            task_phase = message["type_info"].get(
                 'actioninvocation', {}).get('fields', {}).get(
                     'task_phase', {}).get('values', {}).get(
                         str(task_phase_key), {}).get('label', None)
 
-            task = {"name": tname or '',
+            # We want to assign the task to the user who added it.
+            # Check that the user is a member of the incident.
+            # - either directly, as owner or in the members list
+            # - or indirectly, as a member of a group.
+            # (otherwise, adding or assigning the task will fail).
+
+            # Find the person who initiated the action
+            user_id = message["user"]["id"]
+
+            # User info includes a list of groups that user belongs to
+            client = self.rest_client()
+            user_info = client.get("/users/{}".format(user_id))
+            user_groups = set(user_info["group_ids"])
+
+            if incident["owner_id"] == user_id:
+                # OK, user is the incident owner
+                pass
+            elif incident["owner_id"] in user_groups:
+                # OK, user is a member of the incident owner group
+                pass
+            elif user_id in incident["members"]:
+                # OK, user is a member of the incident
+                pass
+            elif user_groups & set(incident["members"]):
+                # OK, user is in a group that is a member of the incident
+                pass
+            else:
+                # Update the incident membership, adding this user
+                def update_func(memberlist):
+                    """Callback for get/put, modifies the member list"""
+                    memberlist["members"].append(user_id)
+                    return memberlist
+
+                log.info("Adding user to member list")
+                members_uri = "/incidents/{}/members".format(incident_id)
+                client.get_put(members_uri, update_func,
+                               co3_context_token=event.context)
+
+            # Create the task
+            task = {"name": tname or '(unnamed)',
                     "instr_text": task_instructions or '',
                     "inc_id": incident_id,
-                    "phase_id": task_phase or ''}
+                    "phase_id": task_phase or None,
+                    "owner_id": user_id}
             log.debug("Submitting task %s", repr(task))
 
             posted_task = self.rest_client().post("/incidents/%s/tasks" %

@@ -1,0 +1,2 @@
+# Ignore Maven target directory in Git.
+target
