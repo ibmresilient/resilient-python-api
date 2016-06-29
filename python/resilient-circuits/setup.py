@@ -50,7 +50,7 @@ long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version="25.0.3",  # __version__ in __init__.py
+    version="26.0.0",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
@@ -60,8 +60,7 @@ setup(
         'circuits',
         'pytz',
         'jinja2',
-        'filelock>=2.0.5',
-        'watchdog'
+        'filelock>=2.0.5'
     ],
     extras_require={
         ':python_version == "2.7"': [

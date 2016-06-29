@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
@@ -27,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "25.0.2"
+__version__ = "26.0.0"
 
 from .co3 import SimpleClient
 from .co3argparse import ArgumentParser
