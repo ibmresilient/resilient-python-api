@@ -46,12 +46,13 @@ import datetime
 from functools import wraps
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
+from signal import SIGINT, SIGTERM
 import logging
 LOG = logging.getLogger(__name__)
 
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
-STOMP_SERVER_HEARTBEAT = 10000      # 10-second heartbeat from server to client
+STOMP_SERVER_HEARTBEAT = 40000      # 40-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 
 
@@ -351,6 +352,7 @@ class Actions(ResilientComponent):
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
+        self.reconnect_stomp = True
         rest_client = self.rest_client()
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
@@ -452,7 +454,8 @@ class Actions(ResilientComponent):
         """Client has disconnected from the STOMP server"""
         LOG.info("STOMP disconnected!")
         # Set a timer to automatically reconnect
-        Timer(5, Event.create("reconnect")).register(self)
+        if self.reconnect_stomp:
+            Timer(5, Event.create("reconnect")).register(self)
 
     def on_heartbeat_timeout(self):
         """Heartbeat timed out from the STOMP server"""
@@ -518,6 +521,12 @@ class Actions(ResilientComponent):
     @handler("unregistered")
     def unregistered(self, event, component, parent):
         """A component has unregistered.  Unsubscribe its message queue(s)."""
+        LOG.info("component %s has unregistered", component)
+        if isinstance(component, Actions):
+            LOG.info("disconnecting Actions component from stomp queue")
+            component.reconnect_stomp = False
+            component.disconnect()
+
         for channel in event.channels:
             if not channel.startswith("actions."):
                 continue
@@ -555,20 +564,25 @@ class Actions(ResilientComponent):
         except:
             pass
 
+    def disconnect(self):
+        """disconnect stomp connection"""
+        if self.conn.is_connected():
+            for queue_name in self.listeners:
+                self._unsubscribe(queue_name)
+            self.conn.disconnect()
+
+
     @handler("started")
     def started(self, event, component):
         """Started Event Handler"""
-        LOG.debug("Started")
+        LOG.debug("Actions Component Started")
         self.reconnect()
 
     @handler("stopped")
     def stopped(self, event, component):
         """Started Event Handler"""
-        LOG.debug("Stopped")
-        if self.conn.is_connected():
-            for queue_name in self.listeners:
-                self._unsubscribe(queue_name)
-            self.conn.disconnect()
+        LOG.debug("Actions Component Stopped")
+        self.disconnect()
 
     @handler("reconnect")
     def reconnect(self):
@@ -589,11 +603,12 @@ class Actions(ResilientComponent):
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        LOG.error("%s (%s): %s", repr(fevent), repr(etype), repr(value))
+        message = str(value or "Processing failed")
+        if traceback and isinstance(traceback, list):
+            message = message + "\n" + ("".join(traceback))
+        LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
         if fevent and isinstance(fevent, ActionMessage):
             fevent.stop()  # Stop further event processing
-            message = str(value or "Processing failed")
-            LOG.warn(message)
             status = 1
             headers = fevent.hdr()
             # Ack the message
@@ -606,6 +621,14 @@ class Actions(ResilientComponent):
             correlation_id = headers['correlation-id']
             reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
             self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+
+    @handler("signal")
+    def _on_signal(self, signo, stack):
+        """We implement a default-event handler, which means we don't get default signal handling - add it back
+           (see FallBackSignalHandler in circuits/core/helpers.py)
+        """
+        if signo in [SIGINT, SIGTERM]:
+            raise SystemExit(0)
 
     @handler()
     def _on_event(self, event, *args, **kwargs):

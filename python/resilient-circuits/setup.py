@@ -60,7 +60,8 @@ setup(
         'circuits',
         'pytz',
         'jinja2',
-        'filelock>=2.0.5'
+        'filelock>=2.0.5',
+        'watchdog'
     ],
     extras_require={
         ':python_version == "2.7"': [

@@ -131,6 +131,7 @@ class SimpleClient(object):
         _raise_if_error(response)
         session = json.loads(response.text)
         orgs = session['orgs']
+        selected_org = None
         if orgs is None or len(orgs) == 0:
             raise Exception("User is a member of no orgs")
         elif self.org_name:
@@ -139,15 +140,26 @@ class SimpleClient(object):
                 org_name = org['name']
                 org_names.append(org_name)
                 if org_name == self.org_name:
-                    self.org_id = org['id']
-            if self.org_id is None:
-                msg = "The user is not a member of the specified organization '{0}'."
-                raise Exception(msg.format(self.org_name, ', '.join(org_names)))
+                    selected_org = org
         else:
             org_names = [org['name'] for org in orgs]
             msg = "Please specify the organization name to which you want to connect.  " + \
                   "The user is a member of the following organizations: '{0}'"
             raise Exception(msg.format("', '".join(org_names)))
+
+        if selected_org is None:
+            msg = "The user is not a member of the specified organization '{0}'."
+            raise Exception(msg.format(self.org_name, ', '.join(org_names)))
+
+        if not selected_org.get("enabled", False):
+            msg = "This organization is not accessible to you.\n\n" + \
+                  "This can occur because of one of the following:\n\n" + \
+                  "The organization does not allow access from your current IP address.\n" + \
+                  "The organization requires authentication with a different provider than you are currently using.\n" + \
+                  "Your IP address is {0}"
+            raise Exception(msg.format(session["session_ip"]))
+
+        self.org_id = selected_org['id']
 
         # set the X-sess-id token, which is used to prevent CSRF attacks.
         self.headers['X-sess-id'] = session['csrf_token']

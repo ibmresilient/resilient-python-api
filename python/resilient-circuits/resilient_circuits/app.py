@@ -46,7 +46,7 @@ import filelock
 from logging.handlers import RotatingFileHandler
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions
-from circuits import Component, Debugger, Timer, Event, handler
+from circuits import Component, Debugger
 import resilient_circuits.keyring_arguments as keyring_arguments
 
 
@@ -125,6 +125,12 @@ class App(Component):
     def __init__(self, auto_load_components=True):
         super(App, self).__init__()
         # Read the configuration options
+        self.action_component = None
+        self.component_loader = None
+        self.auto_load_components = auto_load_components
+        self.do_initialization()
+
+    def do_initialization(self):
         self.opts = AppArgumentParser().parse_args()
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
@@ -135,18 +141,21 @@ class App(Component):
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
-        Actions(self.opts).register(self)
+        self.action_component = Actions(self.opts)
+        self.action_component.register(self)
 
         # Register a `loader` to dynamically load
         # all Circuits components in the 'componentsdir' directory
-        if auto_load_components:
+        if self.auto_load_components:
             LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
-            ComponentLoader(self.opts).register(self)
+            self.component_loader = ComponentLoader(self.opts)
+            self.component_loader.register(self)
 
     def config_logging(self, logdir, loglevel, logfile):
         """ set up some logging """
         global LOG_PATH, LOG
         LOG_PATH = os.path.join(logdir, logfile)
+        LOG = logging.getLogger(__name__)
 
         # Ignore syslog errors from message-too-long
         logging.raiseExceptions = False
@@ -155,16 +164,18 @@ class App(Component):
             numeric_level = getattr(logging, loglevel)
             logging.getLogger().setLevel(numeric_level)
         except AttributeError as e:
-            LOG.exception("Invalid logging level specified. Using INFO level")
             logging.getLogger().setLevel(logging.INFO)
+            LOG.warning("Invalid logging level specified. Using INFO level")
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            self += Debugger()
             logging.getLogger("stomp.py").setLevel(logging.DEBUG)
         else:
             # STOMP is too noisy by default
             logging.getLogger("stomp.py").setLevel(logging.WARN)
 
-        file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000, backupCount=10)
+        file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000,
+                                           backupCount=10)
         file_handler.setFormatter(logging.Formatter(self.FILE_LOG_FORMAT))
         logging.getLogger().addHandler(file_handler)
         syslog = logging.handlers.SysLogHandler()
@@ -173,8 +184,6 @@ class App(Component):
         stderr = logging.StreamHandler()
         stderr.setFormatter(logging.Formatter(self.STDERR_LOG_FORMAT))
         logging.getLogger().addHandler(stderr)
-
-        LOG = logging.getLogger(__name__)
 
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
@@ -198,7 +207,7 @@ class App(Component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
 
-
+      
 def run(*args, **kwargs):
     """Main app"""
 
@@ -212,16 +221,9 @@ def run(*args, **kwargs):
         # attempt to lock file, wait 1 second for lock
         with lock.acquire(timeout=1):
             assert lock.is_locked
-
             application = App(*args, **kwargs)
-            # Debugger is useful to see all the messages (at DEBUG level)
-            # Debugger(logger=logging.getLogger("debugger")).register(application)
-            # Run until interrupted
-            if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-                LOG.info("Running circuits with Debugger enabled")
-                (application + Debugger()).run()
-            else:
-                application.run()
+            application.run()
+
     except filelock.Timeout:
         # file is probably already locked
         print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
