@@ -52,7 +52,7 @@ LOG = logging.getLogger(__name__)
 
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
-STOMP_SERVER_HEARTBEAT = 10000      # 10-second heartbeat from server to client
+STOMP_SERVER_HEARTBEAT = 40000      # 40-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 
 
