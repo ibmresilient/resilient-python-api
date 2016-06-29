@@ -89,10 +89,6 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
 class AppRestartable(App):
     """Our main app component, which sets up the Resilient services and other components"""
 
-    def __init__(self, auto_load_components=True):
-        super(AppRestartable, self).__init__()
-        self.do_initialize_watchdog()
-
     def do_initialize_watchdog(self):
         """Initialize the configuration file watchdog"""
         self.restarting = False
@@ -102,16 +98,18 @@ class AppRestartable(App):
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
         config_dir = os.path.dirname(APP_CONFIG_FILE) or os.getcwd()
-
         self.observer.schedule(event_handler, path=config_dir, recursive=False)
         self.observer.daemon = True
         self.observer.start()
 
-    def stopped(self, event, component):
+    def started(self, component):
+        LOG.info("App Started %s", str(component))
+        self.do_initialize_watchdog()
+
+    def stopped(self, component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
         self._stop_observer()
-        LOG.info("In stopped handler for %s", event)
         if self.restarting:
             self.restarting = False
             self._restart()
@@ -130,7 +128,6 @@ class AppRestartable(App):
         LOG.info("Restarting")
         logging.getLogger().handlers = []
         self.do_initialization()
-        self.do_initialize_watchdog()
 
 
 def run(*args, **kwargs):
