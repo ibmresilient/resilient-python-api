@@ -37,6 +37,8 @@ from __future__ import print_function
 import logging
 import os
 import filelock
+from circuits.core.handlers import handler
+from circuits import Event, Timer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
@@ -51,6 +53,9 @@ LOG = logging.getLogger(__name__)
 def log(log_level):
     logging.getLogger().setLevel(log_level)
 
+class begin_restart(Event):
+    pass
+    
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
@@ -66,28 +71,28 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         self.app._stop_observer()
 
         # We need to shut things down in the right order
-        for component in self.app.components:
-            if component is not self.app.action_component and component is not self.app.component_loader:
-                LOG.info("stopping component %s", component)
-                component.unregister()
-                component.stop()
-
         if self.app.component_loader:
-            for component in self.app.component_loader.components:
-                LOG.info("stopping component %s", component)
-                component.unregister()
+            # This will unregister all the components registered to it as well
+            LOG.info("unregistering component %s", self.app.component_loader)
             self.app.component_loader.unregister()
 
         if self.app.action_component:
+            LOG.info("unregistering component %s", self.app.action_component)
             self.app.action_component.unregister()
 
-        self.app.restarting = True
-        self.app.stop()
-
+        for component in self.app.components:
+            # The Actions component and the Debugger, if attached
+            if component is not self.app.action_component and component is not self.app.component_loader:
+                LOG.info("unregistering component %s", component)
+                component.unregister()
 
 # Main component for our application
 class AppRestartable(App):
     """Our main app component, which sets up the Resilient services and other components"""
+
+    def __init__(self, *args, **kwargs):
+        super(AppRestartable, self).__init__(*args, **kwargs)
+        self.component_collection = []
 
     def do_initialize_watchdog(self):
         """Initialize the configuration file watchdog"""
@@ -102,8 +107,19 @@ class AppRestartable(App):
         self.observer.daemon = True
         self.observer.start()
 
+    def begin_restart(self):
+        LOG.info("Beginning Restart Procedure")
+        self.restarting = True
+        self.stop()
+
     def started(self, component):
         LOG.info("App Started %s", str(component))
+
+    def load_all_success(self, event):
+        for component in self.components:
+            LOG.debug("Adding %s to restartable app components list", str(component))
+            self.component_collection.append(component)
+                    
         self.do_initialize_watchdog()
 
     def stopped(self, component):
@@ -127,7 +143,23 @@ class AppRestartable(App):
         """ Restart Event Handler """
         LOG.info("Restarting")
         logging.getLogger().handlers = []
+        self.component_collection = []
         self.do_initialization()
+
+    @handler("unregistered")
+    def unregistered(self, component, manager):
+        """ Handler for unregistered notificatons for all App subcomponents """
+        LOG.info("%s has unregistered from %s.", str(component), str(manager))
+
+        if component in self.component_collection:
+            self.component_collection.remove(component)
+
+            if len(self.component_collection) == 0:
+                # All are stopped
+                self.fire(begin_restart())
+            else:
+                LOG.debug("Still waiting on %s to stop.", self.component_collection)
+
 
 
 def run(*args, **kwargs):
