@@ -74,6 +74,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_LOG_DIR = 'log'
     DEFAULT_LOG_LEVEL = 'INFO'
     DEFAULT_LOG_FILE = 'app.log'
+    DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self):
         super(AppArgumentParser, self).__init__(config_file=APP_CONFIG_FILE)
@@ -82,6 +83,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_log_dir = self.getopt("resilient", "logdir") or self.DEFAULT_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
+        default_no_prompt_password = self.getopt("resilient", "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
+        default_no_prompt_password = default_no_prompt_password.lower()[0] in ("1", "t", "y")
 
         self.add_argument("--stomp-port",
                           type=int,
@@ -103,6 +106,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_log_file,
                           help="File to log to")
+        self.add_argument("--no-prompt-password",
+                          type=bool,
+                          default=default_no_prompt_password,
+                          help="Never prompt for password on stdin")
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
