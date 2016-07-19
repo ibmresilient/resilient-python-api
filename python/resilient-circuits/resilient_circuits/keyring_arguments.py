@@ -44,7 +44,7 @@ LOG = logging.getLogger(__name__)
 class ArgumentParser(co3.ArgumentParser):
     """An argument parser that implements password lookup from keyring"""
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args(self, args=None, namespace=None, prompt_password=True):
         """Parse arguments, and resolve password-based values from keyring"""
         # Bypass the co3 behavior, go to its super
         args = super(co3.ArgumentParser, self).parse_args(args, namespace)
@@ -52,7 +52,7 @@ class ArgumentParser(co3.ArgumentParser):
         args = ConfigDict(opts)
 
         password = args.password
-        while not password:
+        while (not password) and (not args.no_prompt_password):
             password = getpass.getpass()
         args["password"] = password
 
@@ -104,7 +104,7 @@ def _parse_parameters(names, options):
         val = options[key]
         if isinstance(val, dict):
             val = _parse_parameters(names + (key,), val)
-        if isinstance(val, str) and val[0] == "^":
+        if isinstance(val, str) and len(val) > 1 and val[0] == "^":
             val = val[1:]
             service = ".".join(names) or "_"
             LOG.debug("keyring get('%s', '%s')", service, val)

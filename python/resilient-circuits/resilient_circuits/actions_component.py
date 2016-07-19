@@ -504,7 +504,7 @@ class Actions(ResilientComponent):
     def registered(self, event, component, parent):
         """A component has registered.  Subscribe to its message queue(s)."""
         for channel in event.channels:
-            if not channel.startswith("actions."):
+            if not str(channel).startswith("actions."):
                 continue
             LOG.info("Component %s registered to %s", str(component), channel)
             queue_name = channel.partition(".")[2]
@@ -528,7 +528,7 @@ class Actions(ResilientComponent):
             component.disconnect()
 
         for channel in event.channels:
-            if not channel.startswith("actions."):
+            if not str(channel).startswith("actions."):
                 continue
             LOG.info("Component %s unregistered from %s", str(component), channel)
             queue_name = channel.partition(".")[2]
