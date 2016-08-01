@@ -83,7 +83,7 @@ class ComponentLoader(Loader):
         self.pending_components = []
         self.finished = False
 
-    @handler("started")
+    @handler("started", channel="*")
     def started(self, event, component):
         """Started Event Handler"""
         LOG.debug("Started")
