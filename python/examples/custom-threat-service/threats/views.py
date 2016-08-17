@@ -101,7 +101,9 @@ class RetrieveView(APIView):  # pylint: disable=too-few-public-methods
         request_id = request_id.rstrip('/')
         context = SearchContext.load(request_id)
         if context is None:
-            return Response({"error": "'{}' was not found".format(request_id)}, status.HTTP_404_NOT_FOUND)
+            # We return "no content" because we have none
+            # 404 will cause the custom threat service caller to stop processing
+            return Response({"error": "'{}' was not found".format(request_id)}, status.HTTP_204_NO_CONTENT)
 
         try:
             matching_threats = search_artifacts(context.type, context.value)
