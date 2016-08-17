@@ -580,7 +580,7 @@ class APIClientTest(JsonTestCase):
     def test_not_found(self):
         """ Test when trying to retrieve results from scan that is not available """
         response = self.client.get('/test_this_id')
-        self.assertTrue(response.status_code, 404)
+        self.assertEqual(response.status_code, 204)
 
     @override_settings(SYNC_SEARCHERS=[InternalArtifactSearch], ASYNC_SEARCHERS=[TestArtifactSearch])
     def test_async_scan(self):
