@@ -1,0 +1,7 @@
+stomp.py>=4.0.12
+requests>=2.6.0
+circuits
+pytz
+jinja2
+filelock>=2.0.5
+keyring
