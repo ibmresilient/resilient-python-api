@@ -34,6 +34,7 @@
 import co3
 import json
 import logging
+import requests
 LOG = logging.getLogger(__name__)
 resilient_client = None
 
@@ -54,6 +55,7 @@ def get_resilient_client(opts):
     verify = opts.get("cafile")
     if verify == "false":
         LOG.warn("Unverified HTTPS requests (cafile=false).")
+        requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
 
     # Create SimpleClient for a REST connection to the Resilient services
