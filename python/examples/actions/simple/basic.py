@@ -34,13 +34,14 @@
 from __future__ import print_function
 
 import sys
-import stomp
 import ssl
 import json
 import time
+import logging
+import stomp
 import co3
 import cafargparse
-import logging
+from requests.utils import DEFAULT_CA_BUNDLE_PATH
 
 
 class Co3Listener(object):
@@ -115,10 +116,24 @@ def main():
     conn.set_listener('', Co3Listener(conn))
 
     # Give the STOMP library our TLS/SSL configuration.
+    validator_function = validate_cert
+    cafile = opts.cafile
+    if cafile == "false":
+        # Explicitly disable TLS certificate validation, if you need to
+        cafile = None
+        validator_function = None
+        print("TLS without certificate validation: Insecure! (cafile=false)")
+    elif cafile is None:
+        # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
+        # instead of the certificates from ssl.get_default_verify_paths().cafile
+        cafile = DEFAULT_CA_BUNDLE_PATH
+        print("TLS validation with default certificate file: {0}".format(cafile))
+    else:
+        print("TLS validation with certificate file: {0}".format(cafile))
     conn.set_ssl(for_hosts=[host_port],
-                 ca_certs=opts.cafile,
+                 ca_certs=cafile,
                  ssl_version=ssl.PROTOCOL_TLSv1,
-                 cert_validator=validate_cert)
+                 cert_validator=validator_function)
 
     conn.start()
 
