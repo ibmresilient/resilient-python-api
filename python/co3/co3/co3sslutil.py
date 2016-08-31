@@ -28,7 +28,6 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import ssl
-import fnmatch
 
 
 # Additional certificate validation function.  Called by the Python SSL library.
@@ -55,9 +54,7 @@ def match_hostname(cert, hostname):
             for key, value in sub:
                 if key == 'commonName':
                     names.append(value)
-                    if hostname == value:
-                        return
-                    if value.startswith("*.") and fnmatch.fnmatch(hostname, value):
+                    if value == hostname:
                         return
 
     raise Exception("{0} does not match the expected value in the certificate {1}".format(hostname, str(names)))
