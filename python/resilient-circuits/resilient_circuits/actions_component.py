@@ -39,6 +39,7 @@ import co3
 import stomp
 from stomp.exception import ConnectFailedException
 import ssl
+from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import json
 import re
 import random
@@ -367,18 +368,25 @@ class Actions(ResilientComponent):
                                      try_loopback_connect=False)
 
         # Give the STOMP library our TLS/SSL configuration.
-        validator = validate_cert
-        cert_file = opts.get("cafile")
-        if cert_file is None:
-            validator = None
-        elif cert_file == "false":
-            LOG.warn("Unverified HTTPS requests (cafile=false).")
-            validator = None
-            cert_file = None
+        validator_function = validate_cert
+        cafile = opts.cafile
+        if cafile == "false":
+            # Explicitly disable TLS certificate validation, if you need to
+            cafile = None
+            validator_function = None
+            LOG.warn("TLS without certificate validation: Insecure! (cafile=false)")
+        elif cafile is None:
+            # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
+            # instead of the certificates from ssl.get_default_verify_paths().cafile
+            cafile = DEFAULT_CA_BUNDLE_PATH
+            LOG.debug("TLS validation with default certificate file: {0}".format(cafile))
+        else:
+            LOG.debug("TLS validation with certificate file: {0}".format(cafile))
+
         self.conn.set_ssl(for_hosts=[host_port],
-                          ca_certs=cert_file,
+                          ca_certs=cafile,
                           ssl_version=ssl.PROTOCOL_TLSv1,
-                          cert_validator=validator)
+                          cert_validator=validator_function)
 
         # Other special options
         self.ignore_message_failure = opts["resilient"].get("ignore_message_failure") == "1"
