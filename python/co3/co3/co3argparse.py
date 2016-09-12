@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Resilient Systems, Inc. ("Resilient") is willing to license software
 # or access to software to the company or entity that will be using or
 # accessing the software and documentation and that you represent as
@@ -33,10 +34,12 @@ import os
 import sys
 import argparse
 import getpass
+from co3 import ensure_unicode
 import logging
-if sys.version_info[0] < 3:
-    import ConfigParser as configparser
-else:
+try:
+    # For all python < 3.2
+    import backports.configparser as configparser
+except ImportError:
     import configparser
 
 logger = logging.getLogger(__name__)
@@ -68,7 +71,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """Get an array of option values, or [] if not present"""
         if self.config:
             if opt in self.config.options(section):
-                return self.config.get(section, opt).split(",")
+                return self.config.get(section, opt).split(u",")
         return []
 
     def __init__(self, config_file=None):
@@ -76,16 +79,17 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # Read configuration options.
         if config_file:
+            config_file = ensure_unicode(config_file)
             config_path = os.path.expanduser(config_file)
             if os.path.exists(config_path):
                 try:
-                    self.config = configparser.SafeConfigParser()
+                    self.config = configparser.ConfigParser()
                     self.config.read(config_path)
                 except Exception as exc:
-                    logger.warn("Couldn't read config file '%s': %s", config_path, exc)
+                    logger.warn(u"Couldn't read config file '%s': %s", config_path, exc)
                     self.config = None
             else:
-                logger.warn("Couldn't read config file '%s'", config_path)
+                logger.warn(u"Couldn't read config file '%s'", config_path)
 
         default_email = self.getopt("resilient", "email")
         default_password = self.getopt("resilient", "password")
@@ -138,7 +142,7 @@ class ArgumentParser(argparse.ArgumentParser):
         password = args.password
         while not password:
             password = getpass.getpass()
-        args.password = password
+        args.password = ensure_unicode(password)
 
         if args.cafile:
             args.cafile = os.path.expanduser(args.cafile)

@@ -33,6 +33,7 @@ import json
 import ssl
 import mimetypes
 import os
+import unicodedata
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -76,6 +77,18 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
+def ensure_unicode(input):
+        """ if input is type str, convert to unicode with utf-8 encoding """
+        if input is None:
+            return input
+        if isinstance(input, str):
+            input_unicode =  input.decode('utf-8')
+        else:
+            input_unicode = input
+            
+        input_unicode = unicodedata.normalize('NFKC', input_unicode)
+        return input_unicode
+
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
@@ -93,17 +106,16 @@ class SimpleClient(object):
         self.org_id = None
         self.user_id = None
         self.base_url = u'https://app.resilientsystems.com/'
-
-        self.org_name = org_name.decode('utf-8')
+        self.org_name = ensure_unicode(org_name)
         if proxies:
-            self.proxies = [proxy.decode('utf-8') for proxy in proxies]
+            self.proxies = [ensure_unicode(proxy) for proxy in proxies]
         else:
             self.proxies = None
         if base_url:
-            self.base_url = base_url.decode('utf-8')
+            self.base_url = ensure_unicode(base_url)
         self.verify = verify
         if isinstance(verify, basestring):
-            self.verify = verify.decode('utf-8')
+            self.verify = ensure_unicode(verify)
         if verify is None:
             self.verify = True
         self.authdata = None
@@ -122,8 +134,8 @@ class SimpleClient(object):
           SimpleHTTPException - if an HTTP exception occurrs.
         """
         self.authdata = {
-            u'email': email.decode('utf-8'),
-            u'password': password.decode('utf-8')
+            u'email': ensure_unicode(email),
+            u'password': ensure_unicode(password)
         }
         return self._connect()
 
@@ -145,7 +157,7 @@ class SimpleClient(object):
             for org in orgs:
                 org_name = org['name']
                 org_names.append(org_name)
-                if org_name == self.org_name:
+                if ensure_unicode(org_name) == self.org_name:
                     selected_org = org
         else:
             org_names = [org['name'] for org in orgs]
@@ -208,7 +220,7 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
@@ -232,7 +244,7 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
@@ -258,7 +270,7 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.post,
                                          url,
@@ -272,10 +284,10 @@ class SimpleClient(object):
 
     def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None):
         """Upload a file to the specified URI"""
-        filepath = filepath.decode('utf-8')
+        filepath = ensure_unicode(filepath)
         if filename:
-            filename = filename.decode('utf-8')
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+            filename = ensure_unicode(filename)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filepath)[0] or "application/octet-stream"
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
@@ -297,7 +309,7 @@ class SimpleClient(object):
         """Internal helper to do a get/apply/put loop
         (for situations where the put might return a 409/conflict status code)
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
@@ -359,7 +371,7 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.put,
                                          url,
@@ -389,7 +401,7 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri.decode('utf-8'))
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.delete,
                                          url,
                                          proxies=self.proxies,
@@ -401,3 +413,4 @@ class SimpleClient(object):
             return None
         _raise_if_error(response)
         return json.loads(response.text)
+
