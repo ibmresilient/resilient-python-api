@@ -84,7 +84,7 @@ class ArgumentParser(argparse.ArgumentParser):
             if os.path.exists(config_path):
                 try:
                     self.config = configparser.ConfigParser()
-                    self.config.read(config_path)
+                    self.config.read(config_path, encoding='utf-8')
                 except Exception as exc:
                     logger.warn(u"Couldn't read config file '%s': %s", config_path, exc)
                     self.config = None
