@@ -122,12 +122,13 @@ class SimpleClient(object):
         self.session = requests.Session()
         self.session.mount(u'https://', TLSHttpAdapter())
 
-    def connect(self, email, password):
+    def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
 
         Args:
           email - the email address to use for authentication.
           password - the password
+          timeout - number of seconds to wait for response
         Returns:
           The Resilient session object (dict)
         Raises:
@@ -137,15 +138,16 @@ class SimpleClient(object):
             u'email': ensure_unicode(email),
             u'password': ensure_unicode(password)
         }
-        return self._connect()
+        return self._connect(timeout=timeout)
 
-    def _connect(self):
+    def _connect(self, timeout=None):
         """Establish a session"""
         response = self.session.post(u"{0}/rest/session".format(self.base_url),
                                      data=json.dumps(self.authdata),
                                      proxies=self.proxies,
                                      headers=self.__make_headers(),
-                                     verify=self.verify)
+                                     verify=self.verify,
+                                     timeout=timeout)
         _raise_if_error(response)
         session = json.loads(response.text)
         orgs = session['orgs']
@@ -206,7 +208,7 @@ class SimpleClient(object):
             result = operation(url, **kwargs)
         return result
 
-    def get(self, uri, co3_context_token=None):
+    def get(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -215,6 +217,7 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -226,11 +229,12 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def get_content(self, uri, co3_context_token=None):
+    def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -239,6 +243,7 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           The raw value returned by the server for this resource.
         Raises:
@@ -250,11 +255,12 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None):
+    def post(self, uri, payload, co3_context_token=None, timeout=None):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -265,6 +271,7 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -278,11 +285,12 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None):
+    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None, timeout=None):
         """Upload a file to the specified URI"""
         filepath = ensure_unicode(filepath)
         if filename:
@@ -301,11 +309,12 @@ class SimpleClient(object):
                                              proxies=self.proxies,
                                              cookies=self.cookies,
                                              headers=headers,
-                                             verify=self.verify)
+                                             verify=self.verify,
+                                             timeout=timeout)
             _raise_if_error(response)
             return json.loads(response.text)
 
-    def _get_put(self, uri, apply_func, co3_context_token=None):
+    def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
         (for situations where the put might return a 409/conflict status code)
         """
@@ -315,7 +324,8 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         payload = json.loads(response.text)
         apply_func(payload)
@@ -326,7 +336,8 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         if response.status_code == 200:
             return json.loads(response.text)
         elif response.status_code == 409:
@@ -334,7 +345,7 @@ class SimpleClient(object):
         _raise_if_error(response)
         return None
 
-    def get_put(self, uri, apply_func, co3_context_token=None):
+    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Performs a get, calls apply_func on the returned value, then calls self.put.
         If the put call returns a 409 error, then retry.
 
@@ -344,18 +355,19 @@ class SimpleClient(object):
           to alter the object with the desired changes.
           co3_context_token - the Co3ContextToken from a CAF message (if the caller is
           a CAF message processor.
+          timeout - number of seconds to wait for response
         Returns;
           The object returned by the put operation (converted from JSON to a Python dict).
         Raises:
           Exception if the get or put returns an unexpected status code.
         """
         while True:
-            obj = self._get_put(uri, apply_func, co3_context_token)
+            obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout)
             if obj:
                 return obj
         return None
 
-    def put(self, uri, payload, co3_context_token=None):
+    def put(self, uri, payload, co3_context_token=None, timeout=None):
         """
         Puts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -366,6 +378,7 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -379,23 +392,18 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def delete(self, uri, co3_context_token=None):
+    def delete(self, uri, co3_context_token=None, timeout=None):
         """Deletes the specified URI.
 
         Args:
           uri
           co3_context_token
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
-        specify a uri of /incidents, the actual URL would be something like this:
-
-            https://app.resilientsystems.com/rest/orgs/201/incidents
-        Args:
-           uri
-           co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -407,7 +415,8 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         if response.status_code == 204:
             # 204 - No content is OK for a delete
             return None
