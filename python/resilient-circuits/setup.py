@@ -50,7 +50,7 @@ long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version="26.0.3",  # __version__ in __init__.py
+    version="26.0.4",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
@@ -68,7 +68,7 @@ setup(
         ],
         ':python_version == "2.6"': [
             'keyring==5.4'
-        ],
+        ]
     },
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
