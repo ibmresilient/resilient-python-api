@@ -359,6 +359,12 @@ class Actions(ResilientComponent):
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
 
+        if not rest_client.actions_enabled:
+            # Don't create stomp connection b/c action module is not enabled.
+            LOG.warn("Resilient action module not enabled. No stomp connecton attempted.")
+            self.conn = None
+            return
+        
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
         self.conn = stomp.Connection(host_and_ports=[(host_port)],
@@ -548,7 +554,7 @@ class Actions(ResilientComponent):
                 LOG.error("Component %s was not subscribed", component)
                 continue
             comps.remove(component)
-            if self.conn.is_connected() and not comps:
+            if self.conn and self.conn.is_connected() and not comps:
                 # All components have unsubscribed this destination; stop listening
                 self._unsubscribe(queue_name)
             self.listeners[queue_name] = comps
@@ -556,7 +562,7 @@ class Actions(ResilientComponent):
 
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
-        if self.conn.is_connected() and self.listeners[queue_name]:
+        if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
             self.conn.subscribe(id='stomp-{0}'.format(queue_name),
                                 destination="actions.{0}.{1}".format(self.org_id, queue_name),
@@ -565,7 +571,7 @@ class Actions(ResilientComponent):
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
         try:
-            if self.conn.is_connected() and self.listeners[queue_name]:
+            if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
                 LOG.info("Unsubscribe from message destination '%s'", queue_name)
                 self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
                                       destination="actions.{0}.{1}".format(self.org_id, queue_name))
@@ -574,7 +580,7 @@ class Actions(ResilientComponent):
 
     def disconnect(self):
         """disconnect stomp connection"""
-        if self.conn.is_connected():
+        if self.conn and self.conn.is_connected():
             for queue_name in self.listeners:
                 self._unsubscribe(queue_name)
             self.conn.disconnect()
@@ -595,11 +601,11 @@ class Actions(ResilientComponent):
     @handler("reconnect")
     def reconnect(self):
         """Try (re)connect to the STOMP server"""
-        if self.conn.is_connected():
+        if self.conn and self.conn.is_connected():
             LOG.error("STOMP reconnect when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
-        else:
+        elif self.conn:
             LOG.info("STOMP attempting to connect")
             try:
                 self.conn.start()

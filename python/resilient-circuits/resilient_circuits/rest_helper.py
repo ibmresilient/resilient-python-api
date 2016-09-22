@@ -37,6 +37,7 @@ import logging
 import requests
 LOG = logging.getLogger(__name__)
 resilient_client = None
+connection_opts = None
 
 
 def reset_resilient_client():
@@ -48,6 +49,17 @@ def reset_resilient_client():
 def get_resilient_client(opts):
     """Get a connected instance of SimpleClient for Resilient REST API"""
     global resilient_client
+    global connection_opts
+
+    new_opts = (opts.get("cafile"),
+                opts.get("org"),
+                opts.get("host"),
+                opts.get("port"),
+                opts.get("proxy"),
+                opts.get("email"))
+    if new_opts != connection_opts:
+        resilient_client = None
+        connection_opts = new_opts
     if resilient_client:
         return resilient_client
 
@@ -77,5 +89,10 @@ def get_resilient_client(opts):
                 opts["org_id"] = org["id"]
     else:
         opts["org_id"] = userinfo["orgs"][0]["id"]
+
+    # Check if action module is enabled and store to opts dictionary
+    org_data = resilient_client.get('')
+    resilient_client.actions_enabled = org_data["actions_framework_enabled"]
+
 
     return resilient_client
