@@ -151,7 +151,31 @@ namespace Co3.Rest.Dto
         In,
 
         [EnumMember(Value = "value_removed")]
-        ValueRemoved
+        ValueRemoved,
+
+        [EnumMember(Value = "not_in")]
+        NotIn,
+
+        [EnumMember(Value = "not_equals")]
+        NotEquals,
+
+        [EnumMember(Value = "not_contains")]
+        NotContains,
+
+        [EnumMember(Value = "not_contains_user")]
+        NotContainsUser,
+
+        [EnumMember(Value = "not_changed_to")]
+        NotChangedTo,
+
+        [EnumMember(Value = "not_changed_from")]
+        NotChangedFrom,
+
+        [EnumMember(Value = "has_a_value")]
+        HasAValue,
+
+        [EnumMember(Value = "not_has_a_value")]
+        NotHasAValue,
     }
 
     public class FieldDefDto : PartialFieldDefDto
