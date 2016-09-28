@@ -29,19 +29,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  This type represents the counts of records that were lost as part of an incident.
+    /// </summary>
     public class IncidentCountsDto
     {
-        [JsonProperty("unassigneds")]
-        public List<GeoUnassignedDto> GeoUnassigneds { get; set; }
 
+        /// <summary>
+        ///  An list of objects that describes the "unassigned" records for the incident.
+        /// </summary>
+        [JsonProperty("unassigneds")]
+        public List<GeoUnassignedDto> Unassigneds { get; set; }
+
+        /// <summary>
+        ///  The total number of records that were lost.  This is calculated by the server and is a readonly property.
+        /// </summary>
         [JsonProperty("total")]
         public int Total { get; set; }
 
+        /// <summary>
+        ///  A map of the record counts for the different geographic regions involved with the incident. For example, the following indicates that 100 records were lost in California (ID #6) and 200 records were lost in Delaware (ID #9): { "6": 100, "9": 200 }The list of possible geos (with their IDs) is available in the constDTO geos property.
+        /// </summary>
         [JsonProperty("geo_counts")]
         public Dictionary<string, int> GeoCounts { get; set; }
     }

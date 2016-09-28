@@ -29,16 +29,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Contains the information about a user's status in an org in a session. It contains the information about the org, whether or not the org is currently accessible in the session, and the permissions for the user in the org.
+    /// </summary>
     public class SessionOrgInfoDto : JustOrgDto
     {
-        [JsonProperty("perms")]
-        public PermsDto Perms { get; set; }
 
+        /// <summary>
+        /// </summary>
+        [JsonProperty("perms")]
+        public SessionOrgInfoPermsDto Perms { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
+
     }
 }

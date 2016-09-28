@@ -29,19 +29,31 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class ModifyUserDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("id")]
         public ObjectHandle Id { get; set; }
 
-        [JsonProperty("first_name ")]
+        /// <summary>
+        /// </summary>
+        [JsonProperty("first_name")]
         public string FirstName { get; set; }
 
-        [JsonProperty("last_name ")]
+        /// <summary>
+        /// </summary>
+        [JsonProperty("last_name")]
         public string LastName { get; set; }
+
     }
 }

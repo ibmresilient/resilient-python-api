@@ -29,19 +29,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Contextual information about an action relative to its owning object. Returned as part of an object on which an action can be performed e.g. Incident, Task, etc.
+    /// </summary>
     public class ActionInfoDto
     {
+
+        /// <summary>
+        ///  The ID of the action.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The display name of the action.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  True if this action able to be executed in the current context, false otherwise
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
+
     }
 }

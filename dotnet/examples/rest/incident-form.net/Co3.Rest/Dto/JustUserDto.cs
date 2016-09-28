@@ -30,68 +30,123 @@
  */
 
 using System;
-using System.Runtime.Serialization;
+using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Co3.Rest.Dto
 {
-    [DataContract]
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum JustUserStatus
-    {
-        [EnumMember(Value = "A")]
-        Active,
-
-        [EnumMember(Value = "I")]
-        Inactive,
-
-        [EnumMember(Value = "P")]
-        PendingActivation,
-
-        [EnumMember(Value = "R")]
-        Reset
-    }
-
     /// <summary>
-    /// Summary description for JustUserDTO
+    ///  Contains information about a user.
     /// </summary>
     public class JustUserDto
     {
+
+        /// <summary>
+        ///  The user's ID.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The user's first name.
+        /// </summary>
         [JsonProperty("fname")]
-        public string FirstName { get; set; }
+        public string Fname { get; set; }
 
+        [Obsolete]
+        public string FirstName
+        {
+            get { return Fname; }
+            set { Fname = value; }
+        }
+
+        /// <summary>
+        ///  The user's last name.
+        /// </summary>
         [JsonProperty("lname")]
-        public string LastName { get; set; }
+        public string Lname { get; set; }
+        
+        [Obsolete]
+        public string LastName
+        {
+            get { return Lname; }
+            set { Lname = value; }
+        }
 
+        /// <summary>
+        ///  The status of the user.  The following values are possible: 'A' - the user is active. 'I' - the user is inactive. 'P' - the user is pending activation (i.e. an invitation was created but not accepted by the user). 'R' - the user is being reset.
+        /// </summary>
         [JsonProperty("status")]
-        public JustUserStatus Status { get; set; }
+        public string Status { get; set; }
 
+        /// <summary>
+        ///  User's email address.
+        /// </summary>
         [JsonProperty("email")]
         public string Email { get; set; }
 
+        /// <summary>
+        ///  User's phone number.
+        /// </summary>
         [JsonProperty("phone")]
-        public string PhoneNumber { get; set; }
+        public string Phone { get; set; }
 
+        [Obsolete]
+        public string PhoneNumber
+        {
+            get { return Phone; }
+            set { Phone = value; }
+        }
+
+        /// <summary>
+        ///  User's cell phone number.
+        /// </summary>
         [JsonProperty("cell")]
-        public string CellNumber { get; set; }
+        public string Cell { get; set; }
 
+        [Obsolete]
+        public string CellNumber
+        {
+            get { return Cell; }
+            set { Cell = value; }
+        }
+
+        /// <summary>
+        ///  The user's job title (e.g. Incident Response Manager).
+        /// </summary>
         [JsonProperty("title")]
-        public string JobTitle { get; set; }
+        public string Title { get; set; }
 
+        [Obsolete]
+        public string JobTitle
+        {
+            get { return Title; }
+            set { Title = value; }
+        }
+
+        /// <summary>
+        ///  Notes about the user.
+        /// </summary>
         [JsonProperty("notes")]
         public string Notes { get; set; }
 
+        /// <summary>
+        ///  The date of the user's last login.
+        /// </summary>
         [JsonProperty("last_login")]
         public DateTime LastLogin { get; set; }
 
+        /// <summary>
+        ///  true if the user's account is locked, false otherwise.
+        /// </summary>
         [JsonProperty("locked")]
         public bool Locked { get; set; }
 
+        /// <summary>
+        ///  true if the user's account is authenticated externally, false otherwise.
+        /// </summary>
         [JsonProperty("is_external")]
         public bool IsExternal { get; set; }
+
     }
 }

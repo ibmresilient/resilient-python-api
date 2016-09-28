@@ -35,18 +35,34 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class UserDto
+    /// <summary>
+    ///  Contains information about a user.
+    /// </summary>
+    public class UserDto : JustUserDto
     {
+
+        /// <summary>
+        ///  The organization ID the user is a member of.
+        /// </summary>
         [JsonProperty("org_id")]
         public int OrgId { get; set; }
 
+        /// <summary>
+        ///  The permissions that the user currently has.
+        /// </summary>
         [JsonProperty("roles")]
         public PermsDto Roles { get; set; }
 
+        /// <summary>
+        ///  The IDs of the groups the user is a member of.
+        /// </summary>
         [JsonProperty("group_ids")]
         public List<int> GroupIds { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
+
     }
 }

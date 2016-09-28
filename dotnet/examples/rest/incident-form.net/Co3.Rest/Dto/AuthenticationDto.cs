@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,19 +29,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Parameter for authenticate method.
+    /// </summary>
     public class AuthenticationDto
     {
+
+        /// <summary>
+        ///  The email address (user name) to authenticate as.
+        /// </summary>
         [JsonProperty("email")]
         public string Email { get; set; }
 
+        /// <summary>
+        ///  The password to use to authenticate.
+        /// </summary>
         [JsonProperty("password")]
         public string Password { get; set; }
 
+        /// <summary>
+        ///  true to indicate that the session is an interactive one.  You can only have one interactive session at a time, so if there is another interactive session it will be invalidated.  The default is false, which means that multiple simultaneous sessions are allowed.  interactive sessions will not invalidate other non-interactive sessions.  The default value is false.
+        /// </summary>
         [JsonProperty("interactive")]
         public bool Interactive { get; set; }
+
     }
 }

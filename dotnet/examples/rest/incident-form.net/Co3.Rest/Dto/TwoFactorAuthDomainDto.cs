@@ -29,22 +29,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  This object contains information about a two factor authentication domain
+    /// </summary>
     public class TwoFactorAuthDomainDto
     {
+
+        /// <summary>
+        ///  The ID of the two factor authentication domain
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The type of the two factor authentication domain.
+        /// </summary>
         [JsonProperty("type")]
         public int Type { get; set; }
 
+        /// <summary>
+        ///  The name of the two factor authentication domain that will be displayed.
+        /// </summary>
         [JsonProperty("display_name")]
         public string DisplayName { get; set; }
 
+        /// <summary>
+        ///  String properties of the two factor authentication domain.
+        /// </summary>
         [JsonProperty("properties")]
         public Dictionary<string, string> Properties { get; set; }
     }

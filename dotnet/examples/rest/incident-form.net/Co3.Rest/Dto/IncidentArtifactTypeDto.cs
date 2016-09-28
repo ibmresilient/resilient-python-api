@@ -29,28 +29,46 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class IncidentArtifactTypeDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("desc")]
         public string Desc { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("file")]
         public bool File { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("reg_exp")]
         public string RegExp { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("multi_aware")]
         public bool MultiAware { get; set; }
+
     }
 }

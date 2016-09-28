@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,51 +29,46 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.ComponentModel;
-using System.Runtime.Serialization;
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Co3.Rest.Dto
 {
-    [DataContract]
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum GeoType
-    {
-        [EnumMember(Value = "CITY")]
-        City,
-
-        [EnumMember(Value = "STATE")]
-        State,
-
-        [EnumMember(Value = "PROVINCE")]
-        Province,
-
-        [EnumMember(Value = "COUNTRY")]
-        Country,	
-
-        [EnumMember(Value = "METACOUNTRY")]
-        MetaCountry
-    }
-
+    /// <summary>
+    /// </summary>
     public class GeoDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("parent_id")]
         public int ParentId { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("allow_counts")]
         public bool AllowCounts { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("type")]
         public GeoType Type { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("abbreviation")]
         public string Abbreviation { get; set; }
+
     }
 }

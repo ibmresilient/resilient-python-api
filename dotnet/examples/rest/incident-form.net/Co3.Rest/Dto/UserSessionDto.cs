@@ -29,43 +29,77 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using System.Net;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Class for transferring information about the currently logged in user.
+    /// </summary>
     public class UserSessionDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("orgs")]
         public List<SessionOrgInfoDto> Orgs { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("user_id")]
         public int UserId { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("user_fname")]
         public string UserFname { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("user_lname")]
         public string UserLname { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("user_email")]
         public string UserEmail { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("is_saml")]
         public bool IsSaml { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("saml_alias")]
         public string SamlAlias { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("csrf_token")]
         public string CsrfToken { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("session_ip")]
         [JsonConverter(typeof(JsonConverters.IPAddressConverter))]
         public IPAddress SessionIp { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("is_ldap")]
-        public bool Ldap { get; set; }
+        public bool IsLdap { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [Obsolete]
+        public bool Ldap
+        {
+            get { return IsLdap; }
+            set { IsLdap = value; }
+        }
     }
 }

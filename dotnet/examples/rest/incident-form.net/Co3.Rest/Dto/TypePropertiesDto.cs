@@ -29,20 +29,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Contains additional information about the type for conditions and notifications.
+    /// </summary>
     public class TypePropertiesDto
     {
+
+        /// <summary>
+        ///  True if a condition can be created for this type for when the object is created, false otherwise.
+        /// </summary>
         [JsonProperty("can_create")]
         public bool CanCreate { get; set; }
 
+        /// <summary>
+        ///  True if a condition can be created for this type for when the object is deleted, false otherwise.
+        /// </summary>
         [JsonProperty("can_destroy")]
         public bool CanDestroy { get; set; }
 
+        /// <summary>
+        ///  The list of potential recipients to which a notification is applicable to for this type. e.g. for incident (added_members, owners, members) and for artifact (owners, members)
+        /// </summary>
         [JsonProperty("for_who")]
         public List<string> ForWho { get; set; }
+
     }
 }

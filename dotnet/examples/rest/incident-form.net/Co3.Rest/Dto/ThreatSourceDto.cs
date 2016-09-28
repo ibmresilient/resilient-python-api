@@ -35,36 +35,70 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class ThreatSourceDto
     {
+
+        /// <summary>
+        ///  The threat source's id
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The threat source's display name
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  Brief description of the threat source
+        /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
 
+        /// <summary>
+        ///  Indicates if the threat source is enabled (true) for this org
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        ///  Indicates if the threat source is a custom (non-system) threat source
+        /// </summary>
         [JsonProperty("custom")]
         public bool Custom { get; set; }
 
+        /// <summary>
+        ///  The date on which the terms of service for this threat service was agreed to
+        /// </summary>
         [JsonProperty("tos_agreement_date")]
         public DateTime TosAgreementDate { get; set; }
 
+        /// <summary>
+        ///  True if the license must be agreed to before this threat source can be enabled
+        /// </summary>
         [JsonProperty("prompt_license")]
         public bool PromptLicense { get; set; }
 
+        /// <summary>
+        ///  Returns the API license for this threat source
+        /// </summary>
         [JsonProperty("license")]
         public string License { get; set; }
 
+        /// <summary>
+        ///  The threat source's properties
+        /// </summary>
         [JsonProperty("properties")]
         public Dictionary<string, string> Properties { get; set; }
 
+        /// <summary>
+        ///  An object describing the terms of service data that need to be collected before this threat service can be turned on
+        /// </summary>
         [JsonProperty("tos")]
         public ThreatSourceTosDto Tos { get; set; }
+
     }
 }

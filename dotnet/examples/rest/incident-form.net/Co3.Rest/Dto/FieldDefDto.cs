@@ -29,221 +29,148 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.ComponentModel;
 
 namespace Co3.Rest.Dto
 {
-    [DataContract]
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum InputType
-    {
-        [EnumMember(Value = "boolean")]
-        Boolean,
-
-        [EnumMember(Value = "datepicker")]
-        DatePicker,
-
-        [EnumMember(Value = "multiselect")]
-        MultiSelect,
-
-        [EnumMember(Value = "select")]
-        Select,
-
-        [EnumMember(Value = "text")]
-        Text,
-
-        [EnumMember(Value = "textarea")]
-        TextArea,
-
-        [EnumMember(Value = "number")]
-        Number,
-
-        [EnumMember(Value = "multiselect_incident")]
-        MultiSelectIncident,
-
-        [EnumMember(Value = "multiselect_task")]
-        MultiSelectTask,
-
-        [EnumMember(Value = "select_owner")]
-        SelectOwner,
-
-        [EnumMember(Value = "multiselect_members")]
-        MultiSelectMembers,
-
-        [EnumMember(Value = "datetimepicker")]
-        DateTimePicker,
-
-        [EnumMember(Value = "select_user")]
-        SelectUser,
-
-        [EnumMember(Value = "none")]
-        None
-    }
-
-    [DataContract]
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum FieldRequired
-    {
-        [JsonIgnore]
-        Optional,
-
-        [EnumMember(Value = "always")]
-        Always,
-
-        [EnumMember(Value = "close")]
-        Close
-    }
-
-    [DataContract]
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum MethodName
-    {
-        [EnumMember(Value = "changed")]
-        Changed,
-
-        [EnumMember(Value = "equals")]
-        Equals,
-
-        [EnumMember(Value = "changed_to")]
-        ChangedTo,
-
-        [EnumMember(Value = "changed_from")]
-        ChangedFrom,
-
-        [EnumMember(Value = "object_removed")]
-        ObjectRemoved,
-
-        [EnumMember(Value = "object_added")]
-        ObjectAdded,
-
-        [EnumMember(Value = "value_added")]
-        ValueAdded,
-
-        [EnumMember(Value = "contains")]
-        Contains,
-
-        [EnumMember(Value = "due_within")]
-        DueWithin,
-
-        [EnumMember(Value = "overdue_by")]
-        OverdueBy,
-
-        [EnumMember(Value = "gt")]
-        Gt,
-
-        [EnumMember(Value = "lt")]
-        Lt,
-
-        [EnumMember(Value = "gte")]
-        Gte,
-
-        [EnumMember(Value = "lte")]
-        Lte,
-
-        [EnumMember(Value = "contains_user")]
-        ContainsUser,
-
-        [EnumMember(Value = "in")]
-        In,
-
-        [EnumMember(Value = "value_removed")]
-        ValueRemoved,
-
-        [EnumMember(Value = "not_in")]
-        NotIn,
-
-        [EnumMember(Value = "not_equals")]
-        NotEquals,
-
-        [EnumMember(Value = "not_contains")]
-        NotContains,
-
-        [EnumMember(Value = "not_contains_user")]
-        NotContainsUser,
-
-        [EnumMember(Value = "not_changed_to")]
-        NotChangedTo,
-
-        [EnumMember(Value = "not_changed_from")]
-        NotChangedFrom,
-
-        [EnumMember(Value = "has_a_value")]
-        HasAValue,
-
-        [EnumMember(Value = "not_has_a_value")]
-        NotHasAValue,
-    }
-
+    /// <summary>
+    ///  Represents a field definition in the system.
+    /// </summary>
     public class FieldDefDto : PartialFieldDefDto
     {
+
+        /// <summary>
+        ///  The internal ID of the type. This field is read-only.
+        /// </summary>
         [JsonProperty("type_id")]
         public int TypeId { get; set; }
 
+        /// <summary>
+        ///  The tooltip to display next to the field (i.e. the popup text to display when the user hovers over the "i" icon).
+        /// </summary>
         [JsonProperty("tooltip")]
         public string Tooltip { get; set; }
 
+        /// <summary>
+        ///  The placeholder to display in the edit field (not applicable for all input types).
+        /// </summary>
         [JsonProperty("placeholder")]
         public string Placeholder { get; set; }
 
+        /// <summary>
+        ///  The input type for this field (e.g. "select", "multiselect", "text", etc.).  For a list of valid input types, see constDTO input_types.
+        /// </summary>
         [JsonProperty("input_type")]
         public InputType InputType { get; set; }
 
+        /// <summary>
+        ///  The required status of the field.  Valid values: "always" - a value is always required, even when initially creating the object. "close" - a value is required before the object (incident) can be closed.  The Co3 UI will prompt the user on close if a value is not available. null - a value is optional
+        /// </summary>
         [JsonProperty("required")]
         [DefaultValue(FieldRequired.Optional)]
         public FieldRequired Required { get; set; }
 
+        /// <summary>
+        ///  The field should be hidden from the list of fields allowed in notification trigger conditions.  Generally this should be false for custom fields.
+        /// </summary>
         [JsonProperty("hide_notification")]
         public bool HideNotification { get; set; }
 
+        /// <summary>
+        ///  Is the field a "chosen" field?  This appears in the Co3 UI as "Advanced UI".  It is valid only for select and multiselect fields.  It's best to enable this option when there will be several values to choose from. This option allows the user to search the list for a certain value, and is more visually appealing for longer lists and multiselects."}
+        /// </summary>
         [JsonProperty("chosen")]
         public bool Chosen { get; set; }
 
+        /// <summary>
+        ///  Should a blank option be selectable in the UI?  Enable this option if you'd like users to have the option of leaving the field blank.
+        /// </summary>
         [JsonProperty("blank_option")]
         public bool BlankOption { get; set; }
 
+        /// <summary>
+        ///  Is this field an internal Co3 field?  This value is read-only.
+        /// </summary>
         [JsonProperty("internal")]
         public bool Internal { get; set; }
 
+        /// <summary>
+        ///  The set of valid condition operations for this field.  These are the conditions that can appear in the notification or action triggers section.  This value is read-only.
+        /// </summary>
         [JsonProperty("operations")]
         public List<MethodName> Operations { get; set; }
 
+        /// <summary>
+        ///  The possible values for this field.  This is only applicable for select and multiselect fields.
+        /// </summary>
         [JsonProperty("values")]
         public List<FieldDefValueDto> Values { get; set; }
 
+        /// <summary>
+        ///  The UUID of this field.  This value is read-only.  The server sets this value when the field is initially created.
+        /// </summary>
         [JsonProperty("uuid")]
         public string Uuid { get; set; }
 
+        /// <summary>
+        ///  The permissions the caller has on this field. This value is read-only. This value is set based on the permissions of the caller. See FieldDefPermsDTO.
+        /// </summary>
         [JsonProperty("perms")]
         public FieldDefPermsDto Perms { get; set; }
 
+        /// <summary>
+        ///  True if this is a read-only field, false otherwise.
+        /// </summary>
         [JsonProperty("read_only")]
         public bool ReadOnly { get; set; }
 
+        /// <summary>
+        ///  The "permissions" for the individual condition methods.
+        /// </summary>
         [JsonProperty("operation_perms")]
         public Dictionary<string, MethodNamePermsDto> OperationPerms { get; set; }
 
+        /// <summary>
+        ///  Can the field values ever change?  For example, the incident create_date field cannot ever change so changeable will be false for that field.
+        /// </summary>
         [JsonProperty("changeable")]
         public bool Changeable { get; set; }
 
+        /// <summary>
+        ///  The label for a boolean false value. Default is "No" and is currently read-only.
+        /// </summary>
         [JsonProperty("label_false")]
         public string LabelFalse { get; set; }
 
+        /// <summary>
+        ///  The label for a boolean true value. Default is "Yes" and is currently read-only.
+        /// </summary>
         [JsonProperty("label_true")]
         public string LabelTrue { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("rich_text")]
         public bool RichText { get; set; }
 
+        /// <summary>
+        ///  This value is used for export/import to uniquely represent this field
+        /// </summary>
         [JsonProperty("export_key")]
         public string ExportKey { get; set; }
 
+        /// <summary>
+        ///  The order of this column in the table (1 = leftmost)
+        /// </summary>
         [JsonProperty("order")]
         public int Order { get; set; }
 
+        /// <summary>
+        ///  The width of this column
+        /// </summary>
         [JsonProperty("width")]
         public int Width { get; set; }
 

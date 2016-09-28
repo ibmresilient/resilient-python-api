@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,26 +29,46 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents a supported input type in the system.  Fields in the system have a type (e.g. select, multiselect, text, etc.).  This structure tells you various bits of information about the type.
+    /// </summary>
     public class InputTypeDto
     {
+
+        /// <summary>
+        ///  The name of the type (e.g. "select", "multiselect", "text", etc.).
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The operations that this type supports. See conditionDTO's method property.
+        /// </summary>
         [JsonProperty("supported_methods")]
         public List<string> SupportedMethods { get; set; }
 
+        /// <summary>
+        ///  These are the list of other input types that this type could be changed to.
+        /// </summary>
         [JsonProperty("valid_transformations")]
         public List<string> ValidTransformations { get; set; }
 
+        /// <summary>
+        ///  Can this input type be used on custom fields?
+        /// </summary>
         [JsonProperty("can_use")]
         public bool CanUse { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("supports_rich_text")]
         public bool SupportsRichText { get; set; }
+
     }
 }
