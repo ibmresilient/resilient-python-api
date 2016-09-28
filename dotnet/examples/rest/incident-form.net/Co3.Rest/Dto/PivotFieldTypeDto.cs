@@ -37,21 +37,21 @@ namespace Co3.Rest.Dto
 {
     public enum BucketBy
     {
-        [EnumMember(Value = "MINUTE")]
+        [EnumMember(Value = "minute")]
         Minute,
-        [EnumMember(Value = "HOUR")]
+        [EnumMember(Value = "hour")]
         Hour,
-        [EnumMember(Value = "DAY")]
+        [EnumMember(Value = "day")]
         Day,
-        [EnumMember(Value = "WEEK")]
+        [EnumMember(Value = "week")]
         Week,
-        [EnumMember(Value = "MONTH")]
+        [EnumMember(Value = "month")]
         Month,
-        [EnumMember(Value = "YEAR")]
+        [EnumMember(Value = "year")]
         Year,
-        [EnumMember(Value = "DEFAULT_RESOLUTION")]
+        [EnumMember(Value = "default_resolution")]
         DefaultResolution,
-        [EnumMember(Value = "MINUTE_RESOLUTION")]
+        [EnumMember(Value = "minute_resolution")]
         MinuteResolution
     }
 

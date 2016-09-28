@@ -36,7 +36,7 @@ namespace Co3.Rest.Dto
     public class IncidentStatusDto
     {
         [JsonProperty("id")]
-        public ushort Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
