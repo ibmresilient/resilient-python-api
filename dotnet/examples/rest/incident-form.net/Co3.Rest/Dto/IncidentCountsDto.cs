@@ -47,6 +47,13 @@ namespace Co3.Rest.Dto
         [JsonProperty("unassigneds")]
         public List<GeoUnassignedDto> Unassigneds { get; set; }
 
+        [Obsolete]
+        public List<GeoUnassignedDto> GeoUnassigneds
+        {
+            get { return Unassigneds; }
+            set { Unassigneds = value; }
+        }
+
         /// <summary>
         ///  The total number of records that were lost.  This is calculated by the server and is a readonly property.
         /// </summary>

@@ -63,7 +63,7 @@ namespace Co3.Rest.Dto
         ///  The HIPAARiskDTOfor the incident. This contains information required by HIPAA.  If HIPAA does not apply to this incident then the hipaa propert can be empty.
         /// </summary>
         [JsonProperty("hipaa")]
-        public HIPAARiskDto Hipaa { get; set; }
+        public HipaaRiskDto Hipaa { get; set; }
 
         /// <summary>
         ///  Gets the list of tasks for the incident.  This data is not accepted on a POST or PUT.  It is only used if want_full_data=true is specified when the incident is created.  See also taskDTO.

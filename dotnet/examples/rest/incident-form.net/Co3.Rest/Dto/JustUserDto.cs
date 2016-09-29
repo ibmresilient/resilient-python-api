@@ -51,33 +51,19 @@ namespace Co3.Rest.Dto
         ///  The user's first name.
         /// </summary>
         [JsonProperty("fname")]
-        public string Fname { get; set; }
-
-        [Obsolete]
-        public string FirstName
-        {
-            get { return Fname; }
-            set { Fname = value; }
-        }
-
+        public string FirstName { get; set; }
+        
         /// <summary>
         ///  The user's last name.
         /// </summary>
         [JsonProperty("lname")]
-        public string Lname { get; set; }
+        public string LastName { get; set; }
         
-        [Obsolete]
-        public string LastName
-        {
-            get { return Lname; }
-            set { Lname = value; }
-        }
-
         /// <summary>
         ///  The status of the user.  The following values are possible: 'A' - the user is active. 'I' - the user is inactive. 'P' - the user is pending activation (i.e. an invitation was created but not accepted by the user). 'R' - the user is being reset.
         /// </summary>
         [JsonProperty("status")]
-        public string Status { get; set; }
+        public JustUserStatus Status { get; set; }
 
         /// <summary>
         ///  User's email address.
@@ -89,40 +75,19 @@ namespace Co3.Rest.Dto
         ///  User's phone number.
         /// </summary>
         [JsonProperty("phone")]
-        public string Phone { get; set; }
-
-        [Obsolete]
-        public string PhoneNumber
-        {
-            get { return Phone; }
-            set { Phone = value; }
-        }
-
+        public string PhoneNumber { get; set; }
+        
         /// <summary>
         ///  User's cell phone number.
         /// </summary>
         [JsonProperty("cell")]
-        public string Cell { get; set; }
-
-        [Obsolete]
-        public string CellNumber
-        {
-            get { return Cell; }
-            set { Cell = value; }
-        }
-
+        public string CellNumber { get; set; }
+        
         /// <summary>
         ///  The user's job title (e.g. Incident Response Manager).
         /// </summary>
         [JsonProperty("title")]
-        public string Title { get; set; }
-
-        [Obsolete]
-        public string JobTitle
-        {
-            get { return Title; }
-            set { Title = value; }
-        }
+        public string JobTitle { get; set; }
 
         /// <summary>
         ///  Notes about the user.

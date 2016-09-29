@@ -50,7 +50,7 @@ namespace Co3.Rest.Dto
         /// incidentDTO (nist_attack_vectors property)
         /// </summary>
         [JsonProperty("nist_attack_vectors")]
-        public Dictionary<int, NISTAttackVectorDto> NistAttackVectors { get; set; }
+        public Dictionary<int, NistAttackVectorDto> NistAttackVectors { get; set; }
 
         /// <summary>
         ///  An array of the possible period type values.  These values are used when retrieving data from the OrgStatisticsRESTresource (see the incidents_by_type_over_time and new_and_open_incidents endpoints).

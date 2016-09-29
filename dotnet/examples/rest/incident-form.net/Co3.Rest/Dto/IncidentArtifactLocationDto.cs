@@ -44,7 +44,7 @@ namespace Co3.Rest.Dto
         /// <summary>
         /// </summary>
         [JsonProperty("latlng")]
-        public LatLngDto Latlng { get; set; }
+        public LatLngDto LatLng { get; set; }
 
         /// <summary>
         /// </summary>

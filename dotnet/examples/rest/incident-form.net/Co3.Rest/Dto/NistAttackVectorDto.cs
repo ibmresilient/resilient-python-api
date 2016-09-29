@@ -37,7 +37,7 @@ namespace Co3.Rest.Dto
 {
     /// <summary>
     /// </summary>
-    public class NISTAttackVectorDto
+    public class NistAttackVectorDto
     {
 
         /// <summary>

@@ -110,12 +110,12 @@ namespace Co3.Rest.Dto
         /// <summary>
         /// </summary>
         [JsonProperty("twofactor_auth_domain")]
-        public TwoFactorAuthDomainDto TwofactorAuthDomain { get; set; }
+        public TwoFactorAuthDomainDto TwoFactorAuthDomain { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty("has_available_twofactor")]
-        public bool HasAvailableTwofactor { get; set; }
+        public bool HasAvailableTwoFactor { get; set; }
 
         /// <summary>
         /// </summary>

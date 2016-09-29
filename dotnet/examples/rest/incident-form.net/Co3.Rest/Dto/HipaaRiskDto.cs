@@ -38,7 +38,7 @@ namespace Co3.Rest.Dto
     /// <summary>
     ///  Information that is required for incidents related to HIPAA.
     /// </summary>
-    public class HIPAARiskDto
+    public class HipaaRiskDto
     {
 
         /// <summary>
