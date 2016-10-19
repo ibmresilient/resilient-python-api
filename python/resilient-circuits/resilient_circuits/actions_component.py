@@ -45,6 +45,7 @@ import re
 import random
 import datetime
 from functools import wraps
+from resilient_circuits.testing_tools.stomp_mock_component import ResilientStompMock
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
 from signal import SIGINT, SIGTERM
@@ -366,7 +367,13 @@ class Actions(ResilientComponent):
             return
         
         # Set up a STOMP connection to the Resilient action services
-        host_port = (opts["host"], opts["stomp_port"])
+        if "stomp_mock" in opts:
+            # Register stomp mock component and connect to it
+            ResilientStompMock(opts).register(self)
+            host_port = ("localhost", "61613")
+        else:
+            # Connect to Resilient stomp server
+            host_port = (opts["host"], opts["stomp_port"])
         self.conn = stomp.Connection(host_and_ports=[(host_port)],
                                      heartbeats=(STOMP_CLIENT_HEARTBEAT, STOMP_SERVER_HEARTBEAT),
                                      timeout=STOMP_TIMEOUT,

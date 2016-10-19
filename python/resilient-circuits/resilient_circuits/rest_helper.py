@@ -32,8 +32,11 @@
 """Global accessor for the Resilient REST API"""
 
 import co3
+import os
+import sys
 import json
 import logging
+import importlib
 import requests
 LOG = logging.getLogger(__name__)
 resilient_client = None
@@ -76,6 +79,20 @@ def get_resilient_client(opts):
                                         proxies=opts.get("proxy"),
                                         base_url=url,
                                         verify=verify)
+
+    if "rest_mock" in opts["resilient"]:
+        # Use a Mock for the Resilient Rest API
+        LOG.warn("Using Mock for Resilent REST API")
+        module_path, class_name =opts["resilient"]["rest_mock"].rsplit('.', 1)
+        path, module_name = os.path.split(module_path)
+        sys.path.insert(0, path)
+        module = importlib.import_module(module_name)
+        LOG.info("Looking for %s in %s", class_name, dir(module))
+        mock_class = getattr(module, class_name)
+        res_mock = mock_class(org_name=opts.get("org"),
+                              email=opts["email"])
+        resilient_client.session.mount("https://", res_mock.adapter)
+
 
     userinfo = resilient_client.connect(opts["email"], opts["password"])
 
