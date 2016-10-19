@@ -267,7 +267,7 @@ class SimpleClient(object):
     def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None):
         """Upload a file to the specified URI"""
         url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
-        mime_type = mimetype or mimetypes.guess_type(filepath)[0] or "application/octet-stream"
+        mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
