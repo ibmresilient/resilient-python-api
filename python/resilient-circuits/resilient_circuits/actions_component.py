@@ -45,7 +45,7 @@ import re
 import random
 import datetime
 from functools import wraps
-from resilient_circuits.testing_tools.stomp_mock_component import ResilientStompMock
+import resilient_circuits.testing_tools.stomp_mock_component as stomp_mock_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
 from signal import SIGINT, SIGTERM
@@ -365,11 +365,12 @@ class Actions(ResilientComponent):
             LOG.warn("Resilient action module not enabled. No stomp connecton attempted.")
             self.conn = None
             return
-        
+
         # Set up a STOMP connection to the Resilient action services
-        if "stomp_mock" in opts:
+        self.stomp_mock = "stomp_mock" in opts["resilient"]
+        if self.stomp_mock:
             # Register stomp mock component and connect to it
-            ResilientStompMock(opts).register(self)
+            stomp_mock_component.ResilientStompMock(opts["resilient"]).register(self)
             host_port = ("localhost", "61613")
         else:
             # Connect to Resilient stomp server

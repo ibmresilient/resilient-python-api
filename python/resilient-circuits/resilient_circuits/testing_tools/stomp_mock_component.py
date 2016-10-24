@@ -32,50 +32,41 @@
 """Action Module circuits component to mock Resilient stomp server for testing"""
 
 from __future__ import print_function
-from circuits import Component, Worker, Event
+from circuits import Component, Event, ipc, handler
 import logging
 import coilmq.start
 LOG = logging.getLogger(__name__)
 
-CONFIG_DATA_SECTION = 'mock'
-RESILIENT_DATA_SECTION = 'resilient'
-CHANNEL = 'mock'
+DATA_SECTION = 'resilient'
 
 
 class run_stomp_server(Event):
     """ Trigger stomp server to start up """
-    channels = (CHANNEL,)
+    pass
 
 
 class ResilientStompMock(Component):
     """ Mock the stomp connection for testing"""
-    channel = CHANNEL
-
+    
     def __init__(self, opts):
         super(ResilientStompMock, self).__init__(opts)
-        self.resilient_options = opts.get(RESILIENT_DATA_SECTION, {})
-        self.mock_options = opts.get(CONFIG_DATA_SECTION, {})
+        self.options = opts
+        self.process, self.bridge = StompServer(opts).start(process=True, link=self)
+        self.fire(ipc(run_stomp_server(), self.bridge.channel))
+        LOG.info("fired stomp server start event")
 
-        self.stomp_server = StompServerComponent(self.mock_options)
-        self.stomp_server.configure(self.resilient_options["email"],
-                               self.resilient_options["password"])
-        self.stomp_server.register(self)
-        self.fire(run_stomp_server())
-        LOG.info("Fired Server Run Event!")
-
-class StompServerComponent(Component):
-    channel = CHANNEL
-
+class StompServer(Component):
     def __init__(self, options):
-        super(StompServerComponent, self).__init__()
+        super(StompServer, self).__init__()
         self.options = options
-        self.config_file = self.options["config_file"]
-        Worker(process=True, workers=1).register(self)
+        self.config_file = self.options["stomp_mock"]
+        self.configure(self.options["email"],
+                       self.options["password"])
+
+    def run_stomp_server(self):
+        print("Starting coilmq serverwith config file %s", self.config_file)
+        coilmq.start._main(config=self.config_file)
 
     def configure(self, username, password):
         """ Set username and password in auth file """
         pass
-
-    def run_stomp_server(self):
-        LOG.info("Starting coilmq serverwith config file %s", self.config_file)
-        coilmq.start._main(config=self.config_file)

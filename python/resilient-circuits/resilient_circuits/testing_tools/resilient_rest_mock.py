@@ -83,11 +83,7 @@ class ResilientMock(ResilientMockBase):
     @staticmethod
     def _custom_matcher(request_type, uri, response_callback, request):
         """ matcher function for passing to adapter.add_matcher() """
-        LOG.debug("Comparing %s to %s. Regex Search %s in %s", request.method,
-                  request_type, uri, request.url)
         if request.method == request_type and re.search(uri, request.url):
-            LOG.debug("Match!")
             return response_callback(request)
         else:
-            LOG.debug("Does not match.")
             return None
