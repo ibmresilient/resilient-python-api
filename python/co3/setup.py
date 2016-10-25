@@ -50,7 +50,7 @@ long_description = read('README')
 
 setup(
     name='co3',
-    version="26.0.0",  # __version__ in __init__.py
+    version="26.0.1",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='Resilient',
@@ -60,6 +60,11 @@ setup(
         'requests>=2.6.0',
         'requests-toolbelt>=0.6.0'
     ],
+    extras_require={
+        ':python_version < "3.2"': [
+            'configparser'
+        ]
+    },
     author_email='support@resilientsystems.com',
     description='Resilient API',
     long_description=long_description,
