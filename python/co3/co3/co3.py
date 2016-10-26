@@ -34,7 +34,7 @@ import ssl
 import mimetypes
 import os
 import unicodedata
-
+import sys
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
@@ -77,18 +77,20 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
-def ensure_unicode(input):
-        """ if input is type str, convert to unicode with utf-8 encoding """
-        if input is None:
-            return input
-        if isinstance(input, str):
-            input_unicode =  input.decode('utf-8')
-        else:
-            input_unicode = input
-            
-        input_unicode = unicodedata.normalize('NFKC', input_unicode)
-        return input_unicode
+def ensure_unicode(input_value):
+    """ if input_value is type str, convert to unicode with utf-8 encoding """
+    if sys.version_info.major >= 3:
+        return input_value
 
+    if not isinstance(input_value, basestring):
+        return input_value
+    elif isinstance(input_value, str):
+        input_unicode =  input_value.decode('utf-8')
+    else:
+        input_unicode = input_value
+            
+    input_unicode = unicodedata.normalize('NFKC', input_unicode)
+    return input_unicode
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
@@ -114,8 +116,7 @@ class SimpleClient(object):
         if base_url:
             self.base_url = ensure_unicode(base_url)
         self.verify = verify
-        if isinstance(verify, basestring):
-            self.verify = ensure_unicode(verify)
+        self.verify = ensure_unicode(verify)
         if verify is None:
             self.verify = True
         self.authdata = None
@@ -169,7 +170,7 @@ class SimpleClient(object):
 
         if selected_org is None:
             msg = u"The user is not a member of the specified organization '{0}'."
-            raise Exception(msg.format(self.org_name, u', '.join(org_names)))
+            raise Exception(msg.format(self.org_name))
 
         if not selected_org.get("enabled", False):
             msg = "This organization is not accessible to you.\n\n" + \
