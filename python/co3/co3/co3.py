@@ -33,14 +33,11 @@ import json
 import ssl
 import mimetypes
 import os
+import unicodedata
 import sys
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-if sys.version_info.major == 2:
-    from co3unicode import ensure_unicode
-else:
-    from co3.co3unicode import ensure_unicode
 
 
 class TLSHttpAdapter(HTTPAdapter):
@@ -80,6 +77,20 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
+def ensure_unicode(input_value):
+    """ if input_value is type str, convert to unicode with utf-8 encoding """
+    if sys.version_info.major >= 3:
+        return input_value
+
+    if not isinstance(input_value, basestring):
+        return input_value
+    elif isinstance(input_value, str):
+        input_unicode =  input_value.decode('utf-8')
+    else:
+        input_unicode = input_value
+            
+    input_unicode = unicodedata.normalize('NFKC', input_unicode)
+    return input_unicode
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""

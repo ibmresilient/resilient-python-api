@@ -35,9 +35,9 @@ import sys
 import argparse
 import getpass
 if sys.version_info.major == 2:
-    from co3unicode import ensure_unicode
+    from co3 import ensure_unicode
 else:
-    from co3.co3unicode import ensure_unicode
+    from co3.co3 import ensure_unicode
 import logging
 try:
     # For all python < 3.2
