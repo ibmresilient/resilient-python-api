@@ -45,11 +45,13 @@ import re
 import random
 import datetime
 from functools import wraps
-import resilient_circuits.testing_tools.stomp_mock_component as stomp_mock_component
+#import resilient_test_tools.actions_mock_component as actions_mock_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from collections import Callable
 from signal import SIGINT, SIGTERM
 import logging
+import actions_test_component
+
 LOG = logging.getLogger(__name__)
 
 
@@ -250,7 +252,7 @@ class ActionMessage(Event):
     #    @handler()
     #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
 
-    def __init__(self, source=None, headers=None, message=None):
+    def __init__(self, source=None, headers=None, message=None, test=False):
         super(ActionMessage, self).__init__(source=source, headers=headers, message=message)
         if headers is None:
             headers = {}
@@ -265,6 +267,7 @@ class ActionMessage(Event):
         self.context = headers.get("Co3ContextToken")
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")
+        self.test = test
 
         self.timestamp = None
         ts = headers.get("timestamp")
@@ -359,22 +362,26 @@ class Actions(ResilientComponent):
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+        self.conn = None
 
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
             LOG.warn("Resilient action module not enabled. No stomp connecton attempted.")
-            self.conn = None
             return
 
+        if opts.get("test_actions", False):
+            # Let user submit test actions from the command line for testing
+            LOG.info("Action Tests Enabled! Run resilient_action_test --help for usage")
+            actions_test_component.ResilientTestActions(self.org_id).register(self)
+
+        self.resilient_mock = opts["resilient_mock"] or False
+        if self.resilient_mock:
+            # Using mock API, no need to create a real stomp connection
+            LOG.warn("Using Mock. No Stomp connection")
+            return
+        
         # Set up a STOMP connection to the Resilient action services
-        self.stomp_mock = "stomp_mock" in opts["resilient"]
-        if self.stomp_mock:
-            # Register stomp mock component and connect to it
-            stomp_mock_component.ResilientStompMock(opts["resilient"]).register(self)
-            host_port = ("localhost", "61613")
-        else:
-            # Connect to Resilient stomp server
-            host_port = (opts["host"], opts["stomp_port"])
+        host_port = (opts["host"], opts["stomp_port"])
         self.conn = stomp.Connection(host_and_ports=[(host_port)],
                                      heartbeats=(STOMP_CLIENT_HEARTBEAT, STOMP_SERVER_HEARTBEAT),
                                      timeout=STOMP_TIMEOUT,
@@ -570,6 +577,8 @@ class Actions(ResilientComponent):
 
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
+        if self.resilient_mock:
+            return
         if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
             self.conn.subscribe(id='stomp-{0}'.format(queue_name),
@@ -609,6 +618,8 @@ class Actions(ResilientComponent):
     @handler("reconnect")
     def reconnect(self):
         """Try (re)connect to the STOMP server"""
+        if self.resilient_mock:
+            return
         if self.conn and self.conn.is_connected():
             LOG.error("STOMP reconnect when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
@@ -629,7 +640,7 @@ class Actions(ResilientComponent):
         if traceback and isinstance(traceback, list):
             message = message + "\n" + ("".join(traceback))
         LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
-        if fevent and isinstance(fevent, ActionMessage):
+        if fevent and isinstance(fevent, ActionMessage) and self.conn:
             fevent.stop()  # Stop further event processing
             status = 1
             headers = fevent.hdr()
@@ -657,7 +668,10 @@ class Actions(ResilientComponent):
         """Report the successful handling of an action event"""
         if isinstance(event.parent, ActionMessage) and event.name.endswith("_success"):
             fevent = event.parent
-            if fevent.deferred:
+            if fevent.test:
+                # Test action, nothing to Ack
+                LOG.debug("Test Action: No ack done.")
+            elif fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
             else:
                 value = event.parent.value

@@ -80,10 +80,10 @@ def get_resilient_client(opts):
                                         base_url=url,
                                         verify=verify)
 
-    if "rest_mock" in opts["resilient"]:
+    if opts["resilient_mock"]:
         # Use a Mock for the Resilient Rest API
         LOG.warn("Using Mock for Resilent REST API")
-        module_path, class_name =opts["resilient"]["rest_mock"].rsplit('.', 1)
+        module_path, class_name =opts["resilient_mock"].rsplit('.', 1)
         path, module_name = os.path.split(module_path)
         sys.path.insert(0, path)
         module = importlib.import_module(module_name)

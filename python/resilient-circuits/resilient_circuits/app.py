@@ -110,6 +110,13 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=bool,
                           default=default_no_prompt_password,
                           help="Never prompt for password on stdin")
+        self.add_argument("--test-actions",
+                          action="store_true",
+                          help="Enable submitting test actions?")
+        self.add_argument("--resilient-mock",
+                          type=str,
+                          default=None,
+                          help="Mock class defintion. (lib/my_mock_file.MyMockClass)")
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
