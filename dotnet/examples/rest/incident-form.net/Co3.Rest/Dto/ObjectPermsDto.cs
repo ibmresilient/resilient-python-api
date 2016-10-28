@@ -29,37 +29,61 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class ObjectPermsDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("read")]
         public bool Read { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("write")]
         public bool Write { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("comment")]
         public bool Comment { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("assign")]
         public bool Assign { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("close")]
         public bool Close { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("change_members")]
         public bool ChangeMembers { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("attach_file")]
         public bool AttachFile { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("read_attachments")]
         public bool ReadAttachments { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("delete_attachments")]
         public bool DeleteAttachments { get; set; }
+
     }
 }

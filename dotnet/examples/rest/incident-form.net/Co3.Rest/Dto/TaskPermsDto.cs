@@ -29,10 +29,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class TaskPermsDto : ObjectPermsDto
     {
+
     }
 }

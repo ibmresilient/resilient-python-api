@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,22 +29,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Holds information about the server's version (major, minor and build number).
+    /// </summary>
     public class ServerVersionDto
     {
+
+        /// <summary>
+        ///  The major version number (e.g. 23 if the version string is "23.0.1000")
+        /// </summary>
         [JsonProperty("major")]
         public int Major { get; set; }
 
+        /// <summary>
+        ///  The minor version number (e.g. 0 if the version string is "23.0.1000")
+        /// </summary>
         [JsonProperty("minor")]
         public int Minor { get; set; }
 
+        /// <summary>
+        ///  The build number (e.g. 1000 if the version string is "23.0.1000")
+        /// </summary>
         [JsonProperty("build_number")]
         public int BuildNumber { get; set; }
 
+        /// <summary>
+        ///  The version string (e.g. "23.0.1000")
+        /// </summary>
         [JsonProperty("version")]
         public string Version { get; set; }
+
     }
 }

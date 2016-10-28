@@ -29,19 +29,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Holds "permissions" applicable to a method name/operation, such as whether it should appear in conditions for manual actions, automatic actions and notifications.
+    /// </summary>
     public class MethodNamePermsDto
     {
+
+        /// <summary>
+        ///  Should this method appear in picklists for manual actions?  For example, methods that require "previous values" such as "changed_to" cannot be used in manual actions because there is no concept of a previous value when the list of visible manual actions are calculated.
+        /// </summary>
         [JsonProperty("show_in_manual_actions")]
         public bool ShowInManualActions { get; set; }
 
+        /// <summary>
+        ///  Should this method appear in picklists for automatic actions?
+        /// </summary>
         [JsonProperty("show_in_auto_actions")]
-        public bool ShowInAutomaticActions { get; set; }
+        public bool ShowInAutoActions { get; set; }
 
+        [Obsolete]
+        public bool ShowInAutomaticActions
+        {
+            get { return ShowInAutoActions; }
+            set { ShowInAutoActions = value; }
+        }
+
+        /// <summary>
+        ///  Should this method appear in picklists for automatic notifications?
+        /// </summary>
         [JsonProperty("show_in_notifications")]
         public bool ShowInNotifications { get; set; }
+
     }
 }

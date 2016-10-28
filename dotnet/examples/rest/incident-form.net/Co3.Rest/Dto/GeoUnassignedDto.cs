@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,16 +29,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Indicates an "unassigned" count for a particular geo.  These unassigned counts would generally be for "country".  For example, if you know that you lost 500 records for the United States but you didn't know what specific state the records were for, you'd put them in as unassigned for the United States geo (ID #1000): { "geo": 1000, "count": 500 }
+    /// </summary>
     public class GeoUnassignedDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("geo")]
         public ObjectHandle Geo { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("count")]
         public int Count { get; set; }
+
     }
 }

@@ -29,32 +29,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Runtime.Serialization;
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public enum ThreatSourceTosElementType
-    {
-        [EnumMember(Value = "URL")]
-        Url,
-        [EnumMember(Value = "TEXT")]
-        Text,
-        [EnumMember(Value = "CHECK")]
-        Check
-    }
-
+    /// <summary>
+    /// </summary>
     public class ThreatSourceTosElementDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("type")]
         public ThreatSourceTosElementType Type { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("id")]
         public string Id { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("label")]
         public string Label { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("value")]
         public object Value { get; set; }
     }

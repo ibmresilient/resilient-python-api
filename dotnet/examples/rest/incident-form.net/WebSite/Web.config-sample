@@ -18,5 +18,9 @@
     
     <add key="Co3CssRequired" value="co3_required"/>
     <add key="Co3CssInvalid" value="co3_invalid"/>
+
+    <!-- Optional parameters
+    <add key="Co3DefaultOrg" value="org name here"/>
+    -->
   </appSettings>
 </configuration>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,20 +29,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Contains all of the information necessary to understand a BucketByobject.
+    /// </summary>
     public class BucketByDto
     {
+
+        /// <summary>
+        ///  The value representing the BucketBy.
+        /// </summary>
         [JsonProperty("value")]
         public string Value { get; set; }
 
+        /// <summary>
+        ///  The display value for the BucketBy.
+        /// </summary>
         [JsonProperty("label")]
         public string Label { get; set; }
 
+        /// <summary>
+        ///  The list of possible values the BucketBy will be bucketed into. May be empty, null, or not present if the values are not constant.
+        /// </summary>
         [JsonProperty("bucket_values")]
         public List<string> BucketValues { get; set; }
+
     }
 }

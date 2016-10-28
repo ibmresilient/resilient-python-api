@@ -29,35 +29,66 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class IncidentPiiDto
+    /// <summary>
+    /// </summary>
+    public class IncidentPIIDto
     {
+
+        /// <summary>
+        ///  Whether sensitive or personal data was foreseeably exposed and/or compromised. A value of true or null ("Unknown") indicate that a breach response may be required.
+        /// true means that data was compromised.  false means that data definitely was not compromised. null means that you don't know.
+        /// </summary>
         [JsonProperty("data_compromised")]
         public bool DataCompromised { get; set; }
 
+        /// <summary>
+        ///  The harm status of the incident.  The possible values are specified in the constDTO harm_statuses property.
+        /// </summary>
         [JsonProperty("harmstatus_id")]
         public ObjectHandle HarmstatusId { get; set; }
 
+        /// <summary>
+        ///  Was the that was lost encrypted?  true means that the data was encrypted; false means that it was not encrypted; null means that you do not know if data was encrypted.
+        /// </summary>
         [JsonProperty("data_encrypted")]
         public bool DataEncrypted { get; set; }
 
+        /// <summary>
+        ///  Was the data contained and the exposure resolved?  true means that the exposure has been resolved; false means that it has not been resolved; null means that you do not know if it has been resolved.
+        /// </summary>
         [JsonProperty("data_contained")]
         public bool DataContained { get; set; }
 
+        /// <summary>
+        ///  An array of data source IDs for the incident.  These values are configured specifically for your organization.
+        /// </summary>
         [JsonProperty("data_source_ids")]
         public List<ObjectHandle> DataSourceIds { get; set; }
 
+        /// <summary>
+        ///  The format the data was in (e.g. Paper, Electronic or Verbal).  The possible values are available in the constDTO data_formats property.
+        /// </summary>
         [JsonProperty("data_format")]
         public ObjectHandle DataFormat { get; set; }
 
+        /// <summary>
+        ///  An XML text string describing the high-level assessment of the incident. This is a readonly property.
+        /// </summary>
         [JsonProperty("assessment")]
         public string Assessment { get; set; }
 
+        /// <summary>
+        ///  The total amount of money (in US dollars) that you could be fined if you ignore this incident.  This is calculated by the Co3 rules engine based on the information that you provided.
+        /// This is a readonly property.
+        /// </summary>
         [JsonProperty("exposure")]
         public int Exposure { get; set; }
+
     }
 }

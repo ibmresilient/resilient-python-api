@@ -29,20 +29,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
     /// <summary>
-    /// Summary description for TaskChangesDTO
     /// </summary>
     public class TaskChangeDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("added")]
         public List<NamedEntityDto> Added { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("removed")]
         public List<NamedEntityDto> Removed { get; set; }
+
     }
 }

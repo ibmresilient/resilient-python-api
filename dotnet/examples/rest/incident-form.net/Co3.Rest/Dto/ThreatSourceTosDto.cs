@@ -29,17 +29,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class ThreatSourceTosDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("tos_url")]
         public string TosUrl { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("fields")]
         public List<ThreatSourceTosElementDto> Fields { get; set; }
+
     }
 }

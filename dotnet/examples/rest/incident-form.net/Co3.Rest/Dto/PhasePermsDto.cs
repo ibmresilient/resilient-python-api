@@ -29,16 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Permissions of the phase.
+    /// </summary>
     public class PhasePermsDto
     {
+
+        /// <summary>
+        ///  Can the phase be deleted?  Certain phases cannot be deleted, such as the Initial and Complete phases.
+        /// </summary>
         [JsonProperty("deleteable")]
         public bool Deleteable { get; set; }
 
+        /// <summary>
+        ///  Can the phase be reorderd?  Certain phases cannot be reordered, such as the Initial and Complete phases.
+        /// </summary>
         [JsonProperty("reorderable")]
         public bool Reorderable { get; set; }
+
     }
 }

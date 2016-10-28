@@ -71,6 +71,9 @@ public partial class CreateIncident : System.Web.UI.Page
     // session info
     UserSessionDto m_sessionInfo;
 
+    // the ID of the org that this request should use
+    int m_orgId;
+
     float m_utcOffset;
 
     public CreateIncident()
@@ -140,15 +143,38 @@ public partial class CreateIncident : System.Web.UI.Page
             // connect to the REST API
             m_sessionRest = new SessionRest();
             m_sessionInfo = m_sessionRest.Authenticate(credentials);
+            
+            // The user may belong to multiple orgs.  If web.config specifies the org,
+            // then we'll use it.
+            string defaultOrgName = ConfigurationManager.AppSettings["Co3DefaultOrg"];
+            if (!string.IsNullOrEmpty(defaultOrgName))
+            {
+                SessionOrgInfoDto defaultOrg = m_sessionInfo.Orgs.Find(o => o.Name == defaultOrgName);
+
+                if (defaultOrg == null)
+                {
+                    throw new ArgumentOutOfRangeException("Co3DefaultOrg",
+                        string.Format("{0} is a non-existent org.", defaultOrgName));
+                }
+
+                m_orgId = defaultOrg.Id;
+            }
+
+            // The web.config did not specify the org, so we'll use the first org.
+            // Note that the order of the orgs in the list is not deterministic.
+            // If the user belongs to multiple orgs, then the org used in the page load
+            // maybe different from the org in the postback.
+            if (m_orgId == 0)
+                m_orgId = m_sessionInfo.Orgs[0].Id;
 
             // load the org data
             OrgRest orgRest = m_sessionRest.GetOrgRest();
-            FullOrgDto org = orgRest.GetOrg();
+            FullOrgDto org = orgRest.GetOrg(m_orgId);
 
             // load field data
             m_fields = new Dictionary<string, FieldDefDto>();
             FieldDefDto[] fieldTypes = m_sessionRest.GetFieldRest().GetFieldTypes(org.Id);
-
+            
             // create a map of field names to fields for lookups later
             foreach (FieldDefDto fieldDef in fieldTypes)
                 m_fields.Add(fieldDef.Name, fieldDef);
@@ -332,7 +358,7 @@ public partial class CreateIncident : System.Web.UI.Page
             try
             {
                 OrgRest orgRest = m_sessionRest.GetOrgRest();
-                FullOrgDto org = orgRest.GetOrg();
+                FullOrgDto org = orgRest.GetOrg(m_orgId);
                 incident.OrgId = org.Id;
                 incident.CreateDate = DateTime.UtcNow;
                 incident.OwnerId = new ObjectHandle { Id = m_sessionInfo.UserId };
@@ -565,7 +591,7 @@ public partial class CreateIncident : System.Web.UI.Page
                 throw new NotImplementedException();
         }
 
-        if (bParsed)
+        if (bParsed && value != null)
         {
             if (propertyType != null)
             {

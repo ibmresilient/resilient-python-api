@@ -29,25 +29,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents an incident status.
+    /// </summary>
     public class IncidentStatusDto
     {
-        [JsonProperty("id")]
-        public ushort Id { get; set; }
 
+        /// <summary>
+        ///  The ID of the incident status.
+        /// </summary>
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        /// <summary>
+        ///  Is the status enabled?
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        ///  Does the status represent a "closed" status?
+        /// </summary>
         [JsonProperty("isclosed")]
         public bool Isclosed { get; set; }
 
+        /// <summary>
+        ///  The name of the status.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The description of the status.
+        /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
+
     }
 }

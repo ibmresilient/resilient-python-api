@@ -29,22 +29,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents the permissions that a user has (e.g. whether they can create incidents, are a master administrator, etc.).
+    /// </summary>
     public class PermsDto
     {
+
+        /// <summary>
+        ///  Is the user a master administrator?  Master administrators are allowed to perform all operations in the system.
+        /// </summary>
         [JsonProperty("master_administrator")]
         public bool MasterAdministrator { get; set; }
 
+        /// <summary>
+        ///  Is the user a "regular" administrator.  Regular administrators can see and modify all incidents and tasks, but are not allowed modify the organization's configuration settings.
+        /// </summary>
         [JsonProperty("administrator")]
         public bool Administrator { get; set; }
 
+        /// <summary>
+        ///  Is the user an observer?  Observers are allowed to see all incidents and tasks, but cannot make changes (unless the user is assigned to the incident/task or is also an administrator).
+        /// </summary>
         [JsonProperty("observer")]
         public bool Observer { get; set; }
 
+        /// <summary>
+        ///  Is the user allowed to create incidents?
+        /// </summary>
         [JsonProperty("create_incs")]
         public bool CreateIncs { get; set; }
+
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,29 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Runtime.Serialization;
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Co3.Rest.Dto
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum TextFormat
-    {
-        [EnumMember(Value = "text")]
-        Text,
-        [EnumMember(Value = "html")]
-        Html,
-        [EnumMember(Value = "unknown")]
-        Unknown
-    }
-
+    /// <summary>
+    ///  Represents text content (e.g. incident description, incident resolution summary, artifact description, etc.). The Resilient server will accept either a JSON string or an object of the form: { "format": "html|text", "content": "content text or HTML (depending on format)" } If you send a string, you must be aware of the "rich_text" setting on the field you're sending. If sending an object, you can supply content in either "text" or "html" format.  The server will make a best effort to convert the content into the format needed to display the field in the UI. On output (e.g. the return from a GET, PUT or POST), the textContentDTO is written as a JSON string by default.  The content of the string object will depend on the "rich_text" property of the field.  So if "rich_text" is true, then the content will be HTML.  If "rich_text" is false, then the content will be in plain text.  Note that it is technically possible for the content to be stored on the server in plain text for fields that are marked as rich text (or vice-versa).  When the server is in the default mode, it will convert the data to the format specified in the field definition and write it out as a JSON string.  For example, if the content on the server is plain text but the field definition is "rich text", then the server will perform a plain text to HTML conversion.  The reverse can occur too, for example if an API program sends HTML but the field definition is not rich text then the server will perform a best effort at an HTML to plain text conversion. An API client can request that data be sent in whatever format it is in on the server by specifying the "text_content_output_format=objects_no_convert" query string or HTTP header.  In this case, the server will send the full object. An API client can also request that data be sent as an object, but have conversion applied by specifying the "text_content_output_format=objects_convert" query string or HTTP header.  In this case, the server will send the full object and convert to the format specified in the field definition (if "rich_text" is true then the format will always be returned as "html" and if it's false then it'll always be returned as "text"). An API client can also ask for data in either HTML or text format specifically (regardless of the field definition and the format in which the data is stored) by using either the text_content_output_format=objects_html or text_content_output_format=objects_text request query string or HTTP header.
+    /// </summary>
     public class TextContentDto
     {
+
+        /// <summary>
+        ///  The format of the text content.
+        /// </summary>
         [JsonProperty("format")]
         public TextFormat Format { get; set; }
 
+        /// <summary>
+        ///  The actual text content.  This can be either HTML or plain text depending on the value of the format property.
+        /// </summary>
         [JsonProperty("content")]
         public string Content { get; set; }
+
     }
 }

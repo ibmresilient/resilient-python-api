@@ -35,9 +35,15 @@ namespace Co3.Rest.Dto
 {
     public class ObjectHandle
     {
+        /// <summary>
+        /// Gets the ID referred to by this object (generally an integer value). This can be null in cases where you know the name, but not the ID. 
+        /// </summary>
         [JsonProperty("id")]
         public object Id { get; set; }
 
+        /// <summary>
+        /// Gets the name referred to by this object. This can be null in cases where you know the ID but not the name.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
     }

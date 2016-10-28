@@ -29,25 +29,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents a task status.
+    /// </summary>
     public class TaskStatusDto
     {
-        [JsonProperty("id")]
-        public ushort Id { get; set; }
 
+        /// <summary>
+        ///  The ID of the task status.
+        /// </summary>
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        /// <summary>
+        ///  Is the task status enabled?
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        ///  The name of the task status.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The description of the task status.
+        /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
 
+        /// <summary>
+        ///  Does the task to be considered "closed" when it is in this state?
+        /// </summary>
         [JsonProperty("closed")]
         public bool Closed { get; set; }
+
     }
 }
