@@ -105,7 +105,11 @@ class ResilientTestActions(Component):
         self.fire(write(sock, b"Welcome to the Resilient Circuits Action Tester!\n"))
         self.fire(write(sock, self.usage()))
 
-    @handler("done")
+    def test_response(self, message):
+        """ Send a message out to the client """
+        LOG.debug("Received message for test client")
+        self.fire(write(self.sock, "RESPONSE: " + message + "\n"))
+
     def done(self, event):
         status = yield self.wait(event)
         status = status.value
@@ -116,3 +120,4 @@ class ResilientTestActions(Component):
         else:
             status = status + "\n"
             self.fire(write(self.sock, status.encode('latin-1')))
+

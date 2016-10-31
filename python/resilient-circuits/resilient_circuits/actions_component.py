@@ -647,13 +647,19 @@ class Actions(ResilientComponent):
             # Ack the message
             message_id = headers['message-id']
             subscription = headers["subscription"]
-            LOG.debug("Ack %s", message_id)
-            self.conn.ack(message_id, subscription, transaction=None)
+            if not  fevent.test:                    
+                LOG.debug("Ack %s", message_id)
+                self.conn.ack(message_id, subscription, transaction=None)
             # Reply with error status
             reply_to = headers['reply-to']
             correlation_id = headers['correlation-id']
             reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
-            self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+            if not  fevent.test:
+                self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+            else:
+                # Test action, nothing to Ack
+                self.fire(Event.create("test_response", reply_message))#, "actions."+fevent.)
+                LOG.debug("Test Action: No ack done.")
 
     @handler("signal")
     def _on_signal(self, signo, stack):
@@ -668,10 +674,7 @@ class Actions(ResilientComponent):
         """Report the successful handling of an action event"""
         if isinstance(event.parent, ActionMessage) and event.name.endswith("_success"):
             fevent = event.parent
-            if fevent.test:
-                # Test action, nothing to Ack
-                LOG.debug("Test Action: No ack done.")
-            elif fevent.deferred:
+            if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
             else:
                 value = event.parent.value
@@ -684,10 +687,18 @@ class Actions(ResilientComponent):
                 # Ack the message
                 message_id = headers['message-id']
                 subscription = headers["subscription"]
-                LOG.debug("Ack %s", message_id)
-                self.conn.ack(message_id, subscription, transaction=None)
+                if not fevent.test:
+                    LOG.debug("Ack %s", message_id)
+                    self.conn.ack(message_id, subscription, transaction=None)
                 # Reply with success status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
                 reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
-                self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+                if not  fevent.test:                    
+                    self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+                else:
+                    # Test action, nothing to Ack
+                    self.fire(Event.create("test_response", reply_message), '*')
+                    LOG.debug("Test Action: No ack done.")
+                    LOG.debug(fevent.channels)
+                                    
