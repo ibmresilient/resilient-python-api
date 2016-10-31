@@ -250,6 +250,7 @@
     <Compile Include="FieldRest.cs" />
     <Compile Include="IncidentRest.cs" />
     <Compile Include="JsonConverters\IPAddressConverter.cs" />
+    <Compile Include="JsonConverters\ObjectHandleKeyConverter.cs" />
     <Compile Include="JsonConverters\UnixTimeConverter.cs" />
     <Compile Include="Dto\JustOrgDto.cs" />
     <Compile Include="Dto\NistAttackVectorDto.cs" />
