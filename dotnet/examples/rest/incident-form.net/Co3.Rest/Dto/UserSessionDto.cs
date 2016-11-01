@@ -96,6 +96,7 @@ namespace Co3.Rest.Dto
         /// <summary>
         /// </summary>
         [Obsolete]
+        [JsonIgnore]
         public bool Ldap
         {
             get { return IsLdap; }
