@@ -112,6 +112,7 @@ namespace Co3.Rest.Dto
         public bool ShowInAutomaticActions { get; set; }
         
         [Obsolete]
+        [JsonIgnore]
         public bool ShowInAutoActions
         {
             get { return ShowInAutomaticActions; }
