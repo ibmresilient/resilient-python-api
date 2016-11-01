@@ -45,7 +45,8 @@ namespace Co3.Rest.Dto
         ///  The incidentDataTypesDTOfor the incident. This contains information about the types of data that were lost (e.g First Name, Last Name, Credit card number, etc.).
         /// </summary>
         [JsonProperty("dtm")]
-        public Dictionary<string, bool> Dtm { get; set; }
+        [JsonConverter(typeof(JsonConverters.ObjectHandleKeyConverter))]
+        public Dictionary<ObjectHandle, bool> Dtm { get; set; }
 
         /// <summary>
         ///  The incidentCountsDTOfor the incident. This contains information about the counts of records that were lost for the different geographical regions.
