@@ -53,6 +53,7 @@ namespace Co3.Rest.Dto
         public bool HasUnauthorized { get; set; }
 
         [Obsolete]
+        [JsonIgnore]
         public bool HasUnauthorizedUsers
         {
             get { return HasUnauthorized; }
@@ -66,6 +67,7 @@ namespace Co3.Rest.Dto
         public List<JustUserDto> AuthorizedUsers { get; set; }
 
         [Obsolete]
+        [JsonIgnore]
         public List<JustUserDto> Users
         {
             get { return AuthorizedUsers; }

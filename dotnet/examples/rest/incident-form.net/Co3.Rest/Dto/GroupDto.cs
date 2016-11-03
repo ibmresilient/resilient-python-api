@@ -68,6 +68,7 @@ namespace Co3.Rest.Dto
         ///  Flag to indicate if the group can be assigned to incidents.
         /// </summary>
         [Obsolete]
+        [JsonIgnore]
         public bool Assignable
         {
             get { return IsAssignable; }

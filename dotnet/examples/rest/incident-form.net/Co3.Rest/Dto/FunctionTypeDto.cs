@@ -60,6 +60,7 @@ namespace Co3.Rest.Dto
         public List<PivotFieldType> FieldTypes { get; set; }
 
         [Obsolete("This field has been renamed to FieldTypes")]
+        [JsonIgnore]
         public List<PivotFieldType> PivotFieldTypes
         {
             get { return FieldTypes; }

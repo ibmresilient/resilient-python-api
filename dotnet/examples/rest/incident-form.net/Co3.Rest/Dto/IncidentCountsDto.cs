@@ -48,6 +48,7 @@ namespace Co3.Rest.Dto
         public List<GeoUnassignedDto> Unassigneds { get; set; }
 
         [Obsolete]
+        [JsonIgnore]
         public List<GeoUnassignedDto> GeoUnassigneds
         {
             get { return Unassigneds; }

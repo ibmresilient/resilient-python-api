@@ -47,6 +47,7 @@ namespace Co3.Rest.Dto
         public int Vers { get; set; }
 
         [Obsolete("Property has been renamed to Vers to be consistent with the API")]
+        [JsonIgnore]
         public int Version { get; set; }
 
         /// <summary>
@@ -56,6 +57,7 @@ namespace Co3.Rest.Dto
         public string Addr { get; set; }
 
         [Obsolete("Property has been renamed to Addr to be consistent with the API")]
+        [JsonIgnore]
         public string Address { get; set; }
 
         /// <summary>
