@@ -80,6 +80,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         super(AppArgumentParser, self).__init__(config_file=APP_CONFIG_FILE)
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
+        default_noload = self.getopt("resilient", "noload") or ""
         default_log_dir = self.getopt("resilient", "logdir") or self.DEFAULT_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
@@ -94,6 +95,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_components_dir,
                           help="Circuits components auto-load directory")
+        self.add_argument("--noload",
+                          type = str,
+                          default=default_noload,
+                          help = "List of components that should not be loaded")
         self.add_argument("--logdir",
                           type=str,
                           default=default_log_dir,
@@ -233,9 +238,10 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
-    except ValueError:
-        LOG.exception("ValueError Raised. Application not running.")
+        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(os.path.abspath(APP_LOCK_FILE)))
+    except OSError as exc:
+        # Some other problem accessing the lockfile
+        print("Unable to lock {0}: {1}".format(os.path.abspath(APP_LOCK_FILE), exc))
     # finally:
     #    LOG.info("App finished.")
 
