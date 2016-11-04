@@ -79,5 +79,6 @@ setup(
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
-    ]
+    ],
+    scripts=['bin/res-action-test']
 )

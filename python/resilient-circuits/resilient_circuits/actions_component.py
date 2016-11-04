@@ -50,7 +50,7 @@ from resilient_circuits.rest_helper import get_resilient_client, reset_resilient
 from collections import Callable
 from signal import SIGINT, SIGTERM
 import logging
-import actions_test_component
+import resilient_circuits.actions_test_component as actions_test_component
 
 LOG = logging.getLogger(__name__)
 

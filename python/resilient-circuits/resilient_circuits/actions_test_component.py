@@ -57,10 +57,11 @@ class ResilientTestActions(Component):
 
     def read(self, sock, data):
         """ Triggered by user submitting action over tcp connection """
+        LOG.info("Read %s", data)
         try:
             data =  data.strip().decode('utf-8')
             if ' ' not in data:
-                self.fire(write(sock, self.usage()))
+                self.fire(write(sock, self.usage().encode()))
                 return
 
             queue, message = data.split(' ', 1)
@@ -94,30 +95,28 @@ class ResilientTestActions(Component):
                                                                        test=True)
             self.sock = sock
             self.fire(event, channel)
-            self.fire(write(sock, "Action Submitted\n"))
+            self.fire(write(sock, "Action Submitted\n".encode()))
         except Exception as e:
             LOG.exception("Action Failed")
-            self.fire(write(sock, str(e) + "\n"))
+            self.fire(write(sock, (str(e) + '\n').encode()))
     
     def connect(self, sock, host, port):
         """Triggered for new connecting TCP clients"""
-
-        self.fire(write(sock, b"Welcome to the Resilient Circuits Action Tester!\n"))
-        self.fire(write(sock, self.usage()))
-
+        pass
+        
     def test_response(self, message):
         """ Send a message out to the client """
         LOG.debug("Received message for test client")
-        self.fire(write(self.sock, "RESPONSE: " + message + "\n"))
+        self.fire(write(self.sock, ("RESPONSE: " + message + "\n").encode()))
 
     def done(self, event):
         status = yield self.wait(event)
         status = status.value
         
         if isinstance(status, Exception):
-            self.fire(write(self.sock, str(Exception) + "\n"))
+            self.fire(write(self.sock, (str(Exception) + "\n").encode()))
             raise status
         else:
             status = status + "\n"
-            self.fire(write(self.sock, status.encode('latin-1')))
+            self.fire(write(self.sock, status.encode()))
 
