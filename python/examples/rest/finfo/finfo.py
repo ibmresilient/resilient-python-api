@@ -69,6 +69,10 @@ class FinfoArgumentParser(resilient.ArgumentParser):
                           nargs="?",
                           help="The field name.")
 
+        self.add_argument('--types',
+                          action='store_true',
+                          help="Print the list of types.")
+
         self.add_argument('--type',
                           dest="field_type",
                           default="incident",
@@ -89,6 +93,7 @@ class FinfoArgumentParser(resilient.ArgumentParser):
                           dest="field_values",
                           action='store_true',
                           help="Print the list of valid values for all fields.")
+
 
 def apiname(field):
     """The full (qualified) programmatic name of a field"""
@@ -202,6 +207,25 @@ def list_fields(client, objecttype="incident"):
         print(u"{} {}".format(required_flag, apiname(field)))
 
 
+def list_types(client):
+    """Print a list of types, in readable text"""
+    print("Types:")
+    t = client.get("/types")
+
+    def print_types(parent, indent):
+        if indent>10:
+            return
+        for type in sorted(t.keys()):
+            typedef = t[type]
+            typename = typedef["display_name"]
+            parents = typedef["parent_types"]
+            if (parent is None and len(parents) == 0) or (parent in parents):
+                print(u"{}{}".format(' ' * indent, type))
+                print_types(type, indent+2)
+
+    print_types(None, 2)
+
+
 def main():
     """Main"""
     # Parse commandline arguments
@@ -219,7 +243,9 @@ def main():
 
     # If no field is specified, list them all
     if not opts.fieldname:
-        if opts.field_values:
+        if opts.types:
+            list_types(client)
+        elif opts.field_values:
             list_fields_values(client, opts.field_type)
         elif opts.csv:
             list_fields_csv(client, opts.field_type)
