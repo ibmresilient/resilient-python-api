@@ -70,14 +70,15 @@ class ConnectionThread(threading.Thread):
     def reconnect(self):
         self.response_callback("Connection to Test Server has died.  Trying to reconnect...")
         self.client.close()
-        while True:
+        while not self.stopped():
+            self.response_callback("Trying to reconnect...")
             try:
                 self.connect()
                 self.response_callback("Connection Restored.")
-                break
+                return
             except:
                 time.sleep(3)
-                pass
+        self.response_callback("Reconnect Aborted") 
 
     def run(self):
         while not self.stopped():
@@ -171,11 +172,9 @@ class ResilientTestProcessor(cmd.Cmd):
 
     def killed(self, *args):
         """ Handle kill signal """
-        try:
-            self.do_quit()
-            self.conn_thread.join()
-        finally:
-            raise SystemExit(0)
+        self.do_quit()
+        self.conn_thread.join()
+        raise SystemExit(0)
 
 
     # -------- Helping Methods --------

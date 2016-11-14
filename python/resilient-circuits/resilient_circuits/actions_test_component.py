@@ -53,24 +53,56 @@ class ResilientTestActions(Component):
         TCPServer(bind).register(self)
         self.sock = None
 
+        # Bytes left to read in current action message
+        self.bytes_remaining = 0
+
     def usage(self):
         return "Submit actions with format: <queue> <message json>"
 
     def read(self, sock, data):
         """ Triggered by user submitting action over tcp connection """
-        LOG.info("Read %s", data)
         self.sock = sock
         try:
-            data =  data.strip().decode('utf-8')
-            if ' ' not in data:
-                self.fire_message(self.usage())
+            if not self.bytes_remaining > 0:
+                # New action message
+                data_as_bytes = bytearray(data)
+                self.bytes_remaining = struct.unpack('>I', data_as_bytes[:4])[0]
+                LOG.info("Need to read %d bytes of message" % self.bytes_remaining)
+                data = data_as_bytes[4:]
+                self.bytes_remaining -= len(data)
+                data =  data.strip().decode('utf-8')
+                if ' ' not in data:
+                    self.fire_message(self.usage())
+                    return
+
+                self.queue_in_progress, self.message_in_progress = data.split(' ', 1)
+
+                if not all((self.queue_in_progress, self.message_in_progress)):
+                    self.fire_message("queue and message must be supplied")
+                    return
+
+            else:
+                self.bytes_remaining -= len(data)
+                data =  data.strip().decode('utf-8')
+                self.message_in_progress += data
+
+            if self.bytes_remaining > 0:
+                # Not done reading action yet
+                LOG.info("Still need to read %d bytes of this action message", self.bytes_remaining)
+                return
+            elif not (self.queue_in_progress and self.message_in_progress):
+                # Finished getting message, but it was invalid
+                self.queue_in_progress = ""
+                self.message_in_progress = ""
+                self.bytes_remaining = 0
                 return
 
-            queue, message = data.split(' ', 1)
-
-            if not all((queue, message)):
-                self.fire_message("queue and message must be supplied")
-                return
+            # Finished receving a complete valid action message
+            queue = self.queue_in_progress
+            message = self.message_in_progress
+            self.queue_in_progress = ""
+            self.message_in_progress = ""
+            self.bytes_remaining = 0
 
             channel = "actions." + queue
             headers = {  "reply-to": "/queue/acks.{org}.{queue}".format(org=self.org_id, queue=queue),
@@ -90,7 +122,7 @@ class ResilientTestActions(Component):
                 message = json.loads(message)
                 assert(isinstance(message, dict))
             except Exception as e:
-                LOG.error("Bad Action Message: %s", message)
+                LOG.exception("Bad Action Message: %s", message)
                 self.fire_message("Bad Action Message! %s" % str(e))
                 return
 
@@ -103,11 +135,11 @@ class ResilientTestActions(Component):
         except Exception as e:
             LOG.exception("Action Failed")
             self.fire_message(str(e))
-    
+
     def connect(self, sock, host, port):
         """Triggered for new connecting TCP clients"""
         pass
-        
+
     def test_response(self, message):
         """ Send a message out to the client """
         LOG.debug("Received message for test client")
@@ -116,7 +148,7 @@ class ResilientTestActions(Component):
     def done(self, event):
         status = yield self.wait(event)
         status = status.value
-        
+
         if isinstance(status, Exception):
             self.fire_message(str(Exception))
             raise status
