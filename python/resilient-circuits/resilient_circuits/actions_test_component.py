@@ -35,7 +35,8 @@ from __future__ import print_function
 import logging
 import time
 import json
-from circuits import Component, Event, Timer, task, handler
+import struct
+from circuits import Component, Event, task, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
 import resilient_circuits.actions_component
@@ -53,21 +54,23 @@ class ResilientTestActions(Component):
         self.sock = None
 
     def usage(self):
-        return b"Submit actions with format: <queue> <message json>\n"
+        return "Submit actions with format: <queue> <message json>"
 
     def read(self, sock, data):
         """ Triggered by user submitting action over tcp connection """
         LOG.info("Read %s", data)
+        self.sock = sock
         try:
             data =  data.strip().decode('utf-8')
             if ' ' not in data:
-                self.fire(write(sock, self.usage().encode()))
+                self.fire_message(self.usage())
                 return
 
             queue, message = data.split(' ', 1)
 
             if not all((queue, message)):
-                raise Exception("queue and message must be supplied")
+                self.fire_message("queue and message must be supplied")
+                return
 
             channel = "actions." + queue
             headers = {  "reply-to": "/queue/acks.{org}.{queue}".format(org=self.org_id, queue=queue),
@@ -87,18 +90,19 @@ class ResilientTestActions(Component):
                 message = json.loads(message)
                 assert(isinstance(message, dict))
             except Exception as e:
-                raise Exception("Bad Action Message! %s" % str(e))
+                LOG.error("Bad Action Message: %s", message)
+                self.fire_message("Bad Action Message! %s" % str(e))
+                return
 
             event = resilient_circuits.actions_component.ActionMessage(source=self.parent,
                                                                        headers=headers,
                                                                        message=message,
                                                                        test=True)
-            self.sock = sock
             self.fire(event, channel)
-            self.fire(write(sock, "Action Submitted\n".encode()))
+            self.fire_message("Action Submitted")
         except Exception as e:
             LOG.exception("Action Failed")
-            self.fire(write(sock, (str(e) + '\n').encode()))
+            self.fire_message(str(e))
     
     def connect(self, sock, host, port):
         """Triggered for new connecting TCP clients"""
@@ -107,16 +111,22 @@ class ResilientTestActions(Component):
     def test_response(self, message):
         """ Send a message out to the client """
         LOG.debug("Received message for test client")
-        self.fire(write(self.sock, ("RESPONSE: " + message + "\n").encode()))
+        self.fire_message("RESPONSE: " + message )
 
     def done(self, event):
         status = yield self.wait(event)
         status = status.value
         
         if isinstance(status, Exception):
-            self.fire(write(self.sock, (str(Exception) + "\n").encode()))
+            self.fire_message(str(Exception))
             raise status
         else:
             status = status + "\n"
-            self.fire(write(self.sock, status.encode()))
+            self.fire_message(status)
 
+    def fire_message(self, message):
+        """ Prefix message with length and append newline before firing"""
+        message = (message + "\n").encode()
+        message = struct.pack('>I', len(message)) + message
+        LOG.info("Firing message: %s", message)
+        self.fire(write(self.sock, message))

@@ -379,7 +379,7 @@ class Actions(ResilientComponent):
             # Using mock API, no need to create a real stomp connection
             LOG.warn("Using Mock. No Stomp connection")
             return
-        
+
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
         self.conn = stomp.Connection(host_and_ports=[(host_port)],
@@ -647,7 +647,7 @@ class Actions(ResilientComponent):
             # Ack the message
             message_id = headers['message-id']
             subscription = headers["subscription"]
-            if not  fevent.test:                    
+            if not  fevent.test:
                 LOG.debug("Ack %s", message_id)
                 self.conn.ack(message_id, subscription, transaction=None)
             # Reply with error status
@@ -694,11 +694,10 @@ class Actions(ResilientComponent):
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
                 reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
-                if not  fevent.test:                    
+                if not  fevent.test:
                     self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
                 else:
                     # Test action, nothing to Ack
                     self.fire(Event.create("test_response", reply_message), '*')
                     LOG.debug("Test Action: No ack done.")
                     LOG.debug(fevent.channels)
-                                    
