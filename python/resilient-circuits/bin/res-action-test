@@ -71,14 +71,12 @@ class ConnectionThread(threading.Thread):
         self.response_callback("Connection to Test Server has died.  Trying to reconnect...")
         self.client.close()
         while not self.stopped():
-            self.response_callback("Trying to reconnect...")
             try:
                 self.connect()
                 self.response_callback("Connection Restored.")
                 return
             except:
                 time.sleep(3)
-        self.response_callback("Reconnect Aborted") 
 
     def run(self):
         while not self.stopped():
