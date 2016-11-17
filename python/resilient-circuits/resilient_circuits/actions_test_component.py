@@ -67,8 +67,11 @@ class ResilientTestActions(Component):
                 # New action message
                 data_as_bytes = bytearray(data)
                 self.bytes_remaining = struct.unpack('>I', data_as_bytes[:4])[0]
-                LOG.info("Need to read %d bytes of message" % self.bytes_remaining)
-                data = data_as_bytes[4:]
+                self.msg_id = struct.unpack('>I', data_as_bytes[4:8])[0]
+                self.bytes_remaining = self.bytes_remaining - 4
+                LOG.info("Need to read %d bytes of message %d",
+                         self.bytes_remaining, self.msg_id)
+                data = data_as_bytes[8:self.bytes_remaining + 8]
                 self.bytes_remaining -= len(data)
                 data =  data.strip().decode('utf-8')
                 if ' ' not in data:
@@ -88,7 +91,8 @@ class ResilientTestActions(Component):
 
             if self.bytes_remaining > 0:
                 # Not done reading action yet
-                LOG.info("Still need to read %d bytes of this action message", self.bytes_remaining)
+                LOG.info("Still need to read %d bytes of this message %s", self.bytes_remaining,
+                         self.msg_id)
                 return
             elif not (self.queue_in_progress and self.message_in_progress):
                 # Finished getting message, but it was invalid
@@ -100,6 +104,7 @@ class ResilientTestActions(Component):
             # Finished receving a complete valid action message
             queue = self.queue_in_progress
             message = self.message_in_progress
+
             self.queue_in_progress = ""
             self.message_in_progress = ""
             self.bytes_remaining = 0
@@ -114,7 +119,7 @@ class ResilientTestActions(Component):
                          "priority": "4",
                          "Co3MessagePayload": "ActionDataDTO",
                          "Co3ContentType": "application/json",
-                         "message-id": "ID:resilient-54199-1476798485700-6:2:12:1:1",
+                         "message-id": "ID:resilient-54199-{val}-6:2:12:1:1".format(val=self.msg_id),
                          "Co3ContextToken": "dummy",
                          "subscription": "stomp-{queue}".format(queue=queue)
             }
@@ -129,9 +134,10 @@ class ResilientTestActions(Component):
             event = resilient_circuits.actions_component.ActionMessage(source=self.parent,
                                                                        headers=headers,
                                                                        message=message,
-                                                                       test=True)
+                                                                       test=True,
+                                                                       test_msg_id = self.msg_id)
             self.fire(event, channel)
-            self.fire_message("Action Submitted")
+            self.fire_message("Action %d Submitted" % self.msg_id)
         except Exception as e:
             LOG.exception("Action Failed")
             self.fire_message(str(e))
@@ -140,10 +146,10 @@ class ResilientTestActions(Component):
         """Triggered for new connecting TCP clients"""
         pass
 
-    def test_response(self, message):
+    def test_response(self, msg_id, message):
         """ Send a message out to the client """
         LOG.debug("Received message for test client")
-        self.fire_message("RESPONSE: " + message )
+        self.fire_message("RESPONSE<action %d>: %s" % (msg_id, message))
 
     def done(self, event):
         status = yield self.wait(event)

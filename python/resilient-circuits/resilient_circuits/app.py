@@ -115,6 +115,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           help="Enable submitting test actions?")
         self.add_argument("--resilient-mock",
                           type=str,
+                          action="store",
                           default=None,
                           help="Mock class defintion. (lib/my_mock_file.MyMockClass)")
 

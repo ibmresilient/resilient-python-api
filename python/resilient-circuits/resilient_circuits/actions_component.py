@@ -252,7 +252,7 @@ class ActionMessage(Event):
     #    @handler()
     #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
 
-    def __init__(self, source=None, headers=None, message=None, test=False):
+    def __init__(self, source=None, headers=None, message=None, test=False, test_msg_id=None):
         super(ActionMessage, self).__init__(source=source, headers=headers, message=message)
         if headers is None:
             headers = {}
@@ -268,6 +268,7 @@ class ActionMessage(Event):
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")
         self.test = test
+        self.test_msg_id = test_msg_id
 
         self.timestamp = None
         ts = headers.get("timestamp")
@@ -640,25 +641,26 @@ class Actions(ResilientComponent):
         if traceback and isinstance(traceback, list):
             message = message + "\n" + ("".join(traceback))
         LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
-        if fevent and isinstance(fevent, ActionMessage) and self.conn:
+        if fevent and isinstance(fevent, ActionMessage):
             fevent.stop()  # Stop further event processing
             status = 1
             headers = fevent.hdr()
             # Ack the message
             message_id = headers['message-id']
             subscription = headers["subscription"]
-            if not  fevent.test:
+            if not  fevent.test and self.conn:
                 LOG.debug("Ack %s", message_id)
                 self.conn.ack(message_id, subscription, transaction=None)
             # Reply with error status
             reply_to = headers['reply-to']
             correlation_id = headers['correlation-id']
             reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
-            if not  fevent.test:
-                self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+            if not fevent.test:
+                if self.conn:
+                    self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
             else:
                 # Test action, nothing to Ack
-                self.fire(Event.create("test_response", reply_message))#, "actions."+fevent.)
+                self.fire(Event.create("test_response", fevent.test_msg_id, reply_message))
                 LOG.debug("Test Action: No ack done.")
 
     @handler("signal")
@@ -698,6 +700,6 @@ class Actions(ResilientComponent):
                     self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
                 else:
                     # Test action, nothing to Ack
-                    self.fire(Event.create("test_response", reply_message), '*')
+                    self.fire(Event.create("test_response", fevent.test_msg_id, reply_message), '*')
                     LOG.debug("Test Action: No ack done.")
                     LOG.debug(fevent.channels)

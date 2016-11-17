@@ -44,6 +44,7 @@ import sys
 import struct
 import argparse
 import signal
+
 try:
     from queue import Queue, Empty
 except:
@@ -60,6 +61,7 @@ class ConnectionThread(threading.Thread):
         self.response_callback = response_callback
         self.host = host
         self.port = port
+
         self.connect()
 
     def connect(self):
@@ -94,7 +96,8 @@ class ConnectionThread(threading.Thread):
                 data = self.client.recv(msg_len).decode()
                 self.response_callback(data)
             try:
-                message = self.format_message(self.message_queue.get_nowait())
+                msg, msg_id = self.message_queue.get_nowait()
+                message = self.format_message(msg, msg_id)
                 self.client.send(message)
             except Empty:
                 pass
@@ -102,10 +105,12 @@ class ConnectionThread(threading.Thread):
         self.response_callback("Closing connection")
         self.client.close()
 
-    def format_message(self, message):
-        """ Prefix message with length and append newline """
+    def format_message(self, message, message_id):
+        """ Prefix message with length and id and append newline """
         message = self.as_bytes(message + "\n")
+        message = struct.pack('>I', message_id) + message
         message = struct.pack('>I', len(message)) + message
+
         return message
 
     def as_bytes(self, data):
@@ -127,6 +132,7 @@ class ResilientTestProcessor(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.message_queue = Queue()
         self.response_queue = Queue()
+        self.message_id = 0
         self.conn_thread = ConnectionThread(host, port, self.message_queue, self.print_response)
         signal.signal(signal.SIGINT, self.killed)
         signal.signal(signal.SIGTERM, self.killed)
@@ -187,7 +193,8 @@ class ResilientTestProcessor(cmd.Cmd):
         if not action_json:
             print("Action required\n")
             return
-        self.message_queue.put(queue + ' ' + action_json)
+        self.message_id = self.message_id + 1
+        self.message_queue.put((queue + ' ' + action_json, self.message_id))
     # end submit_action
 
     def _parse_arg(self, arg):
