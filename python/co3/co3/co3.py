@@ -66,6 +66,13 @@ class SimpleHTTPException(Exception):
         self.response = response
 
 
+class NoChange(Exception):
+    """Exception that can be raised within a get/put handler to indicate 'no change'
+       (which then just bypasses the 'put')
+    """
+    pass
+
+
 def _raise_if_error(response):
     """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
 
@@ -329,7 +336,10 @@ class SimpleClient(object):
                                          timeout=timeout)
         _raise_if_error(response)
         payload = json.loads(response.text)
-        apply_func(payload)
+        try:
+            apply_func(payload)
+        except NoChange:
+            return payload
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.put,
                                          url,
