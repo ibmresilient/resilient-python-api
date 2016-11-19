@@ -62,18 +62,29 @@ class LoggingSimpleClient(co3.SimpleClient):
         except Exception as e:
             raise Exception("Response Logging Directory %s does not exist!", logging_directory)
 
+    def _log_response(self, response, *args, **kwargs):
+        """ Log Headers and JSON from a Requests Response object """
+        url = urlparse.urlparse(response.url)
+        filename = "_".join((str(response.status_code), "{0}", url.path, url.params,
+                             datetime.datetime.now().isoformat())).replace('/', '_')
+        with open(os.path.join(self.logging_directory, filename.format("JSON")), "w+") as logfile:
+            logfile.write(json.dumps(response.json(), indent=2))
+        with open(os.path.join(self.logging_directory, filename.format("HEADER")), "w+") as logfile:
+            logfile.write(json.dumps(dict(response.headers), indent=2))
+
+    def _connect(self, *args, **kwargs):
+        """ Connect to Resilient and log response """
+        normal_post = self.session.post
+        self.session.post = lambda *args, **kwargs: normal_post(*args, **kwargs, hooks=dict(response=self._log_response))
+        session = super(LoggingSimpleClient, self)._connect(*args, **kwargs)
+        self.session.post = normal_post
+        return session
+
     def _execute_request(self, operation, url, **kwargs):
         """Execute a HTTP request and log response.
            If unauthorized (likely due to a session timeout), retry.
         """
-        def log_response(response, *args, **kwargs):
-            url = urlparse.urlparse(response.url)
-            filename = "_".join((url.path, url.params,
-                                 datetime.datetime.now().isoformat())).replace('/', '_')
-            with open(os.path.join(self.logging_directory, filename), "w+") as logfile:
-                logfile.write(json.dumps(response.json(), indent=2))
-
-        wrapped_operation = lambda url, **kwargs: operation(url, **kwargs, hooks=dict(response=log_response))
+        wrapped_operation = lambda url, **kwargs: operation(url, **kwargs, hooks=dict(response=self._log_response))
         return super(LoggingSimpleClient, self)._execute_request(wrapped_operation, url, **kwargs)
 
 
