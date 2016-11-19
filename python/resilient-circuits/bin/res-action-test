@@ -163,8 +163,13 @@ class ResilientTestProcessor(cmd.Cmd):
 
     def do_runlist(self, arg):
         """Run a list of commands from a file:  runlist <filename>"""
-        with open(arg) as f:
-            self.cmdqueue.extend(f.read().splitlines())
+        if not arg:
+            print("runlist command requires a filename")
+        try:
+            with open(arg) as f:
+                self.cmdqueue.extend(f.read().splitlines())
+        except Exception as e:
+            print("Bad command list file: %s" % str(e))
     # end do_runlist
 
     def do_quit(self, *args):
@@ -173,6 +178,10 @@ class ResilientTestProcessor(cmd.Cmd):
         self.conn_thread.stop()
         return True
     # end do_quit
+
+    def do_EOF(self, *args):
+        """ Ctrl+D """
+        return self.do_quit()
 
     def killed(self, *args):
         """ Handle kill signal """
@@ -184,7 +193,7 @@ class ResilientTestProcessor(cmd.Cmd):
     # -------- Helping Methods --------
     def print_response(self, data):
         """ print a Test Server response """
-        print(data + "\n")
+        print("\n" + data)
         print(self.prompt, end="")
         sys.stdout.flush()
 

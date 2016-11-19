@@ -45,7 +45,7 @@ import os
 import filelock
 from logging.handlers import RotatingFileHandler
 from resilient_circuits.component_loader import ComponentLoader
-from resilient_circuits.actions_component import Actions
+from resilient_circuits.actions_component import Actions, ResilientComponent
 from circuits import Component, Debugger
 import resilient_circuits.keyring_arguments as keyring_arguments
 
@@ -84,7 +84,12 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
         default_no_prompt_password = self.getopt("resilient", "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
-        default_no_prompt_password = default_no_prompt_password.lower()[0] in ("1", "t", "y")
+        default_no_prompt_password = self._is_true(default_no_prompt_password)
+        default_test_actions = self._is_true(self.getopt("resilient", "test_actions")) or False
+        default_resilient_mock = self.getopt("resilient", "resilient_mock") or None
+        default_test_host = self.getopt("resilient", "test_host") or None
+        default_test_port = self.getopt("resilient", "test_port") or None
+        default_log_responses = self.getopt("resilient", "log_http_responses") or ""
 
         self.add_argument("--stomp-port",
                           type=int,
@@ -112,12 +117,27 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           help="Never prompt for password on stdin")
         self.add_argument("--test-actions",
                           action="store_true",
+                          default=default_test_actions,
                           help="Enable submitting test actions?")
         self.add_argument("--resilient-mock",
                           type=str,
                           action="store",
-                          default=None,
+                          default=default_resilient_mock,
                           help="Mock class defintion. (lib/my_mock_file.MyMockClass)")
+        self.add_argument("--test-host",
+                          type=str,
+                          action="store",
+                          default=default_test_host,
+                          help="For use with --test-actions option. Host or IP to bind test server to.")
+        self.add_argument("--test-port",
+                          type=int,
+                          action="store",
+                          default=default_test_port,
+                          help="For use with --test-actions option. Port to bind test server to.")
+        self.add_argument("--log-http-responses",
+                          type=str,
+                          default=default_log_responses,
+                          help="Log all responses from Resilient REST API to this directory")
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
@@ -127,6 +147,13 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
                 opts.update({section: items})
         return opts
+
+    @staticmethod
+    def _is_true(value):
+        if value:
+            return value.lower()[0] in ("1", "t", "y")
+        else:
+            return False
 
 
 # Main component for our application
@@ -152,6 +179,10 @@ class App(Component):
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
+
+        if self.opts.get("test_actions", False):
+            # Make all components aware that we are in test mode
+            ResilientComponent.test_mode = True
 
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
@@ -222,7 +253,7 @@ class App(Component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
 
-      
+
 def run(*args, **kwargs):
     """Main app"""
 

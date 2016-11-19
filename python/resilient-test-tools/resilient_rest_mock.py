@@ -47,7 +47,7 @@ def resilient_endpoint(request_type, uri):
 
 class ResilientMockBase(object):
     class __metaclass__(type):
-        """ creates collection of with a `uri` attribute
+        """ creates collection with a `uri` attribute
             and stores it on the class as `registered_endpoints`
         """
         def __new__(cls, name, bases, attr):

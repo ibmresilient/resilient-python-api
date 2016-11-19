@@ -131,6 +131,7 @@ class ResilientComponent(BaseComponent):
        This is a convenient superclass for custom components that use the
        Resilient Action Module.
     """
+    test_mode = False # True with --test-actions option
 
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()
@@ -372,8 +373,13 @@ class Actions(ResilientComponent):
 
         if opts.get("test_actions", False):
             # Let user submit test actions from the command line for testing
-            LOG.info("Action Tests Enabled! Run resilient_action_test --help for usage")
-            actions_test_component.ResilientTestActions(self.org_id).register(self)
+            LOG.info("Action Tests Enabled! Run res-action-test and type help for usage")
+            test_options = {}
+            if opts.get("test_port"):
+                test_options["port"] = int(opts["test_port"])
+            if opts.get("test_host"):
+                test_options["host"] = opts["test_host"]
+            actions_test_component.ResilientTestActions(self.org_id, **test_options).register(self)
 
         self.resilient_mock = opts["resilient_mock"] or False
         if self.resilient_mock:
@@ -637,7 +643,10 @@ class Actions(ResilientComponent):
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        message = str(value or "Processing failed")
+        if etype:
+            message = str(etype.__name__) + ": <" + str(value) + ">"
+        else:
+            message = "Processing failed"
         if traceback and isinstance(traceback, list):
             message = message + "\n" + ("".join(traceback))
         LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
@@ -702,4 +711,3 @@ class Actions(ResilientComponent):
                     # Test action, nothing to Ack
                     self.fire(Event.create("test_response", fevent.test_msg_id, reply_message), '*')
                     LOG.debug("Test Action: No ack done.")
-                    LOG.debug(fevent.channels)

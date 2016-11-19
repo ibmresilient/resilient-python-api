@@ -46,10 +46,11 @@ LOG = logging.getLogger(__name__)
 class ResilientTestActions(Component):
     """ Mock the stomp connection for testing"""
 
-    def __init__(self, org_id):
+    def __init__(self, org_id, host="localhost", port=8008):
         super(ResilientTestActions, self).__init__()
         self.org_id = org_id
-        bind = ("0.0.0.0", 8008)
+        bind = (host, port)
+        LOG.debug("Binding test server to %s:%d", host, port)
         TCPServer(bind).register(self)
         self.sock = None
 
@@ -112,7 +113,7 @@ class ResilientTestActions(Component):
             channel = "actions." + queue
             headers = {  "reply-to": "/queue/acks.{org}.{queue}".format(org=self.org_id, queue=queue),
                          "expires": "0",
-                         "timestamp": str(int(time.time())),
+                         "timestamp": str(int(time.time()) * 1000),
                          "destination": "/queue/actions.{org}.{queue}".format(org=self.org_id, queue=queue),
                          "correlation-id": "invid:390",
                          "persistent": "True",
@@ -127,8 +128,8 @@ class ResilientTestActions(Component):
                 message = json.loads(message)
                 assert(isinstance(message, dict))
             except Exception as e:
-                LOG.exception("Bad Action Message: %s", message)
-                self.fire_message("Bad Action Message! %s" % str(e))
+                LOG.exception("Bad Message<action %d>: %s", self.msg_id, message)
+                self.fire_message("Bad Message<action %d>! %s" % (self.msg_id, str(e)))
                 return
 
             event = resilient_circuits.actions_component.ActionMessage(source=self.parent,
@@ -137,10 +138,10 @@ class ResilientTestActions(Component):
                                                                        test=True,
                                                                        test_msg_id = self.msg_id)
             self.fire(event, channel)
-            self.fire_message("Action %d Submitted" % self.msg_id)
+            self.fire_message("Action Submitted<action %d>" % self.msg_id)
         except Exception as e:
-            LOG.exception("Action Failed")
-            self.fire_message(str(e))
+            LOG.exception("Action Failed<action %d>", self.msg_id)
+            self.fire_message("Action Failed<action %d>: %s" % (self.msg_id, str(e)))
 
     def connect(self, sock, host, port):
         """Triggered for new connecting TCP clients"""
@@ -156,15 +157,15 @@ class ResilientTestActions(Component):
         status = status.value
 
         if isinstance(status, Exception):
-            self.fire_message(str(Exception))
+            self.fire_message("Action Failed<action %d>: %s" % (event.test_msg_id, str(Exception)))
             raise status
         else:
             status = status + "\n"
-            self.fire_message(status)
+            self.fire_message("Action Completed<action %d>: %s" % (event.test_msg_id, status))
 
     def fire_message(self, message):
         """ Prefix message with length and append newline before firing"""
-        message = (message + "\n").encode()
+        message = message.encode()
         message = struct.pack('>I', len(message)) + message
-        LOG.info("Firing message: %s", message)
+        LOG.debug("Firing message: %s", message)
         self.fire(write(self.sock, message))

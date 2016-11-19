@@ -34,20 +34,53 @@
 import co3
 import os
 import sys
+import datetime
 import json
 import logging
 import importlib
+try:
+    # Python 3
+    import urllib.parse as urlparse
+except:
+    # Python 2
+    import urlparse
 import requests
 LOG = logging.getLogger(__name__)
 resilient_client = None
 connection_opts = None
 
 
+class LoggingSimpleClient(co3.SimpleClient):
+    """ Simple Client version that logs all Resilient Responses """
+    def __init__(self, *args, logging_directory = "", **kwargs):
+        super(LoggingSimpleClient, self).__init__(*args, **kwargs)
+        try:
+            directory = os.path.expanduser(logging_directory)
+            directory = os.path.expandvars(directory)
+            assert(os.path.exists(directory))
+            self.logging_directory = directory
+        except Exception as e:
+            raise Exception("Response Logging Directory %s does not exist!", logging_directory)
+
+    def _execute_request(self, operation, url, **kwargs):
+        """Execute a HTTP request and log response.
+           If unauthorized (likely due to a session timeout), retry.
+        """
+        def log_response(response, *args, **kwargs):
+            url = urlparse.urlparse(response.url)
+            filename = "_".join((url.path, url.params,
+                                 datetime.datetime.now().isoformat())).replace('/', '_')
+            with open(os.path.join(self.logging_directory, filename), "w+") as logfile:
+                logfile.write(json.dumps(response.json(), indent=2))
+
+        wrapped_operation = lambda url, **kwargs: operation(url, **kwargs, hooks=dict(response=log_response))
+        return super(LoggingSimpleClient, self)._execute_request(wrapped_operation, url, **kwargs)
+
+
 def reset_resilient_client():
     """Reset the cached client"""
     global resilient_client
     resilient_client = None
-
 
 def get_resilient_client(opts):
     """Get a connected instance of SimpleClient for Resilient REST API"""
@@ -75,14 +108,24 @@ def get_resilient_client(opts):
 
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
-    resilient_client = co3.SimpleClient(org_name=opts.get("org"),
-                                        proxies=opts.get("proxy"),
-                                        base_url=url,
-                                        verify=verify)
+    client_args = {"org_name": opts.get("org"),
+                   "proxies": opts.get("proxy"),
+                   "base_url": url,
+                   "verify": verify
+                   }
+    if opts.get("log_http_responses"):
+        LOG.warn("Logging all HTTP Responses from Resilient to %s",
+                 opts["log_http_responses"])
+        simple_client = LoggingSimpleClient
+        client_args["logging_directory"] = opts["log_http_responses"]
+    else:
+        simple_client = co3.SimpleClient
+
+    resilient_client = simple_client(**client_args)
 
     if opts.get("resilient_mock"):
         # Use a Mock for the Resilient Rest API
-        LOG.warn("Using Mock for Resilent REST API")
+        LOG.warn("Using Mock %s for Resilent REST API", opts["resilient_mock"])
         module_path, class_name =opts["resilient_mock"].rsplit('.', 1)
         path, module_name = os.path.split(module_path)
         sys.path.insert(0, path)
@@ -92,7 +135,6 @@ def get_resilient_client(opts):
         res_mock = mock_class(org_name=opts.get("org"),
                               email=opts["email"])
         resilient_client.session.mount("https://", res_mock.adapter)
-
 
     userinfo = resilient_client.connect(opts["email"], opts["password"])
 
