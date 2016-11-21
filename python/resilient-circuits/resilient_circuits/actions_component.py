@@ -97,7 +97,19 @@ class required_action_field(object):
 
 
 class defer(object):
-    """Decorator for an event handler, delays it awhile"""
+    """Decorator for an event handler, delays it awhile.
+
+       Usage:
+       Decorate a Resilient Circuits handler.
+       This decorator should go *before* the '@handler(...)'.
+       Do not use on 'generic' handlers, only on named-event handlers.
+
+            @defer(delay=5)
+            @handler("actions_event_name")
+            def _function(self, event, *args, **kwargs):
+                # handle the event
+                pass
+    """
     def __init__(self, *args, **kwargs):
         self.delay = kwargs.get("delay", None)
         if len(args) > 0:
@@ -112,6 +124,100 @@ class defer(object):
             LOG.debug("decorated")
             if event.defer(itself, delay=self.delay):
                 # OK, let's handle it later
+                return
+            return func(itself, event, *args, **kwargs)
+        return decorated
+
+
+def debounce_get_incident_key(event):
+    """Callback to return the debounce-key for an event.
+       Multiple events with this key will be debounced together.
+       Default is: event name and incident id.
+    """
+    key = "{} for {}".format(event.name, event.message["incident"]["id"])
+    return key
+
+
+class debounce(object):
+    """Decorator for an event handler, debounces multiple occurrences.
+
+       Parameters:
+           delay= (seconds).  Time before the event will be processed.
+                  If another event (with the same key) occurs in this
+                  time, the timer starts over.
+           discard= (Boolean, optional).  If true, when there are multiple
+                  events before the delay expires, only the most recent one
+                  is processed, and the previous ones are discarded.
+
+       Usage:
+       Decorate a Resilient Circuits handler.
+       This decorator should go *before* the '@handler(...)'.
+       Do not use on 'generic' handlers, only on named-event handlers.
+
+            @debounce(delay=10, discard=True)
+            @handler("actions_event_name")
+            def _function(self, event, *args, **kwargs):
+                # handle the event
+                pass
+    """
+    def __init__(self, *args, **kwargs):
+        self.delay = kwargs.get("delay", 1)
+        self.discard = kwargs.get("discard", False)
+        self.get_key = kwargs.get("get_key_func", debounce_get_incident_key)
+        self.debouncedata = {}
+        if len(args) > 0:
+            raise Exception("Usage: @debounce(delay=<seconds>, [discard=True])")
+
+    def __call__(self, func):
+        """Called at decoration time, with function"""
+        LOG.debug("@defer %s", func)
+
+        @wraps(func)
+        def decorated(itself, event, *args, **kwargs):
+            LOG.debug("decorated")
+            # De-bounce messages for this event and the same key:
+            # (key is the incident-id, by default):
+            # - Don't handle the message immediately.
+            #   - Note that we have a deferred event.
+            #   - Defer it for <<delay>>.
+            # - If an event arrives and there is any deferred message,
+            #   - Reset the timer interval to <<delay>>
+            #   - Optionally: throw away the new message.
+            #     Otherwise: defer this one too (to be processed
+            #     immediately after the first deferred message).
+            key = self.get_key(event)
+            if event.deferred:
+                # We deferred this event earlier,
+                # and now it has fired without being reset in the meantime.
+                # All the pending events are OK to go!  Forget their timers!
+                LOG.info("Handling deferred %s", key)
+                event.deferred = False
+                self.debouncedata.pop(key, None)
+            else:
+                # This is a new event.
+                # Are there any other deferred events for this [action+incident]?
+                if key not in self.debouncedata:
+                    # We'll keep a list of all the timers
+                    self.debouncedata[key] = []
+                else:
+                    # Duplicate event
+                    if self.discard:
+                        # Unregister all the previous timers so they don't fire
+                        for timer in self.debouncedata[key]:
+                            timer.unregister()
+                        self.debouncedata[key] = []
+                    else:
+                        # Reset all the pending timers
+                        for timer in self.debouncedata[key]:
+                            timer.reset()
+                # Defer this new event with a timer.
+                LOG.info("Deferring %s", key)
+                timer = Timer(self.delay, event)
+                timer.register(itself)
+                event.deferred = True
+                # Remember the new timer so that we can reset it if necessary
+                self.debouncedata[key].append(timer)
+                # We're done until the timer fires
                 return
             return func(itself, event, *args, **kwargs)
         return decorated
