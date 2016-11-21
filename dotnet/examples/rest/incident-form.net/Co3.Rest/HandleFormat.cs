@@ -29,52 +29,18 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Specialized;
-using Co3.Rest.Dto;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Co3.Rest
 {
-    public class IncidentRest : RestEndpoint
+    public enum HandleFormat
     {
-        const string Endpoint = "/orgs/{0}/incidents";
-        const string EndpointWithId = Endpoint + "/{1}";
-        const string ParamWantFullData = "want_full_data";
-        const string ParamWantTask = "want_tasks";
-
-        internal IncidentRest(RestEndpoint session) : base(session)
-        {
-        }
-
-        public IncidentDto CreateIncident(int orgId, IncidentDto incident)
-        {
-            return HttpPost<IncidentDto>(string.Format(Endpoint, orgId), incident);
-        }
-
-        public IncidentDto CreateIncident(int orgId, IncidentDto incident,
-            bool wantFullData, bool wantTasks)
-        {
-            NameValueCollection parameters = new NameValueCollection();
-
-            if (wantTasks)
-                parameters.Add(ParamWantTask, "true");
-
-            if (wantFullData)
-            {
-                parameters.Add(ParamWantFullData, "true");
-                return HttpPost<FullIncidentDataDto>(string.Format(Endpoint, orgId), parameters, incident);
-            }
-
-            return HttpPost<IncidentDto>(string.Format(Endpoint, orgId), parameters, incident);
-        }
-
-        public FullIncidentDataDto GetIncidentById(int orgId, int incId)
-        {
-            return HttpGet<FullIncidentDataDto>(string.Format(EndpointWithId, orgId, incId));
-        }
-
-        public FullIncidentDataDto UpdateIncident(int orgId, int incId, FullIncidentDataDto data)
-        {
-            return HttpPut<FullIncidentDataDto>(string.Format(EndpointWithId, orgId, incId), null, data);
-        }
+        Ids,
+        Names,
+        Objects
     }
 }

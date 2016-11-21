@@ -32,9 +32,10 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
-using System.Text;
 using System.Net;
 using Co3.Rest.JsonConverters;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Co3.Rest
 {
@@ -42,7 +43,14 @@ namespace Co3.Rest
     {
         public static string Co3ApiUrl { get; set; }
         protected Dto.UserSessionDto m_session;
-        protected Cookie m_cookie;
+        private Cookie m_cookie;
+
+        private readonly string m_proxyUser;
+        private readonly string m_proxyPass;
+        private readonly string m_proxyDomain;
+        private readonly string m_handleFormat;
+        private readonly string m_textContentOutputFormat;
+        private readonly JsonSerializerSettings m_jsonSerializerSettings;
 
         protected RestEndpoint(RestEndpoint session)
         {
@@ -51,6 +59,24 @@ namespace Co3.Rest
                 m_session = session.m_session;
                 m_cookie = session.m_cookie;
             }
+
+            NameValueCollection appSettings = System.Configuration.ConfigurationManager.AppSettings;
+            m_proxyUser = appSettings["Co3ProxyUser"];
+            m_proxyPass = appSettings["Co3ProxyPassword"];
+            m_proxyDomain = appSettings["Co3ProxyDomain"];
+            m_handleFormat = appSettings["Co3HandleFormat"];
+            m_textContentOutputFormat = appSettings["Co3TextContentOutputFormat"];
+
+            m_jsonSerializerSettings = new JsonSerializerSettings()
+            {
+
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            m_jsonSerializerSettings.Converters.Add(new UnixTimeConverter());
+            m_jsonSerializerSettings.Converters.Add(new StringEnumConverter());
+            m_jsonSerializerSettings.Converters.Add(new ObjectHandleConverter((HandleFormat)Enum.Parse(typeof(HandleFormat), m_handleFormat, true)));
         }
 
         static RestEndpoint()
@@ -86,12 +112,12 @@ namespace Co3.Rest
             return InvokeWebMethod<T>("PUT", endPointUrl, postData);
         }
 
-        public T HttpDelete<T>(string endPointUrl)
+        protected T HttpDelete<T>(string endPointUrl)
         {
             return InvokeWebMethod<T>("DELETE", endPointUrl, null);
         }
 
-        T InvokeWebMethod<T>(string method, string endPointUrl, object postData)
+        private T InvokeWebMethod<T>(string method, string endPointUrl, object postData)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Co3ApiUrl + endPointUrl);
             request.CookieContainer = new CookieContainer();
@@ -99,12 +125,9 @@ namespace Co3.Rest
             request.ContentType = "application/json";
             request.Method = method;
 
-            NameValueCollection appSettings
-                = System.Configuration.ConfigurationManager.AppSettings;
-            if (appSettings != null && appSettings["Co3ProxyUser"] != null)
+            if (!string.IsNullOrEmpty(m_proxyUser))
             {
-                request.Proxy.Credentials = new NetworkCredential(appSettings["Co3ProxyUser"],
-                    appSettings["Co3ProxyPassword"], appSettings["Co3ProxyDomain"]);
+                request.Proxy.Credentials = new NetworkCredential(m_proxyUser, m_proxyPass, m_proxyDomain);
             }
             else
                 request.Credentials = CredentialCache.DefaultCredentials;
@@ -116,8 +139,8 @@ namespace Co3.Rest
             if (m_session != null)
             {
                 request.Headers.Add("X-sess-id", m_session.CsrfToken);
-                request.Headers.Add("handle_format", "objects");
-                request.Headers.Add("text_content_output_format", "objects_convert");
+                request.Headers.Add("handle_format", m_handleFormat);
+                request.Headers.Add("text_content_output_format", m_textContentOutputFormat);
             }
 
             if (postData == null)
@@ -144,45 +167,21 @@ namespace Co3.Rest
             }
         }
 
-        public static T FromJson<T>(string json)
+        private T FromJson<T>(string json)
         {
-            Newtonsoft.Json.JsonSerializerSettings settings
-                = new Newtonsoft.Json.JsonSerializerSettings()
-                {
-
-                    DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
-                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
-                };
-
-            settings.Converters.Add(new UnixTimeConverter());
-
             try
             {
-                T t = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json, settings);
-                return t;
+                return JsonConvert.DeserializeObject<T>(json, m_jsonSerializerSettings);
             }
             catch
             {
-                throw new ArgumentException("Unable to deserialize JSON string.  Please check the JSON string is properly formatted and the object for which it represents is correct.");
+                throw new ArgumentException("Unable to deserialize JSON string. Please check the JSON string is properly formatted and the object for which it represents is correct.");
             }
         }
 
-        public static string ToJson(object obj)
+        private string ToJson(object obj)
         {
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-
-            Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer()
-            {
-                DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
-                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
-            };
-
-            serializer.Converters.Add(new UnixTimeConverter());
-            serializer.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            serializer.Serialize(sw, obj);
-
-            return sb.ToString();
+            return JsonConvert.SerializeObject(obj, m_jsonSerializerSettings);
         }
     }
 }
