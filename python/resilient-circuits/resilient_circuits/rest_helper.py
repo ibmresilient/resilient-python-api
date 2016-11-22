@@ -52,7 +52,7 @@ connection_opts = None
 
 class LoggingSimpleClient(co3.SimpleClient):
     """ Simple Client version that logs all Resilient Responses """
-    def __init__(self, *args, logging_directory = "", **kwargs):
+    def __init__(self, logging_directory="", *args, **kwargs):
         super(LoggingSimpleClient, self).__init__(*args, **kwargs)
         try:
             directory = os.path.expanduser(logging_directory)
@@ -75,7 +75,7 @@ class LoggingSimpleClient(co3.SimpleClient):
     def _connect(self, *args, **kwargs):
         """ Connect to Resilient and log response """
         normal_post = self.session.post
-        self.session.post = lambda *args, **kwargs: normal_post(*args, **kwargs, hooks=dict(response=self._log_response))
+        self.session.post = lambda *args, **kwargs: normal_post(hooks=dict(response=self._log_response), *args, **kwargs)
         session = super(LoggingSimpleClient, self)._connect(*args, **kwargs)
         self.session.post = normal_post
         return session
@@ -84,7 +84,7 @@ class LoggingSimpleClient(co3.SimpleClient):
         """Execute a HTTP request and log response.
            If unauthorized (likely due to a session timeout), retry.
         """
-        wrapped_operation = lambda url, **kwargs: operation(url, **kwargs, hooks=dict(response=self._log_response))
+        wrapped_operation = lambda url, **kwargs: operation(url, hooks=dict(response=self._log_response), **kwargs)
         return super(LoggingSimpleClient, self)._execute_request(wrapped_operation, url, **kwargs)
 
 

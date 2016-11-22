@@ -42,6 +42,13 @@ from circuits.net.events import write
 import resilient_circuits.actions_component
 LOG = logging.getLogger(__name__)
 
+class TestAction(Event):
+    """ Circuits event to insert a test Action Message """
+    def __init__(self, queue, msg_id, message):
+        if not all((queue, msg_id, message)):
+            raise ValueError("queue, msg_id, and message are required")
+        super(TestAction, self).__init__(queue=queue, msg_id=msg_id, message=message)
+
 
 class ResilientTestActions(Component):
     """ Mock the stomp connection for testing"""
@@ -52,64 +59,15 @@ class ResilientTestActions(Component):
         bind = (host, port)
         LOG.debug("Binding test server to %s:%d", host, port)
         TCPServer(bind).register(self)
-        self.sock = None
-
-        # Bytes left to read in current action message
-        self.bytes_remaining = 0
+        self.messages_in_progress = {}
+        self.actions_sent = {}
 
     def usage(self):
         return "Submit actions with format: <queue> <message json>"
 
-    def read(self, sock, data):
-        """ Triggered by user submitting action over tcp connection """
-        self.sock = sock
+    def TestAction(self, queue, msg_id, message):
+        """ Create and fire an ActionMessage """
         try:
-            if not self.bytes_remaining > 0:
-                # New action message
-                data_as_bytes = bytearray(data)
-                self.bytes_remaining = struct.unpack('>I', data_as_bytes[:4])[0]
-                self.msg_id = struct.unpack('>I', data_as_bytes[4:8])[0]
-                self.bytes_remaining = self.bytes_remaining - 4
-                LOG.info("Need to read %d bytes of message %d",
-                         self.bytes_remaining, self.msg_id)
-                data = data_as_bytes[8:self.bytes_remaining + 8]
-                self.bytes_remaining -= len(data)
-                data =  data.strip().decode('utf-8')
-                if ' ' not in data:
-                    self.fire_message(self.usage())
-                    return
-
-                self.queue_in_progress, self.message_in_progress = data.split(' ', 1)
-
-                if not all((self.queue_in_progress, self.message_in_progress)):
-                    self.fire_message("queue and message must be supplied")
-                    return
-
-            else:
-                self.bytes_remaining -= len(data)
-                data =  data.strip().decode('utf-8')
-                self.message_in_progress += data
-
-            if self.bytes_remaining > 0:
-                # Not done reading action yet
-                LOG.info("Still need to read %d bytes of this message %s", self.bytes_remaining,
-                         self.msg_id)
-                return
-            elif not (self.queue_in_progress and self.message_in_progress):
-                # Finished getting message, but it was invalid
-                self.queue_in_progress = ""
-                self.message_in_progress = ""
-                self.bytes_remaining = 0
-                return
-
-            # Finished receving a complete valid action message
-            queue = self.queue_in_progress
-            message = self.message_in_progress
-
-            self.queue_in_progress = ""
-            self.message_in_progress = ""
-            self.bytes_remaining = 0
-
             channel = "actions." + queue
             headers = {  "reply-to": "/queue/acks.{org}.{queue}".format(org=self.org_id, queue=queue),
                          "expires": "0",
@@ -120,52 +78,103 @@ class ResilientTestActions(Component):
                          "priority": "4",
                          "Co3MessagePayload": "ActionDataDTO",
                          "Co3ContentType": "application/json",
-                         "message-id": "ID:resilient-54199-{val}-6:2:12:1:1".format(val=self.msg_id),
+                         "message-id": "ID:resilient-54199-{val}-6:2:12:1:1".format(val=msg_id),
                          "Co3ContextToken": "dummy",
                          "subscription": "stomp-{queue}".format(queue=queue)
             }
             try:
+                sock = self.actions_sent.get(msg_id)
                 message = json.loads(message)
                 assert(isinstance(message, dict))
             except Exception as e:
-                LOG.exception("Bad Message<action %d>: %s", self.msg_id, message)
-                self.fire_message("Bad Message<action %d>! %s" % (self.msg_id, str(e)))
+                LOG.exception("Bad Message<action %d>: %s", msg_id, message)
+                if sock:
+                    self.fire_message(sock, "Bad Message<action %d>! %s" % (msg_id, str(e)))
                 return
 
             event = resilient_circuits.actions_component.ActionMessage(source=self.parent,
                                                                        headers=headers,
                                                                        message=message,
                                                                        test=True,
-                                                                       test_msg_id = self.msg_id)
+                                                                       test_msg_id = msg_id)
             self.fire(event, channel)
-            self.fire_message("Action Submitted<action %d>" % self.msg_id)
+            if sock:
+                self.fire_message(sock, "Action Submitted<action %d>" % msg_id)
         except Exception as e:
-            LOG.exception("Action Failed<action %d>", self.msg_id)
-            self.fire_message("Action Failed<action %d>: %s" % (self.msg_id, str(e)))
+            LOG.exception("Action Failed<action %d>", msg_id)
+            if sock:
+                self.fire_message(sock, "Action Failed<action %d>: %s" % (msg_id, str(e)))
+
+    @handler("read")
+    def process_data(self, sock, data):
+        """ Process data received from TCP stream """
+        msg_id = -1 # default
+        try:
+            data_as_bytes = bytearray(data)
+            if sock not in self.messages_in_progress:
+                # New message, parse size out
+                LOG.info("New Action Message!")
+                msg_size = struct.unpack('>I', data_as_bytes[:4])[0] 
+                partial_msg = data_as_bytes[4:msg_size + 4]
+            else:
+                # Retrieve what we had so far
+                msg_size, partial_msg = self.messages_in_progress.pop(sock)
+                LOG.info("Continuation of Message sized %d", msg_size)
+                partial_msg = partial_msg + data_as_bytes
+
+            if len(partial_msg) < msg_size:
+                # Store what we have so far and wait for more
+                self.messages_in_progress[sock] = msg_size, partial_msg
+                LOG.info("Still don't have the whole message. %d out of %d bytes", len(partial_msg), msg_size)
+                return
+            else:
+                # Complete message, parse out msg_id, queue, and msg
+                msg_id = struct.unpack('>I', partial_msg[:4])[0]
+                data = partial_msg[4:msg_size]
+                remainder = partial_msg[msg_size:]
+                data = data.strip().decode('utf-8')
+                LOG.info("Got all of Message %d!", msg_id)
+                if ' ' not in data or len(data) < 2:
+                    # Bad Command
+                    self.fire_message(sock, ("<action %d>: " %  msg_id) + self.usage())
+                else:
+                    queue, message = data.split(' ', 1)
+                    self.actions_sent[msg_id] = sock
+                    self.fire(TestAction(queue, msg_id, message))
+
+                if remainder:
+                    # Process remainder
+                    self.process_data(sock, remainder)
+                    LOG.info("Processing %s bytes of next message", len(remainder))
+        except Exception as e:
+            LOG.exception("Action Failed<action %d>", msg_id)
+            self.fire_message(sock, "Action Failed<action %d>: %s" % (msg_id, str(e)))
 
     def connect(self, sock, host, port):
         """Triggered for new connecting TCP clients"""
         pass
 
     def test_response(self, msg_id, message):
-        """ Send a message out to the client """
+        """ Send a message out to the client if it orginated from test client"""
         LOG.debug("Received message for test client")
-        self.fire_message("RESPONSE<action %d>: %s" % (msg_id, message))
+        sock = self.actions_sent.get(msg_id)
+        if sock:
+            self.fire_message(sock, "RESPONSE<action %d>: %s" % (msg_id, message))
 
     def done(self, event):
         status = yield self.wait(event)
         status = status.value
-
+        sock = self.actions_sent.get(event.test_msg_id)
         if isinstance(status, Exception):
-            self.fire_message("Action Failed<action %d>: %s" % (event.test_msg_id, str(Exception)))
+            self.fire_message(sock, "Action Failed<action %d>: %s" % (event.test_msg_id, str(Exception)))
             raise status
         else:
             status = status + "\n"
-            self.fire_message("Action Completed<action %d>: %s" % (event.test_msg_id, status))
+            self.fire_message(sock, "Action Completed<action %d>: %s" % (event.test_msg_id, status))
 
-    def fire_message(self, message):
-        """ Prefix message with length and append newline before firing"""
+    def fire_message(self, sock, message):
+        """ Prefix message with length before firing"""
         message = message.encode()
         message = struct.pack('>I', len(message)) + message
-        LOG.debug("Firing message: %s", message)
-        self.fire(write(self.sock, message))
+        LOG.debug( "Firing Message: %s", message)
+        self.fire(write(sock, message))
