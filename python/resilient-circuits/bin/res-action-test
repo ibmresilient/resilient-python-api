@@ -30,11 +30,11 @@ from __future__ import print_function
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 """Resilient Circuits Action Test Tool"""
-""""
-Usage:
- $ res-action-test
+#
+# Usage:
+#  $ res-action-test
+#
 
-"""
 import cmd
 import time
 import threading
@@ -70,7 +70,8 @@ class ConnectionThread(threading.Thread):
         self.client.connect(server_address)
 
     def reconnect(self):
-        self.response_callback("Connection to Test Server has died.  Trying to reconnect...")
+        self.response_callback(("Connection to Test Server has died.  "
+                                "Trying to reconnect..."))
         self.client.close()
         while not self.stopped():
             try:
@@ -82,7 +83,9 @@ class ConnectionThread(threading.Thread):
 
     def run(self):
         while not self.stopped():
-            readables, writables, errorables = select.select([self.client], [], [self.client], 1)
+            readables, writables, errorables = select.select([self.client],
+                                                             [], [self.client],
+                                                             1)
             if errorables:
                 self.reconnect()
                 continue
@@ -92,7 +95,6 @@ class ConnectionThread(threading.Thread):
                     self.reconnect()
                     continue
                 msg_len = struct.unpack('>I', msg_len)[0]
-                #self.response_callback("Receiving message of len %d" % msg_len)
                 data = self.client.recv(msg_len).decode()
                 self.response_callback(data)
             try:
@@ -125,7 +127,8 @@ class ConnectionThread(threading.Thread):
 
 class ResilientTestProcessor(cmd.Cmd):
     """Resilient Circuits Test Tool Command Processor"""
-    intro = "Welcome to the Resilient Circuits Action Test Tool. Type help or ? to list commands.\n"
+    intro = ("Welcome to the Resilient Circuits Action Test Tool. "
+             "Type help or ? to list commands.\n")
     prompt = "(restest) "
 
     def __init__(self, host, port):
@@ -133,7 +136,8 @@ class ResilientTestProcessor(cmd.Cmd):
         self.message_queue = Queue()
         self.response_queue = Queue()
         self.message_id = 0
-        self.conn_thread = ConnectionThread(host, port, self.message_queue, self.print_response)
+        self.conn_thread = ConnectionThread(host, port, self.message_queue,
+                                            self.print_response)
         signal.signal(signal.SIGINT, self.killed)
         signal.signal(signal.SIGTERM, self.killed)
         self.conn_thread.start()
@@ -174,7 +178,8 @@ class ResilientTestProcessor(cmd.Cmd):
 
     def do_quit(self, *args):
         """Quit the Test Tool and exit:  quit"""
-        print("You are exiting the Resilient Circuits Action Test Tool.  Goodbye.\n""")
+        print(("You are exiting the Resilient Circuits "
+               "Action Test Tool.  Goodbye.\n"""))
         self.conn_thread.stop()
         return True
     # end do_quit
@@ -188,7 +193,6 @@ class ResilientTestProcessor(cmd.Cmd):
         self.do_quit()
         self.conn_thread.join()
         raise SystemExit(0)
-
 
     # -------- Helping Methods --------
     def print_response(self, data):
@@ -217,8 +221,13 @@ class ResilientTestProcessor(cmd.Cmd):
     # end parse_arg
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Resilient Circuits Action Test Tool')
-    parser.add_argument('--host', dest='host', default='localhost', help="hostname where resilient_circuits program is running. Defaults to localhost.")
-    parser.add_argument('--port', dest='port', default=8008, type=int, help="port where resilient_circuits action test server is listening. defaults to 8008")
+    description = 'Resilient Circuits Action Test Tool'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--host', dest='host', default='localhost',
+                        help=("hostname where resilient_circuits program "
+                              "is running. Defaults to localhost."))
+    parser.add_argument('--port', dest='port', default=8008, type=int,
+                        help=("port where resilient_circuits action "
+                              "test server is listening. defaults to 8008"))
     args = parser.parse_args()
     ResilientTestProcessor(args.host, args.port).cmdloop()

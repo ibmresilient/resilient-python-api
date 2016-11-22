@@ -79,17 +79,22 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     def __init__(self):
         super(AppArgumentParser, self).__init__(config_file=APP_CONFIG_FILE)
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
-        default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
+        default_components_dir = self.getopt("resilient",
+                                             "componentsdir") or self.DEFAULT_COMPONENTS_DIR
         default_log_dir = self.getopt("resilient", "logdir") or self.DEFAULT_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
-        default_no_prompt_password = self.getopt("resilient", "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
+        default_no_prompt_password = self.getopt("resilient",
+                                                 "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
         default_no_prompt_password = self._is_true(default_no_prompt_password)
-        default_test_actions = self._is_true(self.getopt("resilient", "test_actions")) or False
-        default_resilient_mock = self.getopt("resilient", "resilient_mock") or None
+        default_test_actions = self._is_true(self.getopt("resilient",
+                                                         "test_actions")) or False
+        default_resilient_mock = self.getopt("resilient",
+                                             "resilient_mock") or None
         default_test_host = self.getopt("resilient", "test_host") or None
         default_test_port = self.getopt("resilient", "test_port") or None
-        default_log_responses = self.getopt("resilient", "log_http_responses") or ""
+        default_log_responses = self.getopt("resilient",
+                                            "log_http_responses") or ""
 
         self.add_argument("--stomp-port",
                           type=int,
@@ -123,21 +128,25 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           action="store",
                           default=default_resilient_mock,
-                          help="Mock class defintion. (lib/my_mock_file.MyMockClass)")
+                          help=("Mock class defintion. "
+                                "(lib/my_mock_file.MyMockClass)"))
         self.add_argument("--test-host",
                           type=str,
                           action="store",
                           default=default_test_host,
-                          help="For use with --test-actions option. Host or IP to bind test server to.")
+                          help=("For use with --test-actions option. "
+                                "Host or IP to bind test server to."))
         self.add_argument("--test-port",
                           type=int,
                           action="store",
                           default=default_test_port,
-                          help="For use with --test-actions option. Port to bind test server to.")
+                          help=("For use with --test-actions option. "
+                                "Port to bind test server to."))
         self.add_argument("--log-http-responses",
                           type=str,
                           default=default_log_responses,
-                          help="Log all responses from Resilient REST API to this directory")
+                          help=("Log all responses from Resilient "
+                                "REST API to this directory"))
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
@@ -175,7 +184,8 @@ class App(Component):
     def do_initialization(self):
         self.opts = AppArgumentParser().parse_args()
 
-        self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
+        self.config_logging(self.opts["logdir"], self.opts["loglevel"],
+                            self.opts['logfile'])
         LOG.info("Configuration file is %s", APP_CONFIG_FILE)
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
@@ -193,7 +203,8 @@ class App(Component):
         # Register a `loader` to dynamically load
         # all Circuits components in the 'componentsdir' directory
         if self.auto_load_components:
-            LOG.info("Components auto-load directory: %s", self.opts["componentsdir"])
+            LOG.info("Components auto-load directory: %s",
+                     self.opts["componentsdir"])
             self.component_loader = ComponentLoader(self.opts)
             self.component_loader.register(self)
 
@@ -272,7 +283,9 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
+        errmsg = ("Failed to acquire lock on {0} - you may have another "
+                  "instance of Resilient Circuits running")
+        print(errmsg.format(APP_LOCK_FILE))
     except ValueError:
         LOG.exception("ValueError Raised. Application not running.")
     # finally:

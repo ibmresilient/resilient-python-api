@@ -53,9 +53,10 @@ LOG = logging.getLogger(__name__)
 def log(log_level):
     logging.getLogger().setLevel(log_level)
 
+
 class begin_restart(Event):
     pass
-    
+
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
@@ -85,6 +86,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
             if component is not self.app.action_component and component is not self.app.component_loader:
                 LOG.info("unregistering component %s", component)
                 component.unregister()
+
 
 # Main component for our application
 class AppRestartable(App):
@@ -117,9 +119,10 @@ class AppRestartable(App):
 
     def load_all_success(self, event):
         for component in self.components:
-            LOG.debug("Adding %s to restartable app components list", str(component))
+            LOG.debug("Adding %s to restartable app components list",
+                      str(component))
             self.component_collection.append(component)
-                    
+
         self.do_initialize_watchdog()
 
     def stopped(self, component):
@@ -158,8 +161,8 @@ class AppRestartable(App):
                 # All are stopped
                 self.fire(begin_restart())
             else:
-                LOG.debug("Still waiting on %s to stop.", self.component_collection)
-
+                LOG.debug("Still waiting on %s to stop.",
+                          self.component_collection)
 
 
 def run(*args, **kwargs):
@@ -180,7 +183,9 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
+        errmsg = ("Failed to acquire lock on {0} - you may have "
+                  "another instance of Resilient Circuits running")
+        print(errmsg.format(APP_LOCK_FILE))
     except ValueError:
         LOG.exception("ValueError Raised. Application not running.")
     # finally:

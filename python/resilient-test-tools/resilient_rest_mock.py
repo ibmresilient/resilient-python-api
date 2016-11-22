@@ -38,12 +38,14 @@ LOG = logging.getLogger(__name__)
 LOG.addHandler(logging.StreamHandler())
 LOG.setLevel(logging.DEBUG)
 
+
 def resilient_endpoint(request_type, uri):
-    def mark( func ):
+    def mark(func):
         func.uri = uri
         func.request_type = request_type
         return func
     return mark
+
 
 class ResilientMockBase(object):
     class __metaclass__(type):
@@ -71,7 +73,8 @@ class ResilientMock(ResilientMockBase):
         self.adapter = requests_mock.Adapter()
         for uri, handler in self.registered_endpoints.items():
             # Register with regex since some endpoints embed the org_id in the path
-            LOG.info("Registering %s %s to %s", handler.type, uri, str(handler.callback))
+            LOG.info("Registering %s %s to %s", handler.type,
+                     uri, str(handler.callback))
             callback = handler.callback
             self.adapter.add_matcher(lambda request,
                                      method=handler.type,
@@ -80,6 +83,7 @@ class ResilientMock(ResilientMockBase):
                                                                    uri,
                                                                    lambda request: callback(self, request),
                                                                    request))
+
     @staticmethod
     def _custom_matcher(request_type, uri, response_callback, request):
         """ matcher function for passing to adapter.add_matcher() """
