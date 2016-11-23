@@ -170,7 +170,7 @@ class debounce(object):
 
     def __call__(self, func):
         """Called at decoration time, with function"""
-        LOG.debug("@defer %s", func)
+        LOG.debug("@debounce %s", func)
 
         @wraps(func)
         def decorated(itself, event, *args, **kwargs):
@@ -204,12 +204,23 @@ class debounce(object):
                     if self.discard:
                         # Unregister all the previous timers so they don't fire
                         for timer in self.debouncedata[key]:
+                            evt = timer.event
+                            LOG.debug("Unregister timer")
                             timer.unregister()
+                            if evt:
+                                # The timer's event will not fire now.
+                                # Mark it as not 'deferred' and fire a 'success' child event
+                                # so that it gets ack'd to the message queue.
+                                LOG.debug("Fire success")
+                                evt.deferred = False
+                                channels = getattr(evt, "success_channels", evt.channels)
+                                itself.fire(evt.child("success", evt, evt.value.value), *channels)
+                        # Now we can get rid of the list of timers
                         self.debouncedata[key] = []
                     else:
                         # Reset all the pending timers
                         for timer in self.debouncedata[key]:
-                            timer.reset()
+                            timer.reset(interval=self.delay)
                 # Defer this new event with a timer.
                 LOG.info("Deferring %s", key)
                 timer = Timer(self.delay, event)
