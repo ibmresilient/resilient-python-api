@@ -91,7 +91,7 @@ class ComponentLoader(Loader):
         """Started Event Handler"""
         LOG.debug("Started")
         # Load all components from the components directory
-        for filename in os.listdir(self.path):
+        for filename in sorted(os.listdir(self.path)):
             filepath = os.path.join(self.path, filename)
             if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
                 cname = os.path.splitext(filename)[0]
