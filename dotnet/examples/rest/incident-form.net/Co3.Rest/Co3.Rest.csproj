@@ -166,6 +166,7 @@
     <Compile Include="Dto\NotificationDefPermsDto.cs" />
     <Compile Include="Dto\NotificationDto.cs" />
     <Compile Include="Dto\ObjectHandle.cs" />
+    <Compile Include="Dto\ObjectHandleFormat.cs" />
     <Compile Include="Dto\ObjectPermsDto.cs" />
     <Compile Include="Dto\OpenIncidentsByPhaseDto.cs" />
     <Compile Include="Dto\OperationType.cs" />
@@ -249,7 +250,6 @@
     <Compile Include="Dto\VersionDto.cs" />
     <Compile Include="Dto\WhoisDto.cs" />
     <Compile Include="FieldRest.cs" />
-    <Compile Include="HandleFormat.cs" />
     <Compile Include="IncidentRest.cs" />
     <Compile Include="JsonConverters\IPAddressConverter.cs" />
     <Compile Include="JsonConverters\ObjectHandleConverter.cs" />

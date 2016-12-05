@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Co3.Rest.Tests
+namespace Co3.Rest
 {
     [TestClass]
     public class CompatibilityTests

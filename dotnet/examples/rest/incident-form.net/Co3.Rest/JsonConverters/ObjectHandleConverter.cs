@@ -12,15 +12,15 @@ namespace Co3.Rest.JsonConverters
 {
     public class ObjectHandleConverter : JsonConverter
     {
-        private readonly HandleFormat m_handleFormat;
+        private readonly ObjectHandleFormat m_handleFormat;
 
         public ObjectHandleConverter()
-            : this(HandleFormat.Objects)
+            : this(ObjectHandleFormat.Objects)
         {
 
         }
 
-        public ObjectHandleConverter(HandleFormat handleFormat)
+        public ObjectHandleConverter(ObjectHandleFormat handleFormat)
         {
             m_handleFormat = handleFormat;
         }
@@ -36,13 +36,14 @@ namespace Co3.Rest.JsonConverters
             var objectHandle = (ObjectHandle)value;
             switch (m_handleFormat)
             {
-                case HandleFormat.Ids:
+                case ObjectHandleFormat.Ids:
                     writer.WriteValue(objectHandle.Id);
                     break;
-                case HandleFormat.Names:
+                case ObjectHandleFormat.Names:
                     writer.WriteValue(objectHandle.Name);
                     break;
-                case HandleFormat.Objects:
+                case ObjectHandleFormat.Objects:
+                case ObjectHandleFormat.Default:
                     writer.WriteStartObject();
                     writer.WritePropertyName("id");
                     writer.WriteValue(objectHandle.Id);
@@ -50,6 +51,8 @@ namespace Co3.Rest.JsonConverters
                     writer.WriteValue(objectHandle.Name);
                     writer.WriteEndObject();
                     break;
+                default:
+                    throw new NotImplementedException(string.Format("{0} is not supported.", m_handleFormat));
             }
         }
 
@@ -61,13 +64,13 @@ namespace Co3.Rest.JsonConverters
             var objectHandle = new ObjectHandle();
             switch (m_handleFormat)
             {
-                case HandleFormat.Ids:
+                case ObjectHandleFormat.Ids:
                     objectHandle.Id = serializer.Deserialize<int>(reader);
                     break;
-                case HandleFormat.Names:
+                case ObjectHandleFormat.Names:
                     objectHandle.Name = serializer.Deserialize<string>(reader);
                     break;
-                case HandleFormat.Objects:
+                case ObjectHandleFormat.Objects:
                     serializer.Populate(reader, objectHandle);
                     break;
             }

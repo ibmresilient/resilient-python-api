@@ -33,6 +33,7 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using System.Runtime.Serialization;
 using Co3.Rest.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -41,6 +42,10 @@ namespace Co3.Rest
 {
     public abstract class RestEndpoint
     {
+        public const string HeaderCsrfToken = "X-sess-id";
+        public const string HeaderHandleFormat = "handle_format";
+        public const string HeaderTextContentOutputFormat = "text_content_output_format";
+
         public static string Co3ApiUrl { get; set; }
         protected Dto.UserSessionDto m_session;
         private Cookie m_cookie;
@@ -67,18 +72,26 @@ namespace Co3.Rest
             m_handleFormat = appSettings["Co3HandleFormat"];
             m_textContentOutputFormat = appSettings["Co3TextContentOutputFormat"];
 
-            m_jsonSerializerSettings = new JsonSerializerSettings()
+            ObjectHandleFormat handleFormat;
+            if (string.IsNullOrEmpty(m_handleFormat))
             {
+                handleFormat = ObjectHandleFormat.Default;
+                m_handleFormat = GetEnumJsonValue(handleFormat);
+            }
+            else
+                handleFormat = (ObjectHandleFormat)Enum.Parse(typeof(ObjectHandleFormat), m_handleFormat, true);
 
+            m_jsonSerializerSettings = new JsonSerializerSettings
+            {
                 DefaultValueHandling = DefaultValueHandling.Ignore,
                 NullValueHandling = NullValueHandling.Ignore
             };
 
             m_jsonSerializerSettings.Converters.Add(new UnixTimeConverter());
             m_jsonSerializerSettings.Converters.Add(new StringEnumConverter());
-            m_jsonSerializerSettings.Converters.Add(new ObjectHandleConverter((HandleFormat)Enum.Parse(typeof(HandleFormat), m_handleFormat, true)));
+            m_jsonSerializerSettings.Converters.Add(new ObjectHandleConverter(handleFormat));
         }
-
+        
         static RestEndpoint()
         {
             Co3ApiUrl = System.Configuration.ConfigurationManager.AppSettings["Co3ApiUrl"];
@@ -119,7 +132,7 @@ namespace Co3.Rest
 
         private T InvokeWebMethod<T>(string method, string endPointUrl, object postData)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Co3ApiUrl + endPointUrl);
+            HttpWebRequest request = CreateRequest(endPointUrl);
             request.CookieContainer = new CookieContainer();
 
             request.ContentType = "application/json";
@@ -138,9 +151,9 @@ namespace Co3.Rest
             // include session id if available
             if (m_session != null)
             {
-                request.Headers.Add("X-sess-id", m_session.CsrfToken);
-                request.Headers.Add("handle_format", m_handleFormat);
-                request.Headers.Add("text_content_output_format", m_textContentOutputFormat);
+                request.Headers.Add(HeaderCsrfToken, m_session.CsrfToken);
+                request.Headers.Add(HeaderHandleFormat, m_handleFormat);
+                request.Headers.Add(HeaderTextContentOutputFormat, m_textContentOutputFormat);
             }
 
             if (postData == null)
@@ -153,7 +166,7 @@ namespace Co3.Rest
                 }
             }
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (HttpWebResponse response = GetResponse(request))
             using (Stream data = response.GetResponseStream())
             using (StreamReader reader = new StreamReader(data))
             {
@@ -165,6 +178,26 @@ namespace Co3.Rest
 
                 return FromJson<T>(reader.ReadToEnd());
             }
+        }
+
+        /// <summary>
+        /// Method used by tests to mock the HttpWebRequest object.
+        /// </summary>
+        /// <param name="endpointUrl"></param>
+        /// <returns></returns>
+        protected virtual HttpWebRequest CreateRequest(string endpointUrl)
+        {
+            return (HttpWebRequest)WebRequest.Create(Co3ApiUrl + endpointUrl);
+        }
+        
+        /// <summary>
+        /// Method used by tests to verify the request
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        protected virtual HttpWebResponse GetResponse(HttpWebRequest request)
+        {
+            return (HttpWebResponse)request.GetResponse();
         }
 
         private T FromJson<T>(string json)
@@ -179,9 +212,18 @@ namespace Co3.Rest
             }
         }
 
-        private string ToJson(object obj)
+        protected string ToJson(object obj)
         {
             return JsonConvert.SerializeObject(obj, m_jsonSerializerSettings);
+        }
+
+        public static string GetEnumJsonValue<T>(T value)
+        {
+            Type type = typeof(T);
+            string name = Enum.GetName(type, value);
+            EnumMemberAttribute attrib = ((EnumMemberAttribute[])type.GetField(name)
+                .GetCustomAttributes(typeof(EnumMemberAttribute), true))[0];
+            return attrib.Value;
         }
     }
 }
