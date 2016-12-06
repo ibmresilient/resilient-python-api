@@ -15,7 +15,10 @@
     <add key="Co3ApiUrl" value="https://app.resilientsystems.com/rest"/>
     <add key="Co3UserAccount" value="user@company.com"/>
     <add key="Co3UserPassword" value="password"/>
-    
+
+    <add key="Co3HandleFormat" value="objects"/>
+    <add key="Co3TextContentOutputFormat" value="objects_convert"/>
+
     <add key="Co3CssRequired" value="co3_required"/>
     <add key="Co3CssInvalid" value="co3_invalid"/>
 
