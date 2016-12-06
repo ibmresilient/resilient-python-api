@@ -37,6 +37,7 @@ namespace Co3.Rest
     public class IncidentRest : RestEndpoint
     {
         const string Endpoint = "/orgs/{0}/incidents";
+        const string EndpointWithId = Endpoint + "/{1}";
         const string ParamWantFullData = "want_full_data";
         const string ParamWantTask = "want_tasks";
 
@@ -64,6 +65,16 @@ namespace Co3.Rest
             }
 
             return HttpPost<IncidentDto>(string.Format(Endpoint, orgId), parameters, incident);
+        }
+
+        public FullIncidentDataDto GetIncidentById(int orgId, int incId)
+        {
+            return HttpGet<FullIncidentDataDto>(string.Format(EndpointWithId, orgId, incId));
+        }
+
+        public FullIncidentDataDto UpdateIncident(int orgId, int incId, FullIncidentDataDto data)
+        {
+            return HttpPut<FullIncidentDataDto>(string.Format(EndpointWithId, orgId, incId), null, data);
         }
     }
 }

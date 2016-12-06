@@ -1,22 +1,32 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Markup;
 using Co3.Rest.Dto;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Co3.Rest.JsonConverters
 {
-    public class ObjectHandleKeyConverter : JsonConverter
+    public class ObjectHandleKeyConverter<T> : JsonConverter
     {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var values = (Dictionary<ObjectHandle, T>)value;
+            var isIdsHandleFormat = values.Keys.All(k => string.IsNullOrEmpty(k.Name));
+
+            writer.WriteStartObject();
+            foreach (var keyValue in values)
+            {
+                writer.WritePropertyName(isIdsHandleFormat ? keyValue.Key.Id.ToString() : keyValue.Key.Name);
+                writer.WriteValue(keyValue.Value);
+            }
+            writer.WriteEndObject();
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var returnValues = new Dictionary<ObjectHandle, bool>();
-            foreach (var value in serializer.Deserialize<Dictionary<string, bool>>(reader))
+            var returnValues = new Dictionary<ObjectHandle, T>();
+            foreach (var value in serializer.Deserialize<Dictionary<string, T>>(reader))
             {
                 var objectHandle = new ObjectHandle();
                 var key = value.Key;
@@ -36,12 +46,7 @@ namespace Co3.Rest.JsonConverters
 
         public override bool CanConvert(Type objectType)
         {
-            return objectType.IsAssignableFrom(typeof(Dictionary<ObjectHandle, bool>));
-        }
-
-        public override bool CanWrite
-        {
-            get { return false; }
+            return objectType.IsAssignableFrom(typeof(Dictionary<ObjectHandle, T>));
         }
     }
 }
