@@ -53,12 +53,11 @@ class ResilientMockBase(object):
             and stores it on the class as `registered_endpoints`
         """
         def __new__(cls, name, bases, attr):
-            Endpoint = namedtuple("Endpoint", "type callback")
+            Endpoint = namedtuple("Endpoint", "type uri")
             endpoints = {}
             for obj in attr.itervalues():
                     if hasattr(obj, 'uri'):
-                        endpoints[obj.uri] = Endpoint(type=obj.request_type,
-                                                      callback=obj)
+                        endpoints[Endpoint(type=obj.request_type, uri=obj.uri)] = obj
             attr['registered_endpoints'] = endpoints
             return type.__new__(cls, name, bases, attr)
 
@@ -71,15 +70,14 @@ class ResilientMock(ResilientMockBase):
         self.org_name = org_name or "Test Org"
 
         self.adapter = requests_mock.Adapter()
-        for uri, handler in self.registered_endpoints.items():
+        for endpoint, handler in self.registered_endpoints.items():
             # Register with regex since some endpoints embed the org_id in the path
-            LOG.info("Registering %s %s to %s", handler.type,
-                     uri, str(handler.callback))
-            callback = handler.callback
+            LOG.info("Registering %s %s to %s", endpoint.type,
+                     endpoint.uri, str(handler))
             self.adapter.add_matcher(lambda request,
-                                     method=handler.type,
-                                     callback=callback,
-                                     uri=uri: self._custom_matcher(method,
+                                     method=endpoint.type,
+                                     callback=handler,
+                                     uri=endpoint.uri: self._custom_matcher(method,
                                                                    uri,
                                                                    lambda request: callback(self, request),
                                                                    request))
