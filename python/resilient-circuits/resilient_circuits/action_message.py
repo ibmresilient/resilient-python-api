@@ -34,6 +34,7 @@
 
 import json
 import re
+import os.path
 import random
 import datetime
 import logging
@@ -79,7 +80,7 @@ class ActionMessage(Event):
     #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
 
     def __init__(self, source=None, headers=None, message=None,
-                 test=False, test_msg_id=None):
+                 test=False, test_msg_id=None, log_dir=None):
         super(ActionMessage, self).__init__(source=source,
                                             headers=headers,
                                             message=message)
@@ -121,6 +122,9 @@ class ActionMessage(Event):
 
         # Fire a {name}_success event when this event is successfully processed
         self.success = True
+
+        if message and log_dir:
+            self._log_message(log_dir)
 
     def __repr__(self):
         "x.__repr__() <==> repr(x)"
@@ -167,3 +171,11 @@ class ActionMessage(Event):
         LOG.debug("Deferring %s (%s)", self, self.hdr().get("message-id"))
         Timer(delay, self).register(component)
         return True
+
+    def _log_message(self, log_dir):
+        """Log Action Message JSON to File"""
+        filename = "_".join(("ActionMessage", self.displayname,
+                             datetime.datetime.now().isoformat())).replace('/', '_')
+        with open(os.path.join(log_dir,
+                               filename.format("JSON")), "w+") as logfile:
+            logfile.write(json.dumps(self.message, indent=2))

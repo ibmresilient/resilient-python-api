@@ -32,7 +32,7 @@
 """Global accessor for the Resilient REST API"""
 
 import co3
-import os
+import os.path
 import sys
 import datetime
 import json
@@ -67,6 +67,7 @@ class LoggingSimpleClient(co3.SimpleClient):
         """ Log Headers and JSON from a Requests Response object """
         url = urlparse.urlparse(response.url)
         filename = "_".join((str(response.status_code), "{0}",
+                             response.request.method,
                              url.path, url.params,
                              datetime.datetime.now().isoformat())).replace('/', '_')
         with open(os.path.join(self.logging_directory,

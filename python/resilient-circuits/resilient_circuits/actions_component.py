@@ -35,6 +35,7 @@
 import ssl
 import json
 import logging
+import os.path
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
@@ -303,6 +304,18 @@ class Actions(ResilientComponent):
                           ssl_version=ssl.PROTOCOL_TLSv1,
                           cert_validator=validator_function)
 
+        # Store action message logging option
+        self.logging_directory = opts["log_http_responses"] or None
+        if self.logging_directory:
+            try:
+                directory = os.path.expanduser(self.logging_directory)
+                directory = os.path.expandvars(directory)
+                assert(os.path.exists(directory))
+                self.logging_directory = directory
+            except Exception as e:
+                self.logging_directory = None
+                raise Exception("Response Logging Directory %s does not exist!" ,
+                                opts["log_http_responses"])
         # Other special options
         self.ignore_message_failure = opts["resilient"].get("ignore_message_failure") == "1"
 
@@ -406,7 +419,7 @@ class Actions(ResilientComponent):
             # Expect the message payload to always be JSON
             message = json.loads(message)
             # Construct a Circuits event with the message, and fire it on the channel
-            event = ActionMessage(self, headers=headers, message=message)
+            event = ActionMessage(self, headers=headers, message=message, log_dir=self.logging_directory)
             LOG.info(event)
             self.fire(event, channel)
         except Exception as exc:
@@ -415,7 +428,7 @@ class Actions(ResilientComponent):
             if self.ignore_message_failure:
                 # Construct and fire anyway, which will ack the message
                 LOG.warn("This message failure will be ignored...")
-                event = ActionMessage(self, headers=headers, message=None)
+                event = ActionMessage(self, headers=headers, message=None, log_dir=self.logging_directory)
                 self.fire(event, channel)
 
     # Circuits event handlers
