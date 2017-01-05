@@ -41,8 +41,8 @@ test_actions = True
         sys.argv=sys.argv[0:1]
 
         app = App().register(manager)
-        assert watcher.wait("registered")
         manager.start()
+        assert watcher.wait("registered")
         pytest.wait_for(manager, "_running", True)
         assert watcher.wait("load_all_success", timeout=10)
         def finalizer():

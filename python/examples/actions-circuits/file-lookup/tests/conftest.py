@@ -106,8 +106,8 @@ def manager(request):
     request.addfinalizer(finalizer)
 
     waiter = WaitEvent(manager, "started")
-    manager.start()
-    assert waiter.wait()
+    #manager.start()
+    #assert waiter.wait()
 
     if request.config.option.verbose:
         verbose = True
