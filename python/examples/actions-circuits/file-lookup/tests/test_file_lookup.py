@@ -29,8 +29,8 @@ def test_one(circuits_app):
     circuits_app.manager.fire(SubmitTestAction(queue="filelookup",
                                          msg_id="test_one",
                                          message=json.dumps(test_msg)))
-    assert circuits_app.watcher.wait("_lookup_action_complete")
-    applog = os.path.join(circuits_app.logs, "app.log")
+    assert circuits_app.watcher.wait("_success")
+    applog = os.path.join(circuits_app.logs.strpath, "app.log")
     # TODO: inspect log for expected results
     # TODO: Check incident in resilient for expected changes
     
