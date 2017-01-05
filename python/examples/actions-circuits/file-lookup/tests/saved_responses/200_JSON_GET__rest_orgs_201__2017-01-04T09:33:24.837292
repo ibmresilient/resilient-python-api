@@ -1,0 +1,995 @@
+{
+  "us_enabled": true, 
+  "groups": {
+    "9": {
+      "is_assignable": true, 
+      "id": 9, 
+      "members": [
+        5
+      ], 
+      "name": "Incident Handling"
+    }, 
+    "10": {
+      "is_assignable": true, 
+      "id": 10, 
+      "members": [], 
+      "name": "Tuning"
+    }, 
+    "7": {
+      "is_assignable": true, 
+      "id": 7, 
+      "members": [
+        5
+      ], 
+      "name": "CSIRT Leads"
+    }, 
+    "6": {
+      "is_assignable": true, 
+      "id": 6, 
+      "members": [
+        1
+      ], 
+      "name": "Security Monitoring"
+    }
+  }, 
+  "attachments_enabled": true, 
+  "id": 201, 
+  "inc_deletion_allowed": false, 
+  "phases": {
+    "1006": {
+      "uuid": "247d4b79-1762-4d70-bb95-67d83b104eff", 
+      "perms": {
+        "reorderable": true, 
+        "deleteable": true
+      }, 
+      "enabled": true, 
+      "id": 1006, 
+      "order": 5, 
+      "name": "Custom"
+    }, 
+    "1005": {
+      "uuid": "44868c86-246e-4e6e-8636-fa2848b2f279", 
+      "perms": {
+        "reorderable": true, 
+        "deleteable": true
+      }, 
+      "enabled": true, 
+      "id": 1005, 
+      "order": 2, 
+      "name": "Detect/Analyze"
+    }, 
+    "1004": {
+      "uuid": "5558dfa9-3c70-498b-aa39-c1538c1ae671", 
+      "perms": {
+        "reorderable": false, 
+        "deleteable": false
+      }, 
+      "enabled": true, 
+      "id": 1004, 
+      "order": 0, 
+      "name": "Initial"
+    }, 
+    "1003": {
+      "uuid": "ed053e3a-2d6d-47e1-8240-844ed93d4893", 
+      "perms": {
+        "reorderable": true, 
+        "deleteable": true
+      }, 
+      "enabled": true, 
+      "id": 1003, 
+      "order": 1, 
+      "name": "Engage"
+    }, 
+    "1002": {
+      "uuid": "ebad851d-5b5e-4d19-af79-fae53cc1f659", 
+      "perms": {
+        "reorderable": true, 
+        "deleteable": true
+      }, 
+      "enabled": true, 
+      "id": 1002, 
+      "order": 3, 
+      "name": "Respond"
+    }, 
+    "1001": {
+      "uuid": "d057ec97-587e-44c0-ae84-c4fadd6d7e40", 
+      "perms": {
+        "reorderable": false, 
+        "deleteable": false
+      }, 
+      "enabled": true, 
+      "id": 1001, 
+      "order": 6, 
+      "name": "Complete"
+    }, 
+    "1000": {
+      "uuid": "280a7bbe-3d93-4191-973f-2723b282a7e0", 
+      "perms": {
+        "reorderable": true, 
+        "deleteable": true
+      }, 
+      "enabled": true, 
+      "id": 1000, 
+      "order": 4, 
+      "name": "Post-Incident"
+    }
+  }, 
+  "artifact_types": {
+    "42": {
+      "type_name": "URI Path", 
+      "relatable": true, 
+      "type_id": 42
+    }, 
+    "43": {
+      "type_name": "Threat CVE ID", 
+      "relatable": true, 
+      "type_id": 43
+    }, 
+    "24": {
+      "type_name": "Registry Key", 
+      "relatable": true, 
+      "type_id": 24
+    }, 
+    "25": {
+      "type_name": "System Name", 
+      "relatable": true, 
+      "type_id": 25
+    }, 
+    "26": {
+      "type_name": "Process Name", 
+      "relatable": true, 
+      "type_id": 26
+    }, 
+    "27": {
+      "type_name": "Port", 
+      "relatable": true, 
+      "type_id": 27
+    }, 
+    "20": {
+      "type_name": "Email Recipient", 
+      "relatable": true, 
+      "type_id": 20
+    }, 
+    "22": {
+      "type_name": "Malware Sample Fuzzy Hash", 
+      "relatable": true, 
+      "type_id": 22
+    }, 
+    "23": {
+      "type_name": "User Account", 
+      "relatable": true, 
+      "type_id": 23
+    }, 
+    "44": {
+      "type_name": "Network CIDR Range", 
+      "relatable": true, 
+      "type_id": 44
+    }, 
+    "45": {
+      "type_name": "Malware Family/Variant", 
+      "relatable": true, 
+      "type_id": 45
+    }, 
+    "28": {
+      "type_name": "Service", 
+      "relatable": true, 
+      "type_id": 28
+    }, 
+    "29": {
+      "type_name": "String", 
+      "relatable": true, 
+      "type_id": 29
+    }, 
+    "40": {
+      "type_name": "URL Referer", 
+      "relatable": true, 
+      "type_id": 40
+    }, 
+    "41": {
+      "type_name": "User Agent", 
+      "relatable": true, 
+      "type_id": 41
+    }, 
+    "1": {
+      "type_name": "IP Address", 
+      "relatable": true, 
+      "type_id": 1
+    }, 
+    "3": {
+      "type_name": "URL", 
+      "relatable": true, 
+      "type_id": 3
+    }, 
+    "2": {
+      "type_name": "DNS Name", 
+      "relatable": true, 
+      "type_id": 2
+    }, 
+    "5": {
+      "type_name": "Email Subject", 
+      "relatable": true, 
+      "type_id": 5
+    }, 
+    "4": {
+      "type_name": "RFC 822 Email Message File", 
+      "relatable": true, 
+      "type_id": 4
+    }, 
+    "7": {
+      "type_name": "Email Attachment", 
+      "relatable": true, 
+      "type_id": 7
+    }, 
+    "6": {
+      "type_name": "Email Body", 
+      "relatable": true, 
+      "type_id": 6
+    }, 
+    "9": {
+      "type_name": "Email Sender", 
+      "relatable": true, 
+      "type_id": 9
+    }, 
+    "8": {
+      "type_name": "Email Attachment Name", 
+      "relatable": true, 
+      "type_id": 8
+    }, 
+    "13": {
+      "type_name": "Malware MD5 Hash", 
+      "relatable": true, 
+      "type_id": 13
+    }, 
+    "12": {
+      "type_name": "Malware Sample", 
+      "relatable": true, 
+      "type_id": 12
+    }, 
+    "39": {
+      "type_name": "MAC Address", 
+      "relatable": true, 
+      "type_id": 39
+    }, 
+    "38": {
+      "type_name": "Malware SHA-256 Hash", 
+      "relatable": true, 
+      "type_id": 38
+    }, 
+    "15": {
+      "type_name": "Log File", 
+      "relatable": true, 
+      "type_id": 15
+    }, 
+    "14": {
+      "type_name": "Malware SHA-1 Hash", 
+      "relatable": true, 
+      "type_id": 14
+    }, 
+    "16": {
+      "type_name": "Other File", 
+      "relatable": true, 
+      "type_id": 16
+    }, 
+    "19": {
+      "type_name": "Email Sender Name", 
+      "relatable": true, 
+      "type_id": 19
+    }, 
+    "32": {
+      "type_name": "Password", 
+      "relatable": true, 
+      "type_id": 32
+    }, 
+    "31": {
+      "type_name": "File Name", 
+      "relatable": true, 
+      "type_id": 31
+    }, 
+    "30": {
+      "type_name": "Mutex", 
+      "relatable": true, 
+      "type_id": 30
+    }, 
+    "37": {
+      "type_name": "File Path", 
+      "relatable": true, 
+      "type_id": 37
+    }, 
+    "36": {
+      "type_name": "X509 Certificate File", 
+      "relatable": true, 
+      "type_id": 36
+    }, 
+    "35": {
+      "type_name": "HTTP Response Header", 
+      "relatable": true, 
+      "type_id": 35
+    }, 
+    "34": {
+      "type_name": "HTTP Request Header", 
+      "relatable": true, 
+      "type_id": 34
+    }
+  }, 
+  "geos": {}, 
+  "sir_enabled": true, 
+  "saas": false, 
+  "threat_sources": {
+    "10": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "Gather additional artifact data using MaxMind GeoIP2 services.", 
+      "license": null, 
+      "tos": null, 
+      "enabled": false, 
+      "uuid": "1a5d4865-7e53-423b-9637-365611e5be54", 
+      "custom": false, 
+      "id": 10, 
+      "name": "Geolocation with MaxMind"
+    }, 
+    "3": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "A blacklist from www.abuse.ch that tracks known Zeus servers by IP address.", 
+      "license": null, 
+      "tos": null, 
+      "enabled": false, 
+      "uuid": "33a3bf36-e12f-4d2c-9c4a-ff40d3a85ddd", 
+      "custom": false, 
+      "id": 3, 
+      "name": "abuse.ch Zeus IP Blocklist"
+    }, 
+    "5": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "A list of suspicious IP addresses from AlienVault Labs.", 
+      "license": null, 
+      "tos": {
+        "fields": null, 
+        "tos_url": "http://www.alienvault.com/eula"
+      }, 
+      "enabled": false, 
+      "uuid": "e0b00eb3-aadd-4f48-abee-d5d229415992", 
+      "custom": false, 
+      "id": 5, 
+      "name": "AlienVault IP Reputation Feed"
+    }, 
+    "4": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "A blacklist from www.abuse.ch that tracks known Zeus servers by DNS domain name.", 
+      "license": null, 
+      "tos": null, 
+      "enabled": false, 
+      "uuid": "99334d3d-2250-4776-8083-6c53c84fc5cf", 
+      "custom": false, 
+      "id": 4, 
+      "name": "abuse.ch Zeus Domain Blocklist"
+    }, 
+    "7": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "SANS Internet Storm Center (ISC) database", 
+      "license": null, 
+      "tos": null, 
+      "enabled": false, 
+      "uuid": "8226253b-2a35-4129-9664-f8e4ed20590c", 
+      "custom": false, 
+      "id": 7, 
+      "name": "SANS Internet Storm Center"
+    }, 
+    "6": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "Threat intelligence from iSIGHT Partners.", 
+      "license": null, 
+      "tos": {
+        "fields": [
+          {
+            "type": "text", 
+            "id": "public_key", 
+            "value": null, 
+            "label": "API Public Key"
+          }, 
+          {
+            "type": "text", 
+            "id": "private_key", 
+            "value": null, 
+            "label": "API Private Key"
+          }
+        ], 
+        "tos_url": null
+      }, 
+      "enabled": false, 
+      "uuid": "6ac0b8b9-1783-4364-b5a8-925439de4ae3", 
+      "custom": false, 
+      "id": 6, 
+      "name": "iSIGHT Partners"
+    }, 
+    "9": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "Scan artifacts using VirusTotal", 
+      "license": null, 
+      "tos": {
+        "fields": [
+          {
+            "type": "text", 
+            "id": "license", 
+            "value": null, 
+            "label": "API Key"
+          }, 
+          {
+            "type": "check", 
+            "id": "uploadFile", 
+            "value": null, 
+            "label": "Upload files for scanning"
+          }
+        ], 
+        "tos_url": null
+      }, 
+      "enabled": false, 
+      "uuid": "5de07056-8448-4155-84a9-a8d1f817c2b7", 
+      "custom": false, 
+      "id": 9, 
+      "name": "VirusTotal"
+    }, 
+    "8": {
+      "prompt_license": true, 
+      "properties": null, 
+      "tos_agreement_date": null, 
+      "description": "Match malware MD5, SHA-1, and URL artifacts against a list of known malware collected by MalwarePatrol.", 
+      "license": null, 
+      "tos": {
+        "fields": null, 
+        "tos_url": "http://www.malware.com.br/terms.shtml"
+      }, 
+      "enabled": false, 
+      "uuid": "2d5c3c86-b8f4-44f9-89a5-356c123f662d", 
+      "custom": false, 
+      "id": 8, 
+      "name": "MalwarePatrol"
+    }, 
+    "100": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "Search for threat intelligence using the IBM X-Force Exchange platform", 
+      "license": null, 
+      "tos": {
+        "fields": [
+          {
+            "type": "text", 
+            "id": "public_key", 
+            "value": null, 
+            "label": "API Key"
+          }, 
+          {
+            "type": "text", 
+            "id": "private_key", 
+            "value": null, 
+            "label": "API Password"
+          }
+        ], 
+        "tos_url": "https://www.ibm.com/software/sla/sladb.nsf/sla/sd-6891-02"
+      }, 
+      "enabled": false, 
+      "uuid": "b295621e-6504-4e81-9b0c-2b942a64edbd", 
+      "custom": false, 
+      "id": 100, 
+      "name": "IBM X-Force Exchange"
+    }, 
+    "101": {
+      "prompt_license": false, 
+      "properties": {}, 
+      "tos_agreement_date": null, 
+      "description": "Search for threat intelligence using the Symantec DeepSight API platform", 
+      "license": null, 
+      "tos": {
+        "fields": [
+          {
+            "type": "text", 
+            "id": "key", 
+            "value": null, 
+            "label": "API Key"
+          }
+        ], 
+        "tos_url": null
+      }, 
+      "enabled": false, 
+      "uuid": "7b6dce0c-1d64-44c4-bac5-aeb37f6ba725", 
+      "custom": false, 
+      "id": 101, 
+      "name": "Symantec DeepSight"
+    }
+  }, 
+  "hide_breach_tab": false, 
+  "org_info": {
+    "city": null, 
+    "addr": null, 
+    "zip": null, 
+    "incident_deletion_allowed": false, 
+    "has_saml": false, 
+    "supports_ldap": false, 
+    "twofactor_auth_domain": null, 
+    "attachments_enabled": true, 
+    "has_available_twofactor": false, 
+    "state": null, 
+    "addr2": null, 
+    "twofactor_cookie_lifetime_secs": 0, 
+    "require_saml": false, 
+    "tasks_private": false, 
+    "authorized_ldap_group": null, 
+    "id": 201, 
+    "name": "Test"
+  }, 
+  "actions_framework_enabled": true, 
+  "unknown_users": {}, 
+  "users": {
+    "1": {
+      "status": "A", 
+      "cell": null, 
+      "group_ids": [
+        6
+      ], 
+      "locked": false, 
+      "is_external": false, 
+      "roles": {
+        "administrator": false, 
+        "create_incs": true, 
+        "master_administrator": true, 
+        "observer": false
+      }, 
+      "title": null, 
+      "org_id": 201, 
+      "notes": null, 
+      "enabled": true, 
+      "email": "kchurch@us.ibm.com", 
+      "lname": "Church", 
+      "phone": null, 
+      "last_login": 1483540404638, 
+      "fname": "Kathy", 
+      "id": 1
+    }, 
+    "3": {
+      "status": "A", 
+      "cell": null, 
+      "group_ids": [], 
+      "locked": false, 
+      "is_external": false, 
+      "roles": {
+        "administrator": false, 
+        "create_incs": true, 
+        "master_administrator": true, 
+        "observer": false
+      }, 
+      "title": null, 
+      "org_id": 201, 
+      "notes": null, 
+      "enabled": true, 
+      "email": "api@example.com", 
+      "lname": "Guy", 
+      "phone": null, 
+      "last_login": 1472655490212, 
+      "fname": "User", 
+      "id": 3
+    }, 
+    "5": {
+      "status": "A", 
+      "cell": null, 
+      "group_ids": [
+        9, 
+        7
+      ], 
+      "locked": false, 
+      "is_external": false, 
+      "roles": {
+        "administrator": false, 
+        "create_incs": true, 
+        "master_administrator": true, 
+        "observer": false
+      }, 
+      "title": null, 
+      "org_id": 201, 
+      "notes": null, 
+      "enabled": true, 
+      "email": "securitymonitoring@junk2.com", 
+      "lname": "Security", 
+      "phone": null, 
+      "last_login": null, 
+      "fname": "Monitoring", 
+      "id": 5
+    }, 
+    "4": {
+      "status": "A", 
+      "cell": null, 
+      "group_ids": [], 
+      "locked": false, 
+      "is_external": false, 
+      "roles": {
+        "administrator": false, 
+        "create_incs": true, 
+        "master_administrator": true, 
+        "observer": false
+      }, 
+      "title": null, 
+      "org_id": 201, 
+      "notes": null, 
+      "enabled": true, 
+      "email": "securitymonitoring@junk.com", 
+      "lname": "Monitoring", 
+      "phone": null, 
+      "last_login": null, 
+      "fname": "Security", 
+      "id": 4
+    }
+  }, 
+  "regs": {}, 
+  "data_types": {}, 
+  "task_categories": {
+    "51": {
+      "id": 51, 
+      "name": "Data Breach - Organizational"
+    }, 
+    "50": {
+      "id": 50, 
+      "name": "Data Breach - Authority Notifications"
+    }, 
+    "53": {
+      "id": 53, 
+      "name": "Data Breach - Individual Notifications"
+    }, 
+    "52": {
+      "id": 52, 
+      "name": "Data Breach - General"
+    }
+  }, 
+  "incident_types": {
+    "20": {
+      "update_date": null, 
+      "uuid": "2caf1eca-2463-4e9c-8885-16637fc91f3f", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 20, 
+      "name": "System Intrusion"
+    }, 
+    "21": {
+      "update_date": null, 
+      "uuid": "e1b10c0c-21f8-4e3f-9f0f-40668ddd2a01", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 21, 
+      "name": "Denial of Service"
+    }, 
+    "22": {
+      "update_date": null, 
+      "uuid": "bbb113d4-86f3-4cbf-94e0-931aa693e62a", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 22, 
+      "name": "Phishing"
+    }, 
+    "23": {
+      "update_date": null, 
+      "uuid": "c8a80794-47ba-4708-983f-d6e56905b587", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 23, 
+      "name": "Not an Issue"
+    }, 
+    "1": {
+      "update_date": 1296777343194, 
+      "uuid": "b038d098-837c-4c0d-8f3d-ea639f42a1bf", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 1, 
+      "name": "Lost PDA / smartphone"
+    }, 
+    "3": {
+      "update_date": 1296777546848, 
+      "uuid": "9235ae9f-bfb1-4c34-8022-96a86c79e677", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 3, 
+      "name": "Lost PC / laptop / tablet"
+    }, 
+    "4": {
+      "update_date": 1296777581756, 
+      "uuid": "ee9b74ff-52ea-4a5d-9267-6648c8996950", 
+      "create_date": null, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 4, 
+      "name": "Lost documents / files / records"
+    }, 
+    "7": {
+      "update_date": null, 
+      "uuid": "5b190a80-c960-4040-bcae-15565f8c77ae", 
+      "create_date": 1296778141605, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 7, 
+      "name": "Improper disposal: documents / files"
+    }, 
+    "6": {
+      "update_date": 1296777592295, 
+      "uuid": "a468d23f-960f-44ca-8918-4429a5aa4fa1", 
+      "create_date": 1296777481499, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 6, 
+      "name": "Improper disposal: digital asset(s)"
+    }, 
+    "8": {
+      "update_date": 1296778436991, 
+      "uuid": "8bbfc278-f58b-453d-874f-8dcad1ba3253", 
+      "create_date": 1296777437386, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 8, 
+      "name": "Lost storage device / media"
+    }, 
+    "11": {
+      "update_date": null, 
+      "uuid": "e7105d3b-f7bc-4680-8c2d-55d32e6787bb", 
+      "create_date": 1296778208935, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 11, 
+      "name": "Stolen documents / files / records"
+    }, 
+    "13": {
+      "update_date": null, 
+      "uuid": "21b6cc0d-fb98-47cd-9882-cb854ebe641a", 
+      "create_date": 1296777660632, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 13, 
+      "name": "Stolen PDA / smartphone"
+    }, 
+    "12": {
+      "update_date": null, 
+      "uuid": "2b25f669-82a1-4138-9371-0843f5b674b4", 
+      "create_date": 1296777832483, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 12, 
+      "name": "Stolen PC / laptop / tablet"
+    }, 
+    "15": {
+      "update_date": null, 
+      "uuid": "afd3e485-178f-496d-8cd8-639b791ca0a6", 
+      "create_date": 1296778565815, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 15, 
+      "name": "Vendor / 3rd party error"
+    }, 
+    "14": {
+      "update_date": 1296778717127, 
+      "uuid": "da239c99-f0c6-4e61-99aa-b968eda85434", 
+      "create_date": 1296778278265, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 14, 
+      "name": "Stolen storage device / media"
+    }, 
+    "17": {
+      "update_date": null, 
+      "uuid": "4a8d22f7-d89e-4403-85c7-2bafe3b7f2ae", 
+      "create_date": 1296778427539, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 17, 
+      "name": "Communication error (fax; email)"
+    }, 
+    "16": {
+      "update_date": 1296777903604, 
+      "uuid": "8a506ca3-b848-4019-8c20-203543d907fe", 
+      "create_date": 1296777784379, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 16, 
+      "name": "TBD / Unknown"
+    }, 
+    "19": {
+      "update_date": null, 
+      "uuid": "f441538a-2f23-48ca-9af6-45ce7b3971f1", 
+      "create_date": 1305153213937, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 19, 
+      "name": "Malware"
+    }, 
+    "18": {
+      "update_date": 1296779808337, 
+      "uuid": "48e1b3b6-e5a6-44a5-a5d1-dd9c6bfdfa9e", 
+      "create_date": 1296778872265, 
+      "description": null, 
+      "enabled": true, 
+      "system": true, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 18, 
+      "name": "Other"
+    }, 
+    "1006": {
+      "update_date": null, 
+      "uuid": "71a43d01-6358-4bdf-b20f-b7b13fe29fe2", 
+      "create_date": 1482179924613, 
+      "description": null, 
+      "enabled": true, 
+      "system": false, 
+      "parent_id": 16, 
+      "hidden": false, 
+      "id": 1006, 
+      "name": "Suspicious Activity"
+    }, 
+    "1005": {
+      "update_date": null, 
+      "uuid": "e64e69f1-5be1-4d08-a960-723c75d3098b", 
+      "create_date": 1482179905361, 
+      "description": null, 
+      "enabled": true, 
+      "system": false, 
+      "parent_id": 21, 
+      "hidden": false, 
+      "id": 1005, 
+      "name": "DDoS"
+    }, 
+    "1004": {
+      "update_date": null, 
+      "uuid": "c44cfd1e-b687-4dd6-8a6b-0e0f37bc0c06", 
+      "create_date": 1476712611520, 
+      "description": null, 
+      "enabled": true, 
+      "system": false, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 1004, 
+      "name": "Incident Handling"
+    }, 
+    "1003": {
+      "update_date": null, 
+      "uuid": "e0251bea-9c9a-4dff-8812-66f0a8b947d5", 
+      "create_date": 1476712603765, 
+      "description": null, 
+      "enabled": true, 
+      "system": false, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 1003, 
+      "name": "Tuning"
+    }, 
+    "1002": {
+      "update_date": null, 
+      "uuid": "f6aa08ea-4e0c-46c4-bbe8-bb4b38f4183f", 
+      "create_date": 1472653444887, 
+      "description": null, 
+      "enabled": true, 
+      "system": false, 
+      "parent_id": null, 
+      "hidden": false, 
+      "id": 1002, 
+      "name": "Standar Incident Response Process"
+    }, 
+    "1001": {
+      "update_date": null, 
+      "uuid": "1dc938c9-ac03-4d35-8eea-418efcd654ce", 
+      "create_date": 1472495721937, 
+      "description": null, 
+      "enabled": true, 
+      "system": false, 
+      "parent_id": 18, 
+      "hidden": false, 
+      "id": 1001, 
+      "name": "Escalated Offense"
+    }
+  }, 
+  "attachments_used_bytes": 254392, 
+  "properties": [], 
+  "eu_enabled": true, 
+  "incident_severities": {
+    "847": {
+      "id": 847, 
+      "name": "Severity 1"
+    }, 
+    "850": {
+      "id": 850, 
+      "name": "Severity 4"
+    }, 
+    "851": {
+      "id": 851, 
+      "name": "Severity 5"
+    }, 
+    "51": {
+      "id": 51, 
+      "name": "Medium"
+    }, 
+    "50": {
+      "id": 50, 
+      "name": "Low"
+    }, 
+    "849": {
+      "id": 849, 
+      "name": "Severity 3"
+    }, 
+    "848": {
+      "id": 848, 
+      "name": "Severity 2"
+    }, 
+    "52": {
+      "id": 52, 
+      "name": "High"
+    }
+  }, 
+  "canada_enabled": true, 
+  "breach_enabled": true
+}

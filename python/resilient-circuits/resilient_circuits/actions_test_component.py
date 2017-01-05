@@ -43,12 +43,12 @@ from resilient_circuits.action_message import ActionMessage
 LOG = logging.getLogger(__name__)
 
 
-class TestAction(Event):
+class SubmitTestAction(Event):
     """ Circuits event to insert a test Action Message """
     def __init__(self, queue, msg_id, message):
         if not all((queue, msg_id, message)):
             raise ValueError("queue, msg_id, and message are required")
-        super(TestAction, self).__init__(queue=queue, msg_id=msg_id,
+        super(SubmitTestAction, self).__init__(queue=queue, msg_id=msg_id,
                                          message=message)
 
 
@@ -67,7 +67,7 @@ class ResilientTestActions(Component):
     def usage(self):
         return "Submit actions with format: <queue> <message json>"
 
-    def TestAction(self, queue, msg_id, message):
+    def SubmitTestAction(self, queue, msg_id, message):
         """ Create and fire an ActionMessage """
         try:
             message_id = "ID:resilient-54199-{val}-6:2:12:1:1".format(val=msg_id)
@@ -146,7 +146,7 @@ class ResilientTestActions(Component):
                 else:
                     queue, message = data.split(' ', 1)
                     self.actions_sent[msg_id] = sock
-                    self.fire(TestAction(queue, msg_id, message))
+                    self.fire(SubmitTestAction(queue, msg_id, message))
 
                 if remainder:
                     # Process remainder

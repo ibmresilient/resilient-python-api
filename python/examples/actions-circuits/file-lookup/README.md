@@ -95,6 +95,20 @@ into 'custom2'.
 
 To stop the script running, interrupt it with `Ctrl+C`.
 
+## Tests
+
+To run the included tests:
+  pip install pytest
+  pytest tests/test_file_lookup.py 
+
+To run the example against a mocked Resilient appliance:
+  python run.py --resilient-mock resilient_filelookup_mock.MyResilientMock --test-actions
+  
+You can submit test actions with the res-action-test tool. For usage guidance, run:
+  res-action-test
+  (restest) help
+
+
 ## Extending the example
 
 ### Mapping Multiple Fields
