@@ -83,19 +83,20 @@ class ComponentLoader(Loader):
         self.pending_components = []
         self.finished = False
 
-    @handler("started", channel="*")
-    def started(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Started")
-        # Load all components from the components directory
-        for filename in os.listdir(self.path):
-            filepath = os.path.join(self.path, filename)
-            if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
-                cname = os.path.splitext(filename)[0]
-                if cname != "__init__":
-                    LOG.debug("Loading %s", cname)
-                    self.pending_components.append(cname)
-                    self.fire(load(cname))
+    @handler("registered", channel="*")
+    def registered(self, component, manager):
+        """Registered Event Handler"""
+        if component is self:
+            LOG.debug("Loader Registered")
+            # Load all components from the components directory
+            for filename in os.listdir(self.path):
+                filepath = os.path.join(self.path, filename)
+                if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
+                    cname = os.path.splitext(filename)[0]
+                    if cname != "__init__":
+                        LOG.debug("Loading %s", cname)
+                        self.pending_components.append(cname)
+                        self.fire(load(cname))
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):
