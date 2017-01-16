@@ -96,7 +96,7 @@ def wait_for(obj, attr, value=True, timeout=3.0):
         sleep(TIMEOUT)
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def manager(request):
     manager = Manager()
 
@@ -106,8 +106,8 @@ def manager(request):
     request.addfinalizer(finalizer)
 
     waiter = WaitEvent(manager, "started")
-    #manager.start()
-    #assert waiter.wait()
+    manager.start()
+    assert waiter.wait()
 
     if request.config.option.verbose:
         verbose = True
@@ -119,7 +119,7 @@ def manager(request):
     return manager
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def watcher(request, manager):
     watcher = Watcher().register(manager)
 
