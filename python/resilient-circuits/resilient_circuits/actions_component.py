@@ -441,6 +441,9 @@ class Actions(ResilientComponent):
     @handler("registered")
     def registered(self, event, component, parent):
         """A component has registered.  Subscribe to its message queue(s)."""
+        if self is component:
+            self.reconnect()
+            return
         for channel in event.channels:
             if not str(channel).startswith("actions."):
                 continue
@@ -460,10 +463,10 @@ class Actions(ResilientComponent):
     def prepare_unregister(self, event, component):
         """A component is unregistering.  Unsubscribe its message queue(s)."""
         LOG.info("component %s has unregistered", component)
-        if isinstance(component, Actions):
+        if self is component:
             LOG.info("disconnecting Actions component from stomp queue")
-            component.reconnect_stomp = False
-            component.disconnect()
+            self.disconnect()
+            self.reconnect_stomp = False
 
         for channel in event.channels:
             if not str(channel).startswith("actions."):
@@ -514,18 +517,6 @@ class Actions(ResilientComponent):
             for queue_name in self.listeners:
                 self._unsubscribe(queue_name)
             self.conn.disconnect()
-
-    @handler("started")
-    def started(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Actions Component Started")
-        self.reconnect()
-
-    @handler("stopped")
-    def stopped(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Actions Component Stopped")
-        self.disconnect()
 
     @handler("reconnect")
     def reconnect(self):
