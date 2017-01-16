@@ -67,7 +67,7 @@ class ResilientTestActions(Component):
     def usage(self):
         return "Submit actions with format: <queue> <message json>"
 
-    def SubmitTestAction(self, queue, msg_id, message):
+    def SubmitTestAction(self, queue, msg_id, message, channel="*"):
         """ Create and fire an ActionMessage """
         try:
             message_id = "ID:resilient-54199-{val}-6:2:12:1:1".format(val=msg_id)
@@ -90,8 +90,9 @@ class ResilientTestActions(Component):
                        "subscription": "stomp-{queue}".format(queue=queue)}
             try:
                 sock = self.actions_sent.get(msg_id)
-                message = json.loads(message)
-                assert(isinstance(message, dict))
+                if not isinstance(message, dict):
+                    message = json.loads(message)
+                    assert(isinstance(message, dict))
             except Exception as e:
                 LOG.exception("Bad Message<action %d>: %s", msg_id, message)
                 if sock:
