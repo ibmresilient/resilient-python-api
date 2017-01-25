@@ -33,7 +33,7 @@ import logging
 import json
 import requests
 import requests_mock
-from resilient_test_tools.resilient_rest_mock import ResilientMock, resilient_endpoint
+from resilient_circuits.test_tools.resilient_rest_mock import ResilientMock, resilient_endpoint
 LOG = logging.getLogger(__name__)
 
 
