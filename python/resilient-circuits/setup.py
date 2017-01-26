@@ -73,8 +73,7 @@ setup(
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
     long_description=long_description,
-    packages=['resilient_circuits'],
-    package_dir={'resilient_circuits': 'resilient_circuits'},
+    packages=find_packages(),
     include_package_data=True,
     platforms='any',
     classifiers=[
