@@ -234,7 +234,7 @@ class ResilientCircuits:
         resilient_config_data = """
 [resilient]
 logfile = app.log
-loglevel = DEBUG
+loglevel = INFO
 cafile = false
 stomp_port = 65001
 componentsdir = components
