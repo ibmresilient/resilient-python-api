@@ -53,7 +53,7 @@ setup(
     version="26.0.4",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
-    author='Resilient',
+    author='IBM Resilient',
     install_requires=[
         'stomp.py>=4.0.12',
         'requests>=2.6.0',
@@ -75,6 +75,7 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     include_package_data=True,
+    data_files = [("", ["LICENSE"])],
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
