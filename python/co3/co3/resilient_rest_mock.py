@@ -17,29 +17,37 @@ def resilient_endpoint(request_type, uri):
         return func
     return mark
 
-
-class ResilientMockBase(object):
-    class __metaclass__(type):
-        """ creates collection with a `uri` attribute
-            and stores it on the class as `registered_endpoints`
-        """
-        def __new__(cls, name, bases, attr):
-            Endpoint = namedtuple("Endpoint", "type uri")
-            endpoints = {}
-            for obj in attr.itervalues():
-                    if hasattr(obj, 'uri'):
-                        endpoints[Endpoint(type=obj.request_type, uri=obj.uri)] = obj
-            attr['registered_endpoints'] = endpoints
-            return type.__new__(cls, name, bases, attr)
+def with_metaclass(mcls):
+    # Metaclass decorator for python 2/3 compatibility
+    # http://stackoverflow.com/questions/22409430/portable-meta-class-between-python2-and-python3
+    def decorator(cls):
+        body = vars(cls).copy()
+        # clean out class body
+        body.pop('__dict__', None)
+        body.pop('__weakref__', None)
+        return mcls(cls.__name__, cls.__bases__, body)
+    return decorator
 
 
-class ResilientMock(ResilientMockBase):
+class ResilientMockType(type):
+    def __new__(mcl, name, bases, nmspc):
+        Endpoint = namedtuple("Endpoint", "type uri")
+        endpoints = {}
+        for obj in nmspc.values():
+            if hasattr(obj, 'uri'):
+                endpoints[Endpoint(type=obj.request_type, uri=obj.uri)] = obj
+        nmspc['registered_endpoints'] = endpoints
+        return super(ResilientMockType, mcl).__new__(mcl, name, bases, nmspc)
+
+@with_metaclass(ResilientMockType)
+class ResilientMock(object):
     """ Base class for creating Resilient Rest API Mock definitions """
+
     def __init__(self, org_name=None, email=None):
         self.email = email or "api@example.com"
         self.org_name = org_name or "Test Org"
         LOG.info("Initialize ResilientMock %s %s", self.email, self.org_name)
-        
+
         self.adapter = requests_mock.Adapter()
         for endpoint, handler in self.registered_endpoints.items():
             # Register with regex since some endpoints embed the org_id in the path
