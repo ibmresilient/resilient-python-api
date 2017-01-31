@@ -29,19 +29,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Holds basic information about an action.
+    /// </summary>
     public class PartialActionDto
     {
+
+        /// <summary>
+        ///  The ID of the action.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The display name of the action.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The type of the action (e.g. manual or automatic).  See actionsFrameworkInfoDTO action_typesfor the list of possible values.
+        /// </summary>
         [JsonProperty("type")]
         public int Type { get; set; }
+
     }
 }

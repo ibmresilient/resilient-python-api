@@ -29,32 +29,63 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
     /// <summary>
-    /// Summary description for NamedEntityDTO
     /// </summary>
     public class GroupDto
     {
+
+        /// <summary>
+        ///  The ID of the group
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The name of the group.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  Array of the IDs of the members of the group.
+        /// </summary>
         [JsonProperty("members")]
         public List<ObjectHandle> Members { get; set; }
 
+        /// <summary>
+        ///  Flag to indicate if the group can be assigned to incidents.
+        /// </summary>
         [JsonProperty("is_assignable")]
-        public bool Assignable { get; set; }
+        public bool IsAssignable { get; set; }
 
+        /// <summary>
+        ///  Flag to indicate if the group can be assigned to incidents.
+        /// </summary>
+        [Obsolete]
+        [JsonIgnore]
+        public bool Assignable
+        {
+            get { return IsAssignable; }
+            set { IsAssignable = value; }
+        }
+
+        /// <summary>
+        ///  The distinguished name of the LDAP group that this group should include users from.
+        /// </summary>
         [JsonProperty("ldap_dn")]
         public string LdapDn { get; set; }
 
+        /// <summary>
+        ///  The LDAP users who are implicitly members of this group do to the LDAP link association.
+        /// </summary>
         [JsonProperty("ldap_members")]
         public LdapGroupMembersDto LdapMembers { get; set; }
+
     }
 }

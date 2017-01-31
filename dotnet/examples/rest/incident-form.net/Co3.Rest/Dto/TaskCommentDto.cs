@@ -29,16 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents a task comment.
+    /// </summary>
     public class TaskCommentDto : IncidentCommentDto
     {
+
+        /// <summary>
+        ///  The ID of the task to which this comment belongs.
+        /// </summary>
         [JsonProperty("task_id")]
         public int TaskId { get; set; }
 
+        /// <summary>
+        ///  The name of the task to which this comment belongs.
+        /// </summary>
         [JsonProperty("task_name")]
         public string TaskName { get; set; }
+
     }
 }

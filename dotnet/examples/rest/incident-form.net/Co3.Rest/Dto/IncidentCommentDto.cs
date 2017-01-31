@@ -29,16 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  This object represents an incident comment.
+    /// </summary>
     public class IncidentCommentDto : CommentDto
     {
+
+        /// <summary>
+        ///  The ID of the incident to which this comment belongs.
+        /// </summary>
         [JsonProperty("inc_id")]
         public int IncId { get; set; }
 
+        /// <summary>
+        ///  The name of the incident to which this comment belongs.
+        /// </summary>
         [JsonProperty("inc_name")]
         public string IncName { get; set; }
+
     }
 }

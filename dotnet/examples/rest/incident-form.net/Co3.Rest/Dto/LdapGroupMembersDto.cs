@@ -29,20 +29,49 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class LdapGroupMembersDto
     {
+
+        /// <summary>
+        ///  The distinguished name of the LDAP group.
+        /// </summary>
         [JsonProperty("dn")]
         public string Dn { get; set; }
 
+        /// <summary>
+        ///  A boolean that indicates whether or not the LDAP group contains members who are not authorized for this organization.
+        /// </summary>
         [JsonProperty("has_unauthorized")]
-        public bool HasUnauthorizedUsers { get; set; }
+        public bool HasUnauthorized { get; set; }
 
+        [Obsolete]
+        [JsonIgnore]
+        public bool HasUnauthorizedUsers
+        {
+            get { return HasUnauthorized; }
+            set { HasUnauthorized = value; }
+        }
+
+        /// <summary>
+        ///  The list of group members who have access to the Organization.
+        /// </summary>
         [JsonProperty("authorized_users")]
-        public List<JustUserDto> Users { get; set; }
+        public List<JustUserDto> AuthorizedUsers { get; set; }
+
+        [Obsolete]
+        [JsonIgnore]
+        public List<JustUserDto> Users
+        {
+            get { return AuthorizedUsers; }
+            set { AuthorizedUsers = value; }
+        }
     }
 }

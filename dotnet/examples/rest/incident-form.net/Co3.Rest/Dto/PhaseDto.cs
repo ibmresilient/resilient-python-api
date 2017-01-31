@@ -29,31 +29,58 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents a phase.
+    /// </summary>
     public class PhaseDto
     {
+
+        /// <summary>
+        ///  The phase ID.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The phase name.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  Is the phase enabled?
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        ///  The phase permissions.
+        /// </summary>
         [JsonProperty("perms")]
         public PhasePermsDto Perms { get; set; }
 
+        /// <summary>
+        ///  Unique identifier for the phase.
+        /// </summary>
         [JsonProperty("uuid")]
         public string Uuid { get; set; }
 
+        /// <summary>
+        ///  This phases order number relative to the other phases. This field is read-only.
+        /// </summary>
         [JsonProperty("order")]
         public int Order { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("export_key")]
         public string ExportKey { get; set; }
+
     }
 }

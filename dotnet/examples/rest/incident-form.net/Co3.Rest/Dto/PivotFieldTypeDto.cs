@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,44 +29,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public enum BucketBy
-    {
-        [EnumMember(Value = "MINUTE")]
-        Minute,
-        [EnumMember(Value = "HOUR")]
-        Hour,
-        [EnumMember(Value = "DAY")]
-        Day,
-        [EnumMember(Value = "WEEK")]
-        Week,
-        [EnumMember(Value = "MONTH")]
-        Month,
-        [EnumMember(Value = "YEAR")]
-        Year,
-        [EnumMember(Value = "DEFAULT_RESOLUTION")]
-        DefaultResolution,
-        [EnumMember(Value = "MINUTE_RESOLUTION")]
-        MinuteResolution
-    }
-
+    /// <summary>
+    ///  Contains all of the information necessary to understand a PivotFieldTypeobject.
+    /// </summary>
     public class PivotFieldTypeDto
     {
+
+        /// <summary>
+        ///  The value representing the PivotFieldType.
+        /// </summary>
         [JsonProperty("value")]
         public string Value { get; set; }
 
+        /// <summary>
+        ///  The display value for the PivotFieldType.
+        /// </summary>
         [JsonProperty("label")]
         public string Label { get; set; }
 
+        /// <summary>
+        ///  The list of bucketswhich apply to this PivotFieldType. May be empty, null, or not present if no buckets are applicable.
+        /// </summary>
         [JsonProperty("bucket_bys")]
         public List<BucketBy> BucketBys { get; set; }
 
+        /// <summary>
+        ///  The list of acceptable field typeswhich are usable with this PivotFieldType. This list will always contain at least one value.
+        /// </summary>
         [JsonProperty("input_types")]
         public List<InputType> InputTypes { get; set; }
+
     }
 }

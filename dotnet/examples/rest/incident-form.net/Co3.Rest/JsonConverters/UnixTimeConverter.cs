@@ -48,7 +48,7 @@ namespace Co3.Rest.JsonConverters
 
         public override bool CanConvert(Type objectType)
         {
-            return objectType.Equals(typeof(DateTime));
+            return objectType == typeof(DateTime);
         }
 
         public override object ReadJson(JsonReader reader, Type objectType,

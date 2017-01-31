@@ -29,22 +29,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class IncidentPermsDto : ObjectPermsDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("create_milestones")]
         public bool CreateMilestones { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("list_milestones")]
         public bool ListMilestones { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("create_artifacts")]
         public bool CreateArtifacts { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("list_artifacts")]
         public bool ListArtifacts { get; set; }
+
     }
 }

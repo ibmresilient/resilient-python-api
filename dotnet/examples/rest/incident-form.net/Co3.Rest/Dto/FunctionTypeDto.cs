@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,31 +29,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public enum PivotFieldType
-    {
-        [EnumMember(Value = "FIELD")]
-        Field,
-        [EnumMember(Value = "NUMBER_DIFFERENCE")]
-        NumberDifference,
-        [EnumMember(Value = "DATE_DIFFERENCE")]
-        DateDifference
-    }
-
+    /// <summary>
+    ///  Contains all of the information necessary to understand a FunctionTypeobject.
+    /// </summary>
     public class FunctionTypeDto
     {
+
+        /// <summary>
+        ///  The value representing the FunctionType.
+        /// </summary>
         [JsonProperty("value")]
         public string Value { get; set; }
 
+        /// <summary>
+        ///  The display value for the FunctionType.
+        /// </summary>
         [JsonProperty("label")]
         public string Label { get; set; }
 
+        /// <summary>
+        ///  The list of PivotFieldTypesto which this function applies.
+        /// </summary>
         [JsonProperty("field_types")]
-        public List<PivotFieldType> PivotFieldTypes { get; set; }
+        public List<PivotFieldType> FieldTypes { get; set; }
+
+        [Obsolete("This field has been renamed to FieldTypes")]
+        [JsonIgnore]
+        public List<PivotFieldType> PivotFieldTypes
+        {
+            get { return FieldTypes; }
+            set { FieldTypes = value; }
+        }
     }
 }

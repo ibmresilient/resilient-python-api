@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,16 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents a time unit in the system. Current values are days, months, years, hours, minutes. These are used to calculate due dates for tasks.
+    /// </summary>
     public class TimeUnitDto
     {
+
+        /// <summary>
+        ///  The display name for this time unit
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The API value for this time unit
+        /// </summary>
         [JsonProperty("value")]
         public string Value { get; set; }
+
     }
 }

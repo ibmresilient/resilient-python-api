@@ -21,7 +21,7 @@ LOG = logging.getLogger(__name__)
 
 def js_filter(val):
     """Jinja2 filter function 'js' produces JSONified string of the value, without surrounding quotes"""
-    if isinstance(val, jinja2.Undefined):
+    if val is None or isinstance(val, jinja2.Undefined):
         return "null"
     js = json_filter(val)
     return js[1:-1]
@@ -29,7 +29,7 @@ def js_filter(val):
 
 def json_filter(val):
     """Jinja2 filter function 'json' produces JSONified string of the value"""
-    if isinstance(val, jinja2.Undefined):
+    if val is None or isinstance(val, jinja2.Undefined):
         return "null"
     return json.dumps(val, indent=0, sort_keys=True)
 

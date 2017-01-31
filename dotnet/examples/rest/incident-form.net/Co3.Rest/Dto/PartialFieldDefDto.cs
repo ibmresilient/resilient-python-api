@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,22 +29,40 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class PartialFieldDefDto
     {
+
+        /// <summary>
+        ///  The name of the field (e.g. 'name', 'incident_type_ids', etc.)
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The text displayed right next to the field (e.g. "Name", "Incident Type", etc.).
+        /// </summary>
         [JsonProperty("text")]
         public string Text { get; set; }
 
+        /// <summary>
+        ///  The internal ID of this field. This value is read-only. The server sets this value when the field is initially created.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The prefix to use when setting the field value in a DTO.  For example, the prefix for the "data_source_ids" field is "pii".  When setting the value in an incident, you must include "data_source_ids" in a sub-JSON object named "pii".  For example: { "id": 555, "name": "Test incident", ... "pii": { "data_source_ids": [1234, 1235], ... } }
+        /// </summary>
         [JsonProperty("prefix")]
         public string Prefix { get; set; }
+
     }
 }

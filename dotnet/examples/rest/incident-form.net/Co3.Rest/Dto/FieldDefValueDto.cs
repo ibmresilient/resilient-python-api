@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Resilient Systems, Inc. ("Resilient") is willing to license software
  * or access to software to the company or entity that will be using or
  * accessing the software and documentation and that you represent as
@@ -29,26 +29,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Represents a value in a select or multiselect field.
+    /// </summary>
     public class FieldDefValueDto : PartialFieldDefValueDto
     {
+
+        /// <summary>
+        ///  Is this value the default?  Only one value in a set of values can be the default for the set.
+        /// </summary>
         [JsonProperty("default")]
-        [DefaultValue(false)]
         public bool Default { get; set; }
 
+        /// <summary>
+        ///  Is the value enabled?
+        /// </summary>
         [JsonProperty("enabled")]
-        [DefaultValue(false)]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        ///  Additional properties for this value.
+        /// </summary>
         [JsonProperty("properties")]
         public Dictionary<string, object> Properties { get; set; }
 
+        /// <summary>
+        ///  Globally unique identifier for this value. This is a read-only field.
+        /// </summary>
         [JsonProperty("uuid")]
         public string Uuid { get; set; }
+
     }
 }

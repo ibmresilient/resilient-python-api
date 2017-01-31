@@ -73,10 +73,16 @@ def _parse_parameters(names, options):
         if isinstance(val, dict):
             val = _parse_parameters(names + (key,), val)
         if isinstance(val, str) and len(val) > 1 and val[0] == "^":
+            # Decode a secret from the keystore
             val = val[1:]
             service = ".".join(names) or "_"
             LOG.debug("keyring get('%s', '%s')", service, val)
             val = keyring.get_password(service, val)
+        if isinstance(val, str) and len(val) > 1 and val[0] == "$":
+            # Read a value from the environment
+            val = val[1:]
+            LOG.debug("env('%s')", val)
+            val = os.environ.get(val)
         options[key] = val
     return options
 

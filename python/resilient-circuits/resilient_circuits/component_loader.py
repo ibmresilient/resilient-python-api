@@ -45,8 +45,11 @@ class ComponentLoader(Loader):
 
     def __init__(self, opts):
         """Initialize the loader"""
-        
+        # Path where components should be found
         self.path = opts['componentsdir']
+        # Optionally, a list of filenames that should not be loaded
+        noload = opts.get("noload", "")
+        self.noload = [filename.strip() for filename in noload.split(",") if filename.strip() != ""]
         super(ComponentLoader, self).__init__(init_kwargs={"opts": opts}, paths=[self.path])
         self.pending_components = []
         self.finished = False
@@ -62,9 +65,12 @@ class ComponentLoader(Loader):
                 if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
                     cname = os.path.splitext(filename)[0]
                     if cname != "__init__":
-                        LOG.debug("Loading %s", cname)
-                        self.pending_components.append(cname)
-                        self.fire(load(cname))
+                        if cname in self.noload:
+                            LOG.info("Not loading %s", cname)
+                        else:
+                            LOG.debug("Loading %s", cname)
+                            self.pending_components.append(cname)
+                            self.fire(load(cname))
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):

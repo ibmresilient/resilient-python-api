@@ -29,54 +29,101 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Information about an organization.
+    /// </summary>
     public class JustOrgDto
     {
+
+        /// <summary>
+        ///  The ID of the organization.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The name of the organization.
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The address of the organization (e.g. "123 Main Street").
+        /// </summary>
         [JsonProperty("addr")]
         public string Addr { get; set; }
 
+        /// <summary>
+        ///  A second address line (e.g. "Suite 234").
+        /// </summary>
         [JsonProperty("addr2")]
         public string Addr2 { get; set; }
 
+        /// <summary>
+        ///  The city where the organization is located.
+        /// </summary>
         [JsonProperty("city")]
         public string City { get; set; }
 
+        /// <summary>
+        ///  The state where the organization is located (free-form text).
+        /// </summary>
         [JsonProperty("state")]
         public string State { get; set; }
 
+        /// <summary>
+        ///  The ZIP/postal code where the organization is located.
+        /// </summary>
         [JsonProperty("zip")]
         public string Zip { get; set; }
 
+        /// <summary>
+        ///  Are attachments enabled for the organization?
+        /// </summary>
         [JsonProperty("attachments_enabled")]
         public bool AttachmentsEnabled { get; set; }
 
+        /// <summary>
+        ///  Are tasks created as "private" (no members) by default?
+        /// </summary>
         [JsonProperty("tasks_private")]
         public bool TasksPrivate { get; set; }
 
+        /// <summary>
+        ///  Are there SAML federations enabled for this organization?
+        /// </summary>
         [JsonProperty("has_saml")]
         public bool HasSaml { get; set; }
 
+        /// <summary>
+        ///  Is SAML *required* for authentication into this organization?
+        /// </summary>
         [JsonProperty("require_saml")]
         public bool RequireSaml { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("twofactor_auth_domain")]
         public TwoFactorAuthDomainDto TwoFactorAuthDomain { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("has_available_twofactor")]
-        public bool HasAvailableTwoFactorAuthDomains { get; set; }
+        public bool HasAvailableTwoFactor { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("authorized_ldap_group")]
         public string AuthorizedLdapGroup { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("supports_ldap")]
         public bool SupportsLdap { get; set; }
 

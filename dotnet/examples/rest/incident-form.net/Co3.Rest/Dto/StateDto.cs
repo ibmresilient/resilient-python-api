@@ -29,19 +29,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  This type holds information about a US state (e.g. California, Massashusetts).
+    /// </summary>
     public class StateDto
     {
+
+        /// <summary>
+        ///  The internal ID to use when referring to the state in other API calls.
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        ///  The name of the state (e.g. "Massachusetts").
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        ///  The abbreviation of the state (e.g. "MA").
+        /// </summary>
         [JsonProperty("abbrev")]
         public string Abbrev { get; set; }
+
     }
 }

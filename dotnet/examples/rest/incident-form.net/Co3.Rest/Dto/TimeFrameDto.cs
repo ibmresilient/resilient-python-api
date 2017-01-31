@@ -29,28 +29,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
-    public class TimeFrameDto
+    /// <summary>
+    ///  Contains the information about a timeframe. These are used when calculating the due dates for built-in tasks.
+    /// </summary>
+    public class TimeframeDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("default_offset")]
         public int DefaultOffset { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("default_units")]
         public string DefaultUnits { get; set; }
+
     }
 }

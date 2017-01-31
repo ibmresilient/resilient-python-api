@@ -29,28 +29,56 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  Holds information about the actions framework.
+    /// </summary>
     public class ActionsFrameworkInfoDto
     {
+
+        /// <summary>
+        ///  Is the actions framework enabled and licensed?
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        ///  A list of possible message destination types. The following are examples: Queue Topic
+        /// The key portion of the map is the message destination type id, the value contains the visible name.
+        /// </summary>
         [JsonProperty("destination_types")]
         public Dictionary<int, string> DestinationTypes { get; set; }
 
+        /// <summary>
+        ///  A list of possible action types. The following are examples: Automatic Manual
+        /// The key portion of the map is the action type id, the value contains the visible name.
+        /// </summary>
         [JsonProperty("action_types")]
         public Dictionary<int, string> ActionTypes { get; set; }
 
+        /// <summary>
+        ///  A list of possible action object types. The following are examples: Incident Task Note Milestone Artifact
+        /// The key portion of the map is the action object type id, the value contains the visible name.
+        /// </summary>
         [JsonProperty("action_object_types")]
         public Dictionary<int, string> ActionObjectTypes { get; set; }
 
+        /// <summary>
+        ///  A list of possible action invocation statuses. The following are examples: Complete Pending Error Timed Out
+        /// The key portion of the map is the action invocation status id, the value contains the visible name.
+        /// </summary>
         [JsonProperty("action_invocation_statuses")]
         public Dictionary<int, string> ActionInvocationStatuses { get; set; }
 
+        /// <summary>
+        ///  A list of possible action invocation message types. The following are examples: Information Error Warning
+        /// The key portion of the map is the action invocation message type id, the value contains the visible name.
+        /// </summary>
         [JsonProperty("action_invocation_message_types")]
         public Dictionary<int, string> ActionInvocationMessageTypes { get; set; }
     }

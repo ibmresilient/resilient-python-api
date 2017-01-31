@@ -29,25 +29,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    /// </summary>
     public class RegulatorDto
     {
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("id")]
         public int Id { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("enabled")]
         public bool Enabled { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("regulator_category_id")]
         public int RegulatorCategoryId { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        /// <summary>
+        /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
+
     }
 }

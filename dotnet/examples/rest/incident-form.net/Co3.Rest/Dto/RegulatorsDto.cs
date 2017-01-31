@@ -29,14 +29,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  A container object that contains a simple array of regulator IDs.
+    /// </summary>
     public class RegulatorsDto
     {
+
+        /// <summary>
+        ///  An array of regulators that apply to this incident (e.g. "GLB Act", "HIPAA/HITEC", etc.).
+        /// The list of possible regulators and their IDs is available in the
+        /// constDTO regulators property
+        /// .
+        /// </summary>
         [JsonProperty("ids")]
         public List<ObjectHandle> Ids { get; set; }
+
     }
 }
