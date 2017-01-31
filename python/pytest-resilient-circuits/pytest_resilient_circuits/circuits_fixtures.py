@@ -1,4 +1,5 @@
 """py.test config"""
+from __future__ import print_function
 
 import pytest
 
@@ -20,6 +21,7 @@ class Watcher(BaseComponent):
 
     @handler(channel="*", priority=999.9)
     def _on_event(self, event, *args, **kwargs):
+        # print("WATCHER GOT ", event)
         with self._lock:
             self.events.append(event)
 
@@ -32,7 +34,7 @@ class Watcher(BaseComponent):
                 for event in self.events:
                     if event.name == name and event.waitingHandlers == 0:
                         if (channel is None) or (channel in event.channels):
-                            return True
+                            return event
             sleep(TIMEOUT)
         else:
             return False
