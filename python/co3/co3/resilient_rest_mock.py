@@ -5,6 +5,7 @@ from collections import namedtuple
 import json
 import re
 import requests_mock
+from six import add_metaclass
 LOG = logging.getLogger(__name__)
 LOG.addHandler(logging.StreamHandler())
 LOG.setLevel(logging.DEBUG)
@@ -17,17 +18,6 @@ def resilient_endpoint(request_type, uri):
         return func
     return mark
 
-def with_metaclass(mcls):
-    # Metaclass decorator for python 2/3 compatibility
-    # http://stackoverflow.com/questions/22409430/portable-meta-class-between-python2-and-python3
-    def decorator(cls):
-        body = vars(cls).copy()
-        # clean out class body
-        body.pop('__dict__', None)
-        body.pop('__weakref__', None)
-        return mcls(cls.__name__, cls.__bases__, body)
-    return decorator
-
 
 class ResilientMockType(type):
     def __new__(mcl, name, bases, nmspc):
@@ -39,7 +29,7 @@ class ResilientMockType(type):
         nmspc['registered_endpoints'] = endpoints
         return super(ResilientMockType, mcl).__new__(mcl, name, bases, nmspc)
 
-@with_metaclass(ResilientMockType)
+@add_metaclass(ResilientMockType)
 class ResilientMock(object):
     """ Base class for creating Resilient Rest API Mock definitions """
 
