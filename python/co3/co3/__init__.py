@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "26.0.1"
+__version__ = "27.0.0"
 
 from .co3 import SimpleClient
 from .co3argparse import ArgumentParser
