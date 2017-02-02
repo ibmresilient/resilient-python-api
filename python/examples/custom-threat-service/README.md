@@ -1,6 +1,6 @@
 # Sample Custom Threat Service
 
-This sample serves to illustrate how to go about writing a service that meets the criteria for a Custom Threat Service which can be integrated into a Resilient Systems Incident Response Platform installation. The calls that the Resilient platform makes to this service (or others like it) are documented in the Custom Threat Service Integration Guide, included in the package.
+This sample serves to illustrate how to go about writing a service that meets the criteria for a Custom Threat Service which can be integrated into an IBM Resilient Incident Response Platform installation. The calls that the Resilient platform makes to this service (or others like it) are documented in the Custom Threat Service Integration Guide, included in the package.
 
 ## Technologies Used
 

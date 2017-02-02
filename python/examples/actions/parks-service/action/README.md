@@ -16,26 +16,26 @@ from the template JSON provided [here](fielddef_park.json), using the `gadget.py
 from the API examples (in python/examples/gadget/):
 
     python /path/to/gadget.py --email api@example.com --password password --org Local \
-           --location resilient.example.com --port 443 \
+           --host resilient.example.com --port 443 \
            --post /types/incident/fields fielddef_park.json
 
 Add these fields to your Details form.
 
-### Custom Actions
+### Rules
 
 Add a message destination named `park`, type Queue.  Add the API user to the
 destination's users list.
 
 ![Message Destination](documentation/destination.png)
 
-Add a manual action "Park" with object type Artifact, and add the destination
-"park" to this action.
+Add a Menu Item "Park" with object type Artifact, and add the destination
+"park" to this rule.
 
 ![Manual Action](documentation/manual_action.png)
 
 Add an automatic action "AutoPark" with object type Incident, and add the
-destination "park" to this action.  Add a condition so that this automatic
-action only runs when the value of the `park` field is changed:
+destination "park" to this action.  Add a condition so that this rule only runs 
+when the value of the `park` field is changed:
 
 ![Automatic Action](documentation/automatic_action.png)
 

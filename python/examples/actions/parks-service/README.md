@@ -55,25 +55,25 @@ Resilient custom fields and custom actions, and to run the action listener scrip
 When the service and the script are running, you can trigger
 actions in two ways:
 
-1. Automatic action, when a Park is selected on an incident
+1. Automatic Rule, when a Park is selected on an incident
 
    Edit the incident, choose a park code from the Park field, then save.
 
    ![Parks field populated](documentation/park_selected.png)
 
-   Whenever the park code is changed, this triggers the automatic action.
+   Whenever the park code is changed, this triggers the rule.
    The incident will display the park code, then automatically update
    after the action has run, showing the full park name and its bears.
 
    ![Parks data populated](documentation/park_info.png)
 
-2. Manual action, when an artifact contains a park name.
+2. Menu Item, when an artifact contains a park name.
 
    Create an artifact, of any type, and set its value to a park code,
    for example "BELA" (which has bears) or "SAMA" (which doesn't).
 
    Select the actions menu beside the artifact, and choose "Query with Parks Service".
-   This triggers the manual action, using the value of the selected artifact.
+   This triggers the rule, using the value of the selected artifact.
    The incident details will update with the park code and details.
 
    ![Parks artifact](documentation/artifact.png)
