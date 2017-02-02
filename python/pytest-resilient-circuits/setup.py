@@ -6,7 +6,7 @@ requirements = [
 
 setup(
     name='pytest_resilient_circuits',
-    version='1.0.0',
+    version='27.0.0',
     description='Resilient Circuits fixtures for Pytest.',
     author='IBM Resilient',
     license='Resilient License',
