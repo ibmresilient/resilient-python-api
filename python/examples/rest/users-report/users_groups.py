@@ -42,23 +42,25 @@ def report_users_and_groups(client, filename="users_groups.xlsx"):
     ws_groups = workbook.create_sheet(title="Groups")
 
     users_column_map = {
-        "email": 1,
-        "fname": 2,
-        "lname": 3,
-        "title": 4,
-        "phone": 5,
-        "status": 6,
-        "group_ids": 11
+        "id": 1,
+        "email": 2,
+        "fname": 3,
+        "lname": 4,
+        "title": 5,
+        "phone": 6,
+        "status": 7,
+        "group_ids": 12
     }
     users_role_column_map = {
-        "administrator": 7,
-        "create_incs": 8,
-        "master_administrator": 9,
-        "observer": 10
+        "administrator": 8,
+        "create_incs": 9,
+        "master_administrator": 10,
+        "observer": 11
     }
     groups_column_map = {
-        "name": 1,
-        "members": 2
+        "id": 1,
+        "name": 2,
+        "members": 3
     }
 
     # Users sheet: make the header row
