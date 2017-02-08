@@ -12,9 +12,6 @@ from resilient_circuits import keyring_arguments
 from resilient_circuits import rest_helper
 
 
-LOG = logging.getLogger(__name__)
-
-
 # The config file location should usually be set in the environment
 APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "report.config")
 
@@ -22,7 +19,7 @@ APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "report.config")
 def report_users_and_groups(client, filename="users_groups.xlsx"):
     """Produce a spreadsheet report of the users and groups in this organization"""
     # Get the lists of users and groups
-    users = client.get("/users")
+    users = client.get("/users?want_disabled=true")
     groups = client.get("/groups")
 
     # Make lookups for convenience
@@ -48,14 +45,15 @@ def report_users_and_groups(client, filename="users_groups.xlsx"):
         "lname": 4,
         "title": 5,
         "phone": 6,
-        "status": 7,
-        "group_ids": 12
+        "enabled": 7,
+        "status": 8,
+        "group_ids": 13
     }
     users_role_column_map = {
-        "administrator": 8,
-        "create_incs": 9,
-        "master_administrator": 10,
-        "observer": 11
+        "administrator": 9,
+        "create_incs": 10,
+        "master_administrator": 11,
+        "observer": 12
     }
     groups_column_map = {
         "id": 1,
