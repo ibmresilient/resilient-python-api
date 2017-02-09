@@ -55,6 +55,17 @@ to your configuration file.  The default configuration file is named
 The example projects includes a configuration file template, which should
 be copied and edited for your environment.
 
+###Configuration Values From Keystore
+   Values in the config file can be pulled from a compatible keystore system
+   on your OS.  To retrieve a value from a keystore, set it to ^<username> and
+   in your keystore system, associate it to site "_".
+
+Example from app.confg:
+
+> password=^api_user@example.com
+>
+
+![Windows Credential Manager](documents/windows_credential_manager.png "Windows Credential Manager")
 
 
 Project Structure
