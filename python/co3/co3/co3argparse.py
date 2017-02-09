@@ -35,6 +35,7 @@ import sys
 import argparse
 import getpass
 if sys.version_info.major == 2:
+    from io import open
     from co3 import ensure_unicode
 else:
     from co3.co3 import ensure_unicode
