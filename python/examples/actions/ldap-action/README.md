@@ -10,13 +10,13 @@ The LDAP results are written to the description of the artifact.
 
 Set up the custom action:
 
-* Open the Administrator Settings page, then select the Actions tab
+* Open the Customization Settings page, then select the Message Destinations tab
 * Add a message destination, type Queue, with programmatic name `ldap`,
   and add the API user to the queue's user list.
 
   ![Message destination](documentation/message_destination.png)
 
-* Create a Manual Action, "Search LDAP".  Set the object type to Artifact.
+* Select the Rules tab.  Create a Menu Item rule, "Search LDAP".  Set the object type to Artifact.
   Add the queue `ldap` to the action's destinations.
 
   ![Custom manual action](documentation/manual_action.png)

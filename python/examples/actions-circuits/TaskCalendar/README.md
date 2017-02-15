@@ -9,15 +9,15 @@ This integration can be run on the Resilient appliance or anywhere else.
 The code is written in Python, and can be extended for your own purposes.
 
 Requires: Python version 2.7.x or 3.4.x or later.
-Requires: Resilient Server or hosted Application, version 24 or later.
+Requires: Resilient Server or hosted Application, version 27 or later.
 
 ## Resilient server setup
 
 You must configure the following customizations to the Resilient server.
-Open the Administrator Settings --> Actions, then:
+Open the Customization Settings menu, then:
 
 ### Message Destination
-
+Open the Message Destinations tab.
 Create a Queue message destination with programmatic name `taskcalendar`.
 Select Yes for "expect acknowledgement", and add the integration user
 to its users list.
@@ -25,16 +25,16 @@ to its users list.
 ![Custom message destination](Documents/messagedestination.png)
 
 
-### Automatic Action
-
-Create two automatic actions named 'taskcalendar' and 'DueDate change', associated with object type
+### Automatic Rules
+Open the Rules tab.
+Create two automatic rules named 'taskcalendar' and 'DueDate change', associated with object type
 "Task".  Choose `taskcalendar` as the message destination. 
 
-For the action 'taskcalendar' add condition
+For the rul 'taskcalendar' add condition
 "Owner is changed"
 ![Owner Change custom action](Documents/taskcalendar.png)
 
-For the action 'DueDate change' add condition
+For the rule 'DueDate change' add condition
 "Due Date is changed"
 
 ![Due Date Change custom action](Documents/duedatechange.png)

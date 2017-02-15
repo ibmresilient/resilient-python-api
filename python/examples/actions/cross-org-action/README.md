@@ -25,9 +25,11 @@ is *Culture* and the destination org is *Special Circumstances*.
 
 In the *Culture* org, you must set up the custom action:
 
-* Open the Administrator Settings page, then select the Actions tab
+* Open the Customization Settings page, then select the Message Destinations tab
 * Add a message destination, type Queue, with programmatic name `crossorg`,
   and add the API user to the queue's user list.
+      ![Destination](documentation/messagedestination.png)
+  
 * Create the following Action Fields:
 
     * "New Incident Description", with API Access Name `new_incident_description`,
@@ -49,9 +51,9 @@ In the *Culture* org, you must set up the custom action:
       choose whether notes are copied onto the new incident.
 
 
-* Create a Manual Action, "Escalate to Special Circumstances" (or whatever name
+* Create a Menu Item Rule, "Escalate to Special Circumstances" (or whatever name
   you choose).  Set the object type to Artifact.  Add the queue `crossorg` to the
-  action's destinations.  Add the "New Incident Type" and "New Incident Destination"
+   destinations.  Create "New Incident Type" and "New Incident Destination"
   action fields (and optionally the "copy_attachments" and "copy_notes" fields) to the layout.
 
   ![Custom manual action](documentation/manual_action.png)
