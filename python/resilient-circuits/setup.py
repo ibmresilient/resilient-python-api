@@ -50,7 +50,7 @@ long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version="27.0.0",  # __version__ in __init__.py
+    version="27.1.0",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='IBM Resilient',
@@ -80,5 +80,6 @@ setup(
     classifiers=[
         'Programming Language :: Python',
     ],
-    scripts=['bin/res-action-test']
+    scripts=['bin/res-action-test',
+             'bin/resilient-circuits-run']
 )

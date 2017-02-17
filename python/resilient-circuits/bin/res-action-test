@@ -192,7 +192,7 @@ class ResilientTestProcessor(cmd.Cmd):
         return two_parts
     # end parse_arg
 
-if __name__ == '__main__':
+def main():
     description = 'Resilient Circuits Action Test Tool'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--host', dest='host', default='localhost',
@@ -203,3 +203,6 @@ if __name__ == '__main__':
                               "test server is listening. defaults to 8008"))
     args = parser.parse_args()
     ResilientTestProcessor(args.host, args.port).cmdloop()
+    
+if __name__ == '__main__':
+    main()

@@ -3,6 +3,7 @@
 import os
 import sys
 import logging
+import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
 
@@ -53,6 +54,11 @@ class ComponentLoader(Loader):
         super(ComponentLoader, self).__init__(init_kwargs={"opts": opts}, paths=[self.path])
         self.pending_components = []
         self.finished = False
+        self.opts = opts
+
+    def discover_installed_components(self):
+        entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
+        return [ep.load() for ep in entry_points if ep.name not in self.noload]
 
     @handler("registered", channel="*")
     def registered(self, component, manager):
@@ -71,6 +77,17 @@ class ComponentLoader(Loader):
                             LOG.debug("Loading %s", cname)
                             self.pending_components.append(cname)
                             self.fire(load(cname))
+
+            # Load all installed components
+            installed_components = self.discover_installed_components()
+            for component_class in installed_components:
+                LOG.info("Loading %s", component_class.__name__)
+                try:
+                    component_class(opts=self.opts).register(self)
+                    LOG.info("Loaded installed component %s", component_class.__name__)
+                except Exception as e:
+                    LOG.error("Failed to load installed component %s", component_class.__name__)
+                    raise
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):
