@@ -165,7 +165,7 @@ class PhishTankTest(TestCase):
             test_records.write(
                 ",".join([
                     "3336999",
-                    "http://nastyphishingsite.com/tmp/standardbank4/inet.php",
+                    "http://nastyphisshingsite.com/tmp/standardbank4/inet.php",
                     "http://www.phishtank.com/phish_detail.php?phish_id=3336999",
                     "2015-07-20T10:16:35+00:00",
                     "yes",
@@ -218,6 +218,19 @@ class SomethingPhishyTest(PhishTankTest):
 
         properties = hits[0].props.all()
         self.assertEqual(len(properties), 5)
+
+    def test_multiple(self):
+        """ Test search through API endpoint"""
+        PhishTankArtifactSearch.search("net.uri", "nastyphishingsite.com")
+
+        # Now search database match records and retrieve them
+        hits = InternalArtifactSearch.search("net.uri", "nastyphishingsite.com")
+
+        self.assertEqual(len(hits), 6)
+
+        for hit in hits:
+            properties = hit.props.all()
+            self.assertEqual(len(properties), 5)
 
     def test_unsupported_search(self):
         """ Test ValueError appears if type is unsupported """

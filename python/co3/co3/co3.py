@@ -1,38 +1,12 @@
-# Resilient Systems, Inc. ("Resilient") is willing to license software
-# or access to software to the company or entity that will be using or
-# accessing the software and documentation and that you represent as
-# an employee or authorized agent ("you" or "your") only on the condition
-# that you accept all of the terms of this license agreement.
-#
-# The software and documentation within Resilient's Development Kit are
-# copyrighted by and contain confidential information of Resilient. By
-# accessing and/or using this software and documentation, you agree that
-# while you may make derivative works of them, you:
-#
-# 1)  will not use the software and documentation or any derivative
-#     works for anything but your internal business purposes in
-#     conjunction your licensed used of Resilient's software, nor
-# 2)  provide or disclose the software and documentation or any
-#     derivative works to any third party.
-#
-# THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-# OF THE POSSIBILITY OF SUCH DAMAGE.
+# -*- coding: utf-8 -*-
 
 import requests
 import json
 import ssl
 import mimetypes
 import os
-
+import unicodedata
+import sys
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
@@ -59,9 +33,16 @@ class SimpleHTTPException(Exception):
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(SimpleHTTPException, self).__init__("{0}:  {1}".format(response.reason, response.text))
+        super(SimpleHTTPException, self).__init__(u"{0}:  {1}".format(response.reason, response.text))
 
         self.response = response
+
+
+class NoChange(Exception):
+    """Exception that can be raised within a get/put handler to indicate 'no change'
+       (which then just bypasses the 'put')
+    """
+    pass
 
 
 def _raise_if_error(response):
@@ -75,6 +56,20 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
+def ensure_unicode(input_value):
+    """ if input_value is type str, convert to unicode with utf-8 encoding """
+    if sys.version_info.major >= 3:
+        return input_value
+
+    if not isinstance(input_value, basestring):
+        return input_value
+    elif isinstance(input_value, str):
+        input_unicode =  input_value.decode('utf-8')
+    else:
+        input_unicode = input_value
+            
+    input_unicode = unicodedata.normalize('NFKC', input_unicode)
+    return input_unicode
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
@@ -91,43 +86,48 @@ class SimpleClient(object):
         self.cookies = None
         self.org_id = None
         self.user_id = None
-        self.base_url = 'https://app.resilientsystems.com/'
-
-        self.org_name = org_name
-        self.proxies = proxies
+        self.base_url = u'https://app.resilientsystems.com/'
+        self.org_name = ensure_unicode(org_name)
+        if proxies:
+            self.proxies = [ensure_unicode(proxy) for proxy in proxies]
+        else:
+            self.proxies = None
         if base_url:
-            self.base_url = base_url
+            self.base_url = ensure_unicode(base_url)
         self.verify = verify
+        self.verify = ensure_unicode(verify)
         if verify is None:
             self.verify = True
         self.authdata = None
         self.session = requests.Session()
-        self.session.mount('https://', TLSHttpAdapter())
+        self.session.mount(u'https://', TLSHttpAdapter())
 
-    def connect(self, email, password):
+    def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
 
         Args:
           email - the email address to use for authentication.
           password - the password
+          timeout - number of seconds to wait for response
         Returns:
           The Resilient session object (dict)
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
         self.authdata = {
-            'email': email,
-            'password': password
+            u'email': ensure_unicode(email),
+            u'password': ensure_unicode(password)
         }
-        return self._connect()
+        return self._connect(timeout=timeout)
 
-    def _connect(self):
+    def _connect(self, timeout=None):
         """Establish a session"""
-        response = self.session.post("{0}/rest/session".format(self.base_url),
+        response = self.session.post(u"{0}/rest/session".format(self.base_url),
                                      data=json.dumps(self.authdata),
                                      proxies=self.proxies,
                                      headers=self.__make_headers(),
-                                     verify=self.verify)
+                                     verify=self.verify,
+                                     timeout=timeout)
         _raise_if_error(response)
         session = json.loads(response.text)
         orgs = session['orgs']
@@ -139,17 +139,17 @@ class SimpleClient(object):
             for org in orgs:
                 org_name = org['name']
                 org_names.append(org_name)
-                if org_name == self.org_name:
+                if ensure_unicode(org_name) == self.org_name:
                     selected_org = org
         else:
             org_names = [org['name'] for org in orgs]
-            msg = "Please specify the organization name to which you want to connect.  " + \
-                  "The user is a member of the following organizations: '{0}'"
-            raise Exception(msg.format("', '".join(org_names)))
+            msg = u"Please specify the organization name to which you want to connect.  " + \
+                  u"The user is a member of the following organizations: '{0}'"
+            raise Exception(msg.format(u"', '".join(org_names)))
 
         if selected_org is None:
-            msg = "The user is not a member of the specified organization '{0}'."
-            raise Exception(msg.format(self.org_name, ', '.join(org_names)))
+            msg = u"The user is not a member of the specified organization '{0}'."
+            raise Exception(msg.format(self.org_name))
 
         if not selected_org.get("enabled", False):
             msg = "This organization is not accessible to you.\n\n" + \
@@ -188,7 +188,7 @@ class SimpleClient(object):
             result = operation(url, **kwargs)
         return result
 
-    def get(self, uri, co3_context_token=None):
+    def get(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -197,22 +197,24 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def get_content(self, uri, co3_context_token=None):
+    def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -221,22 +223,24 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           The raw value returned by the server for this resource.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None):
+    def post(self, uri, payload, co3_context_token=None, timeout=None):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -247,12 +251,13 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.post,
                                          url,
@@ -260,14 +265,18 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None):
+    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None, timeout=None):
         """Upload a file to the specified URI"""
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
-        mime_type = mimetype or mimetypes.guess_type(filepath)[0] or "application/octet-stream"
+        filepath = ensure_unicode(filepath)
+        if filename:
+            filename = ensure_unicode(filename)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
@@ -280,24 +289,29 @@ class SimpleClient(object):
                                              proxies=self.proxies,
                                              cookies=self.cookies,
                                              headers=headers,
-                                             verify=self.verify)
+                                             verify=self.verify,
+                                             timeout=timeout)
             _raise_if_error(response)
             return json.loads(response.text)
 
-    def _get_put(self, uri, apply_func, co3_context_token=None):
+    def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
         (for situations where the put might return a 409/conflict status code)
         """
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         payload = json.loads(response.text)
-        apply_func(payload)
+        try:
+            apply_func(payload)
+        except NoChange:
+            return payload
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.put,
                                          url,
@@ -305,7 +319,8 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         if response.status_code == 200:
             return json.loads(response.text)
         elif response.status_code == 409:
@@ -313,7 +328,7 @@ class SimpleClient(object):
         _raise_if_error(response)
         return None
 
-    def get_put(self, uri, apply_func, co3_context_token=None):
+    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Performs a get, calls apply_func on the returned value, then calls self.put.
         If the put call returns a 409 error, then retry.
 
@@ -323,18 +338,19 @@ class SimpleClient(object):
           to alter the object with the desired changes.
           co3_context_token - the Co3ContextToken from a CAF message (if the caller is
           a CAF message processor.
+          timeout - number of seconds to wait for response
         Returns;
           The object returned by the put operation (converted from JSON to a Python dict).
         Raises:
           Exception if the get or put returns an unexpected status code.
         """
         while True:
-            obj = self._get_put(uri, apply_func, co3_context_token)
+            obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout)
             if obj:
                 return obj
         return None
 
-    def put(self, uri, payload, co3_context_token=None):
+    def put(self, uri, payload, co3_context_token=None, timeout=None):
         """
         Puts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -345,12 +361,13 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.put,
                                          url,
@@ -358,37 +375,34 @@ class SimpleClient(object):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def delete(self, uri, co3_context_token=None):
+    def delete(self, uri, co3_context_token=None, timeout=None):
         """Deletes the specified URI.
 
         Args:
           uri
           co3_context_token
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
-        specify a uri of /incidents, the actual URL would be something like this:
-
-            https://app.resilientsystems.com/rest/orgs/201/incidents
-        Args:
-           uri
-           co3_context_token
+          timeout - number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception occurrs.
         """
-        url = "{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, uri)
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.delete,
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify)
+                                         verify=self.verify,
+                                         timeout=timeout)
         if response.status_code == 204:
             # 204 - No content is OK for a delete
             return None
         _raise_if_error(response)
         return json.loads(response.text)
+

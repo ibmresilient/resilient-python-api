@@ -10,15 +10,15 @@ This integration can be run on the Resilient appliance or anywhere else.
 The code is written in Python, and can be extended for your own purposes.
 
 Requires: Python version 2.7.x or 3.4.x or later.
-Requires: Resilient Server or hosted Application, version 23 or later.
+Requires: Resilient Server or hosted Application, version 27 or later.
 
 ## Resilient server setup
 
 You must configure the following customizations to the Resilient server.
-Open the Administrator Settings --> Actions, then:
+Open the Customization Settings menu, then:
 
 ### Message Destination
-
+Open the Message Destinations tab.
 Create a Queue message destination with programmatic name `filelookup`.
 Select Yes for "expect acknowledgement", and add the integration user
 to its users list.
@@ -26,16 +26,16 @@ to its users list.
 ![Custom message destination](documentation/messagedestination.png)
 
 ### Custom Fields
-
+Open the Layouts tab.
 Create two custom fields called 'custom1' and 'custom2', both of type
 'Text'.  Add the new fields to the incident details so that you can
 view them.
 ![Custom Fields](documentation/customfield.png)
 ![Edit Incident Details](documentation/incidentdetails.png)
 
-### Automatic Action
-
-Create an automatic action named 'lookup_value', associated with object type
+### Automatic Rule
+Open the Rules tab.
+Create an automatic rule named 'lookup_value', associated with object type
 "Incident".  Choose `filelookup` as the message destination. Add condition
 "custom1 is changed".
 

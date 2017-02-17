@@ -1,34 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Resilient Systems, Inc. ("Resilient") is willing to license software
-# or access to software to the company or entity that will be using or
-# accessing the software and documentation and that you represent as
-# an employee or authorized agent ("you" or "your") only on the condition
-# that you accept all of the terms of this license agreement.
-#
-# The software and documentation within Resilient's Development Kit are
-# copyrighted by and contain confidential information of Resilient. By
-# accessing and/or using this software and documentation, you agree that
-# while you may make derivative works of them, you:
-#
-# 1)  will not use the software and documentation or any derivative
-#     works for anything but your internal business purposes in
-#     conjunction your licensed used of Resilient's software, nor
-# 2)  provide or disclose the software and documentation or any
-#     derivative works to any third party.
-#
-# THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS" AND ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL RESILIENT BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-# OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Circuits component for Action Module subscription and message handling"""
 
@@ -39,6 +9,7 @@ import co3
 import stomp
 from stomp.exception import ConnectFailedException
 import ssl
+from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import json
 import re
 import random
@@ -96,7 +67,19 @@ class required_action_field(object):
 
 
 class defer(object):
-    """Decorator for an event handler, delays it awhile"""
+    """Decorator for an event handler, delays it awhile.
+
+       Usage:
+       Decorate a Resilient Circuits handler.
+       This decorator should go *before* the '@handler(...)'.
+       Do not use on 'generic' handlers, only on named-event handlers.
+
+            @defer(delay=5)
+            @handler("actions_event_name")
+            def _function(self, event, *args, **kwargs):
+                # handle the event
+                pass
+    """
     def __init__(self, *args, **kwargs):
         self.delay = kwargs.get("delay", None)
         if len(args) > 0:
@@ -111,6 +94,111 @@ class defer(object):
             LOG.debug("decorated")
             if event.defer(itself, delay=self.delay):
                 # OK, let's handle it later
+                return
+            return func(itself, event, *args, **kwargs)
+        return decorated
+
+
+def debounce_get_incident_key(event):
+    """Callback to return the debounce-key for an event.
+       Multiple events with this key will be debounced together.
+       Default is: event name and incident id.
+    """
+    key = "{} for {}".format(event.name, event.message["incident"]["id"])
+    return key
+
+
+class debounce(object):
+    """Decorator for an event handler, debounces multiple occurrences.
+
+       Parameters:
+           delay= (seconds).  Time before the event will be processed.
+                  If another event (with the same key) occurs in this
+                  time, the timer starts over.
+           discard= (Boolean, optional).  If true, when there are multiple
+                  events before the delay expires, only the most recent one
+                  is processed, and the previous ones are discarded.
+
+       Usage:
+       Decorate a Resilient Circuits handler.
+       This decorator should go *before* the '@handler(...)'.
+       Do not use on 'generic' handlers, only on named-event handlers.
+
+            @debounce(delay=10, discard=True)
+            @handler("actions_event_name")
+            def _function(self, event, *args, **kwargs):
+                # handle the event
+                pass
+    """
+    def __init__(self, *args, **kwargs):
+        self.delay = kwargs.get("delay", 1)
+        self.discard = kwargs.get("discard", False)
+        self.get_key = kwargs.get("get_key_func", debounce_get_incident_key)
+        self.debouncedata = {}
+        if len(args) > 0:
+            raise Exception("Usage: @debounce(delay=<seconds>, [discard=True])")
+
+    def __call__(self, func):
+        """Called at decoration time, with function"""
+        LOG.debug("@debounce %s", func)
+
+        @wraps(func)
+        def decorated(itself, event, *args, **kwargs):
+            LOG.debug("decorated")
+            # De-bounce messages for this event and the same key:
+            # (key is the incident-id, by default):
+            # - Don't handle the message immediately.
+            #   - Note that we have a deferred event.
+            #   - Defer it for <<delay>>.
+            # - If an event arrives and there is any deferred message,
+            #   - Reset the timer interval to <<delay>>
+            #   - Optionally: throw away the new message.
+            #     Otherwise: defer this one too (to be processed
+            #     immediately after the first deferred message).
+            key = self.get_key(event)
+            if event.deferred:
+                # We deferred this event earlier,
+                # and now it has fired without being reset in the meantime.
+                # All the pending events are OK to go!  Forget their timers!
+                LOG.info("Handling deferred %s", key)
+                event.deferred = False
+                self.debouncedata.pop(key, None)
+            else:
+                # This is a new event.
+                # Are there any other deferred events for this [action+incident]?
+                if key not in self.debouncedata:
+                    # We'll keep a list of all the timers
+                    self.debouncedata[key] = []
+                else:
+                    # Duplicate event
+                    if self.discard:
+                        # Unregister all the previous timers so they don't fire
+                        for timer in self.debouncedata[key]:
+                            evt = timer.event
+                            LOG.debug("Unregister timer")
+                            timer.unregister()
+                            if evt:
+                                # The timer's event will not fire now.
+                                # Mark it as not 'deferred' and fire a 'success' child event
+                                # so that it gets ack'd to the message queue.
+                                LOG.debug("Fire success")
+                                evt.deferred = False
+                                channels = getattr(evt, "success_channels", evt.channels)
+                                itself.fire(evt.child("success", evt, evt.value.value), *channels)
+                        # Now we can get rid of the list of timers
+                        self.debouncedata[key] = []
+                    else:
+                        # Reset all the pending timers
+                        for timer in self.debouncedata[key]:
+                            timer.reset(interval=self.delay)
+                # Defer this new event with a timer.
+                LOG.info("Deferring %s", key)
+                timer = Timer(self.delay, event)
+                timer.register(itself)
+                event.deferred = True
+                # Remember the new timer so that we can reset it if necessary
+                self.debouncedata[key].append(timer)
+                # We're done until the timer fires
                 return
             return func(itself, event, *args, **kwargs)
         return decorated
@@ -358,6 +446,12 @@ class Actions(ResilientComponent):
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
 
+        if not rest_client.actions_enabled:
+            # Don't create stomp connection b/c action module is not enabled.
+            LOG.warn("Resilient action module not enabled. No stomp connecton attempted.")
+            self.conn = None
+            return
+        
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
         self.conn = stomp.Connection(host_and_ports=[(host_port)],
@@ -367,18 +461,25 @@ class Actions(ResilientComponent):
                                      try_loopback_connect=False)
 
         # Give the STOMP library our TLS/SSL configuration.
-        validator = validate_cert
-        cert_file = opts.get("cafile")
-        if cert_file is None:
-            validator = None
-        elif cert_file == "false":
-            LOG.warn("Unverified HTTPS requests (cafile=false).")
-            validator = None
-            cert_file = None
+        validator_function = validate_cert
+        cafile = opts.cafile
+        if cafile == "false":
+            # Explicitly disable TLS certificate validation, if you need to
+            cafile = None
+            validator_function = None
+            LOG.warn("TLS without certificate validation: Insecure! (cafile=false)")
+        elif cafile is None:
+            # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
+            # instead of the certificates from ssl.get_default_verify_paths().cafile
+            cafile = DEFAULT_CA_BUNDLE_PATH
+            LOG.debug("TLS validation with default certificate file: {0}".format(cafile))
+        else:
+            LOG.debug("TLS validation with certificate file: {0}".format(cafile))
+
         self.conn.set_ssl(for_hosts=[host_port],
-                          ca_certs=cert_file,
+                          ca_certs=cafile,
                           ssl_version=ssl.PROTOCOL_TLSv1,
-                          cert_validator=validator)
+                          cert_validator=validator_function)
 
         # Other special options
         self.ignore_message_failure = opts["resilient"].get("ignore_message_failure") == "1"
@@ -540,7 +641,7 @@ class Actions(ResilientComponent):
                 LOG.error("Component %s was not subscribed", component)
                 continue
             comps.remove(component)
-            if self.conn.is_connected() and not comps:
+            if self.conn and self.conn.is_connected() and not comps:
                 # All components have unsubscribed this destination; stop listening
                 self._unsubscribe(queue_name)
             self.listeners[queue_name] = comps
@@ -548,7 +649,7 @@ class Actions(ResilientComponent):
 
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
-        if self.conn.is_connected() and self.listeners[queue_name]:
+        if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
             self.conn.subscribe(id='stomp-{0}'.format(queue_name),
                                 destination="actions.{0}.{1}".format(self.org_id, queue_name),
@@ -557,7 +658,7 @@ class Actions(ResilientComponent):
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
         try:
-            if self.conn.is_connected() and self.listeners[queue_name]:
+            if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
                 LOG.info("Unsubscribe from message destination '%s'", queue_name)
                 self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
                                       destination="actions.{0}.{1}".format(self.org_id, queue_name))
@@ -566,7 +667,7 @@ class Actions(ResilientComponent):
 
     def disconnect(self):
         """disconnect stomp connection"""
-        if self.conn.is_connected():
+        if self.conn and self.conn.is_connected():
             for queue_name in self.listeners:
                 self._unsubscribe(queue_name)
             self.conn.disconnect()
@@ -587,11 +688,11 @@ class Actions(ResilientComponent):
     @handler("reconnect")
     def reconnect(self):
         """Try (re)connect to the STOMP server"""
-        if self.conn.is_connected():
+        if self.conn and self.conn.is_connected():
             LOG.error("STOMP reconnect when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
-        else:
+        elif self.conn:
             LOG.info("STOMP attempting to connect")
             try:
                 self.conn.start()

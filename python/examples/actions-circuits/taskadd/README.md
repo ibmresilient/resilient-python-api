@@ -7,24 +7,27 @@ This integration can be run on the Resilient appliance or anywhere else.
 The code is written in Python, and can be extended for your own purposes.
 
 Requires: Python version 2.7.x or 3.4.x or later.
-Requires: Resilient Server or hosted Application, version 23 or later.
+Requires: Resilient Server or hosted Application, version 27 or later.
 
 ## Resilient server setup
 
 You must configure the following customizations to the Resilient server.
-Open the Administrator Settings --> Actions, then:
+Open the Customization Settings menu, then:
 
 ### Message Destination
-
+Open the Message Destinations tab.
 Create a Queue message destination with programmatic name `add_task`.
 Select Yes for "expect acknowledgement", and add the integration user
 to its users list.
 
 ![Custom message destination](Documents/messagedestination.png)
 
-### Action Fields
 
-Several action fields need to be created.
+### Menu Item Rule
+Create a Menu Item Rule named 'add_task', associated with object type "Incident".
+Choose `add_task` as the message destination.
+
+Several Activity Fields need to be created and added to the rule.
 * `Text field` called "Task Name"
 * `Text area field` called "Task Instructions"
 * `Select field` called "Task Phase", whose options match your organizations's defined incident phases.
@@ -32,13 +35,6 @@ Several action fields need to be created.
 ![Manual Action Field](Documents/actionfield.png)
 ![Manual Action Field](Documents/actionfield1.png)
 ![Manual Action Field](Documents/actionfield2.png)
-
-
-### Manual Action
-
-Create a manual action named 'add_task', associated with object type "Incident".
-Choose `add_task` as the message destination.  Add the 3 custom action fields
-created above to the layout.
 
 ![Custom Automatic Action](Documents/manualaction.png)
 

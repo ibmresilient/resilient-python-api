@@ -8,15 +8,15 @@ This integration can be run on the Resilient appliance or anywhere else.
 The code is written in Python, and can be extended for your own purposes.
 
 Requires: Python version 2.7.x or 3.4.x or later.
-Requires: Resilient Server or hosted Application, version 24 or later.
+Requires: Resilient Server or hosted Application, version 27 or later.
 
 ## Resilient server setup
 
 You must configure the following customizations to the Resilient server.
-Open the Administrator Settings --> Actions, then:
+Open the Custimization Settings menu, then:
 
 ### Message Destination
-
+Open the Message Destinations tab.
 Create a Queue message destination with programmatic name `csirt_action`.
 Select Yes for "expect acknowledgement", and add the integration user
 to its users list.
@@ -24,14 +24,16 @@ to its users list.
 ![message destination](Documents/messagedestination.png)
 
 ### Custom Field
+Open the Layouts tab.
 Add a custom boolean field to the incident definition called
 'csirt_action_required' You should add it to your detail view so that you can
 access it easily to set it.
 
 ![Custom field definition](Documents/fielddefinition.png)
 
-### Automatic Action
-Create an automatic action called 'csirtaction' associated with object type
+### Automatic Rule
+Open the Rules tab.
+Create an automatic rule called 'CSIRTaction' associated with object type
 'Incident'.  Choose 'csirt_action' as the message destination.  The triggering
 condition should be when field 'csirt_action_required' is set to True.
 
