@@ -67,18 +67,6 @@ class ComponentLoader(Loader):
         """Registered Event Handler"""
         if component is self:
             LOG.debug("Loader Registered")
-            # Load all components from the components directory
-            for filename in os.listdir(self.path):
-                filepath = os.path.join(self.path, filename)
-                if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
-                    cname = os.path.splitext(filename)[0]
-                    if cname != "__init__":
-                        if cname in self.noload:
-                            LOG.info("Not loading %s", cname)
-                        else:
-                            LOG.debug("Loading %s", cname)
-                            self.pending_components.append(cname)
-                            self.fire(load(cname))
 
             # Load all installed components
             installed_components = self.discover_installed_components()
@@ -89,7 +77,24 @@ class ComponentLoader(Loader):
                     LOG.info("Loaded installed component %s", component_class.__name__)
                 except Exception as e:
                     LOG.error("Failed to load installed component %s", component_class.__name__)
-                    raise
+                    self.fire(load_all_failure())
+
+            if self.path:
+                # Load all components from the components directory
+                for filename in os.listdir(self.path):
+                    filepath = os.path.join(self.path, filename)
+                    if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
+                        cname = os.path.splitext(filename)[0]
+                        if cname != "__init__":
+                            if cname in self.noload:
+                                LOG.info("Not loading %s", cname)
+                            else:
+                                LOG.debug("Loading %s", cname)
+                                self.pending_components.append(cname)
+                                self.fire(load(cname))
+            else:
+                self.finished = True
+                self.fire(load_all_success())
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):

@@ -41,7 +41,7 @@ application = None
 class AppArgumentParser(keyring_arguments.ArgumentParser):
     """Helper to parse command line arguments."""
     DEFAULT_STOMP_PORT = 65001
-    DEFAULT_COMPONENTS_DIR = 'components'
+    DEFAULT_COMPONENTS_DIR = ''
     DEFAULT_LOG_DIR = 'log'
     DEFAULT_LOG_LEVEL = 'INFO'
     DEFAULT_LOG_FILE = 'app.log'
