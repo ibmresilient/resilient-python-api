@@ -24,8 +24,8 @@ setup(
     name='resilient_circuits',
     version="27.0.0",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
-    license='Resilient License',
-    author='Resilient',
+    license='IBM Resilient License',
+    author='IBM Resilient',
     install_requires=[
         'stomp.py>=4.0.12',
         'requests>=2.6.0',
@@ -49,6 +49,7 @@ setup(
     package_dir={'resilient_circuits': 'resilient_circuits'},
     include_package_data=True,
     platforms='any',
+    data_files=[("", ["LICENSE"])],
     classifiers=[
         'Programming Language :: Python',
     ]
