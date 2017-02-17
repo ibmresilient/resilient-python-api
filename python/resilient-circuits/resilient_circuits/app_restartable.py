@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Action Module server - restartable version of App"""
+
 from __future__ import print_function
 
 import logging

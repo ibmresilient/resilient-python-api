@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Command-line argument parser for Resilient apps"""
 
 import os

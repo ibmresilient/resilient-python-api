@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Action Module server
 
 This uses the `Circuits <http://circuitsframework.com/>` framework to

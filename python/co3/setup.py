@@ -23,7 +23,8 @@ setup(
     name='co3',
     version="27.0.0",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
-    license='Resilient License',
+
+    license='IBM Resilient License',
     author='IBM Resilient',
     install_requires=[
         'argparse',
@@ -43,8 +44,8 @@ setup(
     long_description=long_description,
     packages=['co3'],
     include_package_data=True,
-    data_files = [("", ["LICENSE"])],
     platforms='any',
+    data_files=[("", ["LICENSE"])],
     classifiers=[
         'Programming Language :: Python',
         ]

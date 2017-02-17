@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Circuits component for Action Module subscription and message handling"""
 
 import ssl

@@ -2,11 +2,12 @@ __pycache__
 .DS_Store
 .settings
 .idea
+.cache
 *.iml
 .setup.py.swp
 *.pem
 *.pyc
 *.log
 *.log*
-
 *.config
+resilient_circuits_lockfile
