@@ -4,6 +4,7 @@ Licensing change to "IBM Resilient"
 Support UTF8 strings in co3 module
 Support UTF8 characters in configuration files
 Add optional 'timeout' parameter to REST calls
+Add 'NoChange' to optimize get/put
 Fix 'post_attachment()' to guess MIME-type based on the filename
 
 

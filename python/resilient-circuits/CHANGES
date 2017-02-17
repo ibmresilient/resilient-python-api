@@ -4,7 +4,6 @@ Licensing change to "IBM Resilient"
 Add documentation for reading configuration values from keystore with 'key=^VALUE' syntax
 Add an option for reading configuration values from the environment with 'key=$VALUE' syntax
 Add '@debounce()' decorator for event handler functions
-Add 'NoChange' to optimize get/put
 Add '--noload' option to skip loading specific components
 Load components in a deterministic order (alphabetically)
 Better handle connecting to Resilient without Action Module enabled
