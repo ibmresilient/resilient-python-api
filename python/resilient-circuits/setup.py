@@ -48,11 +48,13 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     include_package_data=True,
-    data_files = [("", ["LICENSE"])],
+    data_files = [("", ["LICENSE"]),
+                  ("data", ["data/app.config.base"])],
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
     ],
     scripts=['bin/res-action-test',
-             'bin/resilient-circuits-run']
+             'bin/resilient-circuits-run',
+             'bin/resilient-circuits-config']
 )

@@ -15,6 +15,12 @@ logging.Formatter('%(asctime)s:%(name)s:%(levelname)-8s %(message)s')
 CONFIG_DATA_SECTION = 'task_add'
 CONFIG_SOURCE_SECTION = 'resilient'
 
+def config_section_data():
+    """sample config data for use in app.config"""
+    data =  """# configuration for AddTaskAction component
+[task_add]
+queue=add_task"""
+    return data
 
 class AddTaskAction(ResilientComponent):
     """

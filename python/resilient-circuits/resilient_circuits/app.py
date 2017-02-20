@@ -33,7 +33,7 @@ def log(log_level):
 
 # The config file location should usually be set in the environment
 APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
-
+APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
 
@@ -42,7 +42,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     """Helper to parse command line arguments."""
     DEFAULT_STOMP_PORT = 65001
     DEFAULT_COMPONENTS_DIR = ''
-    DEFAULT_LOG_DIR = 'log'
     DEFAULT_LOG_LEVEL = 'INFO'
     DEFAULT_LOG_FILE = 'app.log'
     DEFAULT_NO_PROMPT_PASS = "False"
@@ -52,7 +51,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
         default_noload = self.getopt("resilient", "noload") or ""
-        default_log_dir = self.getopt("resilient", "logdir") or self.DEFAULT_LOG_DIR
+        default_log_dir = self.getopt("resilient", "logdir") or APP_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
         default_no_prompt_password = self.getopt("resilient",

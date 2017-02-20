@@ -22,6 +22,7 @@ setup(
     ],
     entry_points={
         # Register the component with resilient_circuits
-        "resilient.circuits.components": ["AddTaskAction = taskadd.components.taskaddaction:AddTaskAction"]
+        "resilient.circuits.components": ["AddTaskAction = taskadd.components.taskaddaction:AddTaskAction"],
+        "resilient.circuits.configsection": ["gen_config = taskadd.components.taskaddaction:config_section_data"]
     }
 )
