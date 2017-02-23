@@ -48,13 +48,13 @@ class ConfiguredAppliance:
         if action_fields:
             for field_name, info in action_fields.items():
                 success = self._create_action_field(field_name,
-                                                    info[0], info[1])
+                                                    info[0], info[1], info[2])
                 assert success
         custom_fields = getattr(request.cls, "custom_fields", None)
         if custom_fields:
             for field_name, info in custom_fields.items():
                 success = self._create_custom_field(field_name,
-                                                    info[0], info[1])
+                                                    info[0], info[1], info[2])
                 assert success
         destinations = getattr(request.cls, "destinations", None)
         if destinations:
@@ -124,20 +124,22 @@ class ConfiguredAppliance:
         return json.loads(response.text)
     # end _get_constants
 
-    def _create_action_field(self, programmatic_name, field_type, display_name):
+    def _create_action_field(self, programmatic_name, field_type, display_name, values):
         """ Create action field in resilient """
         endpoint = "/types/actioninvocation/fields"
         action_field = {"text": display_name,
                         "required": "always",
-                        "tooltip": display_name,
                         "blank_option": False,
                         "input_type": field_type,
                         "name": programmatic_name}
+        if values:
+            action_field["values"] = [{"label": value} for value in values]
+
         try:
             field_def = self.client.post(endpoint, action_field)
             if not field_def:
+                print("Failed to create action field %s" % programmatic_name)
                 return False
-            print("Failed to create action field %s" % programmatic_name)
         except Exception as e:
             print("Failed to create action field %s" % programmatic_name)
             traceback.print_exc()
@@ -145,12 +147,15 @@ class ConfiguredAppliance:
         return True
     # end _create_action_field
 
-    def _create_custom_field(self, programmatic_name, field_type, display_name):
+    def _create_custom_field(self, programmatic_name, field_type, display_name, values):
         """ Create custom field in resilient """
         endpoint = "/types/incident/fields"
         custom_field = {"text": display_name,
                         "input_type": field_type,
                         "name": programmatic_name}
+        if values:
+            custom_field["values"] = [{"label": value} for value in values]
+
         response = self.client.post(endpoint, custom_field)
         return True if response else False
     # end _create_custom_field
@@ -237,15 +242,13 @@ logfile = app.log
 loglevel = INFO
 cafile = false
 stomp_port = 65001
-componentsdir = components
 no_prompt_password = True
 port = 443
 test_actions = True
 """
         print("CURRENT WORKING DIR:  Addr: ", os.getcwd(), id(self))
         print(dir(request.module))
-        self.orignal_cwd = os.getcwd()
-        os.chdir(getattr(request.module, "base_dir", "."))
+
         resilient_mock = getattr(request.module, "resilient_mock", None)
         self.config_file = tmpdir_factory.mktemp('data').join("%dapp.config" % id(self))
         print(self.config_file.strpath)
@@ -290,7 +293,6 @@ test_actions = True
         self.flush_logs()
         self.manager.stop()
         pytest.wait_for(self.manager, "_running", False)
-        os.chdir(self.orignal_cwd)
 
     def flush_logs(self):
         handlers = logging.getLogger().handlers
