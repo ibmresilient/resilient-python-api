@@ -40,7 +40,7 @@ setup(
     long_description = "Resilient Circuits Component for Task Add Menu Item",
     packages=find_packages(),
     include_package_data=True,
-    data_files = [("", ["LICENSE"])],
+    data_files = [("", ["taskadd/LICENSE"])],
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
