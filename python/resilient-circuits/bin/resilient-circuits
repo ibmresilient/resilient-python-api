@@ -14,7 +14,7 @@ try:
     import backports.configparser as configparser
 except ImportError:
     import configparser
-    
+
 try:
     from builtins import input
 except ImportError:
@@ -127,8 +127,8 @@ def main():
     subparsers = parser.add_subparsers(title="subcommands",
                                        help="one of these options must be provided",
                                        description="valid subcommands",
-                                       dest="cmd",
-                                       required=True)
+                                       dest="cmd")
+    subparsers.required = True
     list_parser = subparsers.add_parser("list",
                                         help="List the installed Resilient Circuits components")
     run_parser = subparsers.add_parser("run",
