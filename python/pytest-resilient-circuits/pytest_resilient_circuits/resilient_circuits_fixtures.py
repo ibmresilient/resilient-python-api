@@ -18,9 +18,8 @@ import resilient_circuits.app
 class ConfiguredAppliance:
     """ configure resilient org with specs from the test module """
     def __init__(self, request):
-        # TODO: Add support for phases, tasks, incident types
-        # TODO: Add support for value lists for select fields
-        # TODO: Add support for optional action fields (currently all set as required)
+        # TODO: Add support for phases, tasks, incident types. data ta;es
+        # TODO: Add support for optional action and custom fields (currently all set as required)
 
         host = os.environ.get("RESILIENT_APPLIANCE", request.config.option.resilient_host)
         url = "https://%s:443" % host

@@ -56,7 +56,6 @@ class ComponentLoader(Loader):
         super(ComponentLoader, self).__init__(init_kwargs={"opts": opts}, paths=[self.path])
         self.pending_components = []
         self.finished = False
-        self.opts = opts
 
     def discover_installed_components(self):
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
@@ -70,10 +69,12 @@ class ComponentLoader(Loader):
 
             # Load all installed components
             installed_components = self.discover_installed_components()
+            LOG.info("Found %d installed components", len(installed_components))
             for component_class in installed_components:
                 LOG.info("Loading %s", component_class.__name__)
                 try:
-                    component_class(opts=self.opts).register(self)
+                    component_class(*self._init_args,
+                                    **self._init_kwargs).register(self)
                     LOG.info("Loaded installed component %s", component_class.__name__)
                 except Exception as e:
                     LOG.error("Failed to load installed component %s", component_class.__name__)

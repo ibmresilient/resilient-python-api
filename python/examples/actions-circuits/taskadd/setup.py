@@ -24,7 +24,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name='taskadd',
+    name='rc-taskadd',
     version="27.0.0",
     url='https://www.resilientsystems.com/',
     license='Resilient License',
@@ -40,7 +40,7 @@ setup(
     long_description = "Resilient Circuits Component for Task Add Menu Item",
     packages=find_packages(),
     include_package_data=True,
-    data_files = [("", ["taskadd/LICENSE"])],
+    data_files = [("taskadd", ["taskadd/LICENSE"])],
     platforms='any',
     classifiers=[
         'Programming Language :: Python',

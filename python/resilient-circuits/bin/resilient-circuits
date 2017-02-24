@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """ Command line tool to manage and run resilient-circuits """
+from __future__ import absolute_import
 
 import argparse
 import logging
@@ -9,6 +10,10 @@ import pkg_resources
 import re
 import sys
 import traceback
+if sys.version_info.major == 2:
+    from io import open
+else:
+    unicode = str
 try:
     # For all python < 3.2
     import backports.configparser as configparser
@@ -44,6 +49,7 @@ def list_installed():
         components[ep.dist].append(ep.name)
     if not components:
         LOG.info("No resilient-circuits components are installed")
+        return
     LOG.info("The following packages and components are installed:")
     for dist, component_list in components.items():
         pkg = dist.project_name
@@ -108,7 +114,7 @@ def generate_or_update_config(args):
             for config_data in [func() for func  in discover_required_config_sections()]:
                 required_config = configparser.ConfigParser()
                 LOG.debug("Config Data String:\n%s", config_data)
-                required_config.read_string(config_data)
+                required_config.read_string(unicode(config_data))
                 new_section = required_config.sections()[0]
                 LOG.debug("Required Section: %s", new_section)
                 if new_section not in existing_sections:
