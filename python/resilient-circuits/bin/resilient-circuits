@@ -32,10 +32,14 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
-def run(resilient_circuits_args):
+def run(resilient_circuits_args, restartable=False):
     """Run resilient-circuits"""
     # Leave only the arguments for the run command
-    from resilient_circuits import app # import here b/c it is slow
+    if restartable:
+        # import here b/c it is slow
+        from resilient_circuits import app_restartable as app
+    else:
+        from resilient_circuits import app
     sys.argv=sys.argv[0:1] + resilient_circuits_args
     app.run()
 
@@ -151,6 +155,9 @@ def main():
                                    action="store_true")
     config_parser.add_argument("filename", help="Config file to write to; e.g. 'app.config'")
 
+    run_parser.add_argument("-r", "--auto-restart",
+                            help="Automatically restart all components if config file changes",
+                            action="store_true")
     run_parser.add_argument("resilient_circuits_args", help="Args to pass to app.run", nargs=argparse.REMAINDER)
 
     args, unknown_args = parser.parse_known_args()
@@ -164,7 +171,8 @@ def main():
     if args.cmd == "config":
         generate_or_update_config(args)
     elif args.cmd == "run":
-        run(unknown_args + args.resilient_circuits_args)
+        run(unknown_args + args.resilient_circuits_args,
+            restartable=args.auto_restart)
     elif args.cmd == "list":
         list_installed()
 

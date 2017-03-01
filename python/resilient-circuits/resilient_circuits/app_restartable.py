@@ -13,8 +13,8 @@ from circuits import Event, Timer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
-from .app import App
-from .app import APP_CONFIG_FILE, APP_LOCK_FILE
+from resilient_circuits.app import App
+from resilient_circuits.app import APP_CONFIG_FILE, APP_LOCK_FILE
 
 
 application = None
