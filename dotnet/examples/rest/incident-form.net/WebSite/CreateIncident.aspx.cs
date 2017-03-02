@@ -619,7 +619,7 @@ public partial class CreateIncident : System.Web.UI.Page
     {
         ObjectHandle objectHandle = null;
         if (obj is int)
-            objectHandle = new ObjectHandle { Id = obj };
+            objectHandle = new ObjectHandle { Id = (int)obj };
         if (obj is string)
             objectHandle = new ObjectHandle { Name = Convert.ToString(obj) };
         return objectHandle;

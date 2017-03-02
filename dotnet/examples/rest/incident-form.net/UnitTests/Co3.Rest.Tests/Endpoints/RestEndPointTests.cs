@@ -78,7 +78,7 @@ namespace Co3.Rest.EndPoints
                         Name = Guid.NewGuid().ToString()
                     }
                 };
-                mockEndpoint.Object.Post<object>(m_dummyUrl, incident);
+                mockEndpoint.Object.Post<IncidentDto>(m_dummyUrl, incident);
 
                 // verify that the callback was invoked
                 Assert.IsTrue(invoked);
@@ -136,7 +136,11 @@ namespace Co3.Rest.EndPoints
             List<string> objectHandleTypes = new List<string>();
             objectHandleTypes.Add(null);
             Array.ForEach((ObjectHandleFormat[])Enum.GetValues(typeof(ObjectHandleFormat)),
-                format => objectHandleTypes.Add(RestEndpoint.GetEnumJsonValue(format)));
+                format =>
+                {
+                    if (format != ObjectHandleFormat.Undefined)
+                        objectHandleTypes.Add(RestEndpoint.GetEnumJsonValue(format));
+                });
             return objectHandleTypes.ToArray();
         }
     }

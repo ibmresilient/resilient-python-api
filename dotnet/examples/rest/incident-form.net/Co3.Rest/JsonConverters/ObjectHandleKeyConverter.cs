@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Markup;
 using Co3.Rest.Dto;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Co3.Rest.JsonConverters
 {
@@ -18,14 +19,26 @@ namespace Co3.Rest.JsonConverters
             foreach (var keyValue in values)
             {
                 writer.WritePropertyName(isIdsHandleFormat ? keyValue.Key.Id.ToString() : keyValue.Key.Name);
-                writer.WriteValue(keyValue.Value);
+
+                if (typeof(T).IsClass)
+                {
+                    JToken t = JToken.FromObject(keyValue.Value);
+                    JObject o = (JObject)t;
+                    IList<string> propertyNames = o.Properties().Select(p => p.Name).ToList();
+                    o.AddFirst(new JProperty("Keys", new JArray(propertyNames)));
+                    o.WriteTo(writer);
+                }
+                else
+                {
+                    writer.WriteValue(keyValue.Value);
+                }
             }
             writer.WriteEndObject();
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var returnValues = new Dictionary<ObjectHandle, T>();
+            Dictionary<ObjectHandle, T> returnValues = (Dictionary<ObjectHandle, T>)Activator.CreateInstance(objectType);
             foreach (var value in serializer.Deserialize<Dictionary<string, T>>(reader))
             {
                 var objectHandle = new ObjectHandle();
