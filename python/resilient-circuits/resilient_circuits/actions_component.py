@@ -549,7 +549,7 @@ class Actions(ResilientComponent):
     @handler("prepare_unregister")
     def prepare_unregister(self, event, component):
         """A component is unregistering.  Unsubscribe its message queue(s)."""
-        LOG.info("component %s has unregistered", component)
+        LOG.debug("component %s has unregistered", component)
         if self is component:
             LOG.info("disconnecting Actions component from stomp queue")
             self.disconnect()
