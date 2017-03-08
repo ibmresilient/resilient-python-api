@@ -1,6 +1,7 @@
 """Action Module circuits component to lookup a value in a local CSV file"""
 
 from __future__ import print_function
+import pkg_resources
 from circuits import Component, Debugger
 from circuits.core.handlers import handler
 from resilient_circuits.actions_component import ResilientComponent, ActionMessage
@@ -10,6 +11,17 @@ import logging
 LOG = logging.getLogger(__name__)
 
 CONFIG_DATA_SECTION = 'lookup'
+
+def config_section_data():
+    """sample config data for use in app.config"""
+    config_data = """[lookup]
+queue=filelookup
+reference_file={datafile}
+source_field=custom1
+dest_field=custom2
+"""
+    sample_file = pkg_resources.resource_filename("file_lookup", "data/sample.csv")
+    return config_data.format(datafile=sample_file)
 
 class FileLookupComponent(ResilientComponent):
     """Lookup a value in a CSV file"""
@@ -43,10 +55,10 @@ class FileLookupComponent(ResilientComponent):
         inc_id = incident["id"]
         source_fieldname = self.options["source_field"]
         dest_fieldname = self.options["dest_field"]
-        source_value = incident["properties"].get(source_fieldname, "") 
+        source_value = incident["properties"].get(source_fieldname, "")
 
-        # Open local file 
-        with open(self.options["reference_file"]) as ref_file:
+        # Open local file
+        with open(self.options["reference_file"], 'r') as ref_file:
             # Lookup value in file
             reader = csv.reader(ref_file)
             value = ""
@@ -57,12 +69,12 @@ class FileLookupComponent(ResilientComponent):
             else:
                 # Value not present in CSV file
                 LOG.warning("No entry for [%s] in [%s]" % (
-                    source_value, 
+                    source_value,
                     self.options["reference_file"]))
                 yield "field %s not updated" % dest_fieldname
                 return
-                    
-        LOG.info("READ %s:%s  STORED %s:%s", 
+
+        LOG.info("READ %s:%s  STORED %s:%s",
                  source_fieldname, source_value,
                  dest_fieldname, value)
 
