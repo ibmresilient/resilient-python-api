@@ -117,7 +117,8 @@ class App(Component):
         self.opts = AppArgumentParser().parse_args()
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
-        LOG.info("Configuration file is %s", APP_CONFIG_FILE)
+        LOG.info("Configuration file: %s", APP_CONFIG_FILE)
+        LOG.info("Resilient server: %s", self.opts.get("host"))
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
 
