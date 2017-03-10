@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Utility to access schema metadata with the Resilient REST API"""
+
 from __future__ import print_function
 import co3 as resilient
 import os
@@ -7,11 +12,15 @@ import codecs
 import csv
 import collections
 import logging
+
 if sys.version_info.major < 3:
     from StringIO import StringIO
 else:
     from io import StringIO
 
+
+# The config file location should usually be set in the environment
+APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
 
 LOG = logging.getLogger(__name__)
 
@@ -31,8 +40,8 @@ sys.stderr = wrap_io(sys.stderr)
 
 
 class FinfoArgumentParser(resilient.ArgumentParser):
-    def __init__(self):
-        super(FinfoArgumentParser, self).__init__()
+    def __init__(self, config_file=None):
+        super(FinfoArgumentParser, self).__init__(config_file=config_file)
 
         self.add_argument('fieldname',
                           nargs="?",
@@ -198,17 +207,11 @@ def list_types(client):
 def main():
     """Main"""
     # Parse commandline arguments
-    parser = FinfoArgumentParser()
+    parser = FinfoArgumentParser(config_file=APP_CONFIG_FILE)
     opts = parser.parse_args()
 
-    # Create SimpleClient and connect
-    verify = True
-    if opts.cafile:
-        verify = opts.cafile
-    url = "https://{}:{}".format(opts.host, opts.port)
-
-    client = resilient.SimpleClient(org_name=opts.org, proxies=opts.proxy, base_url=url, verify=verify)
-    client.connect(opts.email, opts.password)
+    # Connect to Resilient
+    client = resilient.get_client(opts)
 
     # If no field is specified, list them all
     if not opts.fieldname:

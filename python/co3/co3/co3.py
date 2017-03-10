@@ -7,9 +7,56 @@ import mimetypes
 import os
 import unicodedata
 import sys
+import logging
+from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+
+def get_client(opts):
+    """
+    Helper: get a SimpleClient for Resilient REST API.
+
+    :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`
+
+    Returns: a connected and verified instance of SimpleClient.
+    """
+    if isinstance(opts, Namespace):
+        opts = vars(opts)
+
+    # Allow explicit setting "do not verify certificates"
+    verify = opts.get("cafile")
+    if verify == "false":
+        logging.getLogger(__name__).warn("Unverified HTTPS requests (cafile=false).")
+        requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
+        verify = False
+
+    # Create SimpleClient for a REST connection to the Resilient services
+    url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
+    resilient_client = SimpleClient(org_name=opts.get("org"),
+                                    proxies=opts.get("proxy"),
+                                    base_url=url,
+                                    verify=verify)
+
+    userinfo = resilient_client.connect(opts["email"], opts["password"])
+
+    # Validate the org, and store org_id in the opts dictionary
+    logging.getLogger(__name__).debug(json.dumps(userinfo, indent=2))
+    if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:
+        raise Exception("User is a member of multiple organizations; please specify one.")
+    if(len(userinfo["orgs"])) > 1:
+        for org in userinfo["orgs"]:
+            if org["name"] == opts.get("org"):
+                opts["org_id"] = org["id"]
+    else:
+        opts["org_id"] = userinfo["orgs"][0]["id"]
+
+    # Check if action module is enabled and store to opts dictionary
+    org_data = resilient_client.get('')
+    resilient_client.actions_enabled = org_data["actions_framework_enabled"]
+
+    return resilient_client
 
 
 class TLSHttpAdapter(HTTPAdapter):
@@ -56,6 +103,7 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
+
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
     if sys.version_info.major >= 3:
@@ -70,6 +118,7 @@ def ensure_unicode(input_value):
             
     input_unicode = unicodedata.normalize('NFKC', input_unicode)
     return input_unicode
+
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""

@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Produce reports from incident history"""
 
 from __future__ import print_function
 from __future__ import absolute_import
 
-import co3
+import co3 as resilient
+import os
 import json
 import logging
 import time
@@ -11,6 +15,10 @@ import csv
 import argparse
 from datetime import datetime
 from calendar import timegm
+
+
+# The config file location should usually be set in the environment
+APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "report.config")
 
 # Report times in hours, not milliseconds
 FACTOR = (60 * 60 * 1000)
@@ -28,10 +36,10 @@ class ReportOpts(dict):
             self.update(dictionary)
 
 
-class ReportArgumentParser(co3.ArgumentParser):
+class ReportArgumentParser(resilient.ArgumentParser):
     """Helper to parse command line arguments."""
 
-    def __init__(self, config_file="report.config"):
+    def __init__(self, config_file=None):
         super(ReportArgumentParser, self).__init__(config_file=config_file)
 
         self.add_argument("--since",
@@ -203,22 +211,12 @@ def phases_report(opts, resilient_client):
 def main():
     """main"""
 
-    # Parse commandline arguments
-    parser = ReportArgumentParser()
+    # Parse the commandline arguments and config file
+    parser = ReportArgumentParser(config_file=APP_CONFIG_FILE)
     opts = parser.parse_args()
 
     # Create SimpleClient for a REST connection to the Resilient services
-    url = "https://{}:{}".format(opts.get("host", ""), opts.get("port", 443))
-
-    resilient_client = co3.SimpleClient(org_name=opts.get("org"),
-                                        proxies=opts.get("proxy"),
-                                        base_url=url,
-                                        verify=opts.get("cafile") or True)
-    userinfo = resilient_client.connect(opts["email"], opts["password"])
-    logger.debug(json.dumps(userinfo, indent=2))
-    if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:
-        logger.error("User is a member of multiple organizations; please specify one.")
-        exit(1)
+    resilient_client = resilient.get_client(opts)
 
     # Do the reports
     phases_report(opts, resilient_client)

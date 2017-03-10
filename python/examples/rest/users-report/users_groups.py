@@ -6,11 +6,10 @@
 from __future__ import print_function
 import os
 import logging
+import co3 as resilient
 from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font
-from resilient_circuits import keyring_arguments
-from resilient_circuits import rest_helper
 
 
 # The config file location should usually be set in the environment
@@ -116,12 +115,13 @@ def report_users_and_groups(client, filename="users_groups.xlsx"):
 
 def main():
     """Main"""
+
     # Parse the commandline arguments and config file
-    parser = keyring_arguments.ArgumentParser(config_file=APP_CONFIG_FILE)
+    parser = resilient.ArgumentParser(config_file=APP_CONFIG_FILE)
     opts = parser.parse_args()
 
-    # Create SimpleClient and connect
-    resilient_client = rest_helper.get_resilient_client(opts)
+    # Create SimpleClient for a REST connection to the Resilient services
+    resilient_client = resilient.get_client(opts)
 
     # Report the list of users and groups
     report_users_and_groups(resilient_client)
