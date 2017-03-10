@@ -270,8 +270,20 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None, timeout=None):
-        """Upload a file to the specified URI"""
+    def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+        """
+        Upload a file to the specified URI
+        e.g. "/incidents/<id>/attachments" (for incident attachments)
+        or,  "/tasks/<id>/attachments" (for task attachments)
+
+        :param uri: The REST URI for posting
+        :param filepath: the path of the file to post
+        :param filename: optional name of the file when posted
+        :param mimetype: optional override for the guessed MIME type
+        :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+        """
         filepath = ensure_unicode(filepath)
         if filename:
             filename = ensure_unicode(filename)
@@ -280,6 +292,7 @@ class SimpleClient(object):
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+            multipart_data.update(data)
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.__make_headers(co3_context_token,
                                           additional_headers={'content-type': encoder.content_type})
@@ -293,6 +306,36 @@ class SimpleClient(object):
                                              timeout=timeout)
             _raise_if_error(response)
             return json.loads(response.text)
+
+    def post_artifact_file(self, uri, artifact_type, artifact_filepath, description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
+        """
+        Post a file artifact to the specified URI
+        e.g. "/incidents/<id>/artifacts/files"
+
+        :param uri: The REST URI for posting
+        :param artifact_type: the artifact type name ("IP Address", etc) or type ID
+        :param artifact_filepath: the path of the file to post
+        :param description: optional description for the artifact
+        :param value: optional value for the artifact
+        :param mimetype: optional override for the guessed MIME type
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+
+        """
+        artifact = {
+            "type": artifact_type,
+            "value": value or "",
+            "description": description or ""
+        }
+        mimedata = {    
+            "artifact": json.dumps(artifact)
+        }
+        return self.post_attachment(uri,
+                                    artifact_filepath,
+                                    mimetype=mimetype,
+                                    data=mimedata,
+                                    co3_context_token=co3_context_token,
+                                    timeout=timeout)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
