@@ -6,6 +6,7 @@
 from __future__ import print_function
 import os
 import logging
+from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from resilient_circuits import keyring_arguments
@@ -14,6 +15,12 @@ from resilient_circuits import rest_helper
 
 # The config file location should usually be set in the environment
 APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "report.config")
+
+
+def get_datetime(ts):
+    """datetime from epoch timestamp"""
+    if ts:
+        return datetime.fromtimestamp(int(int(ts)/1000))
 
 
 def report_users_and_groups(client, filename="users_groups.xlsx"):
@@ -43,17 +50,18 @@ def report_users_and_groups(client, filename="users_groups.xlsx"):
         "email": 2,
         "fname": 3,
         "lname": 4,
-        "title": 5,
-        "phone": 6,
-        "enabled": 7,
-        "status": 8,
-        "group_ids": 13
+        "last_login": 5,
+        "title": 6,
+        "phone": 7,
+        "enabled": 8,
+        "status": 9,
+        "group_ids": 14
     }
     users_role_column_map = {
-        "administrator": 9,
-        "create_incs": 10,
-        "master_administrator": 11,
-        "observer": 12
+        "administrator": 10,
+        "create_incs": 11,
+        "master_administrator": 12,
+        "observer": 13
     }
     groups_column_map = {
         "id": 1,
@@ -70,13 +78,16 @@ def report_users_and_groups(client, filename="users_groups.xlsx"):
 
     # Write the user rows
     for user in users:
-        row = row + 1
+        row += 1
         for col in users_column_map:
             value = user.get(col)
             if col == "group_ids":
                 # resolve names of all the groups
                 user_groups = sorted([groups_lookup.get(group, "?") for group in value])
                 value = ", ".join(user_groups)
+            elif col == "last_login":
+                # This is a time/date
+                value = get_datetime(value)
             ws_users.cell(row=row, column=users_column_map[col], value=value)
         for col in users_role_column_map:
             value = user["roles"].get(col)
@@ -90,7 +101,7 @@ def report_users_and_groups(client, filename="users_groups.xlsx"):
 
     # Write the group rows
     for group in groups:
-        row = row + 1
+        row += 1
         for col in groups_column_map:
             value = group.get(col)
             if col == "members":
