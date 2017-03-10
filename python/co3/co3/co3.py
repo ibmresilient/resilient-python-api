@@ -27,7 +27,7 @@ def get_client(opts):
 
     # Allow explicit setting "do not verify certificates"
     verify = opts.get("cafile")
-    if verify == "false":
+    if str(verify).lower() == "false":
         logging.getLogger(__name__).warn("Unverified HTTPS requests (cafile=false).")
         requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
