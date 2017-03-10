@@ -275,6 +275,14 @@ class SimpleClient(object):
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
         or,  "/tasks/<id>/attachments" (for task attachments)
+
+        :param uri: The REST URI for posting
+        :param filepath: the path of the file to post
+        :param filename: optional name of the file when posted
+        :param mimetype: optional override for the guessed MIME type
+        :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
         """
         filepath = ensure_unicode(filepath)
         if filename:
@@ -303,9 +311,19 @@ class SimpleClient(object):
         """
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"
+
+        :param uri: The REST URI for posting
+        :param artifact_type: the artifact type name ("IP Address", etc) or type ID
+        :param artifact_filepath: the path of the file to post
+        :param description: optional description for the artifact
+        :param value: optional value for the artifact
+        :param mimetype: optional override for the guessed MIME type
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+
         """
         artifact = {
-            "type": str(artifact_type),
+            "type": artifact_type,
             "value": value or "",
             "description": description or ""
         }
