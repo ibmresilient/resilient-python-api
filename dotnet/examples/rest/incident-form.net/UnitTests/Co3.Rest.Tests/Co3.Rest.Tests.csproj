@@ -83,10 +83,11 @@
     <Compile Include="CompatibiltyTests.cs" />
     <Compile Include="Dto\ObjectHandleFormatTests.cs" />
     <Compile Include="JsonConverters\MethodNameConverterTests.cs" />
+    <Compile Include="JsonConverters\ObjectHandleKeyConverterTests.cs" />
     <Compile Include="SerializationTests.cs" />
     <Compile Include="Endpoints\DummyRestEndpoint.cs" />
     <Compile Include="Endpoints\RestEndPointTests.cs" />
-    <Compile Include="JsonConverters\ObjectHandlerConverterTests.cs" />
+    <Compile Include="JsonConverters\ObjectHandleConverterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

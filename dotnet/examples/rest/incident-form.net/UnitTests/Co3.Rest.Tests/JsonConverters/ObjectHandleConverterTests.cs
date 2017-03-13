@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace Co3.Rest.JsonConverters
 {
     [TestClass]
-    public class ObjectHandlerConverterTests
+    public class ObjectHandleConverterTests
     {
         private JsonSerializerSettings m_jsonSerializerSettings;
 
