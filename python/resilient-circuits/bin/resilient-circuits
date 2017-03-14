@@ -80,32 +80,42 @@ def generate_default():
 def generate_or_update_config(args):
     """ Create or update config file based on installed components """
     usage_type = "CREATING" if args.create else "UPDATING"
-    LOG.info("%s config file %s", usage_type, args.filename)
 
-    config_filename = os.path.expandvars(os.path.expanduser(args.filename))
+    if not args.filename:
+        # Use default config file in ~/.resilient/app.config and create directory if missing
+        config_filename = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
+        resilient_dir = os.path.dirname(config_filename)
+        if not os.path.exists(resilient_dir):
+            LOG.info("Creating %s", resilient_dir)
+            os.makedirs(resilient_dir)
+    else:
+        config_filename = os.path.expandvars(os.path.expanduser(args.filename))
     file_exists = os.path.exists(config_filename)
 
     if file_exists:
         if args.create:
             choice = ""
             while choice not in ('y', 'n'):
-                choice = input("%s exists. Do you want to overwrite? y/n: ")
+                choice = input("%s exists. Do you want to overwrite? y/n: " % config_filename)
             if choice == 'n':
                 LOG.error("Config file creation cancelled.")
                 return
     elif args.update:
-        LOG.error("Config file does not exist. Update cancelled.")
+        LOG.error("File %s does not exist. Update cancelled.", config_filename)
         return
+
+    LOG.info("%s config file %s", usage_type, config_filename)
 
     if args.create:
         # Write out default file
         with open(config_filename, "w+", encoding="utf-8") as config_file:
             config_file.write(generate_default())
-            LOG.info("Config generated. Please manually edit with your specific configuration values")
+            LOG.info("Config generated. %s  Please manually edit with your specific configuration values", config_filename)
 
     else:
         # Update existing file
         config = configparser.ConfigParser()
+        updated = False
         with open(config_filename, "r", encoding="utf-8") as config_file:
             first_byte = config_file.read(1)
             if first_byte != u'\ufeff':
@@ -125,10 +135,14 @@ def generate_or_update_config(args):
                     # Add the default data for this required section to the config file
                     LOG.info("Adding new section %s", new_section)
                     config_file.write(u"\n" + config_data)
+                    updated = True
                 else:
                     LOG.debug("Section %s already present, not adding", new_section)
 
-            LOG.info("Update finished. New sections may require manual edits with your specific configuration values")
+            if updated:
+                LOG.info("Update finished. New sections may require manual edits with your specific configuration values")
+            else:
+                LOG.info("No updates required.")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -153,7 +167,10 @@ def main():
     file_option_group.add_argument("-c", "--create",
                                    help="Create new config file with all required sections",
                                    action="store_true")
-    config_parser.add_argument("filename", help="Config file to write to; e.g. 'app.config'")
+    config_parser.add_argument("filename",
+                               help="Config file to write to; e.g. 'app.config'",
+                               default= "",
+                               nargs = "?")
 
     run_parser.add_argument("-r", "--auto-restart",
                             help="Automatically restart all components if config file changes",

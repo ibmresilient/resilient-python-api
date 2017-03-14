@@ -24,7 +24,7 @@ import resilient_circuits.keyring_arguments as keyring_arguments
 # The run() method uses a file lock to prevent multiple simultaneous processes
 # running in the same directory.  You can override the lockfile name in the
 # (and so allow multiple) by setting APP_LOCK_FILE in the environment.
-APP_LOCK_FILE = os.environ.get("APP_LOCK_FILE", "resilient_circuits_lockfile")
+APP_LOCK_FILE = os.environ.get("APP_LOCK_FILE", "")
 
 
 def log(log_level):
@@ -32,7 +32,7 @@ def log(log_level):
 
 
 # The config file location should usually be set in the environment
-APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
+APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", None)
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
@@ -47,7 +47,14 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self):
-        super(AppArgumentParser, self).__init__(config_file=APP_CONFIG_FILE)
+        if not APP_CONFIG_FILE:
+            if os.path.exists("app.config"):
+                config_file = "app.config"
+            else:
+                config_file = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
+        else:
+            config_file = APP_CONFIG_FILE
+        super(AppArgumentParser, self).__init__(config_file=config_file)
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
         default_noload = self.getopt("resilient", "noload") or ""
@@ -186,6 +193,7 @@ class App(Component):
         """ set up some logging """
         global LOG_PATH, LOG
         LOG_PATH = os.path.join(logdir, logfile)
+        LOG_PATH = os.path.expanduser(LOG_PATH)
         LOG = logging.getLogger(__name__)
 
         # Ignore syslog errors from message-too-long
@@ -244,7 +252,14 @@ def run(*args, **kwargs):
 
     # define lock
     # this prevents multiple, identical circuits from running at the same time
-    lock = filelock.FileLock(APP_LOCK_FILE)
+    if not APP_LOCK_FILE:
+       lockfile = os.path.expanduser(os.path.join("~", ".resilient", "resilient_circuits_lockfile"))
+       resilient_dir = os.path.dirname(lockfile)
+       if not os.path.exists(resilient_dir):
+           oks.makedirs(resilient_dir)
+    else:
+        lockfile =  os.path.expanduser(APP_LOCK_FILE)
+    lock = filelock.FileLock(lockfile)
 
     # The main app component initializes the Resilient services
     global application
@@ -257,10 +272,10 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(os.path.abspath(APP_LOCK_FILE)))
+        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(os.path.abspath(lockfile)))
     except OSError as exc:
         # Some other problem accessing the lockfile
-        print("Unable to lock {0}: {1}".format(os.path.abspath(APP_LOCK_FILE), exc))
+        print("Unable to lock {0}: {1}".format(os.path.abspath(lockfile), exc))
     # finally:
     #    LOG.info("App finished.")
 
