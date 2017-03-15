@@ -150,8 +150,8 @@ namespace Co3.Rest.Dto
         [JsonProperty("jurisdiction_name")]
         public string JurisdictionName { get; set; }
 
-        [Obsolete]
         [JsonProperty("jurisdiction_reg_id")]
+        [Obsolete]
         public int JurisdictionRegId { get; set; }
 
         /// <summary>

@@ -78,6 +78,8 @@
     <Compile Include="Dto\ColumnDto.cs" />
     <Compile Include="Dto\CommentDto.cs" />
     <Compile Include="Dto\CommentPermsDto.cs" />
+    <Compile Include="Dto\CommentResultsDto.cs" />
+    <Compile Include="Dto\CommentType.cs" />
     <Compile Include="Dto\ConditionDto.cs" />
     <Compile Include="Dto\ConfigurationExportDto.cs" />
     <Compile Include="Dto\ConfigurationExportHistoryDto.cs" />

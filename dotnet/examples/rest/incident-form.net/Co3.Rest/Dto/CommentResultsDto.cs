@@ -39,19 +39,34 @@ using Newtonsoft.Json;
 
 namespace Co3.Rest.Dto
 {
+    /// <summary>
+    ///  The results of a query on comments.
+    /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    public class ThreatSourceLicenseDto 
+    public class CommentResultsDto 
     {
-        [JsonProperty("expiration")]
-        public DateTime Expiration { get; set; }
+        /// <summary>
+        /// All root comments which meet the query criteria or have children that do.
+        /// </summary>
+        [JsonProperty("root_comments")]
+        public List<CommentDto> RootComments { get; set; }
 
-        [JsonProperty("public_key")]
-        public string PublicKey { get; set; }
+        /// <summary>
+        /// IDs of the incident comments which individually matched the query.
+        /// </summary>
+        [JsonProperty("incident_comment_match_ids")]
+        public List<int> IncidentCommentMatchIds { get; set; }
 
-        [JsonProperty("private_key")]
-        public string PrivateKey { get; set; }
+        /// <summary>
+        /// IDs of the task comments which individually matched the query.
+        /// </summary>
+        [JsonProperty("task_comment_match_ids")]
+        public List<int> TaskCommentMatchIds { get; set; }
 
-        [JsonProperty("key")]
-        public string Key { get; set; }
+        /// <summary>
+        /// Indicates that results have been truncated because the number of matches exceeded the server maximum.
+        /// </summary>
+        [JsonProperty("max_results_exceeded")]
+        public bool MaxResultsExceeded { get; set; }
     }
 }

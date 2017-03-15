@@ -48,12 +48,12 @@ namespace Co3.Rest.Dto
         [JsonProperty("name")]
         public string Name { get; set; }
 
-        [Obsolete]
         [JsonProperty("id")]
+        [Obsolete]
         public int RollupId { get; set; }
 
-        [Obsolete]
         [JsonProperty("parent_id")]
+        [Obsolete]
         public int ParentId { get; set; }
 
         [JsonProperty("phase_id")]

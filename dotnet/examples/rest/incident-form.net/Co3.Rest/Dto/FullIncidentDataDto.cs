@@ -100,7 +100,7 @@ namespace Co3.Rest.Dto
         /// but not currently on PUT, but it should be in the future.
         /// </summary>
         [JsonProperty("comments")]
-        public List<IncidentCommentDto> Comments { get; set; }
+        public List<CommentDto> Comments { get; set; }
 
         /// <summary>
         /// The list of actions available to the caller for execution.

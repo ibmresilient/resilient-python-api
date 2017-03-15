@@ -129,5 +129,37 @@ namespace Co3.Rest.Dto
         /// </summary>
         [JsonProperty("actions")]
         public List<ActionInfoDto> Actions { get; set; }
+
+        /// <summary>
+        /// The ID of the incident to which this comment belongs.
+        /// </summary>
+        [JsonProperty("inc_id")]
+        public int IncId { get; set; }
+
+        /// <summary>
+        /// The name of the incident to which this comment belongs.
+        /// </summary>
+        [JsonProperty("inc_name")]
+        public string IncName { get; set; }
+
+        /// <summary>
+        /// The ID of the task to which this comment belongs.
+        /// Will be null on incident comments.
+        /// </summary>
+        [JsonProperty("task_id")]
+        public int TaskId { get; set; }
+
+        /// <summary>
+        /// The name of the task to which this comment belongs.
+        /// Will be null on task comments.
+        /// </summary>
+        [JsonProperty("task_name")]
+        public string TaskName { get; set; }
+
+        /// <summary>
+        /// The type of the comment (incident or task).
+        /// </summary>
+        [JsonProperty("type")]
+        public CommentType Type { get; set; }
     }
 }

@@ -41,20 +41,14 @@ namespace Co3.Rest.Dto
 {
     /// <summary>
     ///  This object represents an incident comment.
+    /// 
+    ///  This class is being deprecated in v27.2 and will be removed in v29.  Applications using this
+    ///  class should switch to using the <a href="json_CommentDTO.html">CommentDTO</a>
+    ///  class instead.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
+    [Obsolete("Deprecated in v27.2 and will be removed in v29.0")]
     public class IncidentCommentDto : CommentDto
     {
-        /// <summary>
-        /// The ID of the incident to which this comment belongs.
-        /// </summary>
-        [JsonProperty("inc_id")]
-        public int IncId { get; set; }
-
-        /// <summary>
-        /// The name of the incident to which this comment belongs.
-        /// </summary>
-        [JsonProperty("inc_name")]
-        public string IncName { get; set; }
     }
 }

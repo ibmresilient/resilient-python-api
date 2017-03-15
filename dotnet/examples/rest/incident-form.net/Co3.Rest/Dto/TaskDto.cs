@@ -165,8 +165,8 @@ namespace Co3.Rest.Dto
         [JsonProperty("init_date")]
         public DateTime InitDate { get; set; }
 
-        [Obsolete]
         [JsonProperty("src_name")]
+        [Obsolete]
         public string SrcName { get; set; }
 
         /// <summary>
@@ -187,8 +187,8 @@ namespace Co3.Rest.Dto
         /// property should switch to using the <a href="json_TaskDTO.html#reslink_at_id">at_id</a>
         /// property instead.
         /// </summary>
-        [Obsolete]
         [JsonProperty("auto_task_id")]
+        [Obsolete("Deprecated in v27.0 and will be removed in v28.0")]
         public ObjectHandle DeprecatedAutoTaskId { get; set; }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace Co3.Rest.Dto
         public JustUserDto Creator { get; set; }
 
         [JsonProperty("notes")]
-        public List<TaskCommentDto> Notes { get; set; }
+        public List<CommentDto> Notes { get; set; }
 
         /// <summary>
         /// Get the date the task was closed. This field is read only.

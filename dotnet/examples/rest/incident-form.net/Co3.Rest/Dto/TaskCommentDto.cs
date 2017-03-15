@@ -41,20 +41,14 @@ namespace Co3.Rest.Dto
 {
     /// <summary>
     ///  Represents a task comment.
+    /// 
+    ///  This class is being deprecated in v27.2 and will be removed in v29.  Applications using this
+    ///  class should switch to using the <a href="json_CommentDTO.html">CommentDTO</a>
+    ///  class instead.
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
+    [Obsolete("Deprecated in v27.2 and will be removed in v29.0")]
     public class TaskCommentDto : IncidentCommentDto
     {
-        /// <summary>
-        /// The ID of the task to which this comment belongs.
-        /// </summary>
-        [JsonProperty("task_id")]
-        public int TaskId { get; set; }
-
-        /// <summary>
-        /// The name of the task to which this comment belongs.
-        /// </summary>
-        [JsonProperty("task_name")]
-        public string TaskName { get; set; }
     }
 }
