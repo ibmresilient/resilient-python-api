@@ -21,7 +21,7 @@ class TestFileLookupUnitTests:
         # Load saved Action Message
         saved_data_file = os.path.join("tests",
                                        "responses",
-                                       "ActionMessage_Lookup Value_2017-01-30T11:09:38.489498")
+                                       "ActionMessage_Lookup Value_2017-01-30T11-09-38.489498")
         with open(saved_data_file) as data_file:
             msg = json.loads(data_file.read())
             msg["incident"]["properties"]["custom1"] = "value1"
@@ -46,7 +46,7 @@ class TestFileLookupUnitTests:
         # Load saved Action Message
         saved_data_file = os.path.join("tests",
                                        "responses",
-                                       "ActionMessage_Lookup Value_2017-01-30T11:09:38.489498")
+                                       "ActionMessage_Lookup Value_2017-01-30T11-09-38.489498")
         with open(saved_data_file) as data_file:
             msg = json.loads(data_file.read())
             msg["incident"]["properties"]["custom1"] = "invalid"
