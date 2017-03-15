@@ -31,7 +31,6 @@ setup(
     license='Resilient License',
     author='IBM Resilient',
     install_requires=[
-        'setuptools>=34.3.0',
         'resilient_circuits>=27.1.0'
     ],
     tests_require=["pytest",
