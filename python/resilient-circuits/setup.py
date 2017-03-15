@@ -54,6 +54,8 @@ setup(
     classifiers=[
         'Programming Language :: Python',
     ],
-    scripts=['bin/res-action-test',
-             'bin/resilient-circuits']
+    entry_points={
+        'console_scripts': ['res-action-test = resilient_circuits.bin.res_action_test:main',
+                            'resilient-circuits = resilient_circuits.bin.resilient_circuits:main']
+    }
 )
