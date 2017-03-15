@@ -38,7 +38,7 @@ class LoggingSimpleClient(co3.SimpleClient):
         filename = "_".join((str(response.status_code), "{0}",
                              response.request.method,
                              url.path, url.params,
-                             datetime.datetime.now().isoformat())).replace('/', '_')
+                             datetime.datetime.now().isoformat())).replace('/', '_').replace(':', '-')
         with open(os.path.join(self.logging_directory,
                                filename.format("JSON")), "w+") as logfile:
             logfile.write(json.dumps(response.json(), indent=2))

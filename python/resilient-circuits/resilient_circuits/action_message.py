@@ -143,7 +143,7 @@ class ActionMessage(Event):
     def _log_message(self, log_dir):
         """Log Action Message JSON to File"""
         filename = "_".join(("ActionMessage", self.displayname,
-                             datetime.datetime.now().isoformat())).replace('/', '_')
+                             datetime.datetime.now().isoformat())).replace('/', '_').replace(':', '-')
         with open(os.path.join(log_dir,
                                filename.format("JSON")), "w+") as logfile:
             logfile.write(json.dumps(self.message, indent=2))

@@ -15,7 +15,7 @@ class MyResilientMock(ResilientMock):
         super(MyResilientMock,self).__init__(*args, **kwargs)
         with open(os.path.join("tests",
                                "responses",
-                               "200_JSON_GET__rest_orgs_201_incidents_2314__2017-01-30T11:09:38.662431")) as json_data:
+                               "200_JSON_GET__rest_orgs_201_incidents_2314__2017-01-30T11-09-38.662431")) as json_data:
             self.incident =   json.load(json_data)
 
     @resilient_endpoint("POST", "/rest/session")
@@ -177,7 +177,7 @@ class MyResilientMock(ResilientMock):
         LOG.debug("incident_fields_get")
         with open(os.path.join("tests",
                                "responses",
-                               "200_JSON_GET__rest_orgs_201_types_incident_fields__2017-01-30T11:09:07.129108")) as json_data:
+                               "200_JSON_GET__rest_orgs_201_types_incident_fields__2017-01-30T11-09-07.129108")) as json_data:
             field_data =  json.load(json_data)
             return requests_mock.create_response(request,
                                                  status_code=200,
@@ -189,7 +189,7 @@ class MyResilientMock(ResilientMock):
         LOG.debug("action_fields_get")
         with open(os.path.join("tests",
                                "responses",
-                               "200_JSON_GET__rest_orgs_201_types_incident_fields__2017-01-30T11:09:07.129108")) as json_data:
+                               "200_JSON_GET__rest_orgs_201_types_incident_fields__2017-01-30T11-09-07.129108")) as json_data:
             field_data = json.load(json_data)
             return requests_mock.create_response(request,
                                                  status_code=200,
@@ -201,7 +201,7 @@ class MyResilientMock(ResilientMock):
         LOG.debug("actions_get")
         with open(os.path.join("tests",
                                "responses",
-                               "200_JSON_GET__rest_orgs_201_actions__2017-01-30T11:09:07.183063")) as json_data:
+                               "200_JSON_GET__rest_orgs_201_actions__2017-01-30T11-09-07.183063")) as json_data:
             action_data = json.load(json_data)
             return requests_mock.create_response(request,
                                                  status_code=200,

@@ -20,7 +20,7 @@ class SimpleResilientMock(ResilientMock):
     def session_post(self, request):
         """ Callback for POST to /rest/session """
         with open(os.path.join("logged_responses",
-                               "200_JSON_POST__rest_session__2017-03-07T15:06:32.499832")) as json_data:
+                               "200_JSON_POST__rest_session__2017-03-07T15-06-32.499832")) as json_data:
             session_data = json.load(json_data)
             session_data["orgs"][1]["name"] = self.org_name
             session_data["user_email"] = self.email
@@ -34,54 +34,54 @@ class SimpleResilientMock(ResilientMock):
     def task_post(self, request):
         """ Callback for POST to /orgs/<org_id>/incidents/<inc_id>/tasks """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_POST__rest_orgs_211_incidents_4573_tasks__2017-03-07T15:07:14.890616"),
+                                                            "200_JSON_POST__rest_orgs_211_incidents_4573_tasks__2017-03-07T15-07-14.890616"),
                                                request)
 
     @resilient_endpoint("GET", "/orgs/[0-9]+$")
     def org_get(self, request):
         """ Callback for GET to /orgs/<org_id> """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_GET__rest_orgs_211__2017-03-07T15:06:32.631724"),
+                                                            "200_JSON_GET__rest_orgs_211__2017-03-07T15-06-32.631724"),
                                                request)
 
     @resilient_endpoint("GET", "/types/incident/fields$")
     def incident_fields_get(self, request):
         """ Callback for GET to /orgs/<org_id>/types/incident/fields """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_GET__rest_orgs_211_types_incident_fields__2017-03-07T15:06:32.838415"),
+                                                            "200_JSON_GET__rest_orgs_211_types_incident_fields__2017-03-07T15-06-32.838415"),
                                                request)
 
     @resilient_endpoint("GET", "/types/actioninvocation/fields$")
     def action_fields_get(self, request):
         """ Callback for GET to /orgs/<org_id>/types/actioninvocation/fields """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_GET__rest_orgs_211_types_actioninvocation_fields__2017-03-07T15:06:33.664072"),
+                                                            "200_JSON_GET__rest_orgs_211_types_actioninvocation_fields__2017-03-07T15-06-33.664072"),
                                                request)
 
     @resilient_endpoint("GET", "/actions$")
     def actions_get(self, request):
         """ Callback for GET to /orgs/<org_id>/actions """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_GET__rest_orgs_211_actions__2017-03-07T15:06:33.143165"),
+                                                            "200_JSON_GET__rest_orgs_211_actions__2017-03-07T15-06-33.143165"),
                                                request)
 
     @resilient_endpoint("GET", "/users/[0-9]+$")
     def user_get(self, request):
         """ Callback for GET to /orgs/<org_id>/users/<user_id> """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_GET__rest_orgs_211_users_115__2017-03-07T15:07:14.289859"),
+                                                            "200_JSON_GET__rest_orgs_211_users_115__2017-03-07T15-07-14.289859"),
                                                request)
 
     @resilient_endpoint("PUT", "/incidents/[0-9]+/members$")
     def members_put(self, request):
         """ Callback for PUT to /orgs/<org_id>/incidents/<inc_id>/members """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_PUT__rest_orgs_211_incidents_4573_members__2017-03-07T15:07:14.611240"),
+                                                            "200_JSON_PUT__rest_orgs_211_incidents_4573_members__2017-03-07T15-07-14.611240"),
                                                request)
 
     @resilient_endpoint("GET", "/incidents/[0-9]+/members$")
     def members_get(self, request):
         """ Callback for GET to /orgs/<org_id>/incidents/<inc_id>/members """
         return self._create_response_from_file(os.path.join("logged_responses",
-                                                            "200_JSON_GET__rest_orgs_211_incidents_4573_members__2017-03-07T15:07:14.353816"),
+                                                            "200_JSON_GET__rest_orgs_211_incidents_4573_members__2017-03-07T15-07-14.353816"),
                                                request)
