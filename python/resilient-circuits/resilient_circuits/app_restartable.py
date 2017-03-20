@@ -14,7 +14,7 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 from resilient_circuits.app import App
-from resilient_circuits.app import APP_CONFIG_FILE, APP_LOCK_FILE
+from resilient_circuits.app import get_config_file, get_lock
 
 
 application = None
@@ -31,7 +31,7 @@ class begin_restart(Event):
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
-    patterns = ["*" + os.path.basename(APP_CONFIG_FILE), ]
+    patterns = ["*" + os.path.basename(get_config_file()), ]
 
     def __init__(self, app):
         super(ConfigFileUpdateHandler, self).__init__()
@@ -75,7 +75,7 @@ class AppRestartable(App):
         LOG.info("Monitoring config file for changes.")
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
-        config_dir = os.path.dirname(APP_CONFIG_FILE) or os.getcwd()
+        config_dir = os.path.dirname(get_config_file())
         self.observer.schedule(event_handler, path=config_dir, recursive=False)
         self.observer.daemon = True
         self.observer.start()
@@ -141,7 +141,7 @@ def run(*args, **kwargs):
 
     # define lock
     # this prevents multiple, identical circuits from running at the same time
-    lock = filelock.FileLock(APP_LOCK_FILE)
+    lock = get_lock()
 
     # The main app component initializes the Resilient services
     global application

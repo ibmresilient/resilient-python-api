@@ -20,23 +20,27 @@ from resilient_circuits.actions_component import Actions, ResilientComponent
 from circuits import Component, Debugger
 import resilient_circuits.keyring_arguments as keyring_arguments
 
-
-# The run() method uses a file lock to prevent multiple simultaneous processes
-# running in the same directory.  You can override the lockfile name in the
-# (and so allow multiple) by setting APP_LOCK_FILE in the environment.
-APP_LOCK_FILE = os.environ.get("APP_LOCK_FILE", "")
-
-
 def log(log_level):
     logging.getLogger().setLevel(log_level)
 
 
-# The config file location should usually be set in the environment
-APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", None)
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
 
+def get_config_file():
+    """ Get the config file for resilient-circuits """
+    # The config file location should usually be set in the environment
+    # First check environment, then cwd, then ~/.resilient/app.config
+    env_app_config_file = os.environ.get("APP_CONFIG_FILE", None)
+    if not env_app_config_file:
+        if os.path.exists("app.config"):
+            config_file = "app.config"
+        else:
+            config_file = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
+    else:
+        config_file = env_app_config_file
+    return config_file
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
     """Helper to parse command line arguments."""
@@ -47,13 +51,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self):
-        if not APP_CONFIG_FILE:
-            if os.path.exists("app.config"):
-                config_file = "app.config"
-            else:
-                config_file = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
-        else:
-            config_file = APP_CONFIG_FILE
+        config_file = get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
@@ -167,7 +165,7 @@ class App(Component):
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"],
                             self.opts['logfile'])
-        LOG.info("Configuration file is %s", APP_CONFIG_FILE)
+        LOG.info("Configuration file is %s", get_config_file())
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
 
@@ -246,13 +244,15 @@ class App(Component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
 
+def get_lock():
+    """Create a filelock"""
 
-def run(*args, **kwargs):
-    """Main app"""
+    # The run() method uses a file lock in the user's ~/.resilient directory to prevent multiple instances
+    # of resilient circuits running.  You can override the lockfile name in the
+    # (and so allow multiple) by setting APP_LOCK_FILE in the environment.
+    app_lock_file = os.environ.get("APP_LOCK_FILE", "")
 
-    # define lock
-    # this prevents multiple, identical circuits from running at the same time
-    if not APP_LOCK_FILE:
+    if not app_lock_file:
        lockfile = os.path.expanduser(os.path.join("~", ".resilient", "resilient_circuits_lockfile"))
        resilient_dir = os.path.dirname(lockfile)
        if not os.path.exists(resilient_dir):
@@ -260,6 +260,14 @@ def run(*args, **kwargs):
     else:
         lockfile =  os.path.expanduser(APP_LOCK_FILE)
     lock = filelock.FileLock(lockfile)
+    return lock
+
+def run(*args, **kwargs):
+    """Main app"""
+
+    # define lock
+    # this prevents multiple, identical circuits from running at the same time
+    lock = get_lock()
 
     # The main app component initializes the Resilient services
     global application
