@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 import argparse
 import logging
-import os.path
+import os, os.path
 import pkg_resources
 import re
 import sys
@@ -31,6 +31,26 @@ from collections import defaultdict
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
+
+def windows_service(service_args):
+    try:
+        import win32serviceutil
+        from resilient_circuits.bin import service_wrapper
+
+        sys.argv=sys.argv[0:1] + service_args
+        win32serviceutil.HandleCommandLine(service_wrapper.irms_svc)
+    except ImportError:
+        LOG.error("Requires PYWIN32 Package. Please download and install from: "
+                  "https://sourceforge.net/projects/pywin32/files/pywin32/")
+
+def supervisor_service():
+    pass
+
+def manage_service(service_args):
+    if os.name == 'nt':
+        windows_service(service_args)
+    else:
+        supervisor_service(service_args)
 
 def run(resilient_circuits_args, restartable=False):
     """Run resilient-circuits"""
@@ -157,6 +177,8 @@ def main():
                                         help="List the installed Resilient Circuits components")
     run_parser = subparsers.add_parser("run",
                                        help="Run the Resilient Circuits application")
+    service_parser = subparsers.add_parser("service",
+                                           help="Manage Resilient Circuits as a service with Windows or Supervisord")
     config_parser = subparsers.add_parser("config",
                                           help="Create or update a basic configuration file")
 
@@ -177,6 +199,8 @@ def main():
                             action="store_true")
     run_parser.add_argument("resilient_circuits_args", help="Args to pass to app.run", nargs=argparse.REMAINDER)
 
+    service_parser.add_argument("service_args", help="Args to pass to service manager", nargs=argparse.REMAINDER)
+
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
         LOG.setLevel(logging.DEBUG)
@@ -192,6 +216,8 @@ def main():
             restartable=args.auto_restart)
     elif args.cmd == "list":
         list_installed()
+    elif args.cmd == "service":
+        manage_service(unknown_args + args.service_args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
