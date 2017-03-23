@@ -79,6 +79,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_proxy = self.getopts("resilient", "proxy")
         default_org = self.getopt("resilient", "org")
         default_cafile = self.getopt("resilient", "cafile")
+        default_cache_ttl = int(self.getopt("resilient", "cache_ttl"))
 
         self.add_argument("--email",
                           default=default_email,
@@ -115,7 +116,12 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument("--cafile",
                           default=default_cafile,
                           help="The name of a file that contains trusted certificates.")
-        
+
+        self.add_argument("--cache-ttl",
+                          default=default_cache_ttl or 240,
+                          type=int,
+                          help="TTL for API responses when using co3.cached_get")
+
 
     def parse_args(self, args=None, namespace=None):
         args = super(ArgumentParser, self).parse_args(args, namespace)

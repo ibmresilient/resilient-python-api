@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import requests
 import json
 import ssl
 import mimetypes
 import os
 import unicodedata
 import sys
+import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-
+from cachetools import cachedmethod
+from cachetools.ttl import TTLCache
 
 class TLSHttpAdapter(HTTPAdapter):
     """
@@ -67,20 +68,21 @@ def ensure_unicode(input_value):
         input_unicode =  input_value.decode('utf-8')
     else:
         input_unicode = input_value
-            
+
     input_unicode = unicodedata.normalize('NFKC', input_unicode)
     return input_unicode
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
         """
         Args:
           org_name - the name of the organization to use.
           base_url - the base URL to use.
           proxies - HTTP proxies to use, if any.
           verify - The name of a PEM file to use as the list of trusted CAs.
+          cache_ttl - time to live for cached API responses
         """
         self.headers = {'content-type': 'application/json'}
         self.cookies = None
@@ -101,6 +103,7 @@ class SimpleClient(object):
         self.authdata = None
         self.session = requests.Session()
         self.session.mount(u'https://', TLSHttpAdapter())
+        self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
@@ -213,6 +216,18 @@ class SimpleClient(object):
                                          timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
+
+    def keyfunc(self, uri, *args, **kwargs):
+        """ function to generate cache key for cached_get """
+        return uri
+
+    def get_cache(self):
+        return self.cache
+
+    @cachedmethod(get_cache, key=keyfunc)
+    def cached_get(self, uri, co3_context_token=None, timeout=None):
+        """ Same as get, but checks cache first """
+        return self.get(uri, co3_context_token, timeout)
 
     def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
@@ -327,7 +342,7 @@ class SimpleClient(object):
             "value": value or "",
             "description": description or ""
         }
-        mimedata = {    
+        mimedata = {
             "artifact": json.dumps(artifact)
         }
         return self.post_attachment(uri,
@@ -448,4 +463,3 @@ class SimpleClient(object):
             return None
         _raise_if_error(response)
         return json.loads(response.text)
-
