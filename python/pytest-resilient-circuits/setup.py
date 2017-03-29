@@ -6,7 +6,7 @@ requirements = [
 
 setup(
     name='pytest_resilient_circuits',
-    version='27.0.0',
+    version='27.1.0',
     description='Resilient Circuits fixtures for Pytest.',
     author='IBM Resilient',
     license='Resilient License',
@@ -15,7 +15,6 @@ setup(
     packages=['pytest_resilient_circuits'],
     install_requires=requirements,
     include_package_data=True,
-    data_files = [("", ["LICENSE"])],
     entry_points={
         'pytest11': [
             'pytest_resilient_circuits = pytest_resilient_circuits.plugin'

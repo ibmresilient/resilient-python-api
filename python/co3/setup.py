@@ -50,7 +50,7 @@ class PyTest(TestCommand):
 
 setup(
     name='co3',
-    version="27.0.0",  # __version__ in __init__.py
+    version="27.1.0",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
 
     license='IBM Resilient License',
