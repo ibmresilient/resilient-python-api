@@ -41,8 +41,6 @@ setup(
     long_description = "Resilient Circuits Component for Automatic CSV File Lookup",
     packages=find_packages(),
     include_package_data=True,
-    data_files = [("file_lookup", ["file_lookup/LICENSE"]),
-                  ("file_lookup/data", ["file_lookup/data/sample.csv"])],
     platforms='any',
     classifiers=[
         'Programming Language :: Python',

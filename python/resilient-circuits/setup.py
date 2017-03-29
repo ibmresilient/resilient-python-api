@@ -33,7 +33,8 @@ setup(
         'circuits',
         'pytz',
         'jinja2',
-        'filelock>=2.0.5'
+        'filelock>=2.0.5',
+        'co3>=27.1.0'
     ],
     extras_require={
         ':python_version >= "2.7"': [
@@ -48,8 +49,6 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     include_package_data=True,
-    data_files = [("", ["resilient_circuits/LICENSE"]),
-                  ("", ["resilient_circuits/data/app.config.base"])],
     platforms='any',
     classifiers=[
         'Programming Language :: Python',

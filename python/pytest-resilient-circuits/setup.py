@@ -2,6 +2,8 @@ from setuptools import setup
 
 requirements = [
     'pytest>=3.0.0',
+    'co3>=27.1.0',
+    'resilient-circuits>=27.1.0'
 ]
 
 setup(
