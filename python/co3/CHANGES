@@ -1,0 +1,11 @@
+2017-02-17: version 27.0.0
+
+Licensing change to "IBM Resilient"
+Support UTF8 strings in co3 module
+Support UTF8 characters in configuration files
+Add optional 'timeout' parameter to REST calls
+Add 'NoChange' to optimize get/put
+Fix 'post_attachment()' to guess MIME-type based on the filename
+
+
+2016-06-29: version 26.0.0

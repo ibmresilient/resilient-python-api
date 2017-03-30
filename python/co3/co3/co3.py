@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import requests
 import json
 import ssl
 import mimetypes
 import os
 import unicodedata
 import sys
+import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-
+from cachetools import cachedmethod
+from cachetools.ttl import TTLCache
 
 class TLSHttpAdapter(HTTPAdapter):
     """
@@ -67,20 +68,21 @@ def ensure_unicode(input_value):
         input_unicode =  input_value.decode('utf-8')
     else:
         input_unicode = input_value
-            
+
     input_unicode = unicodedata.normalize('NFKC', input_unicode)
     return input_unicode
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
         """
         Args:
           org_name - the name of the organization to use.
           base_url - the base URL to use.
           proxies - HTTP proxies to use, if any.
           verify - The name of a PEM file to use as the list of trusted CAs.
+          cache_ttl - time to live for cached API responses
         """
         self.headers = {'content-type': 'application/json'}
         self.cookies = None
@@ -101,6 +103,7 @@ class SimpleClient(object):
         self.authdata = None
         self.session = requests.Session()
         self.session.mount(u'https://', TLSHttpAdapter())
+        self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
@@ -214,6 +217,18 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
+    def keyfunc(self, uri, *args, **kwargs):
+        """ function to generate cache key for cached_get """
+        return uri
+
+    def get_cache(self):
+        return self.cache
+
+    @cachedmethod(get_cache, key=keyfunc)
+    def cached_get(self, uri, co3_context_token=None, timeout=None):
+        """ Same as get, but checks cache first """
+        return self.get(uri, co3_context_token, timeout)
+
     def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
@@ -270,8 +285,20 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None, timeout=None):
-        """Upload a file to the specified URI"""
+    def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+        """
+        Upload a file to the specified URI
+        e.g. "/incidents/<id>/attachments" (for incident attachments)
+        or,  "/tasks/<id>/attachments" (for task attachments)
+
+        :param uri: The REST URI for posting
+        :param filepath: the path of the file to post
+        :param filename: optional name of the file when posted
+        :param mimetype: optional override for the guessed MIME type
+        :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+        """
         filepath = ensure_unicode(filepath)
         if filename:
             filename = ensure_unicode(filename)
@@ -280,6 +307,7 @@ class SimpleClient(object):
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+            multipart_data.update(data)
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.__make_headers(co3_context_token,
                                           additional_headers={'content-type': encoder.content_type})
@@ -293,6 +321,36 @@ class SimpleClient(object):
                                              timeout=timeout)
             _raise_if_error(response)
             return json.loads(response.text)
+
+    def post_artifact_file(self, uri, artifact_type, artifact_filepath, description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
+        """
+        Post a file artifact to the specified URI
+        e.g. "/incidents/<id>/artifacts/files"
+
+        :param uri: The REST URI for posting
+        :param artifact_type: the artifact type name ("IP Address", etc) or type ID
+        :param artifact_filepath: the path of the file to post
+        :param description: optional description for the artifact
+        :param value: optional value for the artifact
+        :param mimetype: optional override for the guessed MIME type
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+
+        """
+        artifact = {
+            "type": artifact_type,
+            "value": value or "",
+            "description": description or ""
+        }
+        mimedata = {
+            "artifact": json.dumps(artifact)
+        }
+        return self.post_attachment(uri,
+                                    artifact_filepath,
+                                    mimetype=mimetype,
+                                    data=mimedata,
+                                    co3_context_token=co3_context_token,
+                                    timeout=timeout)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
@@ -405,4 +463,3 @@ class SimpleClient(object):
             return None
         _raise_if_error(response)
         return json.loads(response.text)
-

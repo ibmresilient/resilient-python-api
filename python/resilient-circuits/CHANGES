@@ -1,0 +1,31 @@
+2017-02-17: version 27.0.0
+
+Licensing change to "IBM Resilient"
+Add documentation for reading configuration values from keystore with 'key=^VALUE' syntax
+Add an option for reading configuration values from the environment with 'key=$VALUE' syntax
+Add '@debounce()' decorator for event handler functions
+Add '--noload' option to skip loading specific components
+Load components in a deterministic order (alphabetically)
+Better handle connecting to Resilient without Action Module enabled
+Better consistency with REST API in TLS certificate verification
+
+
+26.0.3
+
+Add requirements.txt for easier offline downloading of Python dependencies
+
+
+2016-08-10: version 26.0.2
+
+Fix issue when unsubscribing from STOMP queues
+
+
+2016-08-01: version 26.0.1
+
+Allow override of password prompting
+Allow blank config values
+Fix an issue with 'app-restartable' updating too often
+Fix an issue with events for non-string channel ids
+Fix an issue with loading some action components
+
+2016-06-29: version 26.0.0
