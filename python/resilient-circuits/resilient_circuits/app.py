@@ -256,9 +256,9 @@ def get_lock():
        lockfile = os.path.expanduser(os.path.join("~", ".resilient", "resilient_circuits_lockfile"))
        resilient_dir = os.path.dirname(lockfile)
        if not os.path.exists(resilient_dir):
-           oks.makedirs(resilient_dir)
+           os.makedirs(resilient_dir)
     else:
-        lockfile =  os.path.expanduser(APP_LOCK_FILE)
+        lockfile =  os.path.expanduser(lockfile)
     lock = filelock.FileLock(lockfile)
     return lock
 
@@ -280,10 +280,10 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(os.path.abspath(lockfile)))
+        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(os.path.abspath(lock.lock_file)))
     except OSError as exc:
         # Some other problem accessing the lockfile
-        print("Unable to lock {0}: {1}".format(os.path.abspath(lockfile), exc))
+        print("Unable to lock {0}: {1}".format(os.path.abspath(lock.lock_file), exc))
     # finally:
     #    LOG.info("App finished.")
 

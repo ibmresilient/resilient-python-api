@@ -156,9 +156,12 @@ def run(*args, **kwargs):
         # file is probably already locked
         errmsg = ("Failed to acquire lock on {0} - you may have "
                   "another instance of Resilient Circuits running")
-        print(errmsg.format(APP_LOCK_FILE))
+        print(errmsg.format(os.path.abspath(lock.lock_file)))
     except ValueError:
         LOG.exception("ValueError Raised. Application not running.")
+    except OSError as exc:
+        # Some other problem accessing the lockfile
+        print("Unable to lock {0}: {1}".format(os.path.abspath(lock.lock_file), exc))
     # finally:
     #    LOG.info("App finished.")
 
