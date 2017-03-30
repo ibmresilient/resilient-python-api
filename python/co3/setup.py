@@ -1,12 +1,11 @@
 from __future__ import print_function
-from setuptools import setup, find_packages
 import io
-import codecs
 import os
 import sys
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
-
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -19,10 +18,41 @@ def read(*filenames, **kwargs):
 
 long_description = read('README')
 
+class PyTest(TestCommand):
+    user_options = [('configfile=', 'c', "Resilient Config File for co3argparse"),
+                    ('co3args=', 'a', "Resilient Optional Args for co3argparse"),
+                    ('pytestargs=', 'p', "Pytest Optional Args")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.configfile = ""
+        self.co3args = ""
+        self.pytestargs = ""
+        self.test_suite = True
+        self.test_args = []
+
+    def finalize_options(self):
+        import shlex
+        TestCommand.finalize_options(self)
+        if self.configfile:
+            self.test_args += ["--config-file=%s" % self.configfile]
+        if self.co3args:
+            self.test_args += ["--co3args=%s" % self.co3args]
+        if self.pytestargs:
+            self.test_args += shlex.split(self.pytestargs)
+
+    def run_tests(self):
+        #import here, because outside the eggs aren't loaded
+        print("Running Tests with args: %s" % self.test_args)
+        import pytest
+        errno = pytest.main(args=self.test_args)
+        sys.exit(errno)
+
 setup(
     name='co3',
-    version="27.0.0",  # __version__ in __init__.py
+    version="27.1.0",  # __version__ in __init__.py
     url='https://www.resilientsystems.com/',
+
     license='IBM Resilient License',
     author='IBM Resilient',
     install_requires=[
@@ -30,6 +60,8 @@ setup(
         'stomp.py>=4.0.12',
         'requests>=2.6.0',
         'requests-toolbelt>=0.6.0',
+        'requests-mock>=1.2.0',
+        'six',
         'cachetools'
     ],
     extras_require={
@@ -37,14 +69,15 @@ setup(
             'configparser'
         ]
     },
+    tests_require=["pytest",],
+    cmdclass = {"test" : PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',
     long_description=long_description,
     packages=['co3'],
     include_package_data=True,
     platforms='any',
-    data_files=[("", ["LICENSE"])],
     classifiers=[
         'Programming Language :: Python',
-        ]
+    ]
 )

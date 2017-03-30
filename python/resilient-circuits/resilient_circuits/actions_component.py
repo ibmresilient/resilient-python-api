@@ -2,25 +2,23 @@
 
 """Circuits component for Action Module subscription and message handling"""
 
-from circuits import BaseComponent, Event, Timer, Worker
-from circuits.core.handlers import handler
-
-import co3
-import stomp
-from stomp.exception import ConnectFailedException
 import ssl
-from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import json
-import re
-import random
-import datetime
-from functools import wraps
-from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
+import logging
+import os.path
 from collections import Callable
 from signal import SIGINT, SIGTERM
-import logging
+from functools import wraps
+import stomp
+from stomp.exception import ConnectFailedException
+from circuits import BaseComponent, Event, Timer, Worker
+from circuits.core.handlers import handler
+from requests.utils import DEFAULT_CA_BUNDLE_PATH
+import co3
+import resilient_circuits.actions_test_component as actions_test_component
+from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
+from resilient_circuits.action_message import ActionMessage
 LOG = logging.getLogger(__name__)
-
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 40000      # 40-second heartbeat from server to client
@@ -60,7 +58,8 @@ class required_action_field(object):
     def __call__(self, func):
         """Called at decoration time"""
         # Set or extend the function's "action_fields" attribute
-        func.required_action_fields = getattr(func, "required_action_fields", {})
+        func.required_action_fields = getattr(func,
+                                              "required_action_fields", {})
         func.required_action_fields[self.fieldname] = self.input_type
         # The decorated function is unchanged
         return func
@@ -215,6 +214,7 @@ class ResilientComponent(BaseComponent):
        This is a convenient superclass for custom components that use the
        Resilient Action Module.
     """
+    test_mode = False  # True with --test-actions option
 
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()
@@ -234,20 +234,30 @@ class ResilientComponent(BaseComponent):
                 try:
                     fielddef = self._fields[field_name]
                 except KeyError:
-                    raise Exception("Field '{0}' (required by '{1}') is not defined in the Resilient appliance.".format(field_name, name))
+                    errmsg = ("Field '{0}' (required by '{1}') is not "
+                              "defined in the Resilient appliance.")
+                    raise Exception(errmsg.format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
-                        raise Exception("Field '{0}' (required by '{1}') must be type '{2}'.".format(field_name, name, input_type))
+                        errmsg = ("Field '{0}' (required by '{1}') "
+                                  "must be type '{2}'.")
+                        raise Exception(errmsg.format(field_name,
+                                                      name, input_type))
             # Do all the action fields exist?
             fields = getattr(func, "required_action_fields", {})
             for (field_name, input_type) in fields.items():
                 try:
                     fielddef = self._action_fields[field_name]
                 except KeyError:
-                    raise Exception("Action field '{0}' (required by '{1}') is not defined in the Resilient appliance.".format(field_name, name))
+                    errmsg = ("Action field '{0}' (required by '{1}') "
+                              "is not defined in the Resilient appliance.")
+                    raise Exception(errmsg.format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
-                        raise Exception("Action field '{0}' (required by '{1}') must be type '{2}'.".format(field_name, name, input_type))
+                        errmsg = ("Action field '{0}' (required by "
+                                  "'{1}') must be type '{2}'.")
+                        raise Exception(errmsg.format(field_name,
+                                                      name, input_type))
 
     def rest_client(self):
         """Return a connected instance of the Resilient REST SimpleClient"""
@@ -259,7 +269,8 @@ class ResilientComponent(BaseComponent):
         global _idle_timer
         if _idle_timer is None:
             LOG.debug("create idle timer")
-            _idle_timer = Timer(IDLE_TIMER_INTERVAL, Event.create("idle_reset"), persist=True)
+            _idle_timer = Timer(IDLE_TIMER_INTERVAL,
+                                Event.create("idle_reset"), persist=True)
             _idle_timer.register(self)
         else:
             LOG.debug("Reset idle timer")
@@ -300,128 +311,6 @@ class ResilientComponent(BaseComponent):
         return str(value_id)  # fallback
 
 
-class ActionMessage(Event):
-    """A Circuits event for a Resilient Action Module message"""
-
-    # This is a generic event that holds details of the Action Module message,
-    # including its context (the incident, task, artifact... where the action
-    # was triggered).
-    #
-    # These events are named by the action that triggered them (lowercased).
-    # So a custom action named "Manual Action" will generate an event with name
-    # "manual_action".  To handle that event, you should implement a Component
-    # that has a method named "manual_action":  the Circuits framework will call
-    # your component's methods based on the name of the event.
-    #
-    # The parameters for your event-handler method are:
-    #   event: this event object
-    #   source: the component that fired the event
-    #   headers: the Action Module message headers (dict)
-    #   message: the Action Module message (dict)
-    # For convenience, the message is also broken out onto event properties,
-    #   event.incident: the incident that the event relates to
-    #   event.artifact: the artifact that the event was triggered from (if any)
-    #   event.task: the task that the event was triggered from (if any)
-    #   (etc).
-    #
-    # To have your component's method with a different name from the action,
-    # you can use the '@handler' decorator:
-    #
-    #    @handler("the_action_name")
-    #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
-    #
-    # To have a method handle *any* event on the component's channel,
-    # use the '@handler' decorator with no event name,
-    #
-    #    @handler()
-    #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
-
-    def __init__(self, source=None, headers=None, message=None):
-        super(ActionMessage, self).__init__(source=source, headers=headers, message=message)
-        if headers is None:
-            headers = {}
-        if message is None:
-            message = {}
-        LOG.debug("Source: %s", source)
-        LOG.debug("Headers: %s", json.dumps(headers, indent=2))
-        LOG.debug("Message: %s", json.dumps(message, indent=2))
-
-        self.deferred = False
-        self.message = message
-        self.context = headers.get("Co3ContextToken")
-        self.action_id = message.get("action_id")
-        self.object_type = message.get("object_type")
-
-        self.timestamp = None
-        ts = headers.get("timestamp")
-        if ts is not None:
-            self.timestamp = datetime.datetime.utcfromtimestamp(float(ts)/1000)
-
-        if source is None:
-            # fallback
-            self.displayname = "Unknown"
-        elif isinstance(source, str):
-            # just for testing
-            self.displayname = source
-        else:
-            assert isinstance(source, Actions)
-            self.displayname = source.action_name(self.action_id)
-
-        # The name of this event (=the function that subscribers implement)
-        # is determined from the name of the action.
-        # In future, this should be the action's "programmatic name",
-        # but for now it's the downcased displayname with underscores.
-        self.name = re.sub(r'\W+', '_', self.displayname.strip().lower())
-
-        # Fire a {name}_success event when this event is successfully processed
-        self.success = True
-
-    def __repr__(self):
-        "x.__repr__() <==> repr(x)"
-        if len(self.channels) > 1:
-            channels = repr(self.channels)
-        elif len(self.channels) == 1:
-            channels = str(self.channels[0])
-        else:
-            channels = ""
-        return "<%s[%s] (%s) %s>" % (self.name, channels, self.action_id, self.timestamp)
-
-    def __getattr__(self, name):
-        """Message attributes are made accessible as properties
-           ("incident", "task", "note", "milestone". "task", "artifact";
-           and "properties" for the action fields on manual actions)
-        """
-        if name == "message":
-            raise AttributeError()
-        try:
-            return self.message[name]
-        except KeyError:
-            raise AttributeError()
-
-    def hdr(self):
-        """Get the headers (dict)"""
-        return self.kwargs["headers"]
-
-    def msg(self):
-        """Get the message (dict)"""
-        return self.kwargs["message"]
-
-    def defer(self, component, delay=None):
-        """Defer this message for handling later"""
-        if self.deferred:
-            # This message was already deferred.  You should just handle it.
-            # (Mark it as no longer deferred, so that it will ack now)
-            self.deferred = False
-            return False
-        # Fire me again after a dela
-        if delay is None:
-            delay = 0.5 + random.random()
-        self.deferred = True
-        LOG.debug("Deferring %s (%s)", self, self.hdr().get("message-id"))
-        Timer(delay, self).register(component)
-        return True
-
-
 class Actions(ResilientComponent):
     """Component that subscribes to Resilient Action Module queues and fires message events"""
 
@@ -445,17 +334,37 @@ class Actions(ResilientComponent):
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+        self.conn = None
 
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
-            LOG.warn("Resilient action module not enabled. No stomp connecton attempted.")
-            self.conn = None
+            LOG.warn(("Resilient action module not enabled."
+                      "No stomp connecton attempted."))
             return
-        
+
+        if opts.get("test_actions", False):
+            # Let user submit test actions from the command line for testing
+            LOG.info(("Action Tests Enabled! Run res-action-test "
+                      "and type help for usage"))
+            test_options = {}
+            if opts.get("test_port", None) != None:
+                test_options["port"] = int(opts["test_port"])
+            if opts.get("test_host"):
+                test_options["host"] = opts["test_host"]
+            actions_test_component.ResilientTestActions(self.org_id,
+                                                        **test_options).register(self)
+
+        self.resilient_mock = opts["resilient_mock"] or False
+        if self.resilient_mock:
+            # Using mock API, no need to create a real stomp connection
+            LOG.warn("Using Mock. No Stomp connection")
+            return
+
         # Set up a STOMP connection to the Resilient action services
         host_port = (opts["host"], opts["stomp_port"])
         self.conn = stomp.Connection(host_and_ports=[(host_port)],
-                                     heartbeats=(STOMP_CLIENT_HEARTBEAT, STOMP_SERVER_HEARTBEAT),
+                                     heartbeats=(STOMP_CLIENT_HEARTBEAT,
+                                                 STOMP_SERVER_HEARTBEAT),
                                      timeout=STOMP_TIMEOUT,
                                      keepalive=True,
                                      try_loopback_connect=False)
@@ -467,7 +376,8 @@ class Actions(ResilientComponent):
             # Explicitly disable TLS certificate validation, if you need to
             cafile = None
             validator_function = None
-            LOG.warn("TLS without certificate validation: Insecure! (cafile=false)")
+            LOG.warn(("TLS without certificate validation: "
+                      "Insecure! (cafile=false)"))
         elif cafile is None:
             # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
             # instead of the certificates from ssl.get_default_verify_paths().cafile
@@ -481,6 +391,18 @@ class Actions(ResilientComponent):
                           ssl_version=ssl.PROTOCOL_TLSv1,
                           cert_validator=validator_function)
 
+        # Store action message logging option
+        self.logging_directory = opts["log_http_responses"] or None
+        if self.logging_directory:
+            try:
+                directory = os.path.expanduser(self.logging_directory)
+                directory = os.path.expandvars(directory)
+                assert(os.path.exists(directory))
+                self.logging_directory = directory
+            except Exception as e:
+                self.logging_directory = None
+                raise Exception("Response Logging Directory %s does not exist!" ,
+                                opts["log_http_responses"])
         # Other special options
         self.ignore_message_failure = opts["resilient"].get("ignore_message_failure") == "1"
 
@@ -533,7 +455,8 @@ class Actions(ResilientComponent):
             LOG.warn("Action %s is unknown.", action_id)
             # Refresh the list of action definitions
             list_action_defs = self.rest_client().get("/actions")["entities"]
-            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+            self.action_defs = dict((int(action["id"]),
+                                     action) for action in list_action_defs)
             try:
                 defn = self.action_defs[action_id]
             except KeyError:
@@ -568,7 +491,8 @@ class Actions(ResilientComponent):
         """STOMP produced an error."""
         LOG.error('STOMP listener: Error:\n%s', message)
         # Just raise the event for anyone listening
-        self.fire(Event("exception", "Actions", headers.get("message"), message))
+        self.fire(Event("exception", "Actions",
+                        headers.get("message"), message))
 
     def on_stomp_message(self, headers, message):
         """STOMP produced a message."""
@@ -582,7 +506,7 @@ class Actions(ResilientComponent):
             # Expect the message payload to always be JSON
             message = json.loads(message)
             # Construct a Circuits event with the message, and fire it on the channel
-            event = ActionMessage(self, headers=headers, message=message)
+            event = ActionMessage(source=self, headers=headers, message=message, log_dir=self.logging_directory)
             LOG.info(event)
             self.fire(event, channel)
         except Exception as exc:
@@ -591,7 +515,7 @@ class Actions(ResilientComponent):
             if self.ignore_message_failure:
                 # Construct and fire anyway, which will ack the message
                 LOG.warn("This message failure will be ignored...")
-                event = ActionMessage(self, headers=headers, message=None)
+                event = ActionMessage(source=self, headers=headers, message=None, log_dir=self.logging_directory)
                 self.fire(event, channel)
 
     # Circuits event handlers
@@ -604,6 +528,9 @@ class Actions(ResilientComponent):
     @handler("registered")
     def registered(self, event, component, parent):
         """A component has registered.  Subscribe to its message queue(s)."""
+        if self is component:
+            self.reconnect()
+            return
         for channel in event.channels:
             if not str(channel).startswith("actions."):
                 continue
@@ -622,16 +549,17 @@ class Actions(ResilientComponent):
     @handler("prepare_unregister")
     def prepare_unregister(self, event, component):
         """A component is unregistering.  Unsubscribe its message queue(s)."""
-        LOG.info("component %s has unregistered", component)
-        if isinstance(component, Actions):
+        LOG.debug("component %s has unregistered", component)
+        if self is component:
             LOG.info("disconnecting Actions component from stomp queue")
-            component.reconnect_stomp = False
-            component.disconnect()
+            self.disconnect()
+            self.reconnect_stomp = False
 
         for channel in event.channels:
             if not str(channel).startswith("actions."):
                 continue
-            LOG.info("Component %s unregistered from %s", str(component), channel)
+            LOG.info("Component %s unregistered from %s",
+                     str(component), channel)
             queue_name = channel.partition(".")[2]
             if queue_name not in self.listeners:
                 LOG.error("Channel %s was not subscribed", queue_name)
@@ -649,19 +577,24 @@ class Actions(ResilientComponent):
 
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
+        if self.resilient_mock:
+            return
         if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
             self.conn.subscribe(id='stomp-{0}'.format(queue_name),
-                                destination="actions.{0}.{1}".format(self.org_id, queue_name),
+                                destination="actions.{0}.{1}".format(self.org_id,
+                                                                     queue_name),
                                 ack='client-individual')
 
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
         try:
             if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
-                LOG.info("Unsubscribe from message destination '%s'", queue_name)
+                LOG.info("Unsubscribe from message destination '%s'",
+                         queue_name)
                 self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
-                                      destination="actions.{0}.{1}".format(self.org_id, queue_name))
+                                      destination="actions.{0}.{1}".format(
+                                          self.org_id, queue_name))
         except:
             pass
 
@@ -672,22 +605,11 @@ class Actions(ResilientComponent):
                 self._unsubscribe(queue_name)
             self.conn.disconnect()
 
-
-    @handler("started")
-    def started(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Actions Component Started")
-        self.reconnect()
-
-    @handler("stopped")
-    def stopped(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Actions Component Stopped")
-        self.disconnect()
-
     @handler("reconnect")
     def reconnect(self):
         """Try (re)connect to the STOMP server"""
+        if self.resilient_mock:
+            return
         if self.conn and self.conn.is_connected():
             LOG.error("STOMP reconnect when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
@@ -696,7 +618,8 @@ class Actions(ResilientComponent):
             LOG.info("STOMP attempting to connect")
             try:
                 self.conn.start()
-                self.conn.connect(login=self.opts["email"], passcode=self.opts["password"])
+                self.conn.connect(login=self.opts["email"],
+                                  passcode=self.opts["password"])
             except ConnectFailedException:
                 # Try again later
                 Timer(5, Event.create("reconnect")).register(self)
@@ -704,7 +627,10 @@ class Actions(ResilientComponent):
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        message = str(value or "Processing failed")
+        if etype:
+            message = str(etype.__name__) + ": <" + str(value) + ">"
+        else:
+            message = "Processing failed"
         if traceback and isinstance(traceback, list):
             message = message + "\n" + ("".join(traceback))
         LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
@@ -715,13 +641,23 @@ class Actions(ResilientComponent):
             # Ack the message
             message_id = headers['message-id']
             subscription = headers["subscription"]
-            LOG.debug("Ack %s", message_id)
-            self.conn.ack(message_id, subscription, transaction=None)
+            if not fevent.test and self.conn:
+                LOG.debug("Ack %s", message_id)
+                self.conn.ack(message_id, subscription, transaction=None)
             # Reply with error status
             reply_to = headers['reply-to']
             correlation_id = headers['correlation-id']
-            reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
-            self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+            reply_message = json.dumps({"message_type": status,
+                                        "message": message, "complete": True})
+            if not fevent.test:
+                if self.conn:
+                    self.conn.send(reply_to, reply_message,
+                                   headers={'correlation-id': correlation_id})
+            else:
+                # Test action, nothing to Ack
+                self.fire(Event.create("test_response",
+                                       fevent.test_msg_id, reply_message))
+                LOG.debug("Test Action: No ack done.")
 
     @handler("signal")
     def _on_signal(self, signo, stack):
@@ -749,10 +685,20 @@ class Actions(ResilientComponent):
                 # Ack the message
                 message_id = headers['message-id']
                 subscription = headers["subscription"]
-                LOG.debug("Ack %s", message_id)
-                self.conn.ack(message_id, subscription, transaction=None)
+                if not fevent.test:
+                    LOG.debug("Ack %s", message_id)
+                    self.conn.ack(message_id, subscription, transaction=None)
                 # Reply with success status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
-                reply_message = json.dumps({"message_type": status, "message": message, "complete": True})
-                self.conn.send(reply_to, reply_message, headers={'correlation-id': correlation_id})
+                reply_message = json.dumps({"message_type": status,
+                                            "message": message,
+                                            "complete": True})
+                if not fevent.test:
+                    self.conn.send(reply_to, reply_message,
+                                   headers={'correlation-id': correlation_id})
+                else:
+                    # Test action, nothing to Ack
+                    self.fire(Event.create("test_response", fevent.test_msg_id,
+                                           reply_message), '*')
+                    LOG.debug("Test Action: No ack done.")
