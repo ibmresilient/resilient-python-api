@@ -76,6 +76,8 @@ class AppRestartable(App):
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
         config_dir = os.path.dirname(get_config_file())
+        if not config_dir:
+            config_dir = os.getcwd()
         self.observer.schedule(event_handler, path=config_dir, recursive=False)
         self.observer.daemon = True
         self.observer.start()
