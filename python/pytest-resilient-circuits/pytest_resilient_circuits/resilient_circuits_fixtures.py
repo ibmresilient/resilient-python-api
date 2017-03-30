@@ -21,11 +21,11 @@ class ConfiguredAppliance:
         # TODO: Add support for phases, tasks, incident types. data ta;es
         # TODO: Add support for optional action and custom fields (currently all set as required)
 
-        host = os.environ.get("RESILIENT_APPLIANCE", request.config.option.resilient_host)
+        host = os.environ.get("TEST_RESILIENT_APPLIANCE", request.config.option.resilient_host)
         url = "https://%s:443" % host
-        org = os.environ.get("RESILIENT_ORG", request.config.option.resilient_org)
-        user = os.environ.get("RESILIENT_USER", request.config.option.resilient_email)
-        password = os.environ.get("RESILIENT_PASSWORD", request.config.option.resilient_password)
+        org = os.environ.get("TEST_RESILIENT_ORG", request.config.option.resilient_org)
+        user = os.environ.get("TEST_RESILIENT_USER", request.config.option.resilient_email)
+        password = os.environ.get("TEST_RESILIENT_PASSWORD", request.config.option.resilient_password)
         assert all((host, org, user, password))
 
         # Connect to Resilient
@@ -254,13 +254,13 @@ test_actions = True
         self.logs = tmpdir_factory.mktemp("logs")
         config_data = getattr(request.module, "config_data", "")
         self.config_file.write(resilient_config_data)
-        host = os.environ.get("RESILIENT_APPLIANCE", request.config.option.resilient_host)
+        host = os.environ.get("TEST_RESILIENT_APPLIANCE", request.config.option.resilient_host)
         self.config_file.write("host = %s\n" % host, mode='a')
-        self.org = os.environ.get("RESILIENT_ORG", request.config.option.resilient_org)
+        self.org = os.environ.get("TEST_RESILIENT_ORG", request.config.option.resilient_org)
         self.config_file.write("org = %s\n" % self.org, mode='a')
-        self.user = os.environ.get("RESILIENT_USER", request.config.option.resilient_email)
+        self.user = os.environ.get("TEST_RESILIENT_USER", request.config.option.resilient_email)
         self.config_file.write("email = %s\n" % self.user, mode='a')
-        password = os.environ.get("RESILIENT_PASSWORD", request.config.option.resilient_password)
+        password = os.environ.get("TEST_RESILIENT_PASSWORD", request.config.option.resilient_password)
         self.config_file.write("password = %s\n" % password, mode='a')
         self.config_file.write("log_http_responses = %s\n" % self.logs, mode='a')
         self.config_file.write("logdir = %s\n" % self.logs, mode='a')

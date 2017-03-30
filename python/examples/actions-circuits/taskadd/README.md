@@ -64,7 +64,11 @@ python setup.py test -a "--resilient_email api_user@example.com --resilient_pass
 ```
 
 To run tests for this integration in all supported python versions with generated virtual environments, 
-copy the co3, resilient-circuits, and pytest\resilient\_circuits packages to the taskadd directory and do:
+copy the co3, resilient-circuits, and pytest\_resilient\_circuits packages to a pkgs directory and make them available to pip.
+```
+export PIP_FIND_LINKS=”/path/to/pkgs/"
+```
+Then do:
 ```
 pip install virtualenv
 pip install tox
