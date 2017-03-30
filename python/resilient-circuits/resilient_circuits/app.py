@@ -12,13 +12,14 @@ handlers, and acknowledge the messages when they have been processed.
 from __future__ import print_function
 
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import filelock
-from logging.handlers import RotatingFileHandler
+from circuits import Component, Debugger
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
-from circuits import Component, Debugger
 import resilient_circuits.keyring_arguments as keyring_arguments
+
 
 def log(log_level):
     logging.getLogger().setLevel(log_level)
@@ -80,9 +81,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           default=default_components_dir,
                           help="Circuits components auto-load directory")
         self.add_argument("--noload",
-                          type = str,
+                          type=str,
                           default=default_noload,
-                          help = "List of components that should not be loaded")
+                          help="List of components that should not be loaded")
         self.add_argument("--logdir",
                           type=str,
                           default=default_log_dir,
@@ -163,9 +164,9 @@ class App(Component):
     def do_initialization(self):
         self.opts = AppArgumentParser().parse_args()
 
-        self.config_logging(self.opts["logdir"], self.opts["loglevel"],
-                            self.opts['logfile'])
-        LOG.info("Configuration file is %s", get_config_file())
+        self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
+        LOG.info("Configuration file: %s", get_config_file())
+        LOG.info("Resilient server: %s", self.opts.get("host"))
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
 
@@ -244,6 +245,7 @@ class App(Component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
 
+
 def get_lock():
     """Create a filelock"""
 
@@ -253,14 +255,15 @@ def get_lock():
     app_lock_file = os.environ.get("APP_LOCK_FILE", "")
 
     if not app_lock_file:
-       lockfile = os.path.expanduser(os.path.join("~", ".resilient", "resilient_circuits_lockfile"))
-       resilient_dir = os.path.dirname(lockfile)
-       if not os.path.exists(resilient_dir):
-           os.makedirs(resilient_dir)
+        lockfile = os.path.expanduser(os.path.join("~", ".resilient", "resilient_circuits_lockfile"))
+        resilient_dir = os.path.dirname(lockfile)
+        if not os.path.exists(resilient_dir):
+            os.makedirs(resilient_dir)
     else:
-        lockfile =  os.path.expanduser(lockfile)
+        lockfile = os.path.expanduser(app_lock_file)
     lock = filelock.FileLock(lockfile)
     return lock
+
 
 def run(*args, **kwargs):
     """Main app"""

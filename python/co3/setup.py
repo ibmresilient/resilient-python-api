@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 import io
 import os
@@ -70,7 +73,7 @@ setup(
         ]
     },
     tests_require=["pytest",],
-    cmdclass = {"test" : PyTest},
+    cmdclass={"test" : PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',
     long_description=long_description,

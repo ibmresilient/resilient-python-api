@@ -1,17 +1,27 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Utility to exercise basic REST endpoints in the Resilient API"""
+
 from __future__ import print_function
 
+import co3 as resilient
+import os
 import json
+import logging
 from datetime import datetime
 from calendar import timegm
-import co3
-import logging
+
+
+# The config file location should usually be set in the environment
+APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
 
 
-class ExampleArgumentParser(co3.ArgumentParser):
-    def __init__(self):
-        super(ExampleArgumentParser, self).__init__()
+class ExampleArgumentParser(resilient.ArgumentParser):
+    def __init__(self, config_file=None):
+        super(ExampleArgumentParser, self).__init__(config_file=config_file)
 
         self.add_argument('--list',
                           action='store_true',
@@ -128,36 +138,29 @@ def generic_delete(client, uri):
 
 
 def main():
-    parser = ExampleArgumentParser()
+    parser = ExampleArgumentParser(config_file=APP_CONFIG_FILE)
+    opts = parser.parse_args()
 
-    co3_opts = parser.parse_args()
+    # Create SimpleClient for a REST connection to the Resilient services
+    client = resilient.get_client(opts)
 
-    # Create SimpleClient and connect
-    verify = co3_opts.cafile or True
+    if opts.create:
+        create_incident(client, opts.create, opts.attach)
 
-    url = "https://{0}:{1}".format(co3_opts.host, co3_opts.port)
+    if opts.list:
+        show_incident_list(client, opts.query)
 
-    client = co3.SimpleClient(org_name=co3_opts.org, proxies=co3_opts.proxy, base_url=url, verify=verify)
+    if opts.get:
+        generic_get(client, opts.get)
 
-    client.connect(co3_opts.email, co3_opts.password)
+    if opts.post:
+        generic_post(client, opts.post[0], opts.post[1])
 
-    if co3_opts.create:
-        create_incident(client, co3_opts.create, co3_opts.attach)
+    if opts.update:
+        generic_update(client, opts.update[0], opts.update[1])
 
-    if co3_opts.list:
-        show_incident_list(client, co3_opts.query)
-
-    if co3_opts.get:
-        generic_get(client, co3_opts.get)
-
-    if co3_opts.post:
-        generic_post(client, co3_opts.post[0], co3_opts.post[1])
-
-    if co3_opts.update:
-        generic_update(client, co3_opts.update[0], co3_opts.update[1])
-
-    if co3_opts.delete:
-        generic_delete(client, co3_opts.delete)
+    if opts.delete:
+        generic_delete(client, opts.delete)
 
 
 if __name__ == "__main__":
