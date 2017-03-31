@@ -38,7 +38,7 @@ setup(
     ],
     extras_require={
         ':"Debian" in platform_version': [
-            'keyring==9.1'
+            'keyring<=9.1'  # There is no 'gcc' on Resilient appliance; later versions cause trouble
         ],
         ':python_version >= "2.7"': [
             'keyring'
