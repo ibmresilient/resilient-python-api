@@ -79,7 +79,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_proxy = self.getopts("resilient", "proxy")
         default_org = self.getopt("resilient", "org")
         default_cafile = self.getopt("resilient", "cafile")
-        default_cache_ttl = int(self.getopt("resilient", "cache_ttl"))
+        default_cache_ttl = int(self.getopt("resilient", "cache_ttl") or 0)
 
         self.add_argument("--email",
                           default=default_email,
