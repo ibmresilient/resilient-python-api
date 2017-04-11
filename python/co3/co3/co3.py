@@ -390,7 +390,7 @@ class SimpleClient(object):
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
-            multipart_data.update(data)
+            multipart_data.update(data or {})
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.__make_headers(co3_context_token,
                                           additional_headers={'content-type': encoder.content_type})
