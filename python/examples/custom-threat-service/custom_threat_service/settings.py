@@ -127,6 +127,9 @@ from threats.controller import InternalArtifactSearch
 from sources.phish_tank import PhishTankArtifactSearch
 SYNC_SEARCHERS = [InternalArtifactSearch]
 ASYNC_SEARCHERS = [PhishTankArtifactSearch]
+# e.g. to have PhishTankArtifactSearch behave synchronously remove it from ASYNC_SEARCHERS and add it to SYNC_SEARCHERS
+# SYNC_SEARCHERS = [InternalArtifactSearch, PhishTankArtifactSearch]
+# ASYNC_SEARCHERS = []
 
 
 # Make sure that this section applies AFTER anything that you wish to be overridable wihin the local_settings module
