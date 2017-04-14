@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-__version__ = "27.0.0"
+from .version import resilient_version_number
+
+__version__ = resilient_version_number
 
 from .co3 import SimpleClient
 from .co3argparse import ArgumentParser

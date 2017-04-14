@@ -7,6 +7,7 @@ import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+major_minor_version = "28.0"
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -17,11 +18,22 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
+# Write the co3/version.py file to contain the calculated version number.
+bldno = os.getenv("BUILD_NUMBER")
+
+if not bldno:
+  raise Exception("BUILD_NUMBER environment variable not specified")
+
+version = "{}.{}".format(major_minor_version, bldno)
+
+with open("co3/version.py", "w") as vf:
+  vf.write("resilient_version_number = '{}'".format(version))
+
 long_description = read('README')
 
 setup(
     name='co3',
-    version="27.0.0",  # __version__ in __init__.py
+    version=version,
     url='https://www.resilientsystems.com/',
     license='IBM Resilient License',
     author='IBM Resilient',
