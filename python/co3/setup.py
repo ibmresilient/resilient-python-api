@@ -9,7 +9,6 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
-major_minor_version = "27.1"
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -20,16 +19,19 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-# Write the co3/version.py file to contain the calculated version number.
-bldno = os.getenv("BUILD_NUMBER")
+# Pull the build number from the co3 directory.
+#
+def read_version_number():
+    resilient_version_number = None
+    with open("co3/__version__.py") as f:
+        exec(f.read())
 
-if not bldno:
-  raise Exception("BUILD_NUMBER environment variable not specified")
+    # __version__.py must have set the version number.
+    assert resilient_version_number is not None
 
-version = "{}.{}".format(major_minor_version, bldno)
+    return resilient_version_number
 
-with open("co3/version.py", "w") as vf:
-  vf.write("resilient_version_number = '{}'".format(version))
+version = read_version_number()
 
 long_description = read('README')
 
