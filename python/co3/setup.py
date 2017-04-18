@@ -19,6 +19,16 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
+# Pull the version number from the version.txt file.
+#
+def read_version_number():
+    mydir = os.path.dirname(__file__)
+    with open(os.path.join(mydir, "version.txt")) as f:
+        resilient_version_number = f.read().strip()
+    return resilient_version_number
+
+version = read_version_number()
+
 long_description = read('README')
 
 class PyTest(TestCommand):
@@ -53,7 +63,7 @@ class PyTest(TestCommand):
 
 setup(
     name='co3',
-    version="27.1.0",  # __version__ in __init__.py
+    version=version,
     url='https://www.resilientsystems.com/',
 
     license='IBM Resilient License',
