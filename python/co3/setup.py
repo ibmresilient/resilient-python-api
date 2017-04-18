@@ -19,21 +19,12 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-# Pull the build number from the co3 directory.
+# Pull the version number from the version.txt file.
 #
 def read_version_number():
-    resilient_version_number = None
-    try:
-        with open("co3/__version__.py") as f:
-            exec(f.read())
-    except IOError as e:
-        # Use lame default version number.
-        print("co3/__version__.py couldn't be read - using default version number for dev build.")
-        resilient_version_number = "0.dev0"
-
-    # __version__.py must have set the version number.
-    assert resilient_version_number is not None
-
+    mydir = os.path.dirname(__file__)
+    with open(os.path.join(mydir, "version.txt")) as f:
+        resilient_version_number = f.read().strip()
     return resilient_version_number
 
 version = read_version_number()

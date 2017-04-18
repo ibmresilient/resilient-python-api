@@ -10,6 +10,6 @@ if not bldno:
 
 version = "{}.{}".format(major_minor_version, bldno)
 
-with open("co3/__version__.py", "w") as vf:
-    vf.write("resilient_version_number = '{}'".format(version))
+with open("version.txt", "w") as vf:
+    vf.write(version)
 
