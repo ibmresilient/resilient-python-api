@@ -23,8 +23,13 @@ def read(*filenames, **kwargs):
 #
 def read_version_number():
     resilient_version_number = None
-    with open("co3/__version__.py") as f:
-        exec(f.read())
+    try:
+        with open("co3/__version__.py") as f:
+            exec(f.read())
+    except IOError as e:
+        # Use lame default version number.
+        print("co3/__version__.py couldn't be read - using default version number for dev build.")
+        resilient_version_number = "0.dev0"
 
     # __version__.py must have set the version number.
     assert resilient_version_number is not None
