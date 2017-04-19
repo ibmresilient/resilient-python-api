@@ -22,8 +22,14 @@
     <add key="Co3CssRequired" value="co3_required"/>
     <add key="Co3CssInvalid" value="co3_invalid"/>
 
-    <!-- Optional parameters
-    <add key="Co3DefaultOrg" value="org name here"/>
-    -->
+    <!-- *** Optional parameters *** -->
+    <!-- If your Resilient appliance has multiple orgs, then use Co3DefaultOrg to specify
+         the org the API will use. -->
+    <!--<add key="Co3DefaultOrg" value="org name here"/>-->
+    
+    <!-- If set to true, Co3AcceptAllSslCerts will not validate Resilient's SSL certificate.
+         While this is not recommended, it maybe useful when the development instance of
+         Resilient is using a self signed certificate. -->
+    <!--<add key="Co3AcceptAllSslCerts" value="true" />-->
   </appSettings>
 </configuration>

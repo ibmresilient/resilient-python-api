@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Co3.Rest.Dto;
+using Newtonsoft.Json;
 
 namespace Co3.Rest.Endpoints
 {
@@ -46,6 +47,16 @@ namespace Co3.Rest.Endpoints
         public string Serialize(object obj)
         {
             return ToJson(obj);
+        }
+
+        public T Deserialize<T>(string json)
+        {
+            return FromJson<T>(json);
+        }
+
+        public object Deserialize(string json, Type type)
+        {
+            return JsonConvert.DeserializeObject(json, type, m_jsonSerializerSettings);
         }
     }
 }

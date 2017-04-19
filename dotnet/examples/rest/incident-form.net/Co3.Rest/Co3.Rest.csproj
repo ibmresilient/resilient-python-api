@@ -67,8 +67,12 @@
     <Compile Include="Dto\ActionSimpleTypeDto.cs" />
     <Compile Include="Dto\AttachmentDto.cs" />
     <Compile Include="Dto\AttachmentHistoryDto.cs" />
+    <Compile Include="Dto\AttachmentResultsDto.cs" />
+    <Compile Include="Dto\AttachmentType.cs" />
     <Compile Include="Dto\AuthenticationDto.cs" />
     <Compile Include="Dto\AutomaticTaskDto.cs" />
+    <Compile Include="Dto\AutomationDefinitionDto.cs" />
+    <Compile Include="Dto\AutomationDefinitionType.cs" />
     <Compile Include="Dto\BucketBy.cs" />
     <Compile Include="Dto\BucketByDto.cs" />
     <Compile Include="Dto\CategorySearchResultDto.cs" />
@@ -76,6 +80,8 @@
     <Compile Include="Dto\ColumnDto.cs" />
     <Compile Include="Dto\CommentDto.cs" />
     <Compile Include="Dto\CommentPermsDto.cs" />
+    <Compile Include="Dto\CommentResultsDto.cs" />
+    <Compile Include="Dto\CommentType.cs" />
     <Compile Include="Dto\ConditionDto.cs" />
     <Compile Include="Dto\ConfigurationExportDto.cs" />
     <Compile Include="Dto\ConfigurationExportHistoryDto.cs" />
@@ -94,13 +100,16 @@
     <Compile Include="Dto\DataTableRowDataDto.cs" />
     <Compile Include="Dto\DataTypeDiffDto.cs" />
     <Compile Include="Dto\DataTypeDto.cs" />
+    <Compile Include="Dto\DownloadDto.cs" />
     <Compile Include="Dto\EmailMessageDto.cs" />
     <Compile Include="Dto\EnabledDto.cs" />
     <Compile Include="Dto\FieldDefDto.cs" />
     <Compile Include="Dto\FieldDefPermsDto.cs" />
     <Compile Include="Dto\FieldDefValueDto.cs" />
     <Compile Include="Dto\FieldDiffDto.cs" />
+    <Compile Include="Dto\FieldPatchFailureDto.cs" />
     <Compile Include="Dto\FieldRequired.cs" />
+    <Compile Include="Dto\FieldValModOperation.cs" />
     <Compile Include="Dto\FilterContentDto.cs" />
     <Compile Include="Dto\ForWhoDto.cs" />
     <Compile Include="Dto\FullIncidentDataDto.cs" />
@@ -109,6 +118,7 @@
     <Compile Include="Dto\FunctionDto.cs" />
     <Compile Include="Dto\FunctionType.cs" />
     <Compile Include="Dto\FunctionTypeDto.cs" />
+    <Compile Include="Dto\FutureDto.cs" />
     <Compile Include="Dto\GenericCountDto.cs" />
     <Compile Include="Dto\GeoDto.cs" />
     <Compile Include="Dto\GeoType.cs" />
@@ -144,6 +154,7 @@
     <Compile Include="Dto\LatLngDto.cs" />
     <Compile Include="Dto\LayoutDto.cs" />
     <Compile Include="Dto\LayoutPermsDto.cs" />
+    <Compile Include="Dto\LayoutType.cs" />
     <Compile Include="Dto\LayoutViewConditionDto.cs" />
     <Compile Include="Dto\LayoutViewItemDto.cs" />
     <Compile Include="Dto\LdapGroupDto.cs" />
@@ -158,6 +169,10 @@
     <Compile Include="Dto\MilestoneDto.cs" />
     <Compile Include="Dto\MilestonePermsDto.cs" />
     <Compile Include="Dto\ModifyUserDto.cs" />
+    <Compile Include="Dto\MoveDto.cs" />
+    <Compile Include="Dto\MultiPatchDto.cs" />
+    <Compile Include="Dto\MultiPatchStatusDto.cs" />
+    <Compile Include="Dto\MultipleActionInvokeDto.cs" />
     <Compile Include="Dto\NewAndOpenIncidentsDto.cs" />
     <Compile Include="Dto\NewsfeedEntryDto.cs" />
     <Compile Include="Dto\NewsfeedEntryType.cs" />
@@ -167,10 +182,12 @@
     <Compile Include="Dto\NotificationDto.cs" />
     <Compile Include="Dto\ObjectHandle.cs" />
     <Compile Include="Dto\ObjectHandleFormat.cs" />
+    <Compile Include="Dto\ObjectHandleList.cs" />
     <Compile Include="Dto\ObjectPermsDto.cs" />
     <Compile Include="Dto\OpenIncidentsByPhaseDto.cs" />
     <Compile Include="Dto\OperationType.cs" />
     <Compile Include="Dto\OrgDataTypesDto.cs" />
+    <Compile Include="Dto\OrgIncidentArtifactTypeDto.cs" />
     <Compile Include="Dto\OrgIndDto.cs" />
     <Compile Include="Dto\OrgNetworkDto.cs" />
     <Compile Include="Dto\OrgRegDto.cs" />
@@ -181,6 +198,11 @@
     <Compile Include="Dto\PartialActionDto.cs" />
     <Compile Include="Dto\PartialFieldDefDto.cs" />
     <Compile Include="Dto\PartialFieldDefValueDto.cs" />
+    <Compile Include="Dto\PartialScriptDto.cs" />
+    <Compile Include="Dto\PatchChangeDto.cs" />
+    <Compile Include="Dto\PatchDto.cs" />
+    <Compile Include="Dto\PatchStatusDto.cs" />
+    <Compile Include="Dto\PatchValueDto.cs" />
     <Compile Include="Dto\PhasePermsDto.cs" />
     <Compile Include="Dto\PivotCellDto.cs" />
     <Compile Include="Dto\PivotConstDto.cs" />
@@ -198,12 +220,22 @@
     <Compile Include="Dto\QueryFilterDto.cs" />
     <Compile Include="Dto\QueryPagedDto.cs" />
     <Compile Include="Dto\QuerySortDto.cs" />
+    <Compile Include="Dto\ReassignAssignmentsDto.cs" />
     <Compile Include="Dto\RecordCountDiffDto.cs" />
     <Compile Include="Dto\RegulatorsDto.cs" />
     <Compile Include="Dto\RelatedIncidentDto.cs" />
     <Compile Include="Dto\RelatedIncidentsDto.cs" />
     <Compile Include="Dto\RevisionBaseDto.cs" />
-    <Compile Include="Dto\RevisionCountInfoDto.cs" />
+    <Compile Include="Dto\ScriptDto.cs" />
+    <Compile Include="Dto\ScriptExecuteDto.cs" />
+    <Compile Include="Dto\ScriptExecutionChangeDto.cs" />
+    <Compile Include="Dto\ScriptExecutionDto.cs" />
+    <Compile Include="Dto\ScriptExecutionMessageDto.cs" />
+    <Compile Include="Dto\ScriptExecutionPatchDto.cs" />
+    <Compile Include="Dto\ScriptMetadataDto.cs" />
+    <Compile Include="Dto\ScriptMetadataKeywordDto.cs" />
+    <Compile Include="Dto\ScriptMetadataSnippetDto.cs" />
+    <Compile Include="Dto\ScriptMetadataSuggestionDto.cs" />
     <Compile Include="Dto\SearchInputDto.cs" />
     <Compile Include="Dto\SearchResultDto.cs" />
     <Compile Include="Dto\ServerVersionDto.cs" />
@@ -212,6 +244,7 @@
     <Compile Include="Dto\StatisticsIncidentDto.cs" />
     <Compile Include="Dto\StatisticsTaskDto.cs" />
     <Compile Include="Dto\StatusDto.cs" />
+    <Compile Include="Dto\SupportedLanguageDto.cs" />
     <Compile Include="Dto\SystemTaskDto.cs" />
     <Compile Include="Dto\SystemTaskOverrideDto.cs" />
     <Compile Include="Dto\TaskCatDto.cs" />
@@ -223,8 +256,10 @@
     <Compile Include="Dto\TaskPermsDto.cs" />
     <Compile Include="Dto\TaskRegsDto.cs" />
     <Compile Include="Dto\TextContentDto.cs" />
+    <Compile Include="Dto\TextContentOutputFormat.cs" />
     <Compile Include="Dto\TextFormat.cs" />
     <Compile Include="Dto\ThreatHitDto.cs" />
+    <Compile Include="Dto\ThreatHitPropertyFormat.cs" />
     <Compile Include="Dto\ThreatServiceArtifactDto.cs" />
     <Compile Include="Dto\ThreatServiceArtifactHitDto.cs" />
     <Compile Include="Dto\ThreatServiceArtifactHitPropertyDto.cs" />
@@ -244,6 +279,7 @@
     <Compile Include="Dto\TypePropertiesDto.cs" />
     <Compile Include="Dto\UserGroupsDto.cs" />
     <Compile Include="Dto\UserIncidentTasksDto.cs" />
+    <Compile Include="Dto\UserNotificationDefDto.cs" />
     <Compile Include="Dto\UserNotificationInfoDto.cs" />
     <Compile Include="Dto\UserOrgDto.cs" />
     <Compile Include="Dto\UserStatisticsDto.cs" />
@@ -252,6 +288,7 @@
     <Compile Include="FieldRest.cs" />
     <Compile Include="IncidentRest.cs" />
     <Compile Include="JsonConverters\IPAddressConverter.cs" />
+    <Compile Include="JsonConverters\MethodNameKeyConverter.cs" />
     <Compile Include="JsonConverters\ObjectHandleConverter.cs" />
     <Compile Include="JsonConverters\ObjectHandleKeyConverter.cs" />
     <Compile Include="JsonConverters\UnixTimeConverter.cs" />
@@ -279,6 +316,7 @@
     <Compile Include="RestEndpoint.cs" />
     <Compile Include="SessionRest.cs" />
     <Compile Include="Dto\TaskChangeDto.cs" />
+    <Compile Include="Util\EnumUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

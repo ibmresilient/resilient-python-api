@@ -18,6 +18,9 @@ namespace Co3.Rest.Dto
 
             Array.ForEach((ObjectHandleFormat[])Enum.GetValues(type), handleFormat =>
             {
+                if (handleFormat == ObjectHandleFormat.Undefined)
+                    return;
+
                 string name = Enum.GetName(type, handleFormat);
                 EnumMemberAttribute attrib = ((EnumMemberAttribute[])type.GetField(name)
                     .GetCustomAttributes(typeof(EnumMemberAttribute), true))[0];

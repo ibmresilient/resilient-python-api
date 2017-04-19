@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Co3.Rest.Dto;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Co3.Rest.JsonConverters
 {
@@ -72,6 +66,22 @@ namespace Co3.Rest.JsonConverters
                     break;
                 case ObjectHandleFormat.Objects:
                     serializer.Populate(reader, objectHandle);
+                    break;
+                default:
+                    switch (reader.TokenType)
+                    {
+                        case JsonToken.StartObject:
+                            serializer.Populate(reader, objectHandle);
+                            break;
+                        case JsonToken.String:
+                            objectHandle.Name = serializer.Deserialize<string>(reader);
+                            break;
+                        case JsonToken.Integer:
+                            objectHandle.Id = serializer.Deserialize<int>(reader);
+                            break;
+                        default:
+                            throw new NotImplementedException(reader.TokenType.ToString());
+                    }
                     break;
             }
             return objectHandle;

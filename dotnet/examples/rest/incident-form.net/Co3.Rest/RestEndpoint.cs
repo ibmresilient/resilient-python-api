@@ -34,6 +34,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization;
+using Co3.Rest.Dto;
 using Co3.Rest.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -55,7 +56,7 @@ namespace Co3.Rest
         private readonly string m_proxyDomain;
         private readonly string m_handleFormat;
         private readonly string m_textContentOutputFormat;
-        private readonly JsonSerializerSettings m_jsonSerializerSettings;
+        protected readonly JsonSerializerSettings m_jsonSerializerSettings;
 
         protected RestEndpoint(RestEndpoint session)
         {
@@ -89,6 +90,7 @@ namespace Co3.Rest
 
             m_jsonSerializerSettings.Converters.Add(new UnixTimeConverter());
             m_jsonSerializerSettings.Converters.Add(new StringEnumConverter());
+            m_jsonSerializerSettings.Converters.Add(new IPAddressConverter());
             m_jsonSerializerSettings.Converters.Add(new ObjectHandleConverter(handleFormat));
         }
         
@@ -200,15 +202,15 @@ namespace Co3.Rest
             return (HttpWebResponse)request.GetResponse();
         }
 
-        private T FromJson<T>(string json)
+        protected T FromJson<T>(string json)
         {
             try
             {
                 return JsonConvert.DeserializeObject<T>(json, m_jsonSerializerSettings);
             }
-            catch
+            catch (Exception ex)
             {
-                throw new ArgumentException("Unable to deserialize JSON string. Please check the JSON string is properly formatted and the object for which it represents is correct.");
+                throw new ArgumentException("Unable to deserialize JSON string. Please check the JSON string is properly formatted and the object for which it represents is correct.", ex);
             }
         }
 

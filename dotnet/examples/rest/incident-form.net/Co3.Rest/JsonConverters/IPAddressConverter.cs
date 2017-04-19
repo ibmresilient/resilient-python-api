@@ -42,7 +42,7 @@ namespace Co3.Rest.JsonConverters
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType.IsAssignableFrom(typeof(IPAddress));
+            return objectType == typeof(IPAddress);
         }
 
         public override object ReadJson(JsonReader reader, Type objectType,
