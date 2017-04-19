@@ -168,6 +168,12 @@ namespace Co3.Rest.Dto
         /// A row was deleted to a datatable
         /// </summary>
         [EnumMember(Value = "row_deleted")]
-        RowDeleted
+        RowDeleted,
+
+        /// <summary>
+        /// An attachment was moved from one parent to another parent.
+        /// </summary>
+        [EnumMember(Value = "attachment_moved")]
+        AttachmentMoved
     }
 }

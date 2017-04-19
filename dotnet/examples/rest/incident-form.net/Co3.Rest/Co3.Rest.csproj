@@ -67,6 +67,8 @@
     <Compile Include="Dto\ActionSimpleTypeDto.cs" />
     <Compile Include="Dto\AttachmentDto.cs" />
     <Compile Include="Dto\AttachmentHistoryDto.cs" />
+    <Compile Include="Dto\AttachmentResultsDto.cs" />
+    <Compile Include="Dto\AttachmentType.cs" />
     <Compile Include="Dto\AuthenticationDto.cs" />
     <Compile Include="Dto\AutomaticTaskDto.cs" />
     <Compile Include="Dto\AutomationDefinitionDto.cs" />
@@ -167,6 +169,7 @@
     <Compile Include="Dto\MilestoneDto.cs" />
     <Compile Include="Dto\MilestonePermsDto.cs" />
     <Compile Include="Dto\ModifyUserDto.cs" />
+    <Compile Include="Dto\MoveDto.cs" />
     <Compile Include="Dto\MultiPatchDto.cs" />
     <Compile Include="Dto\MultiPatchStatusDto.cs" />
     <Compile Include="Dto\MultipleActionInvokeDto.cs" />

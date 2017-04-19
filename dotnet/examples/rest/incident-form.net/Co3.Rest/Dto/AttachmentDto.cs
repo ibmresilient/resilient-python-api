@@ -70,10 +70,10 @@ namespace Co3.Rest.Dto
         public DateTime Created { get; set; }
 
         /// <summary>
-        /// The ID of the attachment creator.
+        /// The attachment creator.
         /// </summary>
         [JsonProperty("creator_id")]
-        public int CreatorId { get; set; }
+        public ObjectHandle CreatorId { get; set; }
 
         /// <summary>
         /// The size of the attachment (in bytes).
@@ -93,5 +93,37 @@ namespace Co3.Rest.Dto
         /// </summary>
         [JsonProperty("actions")]
         public List<ActionInfoDto> Actions { get; set; }
+
+        /// <summary>
+        /// The ID of the incident to which this attachment belongs.
+        /// </summary>
+        [JsonProperty("inc_id")]
+        public int IncId { get; set; }
+
+        /// <summary>
+        /// The name of the incident to which this attachment belongs.
+        /// </summary>
+        [JsonProperty("inc_name")]
+        public string IncName { get; set; }
+
+        /// <summary>
+        /// The ID of the task to which this attachment belongs.
+        /// Will be null on incident attachments.
+        /// </summary>
+        [JsonProperty("task_id")]
+        public int TaskId { get; set; }
+
+        /// <summary>
+        /// The name of the task to which this attachment belongs.
+        /// Will be null on task attachments.
+        /// </summary>
+        [JsonProperty("task_name")]
+        public string TaskName { get; set; }
+
+        /// <summary>
+        /// The type of the attachment (incident, task, or artifact).
+        /// </summary>
+        [JsonProperty("type")]
+        public AttachmentType Type { get; set; }
     }
 }
