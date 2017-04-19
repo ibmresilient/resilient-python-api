@@ -9,6 +9,7 @@ import os
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+from pkg_resources import resource_string
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,10 +26,10 @@ def read(*filenames, **kwargs):
 # Pull the version number from the version.txt file.
 #
 def read_version_number():
-    mydir = os.path.dirname(__file__)
-    with open(os.path.join(mydir, "version.txt")) as f:
-        resilient_version_number = f.read().strip()
-    return resilient_version_number
+    path = os.path.join(os.path.dirname(__file__), "co3", "version.txt")
+    with open(path) as f:
+        ver = f.read()
+    return ver.strip()
 
 version = read_version_number()
 

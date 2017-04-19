@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import resource_string
 
-with open(resource_filename(Requirement("co3"), "version.txt")) as f:
-    __version__ = f.read().strip()
+__version__ = resource_string(__name__, "version.txt").strip()
 
-from .co3 import SimpleClient, get_config_file, get_client
+from .co3 import SimpleClient, get_client
 from .co3argparse import ArgumentParser
 from .co3sslutil import match_hostname
 
