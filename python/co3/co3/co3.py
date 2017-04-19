@@ -27,6 +27,28 @@ except:
     import urlparse
 
 
+def get_config_file(filename="app.config"):
+    """
+    Helper: get the location of the configuration file
+    * Use the location specified in $APP_CONFIG_FILE, if set
+    * Otherwise use path in the current working directory, if exists
+    * Otherwise use path in ~/.resilient/ directory
+
+    :param filename: the filename, defaults to 'app.config'
+    """
+    # The config file location should usually be set in the environment
+    # First check environment, then cwd, then ~/.resilient/app.config
+    env_app_config_file = os.environ.get("APP_CONFIG_FILE", None)
+    if not env_app_config_file:
+        if os.path.exists(filename):
+            config_file = filename
+        else:
+            config_file = os.path.expanduser(os.path.join("~", ".resilient", filename))
+    else:
+        config_file = env_app_config_file
+    return config_file
+
+
 def get_client(opts):
     """
     Helper: get a SimpleClient for Resilient REST API.
@@ -49,10 +71,10 @@ def get_client(opts):
 
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
-    simple_client_args = { "org_name": opts.get("org"),
-                           "proxies": opts.get("proxy"),
-                           "base_url": url,
-                           "verify": verify }
+    simple_client_args = {"org_name": opts.get("org"),
+                          "proxies": opts.get("proxy"),
+                          "base_url": url,
+                          "verify": verify}
     if opts.get("log_http_responses"):
         LOG.warn("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
         simple_client = LoggingSimpleClient

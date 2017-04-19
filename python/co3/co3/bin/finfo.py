@@ -19,9 +19,7 @@ else:
     from io import StringIO
 
 
-# The config file location should usually be set in the environment
-APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
-
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
 LOG = logging.getLogger(__name__)
 
 
@@ -207,7 +205,7 @@ def list_types(client):
 def main():
     """Main"""
     # Parse commandline arguments
-    parser = FinfoArgumentParser(config_file=APP_CONFIG_FILE)
+    parser = FinfoArgumentParser(config_file=resilient.get_config_file())
     opts = parser.parse_args()
 
     # Connect to Resilient
@@ -239,5 +237,4 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARN)
     main()

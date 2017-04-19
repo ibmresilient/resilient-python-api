@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+""" Setup for co3 module """
+
 from __future__ import print_function
 import io
 import os
@@ -9,6 +11,7 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -30,6 +33,7 @@ def read_version_number():
 version = read_version_number()
 
 long_description = read('README')
+
 
 class PyTest(TestCommand):
     user_options = [('configfile=', 'c', "Resilient Config File for co3argparse"),
@@ -55,18 +59,19 @@ class PyTest(TestCommand):
             self.test_args += shlex.split(self.pytestargs)
 
     def run_tests(self):
-        #import here, because outside the eggs aren't loaded
+        # import here, because outside the eggs aren't loaded
         print("Running Tests with args: %s" % self.test_args)
         import pytest
         errno = pytest.main(args=self.test_args)
         sys.exit(errno)
 
+
 setup(
     name='co3',
     version=version,
     url='https://www.resilientsystems.com/',
-
     license='IBM Resilient License',
+
     author='IBM Resilient',
     install_requires=[
         'argparse',
@@ -82,15 +87,19 @@ setup(
             'configparser'
         ]
     },
-    tests_require=["pytest",],
-    cmdclass={"test" : PyTest},
+    tests_require=["pytest", ],
+    cmdclass={"test": PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',
     long_description=long_description,
-    packages=['co3'],
+    packages=find_packages(), # packages=['co3'],
     include_package_data=True,
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
-    ]
+    ],
+    entry_points={
+        'console_scripts': ['finfo = co3.bin.finfo:main',
+                            'gadget = co3.bin.gadget:main']
+    }
 )
