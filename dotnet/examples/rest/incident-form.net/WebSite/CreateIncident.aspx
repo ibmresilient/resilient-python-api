@@ -17,6 +17,9 @@
         <p>Service is temporarily unavailable.  Please try again later.</p>
         <div id="_co3_error_detail" runat="server" visible="false"></div>
     </div>
+    <div id="_co3_created_panel" runat="server" class="Notice" visible="false">
+        <p>The incident has been created.</p>
+    </div>
     <form id="IncidentForm" runat="server">
         <div class="Notice">
             This form demonstrates how to create an incident using ASP.net and the Resilient Systems REST API.<br />
@@ -153,7 +156,10 @@
 
         // if the incident was created, send the user to somewhere
         if (Co3CreateIncident(incident))
-            Response.Redirect("http://www.resilientsystems.com");
+        {
+            IncidentForm.Visible = false;
+            _co3_created_panel.Visible = true;
+        }
     }
 
     // logic to display errors and exceptions to help with debugging
