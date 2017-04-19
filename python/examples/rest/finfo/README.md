@@ -1,18 +1,49 @@
 # finfo
 
-This directory contains a command line utility [finfo.py](finfo.py) that uses
-the Resilient REST API (using the `SimpleClient` class from the `co3` module)
-to read and display metadata about fields defined in the Resilient application.
+The `co3` module includes a command line utility __`finfo`__ that uses
+the Resilient REST API to read and display metadata about fields defined
+in the Resilient application.
 
 ### Usage
 
 To print the usage information:
 ```
-  python finfo.py --help
+  finfo --help
 ```
-Required parameters include the Resilient host name, and user email to
-access the server.  Optional parameters include the organization name,
-if the user is member of multiple organizations.
+
+When run with connection information but without any command-line options,
+`finfo` lists basic information about incident fields, including built-in
+and custom fields.
+
+Specify a single field name to display more detail for that field.
+
+Options are available to list fields from Data Tables and other types; 
+to list valid values for 'select'-type fields, and to list the field
+definitions in CSV or JSON format.
+
+
+### Configuration File
+
+Required connection parameters include the Resilient host name, and user
+email to access the server.  Optional parameters include the organization
+name, if the user is member of multiple organizations.
+
+This connection information can be specified on the command line.
+
+For convenience, you can prepare a configuration file that contains this
+information.  The default location for this file is `app.config` in a
+directory named `.resilient` under the user's home directory.  In the
+configuration file is a text file with values below a heading `[resilient]`.
+For example:
+
+```
+[resilient]
+host=resilient.example.com
+port=443
+email=api@example.com
+password=passw0rd
+org=Culture
+```
 
 ## Listing information about fields
 
@@ -21,7 +52,7 @@ includes the required fields (incidated with an asterisk), required-on-close
 fields (indicated with a 'c'), and any custom fields (named `properties.*`):
 
 ```
-$ python finfo.py --email user@mycompany.com --host co3 --cafile cacerts.pem
+$ finfo
 Fields:
   addr
   city
@@ -45,7 +76,7 @@ the definition of the field, such as its datatype and label.  For `select`
 and `multiselect` fields, it also lists the label and ID of the valid values.
 
 ```
-$ python finfo.py --email user@mycompany.com --host co3 --cafile cacerts.pem incident_type_ids
+$ finfo incident_type_ids
 Name:        incident_type_ids
 Label:       Incident Type
 Type:        multiselect
