@@ -10,6 +10,6 @@ if not bldno:
 
 version = "{}.{}".format(major_minor_version, bldno)
 
-with open("version.txt", "w") as vf:
+with open("co3/version.txt", "w") as vf:
     vf.write(version)
 
