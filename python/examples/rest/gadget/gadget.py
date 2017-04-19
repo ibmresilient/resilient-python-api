@@ -13,9 +13,6 @@ from datetime import datetime
 from calendar import timegm
 
 
-# The config file location should usually be set in the environment
-APP_CONFIG_FILE = os.environ.get("APP_CONFIG_FILE", "app.config")
-
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
 
 
@@ -138,7 +135,7 @@ def generic_delete(client, uri):
 
 
 def main():
-    parser = ExampleArgumentParser(config_file=APP_CONFIG_FILE)
+    parser = ExampleArgumentParser(config_file=resilient.get_config_file())
     opts = parser.parse_args()
 
     # Create SimpleClient for a REST connection to the Resilient services

@@ -16,6 +16,7 @@ from logging.handlers import RotatingFileHandler
 import os
 import filelock
 from circuits import Component, Debugger
+import co3 as resilient
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
@@ -29,19 +30,6 @@ APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
 
-def get_config_file():
-    """ Get the config file for resilient-circuits """
-    # The config file location should usually be set in the environment
-    # First check environment, then cwd, then ~/.resilient/app.config
-    env_app_config_file = os.environ.get("APP_CONFIG_FILE", None)
-    if not env_app_config_file:
-        if os.path.exists("app.config"):
-            config_file = "app.config"
-        else:
-            config_file = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
-    else:
-        config_file = env_app_config_file
-    return config_file
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
     """Helper to parse command line arguments."""
@@ -52,7 +40,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self):
-        config_file = get_config_file()
+        config_file = resilient.get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
         default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
