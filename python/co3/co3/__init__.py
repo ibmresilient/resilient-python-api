@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-__version__ = "27.1.0"
+from pkg_resources import Requirement, resource_filename
+
+with open(resource_filename(Requirement("co3"), "version.txt")) as f:
+    __version__ = f.read().strip()
 
 from .co3 import SimpleClient, get_config_file, get_client
 from .co3argparse import ArgumentParser

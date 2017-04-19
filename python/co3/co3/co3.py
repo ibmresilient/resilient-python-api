@@ -267,6 +267,7 @@ class SimpleClient(object):
                   "Your IP address is {0}"
             raise Exception(msg.format(session["session_ip"]))
 
+        self.all_orgs = [org for org in orgs if org.get("enabled")]
         self.org_id = selected_org['id']
 
         # set the X-sess-id token, which is used to prevent CSRF attacks.
