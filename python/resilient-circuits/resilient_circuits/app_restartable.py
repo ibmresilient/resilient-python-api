@@ -13,8 +13,8 @@ from circuits import Event, Timer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
-from .app import App
-from .app import APP_CONFIG_FILE, APP_LOCK_FILE
+from resilient_circuits.app import App
+from resilient_circuits.app import get_config_file, get_lock
 
 
 application = None
@@ -24,13 +24,14 @@ LOG = logging.getLogger(__name__)
 def log(log_level):
     logging.getLogger().setLevel(log_level)
 
+
 class begin_restart(Event):
     pass
-    
+
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
-    patterns = ["*" + os.path.basename(APP_CONFIG_FILE), ]
+    patterns = ["*" + os.path.basename(get_config_file()), ]
 
     def __init__(self, app):
         super(ConfigFileUpdateHandler, self).__init__()
@@ -57,6 +58,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
                 LOG.info("unregistering component %s", component)
                 component.unregister()
 
+
 # Main component for our application
 class AppRestartable(App):
     """Our main app component, which sets up the Resilient services and other components"""
@@ -73,7 +75,9 @@ class AppRestartable(App):
         LOG.info("Monitoring config file for changes.")
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
-        config_dir = os.path.dirname(APP_CONFIG_FILE) or os.getcwd()
+        config_dir = os.path.dirname(get_config_file())
+        if not config_dir:
+            config_dir = os.getcwd()
         self.observer.schedule(event_handler, path=config_dir, recursive=False)
         self.observer.daemon = True
         self.observer.start()
@@ -88,9 +92,10 @@ class AppRestartable(App):
 
     def load_all_success(self, event):
         for component in self.components:
-            LOG.debug("Adding %s to restartable app components list", str(component))
+            LOG.debug("Adding %s to restartable app components list",
+                      str(component))
             self.component_collection.append(component)
-                    
+
         self.do_initialize_watchdog()
 
     def stopped(self, component):
@@ -129,8 +134,8 @@ class AppRestartable(App):
                 # All are stopped
                 self.fire(begin_restart())
             else:
-                LOG.debug("Still waiting on %s to stop.", self.component_collection)
-
+                LOG.debug("Still waiting on %s to stop.",
+                          self.component_collection)
 
 
 def run(*args, **kwargs):
@@ -138,7 +143,7 @@ def run(*args, **kwargs):
 
     # define lock
     # this prevents multiple, identical circuits from running at the same time
-    lock = filelock.FileLock(APP_LOCK_FILE)
+    lock = get_lock()
 
     # The main app component initializes the Resilient services
     global application
@@ -151,9 +156,14 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
+        errmsg = ("Failed to acquire lock on {0} - you may have "
+                  "another instance of Resilient Circuits running")
+        print(errmsg.format(os.path.abspath(lock.lock_file)))
     except ValueError:
         LOG.exception("ValueError Raised. Application not running.")
+    except OSError as exc:
+        # Some other problem accessing the lockfile
+        print("Unable to lock {0}: {1}".format(os.path.abspath(lock.lock_file), exc))
     # finally:
     #    LOG.info("App finished.")
 

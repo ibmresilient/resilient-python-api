@@ -82,18 +82,21 @@ class PhishTankArtifactSearch(BaseArtifactSearch):
         if not cls.supports(artifact_type):
             raise ValueError("PhishTankArtifactSearch does not support artifact type {}".format(artifact_type))
 
+        threats = []
         with open(data_file_path()) as phishing_file:
             phishing_records = csv.DictReader(phishing_file)
             for phishing_record_info in phishing_records:
                 try:
                     phishing_record = PhishingRecord(phishing_record_info)
                     if search_term in phishing_record.url:
-                        cls.store_threat_info(
+                        threat = cls.store_threat_info(
                             phishing_record.name,
                             phishing_record.source_artifact,
                             phishing_record.properties)
+                        threats.append(threat)
                 except ValueError:
                     pass
+        return threats
 
     @classmethod
     def supports(cls, artifact_type):

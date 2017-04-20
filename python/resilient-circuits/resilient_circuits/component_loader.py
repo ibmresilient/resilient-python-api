@@ -5,6 +5,7 @@
 import os
 import sys
 import logging
+import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
 
@@ -56,22 +57,45 @@ class ComponentLoader(Loader):
         self.pending_components = []
         self.finished = False
 
-    @handler("started", channel="*")
-    def started(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Started")
-        # Load all components from the components directory
-        for filename in sorted(os.listdir(self.path)):
-            filepath = os.path.join(self.path, filename)
-            if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
-                cname = os.path.splitext(filename)[0]
-                if cname != "__init__":
-                    if cname in self.noload:
-                        LOG.info("Not loading %s", cname)
-                    else:
-                        LOG.debug("Loading %s", cname)
-                        self.pending_components.append(cname)
-                        self.fire(load(cname))
+    def discover_installed_components(self):
+        entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
+        return [ep.load() for ep in entry_points if ep.name not in self.noload]
+
+    @handler("registered", channel="*")
+    def registered(self, component, manager):
+        """Registered Event Handler"""
+        if component is self:
+            LOG.debug("Loader Registered")
+
+            # Load all installed components
+            installed_components = self.discover_installed_components()
+            LOG.info("Found %d installed components", len(installed_components))
+            for component_class in installed_components:
+                LOG.info("Loading %s", component_class.__name__)
+                try:
+                    component_class(*self._init_args,
+                                    **self._init_kwargs).register(self)
+                    LOG.info("Loaded installed component %s", component_class.__name__)
+                except Exception as e:
+                    LOG.error("Failed to load installed component %s", component_class.__name__)
+                    self.fire(load_all_failure())
+
+            if self.path:
+                # Load all components from the components directory
+                for filename in os.listdir(self.path):
+                    filepath = os.path.join(self.path, filename)
+                    if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
+                        cname = os.path.splitext(filename)[0]
+                        if cname != "__init__":
+                            if cname in self.noload:
+                                LOG.info("Not loading %s", cname)
+                            else:
+                                LOG.debug("Loading %s", cname)
+                                self.pending_components.append(cname)
+                                self.fire(load(cname))
+            else:
+                self.finished = True
+                self.fire(load_all_success())
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):

@@ -201,13 +201,7 @@ class SomethingPhishyTest(PhishTankTest):
         super(SomethingPhishyTest, self).setUp()
         self.client = APIClient()
 
-    def test_search(self):
-        """ Test search through API endpoint"""
-        PhishTankArtifactSearch.search("net.uri", "badphishingsite.com")
-
-        # Now search database match records and retrieve them
-        hits = InternalArtifactSearch.search("net.uri", "badphishingsite.com")
-
+    def confirm_result_list(self, hits):
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0].name, "PhishTank Record 3337000")
 
@@ -218,6 +212,21 @@ class SomethingPhishyTest(PhishTankTest):
 
         properties = hits[0].props.all()
         self.assertEqual(len(properties), 5)
+
+    def test_search_async(self):
+        """ Test search through API endpoint"""
+        PhishTankArtifactSearch.search("net.uri", "badphishingsite.com")
+
+        # Now search database match records and retrieve them
+        hits = InternalArtifactSearch.search("net.uri", "badphishingsite.com")
+
+        self.confirm_result_list(hits)
+
+    def test_search_sync(self):
+        """ Test search through API endpoint"""
+        hits = PhishTankArtifactSearch.search("net.uri", "badphishingsite.com")
+
+        self.confirm_result_list(hits)
 
     def test_multiple(self):
         """ Test search through API endpoint"""
