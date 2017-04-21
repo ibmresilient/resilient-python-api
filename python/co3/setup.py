@@ -9,10 +9,8 @@ import os
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
-from pkg_resources import resource_string
 
 here = os.path.abspath(os.path.dirname(__file__))
-
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
