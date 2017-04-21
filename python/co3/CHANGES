@@ -1,3 +1,24 @@
+2017-04-21: version 27.1.13
+
+C#: incident-form: Updated C# libraries to v27.2.35.
+C#: incident-form: Added Co3AcceptAllSslCerts to run against a Resilient instance with a self signed cert
+
+co3: Remember the available orgs that the user can log in to
+co3: Add 'post_artifact_file' method to support posting file (binary) artifacts
+co3: Add 'cached_get' method and '--cache-ttl' commandline option
+co3: Add 'get_client' helper function to properly construct a SimpleClient from options
+co3: For Debian OS, specify exact version of the 'keyring' dependency
+co3: Use configuration file ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config) for utility scripts
+co3: Move the utility scripts 'gadget' and 'finfo' into the co3 module, installed as executables
+co3: Add support for tests
+Internal procedure change to use CI build process to produce the distribution package
+
+examples: Update custom threat service PhishTank to show a searcher in both Synchronous and Asynchronous modes
+examples: Update custom threat service readme with resutil instructions
+examples: Add 'last_login' timestamp to users/groups report
+docs: updated Web URL Integration Guide
+
+
 2017-02-17: version 27.0.0
 
 Licensing change to "IBM Resilient"

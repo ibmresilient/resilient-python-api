@@ -1,3 +1,13 @@
+2017-04-21: version 27.1.0
+
+Various updates for reliability
+New support for packaged installable application components
+New 'resilient-circuits' utility executable to configure and run applications
+Make 'components' directory optional
+Updated configuration file locations ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config)
+Log the servername at startup
+
+
 2017-02-17: version 27.0.0
 
 Licensing change to "IBM Resilient"
