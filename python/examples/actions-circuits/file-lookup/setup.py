@@ -1,9 +1,19 @@
 from __future__ import print_function
 
-import os.path
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+import os
+
+# Pull the version number from the version.txt file.
+#
+def read_version_number():
+    path = os.path.join(os.path.dirname(__file__), "file_lookup", "version.txt")
+    with open(path) as f:
+        ver = f.read()
+    return ver.strip()
+
+version = read_version_number()
 
 class PyTest(TestCommand):
     user_options = [('pytestargs=', 'a', "Resilient Environment Arguments")]
@@ -26,12 +36,12 @@ class PyTest(TestCommand):
 
 setup(
     name='rc-file-lookup',
-    version="27.0.0",
+    version=version,
     url='https://www.resilientsystems.com/',
     license='Resilient License',
     author='IBM Resilient',
     install_requires=[
-        'resilient_circuits>=27.1.0'
+        'resilient_circuits>={}'.format(version)
     ],
     tests_require=["pytest",
                    "pytest_resilient_circuits"],
