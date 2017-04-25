@@ -15,6 +15,8 @@ def read_version_number():
 
 version = read_version_number()
 
+major, minor, _ = version.split('.', 2)
+
 class PyTest(TestCommand):
     user_options = [('pytestargs=', 'a', "Resilient Environment Arguments")]
 
@@ -41,7 +43,7 @@ setup(
     license='Resilient License',
     author='IBM Resilient',
     install_requires=[
-        'resilient_circuits>={}'.format(version)
+        'resilient_circuits>={}.{}'.format(major, minor)
     ],
     tests_require=["pytest",
                    "pytest_resilient_circuits"],

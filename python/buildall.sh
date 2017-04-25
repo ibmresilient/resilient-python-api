@@ -41,6 +41,8 @@ fi
 
 # Build each of the projects.
 for dir in $project_dirs; do
+    echo "Building directory $dir"
+
     # Remove any old dist files.
     rm -rf $dir/dist/*
 

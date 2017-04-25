@@ -11,10 +11,12 @@ def read_version_number():
 
 version = read_version_number()
 
+major, minor, _ = version.split('.', 2)
+
 requirements = [
     'pytest>=3.0.0',
-    'co3>={}'.format(version),
-    'resilient-circuits>={}'.format(version)
+    'co3>={}.{}'.format(major, minor),
+    'resilient-circuits>={}.{}'.format(major, minor)
 ]
 
 setup(

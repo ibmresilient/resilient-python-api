@@ -28,6 +28,8 @@ def read_version_number():
 
 version = read_version_number()
 
+major, minor, _ = version.split('.', 2)
+
 long_description = read('README')
 
 setup(
@@ -44,7 +46,7 @@ setup(
         'pytz',
         'jinja2',
         'filelock>=2.0.5',
-        'co3>={}'.format(version)
+        'co3>={}.{}'.format(major, minor)
     ],
     extras_require={
         ':"Debian" in platform_version': [
