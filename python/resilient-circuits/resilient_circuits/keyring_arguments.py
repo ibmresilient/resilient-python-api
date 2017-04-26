@@ -12,6 +12,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
+
 class ArgumentParser(co3.ArgumentParser):
     """An argument parser that implements password lookup from keyring"""
 
@@ -29,6 +30,9 @@ class ArgumentParser(co3.ArgumentParser):
 
         if args.cafile:
             args["cafile"] = os.path.expanduser(args.cafile)
+
+        if args.stomp_cafile:
+            args["stomp_cafile"] = os.path.expanduser(args.stomp_cafile)
 
         return args
 
