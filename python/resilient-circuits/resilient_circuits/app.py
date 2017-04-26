@@ -42,15 +42,22 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     def __init__(self):
         config_file = resilient.get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
-        default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
+
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
         default_noload = self.getopt("resilient", "noload") or ""
         default_log_dir = self.getopt("resilient", "logdir") or APP_LOG_DIR
         default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
+
+        # STOMP port is usually 65001
+        default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
+        # For some environments the STOMP TLS certificate will be different from the REST API cert
+        default_stomp_cafile = self.getopt("resilient", "stomp_cafile") or None
+
         default_no_prompt_password = self.getopt("resilient",
                                                  "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
         default_no_prompt_password = self._is_true(default_no_prompt_password)
+
         default_test_actions = self._is_true(self.getopt("resilient",
                                                          "test_actions")) or False
         default_resilient_mock = self.getopt("resilient",
@@ -64,6 +71,11 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=int,
                           default=default_stomp_port,
                           help="Resilient server STOMP port number")
+        self.add_argument("--stomp-cafile",
+                          type=str,
+                          action="store",
+                          default=default_stomp_cafile,
+                          help="Resilient server STOMP TLS certificate")
         self.add_argument("--componentsdir",
                           type=str,
                           default=default_components_dir,
