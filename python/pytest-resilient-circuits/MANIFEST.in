@@ -1,0 +1,2 @@
+include pytest_resilient_circuits/LICENSE
+include pytest_resilient_circuits/version.txt

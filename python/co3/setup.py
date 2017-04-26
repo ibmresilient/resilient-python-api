@@ -11,7 +11,6 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
-
 major_minor_version = "28.0"
 
 def read(*filenames, **kwargs):

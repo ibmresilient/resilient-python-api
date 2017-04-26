@@ -8,13 +8,14 @@ from __future__ import print_function
 import logging
 import os
 import filelock
+import co3 as resilient
 from circuits.core.handlers import handler
 from circuits import Event, Timer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 from resilient_circuits.app import App
-from resilient_circuits.app import get_config_file, get_lock
+from resilient_circuits.app import get_lock
 
 
 application = None
@@ -31,7 +32,7 @@ class begin_restart(Event):
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
-    patterns = ["*" + os.path.basename(get_config_file()), ]
+    patterns = ["*" + os.path.basename(resilient.get_config_file()), ]
 
     def __init__(self, app):
         super(ConfigFileUpdateHandler, self).__init__()
@@ -75,7 +76,7 @@ class AppRestartable(App):
         LOG.info("Monitoring config file for changes.")
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
-        config_dir = os.path.dirname(get_config_file())
+        config_dir = os.path.dirname(resilient.get_config_file())
         if not config_dir:
             config_dir = os.getcwd()
         self.observer.schedule(event_handler, path=config_dir, recursive=False)

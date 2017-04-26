@@ -4,9 +4,7 @@
 from __future__ import print_function
 from setuptools import setup, find_packages
 import io
-import codecs
 import os
-import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,11 +18,23 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
+# Pull the version number from the version.txt file.
+#
+def read_version_number():
+    path = os.path.join(os.path.dirname(__file__), "resilient_circuits", "version.txt")
+    with open(path) as f:
+        ver = f.read()
+    return ver.strip()
+
+version = read_version_number()
+
+major, minor, _ = version.split('.', 2)
+
 long_description = read('README')
 
 setup(
     name='resilient_circuits',
-    version="27.1.0",  # __version__ in __init__.py
+    version=version,
     url='https://www.resilientsystems.com/',
     license='IBM Resilient License',
 
@@ -36,7 +46,7 @@ setup(
         'pytz',
         'jinja2',
         'filelock>=2.0.5',
-        'co3>=27.1.0'
+        'co3>={}.{}'.format(major, minor)
     ],
     extras_require={
         ':"Debian" in platform_version': [
