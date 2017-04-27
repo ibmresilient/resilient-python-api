@@ -1,3 +1,11 @@
+2017-04-27: version 27.1.22
+
+Remove 'dist', instead releases are available on https://github.com/Co3Systems/co3-api/releases
+Build numbering to track the 'co3' module; depend where version is >= major.minor
+Config entry 'stomp_cafile' to support using different TLS certificates for STOMP and REST
+Bugfix in 'app_restartable' configuration file handling
+
+
 2017-04-21: version 27.1.0
 
 Various updates for reliability

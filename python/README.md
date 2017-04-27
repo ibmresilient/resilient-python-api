@@ -53,11 +53,21 @@ from a configuration file, and override them from the command line.
 
 ### Installing the 'co3' module
 
+Current versions of the release package are available on GitHub:
+https://github.com/Co3Systems/co3-api/releases
+
+
 Install the package file using `pip`:
 
-    pip install ./co3/dist/co3-x.x.x.tar.gz
+    pip install .co3-x.x.x.tar.gz
 
-(the filename will vary according to the current version of this repository).
+(the filename will vary according to the current version).
+
+You can build release package files locally, by
+
+    bash ./buildall.sh <version_number>
+
+where <version_number> is an optional build number (1, 2, etc).
 
 
 ## Action Module Application Framework
@@ -82,9 +92,12 @@ access to the REST API and action message data.
 
 ### Installing the 'resilient_circuits' module
 
+Current versions of the release package are available on GitHub:
+https://github.com/Co3Systems/co3-api/releases
+
 Install the package file using `pip`:
 
-    pip install ./resilient_circuits/dist/resilient_circuits-x.x.x.tar.gz
+    pip install resilient_circuits-x.x.x.tar.gz
 
 (the filename will vary according to the current version of this repository).
 

@@ -1,3 +1,9 @@
+2017-04-27: version 27.1.22
+
+co3: Remove 'dist', instead releases are available on https://github.com/Co3Systems/co3-api/releases
+co3: Minor modifications to automated build numbering
+
+
 2017-04-21: version 27.1.13
 
 C#: incident-form: Updated C# libraries to v27.2.35.
