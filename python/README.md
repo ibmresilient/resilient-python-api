@@ -59,7 +59,7 @@ https://github.com/Co3Systems/co3-api/releases
 
 Install the package file using `pip`:
 
-    pip install .co3-x.x.x.tar.gz
+    pip install co3-x.x.x.tar.gz
 
 (the filename will vary according to the current version).
 
