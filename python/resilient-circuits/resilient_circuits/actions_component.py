@@ -446,8 +446,9 @@ class Actions(ResilientComponent):
     def action_name(self, action_id):
         """Get the name of an action, from its id"""
         if action_id is None:
-            LOG.warn("Action: None")
-            return ""
+            # Unnamed action, probably triggered from a v28 workflow
+            LOG.info("Action: _unnamed_")
+            return "_unnamed_"
         try:
             defn = self.action_defs[action_id]
         except KeyError:
