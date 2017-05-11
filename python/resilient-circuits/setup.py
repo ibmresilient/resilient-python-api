@@ -40,7 +40,7 @@ setup(
 
     author='IBM Resilient',
     install_requires=[
-        'stomp.py>=4.0.12',
+        'stompest>=2.3.0',
         'requests>=2.6.0',
         'circuits',
         'pytz',

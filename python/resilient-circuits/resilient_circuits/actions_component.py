@@ -13,15 +13,19 @@ import stomp
 from stomp.exception import ConnectFailedException
 from circuits import BaseComponent, Event, Timer, Worker
 from circuits.core.handlers import handler
+import circuits.six as six
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import co3
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessage
+from resilient_circuits.stomp_component import StompClient
+from .stomp_events import *
+
 LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
-STOMP_SERVER_HEARTBEAT = 40000      # 40-second heartbeat from server to client
+STOMP_SERVER_HEARTBEAT = 10000      # 10-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 
 
@@ -334,7 +338,7 @@ class Actions(ResilientComponent):
         self.org_id = rest_client.org_id
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
-        self.conn = None
+        self.stomp_component = None
 
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
@@ -360,22 +364,11 @@ class Actions(ResilientComponent):
             LOG.warn("Using Mock. No Stomp connection")
             return
 
-        # Set up a STOMP connection to the Resilient action services
-        host_port = (opts["host"], opts["stomp_port"])
-        self.conn = stomp.Connection(host_and_ports=[(host_port)],
-                                     heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                 STOMP_SERVER_HEARTBEAT),
-                                     timeout=STOMP_TIMEOUT,
-                                     keepalive=True,
-                                     try_loopback_connect=False)
-
         # Give the STOMP library our TLS/SSL configuration.
-        validator_function = validate_cert
         cafile = opts.get("stomp_cafile") or opts.cafile
         if cafile == "false":
             # Explicitly disable TLS certificate validation, if you need to
             cafile = None
-            validator_function = None
             LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
         elif cafile is None:
             # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
@@ -385,10 +378,20 @@ class Actions(ResilientComponent):
         else:
             LOG.debug("STOMP TLS validation with certificate file: {0}".format(cafile))
 
-        self.conn.set_ssl(for_hosts=[host_port],
-                          ca_certs=cafile,
-                          ssl_version=ssl.PROTOCOL_TLSv1,
-                          cert_validator=validator_function)
+        context = ssl.create_default_context(cafile=cafile)
+        context.check_hostname = True if cafile else False
+        context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
+
+        # Set up a STOMP connection to the Resilient action services
+        self.stomp_component = StompClient(opts["host"], opts["stomp_port"],
+                                           username=opts["email"],
+                                           password=opts["password"],
+                                           heartbeats=(STOMP_CLIENT_HEARTBEAT,
+                                                       STOMP_SERVER_HEARTBEAT),
+                                           connected_timeout=STOMP_TIMEOUT,
+                                           connect_timeout=STOMP_TIMEOUT,
+                                           ssl_context=context)
+        self.stomp_component.register(self)
 
         # Store action message logging option
         self.logging_directory = opts["log_http_responses"] or None
@@ -404,42 +407,6 @@ class Actions(ResilientComponent):
                                 opts["log_http_responses"])
         # Other special options
         self.ignore_message_failure = opts["resilient"].get("ignore_message_failure") == "1"
-
-        class StompListener(object):
-            """A shim for the STOMP callback"""
-
-            def __init__(self, component):
-                self.component = component
-
-            def on_error(self, headers, message):
-                """STOMP produced an error."""
-                self.component.on_stomp_error(headers, message)
-
-            def on_connecting(self, host_and_port):
-                pass
-
-            def on_connected(self, headers, message):
-                """Client has connected to the STOMP server"""
-                self.component.on_stomp_connected(headers, message)
-
-            def on_disconnected(self):
-                """Client has disconnected from the STOMP server"""
-                self.component.on_stomp_disconnected()
-
-            def on_message(self, headers, message):
-                """STOMP produced a message."""
-                self.component.on_stomp_message(headers, message)
-
-            def on_heartbeat(self):
-                """STOMP heartbeat"""
-                pass
-
-            def on_heartbeat_timeout(self):
-                """STOMP heartbeat timed out"""
-                self.component.on_heartbeat_timeout()
-
-        # When queued events happen, the listener shim will handle them
-        self.conn.set_listener('', StompListener(self))
 
     # Public Utility methods
 
@@ -465,48 +432,47 @@ class Actions(ResilientComponent):
         if defn:
             return defn["name"]
 
-    # STOMP callbacks
-
-    def on_stomp_connected(self, headers, message):
+    @handler("Connected")
+    def on_stomp_connected(self):
         """Client has connected to the STOMP server"""
-        LOG.info("STOMP connected")
-        for queue_name in self.listeners:
-            self._subscribe(queue_name)
+        LOG.info("STOMP connected.")#  Connect to %s", self.listeners)
+        #for queue_name in self.listeners:
+        #    self._subscribe(queue_name)
 
-    def on_stomp_disconnected(self):
-        """Client has disconnected from the STOMP server"""
-        LOG.info("STOMP disconnected!")
-        # Set a timer to automatically reconnect
-        if self.reconnect_stomp:
-            Timer(5, Event.create("reconnect")).register(self)
-
+    @handler("HeartbeatTimeout")
     def on_heartbeat_timeout(self):
         """Heartbeat timed out from the STOMP server"""
         LOG.info("STOMP heartbeat timeout!")
         # Set a timer to automatically reconnect
         Timer(5, Event.create("reconnect")).register(self)
 
-    def on_stomp_error(self, headers, message):
+    @handler("StompErrorEvent")
+    def on_stomp_error(self, headers, message, error):
         """STOMP produced an error."""
-        LOG.error('STOMP listener: Error:\n%s', message)
+        LOG.error('STOMP listener: Error:\n%s', message or error)
         # Just raise the event for anyone listening
         self.fire(Event("exception", "Actions",
                         headers.get("message"), message))
 
-    def on_stomp_message(self, headers, message):
+    @handler("MessageEvent")
+    def on_stomp_message(self, event, headers, message):
         """STOMP produced a message."""
         # Find the queue name from the subscription id (stomp_listener_xxx)
-        subscription = headers["subscription"]
+        subscription = self.stomp_component.get_subscription(event.frame)
         LOG.debug('STOMP listener: message for %s', subscription)
-        queue_name = subscription.partition("-")[2]
+        queue_name = subscription.split(".", 2)[2]
         channel = "actions." + queue_name
+
+        LOG.info("Got Message: %s", event.frame.info())
 
         try:
             # Expect the message payload to always be JSON
-            message = json.loads(message)
+            message = json.loads(message.decode('utf-8'))
             # Construct a Circuits event with the message, and fire it on the channel
-            event = ActionMessage(source=self, headers=headers, message=message, log_dir=self.logging_directory)
-            LOG.info(event)
+            event = ActionMessage(source=self, headers=headers, message=message, frame=event.frame, log_dir=self.logging_directory)
+            LOG.info("Firing Action Message event on channel %s", channel)
+            LOG.debug(event)
+
             self.fire(event, channel)
         except Exception as exc:
             LOG.exception(exc)
@@ -514,7 +480,7 @@ class Actions(ResilientComponent):
             if self.ignore_message_failure:
                 # Construct and fire anyway, which will ack the message
                 LOG.warn("This message failure will be ignored...")
-                event = ActionMessage(source=self, headers=headers, message=None, log_dir=self.logging_directory)
+                event = ActionMessage(source=self, headers=headers, message=None, frame=event.frame, log_dir=self.logging_directory)
                 self.fire(event, channel)
 
     # Circuits event handlers
@@ -534,7 +500,7 @@ class Actions(ResilientComponent):
             if not str(channel).startswith("actions."):
                 continue
             LOG.info("Component %s registered to %s", str(component), channel)
-            queue_name = channel.partition(".")[2]
+            queue_name = channel.split(".", 1)[1]
             if queue_name in self.listeners:
                 comps = set([component])
                 comps.update(self.listeners[queue_name])
@@ -568,7 +534,7 @@ class Actions(ResilientComponent):
                 LOG.error("Component %s was not subscribed", component)
                 continue
             comps.remove(component)
-            if self.conn and self.conn.is_connected() and not comps:
+            if not comps:
                 # All components have unsubscribed this destination; stop listening
                 self._unsubscribe(queue_name)
             self.listeners[queue_name] = comps
@@ -578,50 +544,43 @@ class Actions(ResilientComponent):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.resilient_mock:
             return
-        if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
+        if self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             LOG.info("Subscribe to message destination '%s'", queue_name)
-            self.conn.subscribe(id='stomp-{0}'.format(queue_name),
-                                destination="actions.{0}.{1}".format(self.org_id,
-                                                                     queue_name),
-                                ack='client-individual')
+            destination="actions.{0}.{1}".format(self.org_id, queue_name)
+            self.fire(Subscribe(destination))
 
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
-        try:
-            if self.conn and self.conn.is_connected() and self.listeners[queue_name]:
-                LOG.info("Unsubscribe from message destination '%s'",
-                         queue_name)
-                self.conn.unsubscribe(id='stomp-{0}'.format(queue_name),
-                                      destination="actions.{0}.{1}".format(
-                                          self.org_id, queue_name))
-        except:
-            pass
+        if self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
+            LOG.info("Unsubscribe from message destination '%s'",
+                     queue_name)
+            destination="actions.{0}.{1}".format(self.org_id, queue_name)
+            self.fire(Unsubscribe(destination))
 
     def disconnect(self):
         """disconnect stomp connection"""
-        if self.conn and self.conn.is_connected():
+        if self.stomp_component:
             for queue_name in self.listeners:
                 self._unsubscribe(queue_name)
-            self.conn.disconnect()
+            self.fire(Disconnect())
 
     @handler("reconnect")
     def reconnect(self):
         """Try (re)connect to the STOMP server"""
         if self.resilient_mock:
             return
-        if self.conn and self.conn.is_connected():
+        if self.stomp_component and self.stomp_component.connected:
             LOG.error("STOMP reconnect when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
-        elif self.conn:
+        else:
             LOG.info("STOMP attempting to connect")
-            try:
-                self.conn.start()
-                self.conn.connect(login=self.opts["email"],
-                                  passcode=self.opts["password"])
-            except ConnectFailedException:
-                # Try again later
-                Timer(5, Event.create("reconnect")).register(self)
+            self.fire(Connect())
+
+    @handler("ConnectionFailed")
+    def retry_connection(self):
+        # Try again later
+        Timer(5, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
@@ -639,19 +598,19 @@ class Actions(ResilientComponent):
             headers = fevent.hdr()
             # Ack the message
             message_id = headers['message-id']
-            subscription = headers["subscription"]
-            if not fevent.test and self.conn:
+            subscription = fevent.message.subscription
+            if not fevent.test and self.stomp_component:
+                self.fire(Ack(fevent.frame))
                 LOG.debug("Ack %s", message_id)
-                self.conn.ack(message_id, subscription, transaction=None)
             # Reply with error status
             reply_to = headers['reply-to']
             correlation_id = headers['correlation-id']
             reply_message = json.dumps({"message_type": status,
                                         "message": message, "complete": True})
-            if not fevent.test:
-                if self.conn:
-                    self.conn.send(reply_to, reply_message,
-                                   headers={'correlation-id': correlation_id})
+            if not fevent.test and self.stomp_component:
+                self.fire(Send(headers={'correlation-id': correlation_id},
+                               body=reply_message.encode(),
+                               destination=reply_to))
             else:
                 # Test action, nothing to Ack
                 self.fire(Event.create("test_response",
@@ -686,7 +645,7 @@ class Actions(ResilientComponent):
                 subscription = headers["subscription"]
                 if not fevent.test:
                     LOG.debug("Ack %s", message_id)
-                    self.conn.ack(message_id, subscription, transaction=None)
+                    self.fire(Ack(fevent.frame))
                 # Reply with success status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
@@ -694,8 +653,9 @@ class Actions(ResilientComponent):
                                             "message": message,
                                             "complete": True})
                 if not fevent.test:
-                    self.conn.send(reply_to, reply_message,
-                                   headers={'correlation-id': correlation_id})
+                    self.fire(Send(headers={'correlation-id': correlation_id},
+                                   body=reply_message.encode(),
+                                   destination=reply_to))
                 else:
                     # Test action, nothing to Ack
                     self.fire(Event.create("test_response", fevent.test_msg_id,
