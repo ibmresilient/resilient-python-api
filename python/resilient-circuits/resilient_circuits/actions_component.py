@@ -25,7 +25,7 @@ from .stomp_events import *
 LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
-STOMP_SERVER_HEARTBEAT = 10000      # 10-second heartbeat from server to client
+STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 
 
@@ -327,6 +327,16 @@ class Actions(ResilientComponent):
         super(Actions, self).__init__(opts)
         self.listeners = dict()
 
+        # Set options for connecting to Action Module with HTTP Proxy
+        self._proxy_args = {}
+        if opts.get("proxy_host"):
+            LOG.info("Connecting to stomp through HTTP Proxy %s", opts.get("proxy_host"))
+            proxy_host = urlparse(opts.get("proxy_host")).netloc
+            self._proxy_args = {"proxy_host": proxy_host,
+                                "proxy_port": opts.get("proxy_port"),
+                                "proxy_user": opts.get("proxy_user"),
+                                "proxy_password": opts.get("proxy_password")}
+
         # Create a worker pool, for components that choose to use it
         # The default pool uses 10 threads (not processes).
         Worker(process=False, workers=10).register(self)
@@ -343,7 +353,7 @@ class Actions(ResilientComponent):
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
             LOG.warn(("Resilient action module not enabled."
-                      "No stomp connecton attempted."))
+                      "No stomp connection attempted."))
             return
 
         if opts.get("test_actions", False):
@@ -390,7 +400,8 @@ class Actions(ResilientComponent):
                                                        STOMP_SERVER_HEARTBEAT),
                                            connected_timeout=STOMP_TIMEOUT,
                                            connect_timeout=STOMP_TIMEOUT,
-                                           ssl_context=context)
+                                           ssl_context=context,
+                                           **self._proxy_args)
         self.stomp_component.register(self)
 
         # Store action message logging option
