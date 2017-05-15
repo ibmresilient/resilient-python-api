@@ -6,6 +6,7 @@ import ssl
 import json
 import logging
 import os.path
+import traceback
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
@@ -594,39 +595,42 @@ class Actions(ResilientComponent):
         Timer(5, Event.create("reconnect")).register(self)
 
     @handler("exception")
-    def exception(self, etype, value, traceback, handler=None, fevent=None):
+    def exception(self, etype, value, _traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        if etype:
-            message = str(etype.__name__) + ": <" + str(value) + ">"
-        else:
-            message = "Processing failed"
-        if traceback and isinstance(traceback, list):
-            message = message + "\n" + ("".join(traceback))
-        LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
-        if fevent and isinstance(fevent, ActionMessage):
-            fevent.stop()  # Stop further event processing
-            status = 1
-            headers = fevent.hdr()
-            # Ack the message
-            message_id = headers['message-id']
-            subscription = fevent.message.subscription
-            if not fevent.test and self.stomp_component:
-                self.fire(Ack(fevent.frame))
-                LOG.debug("Ack %s", message_id)
-            # Reply with error status
-            reply_to = headers['reply-to']
-            correlation_id = headers['correlation-id']
-            reply_message = json.dumps({"message_type": status,
-                                        "message": message, "complete": True})
-            if not fevent.test and self.stomp_component:
-                self.fire(Send(headers={'correlation-id': correlation_id},
-                               body=reply_message.encode(),
-                               destination=reply_to))
+        try:
+            if etype:
+                message = etype.__name__ + u": <" + u"{}".format(value) + u">"
             else:
-                # Test action, nothing to Ack
-                self.fire(Event.create("test_response",
-                                       fevent.test_msg_id, reply_message))
-                LOG.debug("Test Action: No ack done.")
+                message = u"Processing failed"
+            if _traceback and isinstance(traceback, list):
+                message = message + "\n" + ("".join(_traceback))
+            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
+            if fevent and isinstance(fevent, ActionMessage):
+                fevent.stop()  # Stop further event processing
+                status = 1
+                headers = fevent.hdr()
+                # Ack the message
+                message_id = headers['message-id']
+                if not fevent.test and self.stomp_component:
+                    self.fire(Ack(fevent.frame))
+                    LOG.debug("Ack %s", message_id)
+                # Reply with error status
+                reply_to = headers['reply-to']
+                correlation_id = headers['correlation-id']
+                reply_message = json.dumps({"message_type": status,
+                                            "message": message, "complete": True})
+                if not fevent.test and self.stomp_component:
+                    self.fire(Send(headers={'correlation-id': correlation_id},
+                                   body=reply_message,
+                                   destination=reply_to))
+                else:
+                    # Test action, nothing to Ack
+                    self.fire(Event.create("test_response",
+                                           fevent.test_msg_id, reply_message))
+                    LOG.debug("Test Action: No ack done.")
+        except Exception as err:
+            LOG.error("Exception handler threw exception! Response to action module may not have sent.")
+            LOG.error(_traceback)
 
     @handler("signal")
     def _on_signal(self, signo, stack):
@@ -653,7 +657,6 @@ class Actions(ResilientComponent):
                 headers = fevent.hdr()
                 # Ack the message
                 message_id = headers['message-id']
-                subscription = headers["subscription"]
                 if not fevent.test:
                     LOG.debug("Ack %s", message_id)
                     self.fire(Ack(fevent.frame))
