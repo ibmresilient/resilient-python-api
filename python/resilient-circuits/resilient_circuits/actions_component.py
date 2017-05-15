@@ -389,9 +389,16 @@ class Actions(ResilientComponent):
         else:
             LOG.debug("STOMP TLS validation with certificate file: {0}".format(cafile))
 
-        context = ssl.create_default_context(cafile=cafile)
-        context.check_hostname = True if cafile else False
-        context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
+        try:
+            ca_certs=None
+            context = ssl.create_default_context(cafile=cafile)
+            context.check_hostname = True if cafile else False
+            context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
+        except AttributeError as err:
+            # Likely an older ssl version w/out true ssl context
+            LOG.info("Can't create SSL context. Using fallback method")
+            context = None
+            ca_certs=cafile
 
         # Set up a STOMP connection to the Resilient action services
         self.stomp_component = StompClient(opts["host"], opts["stomp_port"],
@@ -402,6 +409,7 @@ class Actions(ResilientComponent):
                                            connected_timeout=STOMP_TIMEOUT,
                                            connect_timeout=STOMP_TIMEOUT,
                                            ssl_context=context,
+                                           ca_certs=ca_certs, # For old ssl version
                                            **self._proxy_args)
         self.stomp_component.register(self)
 
