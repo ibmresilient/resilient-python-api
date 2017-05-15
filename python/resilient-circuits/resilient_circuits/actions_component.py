@@ -20,7 +20,7 @@ import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessage
 from resilient_circuits.stomp_component import StompClient
-from .stomp_events import *
+from resilient_circuits.stomp_events import *
 
 LOG = logging.getLogger(__name__)
 
@@ -589,7 +589,7 @@ class Actions(ResilientComponent):
             self.fire(Connect())
 
     @handler("ConnectionFailed")
-    def retry_connection(self):
+    def retry_connection(self, *args, **kwargs):
         # Try again later
         Timer(5, Event.create("reconnect")).register(self)
 
@@ -644,10 +644,10 @@ class Actions(ResilientComponent):
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
             else:
-                value = event.parent.value
-                LOG.debug("success! %s, %s", str(value), str(fevent))
+                value = event.parent.value.getValue()
+                LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
-                message = str(value or "Processing complete")
+                message = value or u"Processing complete"
                 LOG.debug("Message: %s", message)
                 status = 0
                 headers = fevent.hdr()
@@ -665,7 +665,7 @@ class Actions(ResilientComponent):
                                             "complete": True})
                 if not fevent.test:
                     self.fire(Send(headers={'correlation-id': correlation_id},
-                                   body=reply_message.encode(),
+                                   body=reply_message,
                                    destination=reply_to))
                 else:
                     # Test action, nothing to Ack
