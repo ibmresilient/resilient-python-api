@@ -603,7 +603,7 @@ class Actions(ResilientComponent):
     @handler("ConnectionFailed")
     def retry_connection(self, *args, **kwargs):
         # Try again later
-        Timer(5, Event.create("reconnect")).register(self)
+        Timer(60, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, _traceback, handler=None, fevent=None):
