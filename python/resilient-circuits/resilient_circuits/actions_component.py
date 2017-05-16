@@ -6,6 +6,7 @@ import ssl
 import json
 import logging
 import os.path
+import traceback
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
@@ -20,12 +21,12 @@ import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessage
 from resilient_circuits.stomp_component import StompClient
-from .stomp_events import *
+from resilient_circuits.stomp_events import *
 
 LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
-STOMP_SERVER_HEARTBEAT = 10000      # 10-second heartbeat from server to client
+STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 
 
@@ -327,6 +328,16 @@ class Actions(ResilientComponent):
         super(Actions, self).__init__(opts)
         self.listeners = dict()
 
+        # Set options for connecting to Action Module with HTTP Proxy
+        self._proxy_args = {}
+        if opts.get("proxy_host"):
+            LOG.info("Connecting to stomp through HTTP Proxy %s", opts.get("proxy_host"))
+            proxy_host = urlparse(opts.get("proxy_host")).netloc
+            self._proxy_args = {"proxy_host": proxy_host,
+                                "proxy_port": opts.get("proxy_port"),
+                                "proxy_user": opts.get("proxy_user"),
+                                "proxy_password": opts.get("proxy_password")}
+
         # Create a worker pool, for components that choose to use it
         # The default pool uses 10 threads (not processes).
         Worker(process=False, workers=10).register(self)
@@ -343,7 +354,7 @@ class Actions(ResilientComponent):
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
             LOG.warn(("Resilient action module not enabled."
-                      "No stomp connecton attempted."))
+                      "No stomp connection attempted."))
             return
 
         if opts.get("test_actions", False):
@@ -378,9 +389,16 @@ class Actions(ResilientComponent):
         else:
             LOG.debug("STOMP TLS validation with certificate file: {0}".format(cafile))
 
-        context = ssl.create_default_context(cafile=cafile)
-        context.check_hostname = True if cafile else False
-        context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
+        try:
+            ca_certs=None
+            context = ssl.create_default_context(cafile=cafile)
+            context.check_hostname = True if cafile else False
+            context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
+        except AttributeError as err:
+            # Likely an older ssl version w/out true ssl context
+            LOG.info("Can't create SSL context. Using fallback method")
+            context = None
+            ca_certs=cafile
 
         # Set up a STOMP connection to the Resilient action services
         self.stomp_component = StompClient(opts["host"], opts["stomp_port"],
@@ -390,7 +408,9 @@ class Actions(ResilientComponent):
                                                        STOMP_SERVER_HEARTBEAT),
                                            connected_timeout=STOMP_TIMEOUT,
                                            connect_timeout=STOMP_TIMEOUT,
-                                           ssl_context=context)
+                                           ssl_context=context,
+                                           ca_certs=ca_certs, # For old ssl version
+                                           **self._proxy_args)
         self.stomp_component.register(self)
 
         # Store action message logging option
@@ -578,44 +598,47 @@ class Actions(ResilientComponent):
             self.fire(Connect())
 
     @handler("ConnectionFailed")
-    def retry_connection(self):
+    def retry_connection(self, *args, **kwargs):
         # Try again later
         Timer(5, Event.create("reconnect")).register(self)
 
     @handler("exception")
-    def exception(self, etype, value, traceback, handler=None, fevent=None):
+    def exception(self, etype, value, _traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
-        if etype:
-            message = str(etype.__name__) + ": <" + str(value) + ">"
-        else:
-            message = "Processing failed"
-        if traceback and isinstance(traceback, list):
-            message = message + "\n" + ("".join(traceback))
-        LOG.error("%s (%s): %s", repr(fevent), repr(etype), message)
-        if fevent and isinstance(fevent, ActionMessage):
-            fevent.stop()  # Stop further event processing
-            status = 1
-            headers = fevent.hdr()
-            # Ack the message
-            message_id = headers['message-id']
-            subscription = fevent.message.subscription
-            if not fevent.test and self.stomp_component:
-                self.fire(Ack(fevent.frame))
-                LOG.debug("Ack %s", message_id)
-            # Reply with error status
-            reply_to = headers['reply-to']
-            correlation_id = headers['correlation-id']
-            reply_message = json.dumps({"message_type": status,
-                                        "message": message, "complete": True})
-            if not fevent.test and self.stomp_component:
-                self.fire(Send(headers={'correlation-id': correlation_id},
-                               body=reply_message.encode(),
-                               destination=reply_to))
+        try:
+            if etype:
+                message = etype.__name__ + u": <" + u"{}".format(value) + u">"
             else:
-                # Test action, nothing to Ack
-                self.fire(Event.create("test_response",
-                                       fevent.test_msg_id, reply_message))
-                LOG.debug("Test Action: No ack done.")
+                message = u"Processing failed"
+            if _traceback and isinstance(traceback, list):
+                message = message + "\n" + ("".join(_traceback))
+            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
+            if fevent and isinstance(fevent, ActionMessage):
+                fevent.stop()  # Stop further event processing
+                status = 1
+                headers = fevent.hdr()
+                # Ack the message
+                message_id = headers['message-id']
+                if not fevent.test and self.stomp_component:
+                    self.fire(Ack(fevent.frame))
+                    LOG.debug("Ack %s", message_id)
+                # Reply with error status
+                reply_to = headers['reply-to']
+                correlation_id = headers['correlation-id']
+                reply_message = json.dumps({"message_type": status,
+                                            "message": message, "complete": True})
+                if not fevent.test and self.stomp_component:
+                    self.fire(Send(headers={'correlation-id': correlation_id},
+                                   body=reply_message,
+                                   destination=reply_to))
+                else:
+                    # Test action, nothing to Ack
+                    self.fire(Event.create("test_response",
+                                           fevent.test_msg_id, reply_message))
+                    LOG.debug("Test Action: No ack done.")
+        except Exception as err:
+            LOG.error("Exception handler threw exception! Response to action module may not have sent.")
+            LOG.error(_traceback)
 
     @handler("signal")
     def _on_signal(self, signo, stack):
@@ -633,16 +656,15 @@ class Actions(ResilientComponent):
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
             else:
-                value = event.parent.value
-                LOG.debug("success! %s, %s", str(value), str(fevent))
+                value = event.parent.value.getValue()
+                LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
-                message = str(value or "Processing complete")
+                message = value or u"Processing complete"
                 LOG.debug("Message: %s", message)
                 status = 0
                 headers = fevent.hdr()
                 # Ack the message
                 message_id = headers['message-id']
-                subscription = headers["subscription"]
                 if not fevent.test:
                     LOG.debug("Ack %s", message_id)
                     self.fire(Ack(fevent.frame))
@@ -654,7 +676,7 @@ class Actions(ResilientComponent):
                                             "complete": True})
                 if not fevent.test:
                     self.fire(Send(headers={'correlation-id': correlation_id},
-                                   body=reply_message.encode(),
+                                   body=reply_message,
                                    destination=reply_to))
                 else:
                     # Test action, nothing to Ack

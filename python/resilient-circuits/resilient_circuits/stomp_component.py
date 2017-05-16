@@ -7,7 +7,7 @@ import ssl
 import time
 import traceback
 from signal import SIGINT, SIGTERM
-from circuits import Component, Event, Timer
+from circuits import BaseComponent, Event, Timer
 from circuits.io.events import ready
 from circuits.core.utils import findcmp
 from circuits.core.handlers import handler
@@ -16,40 +16,64 @@ from stompest.protocol import StompSpec, StompSession
 from stompest.sync import Stomp
 from stompest.error import StompConnectionError, StompError
 from stompest.sync.client import LOG_CATEGORY
-from .stomp_events import *
+from resilient_circuits.stomp_events import *
+from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
 
-logging.getLogger(LOG_CATEGORY).setLevel(logging.DEBUG)
 
 StompSpec.DEFAULT_VERSION = '1.1'
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
-class StompClient(Component):
+class StompClient(BaseComponent):
 
     def init(self, host, port, username=None, password=None,
              connect_timeout=3, connected_timeout=3,
              version=StompSpec.VERSION_1_2, accept_versions=["1.0", "1.1", "1.2"],
-             heartbeats=(0, 0), ssl_context=None):
+             heartbeats=(0, 0), ssl_context=None,
+             use_ssl=True,
+             key_file=None,
+             cert_file=None,
+             ca_certs=None,
+             ssl_version=ssl.PROTOCOL_TLSv1,
+             key_file_password=None,
+             proxy_host=None,
+             proxy_port=None,
+             proxy_user=None,
+             proxy_password=None):
         """ Initialize StompClient.  Called after __init__ """
-        if ssl_context:
+        if use_ssl and not ssl_context:
+
+            ssl_params = dict(key_file=key_file,
+                              cert_file=cert_file,
+                              ca_certs=ca_certs,
+                              ssl_version=ssl_version,
+                              password=key_file_password)
+            LOG.info("Request to use old-style socket wrapper: %s", ssl_params)
+            ssl_context = ssl_params
+
+        if use_ssl:
             self._stomp_server = 'ssl://%s:%s' % (host, port)
         else:
             self._stomp_server = 'stomp://%s:%s' % (host, port)
 
         self._stomp_config = StompConfig(self._stomp_server, sslContext=ssl_context,
-                             version=version,
-                             login=username,
-                             passcode=password)
+                                         version=version,
+                                         login=username,
+                                         passcode=password)
 
         self._heartbeats = heartbeats
         self._accept_versions = accept_versions
         self._connect_timeout = connect_timeout
         self._connected_timeout = connected_timeout
+        Stomp._transportFactory = EnhancedStompFrameTransport
+        Stomp._transportFactory.proxy_host = proxy_host
+        Stomp._transportFactory.proxy_port = proxy_port
+        Stomp._transportFactory.proxy_user = proxy_user
+        Stomp._transportFactory.proxy_password = proxy_password
         self._client = Stomp(self._stomp_config)
         self._subscribed = {}
         self.server_heartbeat = None
         self.client_heartbeat = None
-        self.ALLOWANCE = 3 # multiplier for heartbeat timeouts
+        self.ALLOWANCE = 2 # multiplier for heartbeat timeouts
 
     @property
     def connected(self):
@@ -57,6 +81,10 @@ class StompClient(Component):
             return self._client.session.state == StompSession.CONNECTED
         else:
             return False
+
+    @property
+    def stomp_logger(self):
+        return LOG_CATEGORY
 
     @handler("Disconnect")
     def _disconnect(self):
@@ -75,7 +103,7 @@ class StompClient(Component):
                 self.client_heartbeat.reset()
             else:
                 LOG.info("Client will send heartbeats to server")
-                # Send heartbeats at 80% of minimum rate
+                # Send heartbeats at 80% of agreed rate
                 self.client_heartbeat = Timer((self._client.clientHeartBeat / 1000.0) * 0.8,
                                      Event.create("ClientHeartbeat"), persist=True)
                 self.client_heartbeat.register(self)
@@ -95,9 +123,11 @@ class StompClient(Component):
         else:
             LOG.info("Expecting no heartbeats from Server")
 
+    #@handler("Connect", "started")
     @handler("Connect")
-    def connect(self):
+    def connect(self, *args, **kwargs):
         """ connect to Stomp server """
+        LOG.info("Connect to Stomp...")
         try:
             self._client.connect(heartBeats=self._heartbeats,
                                  versions=self._accept_versions,
@@ -125,9 +155,9 @@ class StompClient(Component):
         LOG.debug("Last received data %d seconds ago", elapsed)
         if ((self._client.serverHeartBeat / 1000.0) * self.ALLOWANCE + last) < now:
             LOG.error("Server heartbeat timeout. %d seconds since last heartbeat.  Disconnecting.", elapsed)
-            #self.fire(HeartbeatTimeout())
-            #if self.connected:
-            #    self._client.disconnect()
+            self.fire(HeartbeatTimeout())
+            if self.connected:
+                self._client.disconnect()
             # TODO: Try to auto-reconnect?
 
     @handler("ClientHeartbeat")
@@ -157,9 +187,10 @@ class StompClient(Component):
         LOG.debug("send()")
         if not self.connected:
             LOG.error("Can't send when Stomp is disconnected")
+            self.fire(StompErrorEvent(None, Exception("Message send attempted with stomp disconnected")))
             return
         try:
-            self._client.send(destination, body=body, headers=headers, receipt=receipt)
+            self._client.send(destination, body=body.encode('utf-8'), headers=headers, receipt=receipt)
             LOG.debug("Message sent")
         except StompConnectionError as err:
             self.fire(DisconnectedEvent())
@@ -225,17 +256,45 @@ class StompClient(Component):
 
 def main():
     logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
     # Configure and "run" the System.
     context = ssl.create_default_context()
+    #context = ssl.create_default_context(cafile="/Users/kchurch/resilient/local.cer")
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
+#    context.verify_mode = ssl.CERT_REQUIRED
 
-    StompClient("192.168.56.101", 65001,
-                username="kchurch@us.ibm.com",
-                password="Pass4Admin",
-                heartbeats=(10000, 10000),
-                ssl_context=context).run()
+    """
+    s = StompClient("resilient", 65001,
+                    username="user@us.ibm.com",
+                    password="Password",
+                    heartbeats=(10000, 10000),
+                    ssl_context=context)
 
+    """
+    """
+    s = StompClient("resilient", 65001,
+                    username="user@us.ibm.com",
+                    password="Password",
+                    heartbeats=(10000, 10000),
+                    #ca_certs="/Users/username/resilient/local.cer",
+                    ca_certs=False,
+                    ssl_version=ssl.PROTOCOL_TLSv1)
+
+    """
+    """
+    s = StompClient("resilient", 65001,
+                    username="user@us.ibm.com",
+                    password="Password",
+                    heartbeats=(10000, 10000),
+                    ca_certs=None,
+                    ssl_version=ssl.PROTOCOL_TLSv1,)
+                    #proxy_host="runner",
+                    #proxy_port=3128,
+                    #proxy_user="testuser",
+                    #proxy_password="Password")
+    """
+    s.run()
 
 if __name__ == "__main__":
     main()

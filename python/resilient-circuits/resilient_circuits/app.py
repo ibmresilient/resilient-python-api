@@ -207,10 +207,6 @@ class App(Component):
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             self += Debugger()
-            logging.getLogger("stomp.py").setLevel(logging.DEBUG)
-        else:
-            # STOMP is too noisy by default
-            logging.getLogger("stomp.py").setLevel(logging.WARN)
 
         file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000,
                                            backupCount=10)
