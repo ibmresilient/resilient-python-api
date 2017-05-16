@@ -15,6 +15,7 @@ from circuits import BaseComponent, Event, Timer, Worker
 from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import co3
+from co3.co3 import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessage
@@ -308,7 +309,7 @@ class ResilientComponent(BaseComponent):
             if value["enabled"]:
                 if value["value"] == value_id:
                     return value["label"]
-        return str(value_id)  # fallback
+        return ensure_unicode(value_id)  # fallback
 
 
 class Actions(ResilientComponent):
