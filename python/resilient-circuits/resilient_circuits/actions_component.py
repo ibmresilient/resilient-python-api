@@ -455,9 +455,7 @@ class Actions(ResilientComponent):
     @handler("Connected")
     def on_stomp_connected(self):
         """Client has connected to the STOMP server"""
-        LOG.info("STOMP connected.")#  Connect to %s", self.listeners)
-        #for queue_name in self.listeners:
-        #    self._subscribe(queue_name)
+        LOG.info("STOMP connected.")
 
     @handler("HeartbeatTimeout")
     def on_heartbeat_timeout(self):
@@ -527,9 +525,14 @@ class Actions(ResilientComponent):
                 self.listeners[queue_name] = comps
             else:
                 self.listeners[queue_name] = set([component])
-                # Actually subscribe the STOMP connection
-                self._subscribe(queue_name)
+                # Defer subscribing until all components are loaded
             LOG.debug("Listeners: %s", self.listeners)
+
+    @handler("load_all_success")
+    def subscribe_to_queues(self):
+        """ Subscribe to all message queues """
+        for queue_name in self.listeners:
+            self._subscribe(queue_name)
 
     @handler("prepare_unregister")
     def prepare_unregister(self, event, component):
@@ -600,7 +603,7 @@ class Actions(ResilientComponent):
     @handler("ConnectionFailed")
     def retry_connection(self, *args, **kwargs):
         # Try again later
-        Timer(5, Event.create("reconnect")).register(self)
+        Timer(60, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, _traceback, handler=None, fevent=None):
