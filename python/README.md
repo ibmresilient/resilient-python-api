@@ -16,12 +16,12 @@ is to use either `openssl` or the Java `keytool` command line utilities.
 
 Using openssl to create the cacerts.pem file (using Linux or Mac OS):
 ```
-openssl s_client -connect SERVER:65001 -showcerts -tls1 < /dev/null > cacerts.pem 2> /dev/null
+openssl s_client -connect SERVER:443 -showcerts -tls1 < /dev/null > cacerts.pem 2> /dev/null
 ```
 
 Using keytool to create the cacerts.pem file (Linux, Mac OS or Windows):
 ```
-keytool -printcert -rfc -sslserver SERVER:65001 > cacerts.pem
+keytool -printcert -rfc -sslserver SERVER:443 > cacerts.pem
 ```
 
 WARNING:  In a production setting, you should take care to get the certificate
