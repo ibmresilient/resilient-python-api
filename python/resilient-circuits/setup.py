@@ -45,6 +45,7 @@ setup(
         'circuits',
         'pytz',
         'jinja2',
+        'pysocks',
         'filelock>=2.0.5',
         'co3>={}.{}'.format(major, minor)
     ],

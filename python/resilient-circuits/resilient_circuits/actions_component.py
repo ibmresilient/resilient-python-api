@@ -22,6 +22,11 @@ from resilient_circuits.rest_helper import get_resilient_client, reset_resilient
 from resilient_circuits.action_message import ActionMessage
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
+try:
+    from urllib import parse as urlparse
+except ImportError:
+    # Python 2
+    from urlparse import urlparse
 
 LOG = logging.getLogger(__name__)
 
@@ -488,8 +493,7 @@ class Actions(ResilientComponent):
             message = json.loads(message.decode('utf-8'))
             # Construct a Circuits event with the message, and fire it on the channel
             event = ActionMessage(source=self, headers=headers, message=message, frame=event.frame, log_dir=self.logging_directory)
-            LOG.info("Firing Action Message event on channel %s", channel)
-            LOG.debug(event)
+            LOG.info("Event: %s Channel: %s", event, channel)
 
             self.fire(event, channel)
         except Exception as exc:
@@ -659,10 +663,11 @@ class Actions(ResilientComponent):
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
             else:
-                value = event.parent.value.getValue()
+                value = event.parent.value.getValue() or event.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
-                message = value or u"Processing complete"
+                # value will be None if there was no handler or a handler returned None
+                message = value or u"No handler returned a result for this action"
                 LOG.debug("Message: %s", message)
                 status = 0
                 headers = fevent.hdr()

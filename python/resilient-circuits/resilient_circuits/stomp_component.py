@@ -207,7 +207,6 @@ class StompClient(BaseComponent):
                                                   headers={StompSpec.ACK_HEADER: StompSpec.ACK_CLIENT_INDIVIDUAL,
                                                            'id': destination})
             self._subscribed[destination] = token
-            LOG.debug("Subscribed: %s %s", frame, token)
         except StompConnectionError as err:
             self.fire(DisconnectedEvent())
         except StompError as err:
