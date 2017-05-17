@@ -40,6 +40,11 @@ class StompClient(BaseComponent):
              proxy_user=None,
              proxy_password=None):
         """ Initialize StompClient.  Called after __init__ """
+        if proxy_host:
+            LOG.info("Connect to %s:%s through proxy %s:%d", host, port, proxy_host, proxy_port)
+        else:
+            LOG.info("Connect to %s:%s", host, port)
+
         if use_ssl and not ssl_context:
 
             ssl_params = dict(key_file=key_file,

@@ -22,11 +22,6 @@ from resilient_circuits.rest_helper import get_resilient_client, reset_resilient
 from resilient_circuits.action_message import ActionMessage
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    # Python 2
-    from urlparse import urlparse
 
 LOG = logging.getLogger(__name__)
 
@@ -335,9 +330,9 @@ class Actions(ResilientComponent):
 
         # Set options for connecting to Action Module with HTTP Proxy
         self._proxy_args = {}
-        if opts.get("proxy_host"):
-            LOG.info("Connecting to stomp through HTTP Proxy %s", opts.get("proxy_host"))
-            proxy_host = urlparse(opts.get("proxy_host")).netloc
+        proxy_host = opts.get("proxy_host")
+        if proxy_host:
+            proxy_host = proxy_host.replace("http://", "").replace("https://", "")
             self._proxy_args = {"proxy_host": proxy_host,
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
