@@ -40,6 +40,11 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self):
+        # Temporary logging handler until the real one is created later
+        temp_handler = logging.StreamHandler()
+        temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
+        temp_handler.setLevel(logging.INFO)
+        logging.getLogger().addHandler(temp_handler)
         config_file = resilient.get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
 
@@ -66,6 +71,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_test_port = self.getopt("resilient", "test_port") or None
         default_log_responses = self.getopt("resilient",
                                             "log_http_responses") or ""
+        logging.getLogger().removeHandler(temp_handler)
 
         self.add_argument("--stomp-port",
                           type=int,
