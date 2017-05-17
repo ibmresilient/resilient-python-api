@@ -23,7 +23,7 @@ from resilient_circuits.action_message import ActionMessage
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 try:
-    from urllib import parse as urlparse
+    from urllib.parse import urlparse
 except ImportError:
     # Python 2
     from urlparse import urlparse
