@@ -335,6 +335,33 @@ class SimpleClient(object):
         """ Same as get, but checks cache first """
         return self.get(uri, co3_context_token, timeout)
 
+    def get_const(self, co3_context_token=None, timeout=None):
+        """
+        Get the ConstREST endpoint.
+        Endpoint for retrieving various constant information for this server.   This information is
+        useful in translating names that the user sees to IDs that other REST API endpoints accept.
+        For example, the incidentDTO has a field called "crimestatus_id". The valid values are stored
+        in constDTO.crime_statuses.
+
+        Args:
+          co3_context_token
+          timeout: number of seconds to wait for response
+        Returns:
+          ConstDTO as a dictionary
+        Raises:
+          SimpleHTTPException - if an HTTP exception occurs.
+        """
+        url = u"{0}/rest/const".format(self.base_url)
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify,
+                                         timeout=timeout)
+        _raise_if_error(response)
+        return json.loads(response.text)
+
     def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
@@ -457,6 +484,35 @@ class SimpleClient(object):
                                     data=mimedata,
                                     co3_context_token=co3_context_token,
                                     timeout=timeout)
+
+    def search(self, payload, co3_context_token=None, timeout=None):
+        """
+        Posts to the SearchExREST endpoint.
+        Endpoint for performing full text searches through incidents and incident child objects
+        (tasks, incident comments, task comments, milestones, artifacts, incident attachments,
+        task attachments, and data tables).
+
+        Args:
+          payload: the SearchExInputDTO parameters for performing a search, as a dictionary
+          co3_context_token
+          timeout: number of seconds to wait for response
+        Returns:
+          List of results, as an array of SearchExResultDTO
+        Raises:
+          SimpleHTTPException - if an HTTP exception occurs.
+        """
+        url = u"{0}/rest/search".format(self.base_url)
+        payload_json = json.dumps(payload)
+        response = self._execute_request(self.session.post,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify,
+                                         timeout=timeout)
+        _raise_if_error(response)
+        return json.loads(response.text)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
