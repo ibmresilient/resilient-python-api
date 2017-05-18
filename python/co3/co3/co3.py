@@ -297,6 +297,13 @@ class SimpleClient(object):
             result = operation(url, **kwargs)
         return result
 
+    def _keyfunc(self, uri, *args, **kwargs):
+        """ function to generate cache key for cached_get """
+        return uri
+
+    def _get_cache(self):
+        return self.cache
+
     def get(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
@@ -323,14 +330,7 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def keyfunc(self, uri, *args, **kwargs):
-        """ function to generate cache key for cached_get """
-        return uri
-
-    def get_cache(self):
-        return self.cache
-
-    @cachedmethod(get_cache, key=keyfunc)
+    @cachedmethod(_get_cache, key=_keyfunc)
     def cached_get(self, uri, co3_context_token=None, timeout=None):
         """ Same as get, but checks cache first """
         return self.get(uri, co3_context_token, timeout)
