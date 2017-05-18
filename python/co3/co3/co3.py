@@ -220,7 +220,7 @@ class SimpleClient(object):
         Returns:
           The Resilient session object (dict)
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         self.authdata = {
             u'email': ensure_unicode(email),
@@ -310,7 +310,7 @@ class SimpleClient(object):
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
@@ -348,7 +348,7 @@ class SimpleClient(object):
         Returns:
           The raw value returned by the server for this resource.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
@@ -376,7 +376,7 @@ class SimpleClient(object):
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
@@ -529,7 +529,7 @@ class SimpleClient(object):
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
@@ -554,7 +554,7 @@ class SimpleClient(object):
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.delete,
