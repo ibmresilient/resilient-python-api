@@ -658,11 +658,17 @@ class Actions(ResilientComponent):
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
             else:
-                value = event.parent.value.getValue() or event.value.getValue()
+                value = event.parent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
                 # value will be None if there was no handler or a handler returned None
-                message = value or u"No handler returned a result for this action"
+                if value:
+                    if isinstance(value, list):
+                        message = u" ".join(value)
+                    else:
+                        message = value
+                else:
+                    message= u"No handler returned a result for this action"
                 LOG.debug("Message: %s", message)
                 status = 0
                 headers = fevent.hdr()
