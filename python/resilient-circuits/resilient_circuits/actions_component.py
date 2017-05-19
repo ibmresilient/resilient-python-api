@@ -350,12 +350,7 @@ class Actions(ResilientComponent):
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
         self.stomp_component = None
-
-        if not rest_client.actions_enabled:
-            # Don't create stomp connection b/c action module is not enabled.
-            LOG.warn(("Resilient action module not enabled."
-                      "No stomp connection attempted."))
-            return
+        self.logging_directory = None
 
         if opts.get("test_actions", False):
             # Let user submit test actions from the command line for testing
@@ -364,69 +359,10 @@ class Actions(ResilientComponent):
             test_options = {}
             if opts.get("test_port", None) != None:
                 test_options["port"] = int(opts["test_port"])
-            if opts.get("test_host"):
+            if self.opts.get("test_host"):
                 test_options["host"] = opts["test_host"]
             actions_test_component.ResilientTestActions(self.org_id,
                                                         **test_options).register(self)
-
-        self.resilient_mock = opts["resilient_mock"] or False
-        if self.resilient_mock:
-            # Using mock API, no need to create a real stomp connection
-            LOG.warn("Using Mock. No Stomp connection")
-            return
-
-        # Give the STOMP library our TLS/SSL configuration.
-        cafile = opts.get("stomp_cafile") or opts.cafile
-        if cafile == "false":
-            # Explicitly disable TLS certificate validation, if you need to
-            cafile = None
-            LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
-        elif cafile is None:
-            # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
-            # instead of the certificates from ssl.get_default_verify_paths().cafile
-            cafile = DEFAULT_CA_BUNDLE_PATH
-            LOG.debug("STOMP TLS validation with default certificate file: {0}".format(cafile))
-        else:
-            LOG.debug("STOMP TLS validation with certificate file: {0}".format(cafile))
-
-        try:
-            ca_certs=None
-            context = ssl.create_default_context(cafile=cafile)
-            context.check_hostname = True if cafile else False
-            context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
-        except AttributeError as err:
-            # Likely an older ssl version w/out true ssl context
-            LOG.info("Can't create SSL context. Using fallback method")
-            context = None
-            ca_certs=cafile
-
-        # Set up a STOMP connection to the Resilient action services
-        self.stomp_component = StompClient(opts["host"], opts["stomp_port"],
-                                           username=opts["email"],
-                                           password=opts["password"],
-                                           heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                       STOMP_SERVER_HEARTBEAT),
-                                           connected_timeout=STOMP_TIMEOUT,
-                                           connect_timeout=STOMP_TIMEOUT,
-                                           ssl_context=context,
-                                           ca_certs=ca_certs, # For old ssl version
-                                           **self._proxy_args)
-        self.stomp_component.register(self)
-
-        # Store action message logging option
-        self.logging_directory = opts["log_http_responses"] or None
-        if self.logging_directory:
-            try:
-                directory = os.path.expanduser(self.logging_directory)
-                directory = os.path.expandvars(directory)
-                assert(os.path.exists(directory))
-                self.logging_directory = directory
-            except Exception as e:
-                self.logging_directory = None
-                raise Exception("Response Logging Directory %s does not exist!" ,
-                                opts["log_http_responses"])
-        # Other special options
-        self.ignore_message_failure = opts["resilient"].get("ignore_message_failure") == "1"
 
     # Public Utility methods
 
@@ -507,11 +443,83 @@ class Actions(ResilientComponent):
         LOG.debug("Idle reset")
         reset_resilient_client()
 
+    def _setup_stomp(self):
+        rest_client = self.rest_client()
+        if not rest_client.actions_enabled:
+            # Don't create stomp connection b/c action module is not enabled.
+            LOG.warn(("Resilient action module not enabled."
+                      "No stomp connection attempted."))
+            return
+
+        self.resilient_mock = self.opts["resilient_mock"] or False
+        if self.resilient_mock:
+            # Using mock API, no need to create a real stomp connection
+            LOG.warn("Using Mock. No Stomp connection")
+            return
+
+        # Give the STOMP library our TLS/SSL configuration.
+        cafile = self.opts.get("stomp_cafile") or self.opts.cafile
+        if cafile == "false":
+            # Explicitly disable TLS certificate validation, if you need to
+            cafile = None
+            LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
+        elif cafile is None:
+            # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
+            # instead of the certificates from ssl.get_default_verify_paths().cafile
+            cafile = DEFAULT_CA_BUNDLE_PATH
+            LOG.debug("STOMP TLS validation with default certificate file: %s", cafile)
+        else:
+            LOG.debug("STOMP TLS validation with certificate file: %s", cafile)
+
+        try:
+            ca_certs=None
+            context = ssl.create_default_context(cafile=cafile)
+            context.check_hostname = True if cafile else False
+            context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
+        except AttributeError as err:
+            # Likely an older ssl version w/out true ssl context
+            LOG.info("Can't create SSL context. Using fallback method")
+            context = None
+            ca_certs=cafile
+
+        # Set up a STOMP connection to the Resilient action services
+        self.stomp_component = StompClient(self.opts["host"], self.opts["stomp_port"],
+                                           username=self.opts["email"],
+                                           password=self.opts["password"],
+                                           heartbeats=(STOMP_CLIENT_HEARTBEAT,
+                                                       STOMP_SERVER_HEARTBEAT),
+                                           connected_timeout=STOMP_TIMEOUT,
+                                           connect_timeout=STOMP_TIMEOUT,
+                                           ssl_context=context,
+                                           ca_certs=ca_certs, # For old ssl version
+                                           **self._proxy_args)
+        self.stomp_component.register(self)
+
+        # Other special options
+        self.ignore_message_failure = self.opts["resilient"].get("ignore_message_failure") == "1"
+        self.reconnect()
+
+    def _setup_message_logging(self):
+        """ Store action message logging option """
+        self.logging_directory = self.opts["log_http_responses"] or None
+        if self.logging_directory:
+            try:
+                directory = os.path.expanduser(self.logging_directory)
+                directory = os.path.expandvars(directory)
+                assert(os.path.exists(directory))
+                self.logging_directory = directory
+            except Exception as e:
+                self.logging_directory = None
+                raise Exception("Response Logging Directory %s does not exist!" ,
+                                self.opts["log_http_responses"])
+
     @handler("registered")
     def registered(self, event, component, parent):
         """A component has registered.  Subscribe to its message queue(s)."""
         if self is component:
-            self.reconnect()
+            self.reconnect_stomp = True
+            self._setup_message_logging()
+            self._setup_stomp()
             return
         for channel in event.channels:
             if not str(channel).startswith("actions."):
@@ -541,6 +549,10 @@ class Actions(ResilientComponent):
             LOG.info("disconnecting Actions component from stomp queue")
             self.disconnect()
             self.reconnect_stomp = False
+            if self.stomp_component:
+                # TODO: Confirm the stomp component gets garbage collected automatically
+                self.stomp_component.unregister()
+                self.stomp_component = None
 
         for channel in event.channels:
             if not str(channel).startswith("actions."):
@@ -582,8 +594,6 @@ class Actions(ResilientComponent):
     def disconnect(self):
         """disconnect stomp connection"""
         if self.stomp_component:
-            for queue_name in self.listeners:
-                self._unsubscribe(queue_name)
             self.fire(Disconnect())
 
     @handler("reconnect")

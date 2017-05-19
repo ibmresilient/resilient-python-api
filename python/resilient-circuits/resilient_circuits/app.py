@@ -22,10 +22,6 @@ from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
 
 
-def log(log_level):
-    logging.getLogger().setLevel(log_level)
-
-
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
@@ -175,7 +171,7 @@ class App(Component):
         LOG.info("Resilient server: %s", self.opts.get("host"))
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
-
+        LOG.info("Logging Level: %s", self.opts.get("loglevel"))
         if self.opts.get("test_actions", False):
             # Make all components aware that we are in test mode
             ResilientComponent.test_mode = True

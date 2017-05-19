@@ -5,7 +5,6 @@ import logging
 from circuits import Event
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 
 class StompEvent(Event):

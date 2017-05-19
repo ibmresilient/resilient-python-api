@@ -203,6 +203,7 @@ def main():
 
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
+        LOG.debug("Verbose Logging Enabled")
         LOG.setLevel(logging.DEBUG)
 
     if args.cmd != "run" and len(unknown_args) > 0:

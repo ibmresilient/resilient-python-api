@@ -21,11 +21,6 @@ from resilient_circuits.app import get_lock
 application = None
 LOG = logging.getLogger(__name__)
 
-
-def log(log_level):
-    logging.getLogger().setLevel(log_level)
-
-
 class begin_restart(Event):
     pass
 
@@ -58,6 +53,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
             if component is not self.app.action_component and component is not self.app.component_loader:
                 LOG.info("unregistering component %s", component)
                 component.unregister()
+        self.app.components = []
 
 
 # Main component for our application
