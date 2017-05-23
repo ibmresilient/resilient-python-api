@@ -187,7 +187,11 @@ class App(Component):
         if self.auto_load_components:
             LOG.info("Components auto-load directory: %s",
                      self.opts["componentsdir"])
-            self.component_loader = ComponentLoader(self.opts)
+            if not self.component_loader:
+                self.component_loader = ComponentLoader(self.opts)
+            else:
+                LOG.info("Updating and re-registering ComponentLoader")
+                self.component_loader.opts = self.opts
             self.component_loader.register(self)
 
     def config_logging(self, logdir, loglevel, logfile):

@@ -12,7 +12,7 @@ from signal import SIGINT, SIGTERM
 from functools import wraps
 import stomp
 from stomp.exception import ConnectFailedException
-from circuits import BaseComponent, Event, Timer, Worker
+from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
 import circuits.six as six
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
@@ -337,10 +337,6 @@ class Actions(ResilientComponent):
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
                                 "proxy_password": opts.get("proxy_password")}
-
-        # Create a worker pool, for components that choose to use it
-        # The default pool uses 10 threads (not processes).
-        Worker(process=False, workers=10).register(self)
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
