@@ -9,7 +9,7 @@ LOG = logging.getLogger(__name__)
 
 class StompEvent(Event):
     """A Circuits event with less verbose repr"""
-
+    success = True
     def _repr(self):
         return ""
 
@@ -27,8 +27,11 @@ class StompEvent(Event):
 
         return "<%s[%s] (%s)>" % (self.name, channels, data)
 
-class DisconnectedEvent(StompEvent):
-    pass
+class Disconnected(StompEvent):
+    def __init__(self, reconnect=True):
+        super(Disconnected, self).__init__()
+        self.reconnect=reconnect
+
 
 class Disconnect(StompEvent):
     pass
@@ -52,13 +55,15 @@ class ServerHeartbeat(StompEvent):
     pass
 
 class Connect(StompEvent):
-    pass
+    def __init__(self, subscribe=False):
+        super(Connect, self).__init__()
+        self.subscribe = subscribe
 
 class Connected(StompEvent):
     pass
 
 class ConnectionFailed(StompEvent):
-    pass
+    reconnect = True
 
 class StompErrorEvent(StompEvent):
     def __init__(self, frame, err):

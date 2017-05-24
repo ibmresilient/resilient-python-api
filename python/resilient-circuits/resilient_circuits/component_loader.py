@@ -57,14 +57,12 @@ class ComponentLoader(Loader):
         self.noload = [filename.strip() for filename in noload.split(",") if filename.strip() != ""]
         super(ComponentLoader, self).__init__(init_kwargs={"opts": opts}, paths=[self.path])
         self.pending_components = []
-        self.loaded_components = []
         self.finished = False
 
         # Load all installed components
         installed_components = self.discover_installed_components()
         if installed_components:
-            if self._register_components(installed_components):
-                self.loaded_components = [cls for cls in installed_components]
+            self._register_components(installed_components)
 
         if self.path:
             # Load all components from the components directory
@@ -79,21 +77,9 @@ class ComponentLoader(Loader):
                             LOG.debug("Loading %s", cname)
                             self.pending_components.append(cname)
                             self.fire(load(cname))
-
     def discover_installed_components(self):
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
         return [ep.load() for ep in entry_points if ep.name not in self.noload]
-
-    @handler("registered", channel="*")
-    def registered(self, component, manager):
-        """Registered Event Handler"""
-        if component is self:
-            LOG.info("Loader Registered.")
-            if self.finished:
-                # This is a re-register
-                self.components = set()
-                if self._register_components(self.loaded_components):
-                    self.fire(load_all_success())
 
     def _register_components(self, component_list):
         """ register all installed components and ones from componentsdir """
@@ -136,11 +122,3 @@ class ComponentLoader(Loader):
             LOG.error("Failed to load component '%s'", cname)
             safe_but_noisy_import(cname)
             self.fire(load_all_failure())
-
-    @handler("load")
-    def load(self, name):
-        """ return class if not doing auto-load """
-        component = super(ComponentLoader, self).load(name)
-        if component:
-            self.loaded_components.append(component.__class__)
-            return component

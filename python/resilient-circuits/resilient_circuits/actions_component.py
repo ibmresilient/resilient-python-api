@@ -225,9 +225,7 @@ class ResilientComponent(BaseComponent):
         super(ResilientComponent, self).__init__()
         assert isinstance(opts, dict)
         self.opts = opts
-        client = self.rest_client()
-        self._fields = dict((field["name"], field) for field in client.get("/types/incident/fields"))
-        self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
+        self._get_fields()
         # Check that decorated requirements are met
         callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
         for name, func in callables:
@@ -263,6 +261,12 @@ class ResilientComponent(BaseComponent):
                                   "'{1}') must be type '{2}'.")
                         raise Exception(errmsg.format(field_name,
                                                       name, input_type))
+
+    def _get_fields(self):
+        """Get Incident and Action fields"""
+        client = self.rest_client()
+        self._fields = dict((field["name"], field) for field in client.get("/types/incident/fields"))
+        self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
 
     def rest_client(self):
         """Return a connected instance of the Resilient REST SimpleClient"""
@@ -315,6 +319,11 @@ class ResilientComponent(BaseComponent):
                     return value["label"]
         return str(value_id)  # fallback
 
+    @handler("reload")
+    def reload(self, event, opts):
+        """New set of config options"""
+        self.opts = opts
+        self._get_fields()
 
 class Actions(ResilientComponent):
     """Component that subscribes to Resilient Action Module queues and fires message events"""
@@ -479,21 +488,34 @@ class Actions(ResilientComponent):
             ca_certs=cafile
 
         # Set up a STOMP connection to the Resilient action services
-        self.stomp_component = StompClient(self.opts["host"], self.opts["stomp_port"],
-                                           username=self.opts["email"],
-                                           password=self.opts["password"],
-                                           heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                       STOMP_SERVER_HEARTBEAT),
-                                           connected_timeout=STOMP_TIMEOUT,
-                                           connect_timeout=STOMP_TIMEOUT,
-                                           ssl_context=context,
-                                           ca_certs=ca_certs, # For old ssl version
-                                           **self._proxy_args)
-        self.stomp_component.register(self)
+        if not self.stomp_component:
+            self.stomp_component = StompClient(self.opts["host"], self.opts["stomp_port"],
+                                               username=self.opts["email"],
+                                               password=self.opts["password"],
+                                               heartbeats=(STOMP_CLIENT_HEARTBEAT,
+                                                           STOMP_SERVER_HEARTBEAT),
+                                               connected_timeout=STOMP_TIMEOUT,
+                                               connect_timeout=STOMP_TIMEOUT,
+                                               ssl_context=context,
+                                               ca_certs=ca_certs, # For old ssl version
+                                               **self._proxy_args)
+            self.stomp_component.register(self)
+        else:
+            # Component exists, just update it
+            self.stomp_component.init(self.opts["host"], self.opts["stomp_port"],
+                                      username=self.opts["email"],
+                                      password=self.opts["password"],
+                                      heartbeats=(STOMP_CLIENT_HEARTBEAT,
+                                                  STOMP_SERVER_HEARTBEAT),
+                                      connected_timeout=STOMP_TIMEOUT,
+                                      connect_timeout=STOMP_TIMEOUT,
+                                      ssl_context=context,
+                                      ca_certs=ca_certs, # For old ssl version
+                                      **self._proxy_args)
 
         # Other special options
         self.ignore_message_failure = self.opts["resilient"].get("ignore_message_failure") == "1"
-        self.reconnect()
+        self.reconnect(subscribe=False)
 
     def _setup_message_logging(self):
         """ Store action message logging option """
@@ -575,9 +597,16 @@ class Actions(ResilientComponent):
         if self.resilient_mock:
             return
         if self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
+            if queue_name in self.stomp_component.subscribed:
+                LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
             LOG.info("Subscribe to message destination '%s'", queue_name)
             destination="actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination))
+        else:
+            LOG.error("Invalid reqest to subscribe to %s in state Connected? [%s] with %d listeners",
+                      queue_name,
+                      self.stomp_component.connected if self.stomp_component else "NO COMPONENT",
+                      len(self.listeners[queue_name]))
 
     def _unsubscribe(self, queue_name):
         """Unsubscribe the STOMP queue"""
@@ -593,22 +622,32 @@ class Actions(ResilientComponent):
             self.fire(Disconnect())
 
     @handler("reconnect")
-    def reconnect(self):
+    def reconnect(self, subscribe=True):
         """Try (re)connect to the STOMP server"""
         if self.resilient_mock:
             return
         if self.stomp_component and self.stomp_component.connected:
-            LOG.error("STOMP reconnect when already connected")
+            LOG.warn("STOMP reconnect requested when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
         else:
             LOG.info("STOMP attempting to connect")
-            self.fire(Connect())
+            self.fire(Connect(subscribe=subscribe))
 
+    @handler("Connect_success")
+    def connected_succesfully(self, event, *args, **kwargs):
+        """ Connected to stomp, subscribe if required """
+        # This is used to automatically re-subscribe to queues on a reconnect
+        if event.parent.subscribe:
+            self.subscribe_to_queues()
+
+    @handler("Disconnected")
     @handler("ConnectionFailed")
-    def retry_connection(self, *args, **kwargs):
+    def retry_connection(self, event, *args, **kwargs):
         # Try again later
-        Timer(60, Event.create("reconnect")).register(self)
+        reloading = getattr(self.parent, "reloading", False)
+        if event.reconnect and not reloading:
+            Timer(60, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, _traceback, handler=None, fevent=None):
@@ -655,6 +694,19 @@ class Actions(ResilientComponent):
         """
         if signo in [SIGINT, SIGTERM]:
             raise SystemExit(0)
+
+    @handler("reload", priority=999)
+    def reload(self, event, opts):
+        """New config, reconnect to stomp if required"""
+        event.success = False
+        super(Actions, self).reload(event, opts)
+        if self.stomp_component:
+            self.fire(Disconnect())
+            yield self.wait("Disconnect_success")
+            self._setup_stomp()
+            yield self.wait("Connect_success")
+            self.subscribe_to_queues()
+        event.success=True
 
     @handler()
     def _on_event(self, event, *args, **kwargs):
