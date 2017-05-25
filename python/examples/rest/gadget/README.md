@@ -23,21 +23,20 @@ To print the usage information:
 There are various command-line options to specify a connection to the
 Resilient platform.  Additional command-line options perform basic
 actions using the REST API, including the ability to list, query, create
-and update incidents and other Resilient obects.
+and update incidents and other Resilient objects.
+
 
 ### Configuration File
 
-Required connection parameters include the Resilient host name, and user
-email to access the server.  Optional parameters include the organization
-name, if the user is member of multiple organizations.
+Configuration parameters for the server URLs, user credentials and so on
+should be provided using a configuration file.  They can optionally also
+be provided on the command-line.
 
-This connection information can be specified on the command line.
+If the environment variable `APP_CONFIG_FILE` is set, it defines the path
+to your configuration file.  The default location for this file is
+`app.config` in a directory named `.resilient` under the user's home directory.
 
-For convenience, you can prepare a configuration file that contains this
-information.  The default location for this file is `app.config` in a
-directory named `.resilient` under the user's home directory.  In the
-configuration file is a text file with values below a heading `[resilient]`.
-For example:
+The configuration file is a text file, with a `[resilient]` section containing:
 
 ```
 [resilient]
@@ -47,6 +46,7 @@ email=api@example.com
 password=passw0rd
 org=Culture
 ```
+
 
 ## Examples
 
