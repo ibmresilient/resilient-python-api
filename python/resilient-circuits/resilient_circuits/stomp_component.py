@@ -16,15 +16,21 @@ from stompest.protocol import StompSpec, StompSession
 from stompest.sync import Stomp
 from stompest.error import StompConnectionError, StompError
 from stompest.sync.client import LOG_CATEGORY
-from resilient_circuits.stomp_events import *
-from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
+from stomp_events import *
+from stomp_transport import EnhancedStompFrameTransport
 
 
-StompSpec.DEFAULT_VERSION = '1.1'
+StompSpec.DEFAULT_VERSION = '1.2'
+ACK_CLIENT_INDIVIDUAL = StompSpec.ACK_CLIENT_INDIVIDUAL
+ACK_AUTO = StompSpec.ACK_AUTO
+ACK_CLIENT = StompSpec.ACK_CLIENT
+ACK_MODES =(ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
+
 LOG = logging.getLogger(__name__)
 
 class StompClient(BaseComponent):
 
+    channel = "stomp"
     def init(self, host, port, username=None, password=None,
              connect_timeout=3, connected_timeout=3,
              version=StompSpec.VERSION_1_2, accept_versions=["1.0", "1.1", "1.2"],
@@ -38,8 +44,10 @@ class StompClient(BaseComponent):
              proxy_host=None,
              proxy_port=None,
              proxy_user=None,
-             proxy_password=None):
+             proxy_password=None,
+             channel=channel):
         """ Initialize StompClient.  Called after __init__ """
+        self.channel=channel
         if proxy_host:
             LOG.info("Connect to %s:%s through proxy %s:%d", host, port, proxy_host, proxy_port)
         else:
@@ -99,9 +107,9 @@ class StompClient(BaseComponent):
         return LOG_CATEGORY
 
     @handler("Disconnect")
-    def _disconnect(self):
+    def _disconnect(self, receipt=None):
         if self.connected:
-            self._client.disconnect()
+            self._client.disconnect(receipt=receipt)
         self._client.close(flush=True)
         self.fire(Disconnected(reconnect=False))
         self._subscribed = {}
@@ -117,7 +125,7 @@ class StompClient(BaseComponent):
                 LOG.info("Client will send heartbeats to server")
                 # Send heartbeats at 80% of agreed rate
                 self.client_heartbeat = Timer((self._client.clientHeartBeat / 1000.0) * 0.8,
-                                     Event.create("ClientHeartbeat"), persist=True)
+                                              ClientHeartbeat(), persist=True)
                 self.client_heartbeat.register(self)
         else:
             LOG.info("No Client heartbeats will be sent")
@@ -130,18 +138,19 @@ class StompClient(BaseComponent):
                 LOG.info("Requested heartbeats from server.")
                 # Allow a grace period on server heartbeats
                 self.server_heartbeat = Timer((self._client.serverHeartBeat / 1000.0) * self.ALLOWANCE,
-                                              Event.create("ServerHeartbeat"), persist=True)
+                                              ServerHeartbeat(), persist=True)
                 self.server_heartbeat.register(self)
         else:
             LOG.info("Expecting no heartbeats from Server")
 
     #@handler("Connect", "started")
     @handler("Connect")
-    def connect(self, event, *args, **kwargs):
+    def connect(self, event, host=None, *args, **kwargs):
         """ connect to Stomp server """
         LOG.info("Connect to Stomp...")
         try:
             self._client.connect(heartBeats=self._heartbeats,
+                                 host=host,
                                  versions=self._accept_versions,
                                  connectTimeout=self._connect_timeout,
                                  connectedTimeout=self._connected_timeout)
@@ -194,7 +203,7 @@ class StompClient(BaseComponent):
             if self._client.canRead(1):
                 frame = self._client.receiveFrame()
                 LOG.debug("Recieved frame %s", frame)
-                self.fire(MessageEvent(frame))
+                self.fire(Message(frame))
         except StompConnectionError as err:
             self.fire(Disconnected())
 
@@ -203,7 +212,7 @@ class StompClient(BaseComponent):
         LOG.debug("send()")
         if not self.connected:
             LOG.error("Can't send when Stomp is disconnected")
-            self.fire(StompErrorEvent(None, Exception("Message send attempted with stomp disconnected")))
+            self.fire(OnStompError(None, Exception("Message send attempted with stomp disconnected")))
             event.success = False
             return
         try:
@@ -215,15 +224,17 @@ class StompClient(BaseComponent):
         except StompError as err:
             LOG.error("Error sending ack")
             event.success = False
-            self.fire(StompErrorEvent(None, err))
+            self.fire(OnStompError(None, err))
 
     @handler("Subscribe")
-    def _subscribe(self, event, destination):
+    def _subscribe(self, event, destination, ack=ACK_CLIENT_INDIVIDUAL):
+        if ack not in ACK_MODES:
+            raise ValueError("Invalid client ack mode specified")
         LOG.info("Subscribe to message destination %s", destination)
         try:
             # Set ID to match destination name for easy reference later
             frame, token = self._client.subscribe(destination,
-                                                  headers={StompSpec.ACK_HEADER: StompSpec.ACK_CLIENT_INDIVIDUAL,
+                                                  headers={StompSpec.ACK_HEADER: ack,
                                                            'id': destination})
             self._subscribed[destination] = token
         except StompConnectionError as err:
@@ -232,7 +243,7 @@ class StompClient(BaseComponent):
         except StompError as err:
             event.success = False
             LOG.debug(traceback.format_exc())
-            self.fire(StompErrorEvent(None, err))
+            self.fire(OnStompError(None, err))
 
     @handler("Unsubscribe")
     def _unsubscribe(self, event, destination):
@@ -249,10 +260,10 @@ class StompClient(BaseComponent):
         except StompError as err:
             LOG.error("Error sending ack")
             event.success = False
-            self.fire(StompErrorEvent(frame, err))
+            self.fire(OnStompError(frame, err))
 
 
-    @handler("MessageEvent")
+    @handler("Message")
     def on_message(self, event, headers, message):
         LOG.info("Stomp message received")
 
@@ -269,7 +280,7 @@ class StompClient(BaseComponent):
         except StompError as err:
             LOG.error("Error sending ack")
             event.success = False
-            self.fire(StompErrorEvent(frame, err))
+            self.fire(OnStompError(frame, err))
 
     def get_subscription(self, frame):
         """ Get subscription from frame """

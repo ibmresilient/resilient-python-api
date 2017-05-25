@@ -11,6 +11,11 @@ LOG = logging.getLogger(__name__)
 class EnhancedStompFrameTransport(StompFrameTransport):
     """ add support for older ssl module and http proxy """
 
+    proxy_host = None
+    proxy_port = None
+    proxy_user = None
+    proxy_password = None
+
     @staticmethod
     def match_hostname(cert, hostname):
         """ Check that hostname matches cert """

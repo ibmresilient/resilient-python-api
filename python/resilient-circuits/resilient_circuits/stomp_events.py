@@ -28,17 +28,17 @@ class StompEvent(Event):
         return "<%s[%s] (%s)>" % (self.name, channels, data)
 
 class Disconnected(StompEvent):
-    def __init__(self, reconnect=True):
-        super(Disconnected, self).__init__()
+    def __init__(self, reconnect=True, receipt=None):
+        super(Disconnected, self).__init__(receipt=receipt)
         self.reconnect=reconnect
 
 
 class Disconnect(StompEvent):
     pass
 
-class MessageEvent(StompEvent):
+class Message(StompEvent):
     def __init__(self, frame):
-        super(MessageEvent, self).__init__(headers=frame.headers,
+        super(Message, self).__init__(headers=frame.headers,
                                            message=frame.body)
         self.frame = frame
 
@@ -55,8 +55,8 @@ class ServerHeartbeat(StompEvent):
     pass
 
 class Connect(StompEvent):
-    def __init__(self, subscribe=False):
-        super(Connect, self).__init__()
+    def __init__(self, subscribe=False, host=None):
+        super(Connect, self).__init__(host=host)
         self.subscribe = subscribe
 
 class Connected(StompEvent):
@@ -65,11 +65,11 @@ class Connected(StompEvent):
 class ConnectionFailed(StompEvent):
     reconnect = True
 
-class StompErrorEvent(StompEvent):
+class OnStompError(StompEvent):
     def __init__(self, frame, err):
         headers = frame.headers if frame else {}
         body = frame.body if frame else None
-        super(StompErrorEvent, self).__init__(headers=headers,
+        super(OnStompError, self).__init__(headers=headers,
                                               message=body,
                                               error=err)
         self.frame = frame
@@ -78,8 +78,8 @@ class HeartbeatTimeout(StompEvent):
     pass
 
 class Subscribe(StompEvent):
-    def __init__(self, destination):
-        super(Subscribe, self).__init__(destination=destination)
+    def __init__(self, destination, **kwargs):
+        super(Subscribe, self).__init__(destination=destination, **kwargs)
         self.destination=destination
 
 class Unsubscribe(StompEvent):
