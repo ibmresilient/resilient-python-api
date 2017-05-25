@@ -501,7 +501,7 @@ class SimpleClient(object):
         Raises:
           SimpleHTTPException - if an HTTP exception occurs.
         """
-        url = u"{0}/rest/search".format(self.base_url)
+        url = u"{0}/rest/search_ex".format(self.base_url)
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.post,
                                          url,
