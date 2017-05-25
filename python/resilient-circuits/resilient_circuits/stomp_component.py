@@ -16,8 +16,8 @@ from stompest.protocol import StompSpec, StompSession
 from stompest.sync import Stomp
 from stompest.error import StompConnectionError, StompError
 from stompest.sync.client import LOG_CATEGORY
-from stomp_events import *
-from stomp_transport import EnhancedStompFrameTransport
+from resilient_circuits.stomp_events import *
+from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
 
 
 StompSpec.DEFAULT_VERSION = '1.2'
