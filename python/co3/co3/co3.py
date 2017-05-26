@@ -188,15 +188,13 @@ def get_proxy_dict(opts):
         scheme = 'https'
         proxy_host = opts.proxy_host
     else:
-        proxy_host = urlparse.urlparse(opts.proxy_host).netloc
+        proxy_host = opts.proxy_host[len(scheme + "://"):]
 
     if opts.proxy_user and opts.proxy_password:
-        # {'http': 'scheme://user:pass@host:port/'}
         proxy = {'https': '{0}://{1}:{2}@{3}:{4}/'.format(scheme, opts.proxy_user, opts.proxy_password,
                                                           proxy_host, opts.proxy_port)}
     else:
-        # proxy = {'http': 'scheme://host:port'}
-        proxy = {'https': '{0}://{1}:{2}'.format(scheme, opts.proxy_host, opts.proxy_port)}
+        proxy = {'https': '{0}://{1}:{2}'.format(scheme, proxy_host, opts.proxy_port)}
 
     return proxy
 
