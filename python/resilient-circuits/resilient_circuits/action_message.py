@@ -48,7 +48,7 @@ class ActionMessage(Event):
     #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
 
     def __init__(self, source=None, headers=None, message=None,
-                 test=False, test_msg_id=None, log_dir=None):
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
         super(ActionMessage, self).__init__(source=source,
                                             headers=headers,
                                             message=message)
@@ -62,6 +62,7 @@ class ActionMessage(Event):
 
         self.deferred = False
         self.message = message
+        self.frame=frame
         self.context = headers.get("Co3ContextToken")
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")

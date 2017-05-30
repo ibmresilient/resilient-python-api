@@ -37,8 +37,13 @@ class FileLookupComponent(ResilientComponent):
         # The queue name can be specified in the config file, or default to 'filelookup'
         self.channel = "actions." + self.options.get("queue", "filelookup")
 
+    @handler("reload")
+    def reload_options(self, event, opts):
+        """Configuration options have changed, save new values"""
+        LOG.info("Storing updated values from section [%s]"CONFIG_DATA_SECTION)
+        self.options = opts.get(CONFIG_DATA_SECTION, {})
 
-    @handler()
+    @handler("file_lookup")
     def _lookup_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.
@@ -47,10 +52,6 @@ class FileLookupComponent(ResilientComponent):
            (event, *args, **kwargs), and ignore any messages that are not
            from the Action Module.
         """
-        if not isinstance(event, ActionMessage):
-            # Some event we are not interested in
-            return
-
         incident = event.message["incident"]
         inc_id = incident["id"]
         source_fieldname = self.options["source_field"]
