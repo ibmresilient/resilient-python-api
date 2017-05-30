@@ -59,6 +59,10 @@ class ExampleArgumentParser(resilient.ArgumentParser):
         self.add_argument('--delete',
                           help="Generically delete the specified URI.")
 
+        self.add_argument('--search',
+                          help="Search using the specified JSON file (SearchExInputDTO)")
+
+
 
 def show_incident_list(client, query_template_file_name):
     incidents = None
@@ -134,6 +138,15 @@ def generic_delete(client, uri):
     print(client.delete(uri))
 
 
+def generic_search(client, template_file_name):
+    with open(template_file_name, 'r') as template_file:
+        template = json.loads(template_file.read())
+    results = client.search(template)
+
+    print('Response:  ')
+    print(json.dumps(results, indent=4))
+
+
 def main():
     parser = ExampleArgumentParser(config_file=resilient.get_config_file())
     opts = parser.parse_args()
@@ -159,6 +172,8 @@ def main():
     if opts.delete:
         generic_delete(client, opts.delete)
 
+    if opts.search:
+        generic_search(client, opts.search)
 
 if __name__ == "__main__":
     main()

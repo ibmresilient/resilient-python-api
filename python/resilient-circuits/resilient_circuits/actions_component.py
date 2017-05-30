@@ -17,6 +17,7 @@ from circuits.core.handlers import handler
 import circuits.six as six
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import co3
+from co3.co3 import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessage
@@ -317,7 +318,7 @@ class ResilientComponent(BaseComponent):
             if value["enabled"]:
                 if value["value"] == value_id:
                     return value["label"]
-        return str(value_id)  # fallback
+        return ensure_unicode(value_id)  # fallback
 
     @handler("reload")
     def reload(self, event, opts):
@@ -374,8 +375,9 @@ class Actions(ResilientComponent):
     def action_name(self, action_id):
         """Get the name of an action, from its id"""
         if action_id is None:
-            LOG.warn("Action: None")
-            return ""
+            # Unnamed action, probably triggered from a v28 workflow
+            LOG.info("Action: _unnamed_")
+            return "_unnamed_"
         try:
             defn = self.action_defs[action_id]
         except KeyError:

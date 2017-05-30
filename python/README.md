@@ -51,6 +51,42 @@ command line tools will generally need.  The ArgumentParser can read defaults
 from a configuration file, and override them from the command line.
 
 
+### Configuration File
+
+Configuration parameters for the server URLs, user credentials and so on
+should be provided using a configuration file.  They can optionally also
+be provided on the command-line.
+
+If the environment variable `APP_CONFIG_FILE` is set, it defines the path
+to your configuration file.  The default location for this file is
+`app.config` in a directory named `.resilient` under the user's home directory.
+
+The configuration file is a text file, with a `[resilient]` section containing:
+
+```
+[resilient]
+host=resilient.example.com
+port=443
+email=api@example.com
+password=passw0rd
+org=Culture
+```
+
+A standard way to initialize a SimpleClient with this configuration is,
+
+```
+# Read the standard Resilient APIs configuration file
+# - default location is ~/.resilient/app.config
+# - or the location set in $APP_CONFIG_FILE
+# and any other arguments specified on the command line
+parser = co3.ArgumentParser(config_file=co3.get_config_file())
+opts = parser.parse_args()
+
+# Initialize a SimpleClient with these options
+client = co3.get_client(opts)
+
+```
+
 ### Installing the 'co3' module
 
 Current versions of the release package are available on GitHub:
@@ -100,6 +136,34 @@ Install the package file using `pip`:
     pip install resilient_circuits-x.x.x.tar.gz
 
 (the filename will vary according to the current version of this repository).
+
+
+## Certificates
+
+Note that in order to connect to the Resilient server, if the server
+doesn't have a trusted TLS certificate, you must provide the server's
+certificate in a file (e.g. "cacerts.pem").  The quickest way to do this
+is to use either `openssl` or the Java `keytool` command line utilities.
+
+Using openssl to create the cacerts.pem file (using Linux or Mac OS):
+```
+openssl s_client -connect SERVER:443 -showcerts -tls1 < /dev/null > cacerts.pem 2> /dev/null
+```
+
+Using keytool to create the cacerts.pem file (Linux, Mac OS or Windows):
+```
+keytool -printcert -rfc -sslserver SERVER:443 > cacerts.pem
+```
+
+WARNING:  In a production setting, you should take care to get the certificate
+from a trusted source and confirm its fingerprint.
+
+When connecting to a Resilient server with the Python libraries,
+the hostname you specify must match exactly the name in the server
+certificate.  If there is a mismatch, the permanent solution is to either
+change your DNS server or change the server certificate so it matches. It is
+also possible to modify your hosts file temporarily, but that is not a permanent
+solution.
 
 
 ## Resilient API Examples (python/examples directory)

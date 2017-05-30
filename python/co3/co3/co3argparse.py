@@ -8,9 +8,10 @@ import argparse
 import getpass
 if sys.version_info.major == 2:
     from io import open
-    from co3 import ensure_unicode
+    from co3 import ensure_unicode, get_proxy_dict
 else:
-    from co3.co3 import ensure_unicode
+    from co3.co3 import ensure_unicode, get_proxy_dict
+
 import logging
 try:
     # For all python < 3.2
@@ -80,6 +81,10 @@ class ArgumentParser(argparse.ArgumentParser):
         default_org = self.getopt("resilient", "org")
         default_cafile = self.getopt("resilient", "cafile")
         default_cache_ttl = int(self.getopt("resilient", "cache_ttl") or 0)
+        default_proxy_host = self.getopt("resilient", "proxy_host")
+        default_proxy_port = self.getopt("resilient", "proxy_port")
+        default_proxy_user = self.getopt("resilient", "proxy_user")
+        default_proxy_password = self.getopt("resilient", "proxy_password")
 
         self.add_argument("--email",
                           default=default_email,
@@ -122,6 +127,22 @@ class ArgumentParser(argparse.ArgumentParser):
                           type=int,
                           help="TTL for API responses when using co3.cached_get")
 
+        self.add_argument("--proxy_host",
+                          default=default_proxy_host,
+                          help="HTTP Proxy host for Resilient Connection.")
+
+        self.add_argument("--proxy_port",
+                          type=int,
+                          default=default_proxy_port,
+                          help="HTTP Proxy port for Resilient Connection.")
+
+        self.add_argument("--proxy_user",
+                          default=default_proxy_user,
+                          help="HTTP Proxy username for Resilient connection authentication.")
+
+        self.add_argument("--proxy_password",
+                          default=default_proxy_password,
+                          help="HTTP Proxy password for Resilient connection authentication.")
 
     def parse_args(self, args=None, namespace=None):
         args = super(ArgumentParser, self).parse_args(args, namespace)
@@ -134,4 +155,6 @@ class ArgumentParser(argparse.ArgumentParser):
         if args.cafile:
             args.cafile = os.path.expanduser(args.cafile)
 
+        if args.proxy_host:
+            args.proxy = get_proxy_dict(args)
         return args
