@@ -77,7 +77,7 @@ class ComponentLoader(Loader):
                                     **self._init_kwargs).register(self)
                     LOG.info("Loaded installed component %s", component_class.__name__)
                 except Exception as e:
-                    LOG.error("Failed to load installed component %s", component_class.__name__)
+                    LOG.error("Failed to load installed component %s", component_class.__name__, exc_info=1)
                     self.fire(load_all_failure())
 
             if self.path:
