@@ -90,7 +90,7 @@ class ComponentLoader(Loader):
                 component_class(opts=self.opts).register(self)
                 LOG.info("Loaded component %s", component_class.__name__)
             except Exception as e:
-                LOG.error("Failed to load component %s", component_class.__name__)
+                LOG.error("Failed to load component %s", component_class.__name__, exc_info=1)
                 LOG.error(traceback.format_exc())
                 self.fire(load_all_failure())
                 return False
