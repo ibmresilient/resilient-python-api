@@ -69,10 +69,14 @@ def get_client(opts):
         requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
 
+    proxy = None
+    if opts.get("proxy_host"):
+        proxy = get_proxy_dict(opts)
+
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
     simple_client_args = {"org_name": opts.get("org"),
-                          "proxies": opts.get("proxy"),
+                          "proxies": proxy,
                           "base_url": url,
                           "verify": verify}
     if opts.get("log_http_responses"):
@@ -177,6 +181,24 @@ def ensure_unicode(input_value):
     return input_unicode
 
 
+def get_proxy_dict(opts):
+    """ Creates a dictionary with proxy config to be sent to the SimpleClient """
+    scheme = urlparse.urlparse(opts.proxy_host).scheme
+    if not scheme:
+        scheme = 'https'
+        proxy_host = opts.proxy_host
+    else:
+        proxy_host = opts.proxy_host[len(scheme + "://"):]
+
+    if opts.proxy_user and opts.proxy_password:
+        proxy = {'https': '{0}://{1}:{2}@{3}:{4}/'.format(scheme, opts.proxy_user, opts.proxy_password,
+                                                          proxy_host, opts.proxy_port)}
+    else:
+        proxy = {'https': '{0}://{1}:{2}'.format(scheme, proxy_host, opts.proxy_port)}
+
+    return proxy
+
+
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
@@ -196,7 +218,7 @@ class SimpleClient(object):
         self.base_url = u'https://app.resilientsystems.com/'
         self.org_name = ensure_unicode(org_name)
         if proxies:
-            self.proxies = [ensure_unicode(proxy) for proxy in proxies]
+            self.proxies = {ensure_unicode(key): ensure_unicode(proxies[key]) for key in proxies}
         else:
             self.proxies = None
         if base_url:
@@ -313,7 +335,7 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -371,7 +393,7 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           The raw value returned by the server for this resource.
         Raises:
@@ -399,7 +421,7 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -581,7 +603,7 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -606,7 +628,7 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
