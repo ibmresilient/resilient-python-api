@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Circuits events for Stomp Client """
+""" Circuits events for STOMP Client """
 
 import logging
 from circuits import Event
@@ -25,69 +25,81 @@ class StompEvent(Event):
 
         data = self._repr()
 
-        return "<%s[%s] (%s)>" % (self.name, channels, data)
+        return u"<%s[%s] (%s)>" % (self.name, channels, data)
+
 
 class Disconnected(StompEvent):
     def __init__(self, reconnect=True, receipt=None):
         super(Disconnected, self).__init__(receipt=receipt)
-        self.reconnect=reconnect
+        self.reconnect = reconnect
 
 
 class Disconnect(StompEvent):
     pass
 
+
 class Message(StompEvent):
     def __init__(self, frame):
         super(Message, self).__init__(headers=frame.headers,
-                                           message=frame.body)
+                                      message=frame.body)
         self.frame = frame
+
 
 class Send(StompEvent):
     def __init__(self, headers, body, destination):
         super(Send, self).__init__(headers=headers,
-                                        body=body,
-                                        destination=destination)
+                                   body=body,
+                                   destination=destination)
+
 
 class ClientHeartbeat(StompEvent):
     pass
 
+
 class ServerHeartbeat(StompEvent):
     pass
+
 
 class Connect(StompEvent):
     def __init__(self, subscribe=False, host=None):
         super(Connect, self).__init__(host=host)
         self.subscribe = subscribe
 
+
 class Connected(StompEvent):
     pass
 
+
 class ConnectionFailed(StompEvent):
     reconnect = True
+
 
 class OnStompError(StompEvent):
     def __init__(self, frame, err):
         headers = frame.headers if frame else {}
         body = frame.body if frame else None
         super(OnStompError, self).__init__(headers=headers,
-                                              message=body,
-                                              error=err)
+                                           message=body,
+                                           error=err)
         self.frame = frame
 
 class HeartbeatTimeout(StompEvent):
     pass
 
+
 class Subscribe(StompEvent):
     def __init__(self, destination, **kwargs):
         super(Subscribe, self).__init__(destination=destination, **kwargs)
-        self.destination=destination
+        self.destination = destination
+
 
 class Unsubscribe(StompEvent):
     def __init__(self, destination):
         super(Unsubscribe, self).__init__(destination=destination)
-        self.destination=destination
+        self.destination = destination
+
 
 class Ack(StompEvent):
     def __init__(self, frame):
         super(Ack, self).__init__(frame=frame)
-        self.frame=frame
+        self.frame = frame

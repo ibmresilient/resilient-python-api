@@ -405,7 +405,7 @@ class Actions(ResilientComponent):
         # Set a timer to automatically reconnect
         Timer(5, Event.create("reconnect")).register(self)
 
-    @handler("StompErrorEvent")
+    @handler("OnStompError")
     def on_stomp_error(self, headers, message, error):
         """STOMP produced an error."""
         LOG.error('STOMP listener: Error:\n%s', message or error)
@@ -413,7 +413,7 @@ class Actions(ResilientComponent):
         self.fire(Event("exception", "Actions",
                         headers.get("message"), message))
 
-    @handler("MessageEvent")
+    @handler("Message")
     def on_stomp_message(self, event, headers, message):
         """STOMP produced a message."""
         # Find the queue name from the subscription id (stomp_listener_xxx)

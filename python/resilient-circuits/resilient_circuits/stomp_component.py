@@ -66,7 +66,7 @@ class StompClient(BaseComponent):
         if use_ssl:
             uri = "ssl://%s:%s" % (host, port)
         else:
-            uri = "stomp://%s:%s" % (host, port)
+            uri = "tcp://%s:%s" % (host, port)
 
         # Configure failover options so it only tries to connect once
         self._stomp_server = "failover:(%s)?maxReconnectAttempts=1,startupMaxReconnectAttempts=1"  % uri
