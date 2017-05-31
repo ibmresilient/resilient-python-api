@@ -10,11 +10,8 @@ import traceback
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
-import stomp
-from stomp.exception import ConnectFailedException
 from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
-import circuits.six as six
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import co3
 from co3.co3 import ensure_unicode
