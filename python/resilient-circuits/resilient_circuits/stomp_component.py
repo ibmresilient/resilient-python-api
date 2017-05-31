@@ -37,7 +37,7 @@ class StompClient(BaseComponent):
              key_file=None,
              cert_file=None,
              ca_certs=None,
-             ssl_version=ssl.PROTOCOL_TLSv1,
+             ssl_version=ssl.PROTOCOL_SSLv23,  # means 'latest available'
              key_file_password=None,
              proxy_host=None,
              proxy_port=None,
