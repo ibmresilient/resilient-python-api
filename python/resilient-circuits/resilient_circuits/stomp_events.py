@@ -10,6 +10,7 @@ LOG = logging.getLogger(__name__)
 class StompEvent(Event):
     """A Circuits event with less verbose repr"""
     success = True
+
     def _repr(self):
         return ""
 
@@ -82,6 +83,7 @@ class OnStompError(StompEvent):
                                            message=body,
                                            error=err)
         self.frame = frame
+
 
 class HeartbeatTimeout(StompEvent):
     pass
