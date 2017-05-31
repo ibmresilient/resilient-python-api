@@ -74,7 +74,6 @@ setup(
     author='IBM Resilient',
     install_requires=[
         'argparse',
-        'stomp.py>=4.0.12',
         'requests>=2.6.0',
         'requests-toolbelt>=0.6.0',
         'requests-mock>=1.2.0',
