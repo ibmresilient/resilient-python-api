@@ -91,7 +91,6 @@ class StompClient(BaseComponent):
 
     @property
     def connected(self):
-        LOG.debug("STOMP client state '%s'", self._client.session.state)
         if self._client.session:
             return self._client.session.state == StompSession.CONNECTED
         else:
