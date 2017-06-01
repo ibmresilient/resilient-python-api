@@ -552,9 +552,14 @@ class Actions(ResilientComponent):
                 # Defer subscribing until all components are loaded
             LOG.debug("Listeners: %s", self.listeners)
 
-    @handler("load_all_success")
+    @handler("load_all_success", "subscribe_to_all")
     def subscribe_to_queues(self):
         """ Subscribe to all message queues """
+        if not self.stomp_component.connected:
+            yield self.wait("Connected", timeout=30)
+            if not self.stomp_component.connected:
+                LOG.error("Can't subscribe to queues with STOMP disconnected, trying reconnect")
+                self.fire(Event.create("reconnect"))
         for queue_name in self.listeners:
             self._subscribe(queue_name)
 
@@ -636,9 +641,12 @@ class Actions(ResilientComponent):
     @handler("Connect_success")
     def connected_succesfully(self, event, *args, **kwargs):
         """ Connected to stomp, subscribe if required """
+        LOG.debug("Connected successfully. Resubscribe? %s", event.parent.subscribe)
         # This is used to automatically re-subscribe to queues on a reconnect
         if event.parent.subscribe:
-            self.subscribe_to_queues()
+            subscribe_event = Event.create("subscribe_to_all")
+            self.fire(subscribe_event)
+            yield self.wait(subscribe_event)
 
     @handler("Disconnected")
     @handler("ConnectionFailed")
@@ -704,7 +712,9 @@ class Actions(ResilientComponent):
             yield self.wait("Disconnect_success")
             self._setup_stomp()
             yield self.wait("Connect_success")
-            self.subscribe_to_queues()
+            subscribe_event = Event.create("subscribe_to_all")
+            self.fire(subscribe_event)
+            yield self.wait(subscribe_event)
         event.success=True
 
     @handler()
