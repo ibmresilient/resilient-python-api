@@ -421,7 +421,7 @@ class Actions(ResilientComponent):
         queue_name = subscription.split(".", 2)[2]
         channel = "actions." + queue_name
 
-        LOG.info("Got Message: %s", event.frame.info())
+        LOG.debug("Got Message: %s", event.frame.info())
 
         try:
             # Expect the message payload to always be JSON
