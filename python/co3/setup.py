@@ -98,6 +98,7 @@ setup(
     ],
     entry_points={
         'console_scripts': ['finfo = co3.bin.finfo:main',
-                            'gadget = co3.bin.gadget:main']
+                            'gadget = co3.bin.gadget:main',
+                            'res-keyring = co3.bin.res_keyring:main']
     }
 )
