@@ -56,8 +56,10 @@ class ConfigDict(dict):
 def parse_parameters(options):
     """Given a dict that has configuration keys mapped to values,
        - If a value begins with '^', redirect to fetch the value from
-         the secret key stored in the keyring.  The keyring service name is
-         the parent key (or keys, dotted-joined).
+         the secret key stored in the keyring.
+         The keyring service name is always just an underscore
+         (so keys must be unique in the whole options dict)
+       - If a value begins with '$', fetch the value from environment.
 
     >>> opts = {
     ...    "thing": u"value",
@@ -68,7 +70,7 @@ def parse_parameters(options):
     ... }
 
     >>> keyring.set_password("_", "val3", "key3password")
-    >>> keyring.set_password("deep1", "val2", "key2password")
+    >>> keyring.set_password("_", "val2", "key2password")
     >>> os.environ["val4"] = "key4param"
     >>> os.environ["val5"] = "key5param"
 
@@ -106,7 +108,7 @@ def _parse_parameters(names, options):
             val = val[1:]
             service = ".".join(names) or "_"
             LOG.debug("keyring get('%s', '%s')", service, val)
-            val = keyring.get_password(service, val)
+            val = keyring.get_password("_", val)
         if isinstance(val, basestring) and len(val) > 1 and val[0] == "$":
             # Read a value from the environment
             val = val[1:]

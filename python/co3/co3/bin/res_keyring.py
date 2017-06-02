@@ -12,14 +12,23 @@ import logging
 import keyring
 from co3 import get_config_file
 
-if sys.version_info[0] < 3:
-    import ConfigParser as configparser
-else:
+try:
+    # For all python < 3.2
+    from io import open
+    from co3 import ensure_unicode
+    import backports.configparser as configparser
+except ImportError:
+    from co3.co3 import ensure_unicode
     import configparser
-    raw_input = input
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logging.basicConfig()
 
 
 # Main class for util script
@@ -30,11 +39,28 @@ class KeyringUtils(object):
         super(KeyringUtils, self).__init__()
 
         config_file = get_config_file()
-        print(u"Configuration file is {}".format(config_file))
+        print(u"Configuration file: {}".format(config_file))
 
-        config_path = os.path.expanduser(config_file)
-        self.config = configparser.SafeConfigParser()
-        self.config.read(config_path)
+        # Read configuration options.
+        if config_file:
+            config_path = ensure_unicode(config_file)
+            config_path = os.path.expanduser(config_path)
+            if os.path.exists(config_path):
+                try:
+                    self.config = configparser.ConfigParser()
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        first_byte = f.read(1)
+                        if first_byte != u'\ufeff':
+                            # Not a BOM, no need to skip first byte
+                            f.seek(0)
+                        self.config.read_file(f)
+                except Exception as exc:
+                    logger.warn(u"Couldn't read config file '%s': %s", config_path, exc)
+                    self.config = None
+            else:
+                logger.warn(u"Couldn't read config file '%s'", config_file)
+        else:
+            logger.warn(u"Couldn't read config file")
 
     def run(self):
         """
@@ -67,41 +93,57 @@ class KeyringUtils(object):
         return _list_parameters(names, options)
 
 
+def get_input(prompt):
+    if sys.version_info[0] >= 3:
+        return input(prompt)
+    value = raw_input(prompt)
+    return value.decode(sys.stdin.encoding)
+
+
 def _list_parameters(names, options):
-    """Recursively parse parameters, with a tuple of names for keyring context"""
+    """
+    Parse parameters, with a tuple of names for keyring context.
+
+    Given a dict that has configuration keys mapped to values,
+       - If a value begins with '^', redirect to fetch the value from
+         the secret key stored in the keyring.
+         The keyring service name is always just an underscore
+         (so keys must be unique in the whole options dict)
+
+    """
     for key in options.keys():
         val = options[key]
         if isinstance(val, dict):
             val = _list_parameters(names + (key,), val)
             options["__any_secrets__"] = options["__any_secrets__"] or val["__any_secrets__"]
-        if isinstance(val, str) and len(val) > 1 and val[0] == "^":
+        if isinstance(val, basestring) and len(val) > 1 and val[0] == "^":
             # This value is from the keyring
             options["__any_secrets__"] = True
             tag = val
             val = val[1:]
             service = ".".join(names) or "_"
-            LOG.debug("keyring get('%s', '%s')", service, val)
-            value = keyring.get_password(service, val)
+            logger.debug("keyring get('%s', '%s')", service, val)
+            value = keyring.get_password("_", val)
 
             if value is None:
-                print("[{0}] {1}: <not set>".format(",".join(names), key))
+                print("[{0}] {1}: <not set>".format(service, key))
             else:
-                print("[{0}] {1}: {2}".format(",".join(names), key, tag))
+                print("[{0}] {1}: {2}".format(service, key, tag))
 
             newvalue = None
             do_set = True
             while do_set:
-                newvalue = raw_input(u"  Enter new value (or <ENTER> to leave unchanged): ")
+                newvalue = get_input(u"  Enter new value (or <ENTER> to leave unchanged): ")
                 if len(newvalue) == 0:
                     do_set = False
                     break
-                confirm = raw_input(u"  Confirm new value: ")
+                confirm = get_input(u"  Confirm new value: ")
                 if confirm == newvalue:
                     break
                 print(u"Values do not match, try again.")
 
             if do_set:
-                keyring.set_password(service, val, newvalue)
+                keyring.set_password("_", val, newvalue)
                 print(u"Value set.")
 
         options[key] = val
