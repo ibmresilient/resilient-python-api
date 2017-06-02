@@ -6,13 +6,15 @@ import os
 import sys
 import argparse
 import getpass
+import keyring
+import logging
+
 if sys.version_info.major == 2:
     from io import open
     from co3 import ensure_unicode, get_proxy_dict
 else:
     from co3.co3 import ensure_unicode, get_proxy_dict
 
-import logging
 try:
     # For all python < 3.2
     import backports.configparser as configparser
@@ -20,6 +22,25 @@ except ImportError:
     import configparser
 
 logger = logging.getLogger(__name__)
+
+
+class ConfigDict(dict):
+    """A dictionary, with property-based accessor
+
+    >>> opts = {"one": 1}
+    >>> cd = ConfigDict(opts)
+    >>> cd["one"]
+    1
+    >>> cd.one
+    1
+
+    """
+    def __getattr__(self, name):
+        """Attributes are made accessible as properties"""
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError()
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -145,16 +166,95 @@ class ArgumentParser(argparse.ArgumentParser):
                           help="HTTP Proxy password for Resilient connection authentication.")
 
     def parse_args(self, args=None, namespace=None):
+        # Parse the arguments
         args = super(ArgumentParser, self).parse_args(args, namespace)
 
+        # Post-process any options that reference keyring or environment variables
+        opts = parse_parameters(vars(args))
+        args = ConfigDict(opts)
+
+        # Post-processing for other special options
         password = args.password
-        while not password:
+        while (not password) and (not args.no_prompt_password):
             password = getpass.getpass()
-        args.password = ensure_unicode(password)
+        args["password"] = ensure_unicode(password)
 
-        if args.cafile:
-            args.cafile = os.path.expanduser(args.cafile)
+        if args.get("cafile"):
+            args["cafile"] = os.path.expanduser(args.cafile)
 
-        if args.proxy_host:
-            args.proxy = get_proxy_dict(args)
+        if args.get("stomp_cafile"):
+            args["stomp_cafile"] = os.path.expanduser(args.stomp_cafile)
+
+        if args.get("proxy_host"):
+            args["proxy"] = get_proxy_dict(args)
+
         return args
+
+
+def parse_parameters(options):
+    """Given a dict that has configuration keys mapped to values,
+       - If a value begins with '^', redirect to fetch the value from
+         the secret key stored in the keyring.
+         The keyring service name is always just an underscore
+         (so keys must be unique in the whole options dict)
+       - If a value begins with '$', fetch the value from environment.
+
+    >>> opts = {
+    ...    "thing": u"value",
+    ...    "key3": "^val3",
+    ...    "key4": u"$val4",
+    ...    "key5": "$val5",
+    ...    "deep1": {"key1": "val1", "key2": u"^val2"}
+    ... }
+
+    >>> keyring.set_password("_", "val3", "key3password")
+    >>> keyring.set_password("_", "val2", "")
+    >>> keyring.set_password("deep1", "val2", "key2password")
+    >>> os.environ["val4"] = "key4param"
+    >>> os.environ["val5"] = "key5param"
+
+    >>> str(parse_parameters(opts)["key3"])
+    'key3password'
+
+    >>> parse_parameters(opts)["deep1"]["key1"]
+    'val1'
+
+    >>> str(parse_parameters(opts)["deep1"]["key2"])
+    'key2password'
+
+    >>> parse_parameters(opts)["deep1"]["key1"]
+    'val1'
+
+    >>> parse_parameters(opts)["key4"]
+    'key4param'
+
+    >>> parse_parameters(opts)["key5"]
+    'key5param'
+
+    """
+    names = ()
+    return _parse_parameters(names, options)
+
+
+def _parse_parameters(names, options):
+    """Parse parameters, with a tuple of names for keyring context"""
+    for key in options.keys():
+        val = options[key]
+        if isinstance(val, dict):
+            val = _parse_parameters(names + (key,), val)
+        if isinstance(val, basestring) and len(val) > 1 and val[0] == "^":
+            # Decode a secret from the keystore
+            val = val[1:]
+            service = ".".join(names) or "_"
+            if service == "resilient":
+                # Special case, becuase of the way we parse commandlines, treat this as root
+                service = "_"
+            logger.debug("keyring get('%s', '%s')", service, val)
+            val = keyring.get_password(service, val)
+        if isinstance(val, basestring) and len(val) > 1 and val[0] == "$":
+            # Read a value from the environment
+            val = val[1:]
+            logger.debug("env('%s')", val)
+            val = os.environ.get(val)
+        options[key] = val
+    return options

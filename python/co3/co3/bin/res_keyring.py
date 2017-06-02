@@ -122,13 +122,16 @@ def _list_parameters(names, options):
             tag = val
             val = val[1:]
             service = ".".join(names) or "_"
+            if service == "resilient":
+                # Special case, becuase of the way we parse commandlines, treat this as root
+                service = "_"
             logger.debug("keyring get('%s', '%s')", service, val)
-            value = keyring.get_password("_", val)
+            value = keyring.get_password(service, val)
 
             if value is None:
-                print("[{0}] {1}: <not set>".format(service, key))
+                print("[{0}] {1}: <not set>".format(".".join(names) or "_", key))
             else:
-                print("[{0}] {1}: {2}".format(service, key, tag))
+                print("[{0}] {1}: {2}".format(".".join(names) or "_", key, tag))
 
             newvalue = None
             do_set = True
@@ -143,7 +146,7 @@ def _list_parameters(names, options):
                 print(u"Values do not match, try again.")
 
             if do_set:
-                keyring.set_password("_", val, newvalue)
+                keyring.set_password(service, val, newvalue)
                 print(u"Value set.")
 
         options[key] = val

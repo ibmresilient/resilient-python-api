@@ -49,17 +49,6 @@ setup(
         'filelock>=2.0.5',
         'co3>={}.{}'.format(major, minor)
     ],
-    extras_require={
-        ':"Debian" in platform_version': [
-            'keyring<=9.1'  # There is no 'gcc' on Resilient appliance; later versions cause trouble
-        ],
-        ':python_version >= "2.7"': [
-            'keyring'
-        ],
-        ':python_version == "2.6"': [
-            'keyring==5.4'
-        ]
-    },
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
     long_description=long_description,
