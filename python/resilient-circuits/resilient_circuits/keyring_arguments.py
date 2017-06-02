@@ -9,6 +9,11 @@ import os
 import keyring
 import logging
 
+try:
+    basestring
+except NameError:
+    # Python 3
+    basestring = str
 
 LOG = logging.getLogger(__name__)
 
@@ -55,18 +60,35 @@ def parse_parameters(options):
          the parent key (or keys, dotted-joined).
 
     >>> opts = {
-    ...    "thing": "value",
+    ...    "thing": u"value",
     ...    "key3": "^val3",
-    ...    "deep1": {"key1": "val1", "key2": "^val2"}
+    ...    "key4": u"$val4",
+    ...    "key5": "$val5",
+    ...    "deep1": {"key1": "val1", "key2": u"^val2"}
     ... }
 
     >>> keyring.set_password("_", "val3", "key3password")
-    >>> parse_parameters(opts)["key3"]
-    u'key3password'
+    >>> keyring.set_password("deep1", "val2", "key2password")
+    >>> os.environ["val4"] = "key4param"
+    >>> os.environ["val5"] = "key5param"
 
-    >>> keyring.set_password("_.deep1", "val2", "key2password")
-    >>> parse_parameters(opts)["deep1"]["key2"]
-    u'key2password'
+    >>> str(parse_parameters(opts)["key3"])
+    'key3password'
+
+    >>> parse_parameters(opts)["deep1"]["key1"]
+    'val1'
+
+    >>> str(parse_parameters(opts)["deep1"]["key2"])
+    'key2password'
+
+    >>> parse_parameters(opts)["deep1"]["key1"]
+    'val1'
+
+    >>> parse_parameters(opts)["key4"]
+    'key4param'
+
+    >>> parse_parameters(opts)["key5"]
+    'key5param'
 
     """
     names = ()
@@ -79,13 +101,13 @@ def _parse_parameters(names, options):
         val = options[key]
         if isinstance(val, dict):
             val = _parse_parameters(names + (key,), val)
-        if isinstance(val, str) and len(val) > 1 and val[0] == "^":
+        if isinstance(val, basestring) and len(val) > 1 and val[0] == "^":
             # Decode a secret from the keystore
             val = val[1:]
             service = ".".join(names) or "_"
             LOG.debug("keyring get('%s', '%s')", service, val)
             val = keyring.get_password(service, val)
-        if isinstance(val, str) and len(val) > 1 and val[0] == "$":
+        if isinstance(val, basestring) and len(val) > 1 and val[0] == "$":
             # Read a value from the environment
             val = val[1:]
             LOG.debug("env('%s')", val)

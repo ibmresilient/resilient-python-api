@@ -151,7 +151,7 @@ class StompClient(BaseComponent):
                                  versions=self._accept_versions,
                                  connectTimeout=self._connect_timeout,
                                  connectedTimeout=self._connected_timeout)
-            LOG.info("State after Connection Attempt: %s", self._client.session.state)
+            LOG.debug("State after Connection Attempt: %s", self._client.session.state)
             if self.connected:
                 LOG.info("Connected to %s", self._stomp_server)
                 self.fire(Connected())
@@ -180,7 +180,6 @@ class StompClient(BaseComponent):
             self.fire(HeartbeatTimeout())
             if self.connected:
                 self._client.disconnect()
-            # TODO: Try to auto-reconnect?
 
     @handler("ClientHeartbeat")
     def send_heartbeat(self, event):

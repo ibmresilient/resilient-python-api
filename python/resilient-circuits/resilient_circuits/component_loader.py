@@ -77,6 +77,11 @@ class ComponentLoader(Loader):
                             LOG.debug("Loading %s", cname)
                             self.pending_components.append(cname)
                             self.fire(load(cname))
+        if not self.pending_components:
+            # No components from directory, we are done loading
+            self.finished = True
+            self.fire(load_all_success())
+
     def discover_installed_components(self):
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
         return [ep.load() for ep in entry_points if ep.name not in self.noload]
