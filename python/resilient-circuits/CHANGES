@@ -1,3 +1,21 @@
+2017-06-05: version 28.xx
+
+Change the STOMP protocol implementation from 'stomp.py' to 'stompest' library,
+     with a significant refactoring, for better reliabilty and maintainability.
+Add support for STOMP connections via proxy server.
+Add a dependency on 'stompest' and 'pysocks' packages
+Name unnamed actions, e.g. those initiated from v28 workflow, as '_unnamed_'
+Defer subscribing to queues until all components have loaded
+Fix a problem with international characters in 'get_action_field_label()'
+Fix a problem with international characters in status messages and exceptions
+Change to the 'app_restartable' functionality to remove a memory leak and streamline.
+     Instead of fully unloading and reloading components on configuration file changes,
+     Components are instead sent a 'reload' event.
+Update the file_lookup example to handle the reload event
+co3: Move the keyring and env argument parser from resilient_circuits into co3,
+     so all config files can make use of '^xxx' (keyring) and '$xxx' (environment) values
+
+
 2017-04-27: version 27.1.22
 
 Remove 'dist', instead releases are available on https://github.com/Co3Systems/co3-api/releases
