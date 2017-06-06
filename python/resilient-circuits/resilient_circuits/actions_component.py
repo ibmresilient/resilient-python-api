@@ -334,26 +334,16 @@ class Actions(ResilientComponent):
     def __init__(self, opts):
         super(Actions, self).__init__(opts)
         self.listeners = dict()
-
-        # Set options for connecting to Action Module with HTTP Proxy
         self._proxy_args = {}
-        proxy_host = opts.get("proxy_host")
-        if proxy_host:
-            proxy_host = proxy_host.replace("http://", "").replace("https://", "")
-            self._proxy_args = {"proxy_host": proxy_host,
-                                "proxy_port": opts.get("proxy_port"),
-                                "proxy_user": opts.get("proxy_user"),
-                                "proxy_password": opts.get("proxy_password")}
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
         self.reconnect_stomp = True
-        rest_client = self.rest_client()
-        self.org_id = rest_client.org_id
-        list_action_defs = rest_client.get("/actions")["entities"]
-        self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+        self.org_id = None
+        self.action_defs = dict()
         self.stomp_component = None
         self.logging_directory = None
+        self._configure_opts(opts)
 
         if opts.get("test_actions", False):
             # Let user submit test actions from the command line for testing
@@ -366,6 +356,25 @@ class Actions(ResilientComponent):
                 test_options["host"] = opts["test_host"]
             actions_test_component.ResilientTestActions(self.org_id,
                                                         **test_options).register(self)
+
+    def _configure_opts(self, opts):
+        """ Handle settings from configuration """
+        # Set options for connecting to Action Module with HTTP Proxy
+        self._proxy_args = {}
+        proxy_host = opts.get("proxy_host")
+        if proxy_host:
+            proxy_host = proxy_host.replace("http://", "").replace("https://", "")
+            self._proxy_args = {"proxy_host": proxy_host,
+                                "proxy_port": opts.get("proxy_port"),
+                                "proxy_user": opts.get("proxy_user"),
+                                "proxy_password": opts.get("proxy_password")}
+
+        rest_client = self.rest_client()
+        self.org_id = rest_client.org_id
+
+        list_action_defs = rest_client.get("/actions")["entities"]
+        self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+
 
     # Public Utility methods
 
@@ -707,6 +716,7 @@ class Actions(ResilientComponent):
         """New config, reconnect to stomp if required"""
         event.success = False
         super(Actions, self).reload(event, opts)
+        self._configure_opts(opts)
         if self.stomp_component:
             self.fire(Disconnect())
             yield self.wait("Disconnect_success")
