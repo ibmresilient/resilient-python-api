@@ -83,6 +83,16 @@ setup(
     extras_require={
         ':python_version < "3.2"': [
             'configparser'
+        ],
+        ':"Debian" in platform_version': [
+            'keyring<=9.1'
+            # There is no 'gcc' on Resilient appliance; later versions cause trouble
+        ],
+        ':python_version >= "2.7"': [
+            'keyring'
+        ],
+        ':python_version == "2.6"': [
+            'keyring==5.4'
         ]
     },
     tests_require=["pytest", ],
@@ -98,6 +108,7 @@ setup(
     ],
     entry_points={
         'console_scripts': ['finfo = co3.bin.finfo:main',
-                            'gadget = co3.bin.gadget:main']
+                            'gadget = co3.bin.gadget:main',
+                            'res-keyring = co3.bin.res_keyring:main']
     }
 )
