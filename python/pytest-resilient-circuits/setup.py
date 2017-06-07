@@ -11,7 +11,7 @@ def read_version_number():
 
 version = read_version_number()
 
-major, minor, _ = version.split('.', 2)
+major, minor = version.split('.', 2)[:2]
 
 requirements = [
     'pytest>=3.0.0',
