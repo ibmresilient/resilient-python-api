@@ -103,7 +103,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_cafile = self.getopt("resilient", "cafile")
         default_cache_ttl = int(self.getopt("resilient", "cache_ttl") or 0)
         default_proxy_host = self.getopt("resilient", "proxy_host")
-        default_proxy_port = self.getopt("resilient", "proxy_port")
+        default_proxy_port = self.getopt("resilient", "proxy_port") or 0
         default_proxy_user = self.getopt("resilient", "proxy_user")
         default_proxy_password = self.getopt("resilient", "proxy_password")
 
