@@ -616,7 +616,7 @@ class Actions(ResilientComponent):
             destination="actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination))
         else:
-            LOG.error("Invalid reqest to subscribe to %s in state Connected? [%s] with %d listeners",
+            LOG.error("Invalid request to subscribe to %s in state Connected? [%s] with %d listeners",
                       queue_name,
                       self.stomp_component.connected if self.stomp_component else "NO COMPONENT",
                       len(self.listeners[queue_name]))
