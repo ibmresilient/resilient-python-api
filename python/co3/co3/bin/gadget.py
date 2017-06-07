@@ -154,26 +154,26 @@ def main():
     # Create SimpleClient for a REST connection to the Resilient services
     client = resilient.get_client(opts)
 
-    if opts.create:
-        create_incident(client, opts.create, opts.attach)
+    if opts["create"]:
+        create_incident(client, opts["create"], opts["attach"])
 
-    if opts.list:
-        show_incident_list(client, opts.query)
+    if opts["list"]:
+        show_incident_list(client, opts["query"])
 
-    if opts.get:
-        generic_get(client, opts.get)
+    if opts["get"]:
+        generic_get(client, opts["get"])
 
-    if opts.post:
-        generic_post(client, opts.post[0], opts.post[1])
+    if opts["post"]:
+        generic_post(client, opts["post"][0], opts["post"][1])
 
-    if opts.update:
-        generic_update(client, opts.update[0], opts.update[1])
+    if opts["update"]:
+        generic_update(client, opts["update"][0], opts["update"][1])
 
-    if opts.delete:
-        generic_delete(client, opts.delete)
+    if opts["delete"]:
+        generic_delete(client, opts["delete"])
 
-    if opts.search:
-        generic_search(client, opts.search)
+    if opts["search"]:
+        generic_search(client, opts["search"])
 
 if __name__ == "__main__":
     main()
