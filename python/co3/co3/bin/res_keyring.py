@@ -11,6 +11,7 @@ import os
 import logging
 import keyring
 from co3 import get_config_file
+from six import string_types
 
 try:
     # For all python < 3.2
@@ -20,11 +21,6 @@ try:
 except ImportError:
     from co3.co3 import ensure_unicode
     import configparser
-
-try:
-    basestring
-except NameError:
-    basestring = str
 
 
 logger = logging.getLogger(__name__)
@@ -116,7 +112,7 @@ def _list_parameters(names, options):
         if isinstance(val, dict):
             val = _list_parameters(names + (key,), val)
             options["__any_secrets__"] = options["__any_secrets__"] or val["__any_secrets__"]
-        if isinstance(val, basestring) and len(val) > 1 and val[0] == "^":
+        if isinstance(val, string_types) and len(val) > 1 and val[0] == "^":
             # This value is from the keyring
             options["__any_secrets__"] = True
             tag = val
