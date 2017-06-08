@@ -8,16 +8,6 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-
-def read(*filenames, **kwargs):
-    encoding = kwargs.get('encoding', 'utf-8')
-    sep = kwargs.get('sep', '\n')
-    buf = []
-    for filename in filenames:
-        with io.open(filename, encoding=encoding) as f:
-            buf.append(f.read())
-    return sep.join(buf)
-
 # Pull the version number from the version.txt file.
 #
 def read_version_number():
@@ -30,7 +20,6 @@ version = read_version_number()
 
 major, minor = version.split('.', 2)[:2]
 
-long_description = read('README')
 setup(
     name='resilient_circuits',
     version=version,
@@ -50,7 +39,6 @@ setup(
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
-    long_description=long_description,
     packages=find_packages(),
     include_package_data=True,
     platforms='any',
