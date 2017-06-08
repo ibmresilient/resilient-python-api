@@ -12,7 +12,7 @@
 # itself to ensure that the version is properly processed.
 #
 
-readonly major_minor=27.1
+readonly major_minor=28.0
 
 readonly mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
