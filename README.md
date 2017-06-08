@@ -52,9 +52,7 @@ The following subdirectories exist within that directory:
   the Python examples.
 * `examples/rest` - Examples showing how you can use the Resilient REST API
   with Python.
-* `examples/actions` - Examples showing how to use the Resilient Action Module
-  with Python.
-* `examples/actions-circuits` - Examples showing how to use the Resilient Action
+* `examples/action-module` - Examples showing how to use the Resilient Action
   Module with Python, leveraging the `resilient_circuits` application framework
   to make development simpler and more robust.
 * `examples/custom-threat-service` - Examples showing how to implement a
@@ -81,23 +79,9 @@ See the [Python README](python/README.md) for further details.
 
 ***Where can I find a Python example that just uses the REST API?***
 
-There is such an example in `python/examples/rest/gadget/gadget.py`.
+There is such an example in `python/examples/rest/gadget`.
 This tool is useful for exploring the REST API because it allows you to
 generally GET/PUT/POST/DELETE to the Resilient server.
-
-***Where can I find a very basic Python Action Module example?***
-
-There is a basic example in `python/examples/actions/simple/basic.py`.
-This example implements a command line interface that allows you to watch a
-queue/topic.  It simply prints to the console when a message is received.
-It also replies to the server with a "Processing complete" completion message.
-
-***Where can I find a Python Action Module example that connects back to the
-Resilient server using the REST API?***
-
-There is such an example in `python/examples/actions/simple/advanced.py`.
-This example builds on basic.py (mentioned above).  It connects back to the
-Resilient server to append to the incident's description.
 
 ***What is Circuits?***
 

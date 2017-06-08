@@ -1,9 +1,10 @@
-# Python Examples (python directory)
+# Python API Packages
 
 This directory contains
 
  * [co3](co3), the Resilient Python Client Module for the Resilient APIs,
- * [resilient_circuits](resilient_circuits), an application framework for Action Module,
+ * [resilient_circuits](resilient-circuits), an application framework for Action Module,
+ * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures, 
  * and [examples](examples) for the Resilient REST API and Resilient Action Module.
 
 
@@ -44,6 +45,40 @@ password=passw0rd
 org=Culture
 ```
 
+__Configuration Values From Keystore__  
+   Values in the config file can be pulled from a compatible keystore system
+   on your OS.  To retrieve a value from a keystore, set it to ^\<key\>  
+   
+Example from app.confg:  
+```
+[resilient]
+password=^resilient_password
+```
+
+__Adding the Values to Keystore__  
+  The co3 package includes a utility to add all of the keystore-based values from 
+  your app.config file to your system's compatible  keystore system.  Once you have 
+  created the keys in your app.config file, run `res-keyring` and you will be 
+  prompted to create the secure values to store.  
+  
+  ```
+  bash-3.2$ res-keyring 
+  Configuration file: /Users/kchurch/.resilient/app.config
+  Secrets are stored with 'keyring.backends.OS_X'
+  [resilient] password: <not set>
+  Enter new value (or <ENTER> to leave unchanged): 
+  ```
+  
+__Configuration Values From Environment__  
+  Values in your config file can also be pulled from environment variables.
+  To retrieve a value from the environment, set it to $\<key\>  
+
+Example from app.confg:  
+```
+[resilient]
+password=$resilient_password
+```
+
 A standard way to initialize a SimpleClient with this configuration is,
 
 ```
@@ -75,7 +110,7 @@ You can build release package files locally, by
 
     bash ./buildall.sh <version_number>
 
-where <version_number> is an optional build number (1, 2, etc).
+where <version_number> is a build number (1, 2, etc).
 
 
 ## Action Module Application Framework
@@ -85,9 +120,10 @@ is a very lightweight component-based framework for writing applications
 that respond to Action Module events.
 
 It provides an extensible "application" class that loads any Python files
-in the application's `components` directory. For each of these components,
-it automatically subscribes to the appropriate Action Module message
-destination (queue or topic), and dispatches messages to the relevant method.
+in the application's `components` directory as well as any installed 
+compatible packages. For each of these components, it automatically subscribes 
+to the appropriate Action Module message destination (queue or topic), and 
+dispatches messages to the relevant method.
 
 The framework manages the connection to the Action Module, including any
 reconnection after a network outage.  It also manages acknowledgement of
@@ -97,6 +133,7 @@ To develop a component, you simply subclass the `ResilientComponent` class.
 This superclass includes several utility functions that provide convenient
 access to the REST API and action message data.
 
+Examples can be found [examples/action-modules](here).
 
 ### Installing the 'resilient_circuits' module
 
