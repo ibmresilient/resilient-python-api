@@ -47,26 +47,37 @@ org=Culture
 
 __Configuration Values From Keystore__  
    Values in the config file can be pulled from a compatible keystore system
-   on your OS.  To retrieve a value from a keystore, set it to ^\<key\>
+   on your OS.  To retrieve a value from a keystore, set it to ^\<key\>  
    
-Example from app.confg:
+Example from app.confg:  
 ```
 [resilient]
-password=^api_user@example.com
+password=^resilient_password
 ```
 
 __Adding the Values to Keystore__  
-  * __*Preferred Method*__: The co3 package includes a utility to add all of the
-   keystore-based values from your app.config file to your system's compatible 
-   keystore system.  Once you have created the keys in your app.config file,
-   run `res-keyring` and you will be prompted to create the secure values to store.
-   
-   * __*Manual Method*__: You can add the values to your operating system's keystore 
-   system manually.  In your keystore system, associate the values to site "_".  
-   Example from Windows Credential Manager:  
+  The co3 package includes a utility to add all of the keystore-based values from 
+  your app.config file to your system's compatible  keystore system.  Once you have 
+  created the keys in your app.config file, run `res-keyring` and you will be 
+  prompted to create the secure values to store.  
+  
+  ```
+  bash-3.2$ res-keyring 
+  Configuration file: /Users/kchurch/.resilient/app.config
+  Secrets are stored with 'keyring.backends.OS_X'
+  [resilient] password: <not set>
+  Enter new value (or <ENTER> to leave unchanged): 
+  ```
+  
+__Configuration Values From Environment__  
+  Values in your config file can also be pulled from environment variables.
+  To retrieve a value from the environment, set it to $\<key\>  
 
-![Windows Credential Manager](documents/windows_credential_manager.png "Windows Credential Manager")
-
+Example from app.confg:  
+```
+[resilient]
+password=$resilient_password
+```
 
 A standard way to initialize a SimpleClient with this configuration is,
 
