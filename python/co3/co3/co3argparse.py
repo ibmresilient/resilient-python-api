@@ -8,6 +8,7 @@ import argparse
 import getpass
 import keyring
 import logging
+from six import string_types
 
 if sys.version_info.major == 2:
     from io import open
@@ -242,7 +243,7 @@ def _parse_parameters(names, options):
         val = options[key]
         if isinstance(val, dict):
             val = _parse_parameters(names + (key,), val)
-        if isinstance(val, basestring) and len(val) > 1 and val[0] == "^":
+        if isinstance(val, string_types) and len(val) > 1 and val[0] == "^":
             # Decode a secret from the keystore
             val = val[1:]
             service = ".".join(names) or "_"
@@ -251,7 +252,7 @@ def _parse_parameters(names, options):
                 service = "_"
             logger.debug("keyring get('%s', '%s')", service, val)
             val = keyring.get_password(service, val)
-        if isinstance(val, basestring) and len(val) > 1 and val[0] == "$":
+        if isinstance(val, string_types) and len(val) > 1 and val[0] == "$":
             # Read a value from the environment
             val = val[1:]
             logger.debug("env('%s')", val)
