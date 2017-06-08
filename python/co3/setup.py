@@ -12,16 +12,6 @@ from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
 major_minor_version = "28.0"
-
-def read(*filenames, **kwargs):
-    encoding = kwargs.get('encoding', 'utf-8')
-    sep = kwargs.get('sep', '\n')
-    buf = []
-    for filename in filenames:
-        with io.open(filename, encoding=encoding) as f:
-            buf.append(f.read())
-    return sep.join(buf)
-
 #
 def read_version_number():
     path = os.path.join(os.path.dirname(__file__), "co3", "version.txt")
@@ -30,9 +20,6 @@ def read_version_number():
     return ver.strip()
 
 version = read_version_number()
-
-long_description = read('README')
-
 
 class PyTest(TestCommand):
     user_options = [('configfile=', 'c', "Resilient Config File for co3argparse"),
@@ -99,7 +86,7 @@ setup(
     cmdclass={"test": PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',
-    long_description=long_description,
+    long_description='Resilient API',
     packages=find_packages(), # packages=['co3'],
     include_package_data=True,
     platforms='any',
