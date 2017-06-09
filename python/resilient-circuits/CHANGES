@@ -4,6 +4,7 @@ Change the STOMP protocol implementation from 'stomp.py' to 'stompest' library,
      with a significant refactoring, for better reliabilty and maintainability.
 Add support for STOMP connections via proxy server.
 Add a dependency on 'stompest' and 'pysocks' packages
+Remove old 'stomp.py'-based examples
 Name unnamed actions, e.g. those initiated from v28 workflow, as '_unnamed_'
 Defer subscribing to queues until all components have loaded
 Fix a problem with international characters in 'get_action_field_label()'
