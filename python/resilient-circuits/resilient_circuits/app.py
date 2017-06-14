@@ -22,10 +22,6 @@ from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
 
 
-def log(log_level):
-    logging.getLogger().setLevel(log_level)
-
-
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
@@ -40,6 +36,11 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self):
+        # Temporary logging handler until the real one is created later
+        temp_handler = logging.StreamHandler()
+        temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
+        temp_handler.setLevel(logging.INFO)
+        logging.getLogger().addHandler(temp_handler)
         config_file = resilient.get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
 
@@ -66,6 +67,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_test_port = self.getopt("resilient", "test_port") or None
         default_log_responses = self.getopt("resilient",
                                             "log_http_responses") or ""
+        logging.getLogger().removeHandler(temp_handler)
 
         self.add_argument("--stomp-port",
                           type=int,
@@ -169,7 +171,7 @@ class App(Component):
         LOG.info("Resilient server: %s", self.opts.get("host"))
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
-
+        LOG.info("Logging Level: %s", self.opts.get("loglevel"))
         if self.opts.get("test_actions", False):
             # Make all components aware that we are in test mode
             ResilientComponent.test_mode = True
@@ -185,7 +187,11 @@ class App(Component):
         if self.auto_load_components:
             LOG.info("Components auto-load directory: %s",
                      self.opts["componentsdir"])
-            self.component_loader = ComponentLoader(self.opts)
+            if not self.component_loader:
+                self.component_loader = ComponentLoader(self.opts)
+            else:
+                LOG.info("Updating and re-registering ComponentLoader")
+                self.component_loader.opts = self.opts
             self.component_loader.register(self)
 
     def config_logging(self, logdir, loglevel, logfile):
@@ -207,10 +213,6 @@ class App(Component):
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             self += Debugger()
-            logging.getLogger("stomp.py").setLevel(logging.DEBUG)
-        else:
-            # STOMP is too noisy by default
-            logging.getLogger("stomp.py").setLevel(logging.WARN)
 
         file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000,
                                            backupCount=10)

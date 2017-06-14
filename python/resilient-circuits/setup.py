@@ -8,16 +8,6 @@ import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-
-def read(*filenames, **kwargs):
-    encoding = kwargs.get('encoding', 'utf-8')
-    sep = kwargs.get('sep', '\n')
-    buf = []
-    for filename in filenames:
-        with io.open(filename, encoding=encoding) as f:
-            buf.append(f.read())
-    return sep.join(buf)
-
 # Pull the version number from the version.txt file.
 #
 def read_version_number():
@@ -28,9 +18,7 @@ def read_version_number():
 
 version = read_version_number()
 
-major, minor, _ = version.split('.', 2)
-
-long_description = read('README')
+major, minor = version.split('.', 2)[:2]
 
 setup(
     name='resilient_circuits',
@@ -40,28 +28,17 @@ setup(
 
     author='IBM Resilient',
     install_requires=[
-        'stomp.py>=4.0.12',
+        'stompest>=2.3.0',
         'requests>=2.6.0',
         'circuits',
         'pytz',
         'jinja2',
+        'pysocks',
         'filelock>=2.0.5',
         'co3>={}.{}'.format(major, minor)
     ],
-    extras_require={
-        ':"Debian" in platform_version': [
-            'keyring<=9.1'  # There is no 'gcc' on Resilient appliance; later versions cause trouble
-        ],
-        ':python_version >= "2.7"': [
-            'keyring'
-        ],
-        ':python_version == "2.6"': [
-            'keyring==5.4'
-        ]
-    },
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
-    long_description=long_description,
     packages=find_packages(),
     include_package_data=True,
     platforms='any',
