@@ -1,7 +1,7 @@
-2017-06-05: version 28.xx
+2017-06-14: version 28.0.30
 
 Change the STOMP protocol implementation from 'stomp.py' to 'stompest' library,
-     with a significant refactoring, for better reliabilty and maintainability.
+     with a significant refactoring, for better reliability and maintainability.
 Add support for STOMP connections via proxy server.
 Add a dependency on 'stompest' and 'pysocks' packages
 Remove old 'stomp.py'-based examples

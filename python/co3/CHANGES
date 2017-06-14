@@ -1,4 +1,4 @@
-2017-06-xx: version 28.xx
+2017-06-14: version 28.0.30
 
 co3: Add get_const() to get the ConstREST endpoint
 co3: Add search() to post to the SearchExREST endpoint (only for v28+ servers)
