@@ -23,9 +23,15 @@ class irms_svc(win32serviceutil.ServiceFramework):
     _svc_display_name_ = SERVICE_DISPLAY_NAME
     process_handle = None
 
-    def __init__(self, args):
+    def __init__(self, args, res_circuits_args):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.isAlive = True
+
+        self.res_circuits_args = res_circuits_args
+
+    @classmethod
+    def setExeArgs(cls, arg_string):
+        self._exe_args_ = arg_string
 
     def SvcDoRun(self):
         import servicemanager
