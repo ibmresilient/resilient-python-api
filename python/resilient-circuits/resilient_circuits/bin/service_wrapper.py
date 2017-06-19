@@ -11,6 +11,7 @@ import win32job
 import subprocess
 import os
 import signal
+import shlex
 
 SERVICE_NAME = "RESIL_SVC"
 SERVICE_DISPLAY_NAME = "Resilient Circuits"
@@ -22,6 +23,7 @@ class irms_svc(win32serviceutil.ServiceFramework):
     _svc_name_ = SERVICE_NAME
     _svc_display_name_ = SERVICE_DISPLAY_NAME
     process_handle = None
+    _resilient_args_ = ""
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -39,7 +41,9 @@ class irms_svc(win32serviceutil.ServiceFramework):
             extended_info = win32job.QueryInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation)
             extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             win32job.SetInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
-            self.process_handle = subprocess.Popen(("resilient-circuits.exe", "run " + self._resilient_args_))
+            command = "resilient-circuits.exe run " + self._resilient_args_
+            command_args = shlex.split(command)
+            self.process_handle = subprocess.Popen(command_args)
             # Convert process id to process handle:
             perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
             hProcess = win32api.OpenProcess(perms, False, self.process_handle.pid)
