@@ -39,7 +39,7 @@ def windows_service(service_args, res_circuits_args):
 
         if res_circuits_args:
             # Set the command line arguments to pass to "resilient-circuits.exe run"
-            service_wrapper.irms_svc.setExeArgs(res_circuits_args)
+            service_wrapper.irms_svc.setResilientArgs(res_circuits_args)
 
         sys.argv=sys.argv[0:1] + service_args
         win32serviceutil.HandleCommandLine(service_wrapper.irms_svc)

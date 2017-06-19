@@ -28,8 +28,8 @@ class irms_svc(win32serviceutil.ServiceFramework):
         self.isAlive = True
 
     @classmethod
-    def setExeArgs(cls, arg_string):
-        cls._exe_args_ = arg_string
+    def setResilientArgs(cls, arg_string):
+        cls._resilient_args_ = arg_string
 
     def SvcDoRun(self):
         import servicemanager
@@ -39,7 +39,7 @@ class irms_svc(win32serviceutil.ServiceFramework):
             extended_info = win32job.QueryInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation)
             extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             win32job.SetInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
-            self.process_handle = subprocess.Popen(("resilient-circuits.exe", "run"))
+            self.process_handle = subprocess.Popen(("resilient-circuits.exe", "run " + self._resilient_args_))
             # Convert process id to process handle:
             perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
             hProcess = win32api.OpenProcess(perms, False, self.process_handle.pid)
