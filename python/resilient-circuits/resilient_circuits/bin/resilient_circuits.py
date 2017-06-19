@@ -56,7 +56,7 @@ def manage_service(service_args, res_circuits_args):
     else:
         supervisor_service(service_args, res_circuits_args)
 
-def run(resilient_circuits_args, restartable=False):
+def run(resilient_circuits_args, restartable=False, config_file=None):
     """Run resilient-circuits"""
     # Leave only the arguments for the run command
     if restartable:
@@ -65,7 +65,10 @@ def run(resilient_circuits_args, restartable=False):
     else:
         from resilient_circuits import app
     sys.argv=sys.argv[0:1] + resilient_circuits_args
-    app.run()
+    kwargs = {}
+    if config_file:
+        kwargs = {"config_file": config_file}
+    app.run(**kwargs)
 
 def list_installed():
     """print list of installed packages with their components"""
