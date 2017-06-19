@@ -161,17 +161,14 @@ class App(Component):
         self.action_component = None
         self.component_loader = None
         self.auto_load_components = auto_load_components
-
-        # optionally use a specific config file
-        self.config_file = config_file
-
+        self.config_file = config_file or resilient.get_config_file()
         self.do_initialization()
 
     def do_initialization(self):
         self.opts = AppArgumentParser(config_file=self.config_file).parse_args()
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
-        LOG.info("Configuration file: %s", resilient.get_config_file())
+        LOG.info("Configuration file: %s", self.config_file)
         LOG.info("Resilient server: %s", self.opts.get("host"))
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))

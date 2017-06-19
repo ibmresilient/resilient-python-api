@@ -206,7 +206,6 @@ def main():
                             action="store_true")
     run_parser.add_argument("--config-file",
                             help="Pull configuration from specified file",
-                            action="store",
                             default=None)
     run_parser.add_argument("resilient_circuits_args", help="Args to pass to app.run", nargs=argparse.REMAINDER)
 
