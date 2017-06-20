@@ -31,7 +31,9 @@ class irms_svc(win32serviceutil.ServiceFramework):
 
     @classmethod
     def setResilientArgs(cls, arg_string):
+        """args to pass to resilient-circuits.exe run.  Feature does not work yet"""
         cls._resilient_args_ = arg_string
+        # TODO: Store these somwhere permanent (registry?) and the reload them when running
 
     def SvcDoRun(self):
         import servicemanager
