@@ -675,7 +675,7 @@ class Actions(ResilientComponent):
                 message = u"Processing failed"
             if _traceback and isinstance(traceback, list):
                 message = message + "\n" + ("".join(_traceback))
-            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
+            LOG.exception(u"%s (%s): %s", repr(fevent), repr(etype), message)
             if fevent and isinstance(fevent, ActionMessage):
                 fevent.stop()  # Stop further event processing
                 status = 1

@@ -17,6 +17,7 @@ import os
 import filelock
 from circuits import Component, Debugger
 import co3 as resilient
+from co3.co3argparse import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
@@ -136,7 +137,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         if self.config:
             for section in self.config.sections():
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
-                opts.update({section: items})
+                opts.update({section: parse_parameters(items)})
         return opts
 
     @staticmethod
