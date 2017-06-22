@@ -82,7 +82,7 @@ class ArgumentParser(argparse.ArgumentParser):
             config_path = os.path.expanduser(config_path)
             if os.path.exists(config_path):
                 try:
-                    self.config = configparser.ConfigParser()
+                    self.config = configparser.ConfigParser(interpolation=None)
                     with open(config_path, 'r', encoding='utf-8') as f:
                         first_byte = f.read(1)
                         if first_byte != u'\ufeff':

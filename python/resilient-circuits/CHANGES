@@ -1,3 +1,7 @@
+2017-06-22: version 28.0.33
+
+co3: disable the ConfigParser '%' interpolation feature
+
 2017-06-14: version 28.0.30
 
 Change the STOMP protocol implementation from 'stomp.py' to 'stompest' library,

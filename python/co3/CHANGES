@@ -1,3 +1,7 @@
+2017-06-22: version 28.0.33
+
+co3: disable the ConfigParser '%' interpolation feature
+
 2017-06-14: version 28.0.30
 
 co3: Add get_const() to get the ConstREST endpoint
