@@ -134,7 +134,7 @@ def generate_or_update_config(args):
 
     else:
         # Update existing file
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(interpolation=None)
         updated = False
         with open(config_filename, "r", encoding="utf-8") as config_file:
             first_byte = config_file.read(1)
@@ -146,7 +146,7 @@ def generate_or_update_config(args):
 
         with open(config_filename, "a", encoding="utf-8") as config_file:
             for config_data in [func() for func  in discover_required_config_sections()]:
-                required_config = configparser.ConfigParser()
+                required_config = configparser.ConfigParser(interpolation=None)
                 LOG.debug("Config Data String:\n%s", config_data)
                 required_config.read_string(unicode(config_data))
                 new_section = required_config.sections()[0]
