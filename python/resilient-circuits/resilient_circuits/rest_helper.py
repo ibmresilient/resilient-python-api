@@ -35,4 +35,5 @@ def get_resilient_client(opts):
     if resilient_client:
         return resilient_client
 
-    return co3.get_client(opts)
+    resilient_client = co3.get_client(opts)
+    return resilient_client
