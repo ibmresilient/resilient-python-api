@@ -87,3 +87,9 @@ DELETE a comment/note from an incident:
 ```
 $ gadget --delete /incidents/12345/comments/510
 ```
+
+UPDATE an incident using the settings defined in [incident\_update\_template.json](incident\_update\_template.json):  
+```
+$ gadget --update /incidents/12345 incident_update_template.json
+```
+
