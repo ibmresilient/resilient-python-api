@@ -452,12 +452,12 @@ class SimpleClient(object):
           A dictionary corresponding to a PatchDTO
         Raises:
           ValueError: existing_object or update_dict are invalid or incompatible
-          KeyError: update_dict has a field not present in existing_object
         """
-        patch = {"changes": [],
-                 "version": existing_object["vers"]}
+        patch = {"changes": []}
+        if "vers" in existing_object:
+            patch["version"] = existing_object["vers"]
         for key, new_value in update_dict.items():
-            old_value = existing_object[key]
+            old_value = existing_object.get(key)
             update = {"field": {"name": key},
                       "old_value": {"object": old_value},
                       "new_value": {"object": new_value}
@@ -465,7 +465,7 @@ class SimpleClient(object):
             patch["changes"].append(update)
         return patch
 
-    def patch(self, uri, patch_dto, co3_context_token=None, timeout=None, ignore_conflict=False):
+    def patch(self, uri, patch_dto, co3_context_token=None, timeout=None, overwrite_conflict=False):
         """
         PATCH request to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -477,7 +477,7 @@ class SimpleClient(object):
            patch_dto: PatchDTO to apply
            co3_context_token
           timeout: number of seconds to wait for response
-          ignore_conflict: use update_dict values even if incident has changed
+          overwrite_conflict: use update_dict values even if incident has changed
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
@@ -485,20 +485,22 @@ class SimpleClient(object):
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(patch_dto)
+        hdrs = {"handle_format": "names"}
         response = self._execute_request(self.session.patch,
                                          url,
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
+                                         headers=self.__make_headers(co3_context_token,
+                                                                     additional_headers=hdrs),
                                          verify=self.verify,
                                          timeout=timeout)
 
-        response_json = response.json()
+        response_json = response.json() or {}
         message = response_json.get("message", "") or ""
         # Conflicts return a 200 wtih success: false
-        if ignore_conflict and ((response.status_code == 409) or
-                                (response.status_code == 200 and "conflicting edit" in message)):
+        if overwrite_conflict and ((response.status_code == 409) or
+                                (response.status_code == 200 and "field_failures" in response_json)):
             # There was a conflict, but we don't care and want to try again
             LOG.info("Retrying PATCH after conflict: %s", message)
             get_response = self._execute_request(self.session.get,
@@ -513,13 +515,12 @@ class SimpleClient(object):
             return self.patch(uri, patch_dto,
                               co3_context_token=co3_context_token,
                               timeout=timeout,
-                              ignore_conflict=ignore_conflict)
+                              overwrite_conflict=overwrite_conflict)
 
-        _raise_if_error(response)
-        if response_json["success"] is False:
-            raise SimpleHTTPException(response)
+        if (response.status_code == 200 and response_json.get("success", False)):
+            return response_json
 
-        return response_json
+        raise SimpleHTTPException(response)
 
     def _get_patch(self, uri, update_func, co3_context_token=None, timeout=None,
                    existing_object=None, raise_on_conflict=True):
@@ -549,27 +550,29 @@ class SimpleClient(object):
             return payload
         patch = self.create_patch(payload, update_dict)
         payload_json = json.dumps(patch)
+        hdrs = {"handle_format": "names"}
         response = self._execute_request(self.session.patch,
                                          url,
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
+                                         headers=self.__make_headers(co3_context_token,
+                                                                     additional_headers=hdrs),
                                          verify=self.verify,
                                          timeout=timeout)
 
-        response_json = response.json()
+        response_json = response.json() or {}
         message = response_json.get("message", "") or ""
         if ((response.status_code == 409) or
-            (response.status_code == 200 and "conflicting edit" in message)):
+            (response.status_code == 200 and "field_failures" in response_json)):
             if raise_on_conflict:
                 raise SimpleHTTPException(response)
             else:
+                LOG.debug(json.dumps(response_json, indent=2))
                 return None
-        elif response.status_code == 200:
+        elif response.status_code == 200 and response_json.get("success", False):
             return response_json
-        _raise_if_error(response)
-        return None
+        raise SimpleHTTPException(response)
 
     def get_patch(self, uri, update_func, co3_context_token=None, timeout=None, existing_object=None, retry_on_conflict=False):
         """Performs a get, calls update_func on the returned value, then calls self.patch.

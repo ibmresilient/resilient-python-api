@@ -57,8 +57,8 @@ class TestCo3Patch:
         inc = client.post("/incidents", incident)
         return inc
 
-    @pytest.mark.parametrize("ignore_conflict", (True, False))
-    def test_patch_conflict(self, co3_args, ignore_conflict):
+    @pytest.mark.parametrize("overwrite_conflict", (True, False))
+    def test_patch_conflict(self, co3_args, overwrite_conflict):
         """ do incident patch that results in conflict """
         client = self._connect(co3_args)
         inc = self._create_incident(client, {"name": "test"})
@@ -68,14 +68,14 @@ class TestCo3Patch:
         patch = client.create_patch(inc, {"name": "test updated"})
         patch["version"] = patch["version"] - 1 # Force it to check old_value
         try:
-            response = client.patch(uri, patch, ignore_conflict=ignore_conflict)
-            assert(ignore_conflict)
+            response = client.patch(uri, patch, overwrite_conflict=overwrite_conflict)
+            assert(overwrite_conflict)
             assert response["success"] is True
             inc = client.get("/incidents/%d" % inc['id'])
             assert inc['name'] == "test updated"
 
         except co3.co3.SimpleHTTPException as e:
-            assert(not ignore_conflict)
+            assert(not overwrite_conflict)
             fail_msg = "could not be applied due to a conflicting edit by another user.  The following field(s) were in conflict:  name."
             assert fail_msg in e.response.json()["message"]
 
@@ -85,11 +85,34 @@ class TestCo3Patch:
         inc = self._create_incident(client, {"name": "test"})
         uri = "/incidents/%d" % inc['id']
         patch = client.create_patch(inc, {"name": "test updated"})
-        response = client.patch(uri, patch, ignore_conflict=False)
+        response = client.patch(uri, patch, overwrite_conflict=False)
         assert response["success"] is True
         inc = client.get("/incidents/%d" % inc['id'])
         assert inc['name'] == "test updated"
 
+    @pytest.mark.parametrize("existing", ("yes", "no", "partial"))
+    def test_get_patch_without_existing(self, co3_args, existing):
+        """get_patch with missing or incomplete existing_obj"""
+        def get_update_dict(inc):
+            return {"name": "test updated"}
+
+        client = self._connect(co3_args)
+        inc = self._create_incident(client, {"name": "test"})
+        uri = "/incidents/%d" % inc['id']
+        if existing == "no":
+            existing_object = None
+        else:
+            existing_object = inc
+        if existing == "partial":
+            # Remove the parts we'd be checking
+            existing_object.pop("vers")
+            existing_object.pop("name")
+
+        response = client.get_patch(uri, get_update_dict, existing_object=existing_object,
+                                    retry_on_conflict=True)
+        assert response["success"] is True
+        inc = client.get("/incidents/%d" % inc['id'])
+        assert inc['name'] == "test updated"
 
     @pytest.mark.parametrize("conflict_retry", (True, False))
     def test_get_patch_conflict(self, co3_args, conflict_retry):
