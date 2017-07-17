@@ -409,9 +409,9 @@ class Actions(ResilientComponent):
     @handler("HeartbeatTimeout")
     def on_heartbeat_timeout(self):
         """Heartbeat timed out from the STOMP server"""
-        LOG.info("STOMP heartbeat timeout!")
-        # Set a timer to automatically reconnect
-        Timer(5, Event.create("reconnect")).register(self)
+        LOG.error("Reconnecting after STOMP heartbeat timeout.")
+        # Disconnect and Reconnect
+        self.fire(Disconnect(flush=False, reconnect=True))
 
     @handler("OnStompError")
     def on_stomp_error(self, headers, message, error):
@@ -523,7 +523,7 @@ class Actions(ResilientComponent):
 
         # Other special options
         self.ignore_message_failure = self.opts["resilient"].get("ignore_message_failure") == "1"
-        self.reconnect(subscribe=False)
+        self.fire(Event.create("reconnect", subscribe=False))
 
     def _setup_message_logging(self):
         """ Store action message logging option """
@@ -629,21 +629,27 @@ class Actions(ResilientComponent):
             destination="actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Unsubscribe(destination))
 
-    def disconnect(self):
+    def disconnect(self, reconnect=False, flush=True):
         """disconnect stomp connection"""
         if self.stomp_component:
-            self.fire(Disconnect())
+            self.fire(Disconnect(reconnect=reconnect, flush=flush))
 
     @handler("reconnect")
-    def reconnect(self, subscribe=True):
+    def _reconnect(self, subscribe=True):
         """Try (re)connect to the STOMP server"""
         if self.resilient_mock:
             return
-        if self.stomp_component and self.stomp_component.connected:
-            LOG.warn("STOMP reconnect requested when already connected")
+        if self.stomp_component and self.stomp_component.connected and self.stomp_component.socket_connected:
+            LOG.info("STOMP reconnect requested when already connected")
         elif self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
         else:
+            if self.stomp_component.socket_connected:
+                LOG.warn("Disconnecting socket before Connect attempt")
+                disconnect_event = Disconnect(reconnect=False, flush=False)
+                self.fire(disconnect_event)
+                yield self.wait(disconnect_event)
+
             LOG.info("STOMP attempting to connect")
             self.fire(Connect(subscribe=subscribe))
 
@@ -718,7 +724,7 @@ class Actions(ResilientComponent):
         super(Actions, self).reload(event, opts)
         self._configure_opts(opts)
         if self.stomp_component:
-            self.fire(Disconnect())
+            self.fire(Disconnect(flush=True, reconnect=False))
             yield self.wait("Disconnect_success")
             self._setup_stomp()
             yield self.wait("Connect_success")
