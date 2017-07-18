@@ -343,6 +343,7 @@ class Actions(ResilientComponent):
         self.action_defs = dict()
         self.stomp_component = None
         self.logging_directory = None
+        self.subscribe_headers = None
         self._configure_opts(opts)
 
         if opts.get("test_actions", False):
@@ -375,6 +376,7 @@ class Actions(ResilientComponent):
         list_action_defs = rest_client.get("/actions")["entities"]
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
 
+        self.subscribe_headers = {"activemq.prefetchSize": opts["stomp_prefetch_limit"]}
 
     # Public Utility methods
 
@@ -614,7 +616,7 @@ class Actions(ResilientComponent):
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
             LOG.info("Subscribe to message destination '%s'", queue_name)
             destination="actions.{0}.{1}".format(self.org_id, queue_name)
-            self.fire(Subscribe(destination))
+            self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))
         else:
             LOG.error("Invalid request to subscribe to %s in state Connected? [%s] with %d listeners",
                       queue_name,

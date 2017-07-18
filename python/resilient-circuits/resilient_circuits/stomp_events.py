@@ -92,8 +92,8 @@ class HeartbeatTimeout(StompEvent):
 
 
 class Subscribe(StompEvent):
-    def __init__(self, destination, **kwargs):
-        super(Subscribe, self).__init__(destination=destination, **kwargs)
+    def __init__(self, destination, additional_headers=None, **kwargs):
+        super(Subscribe, self).__init__(destination=destination, additional_headers=additional_headers, **kwargs)
         self.destination = destination
 
 

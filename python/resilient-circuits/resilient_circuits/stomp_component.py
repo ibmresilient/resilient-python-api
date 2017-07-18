@@ -237,15 +237,19 @@ class StompClient(BaseComponent):
             self.fire(OnStompError(None, err))
 
     @handler("Subscribe")
-    def _subscribe(self, event, destination, ack=ACK_CLIENT_INDIVIDUAL):
+    def _subscribe(self, event, destination, additional_headers=None, ack=ACK_CLIENT_INDIVIDUAL):
         if ack not in ACK_MODES:
             raise ValueError("Invalid client ack mode specified")
         LOG.info("Subscribe to message destination %s", destination)
         try:
+            headers = {StompSpec.ACK_HEADER: ack,
+                       'id': destination}
+            if additional_headers:
+                headers.update(additional_headers)
+
             # Set ID to match destination name for easy reference later
             frame, token = self._client.subscribe(destination,
-                                                  headers={StompSpec.ACK_HEADER: ack,
-                                                           'id': destination})
+                                                  headers)
             self._subscribed[destination] = token
         except (StompConnectionError, StompError) as err:
             LOG.error("Failed to subscribe to queue.")
