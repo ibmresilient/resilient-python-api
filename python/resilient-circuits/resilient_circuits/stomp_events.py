@@ -36,6 +36,8 @@ class Disconnected(StompEvent):
 
 
 class Disconnect(StompEvent):
+    def __init__(self, reconnect=False, flush=True, receipt=None):
+        super(Disconnect, self).__init__(receipt=receipt, reconnect=reconnect, flush=flush)
     pass
 
 
