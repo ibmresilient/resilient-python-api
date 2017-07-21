@@ -97,7 +97,7 @@ client = co3.get_client(opts)
 ### Installing the 'co3' module
 
 Current versions of the release package are available on GitHub:
-https://github.com/Co3Systems/co3-api/releases
+https://github.ibm.com/Resilient/resilient-api/releases
 
 
 Install the package file using `pip`:
@@ -138,7 +138,7 @@ Examples can be found [examples/action-modules](here).
 ### Installing the 'resilient_circuits' module
 
 Current versions of the release package are available on GitHub:
-https://github.com/Co3Systems/co3-api/releases
+https://github.ibm.com/Resilient/resilient-api/releases
 
 Install the package file using `pip`:
 
