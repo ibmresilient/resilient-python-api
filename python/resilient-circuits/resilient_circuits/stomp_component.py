@@ -216,6 +216,8 @@ class StompClient(BaseComponent):
                 frame = self._client.receiveFrame()
                 LOG.debug("Recieved frame %s", frame)
                 self.fire(Message(frame))
+            else:
+                event.reduce_time_left(0)
         except (StompConnectionError, StompError) as err:
             LOG.error("Failed attempt to generate events.")
             self.fire(OnStompError(None, err))
