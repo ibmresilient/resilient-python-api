@@ -212,7 +212,7 @@ class StompClient(BaseComponent):
         if not self.connected:
             return
         try:
-            if self._client.canRead(1):
+            if self._client.canRead(0):
                 frame = self._client.receiveFrame()
                 LOG.debug("Recieved frame %s", frame)
                 self.fire(Message(frame))
