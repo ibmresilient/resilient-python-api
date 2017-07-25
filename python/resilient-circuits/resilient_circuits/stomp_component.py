@@ -191,7 +191,6 @@ class StompClient(BaseComponent):
             elapsed = now-self.last_heartbeat
         else:
             elapsed = -1
-        LOG.debug("Last received data %d seconds ago", elapsed)
         if ((self._client.serverHeartBeat / 1000.0) * self.ALLOWANCE + self.last_heartbeat) < now:
             LOG.error("Server heartbeat timeout. %d seconds since last heartbeat.", elapsed)
             event.success = False
@@ -225,11 +224,6 @@ class StompClient(BaseComponent):
     @handler("Send")
     def send(self, event, destination, body, headers=None, receipt=None):
         LOG.debug("send()")
-        if not self.connected:
-            LOG.error("Can't send when Stomp is disconnected")
-            self.fire(OnStompError(None, Exception("Message send attempted with stomp disconnected")))
-            event.success = False
-            return
         try:
             self._client.send(destination, body=body.encode('utf-8'), headers=headers, receipt=receipt)
             LOG.debug("Message sent")
@@ -237,6 +231,7 @@ class StompClient(BaseComponent):
             LOG.error("Error sending frame")
             event.success = False
             self.fire(OnStompError(None, err))
+            raise # To fire Send_failure event
 
     @handler("Subscribe")
     def _subscribe(self, event, destination, additional_headers=None, ack=ACK_CLIENT_INDIVIDUAL):
@@ -275,7 +270,7 @@ class StompClient(BaseComponent):
 
     @handler("Message")
     def on_message(self, event, headers, message):
-        LOG.info("Stomp message received")
+        LOG.debug("Stomp message received")
 
     @handler("Ack")
     def ack_frame(self, event, frame):
@@ -287,6 +282,7 @@ class StompClient(BaseComponent):
             LOG.error("Error sending ack")
             event.success = False
             self.fire(OnStompError(frame, err))
+            raise # To fire Ack_failure event
 
     def get_subscription(self, frame):
         """ Get subscription from frame """
