@@ -237,6 +237,8 @@ class StompClient(BaseComponent):
     def _subscribe(self, event, destination, additional_headers=None, ack=ACK_CLIENT_INDIVIDUAL):
         if ack not in ACK_MODES:
             raise ValueError("Invalid client ack mode specified")
+        if destination in self._client.session._subscriptions:
+            LOG.debug("Ignoring subscribe request to %s. Already subscribed.", destination)
         LOG.info("Subscribe to message destination %s", destination)
         try:
             headers = {StompSpec.ACK_HEADER: ack,
