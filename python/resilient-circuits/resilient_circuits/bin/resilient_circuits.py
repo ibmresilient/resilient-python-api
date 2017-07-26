@@ -32,10 +32,14 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
-def windows_service(service_args):
+def windows_service(service_args, res_circuits_args):
     try:
         import win32serviceutil
         from resilient_circuits.bin import service_wrapper
+
+        if res_circuits_args:
+            # Set the command line arguments to pass to "resilient-circuits.exe run"
+            service_wrapper.irms_svc.setResilientArgs(res_circuits_args)
 
         sys.argv=sys.argv[0:1] + service_args
         win32serviceutil.HandleCommandLine(service_wrapper.irms_svc)
@@ -46,13 +50,13 @@ def windows_service(service_args):
 def supervisor_service():
     pass
 
-def manage_service(service_args):
+def manage_service(service_args, res_circuits_args):
     if os.name == 'nt':
-        windows_service(service_args)
+        windows_service(service_args, res_circuits_args)
     else:
-        supervisor_service(service_args)
+        supervisor_service(service_args, res_circuits_args)
 
-def run(resilient_circuits_args, restartable=False):
+def run(resilient_circuits_args, restartable=False, config_file=None):
     """Run resilient-circuits"""
     # Leave only the arguments for the run command
     if restartable:
@@ -61,7 +65,10 @@ def run(resilient_circuits_args, restartable=False):
     else:
         from resilient_circuits import app
     sys.argv=sys.argv[0:1] + resilient_circuits_args
-    app.run()
+    kwargs = {}
+    if config_file:
+        kwargs = {"config_file": config_file}
+    app.run(**kwargs)
 
 def list_installed():
     """print list of installed packages with their components"""
@@ -197,8 +204,16 @@ def main():
     run_parser.add_argument("-r", "--auto-restart",
                             help="Automatically restart all components if config file changes",
                             action="store_true")
+    run_parser.add_argument("--config-file",
+                            help="Pull configuration from specified file",
+                            default=None)
     run_parser.add_argument("resilient_circuits_args", help="Args to pass to app.run", nargs=argparse.REMAINDER)
 
+
+    service_parser.add_argument("--res-circuits-args",
+                                help="Arguments to pass to resilient-circuits.exe run command",
+                                action="store",
+                                default="")
     service_parser.add_argument("service_args", help="Args to pass to service manager", nargs=argparse.REMAINDER)
 
     args, unknown_args = parser.parse_known_args()
@@ -214,11 +229,13 @@ def main():
         generate_or_update_config(args)
     elif args.cmd == "run":
         run(unknown_args + args.resilient_circuits_args,
-            restartable=args.auto_restart)
+            restartable=args.auto_restart,
+            config_file=args.config_file)
     elif args.cmd == "list":
         list_installed()
     elif args.cmd == "service":
-        manage_service(unknown_args + args.service_args)
+        manage_service(unknown_args + args.service_args,
+                       args.res_circuits_args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")

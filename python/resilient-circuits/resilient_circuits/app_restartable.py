@@ -29,12 +29,15 @@ class reload(Event):
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
-    patterns = ["*" + os.path.basename(resilient.get_config_file()), ]
 
     def __init__(self, app):
         super(ConfigFileUpdateHandler, self).__init__()
         self.app = app
         self.max_reload_time = 30
+
+    @classmethod
+    def set_patterns(cls, config_file):
+        cls.patterns = ["*" + os.path.basename(config_file),]
 
     def on_modified(self, event):
         """ reload data from config file and restart components """
@@ -58,15 +61,16 @@ class AppRestartable(App):
         super(AppRestartable, self).__init__(*args, **kwargs)
         self.reloading = False
         self.reload_timer = None
+        self.observer = None
 
     def do_initialize_watchdog(self):
         """Initialize the configuration file watchdog"""
-
         # Monitor the configuration file, using a Watchdog observer daemon.
         LOG.info("Monitoring config file for changes.")
+        ConfigFileUpdateHandler.set_patterns(self.config_file)
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
-        config_dir = os.path.dirname(resilient.get_config_file())
+        config_dir = os.path.dirname(self.config_file)
         if not config_dir:
             config_dir = os.getcwd()
         self.observer.schedule(event_handler, path=config_dir, recursive=False)

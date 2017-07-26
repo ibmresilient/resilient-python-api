@@ -36,13 +36,13 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_LOG_FILE = 'app.log'
     DEFAULT_NO_PROMPT_PASS = "False"
 
-    def __init__(self):
+    def __init__(self, config_file=None):
         # Temporary logging handler until the real one is created later
         temp_handler = logging.StreamHandler()
         temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
         temp_handler.setLevel(logging.INFO)
         logging.getLogger().addHandler(temp_handler)
-        config_file = resilient.get_config_file()
+        config_file = config_file or resilient.get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
 
         default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
@@ -156,19 +156,20 @@ class App(Component):
     SYSLOG_LOG_FORMAT = '%(module)s: %(levelname)s %(message)s'
     STDERR_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] %(message)s'
 
-    def __init__(self, auto_load_components=True):
+    def __init__(self, auto_load_components=True, config_file=None):
         super(App, self).__init__()
         # Read the configuration options
         self.action_component = None
         self.component_loader = None
         self.auto_load_components = auto_load_components
+        self.config_file = config_file or resilient.get_config_file()
         self.do_initialization()
 
     def do_initialization(self):
-        self.opts = AppArgumentParser().parse_args()
+        self.opts = AppArgumentParser(config_file=self.config_file).parse_args()
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
-        LOG.info("Configuration file: %s", resilient.get_config_file())
+        LOG.info("Configuration file: %s", self.config_file)
         LOG.info("Resilient server: %s", self.opts.get("host"))
         LOG.info("Resilient user: %s", self.opts.get("email"))
         LOG.info("Resilient org: %s", self.opts.get("org"))
