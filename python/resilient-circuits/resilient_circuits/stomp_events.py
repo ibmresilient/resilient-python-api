@@ -49,7 +49,12 @@ class Message(StompEvent):
 
 
 class Send(StompEvent):
-    def __init__(self, headers, body, destination):
+    failure = True
+    def __init__(self, headers, body, destination, message_id=None):
+        self.headers = headers
+        self.body = body
+        self.destination = destination
+        self.message_id = message_id
         super(Send, self).__init__(headers=headers,
                                    body=body,
                                    destination=destination)
@@ -92,8 +97,8 @@ class HeartbeatTimeout(StompEvent):
 
 
 class Subscribe(StompEvent):
-    def __init__(self, destination, **kwargs):
-        super(Subscribe, self).__init__(destination=destination, **kwargs)
+    def __init__(self, destination, additional_headers=None, **kwargs):
+        super(Subscribe, self).__init__(destination=destination, additional_headers=additional_headers, **kwargs)
         self.destination = destination
 
 
@@ -104,6 +109,8 @@ class Unsubscribe(StompEvent):
 
 
 class Ack(StompEvent):
-    def __init__(self, frame):
+    failure = True
+    def __init__(self, frame, message_id=None):
         super(Ack, self).__init__(frame=frame)
         self.frame = frame
+        self.message_id = message_id

@@ -107,6 +107,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_proxy_port = self.getopt("resilient", "proxy_port") or 0
         default_proxy_user = self.getopt("resilient", "proxy_user")
         default_proxy_password = self.getopt("resilient", "proxy_password")
+        default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or 20)
 
         self.add_argument("--email",
                           default=default_email,
@@ -165,6 +166,11 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument("--proxy_password",
                           default=default_proxy_password,
                           help="HTTP Proxy password for Resilient connection authentication.")
+
+        self.add_argument("--stomp-prefetch-limit",
+                          default=default_stomp_prefetch_limit,
+                          type=int,
+                          help="MAX number of Action Module messages to send before ACK is required")
 
     def parse_args(self, args=None, namespace=None):
         # Parse the arguments
