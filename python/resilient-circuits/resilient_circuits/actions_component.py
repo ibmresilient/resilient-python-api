@@ -443,8 +443,11 @@ class Actions(ResilientComponent):
     def on_stomp_message(self, event, headers, message):
         """STOMP produced a message."""
         # Find the queue name from the subscription id (stomp_listener_xxx)
-        msg_id = event.frame.headers["message-id"]
-        if msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
+        msg_id = event.frame.headers.get("message-id")
+        if not msg_id:
+            LOG.error("Received message with no message id. %s", event.frame.info())
+            raise ValueError("Stomp message with no message id received")
+        elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
             # Don't process it again, just ackknowledge it
             LOG.info("Skipping reprocess of message %s.  Sending saved ack now.", msg_id)
@@ -723,7 +726,7 @@ class Actions(ResilientComponent):
                 status = 1
                 headers = fevent.hdr()
                 # Ack the message
-                message_id = headers['message-id']
+                message_id = headers.get('message-id')
                 if not fevent.test and self.stomp_component:
                     self.fire(Ack(fevent.frame, message_id=message_id))
                     LOG.debug("Ack %s", message_id)
@@ -866,7 +869,7 @@ class Actions(ResilientComponent):
                 status = 0
                 headers = fevent.hdr()
                 # Ack the message
-                message_id = headers['message-id']
+                message_id = headers.get('message-id', None)
                 if not fevent.test:
                     LOG.debug("Ack %s", message_id)
                     self.fire(Ack(fevent.frame, message_id=message_id))

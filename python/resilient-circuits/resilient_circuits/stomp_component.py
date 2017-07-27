@@ -214,7 +214,10 @@ class StompClient(BaseComponent):
             if self._client.canRead(0):
                 frame = self._client.receiveFrame()
                 LOG.debug("Recieved frame %s", frame)
-                self.fire(Message(frame))
+                if frame.command == StompSpec.ERROR:
+                    self.fire(OnStompError(frame, None))
+                else:
+                    self.fire(Message(frame))
             else:
                 event.reduce_time_left(0)
         except (StompConnectionError, StompError) as err:
