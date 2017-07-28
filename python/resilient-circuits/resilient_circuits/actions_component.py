@@ -603,6 +603,8 @@ class Actions(ResilientComponent):
     @handler("load_all_success", "subscribe_to_all")
     def subscribe_to_queues(self):
         """ Subscribe to all message queues """
+        if not self.stomp_component:
+            return
         if not self.stomp_component.connected:
             yield self.wait("Connected", timeout=30)
             if not self.stomp_component.connected:
@@ -803,6 +805,9 @@ class Actions(ResilientComponent):
     @handler("retry_failed_deliveries")
     def _retry_send_failures(self, event):
         """retry all messages in the delivery_failures dict that are from the current session"""
+        if not self.stomp_component:
+            # Retries not applicable, probably using a mocked appliance
+            return
         if not self.stomp_component.connected:
             LOG.info("Skipping retry of any failed messages because STOMP connection is down")
             return
