@@ -40,10 +40,10 @@ class FileLookupComponent(ResilientComponent):
     @handler("reload")
     def reload_options(self, event, opts):
         """Configuration options have changed, save new values"""
-        LOG.info("Storing updated values from section [%s]"CONFIG_DATA_SECTION)
+        LOG.info("Storing updated values from section [%s]", CONFIG_DATA_SECTION)
         self.options = opts.get(CONFIG_DATA_SECTION, {})
 
-    @handler("file_lookup")
+    @handler("lookup_value")
     def _lookup_action(self, event, *args, **kwargs):
         """The @handler() annotation without an event name makes this
            a default handler - for all events on this component's queue.
