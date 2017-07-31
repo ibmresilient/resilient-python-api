@@ -7,4 +7,5 @@ __version__ = resource_string(__name__, "version.txt").strip()
 from .co3 import SimpleClient, get_client, get_config_file
 from .co3argparse import ArgumentParser
 from .co3sslutil import match_hostname
+from .patch import Patch
 

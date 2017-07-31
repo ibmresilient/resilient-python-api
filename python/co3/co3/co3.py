@@ -441,31 +441,57 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def create_patch(self, existing_object, update_dict):
-        """
-        Convert an incident/task/etc and an update dict into a PatchDTO object
-        This is a helper for using the patch and patch_fields methods.
-        Args:
-          existing_object: dict for an existing incident/task/artifact/etc
-          update_dict: dict with field updates for the existing_object
-        Returns:
-          A dictionary corresponding to a PatchDTO
-        Raises:
-          ValueError: existing_object or update_dict are invalid or incompatible
-        """
-        patch = {"changes": []}
-        if "vers" in existing_object:
-            patch["version"] = existing_object["vers"]
-        for key, new_value in update_dict.items():
-            old_value = existing_object.get(key)
-            update = {"field": {"name": key},
-                      "old_value": {"object": old_value},
-                      "new_value": {"object": new_value}
-            }
-            patch["changes"].append(update)
-        return patch
+    def _patch(self, uri, patch, co3_context_token=None, timeout=None):
+        """Internal method used to call the underlying server patch endpoint"""
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        if hasattr(patch, "to_dict") and callable(getattr(patch, "to_dict")):
+            payload_json = json.dumps(patch.to_dict())
+        else:
+            payload_json = json.dumps(patch)
 
-    def patch(self, uri, patch_dto, co3_context_token=None, timeout=None, overwrite_conflict=False):
+        hdrs = {"handle_format": "names"}
+        response = self._execute_request(self.session.patch,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token,
+                                                                     additional_headers=hdrs),
+                                         verify=self.verify,
+                                         timeout=timeout)
+
+        return response
+
+    @staticmethod
+    def _handle_patch_response(response, patch, overwrite_conflict):
+        """Helper to determine if a patch retry is needed.  Will only return True if the server responds with a
+        409 or if the patch apply failed with field failures and the caller asked to overwrite conflicts."""
+        if response.status_code == 409:
+            # Just retry again, no adjustments.  The server can return 409 if there is a DB-level conflict.
+            LOG.info("Retrying patch unchanged due to server CONFLICT")
+            return True
+
+        if response.status_code == 200:
+            patch_status = response.json()
+
+            LOG.debug(patch_status)
+
+            if not patch_status["success"] and overwrite_conflict and "field_failures" in patch_status:
+                LOG.info("Patch conflict detected, but overwrite_conflict specified - preparing for overwrite")
+
+                # Got conflicts and caller wants to overwrite them, so make adjustments to the
+                # patch to force the overwrite.
+                patch.update_for_overwrite(patch_status)
+
+                return True
+
+        _raise_if_error(response)
+
+        # Don't want to retry and got a 200 response.  There may or may not be field_failures.
+        # Handling that is now up to the caller of the patch method.
+        return False
+
+    def patch(self, uri, patch, co3_context_token=None, timeout=None, overwrite_conflict=False):
         """
         PATCH request to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -473,138 +499,24 @@ class SimpleClient(object):
 
             https://app.resilientsystems.com/rest/orgs/201/incidents
         Args:
-           uri
-           patch_dto: PatchDTO to apply
-           co3_context_token
-          timeout: number of seconds to wait for response
-          overwrite_conflict: use update_dict values even if incident has changed
+            uri: the URI on which patch is to be invoked
+            patch: Patch object to apply
+            co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+            a CAF message processor.
+            timeout: number of seconds to wait for response
+          overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
+          object will be modified if necessary.
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           SimpleHTTPException - if an HTTP exception or patch conflict occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        payload_json = json.dumps(patch_dto)
-        hdrs = {"handle_format": "names"}
-        response = self._execute_request(self.session.patch,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token,
-                                                                     additional_headers=hdrs),
-                                         verify=self.verify,
-                                         timeout=timeout)
+        response = self._patch(uri, patch, co3_context_token, timeout)
 
-        response_json = response.json() or {}
-        message = response_json.get("message", "") or ""
-        # Conflicts return a 200 wtih success: false
-        if overwrite_conflict and ((response.status_code == 409) or
-                                (response.status_code == 200 and "field_failures" in response_json)):
-            # There was a conflict, but we don't care and want to try again
-            LOG.info("Retrying PATCH after conflict: %s", message)
-            get_response = self._execute_request(self.session.get,
-                                                 url,
-                                                 proxies=self.proxies,
-                                                 cookies=self.cookies,
-                                                 headers=self.__make_headers(co3_context_token),
-                                                 verify=self.verify,
-                                                 timeout=timeout)
-            _raise_if_error(get_response)
-            patch_dto["version"] = get_response.json()["vers"]
-            return self.patch(uri, patch_dto,
-                              co3_context_token=co3_context_token,
-                              timeout=timeout,
-                              overwrite_conflict=overwrite_conflict)
+        while self._handle_patch_response(response, patch, overwrite_conflict):
+            response = self._patch(uri, patch, co3_context_token, timeout)
 
-        if (response.status_code == 200 and response_json.get("success", False)):
-            return response_json
-
-        raise SimpleHTTPException(response)
-
-    def _get_patch(self, uri, update_func, co3_context_token=None, timeout=None,
-                   existing_object=None, raise_on_conflict=True):
-        """Internal helper to do a get/update/patch loop
-        (for situations where the patch might return a 409/conflict status)
-        """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        if existing_object:
-            payload = existing_object
-        else:
-            response = self._execute_request(self.session.get,
-                                             url,
-                                             proxies=self.proxies,
-                                             cookies=self.cookies,
-                                             headers=self.__make_headers(co3_context_token),
-                                             verify=self.verify,
-                                             timeout=timeout)
-            _raise_if_error(response)
-            payload = json.loads(response.text)
-        try:
-            update_dict = update_func(payload)
-            if not update_dict:
-                # No Fields to Patch..
-                return payload
-        except NoChange:
-            # No Fields to Patch..
-            return payload
-        patch = self.create_patch(payload, update_dict)
-        payload_json = json.dumps(patch)
-        hdrs = {"handle_format": "names"}
-        response = self._execute_request(self.session.patch,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token,
-                                                                     additional_headers=hdrs),
-                                         verify=self.verify,
-                                         timeout=timeout)
-
-        response_json = response.json() or {}
-        message = response_json.get("message", "") or ""
-        if ((response.status_code == 409) or
-            (response.status_code == 200 and "field_failures" in response_json)):
-            if raise_on_conflict:
-                raise SimpleHTTPException(response)
-            else:
-                LOG.debug(json.dumps(response_json, indent=2))
-                return None
-        elif response.status_code == 200 and response_json.get("success", False):
-            return response_json
-        raise SimpleHTTPException(response)
-
-    def get_patch(self, uri, update_func, co3_context_token=None, timeout=None, existing_object=None, retry_on_conflict=False):
-        """Performs a get, calls update_func on the returned value, then calls self.patch.
-
-        Args:
-          uri - the URI to use.  Note that this is expected to be relative to the org.
-          apply_func - a function to call on the object returned by get.  This should return
-          a dict of field updates
-          co3_context_token - the Co3ContextToken from a CAF message (if the caller is
-          a CAF message processor.)
-          timeout - number of seconds to wait for response
-          existing_object - Use this as the initial object and skip the GET
-          retry_on_conflict - Retry if "conflicting edit" message or 409 error occurs
-        Returns;
-          The object returned by the PATCH operation (converted from JSON to a Python dict).
-        Raises:
-          SimpleHTTPException - if an HTTP exception or patch conflict occurs.
-        """
-        starting_object = existing_object
-        while True:
-            obj = self._get_patch(uri, update_func, co3_context_token=co3_context_token,
-                                  timeout=timeout,
-                                  existing_object=starting_object,
-                                  raise_on_conflict=not retry_on_conflict)
-            if obj:
-                return obj
-            elif not retry_on_conflict:
-                break
-            else:
-                # We had a conflict, need to do a new GET to get current version of object
-                starting_object = None
-        return None
+        return response.json()
 
     def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
         """

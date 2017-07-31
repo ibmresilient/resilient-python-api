@@ -1,5 +1,4 @@
 from __future__ import print_function
-import argparse
 import pytest
 import doctest
 import time
@@ -65,90 +64,33 @@ class TestCo3Patch:
         uri = "/incidents/%d" % inc['id']
         # Create a conflict
         inc["name"] = "the wrong value"
-        patch = client.create_patch(inc, {"name": "test updated"})
-        patch["version"] = patch["version"] - 1 # Force it to check old_value
-        try:
-            response = client.patch(uri, patch, overwrite_conflict=overwrite_conflict)
-            assert(overwrite_conflict)
-            assert response["success"] is True
-            inc = client.get("/incidents/%d" % inc['id'])
-            assert inc['name'] == "test updated"
+        inc["vers"] -= 1 # Force it to check old_value
+        patch = co3.Patch(inc)
+        patch.add_value("name", "test updated")
 
-        except co3.co3.SimpleHTTPException as e:
-            assert(not overwrite_conflict)
+        response = client.patch(uri, patch, overwrite_conflict=overwrite_conflict)
+
+        assert response["success"] is overwrite_conflict
+
+        inc = client.get("/incidents/%d" % inc['id'])
+
+        if overwrite_conflict:
+            assert inc['name'] == "test updated"
+        else:
+            assert inc['name'] == "test"
+
             fail_msg = "could not be applied due to a conflicting edit by another user.  The following field(s) were in conflict:  name."
-            assert fail_msg in e.response.json()["message"]
+            assert fail_msg in response["message"]
 
     def test_patch_no_conflict(self, co3_args):
         """ do incident_patch with no conflict """
         client = self._connect(co3_args)
         inc = self._create_incident(client, {"name": "test"})
         uri = "/incidents/%d" % inc['id']
-        patch = client.create_patch(inc, {"name": "test updated"})
+        patch = co3.Patch(inc)
+        patch.add_value("name", "test updated")
         response = client.patch(uri, patch, overwrite_conflict=False)
         assert response["success"] is True
         inc = client.get("/incidents/%d" % inc['id'])
         assert inc['name'] == "test updated"
 
-    @pytest.mark.parametrize("existing", ("yes", "no", "partial"))
-    def test_get_patch_without_existing(self, co3_args, existing):
-        """get_patch with missing or incomplete existing_obj"""
-        def get_update_dict(inc):
-            return {"name": "test updated"}
-
-        client = self._connect(co3_args)
-        inc = self._create_incident(client, {"name": "test"})
-        uri = "/incidents/%d" % inc['id']
-        if existing == "no":
-            existing_object = None
-        else:
-            existing_object = inc
-        if existing == "partial":
-            # Remove the parts we'd be checking
-            existing_object.pop("vers")
-            existing_object.pop("name")
-
-        response = client.get_patch(uri, get_update_dict, existing_object=existing_object,
-                                    retry_on_conflict=True)
-        assert response["success"] is True
-        inc = client.get("/incidents/%d" % inc['id'])
-        assert inc['name'] == "test updated"
-
-    @pytest.mark.parametrize("conflict_retry", (True, False))
-    def test_get_patch_conflict(self, co3_args, conflict_retry):
-        """ do incident get_patch that results in conflict"""
-        def get_update_dict(inc):
-            return {"name": "test updated"}
-
-        client = self._connect(co3_args)
-        inc = self._create_incident(client, {"name": "test"})
-        uri = "/incidents/%d" % inc['id']
-        # Create a conflict
-        inc["name"] = "the wrong value"
-        inc["vers"] = inc["vers"] - 1
-        try:
-            response = client.get_patch(uri, get_update_dict, existing_object=inc,
-                                        retry_on_conflict=conflict_retry)
-            assert(conflict_retry)
-            assert response["success"] is True
-            inc = client.get("/incidents/%d" % inc['id'])
-            assert inc['name'] == "test updated"
-
-        except co3.co3.SimpleHTTPException as e:
-            assert(not conflict_retry)
-            fail_msg = "could not be applied due to a conflicting edit by another user.  The following field(s) were in conflict:  name."
-            assert fail_msg in e.response.json()["message"]
-
-    def test_get_patch_no_conflict(self, co3_args):
-        """ do incident get_patch with no conflict """
-        def get_update_dict(inc):
-            return {"name": "test updated"}
-
-        client = self._connect(co3_args)
-        inc = self._create_incident(client, {"name": "test"})
-        uri = "/incidents/%d" % inc['id']
-        response = client.get_patch(uri, get_update_dict, existing_object=inc,
-                                    retry_on_conflict=False)
-        assert response["success"] is True
-        inc = client.get("/incidents/%d" % inc['id'])
-        assert inc['name'] == "test updated"
