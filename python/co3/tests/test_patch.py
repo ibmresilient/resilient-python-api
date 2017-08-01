@@ -1,12 +1,12 @@
 from __future__ import print_function
 import pytest
-from co3 import Patch, PatchStatus
+import co3 as resilient
 
 class TestPatch:
     def test_patch(self):
         existing = {"a": 1, "properties": {"b": 2}, "vers": 99}
 
-        patch = Patch(existing)
+        patch = resilient.Patch(existing)
 
         patch.add_value("a", 5)
         patch.add_value("properties.b", 6)
@@ -37,7 +37,7 @@ class TestPatch:
 
     def test_partial_property_name(self):
         existing = {"properties": {"a": 5}}
-        patch = Patch(existing)
+        patch = resilient.Patch(existing)
 
         with pytest.raises(ValueError) as exception_info:
             patch.add_value("properties", 99)
@@ -45,7 +45,7 @@ class TestPatch:
         assert "Invalid field_name parameter" in str(exception_info.value)
 
     def test_no_old_value(self):
-        patch = Patch({})
+        patch = resilient.Patch({})
 
         # this one is allowed
         patch.add_value("a", new_value=5, old_value=3)
@@ -65,7 +65,7 @@ class TestPatch:
         assert "Constructor previous_object or method old_value argument is required" in str(exception_info.value)
 
     def test_add_twice(self):
-        patch = Patch({"a": 5})
+        patch = resilient.Patch({"a": 5})
 
         patch.add_value("a", 7)
         patch.add_value("a", 8)
@@ -88,7 +88,7 @@ class TestPatchStatus:
             "success": success
         }
 
-        status = PatchStatus(test_data)
+        status = resilient.PatchStatus(test_data)
 
         assert status.is_success() == success
 
@@ -111,7 +111,7 @@ class TestPatchStatus:
         }
 
     def test_has_failures(self):
-        status = PatchStatus(TestPatchStatus._make_test_data())
+        status = resilient.PatchStatus(TestPatchStatus._make_test_data())
 
         assert not status.is_success()
         assert status.has_field_failures()
@@ -123,7 +123,7 @@ class TestPatchStatus:
         assert not status.is_conflict_field("blah")
 
     def test_values(self):
-        status = PatchStatus(TestPatchStatus._make_test_data())
+        status = resilient.PatchStatus(TestPatchStatus._make_test_data())
 
         assert status.get_your_original_value("mytest1") == "original1"
         assert status.get_actual_current_value("mytest1") == "current1"
@@ -132,7 +132,7 @@ class TestPatchStatus:
         assert status.get_actual_current_value("mytest2") == "current2"
 
     def test_field_name_found(self):
-        status = PatchStatus(TestPatchStatus._make_test_data())
+        status = resilient.PatchStatus(TestPatchStatus._make_test_data())
 
         with pytest.raises(ValueError) as exception_info:
             status.get_your_original_value("blah")
@@ -145,7 +145,7 @@ class TestPatchStatus:
         assert "No conflict found for field blah" in str(exception_info.value)
 
     def test_message(self):
-        status = PatchStatus(TestPatchStatus._make_test_data())
+        status = resilient.PatchStatus(TestPatchStatus._make_test_data())
 
         assert status.get_message() == "Some message"
 

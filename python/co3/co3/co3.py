@@ -14,7 +14,7 @@ import datetime
 import unicodedata
 import requests
 import importlib
-from patch import PatchStatus
+from .patch import PatchStatus
 from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager

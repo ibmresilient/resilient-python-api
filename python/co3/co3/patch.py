@@ -100,7 +100,7 @@ class Patch(object):
         """Converts this patch object to a dict that can be posted to the server."""
         changes = []
 
-        for field_name, change in self.changes.iteritems():
+        for field_name, change in self.changes.items():
             changes.append(change.to_dict())
 
         patch = dict(changes = changes)
