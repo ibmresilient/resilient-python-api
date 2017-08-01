@@ -14,6 +14,7 @@ import datetime
 import unicodedata
 import requests
 import importlib
+from patch import PatchStatus
 from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -146,6 +147,12 @@ class SimpleHTTPException(Exception):
 
         self.response = response
 
+class PatchConflictException(SimpleHTTPException):
+    """Exception for patch conflicts."""
+    def __init__(self, response, patch_status):
+        super(PatchConflictException, self).__init__(response)
+
+        self.patch_status = patch_status
 
 class NoChange(Exception):
     """Exception that can be raised within a get/put handler to indicate 'no change'
@@ -164,7 +171,6 @@ def _raise_if_error(response):
     """
     if response.status_code != 200:
         raise SimpleHTTPException(response)
-
 
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
@@ -462,8 +468,7 @@ class SimpleClient(object):
 
         return response
 
-    @staticmethod
-    def _handle_patch_response(response, patch, overwrite_conflict):
+    def _handle_patch_response(self, response, patch, callback):
         """Helper to determine if a patch retry is needed.  Will only return True if the server responds with a
         409 or if the patch apply failed with field failures and the caller asked to overwrite conflicts."""
         if response.status_code == 409:
@@ -472,24 +477,40 @@ class SimpleClient(object):
             return True
 
         if response.status_code == 200:
-            patch_status = response.json()
+            json = response.json()
 
-            LOG.debug(patch_status)
+            LOG.debug(json)
 
-            if not patch_status["success"] and overwrite_conflict and "field_failures" in patch_status:
-                LOG.info("Patch conflict detected, but overwrite_conflict specified - preparing for overwrite")
+            patch_status = PatchStatus(json)
 
-                # Got conflicts and caller wants to overwrite them, so make adjustments to the
-                # patch to force the overwrite.
-                patch.update_for_overwrite(patch_status)
+            if not patch_status.is_success() and patch_status.has_field_failures():
+                LOG.info("Patch conflict detected - invoking callback")
 
-                return True
+                return callback(self, response, patch_status, patch)
 
+        # Raise an exception if there's some non-200 response.
         _raise_if_error(response)
 
         # Don't want to retry and got a 200 response.  There may or may not be field_failures.
         # Handling that is now up to the caller of the patch method.
         return False
+
+    @staticmethod
+    def _patch_overwrite_callback(client, response, patch_status, patch):
+        """
+        Callback to use when the caller specified overwrite_conflict=True in the patch call.
+        """
+        patch.update_for_overwrite(patch_status)
+        return True
+
+    @staticmethod
+    def _patch_raise_callback(client, response, patch_status, patch):
+        """
+        Callback to use when the caller specified overwrite_conflict=False in the patch call.
+        """
+
+        # Got a conflict and no callback specified.  Just raise an exception.
+        raise PatchConflictException(response, patch_status)
 
     def patch(self, uri, patch, co3_context_token=None, timeout=None, overwrite_conflict=False):
         """
@@ -498,25 +519,47 @@ class SimpleClient(object):
         specify a uri of /incidents, the actual URL would be something like this:
 
             https://app.resilientsystems.com/rest/orgs/201/incidents
-        Args:
-            uri: the URI on which patch is to be invoked
-            patch: Patch object to apply
-            co3_context_token: the Co3ContextToken from a CAF message (if the caller is
-            a CAF message processor.
-            timeout: number of seconds to wait for response
-          overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
+
+        :param uri: the URI on which patch is to be invoked
+        :param patch: Patch object to apply
+        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+          a CAF message processor.
+        :param timeout: Number of seconds to wait for response
+        :param overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
           object will be modified if necessary.
-        Returns:
-          A dictionary or array with the value returned by the server.
-        Raises:
-          SimpleHTTPException - if an HTTP exception or patch conflict occurs.
+        :return: The response object.
+        :raises SimpleHTTPException: if an HTTP exception or patch conflict occurs.
+        :raises PatchStatusException: If the patch failed to apply (and overwrite_conflict is False).
+        """
+        if overwrite_conflict:
+            # Re-issue patch with intent to overwrite conflicts.
+            callback = SimpleClient._patch_overwrite_callback
+        else:
+            # Raise an exception on conflict.
+            callback = SimpleClient._patch_raise_callback
+
+        return self.patch_with_callback(uri, patch, callback, co3_context_token, timeout)
+
+    def patch_with_callback(self, uri, patch, callback, co3_context_token=None, timeout=None):
+        """
+        PATCH request to the specified URI.  If the patch application fails because of field conflicts,
+        the specified callback is invoked, allowing the caller to adjust the patch as necessary.
+        :param uri: the URI on which patch is to be invoked
+        :param patch: Patch object to apply
+        :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
+          of the following form:
+            def my_callback(client, response, patch_status, patch)
+        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+          a CAF message processor.
+        :param timeout: Number of seconds to wait for response
+        :return: The response object.
         """
         response = self._patch(uri, patch, co3_context_token, timeout)
 
-        while self._handle_patch_response(response, patch, overwrite_conflict):
+        while self._handle_patch_response(response, patch, callback):
             response = self._patch(uri, patch, co3_context_token, timeout)
 
-        return response.json()
+        return response
 
     def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
         """

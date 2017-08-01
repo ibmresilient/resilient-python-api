@@ -68,9 +68,25 @@ class TestCo3Patch:
         patch = co3.Patch(inc)
         patch.add_value("name", "test updated")
 
-        response = client.patch(uri, patch, overwrite_conflict=overwrite_conflict)
+        if overwrite_conflict:
+            # If overwrite_conflict is specified then patch will return.
+            response = client.patch(uri, patch, overwrite_conflict=overwrite_conflict)
 
-        assert response["success"] is overwrite_conflict
+            assert co3.PatchStatus(response.json()).is_success() is overwrite_conflict
+        else:
+            # Not overwriting conflict, so an exception will be thrown.
+            with pytest.raises(co3.PatchConflictException) as exception_info:
+                client.patch(uri, patch, overwrite_conflict=overwrite_conflict)
+
+            # Gather the patch_status value from the exception for additional verification.
+            patch_status = exception_info.value.patch_status
+
+            fail_msg = "could not be applied due to a conflicting edit by another user.  The following field(s) were in conflict:  name."
+            assert fail_msg in patch_status.get_message()
+
+            assert patch_status.get_conflict_fields() == ["name"]
+            assert patch_status.get_your_original_value("name") == "the wrong value"
+            assert patch_status.get_actual_current_value("name") == "test"
 
         inc = client.get("/incidents/%d" % inc['id'])
 
@@ -78,9 +94,6 @@ class TestCo3Patch:
             assert inc['name'] == "test updated"
         else:
             assert inc['name'] == "test"
-
-            fail_msg = "could not be applied due to a conflicting edit by another user.  The following field(s) were in conflict:  name."
-            assert fail_msg in response["message"]
 
     def test_patch_no_conflict(self, co3_args):
         """ do incident_patch with no conflict """
@@ -90,7 +103,7 @@ class TestCo3Patch:
         patch = co3.Patch(inc)
         patch.add_value("name", "test updated")
         response = client.patch(uri, patch, overwrite_conflict=False)
-        assert response["success"] is True
+        assert co3.PatchStatus(response.json()).is_success()
         inc = client.get("/incidents/%d" % inc['id'])
         assert inc['name'] == "test updated"
 

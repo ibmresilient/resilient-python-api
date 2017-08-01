@@ -79,26 +79,22 @@ class Patch(object):
 
         return None
 
-    def update_for_overwrite(self, patch_status_dict):
+    def update_for_overwrite(self, patch_status):
         """Changes to patch to reflect the current values in patch_status_dict.  Use this method if you want to
         re-apply a patch operation that failed because of field conflicts...without concern with the previous
         values.
            patch_status_dict: The return from the patch operation.  It is assumed that this has a "field_failures"
                               property."""
-        if not "field_failures" in patch_status_dict:
+        if not patch_status.has_field_failures():
             raise ValueError("Expected field_failures in patch status return")
 
-        failures = patch_status_dict["field_failures"]
-
-        for failure in failures:
-            field_name = failure["field"]
-
+        for field_name in patch_status.get_conflict_fields():
             change = self._get_change_with_field_named(field_name)
 
             if not change:
                 raise ValueError("No change exists for field failure found in patch status")
 
-            change.old_value = failure["actual_current_value"]
+            change.old_value = patch_status.get_actual_current_value(field_name)
 
     def to_dict(self):
         """Converts this patch object to a dict that can be posted to the server."""
@@ -113,4 +109,68 @@ class Patch(object):
             patch["version"] = self.version
 
         return patch
+
+class PatchStatus(object):
+    """Represents the patch status returned by the patch endpoint."""
+    def __init__(self, patch_status_dict):
+        """Constructs a PatchStatus object
+
+           patch_status_dict: The dictionary returned by the patch operation."""
+
+        self.patch_status_dict = patch_status_dict
+
+    def _get_patch_failure(self, field_name, should_raise):
+        """Internal helper to find the FieldPatchFailureDTO for a given field.
+           field_name: The name of the field to find.
+           should_raise: Should a ValueError be raised if the field isn't found or should we just return None?"""
+        for failure in self.patch_status_dict["field_failures"]:
+            if failure["field"] == field_name:
+                return failure
+
+        if should_raise:
+            raise ValueError("No conflict found for field {}".format(field_name))
+
+        return None
+
+    def is_success(self):
+        """Was the patch operation successful?"""
+        return self.patch_status_dict["success"]
+
+    def has_field_failures(self):
+        """Is there at least one field failure?"""
+        return "field_failures" in self.patch_status_dict and len(self.patch_status_dict["field_failures"]) > 0
+
+    def get_conflict_fields(self):
+        """Get a list of the conflicting field names."""
+        return [x["field"] for x in self.patch_status_dict["field_failures"]];
+
+    def is_conflict_field(self, field_name):
+        """Is the specified field_name amongst the conflicting fields?
+           field_name: The field in question."""
+        return self._get_patch_failure(field_name, should_raise=False) is not None
+
+    def get_your_original_value(self, field_name):
+        """Get the value that *you* specified in the original patch for the specified field.  Raises a ValueError
+           if the field with the name field_name is not amongst the list of conflicting fields.
+
+           field_name: The name of the field in question."""
+        failure = self._get_patch_failure(field_name, should_raise=True)
+
+        return failure["your_original_value"]
+
+    def get_actual_current_value(self, field_name):
+        """Get the current server value for the conflicting field.  Raises a ValueError
+           if the field with the name field_name is not amongst the list of conflicting fields.
+
+           field_name: The name of the field in question."""
+        failure = self._get_patch_failure(field_name, should_raise=True)
+
+        return failure["actual_current_value"]
+
+    def get_message(self):
+        """Gets the message associated with the patch status (or None if there wasn't one)."""
+        if "message" in self.patch_status_dict:
+            return self.patch_status_dict["message"]
+
+        return None
 

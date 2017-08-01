@@ -1,6 +1,6 @@
 from __future__ import print_function
 import pytest
-from co3 import Patch
+from co3 import Patch, PatchStatus
 
 class TestPatch:
     def test_patch(self):
@@ -79,3 +79,73 @@ class TestPatch:
         assert changes[0]["field"] == "a"
         assert changes[0]["old_value"] == 5
         assert changes[0]["new_value"] == 8
+
+
+class TestPatchStatus:
+    @pytest.mark.parametrize("success", (True, False))
+    def test_success(self, co3_args, success):
+        test_data = {
+            "success": success
+        }
+
+        status = PatchStatus(test_data)
+
+        assert status.is_success() == success
+
+    @staticmethod
+    def _make_test_data():
+        return {
+            "success": False,
+            "field_failures": [
+                {
+                    "field": "mytest1",
+                    "your_original_value": "original1",
+                    "actual_current_value": "current1"
+                }, {
+                    "field": "mytest2",
+                    "your_original_value": "original2",
+                    "actual_current_value": "current2"
+                }
+            ],
+            "message": "Some message"
+        }
+
+    def test_has_failures(self):
+        status = PatchStatus(TestPatchStatus._make_test_data())
+
+        assert not status.is_success()
+        assert status.has_field_failures()
+        assert status.get_conflict_fields() == ["mytest1", "mytest2"]
+
+        assert status.is_conflict_field("mytest1")
+        assert status.is_conflict_field("mytest2")
+
+        assert not status.is_conflict_field("blah")
+
+    def test_values(self):
+        status = PatchStatus(TestPatchStatus._make_test_data())
+
+        assert status.get_your_original_value("mytest1") == "original1"
+        assert status.get_actual_current_value("mytest1") == "current1"
+
+        assert status.get_your_original_value("mytest2") == "original2"
+        assert status.get_actual_current_value("mytest2") == "current2"
+
+    def test_field_name_found(self):
+        status = PatchStatus(TestPatchStatus._make_test_data())
+
+        with pytest.raises(ValueError) as exception_info:
+            status.get_your_original_value("blah")
+
+        assert "No conflict found for field blah" in str(exception_info.value)
+
+        with pytest.raises(ValueError) as exception_info:
+            status.get_your_original_value("blah")
+
+        assert "No conflict found for field blah" in str(exception_info.value)
+
+    def test_message(self):
+        status = PatchStatus(TestPatchStatus._make_test_data())
+
+        assert status.get_message() == "Some message"
+
