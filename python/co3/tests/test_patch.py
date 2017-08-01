@@ -70,9 +70,9 @@ class TestPatch:
         patch.add_value("a", 7)
         patch.add_value("a", 8)
 
-        dict = patch.to_dict()
+        mydict = patch.to_dict()
 
-        changes = dict["changes"]
+        changes = mydict["changes"]
 
         assert len(changes) == 1
 
@@ -80,6 +80,23 @@ class TestPatch:
         assert changes[0]["old_value"] == 5
         assert changes[0]["new_value"] == 8
 
+    def test_null_old_value(self):
+        patch = resilient.Patch({"blah": "old value"})
+
+        patch.add_value("blah", "new value", old_value=None)
+
+        mydict = patch.to_dict()
+
+        assert mydict
+
+        changes = mydict["changes"]
+
+        assert changes
+
+        assert len(changes) == 1
+        assert changes[0]["field"] == "blah"
+        assert not changes[0]["old_value"]
+        assert changes[0]["new_value"] == "new value"
 
 class TestPatchStatus:
     @pytest.mark.parametrize("success", (True, False))

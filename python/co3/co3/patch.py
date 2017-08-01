@@ -59,7 +59,7 @@ class Patch(object):
 
         return val
 
-    def add_value(self, field_name, new_value, old_value=None):
+    def add_value(self, field_name, new_value, **kwargs):
         """Adds a value to the patch.
 
            field_name: The name of the field.
@@ -67,7 +67,9 @@ class Patch(object):
            old_value: The last known value of the field being patched.  If omitted then we'll pull the old
                       value from the previous_object that you passed into the constructor."""
 
-        if not old_value:
+        if kwargs.has_key("old_value"):
+            old_value = kwargs.get("old_value")
+        else:
             old_value = self._get_old_value(field_name)
 
         self.changes[field_name] = Change(field_name, new_value, old_value)

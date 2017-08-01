@@ -107,3 +107,19 @@ class TestCo3Patch:
         inc = client.get("/incidents/%d" % inc['id'])
         assert inc['name'] == "test updated"
 
+    def test_patch_null_old_value(self, co3_args):
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test", "description": None})
+
+        patch = co3.Patch(inc)
+
+        patch.add_value("description", "new value")
+
+        uri = "/incidents/%d" % inc['id']
+
+        response = client.patch(uri, patch)
+
+        inc = client.get("/incidents/%d" % inc['id'])
+
+        assert inc["description"] == "new value"
