@@ -488,17 +488,23 @@ class SimpleClient(object):
 
                 before = patch.get_old_values()
 
-                cbret = callback(self, response, patch_status, patch)
+                try:
+                    callback(response, patch_status, patch)
+                except NoChange:
+                    # Callback explicitly indicated that it didn't want to apply the change, so just
+                    # return False here to stop processing.
+                    #
+                    LOG.debug("callback indicated no change after conflict - skipping")
+                    return False
 
-                if cbret:
-                    # Make sure something in the patch has actually changed, otherwise we'd
-                    # just re-issue the same patch and get into a loop.
-                    after = patch.get_old_values()
+                # Make sure something in the patch has actually changed, otherwise we'd
+                # just re-issue the same patch and get into a loop.
+                after = patch.get_old_values()
 
-                    if before == after:
-                        raise ValueError("invoked callback did not change the patch object, but returned True")
+                if before == after:
+                    raise ValueError("invoked callback did not change the patch object, but returned True")
 
-                return cbret
+                return True
 
         # Raise an exception if there's some non-200 response.
         _raise_if_error(response)
@@ -508,15 +514,14 @@ class SimpleClient(object):
         return False
 
     @staticmethod
-    def _patch_overwrite_callback(client, response, patch_status, patch):
+    def _patch_overwrite_callback(response, patch_status, patch):
         """
         Callback to use when the caller specified overwrite_conflict=True in the patch call.
         """
         patch.update_for_overwrite(patch_status)
-        return True
 
     @staticmethod
-    def _patch_raise_callback(client, response, patch_status, patch):
+    def _patch_raise_callback(response, patch_status, patch):
         """
         Callback to use when the caller specified overwrite_conflict=False in the patch call.
         """
@@ -560,7 +565,7 @@ class SimpleClient(object):
         :param patch: Patch object to apply
         :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
           of the following form:
-            def my_callback(client, response, patch_status, patch)
+            def my_callback(response, patch_status, patch)
         :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
           a CAF message processor.
         :param timeout: Number of seconds to wait for response

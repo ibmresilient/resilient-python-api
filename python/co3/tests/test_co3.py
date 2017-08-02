@@ -143,7 +143,7 @@ class TestCo3Patch:
 
         patch.add_value("name", "test updated")
 
-        def mycb(client, response, patch_status, patch):
+        def mycb(response, patch_status, patch):
             # Return True but don't modify the patch.
             return True
 
@@ -151,3 +151,32 @@ class TestCo3Patch:
             client.patch_with_callback(uri, patch, mycb)
 
         assert "invoked callback did not change the patch object, but returned True" in str(exception_info.value)
+
+    def test_no_change(self, co3_args):
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test"})
+
+        uri = "/incidents/%d" % inc['id']
+
+        # Create a conflict
+        inc["name"] = "the wrong value"
+        inc["vers"] -= 1 # Force it to check old_value
+
+        patch = co3.Patch(inc)
+
+        patch.add_value("name", "test updated")
+
+        def mycb(response, patch_status, patch):
+            raise co3.NoChange
+
+        response = client.patch_with_callback(uri, patch, mycb)
+
+        assert response
+        assert response.status_code == 200
+
+        patch_status = co3.PatchStatus(response.json())
+
+        assert not patch_status.is_success()
+        assert patch_status.get_conflict_fields() == ["name"]
+
