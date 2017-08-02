@@ -123,3 +123,31 @@ class TestCo3Patch:
         inc = client.get("/incidents/%d" % inc['id'])
 
         assert inc["description"] == "new value"
+
+    def test_patch_invalid_callback(self, co3_args):
+        """
+        If a callback returns True but didn't modify the passed in patch in any way, that'd be a problem.
+        So make sure we throw an exception in that case.
+        """
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test"})
+
+        uri = "/incidents/%d" % inc['id']
+
+        # Create a conflict
+        inc["name"] = "the wrong value"
+        inc["vers"] -= 1 # Force it to check old_value
+
+        patch = co3.Patch(inc)
+
+        patch.add_value("name", "test updated")
+
+        def mycb(client, response, patch_status, patch):
+            # Return True but don't modify the patch.
+            return True
+
+        with pytest.raises(ValueError) as exception_info:
+            client.patch_with_callback(uri, patch, mycb)
+
+        assert "invoked callback did not change the patch object, but returned True" in str(exception_info.value)

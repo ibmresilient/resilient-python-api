@@ -98,6 +98,14 @@ class Patch(object):
 
             change.old_value = patch_status.get_actual_current_value(field_name)
 
+    def get_old_values(self):
+        """
+        Gets all the 'old values' from the patch.  The SimpleClient uses this to determine if anything has
+        changed when calling the patch conflict callback.
+        :return: A new list that contains all of the 'old values' in the patch.
+        """
+        return [change.old_value for field_name, change in self.changes.items()]
+
     def to_dict(self):
         """Converts this patch object to a dict that can be posted to the server."""
         changes = []
@@ -144,7 +152,7 @@ class PatchStatus(object):
 
     def get_conflict_fields(self):
         """Get a list of the conflicting field names."""
-        return [x["field"] for x in self.patch_status_dict["field_failures"]];
+        return [x["field"] for x in self.patch_status_dict["field_failures"]]
 
     def is_conflict_field(self, field_name):
         """Is the specified field_name amongst the conflicting fields?

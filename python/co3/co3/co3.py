@@ -486,7 +486,19 @@ class SimpleClient(object):
             if not patch_status.is_success() and patch_status.has_field_failures():
                 LOG.info("Patch conflict detected - invoking callback")
 
-                return callback(self, response, patch_status, patch)
+                before = patch.get_old_values()
+
+                cbret = callback(self, response, patch_status, patch)
+
+                if cbret:
+                    # Make sure something in the patch has actually changed, otherwise we'd
+                    # just re-issue the same patch and get into a loop.
+                    after = patch.get_old_values()
+
+                    if before == after:
+                        raise ValueError("invoked callback did not change the patch object, but returned True")
+
+                return cbret
 
         # Raise an exception if there's some non-200 response.
         _raise_if_error(response)
