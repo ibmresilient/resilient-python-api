@@ -67,7 +67,7 @@ class Patch(object):
            old_value: The last known value of the field being patched.  If omitted then we'll pull the old
                       value from the previous_object that you passed into the constructor."""
 
-        if kwargs.has_key("old_value"):
+        if "old_value" in kwargs:
             old_value = kwargs.get("old_value")
         else:
             old_value = self._get_old_value(field_name)
