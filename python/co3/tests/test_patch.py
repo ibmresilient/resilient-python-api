@@ -22,18 +22,18 @@ class TestPatch:
 
         change = changes[0]
         assert change["field"] == "a"
-        assert change["old_value"] == 1
-        assert change["new_value"] == 5
+        assert change["old_value"]["object"] == 1
+        assert change["new_value"]["object"] == 5
 
         change = changes[1]
         assert change["field"] == "properties.b"
-        assert change["old_value"] == 2
-        assert change["new_value"] == 6
+        assert change["old_value"]["object"] == 2
+        assert change["new_value"]["object"] == 6
 
         change = changes[2]
         assert change["field"] == "c"
-        assert not change["old_value"]
-        assert change["new_value"] == 7
+        assert not change["old_value"]["object"]
+        assert change["new_value"] ["object"]== 7
 
     def test_partial_property_name(self):
         existing = {"properties": {"a": 5}}
@@ -56,8 +56,8 @@ class TestPatch:
 
         assert len(changes) == 1
         assert changes[0]["field"] == "a"
-        assert changes[0]["old_value"] == 3
-        assert changes[0]["new_value"] == 5
+        assert changes[0]["old_value"]["object"]== 3
+        assert changes[0]["new_value"]["object"] == 5
 
         with pytest.raises(ValueError) as exception_info:
             patch.add_value("b", new_value=10)
@@ -77,8 +77,8 @@ class TestPatch:
         assert len(changes) == 1
 
         assert changes[0]["field"] == "a"
-        assert changes[0]["old_value"] == 5
-        assert changes[0]["new_value"] == 8
+        assert changes[0]["old_value"]["object"] == 5
+        assert changes[0]["new_value"]["object"] == 8
 
     def test_null_old_value(self):
         patch = resilient.Patch({"blah": "old value"})
@@ -95,8 +95,8 @@ class TestPatch:
 
         assert len(changes) == 1
         assert changes[0]["field"] == "blah"
-        assert not changes[0]["old_value"]
-        assert changes[0]["new_value"] == "new value"
+        assert not changes[0]["old_value"]["object"]
+        assert changes[0]["new_value"]["object"]== "new value"
 
 class TestPatchStatus:
     @pytest.mark.parametrize("success", (True, False))

@@ -14,7 +14,9 @@ class Change(object):
 
     def to_dict(self):
         """Creates a DTO/dict object from this change."""
-        return dict(field = self.field_name, new_value = self.new_value, old_value = self.old_value)
+        return dict(field = self.field_name,
+                    new_value = dict(object = self.new_value),
+                    old_value = dict(object = self.old_value))
 
 class Patch(object):
     """Represents a patch to be applied to an object on the server."""
@@ -183,4 +185,10 @@ class PatchStatus(object):
             return self.patch_status_dict["message"]
 
         return None
+
+    def to_dict(self):
+        """
+        Return the underlying dict representation of this PatchStatus object.
+        """
+        return self.patch_status_dict
 
