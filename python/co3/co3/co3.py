@@ -450,10 +450,10 @@ class SimpleClient(object):
     def _patch(self, uri, patch, co3_context_token=None, timeout=None):
         """Internal method used to call the underlying server patch endpoint"""
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        if hasattr(patch, "to_dict") and callable(getattr(patch, "to_dict")):
-            payload_json = json.dumps(patch.to_dict())
-        else:
+        if isinstance(patch, dict):
             payload_json = json.dumps(patch)
+        else:
+            payload_json = json.dumps(patch.to_dict())
 
         hdrs = {"handle_format": "names"}
         response = self._execute_request(self.session.patch,
