@@ -175,3 +175,39 @@ class TestPatchStatus:
 
         assert status.get_message() == "Some message"
 
+    def test_exchange_conflicting_value(self):
+        # Given a base object with a value of "test1".
+        base = dict(mytest1 = "test1")
+
+        # And a patch that is attempting to modify that base object to have a value of "test2".
+        patch = resilient.Patch(base)
+
+        patch.add_value("mytest1", "test2")
+
+        # Confirm that it does indeed have an "old value" of "test1" (this is taken from the base object).
+        assert patch.get_old_value("mytest1") == "test1"
+
+        # When we create a patch status that simulates a conflict error from the server (where the
+        # value of base changed from "test1" to "blah").
+        patch_status = resilient.PatchStatus({
+            "success": False,
+            "field_failures": [
+                {
+                    "field": "mytest1",
+                    "your_original_value": "test2",
+                    "actual_current_value": "blah"
+                }
+            ],
+            "message": "Some message"
+        })
+
+        # When I exchange the conflicting value...
+        patch.exchange_conflicting_value(patch_status, "mytest1", "test2")
+
+        # The patch's "old value" will be the current server's value.
+        assert patch.get_old_value("mytest1") == "blah"
+        assert patch.get_new_value("mytest1") == "test2"
+
+
+
+

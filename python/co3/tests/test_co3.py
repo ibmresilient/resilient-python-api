@@ -180,3 +180,27 @@ class TestCo3Patch:
         assert not patch_status.is_success()
         assert patch_status.get_conflict_fields() == ["name"]
 
+    def test_conflict_with_handler(self, co3_args):
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test"})
+
+        uri = "/incidents/%d" % inc['id']
+
+        # Create a conflict
+        inc["name"] = "the wrong value"
+        inc["vers"] -= 1 # Force it to check old_value
+
+        patch = co3.Patch(inc)
+
+        patch.add_value("name", "test updated")
+
+        def mycb(response, patch_status, patch):
+            patch.exchange_conflicting_value(patch_status, "name", "test updated take 2")
+
+        response = client.patch_with_callback(uri, patch, mycb)
+
+        assert response
+        assert response.status_code == 200
+
+        assert "test updated take 2" == client.get(uri)["name"]

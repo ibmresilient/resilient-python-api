@@ -40,8 +40,11 @@ class Patch(object):
         # downside.
         self.changes = collections.OrderedDict()
 
-    def _get_old_value(self, field_name):
-        """Helper to get the 'old value' for a field from the previous_object passed into our constructor."""
+    def _get_base_value(self, field_name):
+        """
+        Helper to get the value for a field from the previous_object (base object) passed into
+        our constructor.
+        """
         if not self.previous_object:
             raise ValueError("Constructor previous_object or method old_value argument is required")
 
@@ -72,9 +75,25 @@ class Patch(object):
         if "old_value" in kwargs:
             old_value = kwargs.get("old_value")
         else:
-            old_value = self._get_old_value(field_name)
+            old_value = self._get_base_value(field_name)
 
         self.changes[field_name] = Change(field_name, new_value, old_value)
+
+    def exchange_conflicting_value(self, patch_status, field_name, new_value):
+        """
+        Call this method to update the patch object from within a conflict handler.
+        :param patch_status: The PatchStatus object passed into your patch conflict callback.
+        :param field_name: The name of the field whose value is to be exchanged.
+        :param new_value: The new value to use in the patch (for the next patch operation).  Note that you may
+        want to base your new_value on the result of patch_status.get_actual_current_value(field_name) since
+        that will be what the other user changed the field to.  If you do not consider that previous value then
+        you are effectively overwriting what they did.  Overwriting may be what you want depending on your application,
+        but it likely that you want to somehow consider what the other user did.  If you just want to overwrite all
+        changes note that you can use SimpleClient.patch(..., overwrite_conflict = True).
+        """
+        current_value = patch_status.get_actual_current_value(field_name)
+
+        self.changes[field_name] = Change(field_name, new_value, current_value)
 
     def _get_change_with_field_named(self, field_name):
         """Helper to find an existing change in the list of changes."""
@@ -102,8 +121,8 @@ class Patch(object):
 
     def get_old_values(self):
         """
-        Gets all the 'old values' from the patch.  The SimpleClient uses this to determine if anything has
-        changed when calling the patch conflict callback.
+        Gets all the 'old values' from the patch (for all fields).  The SimpleClient uses this to
+        determine if anything has changed when calling the patch conflict callback.
         :return: A new list that contains all of the 'old values' in the patch.
         """
         return [change.old_value for field_name, change in self.changes.items()]
@@ -113,6 +132,20 @@ class Patch(object):
         Determines if this patch has any changes.
         """
         return len(self.changes) > 0
+
+    def get_old_value(self, field_name):
+        """
+        Gets the old value for the specified field in the patch.
+        :param field_name: The field in question.
+        """
+        return self.changes[field_name].old_value
+
+    def get_new_value(self, field_name):
+        """
+        Gets the new value for the specified field in the patch.
+        :param field_name: The field in question.
+        """
+        return self.changes[field_name].new_value
 
     def to_dict(self):
         """Converts this patch object to a dict that can be posted to the server."""
