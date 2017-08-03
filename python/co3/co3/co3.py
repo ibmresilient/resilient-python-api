@@ -14,6 +14,7 @@ import datetime
 import unicodedata
 import requests
 import importlib
+from .patch import PatchStatus
 from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -146,6 +147,12 @@ class SimpleHTTPException(Exception):
 
         self.response = response
 
+class PatchConflictException(SimpleHTTPException):
+    """Exception for patch conflicts."""
+    def __init__(self, response, patch_status):
+        super(PatchConflictException, self).__init__(response)
+
+        self.patch_status = patch_status
 
 class NoChange(Exception):
     """Exception that can be raised within a get/put handler to indicate 'no change'
@@ -164,7 +171,6 @@ def _raise_if_error(response):
     """
     if response.status_code != 200:
         raise SimpleHTTPException(response)
-
 
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
@@ -441,170 +447,136 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def create_patch(self, existing_object, update_dict):
-        """
-        Convert an incident/task/etc and an update dict into a PatchDTO object
-        This is a helper for using the patch and patch_fields methods.
-        Args:
-          existing_object: dict for an existing incident/task/artifact/etc
-          update_dict: dict with field updates for the existing_object
-        Returns:
-          A dictionary corresponding to a PatchDTO
-        Raises:
-          ValueError: existing_object or update_dict are invalid or incompatible
-        """
-        patch = {"changes": []}
-        if "vers" in existing_object:
-            patch["version"] = existing_object["vers"]
-        for key, new_value in update_dict.items():
-            old_value = existing_object.get(key)
-            update = {"field": {"name": key},
-                      "old_value": {"object": old_value},
-                      "new_value": {"object": new_value}
-            }
-            patch["changes"].append(update)
-        return patch
+    def _patch(self, uri, patch, co3_context_token=None, timeout=None):
+        """Internal method used to call the underlying server patch endpoint"""
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        if isinstance(patch, dict):
+            payload_json = json.dumps(patch)
+        else:
+            payload_json = json.dumps(patch.to_dict())
 
-    def patch(self, uri, patch_dto, co3_context_token=None, timeout=None, overwrite_conflict=False):
+        hdrs = {"handle_format": "names"}
+        response = self._execute_request(self.session.patch,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token,
+                                                                     additional_headers=hdrs),
+                                         verify=self.verify,
+                                         timeout=timeout)
+
+        return response
+
+    def _handle_patch_response(self, response, patch, callback):
+        """Helper to determine if a patch retry is needed.  Will only return True if the server responds with a
+        409 or if the patch apply failed with field failures and the caller asked to overwrite conflicts."""
+        if response.status_code == 409:
+            # Just retry again, no adjustments.  The server can return 409 if there is a DB-level conflict.
+            LOG.info("Retrying patch unchanged due to server CONFLICT")
+            return True
+
+        if response.status_code == 200:
+            json = response.json()
+
+            LOG.debug(json)
+
+            patch_status = PatchStatus(json)
+
+            if not patch_status.is_success() and patch_status.has_field_failures():
+                LOG.info("Patch conflict detected - invoking callback")
+
+                before = patch.get_old_values()
+
+                try:
+                    callback(response, patch_status, patch)
+                except NoChange:
+                    # Callback explicitly indicated that it didn't want to apply the change, so just
+                    # return False here to stop processing.
+                    #
+                    LOG.debug("callback indicated no change after conflict - skipping")
+                    return False
+
+                # Make sure something in the patch has actually changed, otherwise we'd
+                # just re-issue the same patch and get into a loop.
+                after = patch.get_old_values()
+
+                if before == after:
+                    raise ValueError("invoked callback did not change the patch object, but returned True")
+
+                return True
+
+        # Raise an exception if there's some non-200 response.
+        _raise_if_error(response)
+
+        # Don't want to retry and got a 200 response.  There may or may not be field_failures.
+        # Handling that is now up to the caller of the patch method.
+        return False
+
+    @staticmethod
+    def _patch_overwrite_callback(response, patch_status, patch):
+        """
+        Callback to use when the caller specified overwrite_conflict=True in the patch call.
+        """
+        patch.update_for_overwrite(patch_status)
+
+    @staticmethod
+    def _patch_raise_callback(response, patch_status, patch):
+        """
+        Callback to use when the caller specified overwrite_conflict=False in the patch call.
+        """
+
+        # Got a conflict and no callback specified.  Just raise an exception.
+        raise PatchConflictException(response, patch_status)
+
+    def patch(self, uri, patch, co3_context_token=None, timeout=None, overwrite_conflict=False):
         """
         PATCH request to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
         specify a uri of /incidents, the actual URL would be something like this:
 
             https://app.resilientsystems.com/rest/orgs/201/incidents
-        Args:
-           uri
-           patch_dto: PatchDTO to apply
-           co3_context_token
-          timeout: number of seconds to wait for response
-          overwrite_conflict: use update_dict values even if incident has changed
-        Returns:
-          A dictionary or array with the value returned by the server.
-        Raises:
-          SimpleHTTPException - if an HTTP exception or patch conflict occurs.
+
+        :param uri: the URI on which patch is to be invoked
+        :param patch: Patch object to apply
+        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+          a CAF message processor.
+        :param timeout: Number of seconds to wait for response
+        :param overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
+          object will be modified if necessary.
+        :return: The response object.
+        :raises SimpleHTTPException: if an HTTP exception or patch conflict occurs.
+        :raises PatchStatusException: If the patch failed to apply (and overwrite_conflict is False).
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        payload_json = json.dumps(patch_dto)
-        hdrs = {"handle_format": "names"}
-        response = self._execute_request(self.session.patch,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token,
-                                                                     additional_headers=hdrs),
-                                         verify=self.verify,
-                                         timeout=timeout)
-
-        response_json = response.json() or {}
-        message = response_json.get("message", "") or ""
-        # Conflicts return a 200 wtih success: false
-        if overwrite_conflict and ((response.status_code == 409) or
-                                (response.status_code == 200 and "field_failures" in response_json)):
-            # There was a conflict, but we don't care and want to try again
-            LOG.info("Retrying PATCH after conflict: %s", message)
-            get_response = self._execute_request(self.session.get,
-                                                 url,
-                                                 proxies=self.proxies,
-                                                 cookies=self.cookies,
-                                                 headers=self.__make_headers(co3_context_token),
-                                                 verify=self.verify,
-                                                 timeout=timeout)
-            _raise_if_error(get_response)
-            patch_dto["version"] = get_response.json()["vers"]
-            return self.patch(uri, patch_dto,
-                              co3_context_token=co3_context_token,
-                              timeout=timeout,
-                              overwrite_conflict=overwrite_conflict)
-
-        if (response.status_code == 200 and response_json.get("success", False)):
-            return response_json
-
-        raise SimpleHTTPException(response)
-
-    def _get_patch(self, uri, update_func, co3_context_token=None, timeout=None,
-                   existing_object=None, raise_on_conflict=True):
-        """Internal helper to do a get/update/patch loop
-        (for situations where the patch might return a 409/conflict status)
-        """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        if existing_object:
-            payload = existing_object
+        if overwrite_conflict:
+            # Re-issue patch with intent to overwrite conflicts.
+            callback = SimpleClient._patch_overwrite_callback
         else:
-            response = self._execute_request(self.session.get,
-                                             url,
-                                             proxies=self.proxies,
-                                             cookies=self.cookies,
-                                             headers=self.__make_headers(co3_context_token),
-                                             verify=self.verify,
-                                             timeout=timeout)
-            _raise_if_error(response)
-            payload = json.loads(response.text)
-        try:
-            update_dict = update_func(payload)
-            if not update_dict:
-                # No Fields to Patch..
-                return payload
-        except NoChange:
-            # No Fields to Patch..
-            return payload
-        patch = self.create_patch(payload, update_dict)
-        payload_json = json.dumps(patch)
-        hdrs = {"handle_format": "names"}
-        response = self._execute_request(self.session.patch,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token,
-                                                                     additional_headers=hdrs),
-                                         verify=self.verify,
-                                         timeout=timeout)
+            # Raise an exception on conflict.
+            callback = SimpleClient._patch_raise_callback
 
-        response_json = response.json() or {}
-        message = response_json.get("message", "") or ""
-        if ((response.status_code == 409) or
-            (response.status_code == 200 and "field_failures" in response_json)):
-            if raise_on_conflict:
-                raise SimpleHTTPException(response)
-            else:
-                LOG.debug(json.dumps(response_json, indent=2))
-                return None
-        elif response.status_code == 200 and response_json.get("success", False):
-            return response_json
-        raise SimpleHTTPException(response)
+        return self.patch_with_callback(uri, patch, callback, co3_context_token, timeout)
 
-    def get_patch(self, uri, update_func, co3_context_token=None, timeout=None, existing_object=None, retry_on_conflict=False):
-        """Performs a get, calls update_func on the returned value, then calls self.patch.
-
-        Args:
-          uri - the URI to use.  Note that this is expected to be relative to the org.
-          apply_func - a function to call on the object returned by get.  This should return
-          a dict of field updates
-          co3_context_token - the Co3ContextToken from a CAF message (if the caller is
-          a CAF message processor.)
-          timeout - number of seconds to wait for response
-          existing_object - Use this as the initial object and skip the GET
-          retry_on_conflict - Retry if "conflicting edit" message or 409 error occurs
-        Returns;
-          The object returned by the PATCH operation (converted from JSON to a Python dict).
-        Raises:
-          SimpleHTTPException - if an HTTP exception or patch conflict occurs.
+    def patch_with_callback(self, uri, patch, callback, co3_context_token=None, timeout=None):
         """
-        starting_object = existing_object
-        while True:
-            obj = self._get_patch(uri, update_func, co3_context_token=co3_context_token,
-                                  timeout=timeout,
-                                  existing_object=starting_object,
-                                  raise_on_conflict=not retry_on_conflict)
-            if obj:
-                return obj
-            elif not retry_on_conflict:
-                break
-            else:
-                # We had a conflict, need to do a new GET to get current version of object
-                starting_object = None
-        return None
+        PATCH request to the specified URI.  If the patch application fails because of field conflicts,
+        the specified callback is invoked, allowing the caller to adjust the patch as necessary.
+        :param uri: the URI on which patch is to be invoked
+        :param patch: Patch object to apply
+        :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
+          of the following form:
+            def my_callback(response, patch_status, patch)
+        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+          a CAF message processor.
+        :param timeout: Number of seconds to wait for response
+        :return: The response object.
+        """
+        response = self._patch(uri, patch, co3_context_token, timeout)
+
+        while self._handle_patch_response(response, patch, callback):
+            response = self._patch(uri, patch, co3_context_token, timeout)
+
+        return response
 
     def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
         """
