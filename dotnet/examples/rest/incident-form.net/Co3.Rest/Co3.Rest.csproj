@@ -103,6 +103,7 @@
     <Compile Include="Dto\DownloadDto.cs" />
     <Compile Include="Dto\EmailMessageDto.cs" />
     <Compile Include="Dto\EnabledDto.cs" />
+    <Compile Include="Dto\EvaluatableConditionsDto.cs" />
     <Compile Include="Dto\FieldDefDto.cs" />
     <Compile Include="Dto\FieldDefPermsDto.cs" />
     <Compile Include="Dto\FieldDefValueDto.cs" />
@@ -236,6 +237,9 @@
     <Compile Include="Dto\ScriptMetadataKeywordDto.cs" />
     <Compile Include="Dto\ScriptMetadataSnippetDto.cs" />
     <Compile Include="Dto\ScriptMetadataSuggestionDto.cs" />
+    <Compile Include="Dto\SearchExInputDto.cs" />
+    <Compile Include="Dto\SearchExResultDto.cs" />
+    <Compile Include="Dto\SearchExResultsDto.cs" />
     <Compile Include="Dto\SearchInputDto.cs" />
     <Compile Include="Dto\SearchResultDto.cs" />
     <Compile Include="Dto\ServerVersionDto.cs" />
@@ -275,7 +279,9 @@
     <Compile Include="Dto\TwoFactorAuthCookieInfoDto.cs" />
     <Compile Include="Dto\TwoFactorAuthDomainDto.cs" />
     <Compile Include="Dto\TwoFactorVerificationDto.cs" />
+    <Compile Include="Dto\TypedObjectReferenceDto.cs" />
     <Compile Include="Dto\TypeDto.cs" />
+    <Compile Include="Dto\TypeId.cs" />
     <Compile Include="Dto\TypePropertiesDto.cs" />
     <Compile Include="Dto\UserGroupsDto.cs" />
     <Compile Include="Dto\UserIncidentTasksDto.cs" />
@@ -285,6 +291,10 @@
     <Compile Include="Dto\UserStatisticsDto.cs" />
     <Compile Include="Dto\VersionDto.cs" />
     <Compile Include="Dto\WhoisDto.cs" />
+    <Compile Include="Dto\WorkflowContentDto.cs" />
+    <Compile Include="Dto\WorkflowDto.cs" />
+    <Compile Include="Dto\WorkflowModelProblemDto.cs" />
+    <Compile Include="Dto\WorkflowStatusDto.cs" />
     <Compile Include="FieldRest.cs" />
     <Compile Include="IncidentRest.cs" />
     <Compile Include="JsonConverters\IPAddressConverter.cs" />
