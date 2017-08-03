@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Simple client for Resilient REST API"""
+from __future__ import print_function
 
 import json
 import ssl
@@ -13,6 +14,7 @@ import datetime
 import unicodedata
 import requests
 import importlib
+from .patch import PatchStatus
 from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -25,6 +27,8 @@ try:
 except:
     # Python 2
     import urlparse
+
+LOG = logging.getLogger(__name__)
 
 
 def get_config_file(filename="app.config"):
@@ -59,8 +63,6 @@ def get_client(opts):
     """
     if isinstance(opts, Namespace):
         opts = vars(opts)
-
-    LOG = logging.getLogger(__name__)
 
     # Allow explicit setting "do not verify certificates"
     verify = opts.get("cafile")
@@ -145,6 +147,12 @@ class SimpleHTTPException(Exception):
 
         self.response = response
 
+class PatchConflictException(SimpleHTTPException):
+    """Exception for patch conflicts."""
+    def __init__(self, response, patch_status):
+        super(PatchConflictException, self).__init__(response)
+
+        self.patch_status = patch_status
 
 class NoChange(Exception):
     """Exception that can be raised within a get/put handler to indicate 'no change'
@@ -163,7 +171,6 @@ def _raise_if_error(response):
     """
     if response.status_code != 200:
         raise SimpleHTTPException(response)
-
 
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
@@ -440,6 +447,137 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
+    def _patch(self, uri, patch, co3_context_token=None, timeout=None):
+        """Internal method used to call the underlying server patch endpoint"""
+        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        if isinstance(patch, dict):
+            payload_json = json.dumps(patch)
+        else:
+            payload_json = json.dumps(patch.to_dict())
+
+        hdrs = {"handle_format": "names"}
+        response = self._execute_request(self.session.patch,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token,
+                                                                     additional_headers=hdrs),
+                                         verify=self.verify,
+                                         timeout=timeout)
+
+        return response
+
+    def _handle_patch_response(self, response, patch, callback):
+        """Helper to determine if a patch retry is needed.  Will only return True if the server responds with a
+        409 or if the patch apply failed with field failures and the caller asked to overwrite conflicts."""
+        if response.status_code == 409:
+            # Just retry again, no adjustments.  The server can return 409 if there is a DB-level conflict.
+            LOG.info("Retrying patch unchanged due to server CONFLICT")
+            return True
+
+        if response.status_code == 200:
+            json = response.json()
+
+            LOG.debug(json)
+
+            patch_status = PatchStatus(json)
+
+            if not patch_status.is_success() and patch_status.has_field_failures():
+                LOG.info("Patch conflict detected - invoking callback")
+
+                before = patch.get_old_values()
+
+                try:
+                    callback(response, patch_status, patch)
+                except NoChange:
+                    # Callback explicitly indicated that it didn't want to apply the change, so just
+                    # return False here to stop processing.
+                    #
+                    LOG.debug("callback indicated no change after conflict - skipping")
+                    return False
+
+                # Make sure something in the patch has actually changed, otherwise we'd
+                # just re-issue the same patch and get into a loop.
+                after = patch.get_old_values()
+
+                if before == after:
+                    raise ValueError("invoked callback did not change the patch object, but returned True")
+
+                return True
+
+        # Raise an exception if there's some non-200 response.
+        _raise_if_error(response)
+
+        # Don't want to retry and got a 200 response.  There may or may not be field_failures.
+        # Handling that is now up to the caller of the patch method.
+        return False
+
+    @staticmethod
+    def _patch_overwrite_callback(response, patch_status, patch):
+        """
+        Callback to use when the caller specified overwrite_conflict=True in the patch call.
+        """
+        patch.update_for_overwrite(patch_status)
+
+    @staticmethod
+    def _patch_raise_callback(response, patch_status, patch):
+        """
+        Callback to use when the caller specified overwrite_conflict=False in the patch call.
+        """
+
+        # Got a conflict and no callback specified.  Just raise an exception.
+        raise PatchConflictException(response, patch_status)
+
+    def patch(self, uri, patch, co3_context_token=None, timeout=None, overwrite_conflict=False):
+        """
+        PATCH request to the specified URI.
+        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
+        specify a uri of /incidents, the actual URL would be something like this:
+
+            https://app.resilientsystems.com/rest/orgs/201/incidents
+
+        :param uri: the URI on which patch is to be invoked
+        :param patch: Patch object to apply
+        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+          a CAF message processor.
+        :param timeout: Number of seconds to wait for response
+        :param overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
+          object will be modified if necessary.
+        :return: The response object.
+        :raises SimpleHTTPException: if an HTTP exception or patch conflict occurs.
+        :raises PatchStatusException: If the patch failed to apply (and overwrite_conflict is False).
+        """
+        if overwrite_conflict:
+            # Re-issue patch with intent to overwrite conflicts.
+            callback = SimpleClient._patch_overwrite_callback
+        else:
+            # Raise an exception on conflict.
+            callback = SimpleClient._patch_raise_callback
+
+        return self.patch_with_callback(uri, patch, callback, co3_context_token, timeout)
+
+    def patch_with_callback(self, uri, patch, callback, co3_context_token=None, timeout=None):
+        """
+        PATCH request to the specified URI.  If the patch application fails because of field conflicts,
+        the specified callback is invoked, allowing the caller to adjust the patch as necessary.
+        :param uri: the URI on which patch is to be invoked
+        :param patch: Patch object to apply
+        :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
+          of the following form:
+            def my_callback(response, patch_status, patch)
+        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
+          a CAF message processor.
+        :param timeout: Number of seconds to wait for response
+        :return: The response object.
+        """
+        response = self._patch(uri, patch, co3_context_token, timeout)
+
+        while self._handle_patch_response(response, patch, callback):
+            response = self._patch(uri, patch, co3_context_token, timeout)
+
+        return response
+
     def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
         """
         Upload a file to the specified URI
@@ -694,4 +832,3 @@ class LoggingSimpleClient(SimpleClient):
                              **kwargs)
         return super(LoggingSimpleClient, self)._execute_request(
             wrapped_operation, url, **kwargs)
-

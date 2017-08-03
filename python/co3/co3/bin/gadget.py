@@ -56,6 +56,13 @@ class ExampleArgumentParser(resilient.ArgumentParser):
                                "for this option is the URI to GET, update, then PUT.  The second argument is"
                                "a JSON file that will be applied in the update.")
 
+        self.add_argument('--patch',
+                          nargs=2,
+                          help="Patch the resource at the specified URI using the specified JSON file.  The JSON"
+                               "file must be in PatchDTO format.  The JSON data of the updated object is written "
+                               "to stdout.  The first argument for this option is the URI to PATCH.  The second "
+                               "argument is a JSON file that will be patched (in PatchDTO format).")
+
         self.add_argument('--delete',
                           help="Generically delete the specified URI.")
 
@@ -123,16 +130,22 @@ def generic_post(client, uri, template_file_name):
 def generic_update(client, uri, template_file_name):
 
     def update_func(json_data):
-        with open(template_file_name, 'r') as template_file:
-            template = json.loads(template_file.read())
-            json_data.update(template)
-        return json_data
-
-    incident = client.get_put(uri, update_func)
+        with open(template_file_name, 'r') as update_file:
+            update = json.loads(update_file.read())
+            return update
+    incident= client.get_put(uri, update_func)
 
     print('Response:  ')
     print(json.dumps(incident, indent=4))
 
+def generic_patch(client, uri, template_file_name):
+    with open(template_file_name, 'r') as update_file:
+        patch = resilient.Patch(json.loads(update_file.read()))
+
+    response = client.patch(uri, patch)
+
+    print('Response:  ')
+    print(json.dumps(response, indent=4))
 
 def generic_delete(client, uri):
     print(client.delete(uri))
@@ -168,6 +181,9 @@ def main():
 
     if opts["update"]:
         generic_update(client, opts["update"][0], opts["update"][1])
+
+    if opts["patch"]:
+        generic_patch(client, opts["patch"][0], opts["patch"][1])
 
     if opts["delete"]:
         generic_delete(client, opts["delete"])
