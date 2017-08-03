@@ -108,6 +108,12 @@ class Patch(object):
         """
         return [change.old_value for field_name, change in self.changes.items()]
 
+    def has_changes(self):
+        """
+        Determines if this patch has any changes.
+        """
+        return len(self.changes) > 0
+
     def to_dict(self):
         """Converts this patch object to a dict that can be posted to the server."""
         changes = []

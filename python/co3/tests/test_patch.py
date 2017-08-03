@@ -98,6 +98,15 @@ class TestPatch:
         assert not changes[0]["old_value"]["object"]
         assert changes[0]["new_value"]["object"]== "new value"
 
+    def test_has_changes(self):
+        patch = resilient.Patch(dict(testfield=1))
+
+        assert not patch.has_changes()
+
+        patch.add_value("testfield", 5)
+
+        assert patch.has_changes()
+
 class TestPatchStatus:
     @pytest.mark.parametrize("success", (True, False))
     def test_success(self, co3_args, success):
