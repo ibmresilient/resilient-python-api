@@ -42,6 +42,34 @@ $ curl 'http://localhost:8000/artifact_id'
 
 (Replace `artifact_id` in the 3rd call with the id returned from the 2nd call)
 
+
+### Resilient Configuration
+
+To register the custom threat service on the Resilient platform, run the following command from the Resilient console:
+```
+sudo resutil threatserviceedit \
+    -name <custom threat service display name> \
+    -resturl <custom threat service REST URL> \
+    -user <authorization user name> \
+    -password <authorization password>
+```
+The user and password parameters are optional. You only need to specify them if you have enabled Basic Auth in your custom threat service implementation.
+
+After you install the custom threat service, run the following command to test that it is installed correctly and that the Resilient platform can communicate with your custom threat service.
+```
+sudo resutil threatservicetest \
+    -name <custom threat service display name>
+```
+The Resilient platform sends a test request to your custom threat service's Scan Artifact endpoint. If everything is functioning properly, the test command exits with a success message.
+
+You can run the threatserviceedit command again with the same display name to change its settings, including the display name.
+Other threatservice commands include:
+* threatserviceshow: Lists installed custom services.
+* threatservicedel: Deletes a custom threat service.
+
+Finally, to enable queries against your custom threat service, enable the service from the Resilient administration UI (Administrator Settings -> Threat Sources).
+
+
 ### Sample Configuration with nginx
 
 Once you have confirmed that the service works, it needs to be deployed into an environment that supports adding ssl and basic authentication if desired. More importantly, the test django server does not support `Transfer-Encoding: chunked`; therefore, we host python inside a web server that supports it. 

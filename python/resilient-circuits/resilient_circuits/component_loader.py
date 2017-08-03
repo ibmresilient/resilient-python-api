@@ -5,6 +5,8 @@
 import os
 import sys
 import logging
+import traceback
+import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
 
@@ -47,6 +49,7 @@ class ComponentLoader(Loader):
 
     def __init__(self, opts):
         """Initialize the loader"""
+        self.opts = opts
         # Path where components should be found
         self.path = opts['componentsdir']
         # Optionally, a list of filenames that should not be loaded
@@ -56,22 +59,46 @@ class ComponentLoader(Loader):
         self.pending_components = []
         self.finished = False
 
-    @handler("started", channel="*")
-    def started(self, event, component):
-        """Started Event Handler"""
-        LOG.debug("Started")
-        # Load all components from the components directory
-        for filename in sorted(os.listdir(self.path)):
-            filepath = os.path.join(self.path, filename)
-            if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
-                cname = os.path.splitext(filename)[0]
-                if cname != "__init__":
-                    if cname in self.noload:
-                        LOG.info("Not loading %s", cname)
-                    else:
-                        LOG.debug("Loading %s", cname)
-                        self.pending_components.append(cname)
-                        self.fire(load(cname))
+        # Load all installed components
+        installed_components = self.discover_installed_components()
+        if installed_components:
+            self._register_components(installed_components)
+
+        if self.path:
+            # Load all components from the components directory
+            for filename in os.listdir(self.path):
+                filepath = os.path.join(self.path, filename)
+                if os.path.isfile(filepath) and os.path.splitext(filename)[1] == ".py":
+                    cname = os.path.splitext(filename)[0]
+                    if cname != "__init__":
+                        if cname in self.noload:
+                            LOG.info("Not loading %s", cname)
+                        else:
+                            LOG.debug("Loading %s", cname)
+                            self.pending_components.append(cname)
+                            self.fire(load(cname))
+        if not self.pending_components:
+            # No components from directory, we are done loading
+            self.finished = True
+            self.fire(load_all_success())
+
+    def discover_installed_components(self):
+        entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
+        return [ep.load() for ep in entry_points if ep.name not in self.noload]
+
+    def _register_components(self, component_list):
+        """ register all installed components and ones from componentsdir """
+        LOG.info("Loading %d components", len(component_list))
+        for component_class in component_list:
+            LOG.info("Loading %s", component_class.__name__)
+            try:
+                component_class(opts=self.opts).register(self)
+                LOG.info("Loaded component %s", component_class.__name__)
+            except Exception as e:
+                LOG.error("Failed to load component %s", component_class.__name__, exc_info=1)
+                self.fire(load_all_failure())
+                return False
+        return True
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):
@@ -90,7 +117,7 @@ class ComponentLoader(Loader):
             cname = cname.args[0]
 
         if cname in sys.modules:
-            LOG.info("Loaded component '%s'", cname)
+            LOG.info("Loaded and registered component '%s'", cname)
             self.pending_components.remove(cname)
             if self.pending_components == []:
                 self.finished = True

@@ -8,54 +8,47 @@ from __future__ import print_function
 import logging
 import os
 import filelock
-from circuits.core.handlers import handler
+import co3 as resilient
 from circuits import Event, Timer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
-from .app import App
-from .app import APP_CONFIG_FILE, APP_LOCK_FILE
+from resilient_circuits.app import App, AppArgumentParser
+from resilient_circuits.app import get_lock
 
 
 application = None
 LOG = logging.getLogger(__name__)
 
-
-def log(log_level):
-    logging.getLogger().setLevel(log_level)
-
-class begin_restart(Event):
-    pass
-    
+class reload(Event):
+    """Notify components of updates to config"""
+    complete = True
+    def __init__(self, opts):
+        super(reload, self).__init__(opts=opts)
+        self.opts = opts
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
-    patterns = ["*" + os.path.basename(APP_CONFIG_FILE), ]
+    patterns = ["*" + os.path.basename(resilient.get_config_file()), ]
 
     def __init__(self, app):
         super(ConfigFileUpdateHandler, self).__init__()
         self.app = app
+        self.max_reload_time = 30
 
     def on_modified(self, event):
         """ reload data from config file and restart components """
-        LOG.info("configuration file has changed! restarting all components!")
-        self.app._stop_observer()
+        if self.app.reloading:
+            LOG.warn("Configuration file change ignored because reload already in progress")
+            return
 
-        # We need to shut things down in the right order
-        if self.app.component_loader:
-            # This will unregister all the components registered to it as well
-            LOG.info("unregistering component %s", self.app.component_loader)
-            self.app.component_loader.unregister()
-
-        if self.app.action_component:
-            LOG.info("unregistering component %s", self.app.action_component)
-            self.app.action_component.unregister()
-
-        for component in self.app.components:
-            # The Actions component and the Debugger, if attached
-            if component is not self.app.action_component and component is not self.app.component_loader:
-                LOG.info("unregistering component %s", component)
-                component.unregister()
+        LOG.info("Configuration file has changed! Notify components to reload")
+        self.app.reloading = True
+        opts = AppArgumentParser().parse_args()
+        reload_event = reload(opts=opts)
+        self.app.reload_timer = Timer(self.max_reload_time, Event.create("reload_timeout"))
+        self.app.fire(reload_event)
+        self.app.reload_timer.register(self.app)
 
 # Main component for our application
 class AppRestartable(App):
@@ -63,44 +56,47 @@ class AppRestartable(App):
 
     def __init__(self, *args, **kwargs):
         super(AppRestartable, self).__init__(*args, **kwargs)
-        self.component_collection = []
+        self.reloading = False
+        self.reload_timer = None
 
     def do_initialize_watchdog(self):
         """Initialize the configuration file watchdog"""
-        self.restarting = False
 
         # Monitor the configuration file, using a Watchdog observer daemon.
         LOG.info("Monitoring config file for changes.")
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
-        config_dir = os.path.dirname(APP_CONFIG_FILE) or os.getcwd()
+        config_dir = os.path.dirname(resilient.get_config_file())
+        if not config_dir:
+            config_dir = os.getcwd()
         self.observer.schedule(event_handler, path=config_dir, recursive=False)
         self.observer.daemon = True
         self.observer.start()
 
-    def begin_restart(self):
-        LOG.info("Beginning Restart Procedure")
-        self.restarting = True
-        self.stop()
-
     def started(self, component):
         LOG.info("App Started %s", str(component))
-
-    def load_all_success(self, event):
-        for component in self.components:
-            LOG.debug("Adding %s to restartable app components list", str(component))
-            self.component_collection.append(component)
-                    
         self.do_initialize_watchdog()
 
     def stopped(self, component):
         """Stopped Event Handler"""
         LOG.info("App Stopped")
         self._stop_observer()
-        if self.restarting:
-            self.restarting = False
-            self._restart()
-            self.run()
+
+    def reload_complete(self, event, *args, **kwargs):
+        """ All components done handling reload event """
+        if event.parent.success:
+            LOG.info("Reload completed successfully!")
+        else:
+            LOG.error("Reloading failed to complete successfully!")
+        if self.reload_timer:
+            self.reload_timer.unregister()
+            self.reload_timer = None
+        self.reloading = False
+
+    def reload_timeout(self, event):
+        """Reload timed out, assume it failed"""
+        LOG.error("Reload Timed Out, Assuming Failure!")
+        self.reloading = False
 
     def _stop_observer(self):
         """ stop monitoring config file for changes """
@@ -110,35 +106,12 @@ class AppRestartable(App):
             self.observer.stop()
             self.observer = None
 
-    def _restart(self):
-        """ Restart Event Handler """
-        LOG.info("Restarting")
-        logging.getLogger().handlers = []
-        self.component_collection = []
-        self.do_initialization()
-
-    @handler("unregistered")
-    def unregistered(self, component, manager):
-        """ Handler for unregistered notificatons for all App subcomponents """
-        LOG.info("%s has unregistered from %s.", str(component), str(manager))
-
-        if component in self.component_collection:
-            self.component_collection.remove(component)
-
-            if len(self.component_collection) == 0:
-                # All are stopped
-                self.fire(begin_restart())
-            else:
-                LOG.debug("Still waiting on %s to stop.", self.component_collection)
-
-
-
 def run(*args, **kwargs):
     """Main app"""
 
     # define lock
     # this prevents multiple, identical circuits from running at the same time
-    lock = filelock.FileLock(APP_LOCK_FILE)
+    lock = get_lock()
 
     # The main app component initializes the Resilient services
     global application
@@ -151,9 +124,14 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(APP_LOCK_FILE))
+        errmsg = ("Failed to acquire lock on {0} - you may have "
+                  "another instance of Resilient Circuits running")
+        print(errmsg.format(os.path.abspath(lock.lock_file)))
     except ValueError:
         LOG.exception("ValueError Raised. Application not running.")
+    except OSError as exc:
+        # Some other problem accessing the lockfile
+        print("Unable to lock {0}: {1}".format(os.path.abspath(lock.lock_file), exc))
     # finally:
     #    LOG.info("App finished.")
 

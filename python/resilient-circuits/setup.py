@@ -1,56 +1,52 @@
-#
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 from setuptools import setup, find_packages
 import io
-import codecs
 import os
-import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+# Pull the version number from the version.txt file.
+#
+def read_version_number():
+    path = os.path.join(os.path.dirname(__file__), "resilient_circuits", "version.txt")
+    with open(path) as f:
+        ver = f.read()
+    return ver.strip()
 
-def read(*filenames, **kwargs):
-    encoding = kwargs.get('encoding', 'utf-8')
-    sep = kwargs.get('sep', '\n')
-    buf = []
-    for filename in filenames:
-        with io.open(filename, encoding=encoding) as f:
-            buf.append(f.read())
-    return sep.join(buf)
+version = read_version_number()
 
-long_description = read('README')
+major, minor = version.split('.', 2)[:2]
 
 setup(
     name='resilient_circuits',
-    version="27.0.0",  # __version__ in __init__.py
+    version=version,
     url='https://www.resilientsystems.com/',
     license='IBM Resilient License',
+
     author='IBM Resilient',
     install_requires=[
-        'stomp.py>=4.0.12',
+        'stompest>=2.3.0',
         'requests>=2.6.0',
         'circuits',
         'pytz',
         'jinja2',
-        'filelock>=2.0.5'
+        'pysocks',
+        'filelock>=2.0.5',
+        'co3>={}.{}'.format(major, minor)
     ],
-    extras_require={
-        ':python_version >= "2.7"': [
-            'keyring'
-        ],
-        ':python_version == "2.6"': [
-            'keyring==5.4'
-        ]
-    },
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',
-    long_description=long_description,
-    packages=['resilient_circuits'],
-    package_dir={'resilient_circuits': 'resilient_circuits'},
+    packages=find_packages(),
     include_package_data=True,
     platforms='any',
-    data_files=[("", ["LICENSE"])],
     classifiers=[
         'Programming Language :: Python',
-    ]
+    ],
+    entry_points={
+        'console_scripts': ['res-action-test = resilient_circuits.bin.res_action_test:main',
+                            'resilient-circuits = resilient_circuits.bin.resilient_circuits:main']
+    }
 )

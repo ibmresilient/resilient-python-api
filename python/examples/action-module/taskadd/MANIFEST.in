@@ -1,0 +1,4 @@
+include README.md
+include taskadd/data/*
+include taskadd/LICENSE
+include taskadd/version.txt

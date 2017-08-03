@@ -1,15 +1,123 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests
+"""Simple client for Resilient REST API"""
+
 import json
 import ssl
 import mimetypes
 import os
-import unicodedata
 import sys
+import logging
+import datetime
+import unicodedata
+import requests
+import importlib
+from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+from cachetools import cachedmethod
+from cachetools.ttl import TTLCache
+try:
+    # Python 3
+    import urllib.parse as urlparse
+except:
+    # Python 2
+    import urlparse
+
+
+def get_config_file(filename="app.config"):
+    """
+    Helper: get the location of the configuration file
+    * Use the location specified in $APP_CONFIG_FILE, if set
+    * Otherwise use path in the current working directory, if exists
+    * Otherwise use path in ~/.resilient/ directory
+
+    :param filename: the filename, defaults to 'app.config'
+    """
+    # The config file location should usually be set in the environment
+    # First check environment, then cwd, then ~/.resilient/app.config
+    env_app_config_file = os.environ.get("APP_CONFIG_FILE", None)
+    if not env_app_config_file:
+        if os.path.exists(filename):
+            config_file = filename
+        else:
+            config_file = os.path.expanduser(os.path.join("~", ".resilient", filename))
+    else:
+        config_file = env_app_config_file
+    return config_file
+
+
+def get_client(opts):
+    """
+    Helper: get a SimpleClient for Resilient REST API.
+
+    :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`
+
+    Returns: a connected and verified instance of SimpleClient.
+    """
+    if isinstance(opts, Namespace):
+        opts = vars(opts)
+
+    LOG = logging.getLogger(__name__)
+
+    # Allow explicit setting "do not verify certificates"
+    verify = opts.get("cafile")
+    if str(verify).lower() == "false":
+        LOG.warn("Unverified HTTPS requests (cafile=false).")
+        requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
+        verify = False
+
+    proxy = None
+    if opts.get("proxy_host"):
+        proxy = get_proxy_dict(opts)
+
+    # Create SimpleClient for a REST connection to the Resilient services
+    url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
+    simple_client_args = {"org_name": opts.get("org"),
+                          "proxies": proxy,
+                          "base_url": url,
+                          "verify": verify}
+    if opts.get("log_http_responses"):
+        LOG.warn("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
+        simple_client = LoggingSimpleClient
+        simple_client_args["logging_directory"] = opts["log_http_responses"]
+    else:
+        simple_client = SimpleClient
+
+    resilient_client = simple_client(**simple_client_args)
+
+    if opts.get("resilient_mock"):
+        # Use a Mock for the Resilient Rest API
+        LOG.warn("Using Mock '%s' for Resilient REST API", opts["resilient_mock"])
+        module_path, class_name = opts["resilient_mock"].rsplit('.', 1)
+        path, module_name = os.path.split(module_path)
+        sys.path.insert(0, path)
+        module = importlib.import_module(module_name)
+        LOG.info("Looking for %s in %s", class_name, dir(module))
+        mock_class = getattr(module, class_name)
+        res_mock = mock_class(org_name=opts.get("org"), email=opts["email"])
+        resilient_client.session.mount("https://", res_mock.adapter)
+
+    userinfo = resilient_client.connect(opts["email"], opts["password"])
+
+    # Validate the org, and store org_id in the opts dictionary
+    LOG.debug(json.dumps(userinfo, indent=2))
+    if(len(userinfo["orgs"])) > 1 and opts.get("org") is None:
+        raise Exception("User is a member of multiple organizations; please specify one.")
+    if(len(userinfo["orgs"])) > 1:
+        for org in userinfo["orgs"]:
+            if org["name"] == opts.get("org"):
+                opts["org_id"] = org["id"]
+    else:
+        opts["org_id"] = userinfo["orgs"][0]["id"]
+
+    # Check if action module is enabled and store to opts dictionary
+    org_data = resilient_client.get('')
+    resilient_client.actions_enabled = org_data["actions_framework_enabled"]
+
+    return resilient_client
 
 
 class TLSHttpAdapter(HTTPAdapter):
@@ -56,6 +164,7 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
+
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
     if sys.version_info.major >= 3:
@@ -64,23 +173,43 @@ def ensure_unicode(input_value):
     if not isinstance(input_value, basestring):
         return input_value
     elif isinstance(input_value, str):
-        input_unicode =  input_value.decode('utf-8')
+        input_unicode = input_value.decode('utf-8')
     else:
         input_unicode = input_value
-            
+
     input_unicode = unicodedata.normalize('NFKC', input_unicode)
     return input_unicode
+
+
+def get_proxy_dict(opts):
+    """ Creates a dictionary with proxy config to be sent to the SimpleClient """
+    scheme = urlparse.urlparse(opts.proxy_host).scheme
+    if not scheme:
+        scheme = 'https'
+        proxy_host = opts.proxy_host
+    else:
+        proxy_host = opts.proxy_host[len(scheme + "://"):]
+
+    if opts.proxy_user and opts.proxy_password:
+        proxy = {'https': '{0}://{1}:{2}@{3}:{4}/'.format(scheme, opts.proxy_user, opts.proxy_password,
+                                                          proxy_host, opts.proxy_port)}
+    else:
+        proxy = {'https': '{0}://{1}:{2}'.format(scheme, proxy_host, opts.proxy_port)}
+
+    return proxy
+
 
 class SimpleClient(object):
     """Helper for using Resilient REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
         """
         Args:
           org_name - the name of the organization to use.
           base_url - the base URL to use.
           proxies - HTTP proxies to use, if any.
           verify - The name of a PEM file to use as the list of trusted CAs.
+          cache_ttl - time to live for cached API responses
         """
         self.headers = {'content-type': 'application/json'}
         self.cookies = None
@@ -89,7 +218,7 @@ class SimpleClient(object):
         self.base_url = u'https://app.resilientsystems.com/'
         self.org_name = ensure_unicode(org_name)
         if proxies:
-            self.proxies = [ensure_unicode(proxy) for proxy in proxies]
+            self.proxies = {ensure_unicode(key): ensure_unicode(proxies[key]) for key in proxies}
         else:
             self.proxies = None
         if base_url:
@@ -101,6 +230,7 @@ class SimpleClient(object):
         self.authdata = None
         self.session = requests.Session()
         self.session.mount(u'https://', TLSHttpAdapter())
+        self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
@@ -112,7 +242,7 @@ class SimpleClient(object):
         Returns:
           The Resilient session object (dict)
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         self.authdata = {
             u'email': ensure_unicode(email),
@@ -189,6 +319,13 @@ class SimpleClient(object):
             result = operation(url, **kwargs)
         return result
 
+    def _keyfunc(self, uri, *args, **kwargs):
+        """ function to generate cache key for cached_get """
+        return uri
+
+    def _get_cache(self):
+        return self.cache
+
     def get(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
@@ -198,13 +335,45 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify,
+                                         timeout=timeout)
+        _raise_if_error(response)
+        return json.loads(response.text)
+
+    @cachedmethod(_get_cache, key=_keyfunc)
+    def cached_get(self, uri, co3_context_token=None, timeout=None):
+        """ Same as get, but checks cache first """
+        return self.get(uri, co3_context_token, timeout)
+
+    def get_const(self, co3_context_token=None, timeout=None):
+        """
+        Get the ConstREST endpoint.
+        Endpoint for retrieving various constant information for this server.   This information is
+        useful in translating names that the user sees to IDs that other REST API endpoints accept.
+        For example, the incidentDTO has a field called "crimestatus_id". The valid values are stored
+        in constDTO.crime_statuses.
+
+        Args:
+          co3_context_token
+          timeout: number of seconds to wait for response
+        Returns:
+          ConstDTO as a dictionary
+        Raises:
+          SimpleHTTPException - if an HTTP exception occurs.
+        """
+        url = u"{0}/rest/const".format(self.base_url)
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
@@ -224,11 +393,11 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           The raw value returned by the server for this resource.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
@@ -252,11 +421,11 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
@@ -271,8 +440,20 @@ class SimpleClient(object):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, co3_context_token=None, timeout=None):
-        """Upload a file to the specified URI"""
+    def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+        """
+        Upload a file to the specified URI
+        e.g. "/incidents/<id>/attachments" (for incident attachments)
+        or,  "/tasks/<id>/attachments" (for task attachments)
+
+        :param uri: The REST URI for posting
+        :param filepath: the path of the file to post
+        :param filename: optional name of the file when posted
+        :param mimetype: optional override for the guessed MIME type
+        :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+        """
         filepath = ensure_unicode(filepath)
         if filename:
             filename = ensure_unicode(filename)
@@ -281,6 +462,7 @@ class SimpleClient(object):
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+            multipart_data.update(data or {})
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.__make_headers(co3_context_token,
                                           additional_headers={'content-type': encoder.content_type})
@@ -294,6 +476,65 @@ class SimpleClient(object):
                                              timeout=timeout)
             _raise_if_error(response)
             return json.loads(response.text)
+
+    def post_artifact_file(self, uri, artifact_type, artifact_filepath, description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
+        """
+        Post a file artifact to the specified URI
+        e.g. "/incidents/<id>/artifacts/files"
+
+        :param uri: The REST URI for posting
+        :param artifact_type: the artifact type name ("IP Address", etc) or type ID
+        :param artifact_filepath: the path of the file to post
+        :param description: optional description for the artifact
+        :param value: optional value for the artifact
+        :param mimetype: optional override for the guessed MIME type
+        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param timeout: optional timeout (seconds)
+
+        """
+        artifact = {
+            "type": artifact_type,
+            "value": value or "",
+            "description": description or ""
+        }
+        mimedata = {
+            "artifact": json.dumps(artifact)
+        }
+        return self.post_attachment(uri,
+                                    artifact_filepath,
+                                    mimetype=mimetype,
+                                    data=mimedata,
+                                    co3_context_token=co3_context_token,
+                                    timeout=timeout)
+
+    def search(self, payload, co3_context_token=None, timeout=None):
+        """
+        Posts to the SearchExREST endpoint.
+        Endpoint for performing full text searches through incidents and incident child objects
+        (tasks, incident comments, task comments, milestones, artifacts, incident attachments,
+        task attachments, and data tables).
+
+        Args:
+          payload: the SearchExInputDTO parameters for performing a search, as a dictionary
+          co3_context_token
+          timeout: number of seconds to wait for response
+        Returns:
+          List of results, as an array of SearchExResultDTO
+        Raises:
+          SimpleHTTPException - if an HTTP exception occurs.
+        """
+        url = u"{0}/rest/search_ex".format(self.base_url)
+        payload_json = json.dumps(payload)
+        response = self._execute_request(self.session.post,
+                                         url,
+                                         data=payload_json,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.__make_headers(co3_context_token),
+                                         verify=self.verify,
+                                         timeout=timeout)
+        _raise_if_error(response)
+        return json.loads(response.text)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
@@ -362,11 +603,11 @@ class SimpleClient(object):
            uri
            payload
            co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
@@ -387,11 +628,11 @@ class SimpleClient(object):
         Args:
           uri
           co3_context_token
-          timeout - number of seconds to wait for response
+          timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          SimpleHTTPException - if an HTTP exception occurrs.
+          SimpleHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.delete,
@@ -406,4 +647,51 @@ class SimpleClient(object):
             return None
         _raise_if_error(response)
         return json.loads(response.text)
+
+
+class LoggingSimpleClient(SimpleClient):
+    """ Simple Client version that logs all Resilient REST API responses to disk.  Useful when building a Mock."""
+    def __init__(self, logging_directory="", *args, **kwargs):
+        super(LoggingSimpleClient, self).__init__(*args, **kwargs)
+        try:
+            directory = os.path.expanduser(logging_directory)
+            directory = os.path.expandvars(directory)
+            assert(os.path.exists(directory))
+            self.logging_directory = directory
+        except Exception as e:
+            raise Exception("Response Logging Directory %s does not exist!",
+                            logging_directory)
+
+    def _log_response(self, response, *args, **kwargs):
+        """ Log Headers and JSON from a Requests Response object """
+        url = urlparse.urlparse(response.url)
+        filename = "_".join((str(response.status_code), "{0}",
+                             response.request.method,
+                             url.path, url.params,
+                             datetime.datetime.now().isoformat())).replace('/', '_').replace(':', '-')
+        with open(os.path.join(self.logging_directory,
+                               filename.format("JSON")), "w+") as logfile:
+            logfile.write(json.dumps(response.json(), indent=2))
+        with open(os.path.join(self.logging_directory,
+                               filename.format("HEADER")), "w+") as logfile:
+            logfile.write(json.dumps(dict(response.headers), indent=2))
+
+    def _connect(self, *args, **kwargs):
+        """ Connect to Resilient and log response """
+        normal_post = self.session.post
+        self.session.post = lambda *args, **kwargs: normal_post(
+            hooks=dict(response=self._log_response), *args, **kwargs)
+        session = super(LoggingSimpleClient, self)._connect(*args, **kwargs)
+        self.session.post = normal_post
+        return session
+
+    def _execute_request(self, operation, url, **kwargs):
+        """Execute a HTTP request and log response.
+           If unauthorized (likely due to a session timeout), retry.
+        """
+        def wrapped_operation(url, **kwargs):
+            return operation(url, hooks=dict(response=self._log_response),
+                             **kwargs)
+        return super(LoggingSimpleClient, self)._execute_request(
+            wrapped_operation, url, **kwargs)
 

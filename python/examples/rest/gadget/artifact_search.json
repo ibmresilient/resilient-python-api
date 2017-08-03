@@ -1,0 +1,21 @@
+{
+  "query": "rtfm.mit.edu",
+  "types": [
+    "artifact"
+  ],
+  "filters": {
+    "incident": [
+      {
+        "conditions": [
+          {
+            "field_name": "plan_status",
+            "method": "in",
+            "value": [
+              "A"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
