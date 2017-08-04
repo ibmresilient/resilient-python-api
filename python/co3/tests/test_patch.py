@@ -107,6 +107,22 @@ class TestPatch:
 
         assert patch.has_changes()
 
+    def test_delete(self):
+        patch = resilient.Patch(dict(a=1, b=2))
+
+        assert not patch.has_changes()
+
+        patch.add_value("a", 11)
+
+        assert patch.has_changes()
+
+        assert patch.get_old_value("a") == 1
+        assert patch.get_new_value("a") == 11
+
+        patch.delete_value("a")
+
+        assert not patch.has_changes()
+
 class TestPatchStatus:
     @pytest.mark.parametrize("success", (True, False))
     def test_success(self, co3_args, success):

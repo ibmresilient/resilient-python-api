@@ -497,6 +497,10 @@ class SimpleClient(object):
                     LOG.debug("callback indicated no change after conflict - skipping")
                     return False
 
+                if not patch.has_changes():
+                    LOG.debug("callback removed all conflicts from patch - no need to re-issue")
+                    return False
+
                 # Make sure something in the patch has actually changed, otherwise we'd
                 # just re-issue the same patch and get into a loop.
                 after = patch.get_old_values()
