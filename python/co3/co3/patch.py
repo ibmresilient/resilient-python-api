@@ -147,6 +147,14 @@ class Patch(object):
         """
         return self.changes[field_name].new_value
 
+    def delete_value(self, field_name):
+        """
+        Removes the change for the specified field.
+        :param field_name: The field to remove.
+        """
+        if field_name in self.changes:
+            del(self.changes[field_name])
+
     def to_dict(self):
         """Converts this patch object to a dict that can be posted to the server."""
         changes = []
