@@ -218,8 +218,6 @@ class StompClient(BaseComponent):
                     self.fire(OnStompError(frame, None))
                 else:
                     self.fire(Message(frame))
-            else:
-                event.reduce_time_left(0)
         except (StompConnectionError, StompError) as err:
             LOG.error("Failed attempt to generate events.")
             self.fire(OnStompError(None, err))
