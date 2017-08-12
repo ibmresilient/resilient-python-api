@@ -7,6 +7,7 @@ import json
 import logging
 import os.path
 import traceback
+import base64
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
@@ -472,8 +473,16 @@ class Actions(ResilientComponent):
             LOG.debug("Got Message: %s", event.frame.info())
 
             try:
-                # Expect the message payload to always be JSON
-                message = json.loads(message.decode('utf-8'))
+                # Expect the message payload to always be UTF8 JSON.
+                # However, it may contain surrogate pairs, and in Python 3 that causes problems:
+                # - surrogate pairs are not allowed by the default (strict) utf8 decoder,
+                # - if we pass them, it will cause downstream issues, so we should re-encode.
+                try:
+                    mstr = message.decode('utf-8')
+                except UnicodeDecodeError:
+                    mstr = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
+
+                message = json.loads(mstr)
                 # Construct a Circuits event with the message, and fire it on the channel
                 event = ActionMessage(source=self, headers=headers, message=message, frame=event.frame, log_dir=self.logging_directory)
                 LOG.info("Event: %s Channel: %s", event, channel)
@@ -481,6 +490,7 @@ class Actions(ResilientComponent):
                 self.fire(event, channel)
             except Exception as exc:
                 LOG.exception(exc)
+                LOG.error("DATA:%s", base64.b64encode(message))
                 # Normally the event won't be ack'd.  Just report it and carry on.
                 if self.ignore_message_failure:
                     # Construct and fire anyway, which will ack the message
