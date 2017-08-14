@@ -480,6 +480,7 @@ class Actions(ResilientComponent):
                 try:
                     mstr = message.decode('utf-8')
                 except UnicodeDecodeError:
+                    LOG.debug("Failed utf8 decode, trying surrogate")
                     mstr = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
 
                 message = json.loads(mstr)
