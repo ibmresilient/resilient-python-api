@@ -17,7 +17,7 @@ import os
 import filelock
 from circuits import Component, Debugger
 import co3 as resilient
-from co3.co3argparse import parse_parameters
+from co3 import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
