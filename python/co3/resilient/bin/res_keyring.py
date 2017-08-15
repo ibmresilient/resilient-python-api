@@ -10,16 +10,16 @@ import sys
 import os
 import logging
 import keyring
-from co3 import get_config_file
+from resilient import get_config_file
 from six import string_types
 
 try:
     # For all python < 3.2
     from io import open
-    from co3 import ensure_unicode
+    from resilient import ensure_unicode
     import backports.configparser as configparser
 except ImportError:
-    from co3.co3 import ensure_unicode
+    from resilient.co3 import ensure_unicode
     import configparser
 
 
