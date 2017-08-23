@@ -51,6 +51,20 @@ def url_filter(val):
     return urllib.quote(str(val))
 
 
+def idna_filter(val):
+    """Jinja2 filter function 'idna' encodes the value per RFC 3490"""
+    if isinstance(val, jinja2.Undefined):
+        return "[undefined]"
+    return val.encode("idna").decode("utf-8")
+
+
+def punycode_filter(val):
+    """Jinja2 filter function 'punycode' encodes the value per RFC 3492"""
+    if isinstance(val, jinja2.Undefined):
+        return "[undefined]"
+    return val.encode("punycode").decode("utf-8")
+
+
 def ldap_filter(val):
     """Jinja2 filter function 'ldap' produces LDAP-encoded string of the value"""
     if isinstance(val, jinja2.Undefined):
@@ -181,6 +195,8 @@ JINJA_FILTERS = {"json": json_filter,
                  "js": js_filter,
                  "html": html_filter,
                  "url": url_filter,
+                 "idna": idna_filter,
+                 "punycode": punycode_filter,
                  "ldap": ldap_filter,
                  "ps": ps_filter,
                  "sh": sh_filter,
@@ -350,9 +366,19 @@ def test(template):
         >>> test("{{string|upper}}")
         u'TEMPLATES'
 
+        >>> test("{{domain|idna}}")
+        u'xn--c1yn36f'
+
+        >>> test("{{domain|punycode}}")
+        u'c1yn36f'
 
     """
-    data = {"string": "templates", "number": 42, "numbers": [1, 2, 3], "object": {"name": "v<a>lue"}, "epochdate": 1020304050607}
+    data = {"string": "templates",
+            "number": 42,
+            "numbers": [1, 2, 3],
+            "object": {"name": "v<a>lue"},
+            "epochdate": 1020304050607,
+            "domain": u"\u9ede\u770b"}
     return unicode(render(template, data))
 
 
