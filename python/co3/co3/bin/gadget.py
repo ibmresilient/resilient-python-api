@@ -83,7 +83,7 @@ def show_incident_list(client, query_template_file_name):
 
     # Print the incident names
     for inc in incidents:
-        print('{0}: {1}'.format(inc['id'], inc['name']))
+        print(u'{0}: {1}'.format(inc['id'], inc['name']))
 
 
 def get_json_time(dt):
