@@ -1,3 +1,10 @@
+2017-08-24: version 28.1.
+
+resilient-circuits: fix a problem with python3 handling unicode surrogate pairs (e.g. emoji) in action messages
+resilient-circuits: add 'idna' and 'punycode' JINJA filters for domain encoding
+resilient-circuits: add '--config-file' commandline argument
+resilient-circuits: fix various performance and reliability issues
+
 2017-06-22: version 28.0.33
 
 co3: disable the ConfigParser '%' interpolation feature

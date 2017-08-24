@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
-major_minor_version = "28.0"
+major_minor_version = "28.1"
 #
 def read_version_number():
     path = os.path.join(os.path.dirname(__file__), "co3", "version.txt")

@@ -1,3 +1,11 @@
+2017-08-24: version 28.1.
+
+co3: add 'patch' method to SimpleClient for efficient field-level updates
+gadget: add '--patch' option
+gadget: use 'patch' instead of 'get_put' for '--update' actions
+gadget: fix a problem using 'gadget --list' with unicode characters in incident names
+C#: update for v28.1
+
 2017-06-22: version 28.0.33
 
 co3: disable the ConfigParser '%' interpolation feature
