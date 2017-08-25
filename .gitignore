@@ -5,11 +5,15 @@ __pycache__
 .cache
 .coverage
 .tox
+.swp
+.eggs
+resilient_circuits_lockfile
 *.iml
-.setup.py.swp
 *.pem
 *.pyc
 *.log
 *.log*
 *.config
-resilient_circuits_lockfile
+*~
+*.egg-info
+*.tar.gz
