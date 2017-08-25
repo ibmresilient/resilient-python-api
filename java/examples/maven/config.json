@@ -1,8 +1,0 @@
-{
-  "restUrl": "https://myserver.mycompany.com",
-  "user": "someuser@mycompany.com",
-  "password": "some optional password - will prompt if missing",
-  "trustStore": "/path/to/custom/java/truststore",
-  "trustStorePassword": "changeit",
-  "orgName": "Optional Org Name - required if user is a member of multiple"
-}

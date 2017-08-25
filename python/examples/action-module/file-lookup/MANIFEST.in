@@ -1,4 +1,0 @@
-include README.md
-include file_lookup/data/*
-include file_lookup/LICENSE
-include file_lookup/version.txt

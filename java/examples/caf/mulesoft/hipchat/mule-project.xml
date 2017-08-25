@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><mule-project xmlns="http://www.mulesoft.com/tooling/project" schemaVersion="3.5.0.0" runtimeId="org.mule.tooling.server.3.5.CE">
-  <name>mulesoft</name>
-  <muleExtension name="APIkit" qualifier="org.mule.tooling.apikit"/>
-  <name>hipchat</name>
-  <name>hipchat</name>
-  <name>hipchat</name>
-  <name>hipchat</name>
-</mule-project>

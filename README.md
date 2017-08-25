@@ -1,169 +1,183 @@
-# Introduction
+# Python API Packages
 
-This project contains utilities and sample code for the Resilient APIs
-(both the Action Module and REST APIs).
-The following is the top level directory structure:
+This directory contains
 
- Directory  | Description
- ---------- | -----------
- docs       | Documentation and developer guides
- dotnet     | Microsoft .NET REST API examples
- java       | Java REST API and Action Module examples
- python     | Python REST API and Action Module examples
- weburl     | Web URL examples
+ * [co3](co3), the Resilient Python Client Module for the Resilient APIs,
+ * [resilient_circuits](resilient-circuits), an application framework for Action Module,
+ * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures, 
+ * and [examples](examples) for the Resilient REST API and Resilient Action Module.
 
 
-# Example FAQ/Index
+## Python Client Module
 
-You may be here because you are looking for a specific example of accomplishing
-a task or have a specific question.  This section will attempt to get you
-pointed in the right direction.
+The Resilient Python Client (`co3` module) contains tools helpful in calling
+the Resilient REST API and Action Module.
 
+It provides a SimpleClient class that you use to call the Resilient REST API.
+This class manages an authenticated connection to the Resilient server, and
+provides simple helper methods for accessing REST resources.
 
-## General ##
-
-***What is the difference between the Resilient REST API and the Resilient
-Action Module?***
-
-The Resilient REST API is allows programs to get and modify data within the
-Resilient system.  Using this API you can create, modify, query and delete
-incident-oriented information.  The Resilient Web UI uses the REST API to do
-everything.  You can write clients that use the REST API in the same ways.
-
-The Resilient Action Module allows you to respond to "actions" (either manual
-or automatic) that the server generates.  The Action Module Programmer's Guide
-contains much more information about this framework.
-
-***I need an example that I cannot find here.  Can you help?***
-
-We love to help customers be successful! Please contact us at
-[success@resilientsystems.com](mailto:success@resilientsystems.com).
+The module also provides an ArgumentParser (which extends `argparse.ArgumentParser`)
+to simplify the writing of command line utilities.  This provides support for
+standard arguments such as `--host` and `--email` that Resilient-oriented
+command line tools will generally need.  The ArgumentParser can read defaults
+from a configuration file, and override them from the command line.
 
 
-## Python ##
+### Configuration File
 
-***Where are the Python examples?***
+Configuration parameters for the server URLs, user credentials and so on
+should be provided using a configuration file.  They can optionally also
+be provided on the command-line.
 
-The Python examples are located in the `python/examples` directory.
-The following subdirectories exist within that directory:
+If the environment variable `APP_CONFIG_FILE` is set, it defines the path
+to your configuration file.  The default location for this file is
+`app.config` in a directory named `.resilient` under the user's home directory.
 
-* `co3` - This directory contains a Python module that is used by all of the
-  Python examples.  You'll want to install this module before continuing with
-  the Python examples.
-* `examples/rest` - Examples showing how you can use the Resilient REST API
-  with Python.
-* `examples/action-module` - Examples showing how to use the Resilient Action
-  Module with Python, leveraging the `resilient_circuits` application framework
-  to make development simpler and more robust.
-* `examples/custom-threat-service` - Examples showing how to implement a
-  Custom Threat Service with Python, using the Django web framework.
+The configuration file is a text file, with a `[resilient]` section containing:
 
-See the [Python README](python/README.md) for details.
+```
+[resilient]
+host=resilient.example.com
+port=443
+email=api@example.com
+password=passw0rd
+org=Culture
+```
 
-***Which version of Python do the examples use?***
+__Configuration Values From Keystore__  
+   Values in the config file can be pulled from a compatible keystore system
+   on your OS.  To retrieve a value from a keystore, set it to ^\<key\>  
+   
+Example from app.confg:  
+```
+[resilient]
+password=^resilient_password
+```
 
-They work fine with the latest release of Python 2.7 or later, or 3.4 or later.
-At least Python 2.7.9 is preferred, since it has better TLS certificate handling.
+__Adding the Values to Keystore__  
+  The co3 package includes a utility to add all of the keystore-based values from 
+  your app.config file to your system's compatible  keystore system.  Once you have 
+  created the keys in your app.config file, run `res-keyring` and you will be 
+  prompted to create the secure values to store.  
+  
+  ```
+  bash-3.2$ res-keyring 
+  Configuration file: /Users/kchurch/.resilient/app.config
+  Secrets are stored with 'keyring.backends.OS_X'
+  [resilient] password: <not set>
+  Enter new value (or <ENTER> to leave unchanged): 
+  ```
+  
+__Configuration Values From Environment__  
+  Values in your config file can also be pulled from environment variables.
+  To retrieve a value from the environment, set it to $\<key\>  
 
-***How do I run the Python examples?***
+Example from app.confg:  
+```
+[resilient]
+password=$resilient_password
+```
 
-Your first step should be to install the "co3" Python module.
+A standard way to initialize a SimpleClient with this configuration is,
 
-All of the Python examples show a command line usage if you run them with the
-`--help` argument.  One key point worth calling out here is that you have to
-somehow tell the example programs how to determine if the server certificate
-is trusted.  You do this with the `--cafile` argument.
+```
+# Read the standard Resilient APIs configuration file
+# - default location is ~/.resilient/app.config
+# - or the location set in $APP_CONFIG_FILE
+# and any other arguments specified on the command line
+parser = co3.ArgumentParser(config_file=co3.get_config_file())
+opts = parser.parse_args()
 
-See the [Python README](python/README.md) for further details.
+# Initialize a SimpleClient with these options
+client = co3.get_client(opts)
 
+```
 
-***Where can I find a Python example that just uses the REST API?***
+### Installing the 'co3' module
 
-There is such an example in `python/examples/rest/gadget`.
-This tool is useful for exploring the REST API because it allows you to
-generally GET/PUT/POST/DELETE to the Resilient server.
-
-***What is Circuits?***
-
-The [Circuits framework](http://circuitsframework.com/) is a lightweight,
-event-driven, asynchronous framework for Python applications.
-
-Resilient provides a Circuits-based application structure, `resilient_circuits`,
-for developing Action Module integrations in Python.  This framework can easily
-load and run multiple "components" at once, to support your integration and
-automation tasks.  It can be a very convenient and productive way to develop
-applications that use Resilient REST API and Resilient Action Module.
-
-See the [resilient-circuits README](python/resilient-circuits/README) and the
-[extensive examples](python/examples/actions-circuits/) for further details.
+Current versions of the release package are available on GitHub:
+https://github.com/Co3Systems/co3-api/releases
 
 
+Install the package file using `pip`:
 
-## Java ##
+    pip install co3-x.x.x.tar.gz
 
-***Where are the Java examples?***
+(the filename will vary according to the current version).
 
-The Java examples are in the `java/examples` directory.
-The following subdirectories exist within that directory:
+You can build release package files locally, by
 
-* `examples/caf/general` - Groovy examples that read Action Module actions from
-  a destination and invoke Resilient REST API commands.
-* `examples/caf/camel` - Apache Camel example that reads Action Module actions
-  from a destination and adjusts the incident severity based on the incident
-  type.
-* `examples/caf/mulesoft` - Mulesoft Anypoint Studio example that illustrates
-  how to read from a message destination and post to HipChat.  Note that you
-  will need to install Mulesoft Anypoint Studio to use this example.
-* `examples/rest` - A collection of examples that illustrate various ways to use
-  the Resilient REST API.
-* `jms-util` - A library that allows for secure connections to Apache ActiveMQ
-  servers.  All of the Action Module examples use this library because the
-  default Active MQ client library does not check for certificate common name
-  mismatch errors.
+    bash ./buildall.sh <version_number>
 
-See the [Java README](java/README.md) for more information.
+where <version_number> is a build number (1, 2, etc).
 
-***What Java version do the examples use?***
 
-The examples were written using Java 7, although you should be able to run them
-with Java 6 - 8.
+## Action Module Application Framework
 
-Some of the examples are written in Groovy v2.3.6.
+The Resilient-Circuits Application Framework (`resilient_circuits` module)
+is a very lightweight component-based framework for writing applications
+that respond to Action Module events.
 
-***How do you build the examples?***
+It provides an extensible "application" class that loads any Python files
+in the application's `components` directory as well as any installed 
+compatible packages. For each of these components, it automatically subscribes 
+to the appropriate Action Module message destination (queue or topic), and 
+dispatches messages to the relevant method.
 
-We use Gradle to build the examples.
-See the [Java Examples README](java/examples/README.md) for more information.
+The framework manages the connection to the Action Module, including any
+reconnection after a network outage.  It also manages acknowledgement of
+action messages and sending action status back to the server.
 
-***What's the best way to explore the Java examples?***
+To develop a component, you simply subclass the `ResilientComponent` class.
+This superclass includes several utility functions that provide convenient
+access to the REST API and action message data.
 
-We highly recommend that you use Eclipse or IntelliJ for this.  You will need
-to have the Gradle Eclipse add-in installed.  Once you have done that, you can
-import the Gradle project in the "java" directory.
+Examples can be found [examples/action-modules](here).
 
-***What is Mulesoft?***
+### Installing the 'resilient_circuits' module
 
-[Mulesoft](https://www.mulesoft.org) is an Enterprise Service Bus (ESB) that
-allows you to run multiple integrations (Resilient-related or not) within a
-single environment.  An ESB can be helpful if you have many different systems
-that need to interact with one anohter.  If you already have an ESB, you may
-want to consider having your Resilient integrations run within it.
+Current versions of the release package are available on GitHub:
+https://github.com/Co3Systems/co3-api/releases
 
-The Mulesoft ESB also has a number of pre-built connectors that might simplify
-integrations with Resilient.
+Install the package file using `pip`:
 
-See the [Mulesoft HipChat Example](java/examples/caf/mulesoft/) for an example
-of how you can use Mulesoft to integrate Resilient with a chat client (HipChat
-in our example).
+    pip install resilient_circuits-x.x.x.tar.gz
 
-If you do not need to full power of an ESB such as Mulesoft, you may wish to
-consider a lighter-weight alternative such as Apache Camel (see below).
+(the filename will vary according to the current version of this repository).
 
-***What is Apache Camel?***
 
-Camel allows you to create "routes" that describe how messages (such as Action
-Module messages) get processed.  Apache Camel is an open source tool with
-built-in connectors that may help simplify integrations with Resilient.
+## Certificates
 
-See the [Apache Camel Example](java/examples/caf/camel) section for an example
-of how you can use Camel to integrate with Resilient.
+Note that in order to connect to the Resilient server, if the server
+doesn't have a trusted TLS certificate, you must provide the server's
+certificate in a file (e.g. "cacerts.pem").  The quickest way to do this
+is to use either `openssl` or the Java `keytool` command line utilities.
+
+Using openssl to create the cacerts.pem file (using Linux or Mac OS):
+```
+openssl s_client -connect SERVER:443 -showcerts -tls1 < /dev/null > cacerts.pem 2> /dev/null
+```
+
+Using keytool to create the cacerts.pem file (Linux, Mac OS or Windows):
+```
+keytool -printcert -rfc -sslserver SERVER:443 > cacerts.pem
+```
+
+WARNING:  In a production setting, you should take care to get the certificate
+from a trusted source and confirm its fingerprint.
+
+When connecting to a Resilient server with the Python libraries,
+the hostname you specify must match exactly the name in the server
+certificate.  If there is a mismatch, the permanent solution is to either
+change your DNS server or change the server certificate so it matches. It is
+also possible to modify your hosts file temporarily, but that is not a permanent
+solution.
+
+
+## Resilient API Examples (python/examples directory)
+
+The [examples](examples) directory contains several utilities and examples
+that make use of the Resilient REST API and the Resilient Action Module.
+
+For further details, see the `README.md` supplied with each example.
