@@ -35,7 +35,7 @@ setup(
         'jinja2',
         'pysocks',
         'filelock>=2.0.5',
-        'co3>={}.{}'.format(major, minor)
+        'resilient>={}.{}'.format(major, minor)
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Apps',

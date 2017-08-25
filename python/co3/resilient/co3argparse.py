@@ -12,9 +12,9 @@ from six import string_types
 
 if sys.version_info.major == 2:
     from io import open
-    from co3 import ensure_unicode, get_proxy_dict
+    from resilient import ensure_unicode, get_proxy_dict
 else:
-    from co3.co3 import ensure_unicode, get_proxy_dict
+    from resilient.co3 import ensure_unicode, get_proxy_dict
 
 try:
     # For all python < 3.2

@@ -1,25 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" Setup for co3 module """
+""" Setup for resilient module """
 
 from __future__ import print_function
-import io
 import os
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 here = os.path.abspath(os.path.dirname(__file__))
-major_minor_version = "28.1"
-#
+major_minor_version = "28.2"
+
+
 def read_version_number():
-    path = os.path.join(os.path.dirname(__file__), "co3", "version.txt")
+    path = os.path.join(os.path.dirname(__file__), "resilient", "version.txt")
     with open(path) as f:
         ver = f.read()
     return ver.strip()
 
 version = read_version_number()
+
 
 class PyTest(TestCommand):
     user_options = [('configfile=', 'c', "Resilient Config File for co3argparse"),
@@ -53,7 +54,7 @@ class PyTest(TestCommand):
 
 
 setup(
-    name='co3',
+    name='resilient',
     version=version,
     url='https://www.resilientsystems.com/',
     license='IBM Resilient License',
@@ -87,15 +88,15 @@ setup(
     author_email='support@resilientsystems.com',
     description='Resilient API',
     long_description='Resilient API',
-    packages=find_packages(), # packages=['co3'],
+    packages=find_packages(),
     include_package_data=True,
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
     ],
     entry_points={
-        'console_scripts': ['finfo = co3.bin.finfo:main',
-                            'gadget = co3.bin.gadget:main',
-                            'res-keyring = co3.bin.res_keyring:main']
+        'console_scripts': ['finfo = resilient.bin.finfo:main',
+                            'gadget = resilient.bin.gadget:main',
+                            'res-keyring = resilient.bin.res_keyring:main']
     }
 )
