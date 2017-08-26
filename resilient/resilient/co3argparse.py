@@ -182,7 +182,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # Post-processing for other special options
         password = args.password
-        while (not password) and (not args.no_prompt_password):
+        while (not password) and (not args.get("no_prompt_password")):
             password = getpass.getpass()
         args["password"] = ensure_unicode(password)
 
