@@ -14,6 +14,7 @@ major_minor_version = "28.2"
 
 
 def read_version_number():
+    """Pull the version number from the version.txt file."""
     path = os.path.join(os.path.dirname(__file__), "resilient", "version.txt")
     with open(path) as f:
         ver = f.read()
@@ -56,8 +57,23 @@ class PyTest(TestCommand):
 setup(
     name='resilient',
     version=version,
-    url='https://www.resilientsystems.com/',
-    license='IBM Resilient License',
+    url='https://developer.ibm.com/resilient',
+    license='MIT',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Environment :: Other Environment',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Topic :: Security',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ],
 
     author='IBM Resilient',
     install_requires=[
@@ -87,13 +103,10 @@ setup(
     cmdclass={"test": PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',
-    long_description='Resilient API',
+    long_description='Resilient API Modules for Python',
     packages=find_packages(),
     include_package_data=True,
     platforms='any',
-    classifiers=[
-        'Programming Language :: Python',
-    ],
     entry_points={
         'console_scripts': ['finfo = resilient.bin.finfo:main',
                             'gadget = resilient.bin.gadget:main',
