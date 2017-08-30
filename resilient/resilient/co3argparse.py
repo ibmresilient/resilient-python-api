@@ -173,29 +173,47 @@ class ArgumentParser(argparse.ArgumentParser):
                           help="MAX number of Action Module messages to send before ACK is required")
 
     def parse_args(self, args=None, namespace=None):
-        # Parse the arguments
+        """
+        Parse the configuration options and command-line arguments.
+
+        :return: Note: the return value is a dict, not a Namespace.
+        """
+        # (the implementation calls parse_known_args)
         args = super(ArgumentParser, self).parse_args(args, namespace)
-
-        # Post-process any options that reference keyring or environment variables
-        opts = parse_parameters(vars(args))
-        args = ConfigDict(opts)
-
-        # Post-processing for other special options
-        password = args.password
-        while (not password) and (not args.get("no_prompt_password")):
-            password = getpass.getpass()
-        args["password"] = ensure_unicode(password)
-
-        if args.get("cafile"):
-            args["cafile"] = os.path.expanduser(args.cafile)
-
-        if args.get("stomp_cafile"):
-            args["stomp_cafile"] = os.path.expanduser(args.stomp_cafile)
-
-        if args.get("proxy_host"):
-            args["proxy"] = get_proxy_dict(args)
-
         return args
+
+    def parse_known_args(self, args=None, namespace=None):
+        """
+        Parse the configuration options and command-line arguments.
+
+        :return: Note: the return value is a dict, not a Namespace.
+        """
+        # Parse the known arguments
+        args, argv = super(ArgumentParser, self).parse_known_args(args, namespace)
+        return _post_process_args(args), argv
+
+
+def _post_process_args(args):
+    # Post-process any options that reference keyring or environment variables
+    opts = parse_parameters(vars(args))
+    args = ConfigDict(opts)
+
+    # Post-processing for other special options
+    password = args.password
+    while (not password) and (not args.get("no_prompt_password")):
+        password = getpass.getpass()
+    args["password"] = ensure_unicode(password)
+
+    if args.get("cafile"):
+        args["cafile"] = os.path.expanduser(args.cafile)
+
+    if args.get("stomp_cafile"):
+        args["stomp_cafile"] = os.path.expanduser(args.stomp_cafile)
+
+    if args.get("proxy_host"):
+        args["proxy"] = get_proxy_dict(args)
+
+    return args
 
 
 def parse_parameters(options):
