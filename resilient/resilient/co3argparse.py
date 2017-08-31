@@ -47,11 +47,11 @@ class ConfigDict(dict):
 class ArgumentParser(argparse.ArgumentParser):
     """Helper to parse common Resilient command line arguments.
 
-    Optionally, arguments can be specified in a config file, section '[resilient]'.
+    Optionally, arguments can be specified in a config file, section :samp:`[resilient]`.
 
     It is expected that a command line utility that needs to work with a Resilient
-    server will create its own class that inherits this class.  Its __init__
-    method will call self.add_argument as necessary.
+    server will create its own class that inherits this class.  Its `__init__`
+    method should call :samp:`self.add_argument(...)` as necessary.
 
     See https://docs.python.org/3/library/argparse.html for more details.
     """
@@ -60,14 +60,24 @@ class ArgumentParser(argparse.ArgumentParser):
     config = None
 
     def getopt(self, section, opt):
-        """Get a single option value, or None if not present"""
+        """Get a single option value.
+
+        :param section: The configuration section.
+        :param opt: The configuration option.
+        :return: The value, or None if not present.
+        """
         if self.config:
             if opt in self.config.options(section):
                 return self.config.get(section, opt)
         return None
 
     def getopts(self, section, opt):
-        """Get an array of option values, or [] if not present"""
+        """Get a comma-separated option value as an array.
+
+        :param section: The configuration section.
+        :param opt: The configuration option.
+        :return: The value, or [] if not present.
+        """
         if self.config:
             if opt in self.config.options(section):
                 return self.config.get(section, opt).split(u",")

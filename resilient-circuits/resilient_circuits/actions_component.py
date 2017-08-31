@@ -30,6 +30,7 @@ STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 MAX_RETRY_COUNT = 3                 # Retry failed deliveris this many times
 
+
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
     try:
@@ -217,7 +218,9 @@ class ResilientComponent(BaseComponent):
     """A Circuits base component with a connection to the Resilient REST API
 
        This is a convenient superclass for custom components that use the
-       Resilient Action Module.
+       Resilient Action Module.  If our component inherits from ResilientComponent,
+       it will automatically be loaded and subscribed to events on the message destination
+       specified by :attr:`channel`
     """
     test_mode = False  # True with --test-actions option
 
@@ -269,7 +272,9 @@ class ResilientComponent(BaseComponent):
         self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
 
     def rest_client(self):
-        """Return a connected instance of the Resilient REST SimpleClient"""
+        """Return a connected instance of the :class:`resilient.SimpleClient`
+        that can be used to access the Resilient REST API.
+        """
         self.reset_idle_timer()
         return get_resilient_client(self.opts)
 
@@ -321,9 +326,10 @@ class ResilientComponent(BaseComponent):
 
     @handler("reload")
     def reload(self, event, opts):
-        """New set of config options"""
+        """Event handler called when the configuration options have changed."""
         self.opts = opts
         self._get_fields()
+
 
 class Actions(ResilientComponent):
     """Component that subscribes to Resilient Action Module queues and fires message events"""
@@ -352,8 +358,7 @@ class Actions(ResilientComponent):
         self.subscribe_headers = None
         self._configure_opts(opts)
 
-        _retry_timer = Timer(RETRY_TIMER_INTERVAL,
-                            Event.create("retry_failed_deliveries"), persist=True)
+        _retry_timer = Timer(RETRY_TIMER_INTERVAL, Event.create("retry_failed_deliveries"), persist=True)
         _retry_timer.register(self)
 
         if opts.get("test_actions", False):
@@ -485,7 +490,11 @@ class Actions(ResilientComponent):
 
                 message = json.loads(mstr)
                 # Construct a Circuits event with the message, and fire it on the channel
-                event = ActionMessage(source=self, headers=headers, message=message, frame=event.frame, log_dir=self.logging_directory)
+                event = ActionMessage(source=self,
+                                      headers=headers,
+                                      message=message,
+                                      frame=event.frame,
+                                      log_dir=self.logging_directory)
                 LOG.info("Event: %s Channel: %s", event, channel)
 
                 self.fire(event, channel)
@@ -496,7 +505,11 @@ class Actions(ResilientComponent):
                 if self.ignore_message_failure:
                     # Construct and fire anyway, which will ack the message
                     LOG.warn("This message failure will be ignored...")
-                    event = ActionMessage(source=self, headers=headers, message=None, frame=event.frame, log_dir=self.logging_directory)
+                    event = ActionMessage(source=self,
+                                          headers=headers,
+                                          message=None,
+                                          frame=event.frame,
+                                          log_dir=self.logging_directory)
                     self.fire(event, channel)
 
     # Circuits event handlers
@@ -535,7 +548,7 @@ class Actions(ResilientComponent):
             LOG.debug("STOMP TLS validation with certificate file: %s", cafile)
 
         try:
-            ca_certs=None
+            ca_certs = None
             context = ssl.create_default_context(cafile=cafile)
             context.check_hostname = True if cafile else False
             context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
@@ -543,7 +556,7 @@ class Actions(ResilientComponent):
             # Likely an older ssl version w/out true ssl context
             LOG.info("Can't create SSL context. Using fallback method")
             context = None
-            ca_certs=cafile
+            ca_certs = cafile
 
         # Set up a STOMP connection to the Resilient action services
         if not self.stomp_component:
@@ -555,7 +568,7 @@ class Actions(ResilientComponent):
                                                connected_timeout=STOMP_TIMEOUT,
                                                connect_timeout=STOMP_TIMEOUT,
                                                ssl_context=context,
-                                               ca_certs=ca_certs, # For old ssl version
+                                               ca_certs=ca_certs,  # For old ssl version
                                                **self._proxy_args)
             self.stomp_component.register(self)
         else:
@@ -568,7 +581,7 @@ class Actions(ResilientComponent):
                                       connected_timeout=STOMP_TIMEOUT,
                                       connect_timeout=STOMP_TIMEOUT,
                                       ssl_context=context,
-                                      ca_certs=ca_certs, # For old ssl version
+                                      ca_certs=ca_certs,  # For old ssl version
                                       **self._proxy_args)
 
         # Other special options
@@ -586,7 +599,7 @@ class Actions(ResilientComponent):
                 self.logging_directory = directory
             except Exception as e:
                 self.logging_directory = None
-                raise Exception("Response Logging Directory %s does not exist!" ,
+                raise Exception("Response Logging Directory %s does not exist!",
                                 self.opts["log_http_responses"])
 
     @handler("registered")
@@ -665,7 +678,7 @@ class Actions(ResilientComponent):
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
             LOG.info("Subscribe to message destination '%s'", queue_name)
-            destination="actions.{0}.{1}".format(self.org_id, queue_name)
+            destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))
         else:
             LOG.error("Invalid request to subscribe to %s in state Connected? [%s] with %d listeners",
@@ -678,7 +691,7 @@ class Actions(ResilientComponent):
         if self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             LOG.info("Unsubscribe from message destination '%s'",
                      queue_name)
-            destination="actions.{0}.{1}".format(self.org_id, queue_name)
+            destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Unsubscribe(destination))
 
     def disconnect(self, reconnect=False, flush=True):
@@ -812,7 +825,6 @@ class Actions(ResilientComponent):
             self._resilient_ack_delivery_failures[message_id] = failure
         LOG.warn("Failed %d times to deliver Resilient ack for message %s", failure["retry_count"], message_id)
 
-
     @handler("retry_failed_deliveries")
     def _retry_send_failures(self, event):
         """retry all messages in the delivery_failures dict that are from the current session"""
@@ -860,7 +872,7 @@ class Actions(ResilientComponent):
             subscribe_event = Event.create("subscribe_to_all")
             self.fire(subscribe_event)
             yield self.wait(subscribe_event)
-        event.success=True
+        event.success = True
 
     @handler()
     def _on_event(self, event, *args, **kwargs):
@@ -880,7 +892,7 @@ class Actions(ResilientComponent):
                     else:
                         message = value
                 else:
-                    message= u"No handler returned a result for this action"
+                    message = u"No handler returned a result for this action"
                 LOG.debug("Message: %s", message)
                 status = 0
                 headers = fevent.hdr()

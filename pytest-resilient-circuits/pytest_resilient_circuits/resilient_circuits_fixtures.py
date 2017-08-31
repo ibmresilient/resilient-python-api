@@ -230,6 +230,7 @@ class ConfiguredAppliance:
 
 # end ConfiguredAppliance
 
+
 class ResilientCircuits:
     def __init__(self, tmpdir_factory, manager, watcher, request):
 
@@ -301,17 +302,20 @@ test_actions = True
 
 # end ResilientCircuits
 
+
 @pytest.fixture(scope="class")
 def circuits_app(tmpdir_factory, manager, watcher, request):
     circuits_app_fixture = ResilientCircuits(tmpdir_factory, manager, watcher, request)
     yield circuits_app_fixture
     circuits_app_fixture.finalizer()
 
+
 @pytest.fixture(scope="class")
 def configure_resilient(request):
     """ Create necessary destinations, actions, fields, etc in Resilient """
     yield ConfiguredAppliance(request)
 # end configure_resilient
+
 
 @pytest.fixture(scope="class")
 def new_incident(circuits_app):

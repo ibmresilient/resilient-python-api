@@ -12,40 +12,48 @@ LOG = logging.getLogger(__name__)
 
 
 class ActionMessage(Event):
-    """A Circuits event for a Resilient Action Module message"""
+    """A Circuits event for a Resilient Action Module message.
 
-    # This is a generic event that holds details of the Action Module message,
-    # including its context (the incident, task, artifact... where the action
-    # was triggered).
-    #
-    # These events are named by the action that triggered them (lowercased).
-    # So a custom action named "Manual Action" will generate an event with name
-    # "manual_action".  To handle that event, you should implement a Component
-    # that has a method named "manual_action":  the Circuits framework will call
-    # your component's methods based on the name of the event.
-    #
-    # The parameters for your event-handler method are:
-    #   event: this event object
-    #   source: the component that fired the event
-    #   headers: the Action Module message headers (dict)
-    #   message: the Action Module message (dict)
-    # For convenience, the message is also broken out onto event properties,
-    #   event.incident: the incident that the event relates to
-    #   event.artifact: the artifact that the event was triggered from (if any)
-    #   event.task: the task that the event was triggered from (if any)
-    #   (etc).
-    #
-    # To have your component's method with a different name from the action,
-    # you can use the '@handler' decorator:
-    #
-    #    @handler("the_action_name")
-    #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
-    #
-    # To have a method handle *any* event on the component's channel,
-    # use the '@handler' decorator with no event name,
-    #
-    #    @handler()
-    #    def _any_method_name(self, event, source=None, headers=None, message=None) ...
+    This is a generic event that holds details of the Action Module message,
+    including its context (the incident, task, artifact... where the action
+    was triggered).  Your components will receive these events from the
+    Resilient Action Module message destination.
+
+    These events are named by the rule that triggered them (lowercased).
+    So a custom action rule named "Manual Action" will generate an event with name
+    "manual_action".  To handle that event, you should implement a :class:`ResilientComponent`
+    that has a method named :samp:`manual_action`:  the Circuits framework will call
+    your component's methods based on the name of the event.
+
+    The parameters for your event-handler method are:
+       * event: this event object
+       * source: the component that fired the event
+       * headers: the Action Module message headers (dict)
+       * message: the Action Module message (dict)
+    For convenience, the message is also broken out onto event properties,
+       * event.incident: the incident that the event relates to
+       * event.artifact: the artifact that the event was triggered from (if any)
+       * event.task: the task that the event was triggered from (if any)
+       (etc).
+
+    To have your component's method with a different name from the action,
+    you can use the :class:`@handler` decorator:
+
+    .. code-block:: python
+
+        @handler("the_action_name")
+        def _any_method_name(self, event, source=None, headers=None, message=None) ...
+
+    To have a method handle *any* event on the component's channel,
+    use the '@handler' decorator with no event name,
+
+    .. code-block:: python
+
+        @handler()
+        def _any_method_name(self, event, source=None, headers=None, message=None) ...
+
+    Refer to the developer documentation for additional details on writing components and event handlers.
+    """
 
     def __init__(self, source=None, headers=None, message=None,
                  test=False, test_msg_id=None, frame=None, log_dir=None):
@@ -62,7 +70,7 @@ class ActionMessage(Event):
 
         self.deferred = False
         self.message = message
-        self.frame=frame
+        self.frame = frame
         self.context = headers.get("Co3ContextToken")
         self.action_id = message.get("action_id")
         self.object_type = message.get("object_type")

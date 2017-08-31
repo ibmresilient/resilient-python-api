@@ -140,12 +140,12 @@ class SimpleHTTPException(Exception):
     """Exception for HTTP errors."""
     def __init__(self, response):
         """
-        Args:
-          response - the Response object from the get/put/etc.
+        :param response: The Response object from the get/put/etc.
         """
         super(SimpleHTTPException, self).__init__(u"{0}:  {1}".format(response.reason, response.text))
 
         self.response = response
+
 
 class PatchConflictException(SimpleHTTPException):
     """Exception for patch conflicts."""
@@ -154,9 +154,10 @@ class PatchConflictException(SimpleHTTPException):
 
         self.patch_status = patch_status
 
+
 class NoChange(Exception):
-    """Exception that can be raised within a get/put handler to indicate 'no change'
-       (which then just bypasses the 'put')
+    """Exception that can be raised within a get/put handler or a patch callback
+       to indicate 'no change' (which then just bypasses the update operation).
     """
     pass
 
@@ -164,13 +165,12 @@ class NoChange(Exception):
 def _raise_if_error(response):
     """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
 
-    Args:
-      response - the Response object from a get/put/etc.
-    Raises:
-      SimpleHTTPException - if response.status_code is not 200.
+    :param response: the Response object from a get/put/etc.
+    :raises SimpleHTTPException: if response.status_code is not 200.
     """
     if response.status_code != 200:
         raise SimpleHTTPException(response)
+
 
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
@@ -207,16 +207,16 @@ def get_proxy_dict(opts):
 
 
 class SimpleClient(object):
-    """Helper for using Resilient REST API."""
+    """Python helper class for using the Resilient REST API."""
 
     def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
         """
-        Args:
-          org_name - the name of the organization to use.
-          base_url - the base URL to use.
-          proxies - HTTP proxies to use, if any.
-          verify - The name of a PEM file to use as the list of trusted CAs.
-          cache_ttl - time to live for cached API responses
+
+        :param org_name: The name of the organization to use.
+        :param base_url: The base URL of the Resilient server, e.g. 'https://app.resilientsystems.com/'
+        :param proxies: A dictionary of HTTP proxies to use, if any.
+        :param verify: The path to a PEM file containing the trusted CAs, or False to disable all TLS verification
+        :param cache_ttl: Time to live for cached API responses
         """
         self.headers = {'content-type': 'application/json'}
         self.cookies = None
@@ -240,16 +240,14 @@ class SimpleClient(object):
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
-        """Performs connection, which includes authentication.
+        """
+        Connect and authenticate to the Resilient REST API service.
 
-        Args:
-          email - the email address to use for authentication.
-          password - the password
-          timeout - number of seconds to wait for response
-        Returns:
-          The Resilient session object (dict)
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        :param email: The email address to use for authentication.
+        :param password: The password.
+        :param timeout: optional timeout (seconds)
+        :return: The Resilient session object.
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         self.authdata = {
             u'email': ensure_unicode(email),
@@ -334,19 +332,17 @@ class SimpleClient(object):
         return self.cache
 
     def get(self, uri, co3_context_token=None, timeout=None):
-        """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
-        for example, if you specify a uri of /incidents, the actual URL would be something like this:
+        """Gets the specified URI.
 
-            https://app.resilientsystems.com/rest/orgs/201/incidents
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
 
-        Args:
-          uri
-          co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          A dictionary or array with the value returned by the server.
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        :param uri: Relative URI of the resource to fetch.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: A dictionary or array with the value returned by the server.
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
@@ -361,7 +357,7 @@ class SimpleClient(object):
 
     @cachedmethod(_get_cache, key=_keyfunc)
     def cached_get(self, uri, co3_context_token=None, timeout=None):
-        """ Same as get, but checks cache first """
+        """ Same as `get()`, but checks cache first """
         return self.get(uri, co3_context_token, timeout)
 
     def get_const(self, co3_context_token=None, timeout=None):
@@ -372,13 +368,10 @@ class SimpleClient(object):
         For example, the incidentDTO has a field called "crimestatus_id". The valid values are stored
         in constDTO.crime_statuses.
 
-        Args:
-          co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          ConstDTO as a dictionary
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: ConstDTO as a dictionary
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/const".format(self.base_url)
         response = self._execute_request(self.session.get,
@@ -392,19 +385,17 @@ class SimpleClient(object):
         return json.loads(response.text)
 
     def get_content(self, uri, co3_context_token=None, timeout=None):
-        """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
-        for example, if you specify a uri of /incidents, the actual URL would be something like this:
+        """Gets the specified URI.
 
-            https://app.resilientsystems.com/rest/orgs/201/incidents
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
 
-        Args:
-          uri
-          co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          The raw value returned by the server for this resource.
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        :param uri: Relative URI of the resource to fetch.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: The raw value returned by the server for this resource.
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
@@ -418,21 +409,18 @@ class SimpleClient(object):
         return response.content
 
     def post(self, uri, payload, co3_context_token=None, timeout=None):
-        """
-        Posts to the specified URI.
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
-        specify a uri of /incidents, the actual URL would be something like this:
+        """Posts to the specified URI.
 
-            https://app.resilientsystems.com/rest/orgs/201/incidents
-        Args:
-           uri
-           payload
-           co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          A dictionary or array with the value returned by the server.
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+
+        :param uri: Relative URI of the resource to post.
+        :param payload: A dictionary value to be posted.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: A dictionary or array with the value returned by the server.
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
@@ -529,25 +517,23 @@ class SimpleClient(object):
         """
         Callback to use when the caller specified overwrite_conflict=False in the patch call.
         """
-
         # Got a conflict and no callback specified.  Just raise an exception.
         raise PatchConflictException(response, patch_status)
 
     def patch(self, uri, patch, co3_context_token=None, timeout=None, overwrite_conflict=False):
         """
         PATCH request to the specified URI.
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
-        specify a uri of /incidents, the actual URL would be something like this:
 
-            https://app.resilientsystems.com/rest/orgs/201/incidents
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
 
-        :param uri: the URI on which patch is to be invoked
-        :param patch: Patch object to apply
-        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
-          a CAF message processor.
-        :param timeout: Number of seconds to wait for response
+        :param uri: Relative URI of the resource to patch.
+        :param patch: The :class:`Patch` object to apply
+        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
         :param overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
-          object will be modified if necessary.
+                object will be modified if necessary.
         :return: The response object.
         :raises SimpleHTTPException: if an HTTP exception or patch conflict occurs.
         :raises PatchStatusException: If the patch failed to apply (and overwrite_conflict is False).
@@ -565,14 +551,14 @@ class SimpleClient(object):
         """
         PATCH request to the specified URI.  If the patch application fails because of field conflicts,
         the specified callback is invoked, allowing the caller to adjust the patch as necessary.
-        :param uri: the URI on which patch is to be invoked
-        :param patch: Patch object to apply
+
+        :param uri: Relative URI of the resource to patch.
+        :param patch: The :class:`Patch` object to apply
         :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
-          of the following form:
-            def my_callback(response, patch_status, patch)
-        :param co3_context_token: the Co3ContextToken from a CAF message (if the caller is
-          a CAF message processor.
-        :param timeout: Number of seconds to wait for response
+          of the following form: `def my_callback(response, patch_status, patch)`.
+          If your callback raises :class:`NoChange`, the update is skipped.
+        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
         :return: The response object.
         """
         response = self._patch(uri, patch, co3_context_token, timeout)
@@ -588,12 +574,12 @@ class SimpleClient(object):
         e.g. "/incidents/<id>/attachments" (for incident attachments)
         or,  "/tasks/<id>/attachments" (for task attachments)
 
-        :param uri: The REST URI for posting
+        :param uri: Relative URI of the resource to post.
         :param filepath: the path of the file to post
         :param filename: optional name of the file when posted
         :param mimetype: optional override for the guessed MIME type
         :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
-        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
         :param timeout: optional timeout (seconds)
         """
         filepath = ensure_unicode(filepath)
@@ -624,15 +610,14 @@ class SimpleClient(object):
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"
 
-        :param uri: The REST URI for posting
+        :param uri: Relative URI of the resource to post.
         :param artifact_type: the artifact type name ("IP Address", etc) or type ID
         :param artifact_filepath: the path of the file to post
         :param description: optional description for the artifact
         :param value: optional value for the artifact
         :param mimetype: optional override for the guessed MIME type
-        :param co3_context_token: Action Module context token, if responding to an Action Module event
+        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
         :param timeout: optional timeout (seconds)
-
         """
         artifact = {
             "type": artifact_type,
@@ -656,14 +641,11 @@ class SimpleClient(object):
         (tasks, incident comments, task comments, milestones, artifacts, incident attachments,
         task attachments, and data tables).
 
-        Args:
-          payload: the SearchExInputDTO parameters for performing a search, as a dictionary
-          co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          List of results, as an array of SearchExResultDTO
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        :param payload: The SearchExInputDTO parameters for performing a search, as a dictionary
+        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: List of results, as an array of SearchExResultDTO
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/search_ex".format(self.base_url)
         payload_json = json.dumps(payload)
@@ -713,20 +695,21 @@ class SimpleClient(object):
         return None
 
     def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
-        """Performs a get, calls apply_func on the returned value, then calls self.put.
-        If the put call returns a 409 error, then retry.
+        """Safely performs an update operation by a GET, calls your `apply_func` callback, then PUT
+        with the updated value.  If the put call returns a 409 error, these steps are retried.
+        
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
 
-        Args:
-          uri - the URI to use.  Note that this is expected to be relative to the org.
-          apply_func - a function to call on the object returned by get.  This is expected
-          to alter the object with the desired changes.
-          co3_context_token - the Co3ContextToken from a CAF message (if the caller is
-          a CAF message processor.
-          timeout - number of seconds to wait for response
-        Returns;
-          The object returned by the put operation (converted from JSON to a Python dict).
-        Raises:
-          Exception if the get or put returns an unexpected status code.
+        :param uri: Relative URI of the resource to get and update.
+        :param apply_func: A callback function that you implement to update the resource.  The function must be
+          of the following form: `def my_apply_func(object_to_update)`, and update the object.
+          If your callback raises :class:`NoChange`, the update is skipped.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: A dictionary or array with the value returned by the PUT operation.
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         while True:
             obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout)
@@ -735,21 +718,18 @@ class SimpleClient(object):
         return None
 
     def put(self, uri, payload, co3_context_token=None, timeout=None):
-        """
-        Puts to the specified URI.
-        Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
-        specify a uri of /incidents, the actual URL would be something like this:
+        """Directly performs an update operation by PUT to the specified URI.
 
-            https://app.resilientsystems.com/rest/orgs/201/incidents
-        Args:
-           uri
-           payload
-           co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          A dictionary or array with the value returned by the server.
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+
+        :param uri: Relative URI of the resource to update.
+        :param payload: The object to update.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :return: A dictionary or array with the value returned by the server.
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
@@ -767,14 +747,14 @@ class SimpleClient(object):
     def delete(self, uri, co3_context_token=None, timeout=None):
         """Deletes the specified URI.
 
-        Args:
-          uri
-          co3_context_token
-          timeout: number of seconds to wait for response
-        Returns:
-          A dictionary or array with the value returned by the server.
-        Raises:
-          SimpleHTTPException - if an HTTP exception occurs.
+        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
+        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
+        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+
+        :param uri: Relative URI of the resource to update.
+        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
+        :param timeout: optional timeout (seconds)
+        :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.delete,

@@ -20,12 +20,15 @@ from resilient_circuits.app import get_lock
 application = None
 LOG = logging.getLogger(__name__)
 
+
 class reload(Event):
     """Notify components of updates to config"""
     complete = True
+
     def __init__(self, opts):
         super(reload, self).__init__(opts=opts)
         self.opts = opts
+
 
 class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     """ Restarts application when config file is modified """
@@ -52,6 +55,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         self.app.reload_timer = Timer(self.max_reload_time, Event.create("reload_timeout"))
         self.app.fire(reload_event)
         self.app.reload_timer.register(self.app)
+
 
 # Main component for our application
 class AppRestartable(App):
@@ -109,6 +113,7 @@ class AppRestartable(App):
             self.observer.unschedule_all()
             self.observer.stop()
             self.observer = None
+
 
 def run(*args, **kwargs):
     """Main app"""

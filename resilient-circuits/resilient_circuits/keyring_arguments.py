@@ -7,4 +7,4 @@ import co3
 
 
 class ArgumentParser(co3.ArgumentParser):
-    """Nothing here.  ALl this functionality is now in the base class"""
+    """Nothing here.  All this functionality is now in the base class"""
