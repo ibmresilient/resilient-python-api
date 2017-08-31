@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 import resilient as resilient
-import os
 import json
 import sys
 import codecs

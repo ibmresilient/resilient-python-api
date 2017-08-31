@@ -3,16 +3,14 @@
 This package is a `py.test` plugin that provides fixtures to facilitate testing resilient-circuits applications.
 
 
-Requirements
-============
+### Requirements
 
-The `co3` and `resilient-circuits` packages should be installed before use.
+The `resilient` and `resilient-circuits` packages should be installed before use.
 
 Other requirements are installed when you install the package.
 
 
-Installing this module
-======================
+### Installing this module
 
 To install a pre-built package file:
 
@@ -32,12 +30,7 @@ This creates a single file `dist/pytest_resilient_circuits-x.x.x.tar.gz` (the fi
 vary according to the current version).
 
 
-Usage
-=================
+### Usage
+
 For usage instructions and examples, please see the Resilient Integrations Python Developer's Guide.
 
-
-More Info
-=========
-For more information,
-contact [success@resilientsystems.com](success@resilientsystems.com).

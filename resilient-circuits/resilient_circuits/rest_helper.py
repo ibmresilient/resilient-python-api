@@ -3,7 +3,7 @@
 
 """Global accessor for the Resilient REST API"""
 
-import co3
+import resilient
 
 resilient_client = None
 connection_opts = None
@@ -35,5 +35,5 @@ def get_resilient_client(opts):
     if resilient_client:
         return resilient_client
 
-    resilient_client = co3.get_client(opts)
+    resilient_client = resilient.get_client(opts)
     return resilient_client

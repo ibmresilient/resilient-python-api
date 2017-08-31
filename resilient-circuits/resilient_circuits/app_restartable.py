@@ -8,7 +8,7 @@ from __future__ import print_function
 import logging
 import os
 import filelock
-import co3 as resilient
+import resilient
 from circuits import Event, Timer
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler

@@ -3,8 +3,8 @@
 
 """Argument parse helper, for values stored in keyring or file"""
 
-import co3
+import resilient
 
 
-class ArgumentParser(co3.ArgumentParser):
+class ArgumentParser(resilient.ArgumentParser):
     """Nothing here.  All this functionality is now in the base class"""

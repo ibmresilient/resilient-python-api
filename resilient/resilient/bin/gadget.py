@@ -5,8 +5,7 @@
 
 from __future__ import print_function
 
-import co3 as resilient
-import os
+import resilient
 import json
 import logging
 from datetime import datetime

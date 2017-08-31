@@ -14,8 +14,8 @@ from functools import wraps
 from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-import co3
-from co3 import ensure_unicode
+import resilient
+from resilient import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessage
@@ -34,7 +34,7 @@ MAX_RETRY_COUNT = 3                 # Retry failed deliveris this many times
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
     try:
-        co3.match_hostname(cert, hostname)
+        resilient.match_hostname(cert, hostname)
     except Exception as exc:
         return (False, str(exc))
     return (True, "Success")
@@ -540,7 +540,7 @@ class Actions(ResilientComponent):
             cafile = None
             LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
         elif cafile is None:
-            # Since the REST API (co3 library) uses 'requests', let's use its default certificate bundle
+            # Since the REST API (resilient library) uses 'requests', let's use its default certificate bundle
             # instead of the certificates from ssl.get_default_verify_paths().cafile
             cafile = DEFAULT_CA_BUNDLE_PATH
             LOG.debug("STOMP TLS validation with default certificate file: %s", cafile)
