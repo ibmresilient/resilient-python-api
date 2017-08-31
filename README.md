@@ -2,15 +2,14 @@
 
 This directory contains
 
- * [co3](co3), the Resilient Python Client Module for the Resilient APIs,
- * [resilient_circuits](resilient-circuits), an application framework for Action Module,
- * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures, 
- * and [examples](examples) for the Resilient REST API and Resilient Action Module.
+ * [resilient](resilient), the Resilient Python Client Module for the Resilient APIs,
+ * [resilient_circuits](resilient-circuits), an application framework for Resilient Action Module,
+ * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures. 
 
 
 ## Python Client Module
 
-The Resilient Python Client (`co3` module) contains tools helpful in calling
+The Resilient Python Client (`resilient` module) contains tools helpful in calling
 the Resilient REST API and Action Module.
 
 It provides a SimpleClient class that you use to call the Resilient REST API.
@@ -46,8 +45,8 @@ org=Culture
 ```
 
 __Configuration Values From Keystore__  
-   Values in the config file can be pulled from a compatible keystore system
-   on your OS.  To retrieve a value from a keystore, set it to ^\<key\>  
+Values in the config file can be pulled from a compatible keystore system
+on your OS.  To retrieve a value named `yourkey` from a keystore, set it to `^yourkey`.  
    
 Example from app.confg:  
 ```
@@ -56,22 +55,22 @@ password=^resilient_password
 ```
 
 __Adding the Values to Keystore__  
-  The co3 package includes a utility to add all of the keystore-based values from 
-  your app.config file to your system's compatible  keystore system.  Once you have 
-  created the keys in your app.config file, run `res-keyring` and you will be 
-  prompted to create the secure values to store.  
+The resilient package includes a utility to add all of the keystore-based values from 
+your app.config file to your system's compatible  keystore system.  Once you have 
+referenced the keys in your app.config file, run `res-keyring` and you will be 
+prompted for the secure values to store.  
   
-  ```
-  bash-3.2$ res-keyring 
-  Configuration file: /Users/kchurch/.resilient/app.config
+```
+  $ res-keyring 
+  Configuration file: /Users/example/.resilient/app.config
   Secrets are stored with 'keyring.backends.OS_X'
   [resilient] password: <not set>
   Enter new value (or <ENTER> to leave unchanged): 
-  ```
+```
   
 __Configuration Values From Environment__  
-  Values in your config file can also be pulled from environment variables.
-  To retrieve a value from the environment, set it to $\<key\>  
+Values in your config file can also be pulled from environment variables.
+To retrieve a value from the environment, set it to `$YOUR_ENV_VAR`.  
 
 Example from app.confg:  
 ```
@@ -86,25 +85,27 @@ A standard way to initialize a SimpleClient with this configuration is,
 # - default location is ~/.resilient/app.config
 # - or the location set in $APP_CONFIG_FILE
 # and any other arguments specified on the command line
-parser = co3.ArgumentParser(config_file=co3.get_config_file())
+parser = resilient.ArgumentParser(config_file=resilient.get_config_file())
 opts = parser.parse_args()
 
 # Initialize a SimpleClient with these options
-client = co3.get_client(opts)
-
+client = resilient.get_client(opts)
 ```
 
-### Installing the 'co3' module
+### Installing the 'resilient' module
 
-Current versions of the release package are available on GitHub:
-https://github.com/Co3Systems/co3-api/releases
+Current versions of the release package are available on
+[PyPi](https://pypi.python.org/pypi/resilient) and 
+[GitHub](https://github.com/IBMResilient/resilient-python-api/releases).
+Install using `pip`:
+
+    pip install resilient
 
 
-Install the package file using `pip`:
+If you have downloaded a package file, install it using `pip`
+(the filename will vary according to the current version of this repository):
 
-    pip install co3-x.x.x.tar.gz
-
-(the filename will vary according to the current version).
+    pip install resilient-x.x.x.tar.gz
 
 You can build release package files locally, by
 
@@ -113,11 +114,20 @@ You can build release package files locally, by
 where <version_number> is a build number (1, 2, etc).
 
 
-## Action Module Application Framework
+## Command-Line Utilities
+
+The `resilient` package includes command-line utilities:
+
+* `res-keyring`, described above.
+* `finfo`, to read and display metadata about the fields in your Resilient organization.
+* `gadget`, for general-purpose command line access to Resilient REST API.
+
+
+## Resilient-Circuits Action Module Application Framework
 
 The Resilient-Circuits Application Framework (`resilient_circuits` module)
-is a very lightweight component-based framework for writing applications
-that respond to Action Module events.
+is a lightweight framework for rapid development of Resilient Action Module
+event processors in Python.
 
 It provides an extensible "application" class that loads any Python files
 in the application's `components` directory as well as any installed 
@@ -133,23 +143,24 @@ To develop a component, you simply subclass the `ResilientComponent` class.
 This superclass includes several utility functions that provide convenient
 access to the REST API and action message data.
 
-Examples can be found [examples/action-modules](here).
-
 ### Installing the 'resilient_circuits' module
 
-Current versions of the release package are available on GitHub:
-https://github.com/Co3Systems/co3-api/releases
+Current versions of the release package are available on
+[PyPi](https://pypi.python.org/pypi/resilient-circuits) and 
+[GitHub](https://github.com/IBMResilient/resilient-python-api/releases).
+Install using `pip`:
 
-Install the package file using `pip`:
+    pip install resilient-circuits
+
+If you have downloaded a package file, install it using `pip`
+(the filename will vary according to the current version of this repository):
 
     pip install resilient_circuits-x.x.x.tar.gz
-
-(the filename will vary according to the current version of this repository).
 
 
 ## Certificates
 
-Note that in order to connect to the Resilient server, if the server
+In order to connect to the Resilient server, if the server
 doesn't have a trusted TLS certificate, you must provide the server's
 certificate in a file (e.g. "cacerts.pem").  The quickest way to do this
 is to use either `openssl` or the Java `keytool` command line utilities.
@@ -173,11 +184,3 @@ certificate.  If there is a mismatch, the permanent solution is to either
 change your DNS server or change the server certificate so it matches. It is
 also possible to modify your hosts file temporarily, but that is not a permanent
 solution.
-
-
-## Resilient API Examples (python/examples directory)
-
-The [examples](examples) directory contains several utilities and examples
-that make use of the Resilient REST API and the Resilient Action Module.
-
-For further details, see the `README.md` supplied with each example.

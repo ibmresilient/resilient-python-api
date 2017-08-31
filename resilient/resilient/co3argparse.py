@@ -158,7 +158,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument("--cache-ttl",
                           default=default_cache_ttl or 240,
                           type=int,
-                          help="TTL for API responses when using co3.cached_get")
+                          help="TTL for API responses when using cached_get")
 
         self.add_argument("--proxy_host",
                           default=default_proxy_host,

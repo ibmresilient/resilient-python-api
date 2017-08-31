@@ -357,7 +357,7 @@ class SimpleClient(object):
 
     @cachedmethod(_get_cache, key=_keyfunc)
     def cached_get(self, uri, co3_context_token=None, timeout=None):
-        """ Same as `get()`, but checks cache first """
+        """ Same as :meth:`get()`, but checks cache first """
         return self.get(uri, co3_context_token, timeout)
 
     def get_const(self, co3_context_token=None, timeout=None):

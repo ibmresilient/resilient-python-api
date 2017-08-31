@@ -8,6 +8,8 @@ import os
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+from pip import get_installed_distributions
+from pkg_resources import get_distribution
 
 here = os.path.abspath(os.path.dirname(__file__))
 major_minor_version = "28.2"
@@ -21,6 +23,20 @@ def read_version_number():
     return ver.strip()
 
 version = read_version_number()
+
+
+def check_deps():
+    # Fail if the 'co3' module is installed, this supersedes it
+    packages = get_installed_distributions(local_only=True)
+    # For each EggInfoDistribution, find its metadata
+    for pkg in packages:
+        distro = get_distribution(pkg.project_name)
+        if distro.project_name == 'co3':
+            print("This package replaces the 'co3' distribution.  Please 'pip uninstall co3' first.")
+            sys.exit(1)
+
+if __name__ == "__main__":
+    check_deps()
 
 
 class PyTest(TestCommand):

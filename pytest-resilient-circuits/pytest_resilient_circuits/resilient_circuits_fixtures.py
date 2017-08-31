@@ -11,9 +11,11 @@ import logging
 import pytest
 from circuits import Event
 from pytest_resilient_circuits.circuits_fixtures import manager, watcher
-import co3
-from co3.co3 import SimpleHTTPException, _raise_if_error
+import resilient
+from resilient import SimpleHTTPException
+from resilient.co3 import _raise_if_error
 import resilient_circuits.app
+
 
 class ConfiguredAppliance:
     """ configure resilient org with specs from the test module """

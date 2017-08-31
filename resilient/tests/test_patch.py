@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pytest
-import co3 as resilient
+import resilient
+
 
 class TestPatch:
     def test_patch(self):
@@ -122,6 +123,7 @@ class TestPatch:
         patch.delete_value("a")
 
         assert not patch.has_changes()
+
 
 class TestPatchStatus:
     @pytest.mark.parametrize("success", (True, False))
