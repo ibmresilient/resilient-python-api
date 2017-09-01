@@ -39,9 +39,6 @@ else
     echo "Build number not specified - skipping version processing."
 fi
 
-# Build the documentation.
-(cd docs && make clean html)
-
 # Build each of the projects.
 for dir in $project_dirs; do
     echo "Building directory $dir"
@@ -53,3 +50,5 @@ for dir in $project_dirs; do
     (cd $dir && python setup.py sdist --formats=gztar)
 done
 
+# Build the documentation. 
+(cd docs && make clean html)
