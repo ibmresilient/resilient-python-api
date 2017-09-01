@@ -13,8 +13,17 @@ from circuits import Event
 from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
 from resilient import SimpleHTTPException
-from resilient.co3 import _raise_if_error
 import resilient_circuits.app
+
+
+def _raise_if_error(response):
+    """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
+
+    :param response: the Response object from a get/put/etc.
+    :raises SimpleHTTPException: if response.status_code is not 200.
+    """
+    if response.status_code != 200:
+        raise SimpleHTTPException(response)
 
 
 class ConfiguredAppliance:
@@ -31,7 +40,7 @@ class ConfiguredAppliance:
         assert all((host, org, user, password))
 
         # Connect to Resilient
-        self.client = co3.SimpleClient(org_name=org, base_url=url, verify=False)
+        self.client = resilient.SimpleClient(org_name=org, base_url=url, verify=False)
         session = self.client.connect(user, password)
 
         # Retrieve constants from appliance
@@ -279,7 +288,7 @@ test_actions = True
         self.manager = manager
         self.watcher = watcher
 
-        # Remove the pytest commandline arguments so they don't break ArgParse in co3
+        # Remove the pytest commandline arguments so they don't break ArgParse in resilient
         sys.argv=sys.argv[0:1]
 
         self.app = resilient_circuits.app.App().register(manager)
