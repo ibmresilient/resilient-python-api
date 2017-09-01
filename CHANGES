@@ -1,5 +1,5 @@
 
-2017-09-01: version 28.2.
+2017-09-01: version 28.2.1
 
 change license to MIT
 rename 'co3' package to 'resilient'
