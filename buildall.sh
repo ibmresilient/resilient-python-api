@@ -50,5 +50,5 @@ for dir in $project_dirs; do
     (cd $dir && python setup.py sdist --formats=gztar)
 done
 
-# Build the documentation. 
-(cd docs && make clean html)
+# Build the documentation.
+# (cd docs && make clean html)
