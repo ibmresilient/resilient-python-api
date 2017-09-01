@@ -34,7 +34,7 @@ class ActionMessage(Event):
        * event.incident: the incident that the event relates to
        * event.artifact: the artifact that the event was triggered from (if any)
        * event.task: the task that the event was triggered from (if any)
-       (etc).
+         (etc).
 
     To have your component's method with a different name from the action,
     you can use the :class:`@handler` decorator:

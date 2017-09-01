@@ -1,0 +1,55 @@
+language: python
+python: 2.6
+
+env:
+  global:
+  - TEST_RESILIENT_APPLIANCE=d2-direct.resilientsystems.com
+  - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
+  - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
+  - secure: VU1PL2bWOE+E3ieBz/0Oa2hIRXGeSFYubE9SYh3dH541h8V8FWE0kGt8P6xdZOGmf9xNsDL/O+rKqrq5TCKTdUQqFXm7RCD//iQrHUcbu2YU38XPpBQrWxSZs29sR3R6UkUypZahHmn/ghjgZnRxQIWGscYPvvNCiOP9X85ckmVaKLYPwW0HPH7vIKs9zcT8tEyRDANokc0BQDjeVu0s29FeKGyy9JVbuye8/1TmVkQWBvutvcQ/z/mOQ7dOO3fW0wkVwOHPF9FtBc79WzjK5w/Ej30EWHC5zdRG46+2FLcqKSHvkyuV59f0ojxLzRmeR1ueS37pNncmXfVMREwtiIYN/Dd3isLsg14RK1leu/JHiPxfQtz2TV4+yeVO4aZk+Bs/JLf1ZbXAE+A71hIH6rTUpEBq1S8qjKsfTPEWLg1cuq1ujf2WOAumdIf8rSOnQ9EbEfBlm3N8Wo9RjXbEx6hq+UHr7L28tw0u00gcAex6Ky2eRk+USFnXBHs/Kf5i29CWzw4Lcnb2hPa0bup3yNQuss/Yy+cQO5tDW8jJPP8joR5Fvr8fJZVtGlTGp09odHcrDGKvbdlf0gVmVDYawKi0v4m0URCKVy0vYAbzVOgZF46nW+VfcexiLxomwYpKeltigk+L52aV5DIodfuxS9aB6IJtEYSTO8Mf+Yo2x8Q=
+
+matrix:
+  fast_finish: true
+  exclude:
+    # This is to exclude the default build job
+    - python: 2.6
+
+  include:
+  - python: 2.7
+    env:
+      - TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+  - python: 3.4
+    env:
+      - TOXENV=py34 TEST_RESILIENT_ORG="Resilient PS - Test2"
+
+install:
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
+  - pip install tox
+  - pip install sphinx
+
+before_script:
+  # nothing
+
+script:
+  - buildnum=$(git tag --list | tail -n 1 | awk -F '.' '{print $3}')
+  - ./buildall.sh $buildnum
+
+after_script:
+  - echo "Packages To Deploy"
+  - ls -l *.tar.gz
+
+deploy:
+  # Note: This is going to run twice and fail the second time. Will fix with travis enterprise 2.2 "stages" feature
+  provider: releases
+  api_key: "$GITHUB_OAUTH_TOKEN"
+  file_glob: true
+  file: ./rc-*.tar.gz
+  skip_cleanup: true
+  on:
+    tags: true
+
+#notifications:
+#  slack:
+#    rooms: ibm-security:9xGeUjQaqaNY1qgBG6ORFaSl
+#    on_success: change

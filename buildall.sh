@@ -12,7 +12,7 @@
 # itself to ensure that the version is properly processed.
 #
 
-readonly major_minor=28.1
+readonly major_minor=28.2
 
 readonly mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -38,6 +38,9 @@ if [[ ! -z "$bldno" ]] && [[ $bldno -gt 0 ]]; then
 else
     echo "Build number not specified - skipping version processing."
 fi
+
+# Build the documentation.
+(cd docs && make clean html)
 
 # Build each of the projects.
 for dir in $project_dirs; do

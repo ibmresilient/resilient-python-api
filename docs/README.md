@@ -2,5 +2,5 @@ This directory contains tools to create package reference documentation using [S
 
 To build the documentation,
 ```
-    make html
+    make clean html
 ```

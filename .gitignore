@@ -18,3 +18,4 @@ resilient_circuits_lockfile
 *.egg-info
 *.tar.gz
 build
+_build
