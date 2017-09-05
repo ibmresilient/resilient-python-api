@@ -131,9 +131,9 @@ def generic_update(client, uri, template_file_name):
 
     def update_func(json_data):
         with open(template_file_name, 'r') as update_file:
-            update = json.loads(update_file.read())
-            return update
-    incident= client.get_put(uri, update_func)
+            template = json.loads(update_file.read())
+            json_data.update(template)
+    incident = client.get_put(uri, update_func)
 
     print('Response:  ')
     print(json.dumps(incident, indent=4))
