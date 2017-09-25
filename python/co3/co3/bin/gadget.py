@@ -6,7 +6,7 @@
 from __future__ import print_function
 
 import co3 as resilient
-import os
+import sys
 import json
 import logging
 from datetime import datetime
@@ -99,21 +99,21 @@ def create_incident(client, template_file_name, attachments):
     template['discovered_date'] = get_json_time(datetime.utcnow())
 
     incident = client.post('/incidents', template)
-    print('Created incident:  ')
+    print('Created incident:  ', file=sys.stderr)
     print(json.dumps(incident, indent=4))
 
     incident_id = incident['id']
     if isinstance(attachments, list) and len(attachments) > 0:
         for attachment in attachments:
             upload = client.post_attachment('/incidents/{0}/attachments'.format(incident_id), attachment)
-            print('Created attachment:  ')
+            print('Created attachment:  ', file=sys.stderr)
             print(json.dumps(upload, indent=4))
 
 
 def generic_get(client, uri):
     incident = client.get(uri)
 
-    print('Response:  ')
+    print('Response:  ', file=sys.stderr)
     print(json.dumps(incident, indent=4))
 
 
@@ -123,7 +123,7 @@ def generic_post(client, uri, template_file_name):
 
     incident = client.post(uri, template)
 
-    print('Response:  ')
+    print('Response:  ', file=sys.stderr)
     print(json.dumps(incident, indent=4))
 
 
@@ -135,8 +135,9 @@ def generic_update(client, uri, template_file_name):
             json_data.update(template)
     incident = client.get_put(uri, update_func)
 
-    print('Response:  ')
+    print('Response:  ', file=sys.stderr)
     print(json.dumps(incident, indent=4))
+
 
 def generic_patch(client, uri, template_file_name):
     with open(template_file_name, 'r') as update_file:
@@ -144,8 +145,9 @@ def generic_patch(client, uri, template_file_name):
 
     response = client.patch(uri, patch)
 
-    print('Response:  ')
+    print('Response:  ', file=sys.stderr)
     print(json.dumps(response, indent=4))
+
 
 def generic_delete(client, uri):
     print(client.delete(uri))
@@ -156,7 +158,7 @@ def generic_search(client, template_file_name):
         template = json.loads(template_file.read())
     results = client.search(template)
 
-    print('Response:  ')
+    print('Response:  ', file=sys.stderr)
     print(json.dumps(results, indent=4))
 
 
