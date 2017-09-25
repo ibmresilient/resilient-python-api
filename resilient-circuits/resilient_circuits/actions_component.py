@@ -500,7 +500,8 @@ class Actions(ResilientComponent):
                 self.fire(event, channel)
             except Exception as exc:
                 LOG.exception(exc)
-                LOG.error("DATA:%s", base64.b64encode(message))
+                if not isinstance(message, dict):
+                    LOG.error("DATA:%s", base64.b64encode(message))
                 # Normally the event won't be ack'd.  Just report it and carry on.
                 if self.ignore_message_failure:
                     # Construct and fire anyway, which will ack the message
