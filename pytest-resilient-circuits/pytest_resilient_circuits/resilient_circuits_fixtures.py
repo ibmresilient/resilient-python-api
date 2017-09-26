@@ -29,7 +29,7 @@ def _raise_if_error(response):
 class ConfiguredAppliance:
     """ configure resilient org with specs from the test module """
     def __init__(self, request):
-        # TODO: Add support for phases, tasks, incident types. data ta;es
+        # TODO: Add support for phases, tasks, incident types.
         # TODO: Add support for optional action and custom fields (currently all set as required)
 
         host = os.environ.get("TEST_RESILIENT_APPLIANCE", request.config.option.resilient_host)
@@ -93,6 +93,14 @@ class ConfiguredAppliance:
                                                         action_types["Automatic"],
                                                         info[2])
                 assert success
+
+        data_tables = getattr(request.cls, "data_tables", None)
+        print("create data tables: %s" % data_tables)
+        if data_tables:
+            for table_name, columns in data_tables.items():
+                success = self._create_data_table(table_name, columns)
+                assert success
+
     # end __init__
 
     def _clear_org(self):
@@ -120,6 +128,12 @@ class ConfiguredAppliance:
             for field in fields:
                 print("URL IS /types/incident/fields/%s" % field['id'])
                 self.client.delete("/types/incident/fields/%s" % field['id'])
+
+        types = self.client.get("/types")
+        data_tables = [res_type["type_name"] for res_type in types.values() if res_type['type_id'] == 8]
+        for dt_name in data_tables :
+            print("Delete /types/%s" % dt_name)
+            self.client.delete("/types/%s" % dt_name)
     # end _clear_org
 
     def _get_constants(self):
@@ -225,7 +239,6 @@ class ConfiguredAppliance:
         }
         if conditions:
             action["conditions"] = conditions
-
         try:
             action_obj = self.client.post(endpoint, action)
             if not action_obj:
@@ -238,6 +251,48 @@ class ConfiguredAppliance:
 
         return True
     # end _create_automatic_action
+
+    def _create_data_table(self, table_name, columns):
+        """" Create a data table """
+        endpoint = "/types"
+        table_columns = {}
+        print("create table %s" % table_name)
+        table = {"type_name": table_name,
+                 "display_name": table_name,
+                 "type_id": 8,
+                 "parent_types": ["incident",]}
+        try:
+            dt_obj = self.client.post(endpoint, table)
+            if not dt_obj:
+                print("Failed to create data table %s" % table_name)
+                return False
+        except Exception as e:
+            print("Failed to create data table %s" % table_name)
+            traceback.print_exc()
+            return False
+
+        endpoint = "/types/%s/fields" % table_name
+        for col_name, (col_type, col_values) in columns.items():
+            if not col_values:
+                values = []
+            else:
+                values = [{"label": value} for value in col_values]
+            field = {"name": col_name,
+                     "text": col_name,
+                     "input_type": col_type,
+                     "values": values}
+            try:
+                field_obj = self.client.post(endpoint, field)
+                if not field_obj:
+                    print("Failed to create data table field %s" % col_name)
+                    return False
+            except Exception as e:
+                print("Failed to create data table field %s" % col_name)
+                traceback.print_exc()
+                return False
+
+        return True
+    # end _create_data_table
 
 # end ConfiguredAppliance
 
@@ -258,7 +313,6 @@ port = 443
 test_actions = True
 """
         print("CURRENT WORKING DIR:  Addr: ", os.getcwd(), id(self))
-        print(dir(request.module))
 
         resilient_mock = getattr(request.module, "resilient_mock", None)
         self.config_file = tmpdir_factory.mktemp('data').join("%dapp.config" % id(self))
