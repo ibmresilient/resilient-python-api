@@ -250,7 +250,7 @@ class ConfiguredAppliance:
         print("create table %s" % table_name)
         table = {"type_name": table_name,
                  "display_name": table_name,
-                 "type_id": 8,
+                 "type_id": DATATABLE_TYPE_ID,
                  "parent_types": ["incident",]}
         try:
             dt_obj = self.client.post(endpoint, table)
