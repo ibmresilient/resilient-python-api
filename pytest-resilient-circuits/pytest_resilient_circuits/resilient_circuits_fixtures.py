@@ -12,19 +12,10 @@ import pytest
 from circuits import Event
 from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
-from resilient import SimpleHTTPException
+from resilient import SimpleHTTPException, _raise_if_error
 import resilient_circuits.app
 
-
-def _raise_if_error(response):
-    """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
-
-    :param response: the Response object from a get/put/etc.
-    :raises SimpleHTTPException: if response.status_code is not 200.
-    """
-    if response.status_code != 200:
-        raise SimpleHTTPException(response)
-
+DATATABLE_TYPE_ID = 8
 
 class ConfiguredAppliance:
     """ configure resilient org with specs from the test module """
@@ -130,7 +121,7 @@ class ConfiguredAppliance:
                 self.client.delete("/types/incident/fields/%s" % field['id'])
 
         types = self.client.get("/types")
-        data_tables = [res_type["type_name"] for res_type in types.values() if res_type['type_id'] == 8]
+        data_tables = [res_type["type_name"] for res_type in types.values() if res_type['type_id'] == DATATABLE_TYPE_ID]
         for dt_name in data_tables :
             print("Delete /types/%s" % dt_name)
             self.client.delete("/types/%s" % dt_name)
