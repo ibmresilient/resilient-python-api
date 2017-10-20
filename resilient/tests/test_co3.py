@@ -3,6 +3,7 @@ import pytest
 import doctest
 import time
 import types
+import os
 import resilient
 
 
@@ -206,3 +207,92 @@ class TestCo3Patch:
         assert response.status_code == 200
 
         assert "test updated take 2" == client.get(uri)["name"]
+
+    def test_delete(self, co3_args):
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test"})
+
+        uri = "/incidents/%d" % inc['id']
+
+        response = client.delete(uri)
+        assert response
+        assert response['success'] == True
+
+    def test_post_attachment(self, co3_args):
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test for attachment"})
+
+        file_name = "test-for-attachment.txt"
+        file_content = "this is test data"
+
+        # Create the file
+        temp_file = open(file_name, "wb")
+        temp_file.write(file_content)
+        temp_file.close()
+        # Post file to Resilient
+        response = client.post_attachment("/incidents/{0}/attachments".format(inc["id"]),
+                                          file_name,
+                                          file_name,
+                                          mimetype="text/plain")
+
+        assert response
+        assert response['name'] == file_name
+
+        os.remove(file_name)
+
+    def test_get_config_file(self, co3_args):
+        config_file = resilient.get_config_file("~/.resilient/app.config")
+
+        assert config_file
+
+    def test_get_client(self, co3_args):
+        client = resilient.get_client(co3_args)
+
+        assert client
+
+    def test_throw_simple_http_exception(self, co3_args):
+        with pytest.raises(resilient.SimpleHTTPException) as exception_info:
+            client = resilient.SimpleClient("Not A real Org")
+            user_info = client.connect("not_a_user@mail.com", "test")
+
+            assert exception_info
+
+    def test_get_const(self, co3_args):
+        client = self._connect(co3_args)
+
+        response = client.get_const()
+
+        assert response
+
+    def test_get_content(self, co3_args):
+        client = self._connect(co3_args)
+
+        response = client.get_content("/incidents")
+
+        assert response
+
+    def test_get_proxy_dict(self, co3_args):
+        proxy_opts = type('', (), {})()
+        proxy_opts.proxy_host = "http://resilientproxy.com"
+        proxy_opts.proxy_port = "4443"
+        proxy_opts.proxy_user = None
+        proxy_opts.proxy_password = None
+        proxy_dict = resilient.get_proxy_dict(proxy_opts)
+
+        assert proxy_dict == {'https': 'http://resilientproxy.com:4443'}
+
+        proxy_opts.proxy_user = "user"
+        proxy_opts.proxy_password = "password"
+        proxy_dict = resilient.get_proxy_dict(proxy_opts)
+
+        assert proxy_dict == {'https': 'http://user:password@resilientproxy.com:4443/'}
+
+        proxy_opts.proxy_host = "resilientproxy.com"
+
+        proxy_dict = resilient.get_proxy_dict(proxy_opts)
+
+        assert proxy_dict == {'https': 'https://user:password@resilientproxy.com:4443/'}
+
+
