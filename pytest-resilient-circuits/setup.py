@@ -8,11 +8,9 @@ from setuptools import setup
 
 
 def read_version_number():
-    """Pull the version number from the version.txt file."""
-    path = os.path.join(os.path.dirname(__file__), "pytest_resilient_circuits", "version.txt")
-    with open(path) as f:
-        ver = f.read()
-    return ver.strip()
+    from setuptools_scm import get_version
+    return get_version(root="../")
+
 
 version = read_version_number()
 
@@ -26,7 +24,8 @@ requirements = [
 
 setup(
     name='pytest_resilient_circuits',
-    version=version,
+    use_scm_version={"root": "../", "relative_to": __file__},
+    setup_requires=['setuptools_scm'],
     url='https://developer.ibm.com/resilient',
     license='MIT',
     author='IBM Resilient',
