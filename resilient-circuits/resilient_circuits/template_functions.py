@@ -207,7 +207,7 @@ JINJA_FILTERS = {"json": json_filter,
 
 
 # Maintain one global Environment
-ENV = jinja2.Environment(autoescape=False)
+ENV = jinja2.Environment(autoescape=jinja2.select_autoescape(default_for_string=False))
 ENV.globals.update(JINJA_FILTERS)
 ENV.filters.update(JINJA_FILTERS)
 
