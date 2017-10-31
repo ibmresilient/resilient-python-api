@@ -33,7 +33,7 @@ before_script:
   # nothing
 
 script:
-  - buildnum=$(git tag --list | tail -n 1 | awk -F '.' '{print $3}')
+  - buildnum=$(git tag --list | tail -n 1 | sed s/[a-z]//g)
   - ./buildall.sh $buildnum
 
 after_script:
