@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 # TL;DR; Just run this script with "./buildall.sh XXX" where XXX
-# is the build number you want.
+# is the version number you want.
 #
 # This script will build all of the projects in this directory tree.
 # It finds each directory that contains a setup.py file.  It also
@@ -12,31 +12,19 @@
 # itself to ensure that the version is properly processed.
 #
 
-readonly major_minor=28.2
-
 readonly mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Find all directories with a setup.py file in them.
 readonly project_dirs=$(find $mydir -name setup.py -exec dirname {} \;)
 
-# Get the build number from the command line.
-readonly bldno=$1
+# Get the version number from the command line.
+readonly version_number=$1
 
-if [[ ! -z "$bldno" ]] && [[ $bldno -gt 0 ]]; then
-    # Write the build number to each project.
-    readonly version=$major_minor.$bldno
-
-    for dir in $project_dirs; do
-        version_file=$(find "$dir" -name version.txt)
-
-        echo "Writing version $version to $version_file"
-
-        if [[ ! -z "$version_file" ]]; then
-            echo $version > $version_file
-        fi
-    done
+if [ ! -z "$version_number" ]; then
+    # Write the version as environment variable.
+    export SETUPTOOLS_SCM_PRETEND_VERSION=$version_number
 else
-    echo "Build number not specified - skipping version processing."
+    echo "Version number not specified - skipping version processing."
 fi
 
 # Build each of the projects.
