@@ -11,20 +11,6 @@ from setuptools.command.test import test as TestCommand
 from pip import get_installed_distributions
 from pkg_resources import get_distribution
 
-here = os.path.abspath(os.path.dirname(__file__))
-major_minor_version = "28.2"
-
-
-def read_version_number():
-    """Pull the version number from the version.txt file."""
-    path = os.path.join(os.path.dirname(__file__), "resilient", "version.txt")
-    with open(path) as f:
-        ver = f.read()
-    return ver.strip()
-
-version = read_version_number()
-
-
 def check_deps():
     # Fail if the 'co3' module is installed, this supersedes it
     packages = get_installed_distributions(local_only=True)
@@ -72,7 +58,8 @@ class PyTest(TestCommand):
 
 setup(
     name='resilient',
-    version=version,
+    use_scm_version={"root": "../", "relative_to": __file__},
+    setup_requires=['setuptools_scm'],
     url='https://developer.ibm.com/resilient',
     license='MIT',
     classifiers=[

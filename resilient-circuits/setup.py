@@ -11,11 +11,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_version_number():
-    """Pull the version number from the version.txt file."""
-    path = os.path.join(os.path.dirname(__file__), "resilient_circuits", "version.txt")
-    with open(path) as f:
-        ver = f.read()
-    return ver.strip()
+    from setuptools_scm import get_version
+    return get_version(root="../")
 
 version = read_version_number()
 
@@ -23,7 +20,8 @@ major, minor = version.split('.', 2)[:2]
 
 setup(
     name='resilient_circuits',
-    version=version,
+    use_scm_version={"root": "../", "relative_to": __file__},
+    setup_requires=['setuptools_scm'],
     url='https://developer.ibm.com/resilient',
     license='MIT',
     classifiers=[
