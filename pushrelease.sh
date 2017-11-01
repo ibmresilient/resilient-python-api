@@ -16,8 +16,8 @@ id=$(getJsonVal "$output" "['id']")
 echo Release Id: $id
 for file in ../builds/resilient*.tar.gz; do
   echo Uploading file... ${file##*/}
-  fileUpload=$(curl --data-binary @../builds/${file##*/} -H "Authorization: token e559c907d124e572df9f18b7421b3d94847e39b3" -H "Content-Type: application/octet-stream" https://github.ibm.com/api/uploads/repos/Resilient/resilient-python-api/releases/"$id"/assets?name=${file##*/} )
-  echo File uploaded
+  fileUpload=$(curl --data-binary @../builds/${file##*/} -H "Authorization: token $GIT_HUB_AUTH_TOKEN" -H "Content-Type: application/octet-stream" https://github.ibm.com/api/uploads/repos/Resilient/resilient-python-api/releases/"$id"/assets?name=${file##*/} )
+  echo $fileUpload
 done
 
 
