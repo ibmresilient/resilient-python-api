@@ -12,7 +12,7 @@ import pytest
 from circuits import Event
 from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
-from resilient import SimpleHTTPException, _raise_if_error
+from resilient import SimpleHTTPException
 import resilient_circuits.app
 
 DATATABLE_TYPE_ID = 8
@@ -135,7 +135,8 @@ class ConfiguredAppliance:
                                                 proxies=self.client.proxies,
                                                 cookies=self.client.cookies,
                                                 headers=self.client._SimpleClient__make_headers())
-        _raise_if_error(response)
+        if response.status_code != 200:
+            raise SimpleHTTPException(response)
         return json.loads(response.text)
     # end _get_constants
 
