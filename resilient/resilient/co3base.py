@@ -38,6 +38,8 @@ class TLSHttpAdapter(HTTPAdapter):
                                        maxsize=maxsize,
                                        block=block,
                                        ssl_version=ssl.PROTOCOL_SSLv23)
+
+
 class BasicHTTPException(Exception):
     """Exception for HTTP errors."""
     def __init__(self, response):
@@ -56,6 +58,14 @@ class BasicHTTPException(Exception):
     def raise_if_error(response):
         if response.status_code != 200:
             raise BasicHTTPException(response)
+
+
+class NoChangeForPut(Exception):
+    """Exception that can be raised within a get/put handler or a patch callback
+       to indicate 'no change' (which then just bypasses the update operation).
+    """
+    pass
+
 
 def ensure_unicode(input_value):
     """ if input_value is type str, convert to unicode with utf-8 encoding """
@@ -90,6 +100,7 @@ def get_proxy_dict(opts):
 
     return proxy
 
+
 class BaseClient(object):
     """Helper for using Resilient REST API."""
 
@@ -120,7 +131,6 @@ class BaseClient(object):
         self.authdata = None
         self.session = requests.Session()
         self.session.mount(u'https://', TLSHttpAdapter())
-
 
     def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
@@ -374,7 +384,7 @@ class BaseClient(object):
         payload = json.loads(response.text)
         try:
             apply_func(payload)
-        except NoChange:
+        except NoChangeForPut:
             return payload
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.put,

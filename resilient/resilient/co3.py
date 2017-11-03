@@ -143,7 +143,7 @@ class PatchConflictException(SimpleHTTPException):
         self.patch_status = patch_status
 
 
-class NoChange(Exception):
+class NoChange(co3base.NoChangeForPut):
     """Exception that can be raised within a get/put handler or a patch callback
        to indicate 'no change' (which then just bypasses the update operation).
     """
