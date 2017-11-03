@@ -9,8 +9,8 @@ from .co3 import SimpleClient, \
     PatchConflictException, \
     NoChange, \
     get_client, \
-    get_config_file, \
-    ensure_unicode, \
+    get_config_file
+from .co3base import ensure_unicode, \
     get_proxy_dict
 from .co3argparse import parse_parameters, ArgumentParser
 from .co3sslutil import match_hostname
