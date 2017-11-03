@@ -14,7 +14,7 @@ import datetime
 import unicodedata
 import requests
 import importlib
-import co3base
+from . import co3base
 from .patch import PatchStatus
 from argparse import Namespace
 from requests.adapters import HTTPAdapter
