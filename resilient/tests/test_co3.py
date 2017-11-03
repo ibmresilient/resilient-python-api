@@ -228,7 +228,7 @@ class TestCo3Patch:
         file_content = "this is test data"
 
         # Create the file
-        temp_file = open(file_name, "wb")
+        temp_file = open(file_name, "w")
         temp_file.write(file_content)
         temp_file.close()
         # Post file to Resilient
