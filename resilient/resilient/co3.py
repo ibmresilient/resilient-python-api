@@ -14,6 +14,7 @@ import datetime
 import unicodedata
 import requests
 import importlib
+from . import co3base
 from .patch import PatchStatus
 from argparse import Namespace
 from requests.adapters import HTTPAdapter
@@ -21,6 +22,8 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from cachetools import cachedmethod
 from cachetools.ttl import TTLCache
+from .co3base import ensure_unicode, get_proxy_dict, NoChange
+
 try:
     # Python 3
     import urllib.parse as urlparse
@@ -121,21 +124,6 @@ def get_client(opts):
 
     return resilient_client
 
-
-class TLSHttpAdapter(HTTPAdapter):
-    """
-    Adapter that ensures that we use the best available SSL/TLS version.
-    Some environments default to SSLv3, so we need to specifically ask for
-    the highest protocol version that both the client and server support.
-    Despite the name, SSLv23 can select "TLS" protocols as well as "SSL".
-    """
-    def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = PoolManager(num_pools=connections,
-                                       maxsize=maxsize,
-                                       block=block,
-                                       ssl_version=ssl.PROTOCOL_SSLv23)
-
-
 class SimpleHTTPException(Exception):
     """Exception for HTTP errors."""
     def __init__(self, response):
@@ -155,13 +143,6 @@ class PatchConflictException(SimpleHTTPException):
         self.patch_status = patch_status
 
 
-class NoChange(Exception):
-    """Exception that can be raised within a get/put handler or a patch callback
-       to indicate 'no change' (which then just bypasses the update operation).
-    """
-    pass
-
-
 def _raise_if_error(response):
     """Helper to raise a SimpleHTTPException if the response.status_code is not 200.
 
@@ -171,42 +152,7 @@ def _raise_if_error(response):
     if response.status_code != 200:
         raise SimpleHTTPException(response)
 
-
-def ensure_unicode(input_value):
-    """ if input_value is type str, convert to unicode with utf-8 encoding """
-    if sys.version_info.major >= 3:
-        return input_value
-
-    if not isinstance(input_value, basestring):
-        return input_value
-    elif isinstance(input_value, str):
-        input_unicode = input_value.decode('utf-8')
-    else:
-        input_unicode = input_value
-
-    input_unicode = unicodedata.normalize('NFKC', input_unicode)
-    return input_unicode
-
-
-def get_proxy_dict(opts):
-    """ Creates a dictionary with proxy config to be sent to the SimpleClient """
-    scheme = urlparse.urlparse(opts.proxy_host).scheme
-    if not scheme:
-        scheme = 'https'
-        proxy_host = opts.proxy_host
-    else:
-        proxy_host = opts.proxy_host[len(scheme + "://"):]
-
-    if opts.proxy_user and opts.proxy_password:
-        proxy = {'https': '{0}://{1}:{2}@{3}:{4}/'.format(scheme, opts.proxy_user, opts.proxy_password,
-                                                          proxy_host, opts.proxy_port)}
-    else:
-        proxy = {'https': '{0}://{1}:{2}'.format(scheme, proxy_host, opts.proxy_port)}
-
-    return proxy
-
-
-class SimpleClient(object):
+class SimpleClient(co3base.BaseClient):
     """Python helper class for using the Resilient REST API."""
 
     def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
@@ -218,25 +164,7 @@ class SimpleClient(object):
         :param verify: The path to a PEM file containing the trusted CAs, or False to disable all TLS verification
         :param cache_ttl: Time to live for cached API responses
         """
-        self.headers = {'content-type': 'application/json'}
-        self.cookies = None
-        self.org_id = None
-        self.user_id = None
-        self.base_url = u'https://app.resilientsystems.com/'
-        self.org_name = ensure_unicode(org_name)
-        if proxies:
-            self.proxies = {ensure_unicode(key): ensure_unicode(proxies[key]) for key in proxies}
-        else:
-            self.proxies = None
-        if base_url:
-            self.base_url = ensure_unicode(base_url)
-        self.verify = verify
-        self.verify = ensure_unicode(verify)
-        if verify is None:
-            self.verify = True
-        self.authdata = None
-        self.session = requests.Session()
-        self.session.mount(u'https://', TLSHttpAdapter())
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
@@ -249,80 +177,14 @@ class SimpleClient(object):
         :return: The Resilient session object.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        self.authdata = {
-            u'email': ensure_unicode(email),
-            u'password': ensure_unicode(password)
-        }
-        return self._connect(timeout=timeout)
+        # Calling connect of BaseClient. Convert the exception if there is any
+        ret = None
+        try:
+            ret = super(SimpleClient, self).connect(email, password, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
 
-    def _connect(self, timeout=None):
-        """Establish a session"""
-        response = self.session.post(u"{0}/rest/session".format(self.base_url),
-                                     data=json.dumps(self.authdata),
-                                     proxies=self.proxies,
-                                     headers=self.__make_headers(),
-                                     verify=self.verify,
-                                     timeout=timeout)
-        _raise_if_error(response)
-        session = json.loads(response.text)
-        orgs = session['orgs']
-        selected_org = None
-        if orgs is None or len(orgs) == 0:
-            raise Exception("User is a member of no orgs")
-        elif self.org_name:
-            org_names = []
-            for org in orgs:
-                org_name = org['name']
-                org_names.append(org_name)
-                if ensure_unicode(org_name) == self.org_name:
-                    selected_org = org
-        else:
-            org_names = [org['name'] for org in orgs]
-            msg = u"Please specify the organization name to which you want to connect.  " + \
-                  u"The user is a member of the following organizations: '{0}'"
-            raise Exception(msg.format(u"', '".join(org_names)))
-
-        if selected_org is None:
-            msg = u"The user is not a member of the specified organization '{0}'."
-            raise Exception(msg.format(self.org_name))
-
-        if not selected_org.get("enabled", False):
-            msg = "This organization is not accessible to you.\n\n" + \
-                  "This can occur because of one of the following:\n\n" + \
-                  "The organization does not allow access from your current IP address.\n" + \
-                  "The organization requires authentication with a different provider than you are currently using.\n" + \
-                  "Your IP address is {0}"
-            raise Exception(msg.format(session["session_ip"]))
-
-        self.all_orgs = [org for org in orgs if org.get("enabled")]
-        self.org_id = selected_org['id']
-
-        # set the X-sess-id token, which is used to prevent CSRF attacks.
-        self.headers['X-sess-id'] = session['csrf_token']
-        self.cookies = {
-            'JSESSIONID': response.cookies['JSESSIONID']
-        }
-        self.user_id = session["user_id"]
-        return session
-
-    def __make_headers(self, co3_context_token=None, additional_headers=None):
-        """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
-        headers = self.headers.copy()
-        if co3_context_token is not None:
-            headers['X-Co3ContextToken'] = co3_context_token
-        if isinstance(additional_headers, dict):
-            headers.update(additional_headers)
-        return headers
-
-    def _execute_request(self, operation, url, **kwargs):
-        """Execute a HTTP request.
-           If unauthorized (likely due to a session timeout), retry.
-        """
-        result = operation(url, **kwargs)
-        if result.status_code == 401:  # unauthorized, re-auth and try again
-            self._connect()
-            result = operation(url, **kwargs)
-        return result
+        return ret
 
     def _keyfunc(self, uri, *args, **kwargs):
         """ function to generate cache key for cached_get """
@@ -344,16 +206,13 @@ class SimpleClient(object):
         :return: A dictionary or array with the value returned by the server.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        response = self._execute_request(self.session.get,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        _raise_if_error(response)
-        return json.loads(response.text)
+        # Call get from BaseClient, convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).get(uri, co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
     @cachedmethod(_get_cache, key=_keyfunc)
     def cached_get(self, uri, co3_context_token=None, timeout=None):
@@ -378,7 +237,7 @@ class SimpleClient(object):
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
                                          timeout=timeout)
         _raise_if_error(response)
@@ -397,16 +256,13 @@ class SimpleClient(object):
         :return: The raw value returned by the server for this resource.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        response = self._execute_request(self.session.get,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        _raise_if_error(response)
-        return response.content
+        # Call get_content from BaseClient. Convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).get_content(uri, co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
     def post(self, uri, payload, co3_context_token=None, timeout=None):
         """Posts to the specified URI.
@@ -422,18 +278,13 @@ class SimpleClient(object):
         :return: A dictionary or array with the value returned by the server.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        payload_json = json.dumps(payload)
-        response = self._execute_request(self.session.post,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        _raise_if_error(response)
-        return json.loads(response.text)
+        # Call post of BaseClient. Convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
     def _patch(self, uri, patch, co3_context_token=None, timeout=None):
         """Internal method used to call the underlying server patch endpoint"""
@@ -449,7 +300,7 @@ class SimpleClient(object):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token,
+                                         headers=self.make_headers(co3_context_token,
                                                                      additional_headers=hdrs),
                                          verify=self.verify,
                                          timeout=timeout)
@@ -582,57 +433,14 @@ class SimpleClient(object):
         :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
         :param timeout: optional timeout (seconds)
         """
-        filepath = ensure_unicode(filepath)
-        if filename:
-            filename = ensure_unicode(filename)
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
-        with open(filepath, 'rb') as filehandle:
-            attachment_name = filename or os.path.basename(filepath)
-            multipart_data = {'file': (attachment_name, filehandle, mime_type)}
-            multipart_data.update(data or {})
-            encoder = MultipartEncoder(fields=multipart_data)
-            headers = self.__make_headers(co3_context_token,
-                                          additional_headers={'content-type': encoder.content_type})
-            response = self._execute_request(self.session.post,
-                                             url,
-                                             data=encoder,
-                                             proxies=self.proxies,
-                                             cookies=self.cookies,
-                                             headers=headers,
-                                             verify=self.verify,
-                                             timeout=timeout)
-            _raise_if_error(response)
-            return json.loads(response.text)
-
-    def post_artifact_file(self, uri, artifact_type, artifact_filepath, description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
-        """
-        Post a file artifact to the specified URI
-        e.g. "/incidents/<id>/artifacts/files"
-
-        :param uri: Relative URI of the resource to post.
-        :param artifact_type: the artifact type name ("IP Address", etc) or type ID
-        :param artifact_filepath: the path of the file to post
-        :param description: optional description for the artifact
-        :param value: optional value for the artifact
-        :param mimetype: optional override for the guessed MIME type
-        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        """
-        artifact = {
-            "type": artifact_type,
-            "value": value or "",
-            "description": description or ""
-        }
-        mimedata = {
-            "artifact": json.dumps(artifact)
-        }
-        return self.post_attachment(uri,
-                                    artifact_filepath,
-                                    mimetype=mimetype,
-                                    data=mimedata,
-                                    co3_context_token=co3_context_token,
-                                    timeout=timeout)
+        # Call BaseClient post_attachment. Convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).post_attachment(uri, filepath, filename, mimetype, data,
+                                                                 co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
     def search(self, payload, co3_context_token=None, timeout=None):
         """
@@ -654,45 +462,11 @@ class SimpleClient(object):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
                                          timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
-
-    def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
-        """Internal helper to do a get/apply/put loop
-        (for situations where the put might return a 409/conflict status code)
-        """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        response = self._execute_request(self.session.get,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        _raise_if_error(response)
-        payload = json.loads(response.text)
-        try:
-            apply_func(payload)
-        except NoChange:
-            return payload
-        payload_json = json.dumps(payload)
-        response = self._execute_request(self.session.put,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        if response.status_code == 200:
-            return json.loads(response.text)
-        elif response.status_code == 409:
-            return None
-        _raise_if_error(response)
-        return None
 
     def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Safely performs an update operation by a GET, calls your `apply_func` callback, then PUT
@@ -711,11 +485,13 @@ class SimpleClient(object):
         :return: A dictionary or array with the value returned by the PUT operation.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        while True:
-            obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout)
-            if obj:
-                return obj
-        return None
+        # Call BaseClient get_put. Convert exception if there is any
+        res = None
+        try:
+            res = super(SimpleClient, self).get_put(uri, apply_func, co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return res
 
     def put(self, uri, payload, co3_context_token=None, timeout=None):
         """Directly performs an update operation by PUT to the specified URI.
@@ -731,18 +507,13 @@ class SimpleClient(object):
         :return: A dictionary or array with the value returned by the server.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        payload_json = json.dumps(payload)
-        response = self._execute_request(self.session.put,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        _raise_if_error(response)
-        return json.loads(response.text)
+        # Call BaseClient put. Convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).put(uri, payload, co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
     def delete(self, uri, co3_context_token=None, timeout=None):
         """Deletes the specified URI.
@@ -756,20 +527,13 @@ class SimpleClient(object):
         :param timeout: optional timeout (seconds)
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        response = self._execute_request(self.session.delete,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.__make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        if response.status_code == 204:
-            # 204 - No content is OK for a delete
-            return None
-        _raise_if_error(response)
-        return json.loads(response.text)
-
+        # Call BaseClient delete. Convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).delete(uri, co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
 class LoggingSimpleClient(SimpleClient):
     """ Simple Client version that logs all Resilient REST API responses to disk.  Useful when building a Mock."""
