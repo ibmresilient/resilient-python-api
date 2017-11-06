@@ -22,7 +22,7 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from cachetools import cachedmethod
 from cachetools.ttl import TTLCache
-from .co3base import ensure_unicode, get_proxy_dict
+from .co3base import ensure_unicode, get_proxy_dict, NoChange
 
 try:
     # Python 3
@@ -141,13 +141,6 @@ class PatchConflictException(SimpleHTTPException):
         super(PatchConflictException, self).__init__(response)
 
         self.patch_status = patch_status
-
-
-class NoChange(co3base.NoChangeForPut):
-    """Exception that can be raised within a get/put handler or a patch callback
-       to indicate 'no change' (which then just bypasses the update operation).
-    """
-    pass
 
 
 def _raise_if_error(response):

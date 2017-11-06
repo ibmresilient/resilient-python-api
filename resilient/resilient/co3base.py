@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """Base client for Resilient REST API"""
@@ -60,7 +59,7 @@ class BasicHTTPException(Exception):
             raise BasicHTTPException(response)
 
 
-class NoChangeForPut(Exception):
+class NoChange(Exception):
     """Exception that can be raised within a get/put handler or a patch callback
        to indicate 'no change' (which then just bypasses the update operation).
     """
@@ -384,7 +383,7 @@ class BaseClient(object):
         payload = json.loads(response.text)
         try:
             apply_func(payload)
-        except NoChangeForPut:
+        except NoChange:
             return payload
         payload_json = json.dumps(payload)
         response = self._execute_request(self.session.put,
