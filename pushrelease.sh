@@ -14,9 +14,9 @@ output=$(curl -X POST -H 'Content-Type:application/json' -H 'Accept:application/
 rm json.json
 id=$(getJsonVal "$output" "['id']")
 echo Release Id: $id
-for file in ../builds/resilient*.tar.gz; do
+for file in ./builds/resilient*.tar.gz; do
   echo Uploading file... ${file##*/}
-  fileUpload=$(curl --data-binary @../builds/${file##*/} -H "Authorization: token $GIT_HUB_AUTH_TOKEN" -H "Content-Type: application/octet-stream" https://github.ibm.com/api/uploads/repos/Resilient/resilient-python-api/releases/"$id"/assets?name=${file##*/} )
+  fileUpload=$(curl --data-binary @./builds/${file##*/} -H "Authorization: token $GIT_HUB_AUTH_TOKEN" -H "Content-Type: application/octet-stream" https://github.ibm.com/api/uploads/repos/Resilient/resilient-python-api/releases/"$id"/assets?name=${file##*/} )
   echo $fileUpload
 done
 
