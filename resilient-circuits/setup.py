@@ -9,12 +9,7 @@ from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-
-def read_version_number():
-    from setuptools_scm import get_version
-    return get_version(root="../")
-
-version = read_version_number()
+version = "28.0"
 
 major, minor = version.split('.', 2)[:2]
 
