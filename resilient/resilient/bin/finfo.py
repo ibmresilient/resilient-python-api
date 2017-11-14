@@ -4,7 +4,7 @@
 """Utility to access schema metadata with the Resilient REST API"""
 
 from __future__ import print_function
-import resilient as resilient
+import resilient
 import json
 import sys
 import codecs

@@ -4,22 +4,26 @@
 """ Setup for resilient module """
 
 from __future__ import print_function
-import os
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from pip import get_installed_distributions
-from pkg_resources import get_distribution
+from pkg_resources import get_distribution, DistributionNotFound
+
 
 def check_deps():
     # Fail if the 'co3' module is installed, this supersedes it
     packages = get_installed_distributions(local_only=True)
     # For each EggInfoDistribution, find its metadata
     for pkg in packages:
-        distro = get_distribution(pkg.project_name)
-        if distro.project_name == 'co3':
-            print("This package replaces the 'co3' distribution.  Please 'pip uninstall co3' first.")
-            sys.exit(1)
+        try:
+            distro = get_distribution(pkg.project_name)
+            if distro.project_name == 'co3':
+                print("This package replaces the 'co3' distribution.  Please 'pip uninstall co3' first.")
+                sys.exit(1)
+        except DistributionNotFound:
+            pass
+
 
 if __name__ == "__main__":
     check_deps()
