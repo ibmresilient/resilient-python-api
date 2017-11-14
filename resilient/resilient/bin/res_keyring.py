@@ -10,16 +10,14 @@ import sys
 import os
 import logging
 import keyring
-from resilient import get_config_file
+import resilient
 from six import string_types
 
 try:
     # For all python < 3.2
     from io import open
-    from resilient import ensure_unicode
     import backports.configparser as configparser
 except ImportError:
-    from resilient.co3 import ensure_unicode
     import configparser
 
 
@@ -34,12 +32,12 @@ class KeyringUtils(object):
     def __init__(self):
         super(KeyringUtils, self).__init__()
 
-        config_file = get_config_file()
+        config_file = resilient.get_config_file()
         print(u"Configuration file: {}".format(config_file))
 
         # Read configuration options.
         if config_file:
-            config_path = ensure_unicode(config_file)
+            config_path = resilient.ensure_unicode(config_file)
             config_path = os.path.expanduser(config_path)
             if os.path.exists(config_path):
                 try:

@@ -1,3 +1,2 @@
 include resilient_circuits/LICENSE
 include resilient_circuits/data/app.config.base
-include resilient_circuits/version.txt
