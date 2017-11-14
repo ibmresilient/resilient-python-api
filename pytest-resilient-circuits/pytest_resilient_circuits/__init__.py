@@ -1,5 +1,5 @@
-
-from pkg_resources import resource_string
-
-__version__ = resource_string(__name__, "version.txt").strip()
-
+import pkg_resources
+try:
+    __version__ = pkg_resources.get_distribution(__name__).version
+except pkg_resources.DistributionNotFound:
+    pass
