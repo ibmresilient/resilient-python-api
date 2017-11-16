@@ -186,6 +186,9 @@ class SimpleClient(co3base.BaseClient):
 
         return ret
 
+    def __make_headers(self, co3_context_token=None, additional_headers=None):
+        return self.make_headers(co3_context_token, additional_headers)
+
     def _keyfunc(self, uri, *args, **kwargs):
         """ function to generate cache key for cached_get """
         return uri
