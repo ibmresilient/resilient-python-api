@@ -1,5 +1,5 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 # -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 #
 # resilient documentation build configuration file, created by
 # sphinx-quickstart on Wed Aug 30 12:27:13 2017.

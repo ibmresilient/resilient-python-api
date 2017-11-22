@@ -1,5 +1,5 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 # -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 
 """Base client for Resilient REST API"""
 from __future__ import print_function
