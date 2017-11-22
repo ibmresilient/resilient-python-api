@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 
 """Methods and classes for manipulating patch-related elements for the Resilient REST API"""
 

@@ -1,3 +1,5 @@
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+
 """Pytest Fixture for Testing Resilient Circuits Components"""
 from __future__ import print_function
 

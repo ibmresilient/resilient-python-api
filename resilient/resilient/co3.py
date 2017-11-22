@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 
 """Simple client for Resilient REST API"""
 from __future__ import print_function

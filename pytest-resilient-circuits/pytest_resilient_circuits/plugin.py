@@ -1,3 +1,5 @@
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+
 """ py.test plugin configuration for pytest-resilient-circuits """
 
 _help_email = "Resilient user email"
