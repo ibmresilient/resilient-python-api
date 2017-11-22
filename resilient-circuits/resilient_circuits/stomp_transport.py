@@ -1,3 +1,4 @@
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 """ stompest StompFrameTransport allowing for ssl.wrap_socket """
 
 import logging

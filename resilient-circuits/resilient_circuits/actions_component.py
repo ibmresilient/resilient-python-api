@@ -1,3 +1,4 @@
+# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 # -*- coding: utf-8 -*-
 
 """Circuits component for Action Module subscription and message handling"""
