@@ -12,4 +12,4 @@ except pkg_resources.DistributionNotFound:
 from resilient import *
 
 warnings.warn("The 'co3' module is deprecated, use 'resilient' instead", DeprecationWarning)
-r
+
