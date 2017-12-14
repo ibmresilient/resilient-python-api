@@ -1,4 +1,4 @@
-# Python API Packages
+# Resilient Python APIs
 
 This directory contains
 
@@ -14,7 +14,7 @@ the Resilient REST API and Action Module.
 
 It provides a SimpleClient class that you use to call the Resilient REST API.
 This class manages an authenticated connection to the Resilient server, and
-provides simple helper methods for accessing REST resources.
+simple helper methods for accessing REST resources.
 
 The module also provides an ArgumentParser (which extends `argparse.ArgumentParser`)
 to simplify the writing of command line utilities.  This provides support for
@@ -111,7 +111,7 @@ You can build release package files locally, by
 
     bash ./buildall.sh <version_number>
 
-where <version_number> is a build number (1, 2, etc).
+where <version_number> is a full version number ("29.0.123", etc).
 
 
 ## Command-Line Utilities
