@@ -1,4 +1,19 @@
 
+2017-12-12: version 29.0.1
+
+Fix an issue with backward compatibility between 'co3' and 'resilient' package names
+
+
+2017-12-01: version 29.0.0
+
+New package versions: Published under the MIT open-source license.
+New package versions: Published to pypi.
+resilient: Refactoring base class to support minimal environments
+resilient-circuits: change default JINJA autoescape for safety
+pytest-resilient-circuits: support creating datatables in tests
+gadget: don't print labels to stdout
+
+
 2017-09-01: version 28.2.1
 
 change license to MIT
