@@ -31,11 +31,11 @@ def js_filter(val):
     return js[1:-1]
 
 
-def json_filter(val):
+def json_filter(val, indent=0):
     """Jinja2 filter function 'json' produces JSONified string of the value"""
     if val is None or isinstance(val, jinja2.Undefined):
         return "null"
-    return json.dumps(val, indent=0, sort_keys=True)
+    return json.dumps(val, indent=indent, sort_keys=True)
 
 
 def html_filter(val):
@@ -120,7 +120,7 @@ def sh_filter(val):
     return ''.join(escaped)
 
 
-def pretty_filter(val):
+def pretty_filter(val, indent=2):
     """Jinja2 filter function 'pretty' produces pretty-printed string of the value"""
     if isinstance(val, jinja2.Undefined):
         return "[undefined]"
@@ -129,7 +129,7 @@ def pretty_filter(val):
         if typ is unicode:
             object = object.encode("utf-8")
         return pprint._safe_repr(object, context, maxlevels, level)
-    printer = pprint.PrettyPrinter(indent=2)
+    printer = pprint.PrettyPrinter(indent=indent)
     printer.format = nice_repr
     return printer.pformat(val)
 

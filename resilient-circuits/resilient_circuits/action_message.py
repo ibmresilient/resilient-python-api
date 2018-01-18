@@ -157,3 +157,7 @@ class ActionMessage(Event):
         with open(os.path.join(log_dir,
                                filename.format("JSON")), "w+") as logfile:
             logfile.write(json.dumps(self.message, indent=2))
+
+
+# placeholder
+FunctionMessage = ActionMessage

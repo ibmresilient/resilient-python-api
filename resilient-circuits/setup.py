@@ -55,6 +55,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': ['res-action-test = resilient_circuits.bin.res_action_test:main',
-                            'resilient-circuits = resilient_circuits.bin.resilient_circuits:main']
+                            'function-gen = resilient_circuits.bin.function_gen:main',
+                            'resilient-circuits = resilient_circuits.bin.resilient_circuits_cmd:main']
     }
 )

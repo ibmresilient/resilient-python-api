@@ -12,6 +12,7 @@ import base64
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
+from inspect import getargspec
 from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
@@ -19,7 +20,7 @@ import resilient
 from resilient import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
-from resilient_circuits.action_message import ActionMessage
+from resilient_circuits.action_message import ActionMessage, FunctionMessage
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 
@@ -29,7 +30,7 @@ STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
-MAX_RETRY_COUNT = 3                 # Retry failed deliveris this many times
+MAX_RETRY_COUNT = 3                 # Retry failed deliveries this many times
 
 
 def validate_cert(cert, hostname):
@@ -39,6 +40,59 @@ def validate_cert(cert, hostname):
     except Exception as exc:
         return (False, str(exc))
     return (True, "Success")
+
+
+"""Decorators for selecting the channel"""
+
+class ActionQueue(object):
+    """Decorator, sets the channel for a ResilientComponent"""
+    def __init__(self, queuename):
+        self.queuename = queuename
+
+    def __call__(self, func):
+        """Called at decoration time"""
+        # Set or extend the component's "channel" attribute
+        func.channel = getattr(func, "channel", {})
+        # The decorated function is unchanged
+        return func
+
+
+"""Other decorators"""
+
+
+def function(*names, **kwargs):
+    """Decorator, marks a class method as being a Resilient Function handler"""
+    # This is an extended copy of circuits.core.handlers:handler
+    def wrapper(f):
+        if names and isinstance(names[0], bool) and not names[0]:
+            f.handler = False
+            return f
+
+        if not names:
+            raise ValueError("Function name must be specified.")
+
+        default_channel = "actions.f_{}".format(names[0])
+        f.handler = True
+
+        # Circuits properties
+        f.names = names
+        f.priority = kwargs.get("priority", 0)
+        f.channel = kwargs.get("channel", default_channel)
+        f.override = kwargs.get("override", False)
+
+        # Resilient properties that define the function's interface
+        f.function_definition_def = kwargs.get("definition", None)
+        f.function_parameters_def = kwargs.get("parameters", None)
+
+        args = getargspec(f)[0]
+
+        if args and args[0] == "self":
+            del args[0]
+        f.event = getattr(f, "event", bool(args and args[0] == "event"))
+
+        return f
+
+    return wrapper
 
 
 class required_field(object):
@@ -491,11 +545,18 @@ class Actions(ResilientComponent):
 
                 message = json.loads(mstr)
                 # Construct a Circuits event with the message, and fire it on the channel
-                event = ActionMessage(source=self,
-                                      headers=headers,
-                                      message=message,
-                                      frame=event.frame,
-                                      log_dir=self.logging_directory)
+                if message.get("function"):
+                    event = FunctionMessage(source=self,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                else:
+                    event = ActionMessage(source=self,
+                                          headers=headers,
+                                          message=message,
+                                          frame=event.frame,
+                                          log_dir=self.logging_directory)
                 LOG.info("Event: %s Channel: %s", event, channel)
 
                 self.fire(event, channel)
@@ -612,7 +673,14 @@ class Actions(ResilientComponent):
             self._setup_message_logging()
             self._setup_stomp()
             return
-        for channel in event.channels:
+        # The set of channels for this component is:
+        # - the component's channel(s) declared at class level, and
+        # - any channel(s) declared at individual handlers
+        channels = set(event.channels)
+        for handler in component.handlers():
+            if handler.channel:
+                channels.add(handler.channel)
+        for channel in channels:
             if not str(channel).startswith("actions."):
                 continue
             LOG.info("Component %s registered to %s", str(component), channel)
