@@ -12,55 +12,14 @@ from circuits import Event, Timer
 LOG = logging.getLogger(__name__)
 
 
-class ActionMessage(Event):
-    """A Circuits event for a Resilient Action Module message.
-
-    This is a generic event that holds details of the Action Module message,
-    including its context (the incident, task, artifact... where the action
-    was triggered).  Your components will receive these events from the
-    Resilient Action Module message destination.
-
-    These events are named by the rule that triggered them (lowercased).
-    So a custom action rule named "Manual Action" will generate an event with name
-    "manual_action".  To handle that event, you should implement a :class:`ResilientComponent`
-    that has a method named :samp:`manual_action`:  the Circuits framework will call
-    your component's methods based on the name of the event.
-
-    The parameters for your event-handler method are:
-       * event: this event object
-       * source: the component that fired the event
-       * headers: the Action Module message headers (dict)
-       * message: the Action Module message (dict)
-    For convenience, the message is also broken out onto event properties,
-       * event.incident: the incident that the event relates to
-       * event.artifact: the artifact that the event was triggered from (if any)
-       * event.task: the task that the event was triggered from (if any)
-         (etc).
-
-    To have your component's method with a different name from the action,
-    you can use the :class:`@handler` decorator:
-
-    .. code-block:: python
-
-        @handler("the_action_name")
-        def _any_method_name(self, event, source=None, headers=None, message=None) ...
-
-    To have a method handle *any* event on the component's channel,
-    use the '@handler' decorator with no event name,
-
-    .. code-block:: python
-
-        @handler()
-        def _any_method_name(self, event, source=None, headers=None, message=None) ...
-
-    Refer to the developer documentation for additional details on writing components and event handlers.
-    """
+class ActionMessageBase(Event):
+    """Superclass for Action and Function messages"""
 
     def __init__(self, source=None, headers=None, message=None,
                  test=False, test_msg_id=None, frame=None, log_dir=None):
-        super(ActionMessage, self).__init__(source=source,
-                                            headers=headers,
-                                            message=message)
+        super(ActionMessageBase, self).__init__(source=source,
+                                                headers=headers,
+                                                message=message)
         if headers is None:
             headers = {}
         if message is None:
@@ -83,26 +42,11 @@ class ActionMessage(Event):
         if ts is not None:
             self.timestamp = datetime.datetime.utcfromtimestamp(float(ts)/1000)
 
-        if source is None:
-            # fallback
-            self.displayname = "Unknown"
-        elif isinstance(source, str):
-            # just for testing
-            self.displayname = source
-        else:
-            self.displayname = source.action_name(self.action_id)
-
-        # The name of this event (=the function that subscribers implement)
-        # is determined from the name of the action.
-        # In future, this should be the action's "programmatic name",
-        # but for now it's the downcased displayname with underscores.
-        self.name = re.sub(r'\W+', '_', self.displayname.strip().lower())
+        self.name = "_unknown_"
+        self.displayname = "Unknown"
 
         # Fire a {name}_success event when this event is successfully processed
         self.success = True
-
-        if message and log_dir:
-            self._log_message(log_dir)
 
     def __repr__(self):
         "x.__repr__() <==> repr(x)"
@@ -151,13 +95,107 @@ class ActionMessage(Event):
         return True
 
     def _log_message(self, log_dir):
-        """Log Action Message JSON to File"""
-        filename = "_".join(("ActionMessage", self.displayname,
+        """Log Message JSON to File"""
+        filename = "_".join((self.__class__.name, self.displayname,
                              datetime.datetime.now().isoformat())).replace('/', '_').replace(':', '-')
         with open(os.path.join(log_dir,
                                filename.format("JSON")), "w+") as logfile:
             logfile.write(json.dumps(self.message, indent=2))
 
 
-# placeholder
-FunctionMessage = ActionMessage
+class ActionMessage(ActionMessageBase):
+    """A Circuits event for a Resilient Action Module message.
+
+    This is a generic event that holds details of the Action Module message,
+    including its context (the incident, task, artifact... where the action
+    was triggered).  Your components will receive these events from the
+    Resilient Action Module message destination.
+
+    These events are named by the rule that triggered them (lowercased).
+    So a custom action rule named "Manual Action" will generate an event with name
+    "manual_action".  To handle that event, you should implement a :class:`ResilientComponent`
+    that has a method named :samp:`manual_action`:  the Circuits framework will call
+    your component's methods based on the name of the event.
+
+    The parameters for your event-handler method are:
+       * event: this event object
+       * source: the component that fired the event
+       * headers: the Action Module message headers (dict)
+       * message: the Action Module message (dict)
+    For convenience, the message is also broken out onto event properties,
+       * event.incident: the incident that the event relates to
+       * event.artifact: the artifact that the event was triggered from (if any)
+       * event.task: the task that the event was triggered from (if any)
+         (etc).
+
+    To have your component's method with a different name from the action,
+    you can use the :class:`@handler` decorator:
+
+    .. code-block:: python
+
+        @handler("the_action_name")
+        def _any_method_name(self, event, source=None, headers=None, message=None) ...
+
+    To have a method handle *any* event on the component's channel,
+    use the '@handler' decorator with no event name,
+
+    .. code-block:: python
+
+        @handler()
+        def _any_method_name(self, event, source=None, headers=None, message=None) ...
+
+    Refer to the developer documentation for additional details on writing components and event handlers.
+    """
+
+    def __init__(self, source=None, headers=None, message=None,
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
+        super(ActionMessage, self).__init__(source=source,
+                                            headers=headers,
+                                            message=message,
+                                            test=test,
+                                            test_msg_id=test_msg_id,
+                                            frame=frame,
+                                            log_dir=log_dir)
+
+        self.action_id = message.get("action_id")
+
+        if isinstance(source, str):
+            # just for testing
+            self.displayname = source
+        elif source is not None:
+            self.displayname = source.action_name(self.action_id)
+
+        # The name of this event (=the function that subscribers implement)
+        # is determined from the name of the action.
+        # In future, this should be the action's "programmatic name",
+        # but for now it's the downcased displayname with underscores.
+        self.name = re.sub(r'\W+', '_', self.displayname.strip().lower())
+
+        if message and log_dir:
+            self._log_message(log_dir)
+
+
+class FunctionMessage(ActionMessageBase):
+    """A Circuits event for a Resilient Function message.
+    """
+
+    def __init__(self, source=None, headers=None, message=None,
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
+        super(FunctionMessage, self).__init__(source=source,
+                                              headers=headers,
+                                              message=message,
+                                              test=test,
+                                              test_msg_id=test_msg_id,
+                                              frame=frame,
+                                              log_dir=log_dir)
+
+        fn = message["function"]
+        self.action_id = fn.get("id")
+
+        # The name of this event is the API name name of the function.
+        self.name = fn.get("name", "_unnamed_")
+        self.displayname = fn.get("display_name", self.name)
+
+        if message and log_dir:
+            self._log_message(log_dir)
+

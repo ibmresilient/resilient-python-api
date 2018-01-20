@@ -9,7 +9,7 @@ import struct
 from circuits import Component, Event, task, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
-from resilient_circuits.action_message import ActionMessage
+from resilient_circuits.action_message import ActionMessage, FunctionMessage
 LOG = logging.getLogger(__name__)
 
 
@@ -70,11 +70,18 @@ class ResilientTestActions(Component):
                     self.fire_message(sock, msg)
                 return
 
-            event = ActionMessage(source=self.parent,
-                                  headers=headers,
-                                  message=message,
-                                  test=True,
-                                  test_msg_id=msg_id)
+            if message.get("function"):
+                event = FunctionMessage(source=self.parent,
+                                        headers=headers,
+                                        message=message,
+                                        test=True,
+                                        test_msg_id=msg_id)
+            else:
+                event = ActionMessage(source=self.parent,
+                                      headers=headers,
+                                      message=message,
+                                      test=True,
+                                      test_msg_id=msg_id)
             self.fire(event, channel)
             if sock:
                 self.fire_message(sock, "Action Submitted<action %d>" % msg_id)

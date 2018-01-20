@@ -20,7 +20,7 @@ import resilient
 from resilient import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
-from resilient_circuits.action_message import ActionMessage, FunctionMessage
+from resilient_circuits.action_message import ActionMessageBase, ActionMessage, FunctionMessage
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 
@@ -42,24 +42,6 @@ def validate_cert(cert, hostname):
     return (True, "Success")
 
 
-"""Decorators for selecting the channel"""
-
-class ActionQueue(object):
-    """Decorator, sets the channel for a ResilientComponent"""
-    def __init__(self, queuename):
-        self.queuename = queuename
-
-    def __call__(self, func):
-        """Called at decoration time"""
-        # Set or extend the component's "channel" attribute
-        func.channel = getattr(func, "channel", {})
-        # The decorated function is unchanged
-        return func
-
-
-"""Other decorators"""
-
-
 def function(*names, **kwargs):
     """Decorator, marks a class method as being a Resilient Function handler"""
     # This is an extended copy of circuits.core.handlers:handler
@@ -71,13 +53,13 @@ def function(*names, **kwargs):
         if not names:
             raise ValueError("Function name must be specified.")
 
-        default_channel = "actions.f_{}".format(names[0])
         f.handler = True
+        f.function = True
 
         # Circuits properties
         f.names = names
         f.priority = kwargs.get("priority", 0)
-        f.channel = kwargs.get("channel", default_channel)
+        f.channel = kwargs.get("channel", ",".join(["functions.{}".format(name) for name in names]))
         f.override = kwargs.get("override", False)
 
         # Resilient properties that define the function's interface
@@ -320,11 +302,30 @@ class ResilientComponent(BaseComponent):
                         raise Exception(errmsg.format(field_name,
                                                       name, input_type))
 
+            # Do all the custom functions exist?
+            if getattr(func, "function", False):
+                if self._functions is None:
+                    LOG.warn("Functions are not available in this Resilient appliance!")
+                else:
+                    func_names = getattr(func, "names", [])
+                    for func_name in func_names:
+                        try:
+                            funcdef = self._functions[func_name]
+                        except KeyError:
+                            errmsg = "Function '{0}' is not defined in the Resilient appliance."
+                            raise Exception(errmsg.format(func_name))
+
     def _get_fields(self):
         """Get Incident and Action fields"""
         client = self.rest_client()
         self._fields = dict((field["name"], field) for field in client.get("/types/incident/fields"))
         self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
+        self._destinations = dict((dest["id"], dest) for dest in client.get("/message_destinations")["entities"])
+        try:
+            self._functions = dict((func["name"], func) for func in client.get("/functions")["entities"])
+        except resilient.SimpleHTTPException:
+            # functions are not available, pre-v30 server
+            self._functions = None
 
     def rest_client(self):
         """Return a connected instance of the :class:`resilient.SimpleClient`
@@ -679,12 +680,21 @@ class Actions(ResilientComponent):
         channels = set(event.channels)
         for handler in component.handlers():
             if handler.channel:
-                channels.add(handler.channel)
+                channels.update(handler.channel.split(","))
         for channel in channels:
-            if not str(channel).startswith("actions."):
+            if str(channel).startswith("actions."):
+                # Action module handler, channel "actions.xx" subscribes to "xx"
+                queue_name = channel.split(".", 1)[1]
+                LOG.info("Component %s registered to '%s'", str(component), queue_name)
+            elif str(channel).startswith("functions."):
+                # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
+                func_name = channel.split(".", 1)[1]
+                queue_id = self._functions[func_name]["destination_handle"]
+                queue_name = self._destinations[queue_id]["programmatic_name"]
+                LOG.info("Component %s function '%s' registered to '%s'", str(component), func_name, queue_name)
+            else:
                 continue
-            LOG.info("Component %s registered to %s", str(component), channel)
-            queue_name = channel.split(".", 1)[1]
+
             if queue_name in self.listeners:
                 comps = set([component])
                 comps.update(self.listeners[queue_name])
@@ -817,7 +827,7 @@ class Actions(ResilientComponent):
             if traceback and isinstance(traceback, list):
                 message = message + "\n" + ("".join(traceback))
             LOG.exception(u"%s (%s): %s", repr(fevent), repr(etype), message)
-            if fevent and isinstance(fevent, ActionMessage):
+            if fevent and isinstance(fevent, ActionMessageBase):
                 fevent.stop()  # Stop further event processing
                 status = 1
                 headers = fevent.hdr()
@@ -947,7 +957,7 @@ class Actions(ResilientComponent):
     @handler()
     def _on_event(self, event, *args, **kwargs):
         """Report the successful handling of an action event"""
-        if isinstance(event.parent, ActionMessage) and event.name.endswith("_success"):
+        if isinstance(event.parent, ActionMessageBase) and event.name.endswith("_success"):
             fevent = event.parent
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))

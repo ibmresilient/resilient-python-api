@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
-"""Utility to codegen a function implementation"""
+"""Utility to codegen a resilient-circuits component or package"""
 
 from __future__ import print_function
 
@@ -11,42 +11,32 @@ import resilient
 from resilient_circuits import template_functions
 
 
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
-
-
 # JINJA template for the generated code
-CODE_TEMPLATE = '''
-# pragma pylint: disable=bad-whitespace, bad-continuation, unused-argument, no-self-use
-"""Function implementation: {{function.name}}"""
+CODE_TEMPLATE = '''# -*- coding: utf-8 -*-
+# pragma pylint: disable=unused-argument, no-self-use
+"""Function implementation"""
 
+import logging
 from resilient_circuits.actions_component import ResilientComponent, function
 
 
-# Definitions for this function's input parameters
-{%for param in parameters%}
-{{param.name|upper}}_DEF = {{param|pretty(indent=4)}}
-{%endfor%}
-
-# Definition for this function
-{{function.name|upper}}_DEF = {{function|pretty(indent=4)}}
-
-
 class MyComponent(ResilientComponent):
-    """Implements a Resilient function"""
-
-    @function("{{function.name|js}}",
-              definition={{function.name|upper}}_DEF,
-              parameters=[{%set comma=joiner(", ")%}{%for p in parameters%}{{comma()}}{{p.name|upper}}_DEF{%endfor%}])
+    """Component that implements Resilient function(s)"""
+{%for function in functions%}
+    @function("{{function.name|js}}")
     def _{{function.name}}_function(self, event, *args, **kwargs):
-        """{{function.description}}"""
+        """Function: {{function.description}}"""
 
-        # Function parameters:{%for p in parameters%}
-        {{p.name}} = kwargs.get("{{p.name}}"){%endfor%}
+        # Get the function parameters:
+        function_parameters = event.message.get("inputs", {}){%for p in function.parameters%}
+        {{p.name}} = function_parameters.get("{{p.name}}"){%endfor%}
 
         # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
-        
+        logging.getLogger(__name__).info("this function was called!")
+
+        # Return a string or dictionary
         return "That's all, folks!"
-'''
+{%endfor%}'''
 
 # The attributes we want to keep from the object definitions
 TEMPLATE_ATTRIBUTES = [
@@ -88,7 +78,7 @@ class CodegenArgumentParser(resilient.ArgumentParser):
         super(CodegenArgumentParser, self).__init__(config_file=config_file)
 
         self.add_argument('function',
-                          nargs="?",
+                          nargs="*",
                           help="Name of the function.")
 
 
@@ -109,31 +99,36 @@ def clean(dictionary, keep):
     return dictionary
 
 
-def codegen_function(client, function_name):
+def codegen_function(client, function_names):
     """Generate a code template for a function"""
-    # Get the function definition
-    function_def = client.get("/functions/{}?handle_format=names".format(function_name))
-    # Remove the attributes we don't want to serialize
-    clean(function_def, FUNCTION_ATTRIBUTES)
-    for view_item in function_def.get("view_items", []):
-        clean(view_item, VIEW_ITEM_ATTRIBUTES)
+    functions = []
 
-    # Get the parameters (input fields)
-    param_names = [item["content"] for item in function_def["view_items"]]
-    params = []
-    for param_name in param_names:
-        param = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
-        clean(param, PARAMETER_ATTRIBUTES)
-        for template in param.get("templates", []):
-            clean(template, TEMPLATE_ATTRIBUTES)
-        for value in param.get("values", []):
-            clean(value, VALUE_ATTRIBUTES)
-        params.append(param)
+    for function_name in function_names:
+        # Get the function definition
+        function_def = client.get("/functions/{}?handle_format=names".format(function_name))
+        # Remove the attributes we don't want to serialize
+        clean(function_def, FUNCTION_ATTRIBUTES)
+        for view_item in function_def.get("view_items", []):
+            clean(view_item, VIEW_ITEM_ATTRIBUTES)
 
-    # Write out the template
+        # Get the parameters (input fields)
+        param_names = [item["content"] for item in function_def["view_items"]]
+        params = []
+        for param_name in param_names:
+            param = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
+            clean(param, PARAMETER_ATTRIBUTES)
+            for template in param.get("templates", []):
+                clean(template, TEMPLATE_ATTRIBUTES)
+            for value in param.get("values", []):
+                clean(value, VALUE_ATTRIBUTES)
+            params.append(param)
+
+        # Write out the template
+        function_def["parameters"] = params
+        functions.append(function_def)
+
     data = {
-        "function": function_def,
-        "parameters": params
+        "functions": functions,
     }
     print(template_functions.render(CODE_TEMPLATE, data))
 
@@ -146,12 +141,13 @@ def main():
     # Create SimpleClient for a REST connection to the Resilient services
     client = resilient.get_client(opts)
 
-    function_name = opts.get("function")
-    if function_name:
-        codegen_function(client, function_name)
+    function_names = opts.get("function")
+    if function_names:
+        codegen_function(client, function_names)
     else:
         list_functions(client)
 
 
 if __name__ == "__main__":
+    # logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
     main()

@@ -7,10 +7,12 @@ from __future__ import absolute_import
 import argparse
 import logging
 import os, os.path
-import pkg_resources
-import re
 import sys
-import traceback
+from collections import defaultdict
+import pkg_resources
+import resilient
+from resilient_circuits.bin.resilient_codegen import list_functions, codegen_function
+
 if sys.version_info.major == 2:
     from io import open
 else:
@@ -27,13 +29,14 @@ except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
 
-from collections import defaultdict
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
+
 def windows_service(service_args, res_circuits_args):
+    """Register a windows service"""
     try:
         import win32serviceutil
         from resilient_circuits.bin import service_wrapper
@@ -42,20 +45,25 @@ def windows_service(service_args, res_circuits_args):
             # Set the command line arguments to pass to "resilient-circuits.exe run"
             service_wrapper.irms_svc.setResilientArgs(res_circuits_args)
 
-        sys.argv=sys.argv[0:1] + service_args
+        sys.argv = sys.argv[0:1] + service_args
         win32serviceutil.HandleCommandLine(service_wrapper.irms_svc)
     except ImportError:
         LOG.error("Requires PYWIN32 Package. Please download and install from: "
                   "https://sourceforge.net/projects/pywin32/files/pywin32/")
 
+
 def supervisor_service():
+    """Register a unix service with supervisord [deprecated]"""
     pass
 
+
 def manage_service(service_args, res_circuits_args):
+    """Register a windows or unix service"""
     if os.name == 'nt':
         windows_service(service_args, res_circuits_args)
     else:
         supervisor_service(service_args, res_circuits_args)
+
 
 def run(resilient_circuits_args, restartable=False, config_file=None):
     """Run resilient-circuits"""
@@ -65,11 +73,12 @@ def run(resilient_circuits_args, restartable=False, config_file=None):
         from resilient_circuits import app_restartable as app
     else:
         from resilient_circuits import app
-    sys.argv=sys.argv[0:1] + resilient_circuits_args
+    sys.argv = sys.argv[0:1] + resilient_circuits_args
     kwargs = {}
     if config_file:
         kwargs = {"config_file": config_file}
     app.run(**kwargs)
+
 
 def list_installed():
     """print list of installed packages with their components"""
@@ -91,10 +100,12 @@ def list_installed():
                  version,
                  "\n\t".join(component_list))
 
+
 def discover_required_config_sections():
     """return list of functions to call to generate sample config sections"""
     entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
     return [ep.load() for ep in entry_points]
+
 
 def generate_default():
     """ return string containing entire default app.config """
@@ -104,6 +115,7 @@ def generate_default():
         additional_sections = [func() for func  in discover_required_config_sections()]
         LOG.debug("Found %d sections to generate", len(additional_sections))
         return "\n\n".join(([base_config,] + additional_sections))
+
 
 def generate_or_update_config(args):
     """ Create or update config file based on installed components """
@@ -138,7 +150,8 @@ def generate_or_update_config(args):
         # Write out default file
         with open(config_filename, "w+", encoding="utf-8") as config_file:
             config_file.write(generate_default())
-            LOG.info("Config generated. %s  Please manually edit with your specific configuration values", config_filename)
+            LOG.info("Config generated. %s  Please manually edit with your specific configuration values",
+                     config_filename)
 
     else:
         # Update existing file
@@ -172,6 +185,20 @@ def generate_or_update_config(args):
             else:
                 LOG.info("No updates required.")
 
+
+def generate_code(args):
+    """generate template code components from functions"""
+    parser = resilient.ArgumentParser(config_file=resilient.get_config_file())
+    (opts, extra) = parser.parse_known_args()
+    client = resilient.get_client(opts)
+    if args.function:
+        # codegen a component for one or more functions
+        codegen_function(client, args.function)
+    else:
+        # list the available functions from the server
+        list_functions(client)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Print debug output", action="store_true")
@@ -181,6 +208,7 @@ def main():
                                        description="valid subcommands",
                                        dest="cmd")
     subparsers.required = True
+
     list_parser = subparsers.add_parser("list",
                                         help="List the installed Resilient Circuits components")
     run_parser = subparsers.add_parser("run",
@@ -189,7 +217,10 @@ def main():
                                            help="Manage Resilient Circuits as a service with Windows or Supervisord")
     config_parser = subparsers.add_parser("config",
                                           help="Create or update a basic configuration file")
+    codegen_parser = subparsers.add_parser("codegen",
+                                           help="Generate template code for Python components")
 
+    # Options for 'config'
     file_option_group = config_parser.add_mutually_exclusive_group(required=True)
     file_option_group.add_argument("-u", "--update",
                                    help="Add any missing sections required for installed components",
@@ -199,9 +230,10 @@ def main():
                                    action="store_true")
     config_parser.add_argument("filename",
                                help="Config file to write to; e.g. 'app.config'",
-                               default= "",
-                               nargs = "?")
+                               default="",
+                               nargs="?")
 
+    # Options for 'run'
     run_parser.add_argument("-r", "--auto-restart",
                             help="Automatically restart all components if config file changes",
                             action="store_true")
@@ -210,12 +242,24 @@ def main():
                             default=None)
     run_parser.add_argument("resilient_circuits_args", help="Args to pass to app.run", nargs=argparse.REMAINDER)
 
-
+    # Options for 'service'
     service_parser.add_argument("--res-circuits-args",
                                 help="Arguments to pass to resilient-circuits.exe run command",
                                 action="store",
                                 default="")
     service_parser.add_argument("service_args", help="Args to pass to service manager", nargs=argparse.REMAINDER)
+
+    # Options for 'codegen'
+    codegen_parser.add_argument("-f", "--function",
+                                help="Name of the function(s) to generate code for",
+                                nargs="*")
+    codegen_parser.add_argument("--with-metadata",
+                                help="Include full metadata for 'customize'",
+                                action="store_true")
+    codegen_parser.add_argument("filename",
+                                help="Python file to write to; e.g. 'myfile.py'",
+                                default="",
+                                nargs="?")
 
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
@@ -235,8 +279,10 @@ def main():
     elif args.cmd == "list":
         list_installed()
     elif args.cmd == "service":
-        manage_service(unknown_args + args.service_args,
-                       args.res_circuits_args)
+        manage_service(unknown_args + args.service_args, args.res_circuits_args)
+    elif args.cmd == "codegen":
+        generate_code(args)
+
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
