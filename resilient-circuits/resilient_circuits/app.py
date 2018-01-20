@@ -189,7 +189,7 @@ class App(Component):
         # all Circuits components in the 'componentsdir' directory
         if self.auto_load_components:
             LOG.info("Components auto-load directory: %s",
-                     self.opts["componentsdir"])
+                     self.opts["componentsdir"] or "(none)")
             if not self.component_loader:
                 self.component_loader = ComponentLoader(self.opts)
             else:

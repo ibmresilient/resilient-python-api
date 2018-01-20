@@ -11,7 +11,8 @@ import sys
 from collections import defaultdict
 import pkg_resources
 import resilient
-from resilient_circuits.bin.resilient_codegen import list_functions, codegen_function
+from resilient_circuits.app import AppArgumentParser
+from resilient_circuits.bin.resilient_codegen import list_functions, codegen_functions
 
 if sys.version_info.major == 2:
     from io import open
@@ -188,12 +189,18 @@ def generate_or_update_config(args):
 
 def generate_code(args):
     """generate template code components from functions"""
-    parser = resilient.ArgumentParser(config_file=resilient.get_config_file())
+    parser = AppArgumentParser(config_file=resilient.get_config_file())
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
+
     if args.function:
         # codegen a component for one or more functions
-        codegen_function(client, args.function)
+        if len(args.function) > 1:
+            default_name = "functions.py"
+        else:
+            default_name = "{}.py".format(args.function[0])
+        output_file = os.path.join(opts["componentsdir"] or os.curdir, args.output or default_name)
+        codegen_functions(client, args.function, os.path.expanduser(output_file))
     else:
         # list the available functions from the server
         list_functions(client)
@@ -253,12 +260,8 @@ def main():
     codegen_parser.add_argument("-f", "--function",
                                 help="Name of the function(s) to generate code for",
                                 nargs="*")
-    codegen_parser.add_argument("--with-metadata",
-                                help="Include full metadata for 'customize'",
-                                action="store_true")
-    codegen_parser.add_argument("filename",
-                                help="Python file to write to; e.g. 'myfile.py'",
-                                default="",
+    codegen_parser.add_argument("-o", "--output",
+                                help="Output file name",
                                 nargs="?")
 
     args, unknown_args = parser.parse_known_args()
@@ -270,18 +273,20 @@ def main():
         # Shouldn't have any unknown args for other commands, generate the proper errors
         args = parser.parse_args()
 
-    if args.cmd == "config":
-        generate_or_update_config(args)
-    elif args.cmd == "run":
+    if args.cmd == "run":
         run(unknown_args + args.resilient_circuits_args,
             restartable=args.auto_restart,
             config_file=args.config_file)
-    elif args.cmd == "list":
-        list_installed()
-    elif args.cmd == "service":
-        manage_service(unknown_args + args.service_args, args.res_circuits_args)
-    elif args.cmd == "codegen":
-        generate_code(args)
+    else:
+        logging.basicConfig(format='%(message)s', level=logging.INFO)
+        if args.cmd == "config":
+            generate_or_update_config(args)
+        elif args.cmd == "list":
+            list_installed()
+        elif args.cmd == "service":
+            manage_service(unknown_args + args.service_args, args.res_circuits_args)
+        elif args.cmd == "codegen":
+            generate_code(args)
 
 
 if __name__ == "__main__":

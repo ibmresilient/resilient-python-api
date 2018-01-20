@@ -6,9 +6,12 @@
 
 from __future__ import print_function
 
+import os
 import logging
-import resilient
 from resilient_circuits import template_functions
+
+
+LOG = logging.getLogger("__name__")
 
 
 # JINJA template for the generated code
@@ -22,6 +25,16 @@ from resilient_circuits.actions_component import ResilientComponent, function
 
 class MyComponent(ResilientComponent):
     """Component that implements Resilient function(s)"""
+    
+#    def __init__(self, opts):
+#        """constructor provides access to the configuration options"""
+#        super(MyComponent, self).__init__(opts)
+#        self.options = opts.get("my_config_section", {})
+
+#    @handler("reload")
+#    def reload_options(self, event, opts):
+#        """Configuration options have changed, save new values"""
+#        self.options = opts.get("my_config_section", {})
 {%for function in functions%}
     @function("{{function.name|js}}")
     def _{{function.name}}_function(self, event, *args, **kwargs):
@@ -72,16 +85,6 @@ FUNCTION_ATTRIBUTES = [
 ]
 
 
-class CodegenArgumentParser(resilient.ArgumentParser):
-    """Commandline arguments"""
-    def __init__(self, config_file=None):
-        super(CodegenArgumentParser, self).__init__(config_file=config_file)
-
-        self.add_argument('function',
-                          nargs="*",
-                          help="Name of the function.")
-
-
 def list_functions(client):
     """List all the functions"""
     function_defs = client.get("/functions?handle_format=names")
@@ -99,8 +102,9 @@ def clean(dictionary, keep):
     return dictionary
 
 
-def codegen_function(client, function_names):
-    """Generate a code template for a function"""
+def codegen_functions(client, function_names, output_file):
+    """Generate a code template for one or more functions"""
+
     functions = []
 
     for function_name in function_names:
@@ -130,24 +134,11 @@ def codegen_function(client, function_names):
     data = {
         "functions": functions,
     }
-    print(template_functions.render(CODE_TEMPLATE, data))
+    if os.path.exists(output_file):
+        LOG.error("Not writing %s: file exists.", output_file)
+        return
 
-
-def main():
-    """main"""
-    parser = CodegenArgumentParser(config_file=resilient.get_config_file())
-    opts = parser.parse_args()
-
-    # Create SimpleClient for a REST connection to the Resilient services
-    client = resilient.get_client(opts)
-
-    function_names = opts.get("function")
-    if function_names:
-        codegen_function(client, function_names)
-    else:
-        list_functions(client)
-
-
-if __name__ == "__main__":
-    # logging.basicConfig(format='%(asctime)s %(message)s', level=logging.WARN)
-    main()
+    LOG.info("Writing: %s", output_file)
+    with open(output_file, mode="w") as outfile:
+        rendered = template_functions.render(CODE_TEMPLATE, data)
+        outfile.write(rendered)
