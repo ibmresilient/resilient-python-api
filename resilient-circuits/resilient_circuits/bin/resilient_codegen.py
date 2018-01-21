@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
@@ -15,15 +14,15 @@ LOG = logging.getLogger("__name__")
 
 
 # JINJA template for the generated code
-CODE_TEMPLATE = '''# -*- coding: utf-8 -*-
+FUNCTION_CODE_TEMPLATE = '''# -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
 """Function implementation"""
 
 import logging
-from resilient_circuits.actions_component import ResilientComponent, function
+from resilient_circuits import ResilientComponent, function, FunctionResult
 
 
-class MyComponent(ResilientComponent):
+class MyFunctionComponent(ResilientComponent):
     """Component that implements Resilient function(s)"""
     
 #    def __init__(self, opts):
@@ -48,7 +47,7 @@ class MyComponent(ResilientComponent):
         logging.getLogger(__name__).info("this function was called!")
 
         # Return a string or dictionary
-        return "That's all, folks!"
+        yield FunctionResult("xyz")
 {%endfor%}'''
 
 # The attributes we want to keep from the object definitions
@@ -131,14 +130,14 @@ def codegen_functions(client, function_names, output_file):
         function_def["parameters"] = params
         functions.append(function_def)
 
-    data = {
-        "functions": functions,
-    }
     if os.path.exists(output_file):
         LOG.error("Not writing %s: file exists.", output_file)
         return
 
     LOG.info("Writing: %s", output_file)
     with open(output_file, mode="w") as outfile:
-        rendered = template_functions.render(CODE_TEMPLATE, data)
+        data = {
+            "functions": functions,
+        }
+        rendered = template_functions.render(FUNCTION_CODE_TEMPLATE, data)
         outfile.write(rendered)

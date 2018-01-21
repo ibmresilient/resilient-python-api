@@ -12,15 +12,15 @@ import base64
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from functools import wraps
-from inspect import getargspec
 from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import resilient
 from resilient import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
+from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
-from resilient_circuits.action_message import ActionMessageBase, ActionMessage, FunctionMessage
+from resilient_circuits.action_message import ActionMessageBase, ActionMessage, FunctionMessage, StatusMessage, FunctionResult
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 
@@ -32,6 +32,10 @@ STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 MAX_RETRY_COUNT = 3                 # Retry failed deliveries this many times
 
+# Global idle timer, fires after 10 minutes to reset the REST connection
+IDLE_TIMER_INTERVAL = 600
+_idle_timer = None
+
 
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
@@ -42,222 +46,12 @@ def validate_cert(cert, hostname):
     return (True, "Success")
 
 
-def function(*names, **kwargs):
-    """Decorator, marks a class method as being a Resilient Function handler"""
-    # This is an extended copy of circuits.core.handlers:handler
-    def wrapper(f):
-        if names and isinstance(names[0], bool) and not names[0]:
-            f.handler = False
-            return f
-
-        if not names:
-            raise ValueError("Function name must be specified.")
-
-        f.handler = True
-        f.function = True
-
-        # Circuits properties
-        f.names = names
-        f.priority = kwargs.get("priority", 0)
-        f.channel = kwargs.get("channel", ",".join(["functions.{}".format(name) for name in names]))
-        f.override = kwargs.get("override", False)
-
-        # Resilient properties that define the function's interface
-        f.function_definition_def = kwargs.get("definition", None)
-        f.function_parameters_def = kwargs.get("parameters", None)
-
-        args = getargspec(f)[0]
-
-        if args and args[0] == "self":
-            del args[0]
-        f.event = getattr(f, "event", bool(args and args[0] == "event"))
-
-        return f
-
-    return wrapper
-
-
-class required_field(object):
-    """Decorator, declares a required field for a ResilientComponent or its methods"""
-    def __init__(self, fieldname, input_type=None):
-        self.fieldname = fieldname
-        self.input_type = input_type
-
-    def __call__(self, func):
-        """Called at decoration time"""
-        # Set or extend the function's "custom_fields" attribute
-        func.required_fields = getattr(func, "required_fields", {})
-        func.required_fields[self.fieldname] = self.input_type
-        # The decorated function is unchanged
-        return func
-
-
-class required_action_field(object):
-    """Decorator, declares a required field for a ResilientComponent or its methods"""
-    def __init__(self, fieldname, input_type=None):
-        self.fieldname = fieldname
-        self.input_type = input_type
-
-    def __call__(self, func):
-        """Called at decoration time"""
-        # Set or extend the function's "action_fields" attribute
-        func.required_action_fields = getattr(func,
-                                              "required_action_fields", {})
-        func.required_action_fields[self.fieldname] = self.input_type
-        # The decorated function is unchanged
-        return func
-
-
-class defer(object):
-    """Decorator for an event handler, delays it awhile.
-
-       Usage:
-       Decorate a Resilient Circuits handler.
-       This decorator should go *before* the '@handler(...)'.
-       Do not use on 'generic' handlers, only on named-event handlers.
-
-            @defer(delay=5)
-            @handler("actions_event_name")
-            def _function(self, event, *args, **kwargs):
-                # handle the event
-                pass
-    """
-    def __init__(self, *args, **kwargs):
-        self.delay = kwargs.get("delay", None)
-        if len(args) > 0:
-            raise Exception("Usage: @defer() or @defer(delay=<seconds>)")
-
-    def __call__(self, func):
-        """Called at decoration time, with function"""
-        LOG.debug("@defer %s", func)
-
-        @wraps(func)
-        def decorated(itself, event, *args, **kwargs):
-            LOG.debug("decorated")
-            if event.defer(itself, delay=self.delay):
-                # OK, let's handle it later
-                return
-            return func(itself, event, *args, **kwargs)
-        return decorated
-
-
-def debounce_get_incident_key(event):
-    """Callback to return the debounce-key for an event.
-       Multiple events with this key will be debounced together.
-       Default is: event name and incident id.
-    """
-    key = "{} for {}".format(event.name, event.message["incident"]["id"])
-    return key
-
-
-class debounce(object):
-    """Decorator for an event handler, debounces multiple occurrences.
-
-       Parameters:
-           delay= (seconds).  Time before the event will be processed.
-                  If another event (with the same key) occurs in this
-                  time, the timer starts over.
-           discard= (Boolean, optional).  If true, when there are multiple
-                  events before the delay expires, only the most recent one
-                  is processed, and the previous ones are discarded.
-
-       Usage:
-       Decorate a Resilient Circuits handler.
-       This decorator should go *before* the '@handler(...)'.
-       Do not use on 'generic' handlers, only on named-event handlers.
-
-            @debounce(delay=10, discard=True)
-            @handler("actions_event_name")
-            def _function(self, event, *args, **kwargs):
-                # handle the event
-                pass
-    """
-    def __init__(self, *args, **kwargs):
-        self.delay = kwargs.get("delay", 1)
-        self.discard = kwargs.get("discard", False)
-        self.get_key = kwargs.get("get_key_func", debounce_get_incident_key)
-        self.debouncedata = {}
-        if len(args) > 0:
-            raise Exception("Usage: @debounce(delay=<seconds>, [discard=True])")
-
-    def __call__(self, func):
-        """Called at decoration time, with function"""
-        LOG.debug("@debounce %s", func)
-
-        @wraps(func)
-        def decorated(itself, event, *args, **kwargs):
-            LOG.debug("decorated")
-            # De-bounce messages for this event and the same key:
-            # (key is the incident-id, by default):
-            # - Don't handle the message immediately.
-            #   - Note that we have a deferred event.
-            #   - Defer it for <<delay>>.
-            # - If an event arrives and there is any deferred message,
-            #   - Reset the timer interval to <<delay>>
-            #   - Optionally: throw away the new message.
-            #     Otherwise: defer this one too (to be processed
-            #     immediately after the first deferred message).
-            key = self.get_key(event)
-            if event.deferred:
-                # We deferred this event earlier,
-                # and now it has fired without being reset in the meantime.
-                # All the pending events are OK to go!  Forget their timers!
-                LOG.info("Handling deferred %s", key)
-                event.deferred = False
-                self.debouncedata.pop(key, None)
-            else:
-                # This is a new event.
-                # Are there any other deferred events for this [action+incident]?
-                if key not in self.debouncedata:
-                    # We'll keep a list of all the timers
-                    self.debouncedata[key] = []
-                else:
-                    # Duplicate event
-                    if self.discard:
-                        # Unregister all the previous timers so they don't fire
-                        for timer in self.debouncedata[key]:
-                            evt = timer.event
-                            LOG.debug("Unregister timer")
-                            timer.unregister()
-                            if evt:
-                                # The timer's event will not fire now.
-                                # Mark it as not 'deferred' and fire a 'success' child event
-                                # so that it gets ack'd to the message queue.
-                                LOG.debug("Fire success")
-                                evt.deferred = False
-                                channels = getattr(evt, "success_channels", evt.channels)
-                                itself.fire(evt.child("success", evt, evt.value.value), *channels)
-                        # Now we can get rid of the list of timers
-                        self.debouncedata[key] = []
-                    else:
-                        # Reset all the pending timers
-                        for timer in self.debouncedata[key]:
-                            timer.reset(interval=self.delay)
-                # Defer this new event with a timer.
-                LOG.info("Deferring %s", key)
-                timer = Timer(self.delay, event)
-                timer.register(itself)
-                event.deferred = True
-                # Remember the new timer so that we can reset it if necessary
-                self.debouncedata[key].append(timer)
-                # We're done until the timer fires
-                return
-            return func(itself, event, *args, **kwargs)
-        return decorated
-
-
-# Global idle timer, fires after 10 minutes to reset the REST connection
-IDLE_TIMER_INTERVAL = 600
-_idle_timer = None
-
-
 class ResilientComponent(BaseComponent):
-    """A Circuits base component with a connection to the Resilient REST API
+    """A Circuits base component with a connection to the Resilient APIs.
 
-       This is a convenient superclass for custom components that use the
-       Resilient Action Module.  If our component inherits from ResilientComponent,
-       it will automatically be loaded and subscribed to events on the message destination
-       specified by :attr:`channel`
+       This is the superclass for custom Resilient Action Module components.
+       If a component inherits from ResilientComponent, it will automatically be loaded,
+       and actions and functions will be dispatched to its `handler` and `function` methods.
     """
     test_mode = False  # True with --test-actions option
 
@@ -278,7 +72,7 @@ class ResilientComponent(BaseComponent):
                     fielddef = self._fields[field_name]
                 except KeyError:
                     errmsg = ("Field '{0}' (required by '{1}') is not "
-                              "defined in the Resilient appliance.")
+                              "defined in this Resilient platform.")
                     raise Exception(errmsg.format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
@@ -293,7 +87,7 @@ class ResilientComponent(BaseComponent):
                     fielddef = self._action_fields[field_name]
                 except KeyError:
                     errmsg = ("Action field '{0}' (required by '{1}') "
-                              "is not defined in the Resilient appliance.")
+                              "is not defined in this Resilient platform.")
                     raise Exception(errmsg.format(field_name, name))
                 if input_type is not None:
                     if fielddef["input_type"] != input_type:
@@ -304,15 +98,16 @@ class ResilientComponent(BaseComponent):
 
             # Do all the custom functions exist?
             if getattr(func, "function", False):
+                func_names = getattr(func, "names", [])
                 if self._functions is None:
-                    LOG.warn("Functions are not available in this Resilient appliance!")
+                    LOG.warn("Functions are not available in this Resilient platform!  "
+                             "Cannot run '{}'".format(", ".join(func_names)))
                 else:
-                    func_names = getattr(func, "names", [])
                     for func_name in func_names:
                         try:
                             funcdef = self._functions[func_name]
                         except KeyError:
-                            errmsg = "Function '{0}' is not defined in the Resilient appliance."
+                            errmsg = "Function '{0}' is not defined in the Resilient platform."
                             raise Exception(errmsg.format(func_name))
 
     def _get_fields(self):
@@ -323,9 +118,11 @@ class ResilientComponent(BaseComponent):
         self._destinations = dict((dest["id"], dest) for dest in client.get("/message_destinations")["entities"])
         try:
             self._functions = dict((func["name"], func) for func in client.get("/functions")["entities"])
+            self._function_fields = dict((field["name"], field) for field in client.get("/types/__function/fields"))
         except resilient.SimpleHTTPException:
             # functions are not available, pre-v30 server
             self._functions = None
+            self._function_fields = None
 
     def rest_client(self):
         """Return a connected instance of the :class:`resilient.SimpleClient`
@@ -355,7 +152,7 @@ class ResilientComponent(BaseComponent):
         return self._fields.values()
 
     def get_field_label(self, fieldname, value_id):
-        """Get the label for an action-field id"""
+        """Get the label for an incident-field value id"""
         field = self._fields[fieldname]
         for value in field["values"]:
             if value["enabled"]:
@@ -372,8 +169,27 @@ class ResilientComponent(BaseComponent):
         return self._action_fields.values()
 
     def get_action_field_label(self, fieldname, value_id):
-        """Get the label for an action-field id"""
+        """Get the label for an action-field value id"""
         field = self._action_fields[fieldname]
+        for value in field["values"]:
+            if value["enabled"]:
+                if value["value"] == value_id:
+                    return value["label"]
+        return ensure_unicode(value_id)  # fallback
+
+    def get_function_field(self, fieldname):
+        """Get the definition of a function input field (parameter)"""
+        return self._function_fields[fieldname] if self._function_fields else None
+
+    def get_function_fields(self):
+        """Get the definitions of all function input-fields (parameters), as a list"""
+        return self._function_fields.values() if self._function_fields else None
+
+    def get_function_field_label(self, fieldname, value_id):
+        """Get the label for a function input-field value id"""
+        if self._function_fields is None:
+            return None
+        field = self._function_fields[fieldname]
         for value in field["values"]:
             if value["enabled"]:
                 if value["value"] == value_id:
@@ -511,7 +327,7 @@ class Actions(ResilientComponent):
             raise ValueError("Stomp message with no message id received")
         elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
-            # Don't process it again, just ackknowledge it
+            # Don't process it again, just acknowledge it
             LOG.info("Skipping reprocess of message %s.  Sending saved ack now.", msg_id)
             failure_info = self._resilient_ack_delivery_failures.get(msg_id)
             if failure_info:
@@ -686,7 +502,7 @@ class Actions(ResilientComponent):
                 # Action module handler, channel "actions.xx" subscribes to "xx"
                 queue_name = channel.split(".", 1)[1]
                 LOG.info("Component %s registered to '%s'", str(component), queue_name)
-            elif str(channel).startswith("functions."):
+            elif str(channel).startswith("functions.") and self._functions:
                 # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
                 func_name = channel.split(".", 1)[1]
                 queue_id = self._functions[func_name]["destination_handle"]
@@ -954,6 +770,31 @@ class Actions(ResilientComponent):
             yield self.wait(subscribe_event)
         event.success = True
 
+    @handler("StatusMessage")
+    def _status(self, event, *args, **kwargs):
+        """Report an interim status"""
+        if not isinstance(event.parent, ActionMessageBase):
+            return
+        fevent = event.parent
+        if fevent.test:
+            return
+        # Reply with interim status
+        message = event.text
+        if not message:
+            return
+        status = 0
+        headers = fevent.hdr()
+        message_id = headers.get('message-id', None)
+        reply_to = headers['reply-to']
+        correlation_id = headers['correlation-id']
+        reply_message = json.dumps({"message_type": status,
+                                    "message": message,
+                                    "complete": False})
+        self.fire(Send(headers={'correlation-id': correlation_id},
+                       body=reply_message,
+                       destination=reply_to,
+                       message_id=message_id))
+
     @handler()
     def _on_event(self, event, *args, **kwargs):
         """Report the successful handling of an action event"""
@@ -965,15 +806,62 @@ class Actions(ResilientComponent):
                 value = event.parent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
-                # value will be None if there was no handler or a handler returned None
-                if value:
-                    if isinstance(value, list):
-                        message = u" ".join(value)
-                    else:
-                        message = value
-                else:
-                    message = u"No handler returned a result for this action"
-                LOG.debug("Message: %s", message)
+
+                # The value might be:
+                # - None (if there was no handler or a handler just returned None)
+                # - or a single thing, or a list; where each thing could be
+                #   - a StatusMessage
+                #   - a FunctionResult
+                #   - a plain Python object: string, number, dictionary, etc
+                # Custom Actions don't have any "result", so all the values are
+                # concatenated into a status message.
+                # Functions have a result as well as a status message.
+                if not isinstance(value, list):
+                    value = [value]
+                function_result = None
+                status_messages = []
+
+                if isinstance(event.parent, ActionMessage):
+                    # All the values become the status message.
+                    for val in value:
+                        if isinstance(val, StatusMessage):
+                            status_messages.append(val)
+                        elif val is not None and not isinstance(val, FunctionResult):
+                            status_messages.append(StatusMessage(parent=event.parent, text=val))
+                    # If the function didn't return a status message, let's make one.
+                    if not status_messages:
+                        status_messages.append(StatusMessage(parent=event.parent,
+                                                             text=u"No handler returned a result for this action"))
+
+                if isinstance(event.parent, FunctionMessage):
+                    # The first (and only the first!) FunctionResult is the result.
+                    for val in value:
+                        if isinstance(val, FunctionResult):
+                            function_result = val
+                            break
+                    # If there was no FunctionResult, but there was a plain value, convert that to a FunctionResult
+                    values = []
+                    for val in value:
+                        if function_result is None and \
+                                not isinstance(val, FunctionResult) and \
+                                not isinstance(val, StatusMessage):
+                            function_result = FunctionResult(val)
+                        else:
+                            values.append(val)
+                    # All the other values become the status message.
+                    for val in values:
+                        if isinstance(val, FunctionResult):
+                            pass
+                        elif isinstance(val, StatusMessage):
+                            status_messages.append(val)
+                        elif val is not None:
+                            status_messages.append(StatusMessage(parent=event.parent, text=val))
+                    # If the function didn't return a status message, let's make one.
+                    if not status_messages:
+                        status_messages.append(StatusMessage(parent=event.parent, text=u"Completed."))
+
+                message = "\n".join(map(str, status_messages))
+                LOG.debug(u"Message: %s", message)
                 status = 0
                 headers = fevent.hdr()
                 # Ack the message
@@ -984,9 +872,14 @@ class Actions(ResilientComponent):
                 # Reply with success status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
-                reply_message = json.dumps({"message_type": status,
-                                            "message": message,
-                                            "complete": True})
+                # reply_message is an ActionAcknowledgementDTO
+                reply_dto = {"message_type": status,
+                             "message": message,
+                             "complete": True}
+                if function_result:
+                    LOG.debug("Result: %s", function_result.value)
+                    reply_dto["variables"] = {"result": function_result.value}
+                reply_message = json.dumps(reply_dto)
                 if not fevent.test:
                     self.fire(Send(headers={'correlation-id': correlation_id},
                                    body=reply_message,

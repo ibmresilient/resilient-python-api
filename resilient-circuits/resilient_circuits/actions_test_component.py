@@ -6,7 +6,7 @@ import logging
 import time
 import json
 import struct
-from circuits import Component, Event, task, handler
+from circuits import Component, Event, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
 from resilient_circuits.action_message import ActionMessage, FunctionMessage
@@ -18,8 +18,7 @@ class SubmitTestAction(Event):
     def __init__(self, queue, msg_id, message):
         if not all((queue, msg_id, message)):
             raise ValueError("queue, msg_id, and message are required")
-        super(SubmitTestAction, self).__init__(queue=queue, msg_id=msg_id,
-                                         message=message)
+        super(SubmitTestAction, self).__init__(queue=queue, msg_id=msg_id, message=message)
 
 
 class ResilientTestActions(Component):
@@ -45,7 +44,6 @@ class ResilientTestActions(Component):
                                                           queue=queue)
             destination = "/queue/actions.{org}.{queue}".format(org=self.org_id,
                                                                 queue=queue)
-            channel = "actions." + queue
             headers = {"reply-to": reply_to,
                        "expires": "0",
                        "timestamp": str(int(time.time()) * 1000),
@@ -71,12 +69,14 @@ class ResilientTestActions(Component):
                 return
 
             if message.get("function"):
+                channel = "functions." + message["function"]["name"]
                 event = FunctionMessage(source=self.parent,
                                         headers=headers,
                                         message=message,
                                         test=True,
                                         test_msg_id=msg_id)
             else:
+                channel = "actions." + queue
                 event = ActionMessage(source=self.parent,
                                       headers=headers,
                                       message=message,
@@ -147,6 +147,7 @@ class ResilientTestActions(Component):
             self.fire_message(sock, msg)
 
     def done(self, event):
+        """Handler when done"""
         status = yield self.wait(event)
         status = status.value
         sock = self.actions_sent.get(event.test_msg_id)

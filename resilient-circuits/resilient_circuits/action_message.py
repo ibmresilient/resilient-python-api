@@ -13,7 +13,8 @@ LOG = logging.getLogger(__name__)
 
 
 class ActionMessageBase(Event):
-    """Superclass for Action and Function messages"""
+    """Superclass for :class:`ActionMessage` and :class:`FunctionMessage`.
+    """
 
     def __init__(self, source=None, headers=None, message=None,
                  test=False, test_msg_id=None, frame=None, log_dir=None):
@@ -94,6 +95,21 @@ class ActionMessageBase(Event):
         Timer(delay, self).register(component)
         return True
 
+    def status(self, component, message):
+        """Send Resilient a status message for this function or action.
+           The message text will be displayed in 'Action Status'.
+
+           This method must be called with 'yield':
+
+           .. code-block:: python
+
+               yield event.status(self, "this is an interim status")
+               ...
+               yield event.status(self, "this is the final status")
+               yield FunctionResult("xyz")
+        """
+        return component.call(StatusMessage(parent=self, text=message))
+
     def _log_message(self, log_dir):
         """Log Message JSON to File"""
         filename = "_".join((self.__class__.name, self.displayname,
@@ -106,7 +122,7 @@ class ActionMessageBase(Event):
 class ActionMessage(ActionMessageBase):
     """A Circuits event for a Resilient Action Module message.
 
-    This is a generic event that holds details of the Action Module message,
+    This event holds details of the Action Module message,
     including its context (the incident, task, artifact... where the action
     was triggered).  Your components will receive these events from the
     Resilient Action Module message destination.
@@ -129,20 +145,22 @@ class ActionMessage(ActionMessageBase):
          (etc).
 
     To have your component's method with a different name from the action,
-    you can use the :class:`@handler` decorator:
+    you can use the :func:`handler` decorator:
 
     .. code-block:: python
 
         @handler("the_action_name")
-        def _any_method_name(self, event, source=None, headers=None, message=None) ...
+        def _any_method_name(self, event, source=None, headers=None, message=None):
+            ...
 
     To have a method handle *any* event on the component's channel,
-    use the '@handler' decorator with no event name,
+    use the :func:`handler` decorator with no event name,
 
     .. code-block:: python
 
         @handler()
-        def _any_method_name(self, event, source=None, headers=None, message=None) ...
+        def _any_method_name(self, event, source=None, headers=None, message=None):
+            ...
 
     Refer to the developer documentation for additional details on writing components and event handlers.
     """
@@ -176,7 +194,37 @@ class ActionMessage(ActionMessageBase):
 
 
 class FunctionMessage(ActionMessageBase):
-    """A Circuits event for a Resilient Function message.
+    """A Circuits event for a Resilient Function call.
+
+    This event holds details of the Function message, including its input parameters.
+    Your components will receive these events from their Resilient message destination.
+
+    To handle a function, you should implement a :class:`ResilientComponent` with a method
+    annotated with the :func:`function` decorator:
+
+    .. code-block:: python
+
+        @function("the_function_name")
+        def _any_method_name(self, event, *args, **kwargs):
+            ...
+
+    The parameters for your function method are:
+       * event: this event object
+       * args and kwargs: additional context
+    The `event.message` contains:
+       * user: details of the user who triggered the function call
+       * function: details of the function being called
+       * workflow: information about the workflow containing the function
+       * inputs: the input parameter values.
+
+    To return a value from your function, yield or return a :class:`FunctionResult` containing
+    the value:
+
+    .. code-block:: python
+
+        yield FunctionResult("xyz")
+
+    Refer to the developer documentation for additional details on writing components and event handlers.
     """
 
     def __init__(self, source=None, headers=None, message=None,
@@ -199,3 +247,24 @@ class FunctionMessage(ActionMessageBase):
         if message and log_dir:
             self._log_message(log_dir)
 
+
+class StatusMessage(Event):
+    """Event that we use to send "action status" update back to resilient"""
+    def __init__(self, parent=None, text=None):
+        super(StatusMessage, self).__init__(text)
+        self.parent = parent
+
+    @property
+    def text(self):
+        """Text of the message"""
+        return self.args[0]
+
+    def __str__(self):
+        return self.args[0] or ""
+
+
+class FunctionResult(object):
+    """Encapsulates the result of a function call."""
+    def __init__(self, value):
+        super(FunctionResult, self).__init__()
+        self.value = value
