@@ -19,7 +19,7 @@ FUNCTION_CODE_TEMPLATE = '''# -*- coding: utf-8 -*-
 """Function implementation"""
 
 import logging
-from resilient_circuits import ResilientComponent, function, FunctionResult
+from resilient_circuits import ResilientComponent, function, StatusMessage, FunctionResult
 
 
 class MyFunctionComponent(ResilientComponent):
@@ -40,13 +40,17 @@ class MyFunctionComponent(ResilientComponent):
         """Function: {{function.description}}"""
 
         # Get the function parameters:
-        function_parameters = event.message.get("inputs", {}){%for p in function.parameters%}
-        {{p.name}} = function_parameters.get("{{p.name}}"){%endfor%}
+        log = logging.getLogger(__name__)
+        {%for p in function.parameters%}
+        {{p.name}} = kwargs.get("{{p.name}}"){%endfor%}
+        {%for p in function.parameters if not 'pass' in p|lower%}
+        log.info("{{p.text}}: {}".format({{p.name}})){%endfor%}
 
         # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
-        logging.getLogger(__name__).info("this function was called!")
-
-        # Return a string or dictionary
+        #yield StatusMessage("starting...")
+        #yield StatusMessage("done...")
+        
+        # Produce a FunctionResult with string or dictionary value
         yield FunctionResult("xyz")
 {%endfor%}'''
 

@@ -3,15 +3,21 @@
 
 """Circuits component for Action Module subscription and message handling"""
 
+import logging
 from inspect import getargspec
+from functools import wraps
+from types import GeneratorType
+from circuits import Timer, task, Event
 import circuits.core.handlers
+from resilient_circuits.action_message import FunctionResult, StatusMessage, StatusMessageEvent
 
+LOG = logging.getLogger(__name__)
 
 # for convenience we alias the circuits 'handler'
 handler = circuits.core.handlers.handler
 
 
-def function(*names, **kwargs):
+class function(object):
     """Creates a Function Handler.
 
     This decorator can be applied to methods of classes derived from :class:`ResilientComponent`.
@@ -19,37 +25,70 @@ def function(*names, **kwargs):
     Specify the function's API name as parameter to the decorator.
     The function handler will automatically be subscribed to the function's message destination.
     """
-    # This is an extended copy of circuits.core.handlers:handler
-    def wrapper(f):
-        if names and isinstance(names[0], bool) and not names[0]:
-            f.handler = False
-            return f
+    # This is an extended version of circuits.core.handlers:handler
 
-        if not names:
-            raise ValueError("Function name must be specified.")
+    def __init__(self, *args, **kwargs):
+        if len(args) != 1:
+            raise ValueError("Usage: @function(api_name)")
+        self.names = args
+        self.kwargs = kwargs
 
-        f.handler = True
-        f.function = True
+    def __call__(self, func):
+        """Called at decoration time, with function"""
+        LOG.debug("@function %s", func)
+
+        func.handler = True
+        func.function = True
 
         # Circuits properties
-        f.names = names
-        f.priority = kwargs.get("priority", 0)
-        f.channel = kwargs.get("channel", ",".join(["functions.{}".format(name) for name in names]))
-        f.override = kwargs.get("override", False)
+        func.names = self.names
+        func.priority = self.kwargs.get("priority", 0)
+        func.channel = self.kwargs.get("channel", ",".join(["functions.{}".format(name) for name in self.names]))
+        func.override = self.kwargs.get("override", False)
 
-        # Resilient properties that define the function's interface
-        f.function_definition_def = kwargs.get("definition", None)
-        f.function_parameters_def = kwargs.get("parameters", None)
-
-        args = getargspec(f)[0]
+        args = getargspec(func)[0]
 
         if args and args[0] == "self":
             del args[0]
-        f.event = getattr(f, "event", bool(args and args[0] == "event"))
+        func.event = getattr(func, "event", bool(args and args[0] == "event"))
 
-        return f
+        @wraps(func)
+        def decorated(itself, event, *args, **kwargs):
+            """the decorated function"""
+            LOG.debug("decorated")
+            function_parameters = event.message.get("inputs", {})
 
-    return wrapper
+            def _the_task(event, *args, **kwargs):
+                return func(itself, event, *args, **kwargs)
+
+            def _call_the_task(**kwds):
+                result_list = []
+                task_result_or_gen = _the_task(self, event, **kwds)
+                if not isinstance(task_result_or_gen, GeneratorType):
+                    task_result_or_gen = [task_result_or_gen]
+                for val in task_result_or_gen:
+                    if isinstance(val, StatusMessage):
+                        # Fire the wrapped status message event to notify resilient
+                        LOG.debug(val)
+                        itself.fire(StatusMessageEvent(parent=event, message=val.text))
+                    elif isinstance(val, FunctionResult):
+                        # Collect the result for return
+                        LOG.debug(val)
+                        result_list.append(val)
+                    elif isinstance(val, Event):
+                        # Some other event, just fire it
+                        LOG.debug(val)
+                        itself.fire(val)
+                    else:
+                        # Whatever this is, add it to the results
+                        result_list.append(val)
+                return result_list
+
+            ret = yield itself.call(task(_call_the_task, **function_parameters), channel="functions_worker")
+            xxx = ret.value
+            # Return value is the result_list that was yielded from the wrapped function
+            yield xxx
+        return decorated
 
 
 class required_field(object):
@@ -110,6 +149,7 @@ class defer(object):
 
         @wraps(func)
         def decorated(itself, event, *args, **kwargs):
+            """the decorated function"""
             LOG.debug("decorated")
             if event.defer(itself, delay=self.delay):
                 # OK, let's handle it later
@@ -165,6 +205,7 @@ class debounce(object):
 
         @wraps(func)
         def decorated(itself, event, *args, **kwargs):
+            """the decorated function"""
             LOG.debug("decorated")
             # De-bounce messages for this event and the same key:
             # (key is the incident-id, by default):

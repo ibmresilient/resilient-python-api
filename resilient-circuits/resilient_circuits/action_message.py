@@ -248,19 +248,14 @@ class FunctionMessage(ActionMessageBase):
             self._log_message(log_dir)
 
 
-class StatusMessage(Event):
-    """Event that we use to send "action status" update back to resilient"""
-    def __init__(self, parent=None, text=None):
-        super(StatusMessage, self).__init__(text)
-        self.parent = parent
-
-    @property
-    def text(self):
-        """Text of the message"""
-        return self.args[0]
+class StatusMessage(object):
+    """Encapsulates a status message yielded from an action or function call"""
+    def __init__(self, text):
+        super(StatusMessage, self).__init__()
+        self.text = text
 
     def __str__(self):
-        return self.args[0] or ""
+        return self.text or ""
 
 
 class FunctionResult(object):
@@ -268,3 +263,15 @@ class FunctionResult(object):
     def __init__(self, value):
         super(FunctionResult, self).__init__()
         self.value = value
+
+
+class StatusMessageEvent(Event):
+    """Event that we use to send "action status" update back to resilient"""
+    def __init__(self, parent=None, message=None):
+        super(StatusMessageEvent, self).__init__(message)
+        self.parent = parent
+
+    @property
+    def text(self):
+        """Text of the message"""
+        return self.args[0]

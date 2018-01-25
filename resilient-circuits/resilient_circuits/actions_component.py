@@ -7,12 +7,10 @@ import ssl
 import json
 import logging
 import os.path
-import traceback
 import base64
 from collections import Callable
 from signal import SIGINT, SIGTERM
-from functools import wraps
-from circuits import BaseComponent, Event, Timer
+from circuits import BaseComponent, Worker
 from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import resilient
@@ -44,6 +42,17 @@ def validate_cert(cert, hostname):
     except Exception as exc:
         return (False, str(exc))
     return (True, "Success")
+
+
+class InterruptibleWorker(Worker):
+    @handler("signal", channel="*")
+    def _on_signal(self, signo, stack):
+        """Add a signal handler to the worker processes otherwise they swallow SIGINT, SIGTERM
+           (see FallBackSignalHandler in circuits/core/helpers.py)
+        """
+        if signo in [SIGINT, SIGTERM]:
+            LOG.info("Worker interrupted")
+            raise SystemExit(0)
 
 
 class ResilientComponent(BaseComponent):
@@ -117,7 +126,9 @@ class ResilientComponent(BaseComponent):
         self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
         self._destinations = dict((dest["id"], dest) for dest in client.get("/message_destinations")["entities"])
         try:
-            self._functions = dict((func["name"], func) for func in client.get("/functions")["entities"])
+            self._functions = {}
+            for func in client.get("/functions")["entities"]:
+                self._functions[func["name"]] = client.get("/functions/{}".format(func["name"]))
             self._function_fields = dict((field["name"], field) for field in client.get("/types/__function/fields"))
         except resilient.SimpleHTTPException:
             # functions are not available, pre-v30 server
@@ -228,6 +239,7 @@ class Actions(ResilientComponent):
         self.stomp_component = None
         self.logging_directory = None
         self.subscribe_headers = None
+        self._functions_worker = None
         self._configure_opts(opts)
 
         _retry_timer = Timer(RETRY_TIMER_INTERVAL, Event.create("retry_failed_deliveries"), persist=True)
@@ -363,6 +375,7 @@ class Actions(ResilientComponent):
                 message = json.loads(mstr)
                 # Construct a Circuits event with the message, and fire it on the channel
                 if message.get("function"):
+                    channel = "functions." + message["function"]["name"]
                     event = FunctionMessage(source=self,
                                             headers=headers,
                                             message=message,
@@ -508,6 +521,10 @@ class Actions(ResilientComponent):
                 queue_id = self._functions[func_name]["destination_handle"]
                 queue_name = self._destinations[queue_id]["programmatic_name"]
                 LOG.info("Component %s function '%s' registered to '%s'", str(component), func_name, queue_name)
+                if not self._functions_worker:
+                    # Make a worker thread-pool that functions will be run with
+                    self._functions_worker = InterruptibleWorker(process=False, channel="functions_worker")
+                    self._functions_worker.register(component)
             else:
                 continue
 
@@ -770,7 +787,7 @@ class Actions(ResilientComponent):
             yield self.wait(subscribe_event)
         event.success = True
 
-    @handler("StatusMessage")
+    @handler("StatusMessageEvent")
     def _status(self, event, *args, **kwargs):
         """Report an interim status"""
         if not isinstance(event.parent, ActionMessageBase):
@@ -807,7 +824,7 @@ class Actions(ResilientComponent):
                 LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
 
-                # The value might be:
+                # At completion, the value might be:
                 # - None (if there was no handler or a handler just returned None)
                 # - or a single thing, or a list; where each thing could be
                 #   - a StatusMessage
@@ -827,11 +844,10 @@ class Actions(ResilientComponent):
                         if isinstance(val, StatusMessage):
                             status_messages.append(val)
                         elif val is not None and not isinstance(val, FunctionResult):
-                            status_messages.append(StatusMessage(parent=event.parent, text=val))
+                            status_messages.append(StatusMessage(val))
                     # If the function didn't return a status message, let's make one.
                     if not status_messages:
-                        status_messages.append(StatusMessage(parent=event.parent,
-                                                             text=u"No handler returned a result for this action"))
+                        status_messages.append(StatusMessage(u"No handler returned a result for this action"))
 
                 if isinstance(event.parent, FunctionMessage):
                     # The first (and only the first!) FunctionResult is the result.
@@ -855,10 +871,10 @@ class Actions(ResilientComponent):
                         elif isinstance(val, StatusMessage):
                             status_messages.append(val)
                         elif val is not None:
-                            status_messages.append(StatusMessage(parent=event.parent, text=val))
+                            status_messages.append(StatusMessage(val))
                     # If the function didn't return a status message, let's make one.
                     if not status_messages:
-                        status_messages.append(StatusMessage(parent=event.parent, text=u"Completed."))
+                        status_messages.append(StatusMessage(u"Completed"))
 
                 message = "\n".join(map(str, status_messages))
                 LOG.debug(u"Message: %s", message)
