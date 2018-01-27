@@ -130,8 +130,7 @@ class ResilientComponent(BaseComponent):
                         try:
                             funcdef = self._functions[func_name]
                         except KeyError:
-                            errmsg = "Function '{0}' is not defined in the Resilient platform."
-                            raise Exception(errmsg.format(func_name))
+                            LOG.warn("Function '{0}' is not defined in this Resilient platform!".format(func_name))
 
     def _get_fields(self):
         """Get Incident and Action fields"""

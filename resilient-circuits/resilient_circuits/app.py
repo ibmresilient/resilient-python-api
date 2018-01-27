@@ -231,7 +231,7 @@ class App(Component):
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
         LOG.info("Components loaded")
-        
+
         # For debugging, print out the tree of all loaded components
         def walk(depth, component):
             yield (u"  " * depth) + repr(component)

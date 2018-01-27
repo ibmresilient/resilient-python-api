@@ -306,7 +306,7 @@ def render_json(template, data):
        {u'result': u'the new thing'}
     """
     result = render(template, data)
-    for n in range(1,32):
+    for n in range(1, 32):
         result = result.replace(chr(n), " ")
     try:
         value = json.loads(result)

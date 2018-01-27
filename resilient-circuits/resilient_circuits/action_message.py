@@ -95,21 +95,6 @@ class ActionMessageBase(Event):
         Timer(delay, self).register(component)
         return True
 
-    def status(self, component, message):
-        """Send Resilient a status message for this function or action.
-           The message text will be displayed in 'Action Status'.
-
-           This method must be called with 'yield':
-
-           .. code-block:: python
-
-               yield event.status(self, "this is an interim status")
-               ...
-               yield event.status(self, "this is the final status")
-               yield FunctionResult("xyz")
-        """
-        return component.call(StatusMessage(parent=self, text=message))
-
     def _log_message(self, log_dir):
         """Log Message JSON to File"""
         filename = "_".join((self.__class__.name, self.displayname,

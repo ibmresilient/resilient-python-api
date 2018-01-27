@@ -41,7 +41,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
 
     @classmethod
     def set_patterns(cls, config_file):
-        cls.patterns = ["*" + os.path.basename(config_file),]
+        cls.patterns = ["*" + os.path.basename(config_file), ]
 
     def on_modified(self, event):
         """ reload data from config file and restart components """
