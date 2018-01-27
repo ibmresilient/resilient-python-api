@@ -231,6 +231,18 @@ class App(Component):
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
         LOG.info("Components loaded")
+        
+        # For debugging, print out the tree of all loaded components
+        def walk(depth, component):
+            yield (u"  " * depth) + repr(component)
+            for event in component.events():
+                channels = ", ".join([h.channel or '*' for h in list(component._handlers[event])])
+                yield u"{}{}/{}".format((u"  " * (depth+1)), event, channels)
+            for c in component.components:
+                for thing in walk(depth+1, c):
+                    yield thing
+        tree = walk(1, self.root)
+        LOG.debug(u"Components:\n" + ("\n".join(tree)))
 
     def load_all_failure(self, event):
         """OK, component loader says we're unable to start"""

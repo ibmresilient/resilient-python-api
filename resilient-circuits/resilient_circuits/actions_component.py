@@ -11,6 +11,7 @@ import base64
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from circuits import BaseComponent, Worker
+from circuits.core.manager import ExceptionWrapper
 from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import resilient
@@ -44,7 +45,10 @@ def validate_cert(cert, hostname):
     return (True, "Success")
 
 
-class InterruptibleWorker(Worker):
+class FunctionWorker(Worker):
+
+    channel = "functionworker"
+
     @handler("signal", channel="*")
     def _on_signal(self, signo, stack):
         """Add a signal handler to the worker processes otherwise they swallow SIGINT, SIGTERM
@@ -53,6 +57,16 @@ class InterruptibleWorker(Worker):
         if signo in [SIGINT, SIGTERM]:
             LOG.info("Worker interrupted")
             raise SystemExit(0)
+
+    @handler("task", override=True)
+    def _on_task(self, f, *args, **kwargs):
+        result = self.pool.apply_async(f, args, kwargs)
+        while not result.ready():
+            yield
+        try:
+            yield result.get()
+        except Exception as e:
+            yield ExceptionWrapper(e)
 
 
 class ResilientComponent(BaseComponent):
@@ -239,7 +253,7 @@ class Actions(ResilientComponent):
         self.stomp_component = None
         self.logging_directory = None
         self.subscribe_headers = None
-        self._functions_worker = None
+        self._functionworker = None
         self._configure_opts(opts)
 
         _retry_timer = Timer(RETRY_TIMER_INTERVAL, Event.create("retry_failed_deliveries"), persist=True)
@@ -521,10 +535,10 @@ class Actions(ResilientComponent):
                 queue_id = self._functions[func_name]["destination_handle"]
                 queue_name = self._destinations[queue_id]["programmatic_name"]
                 LOG.info("Component %s function '%s' registered to '%s'", str(component), func_name, queue_name)
-                if not self._functions_worker:
-                    # Make a worker thread-pool that functions will be run with
-                    self._functions_worker = InterruptibleWorker(process=False, channel="functions_worker")
-                    self._functions_worker.register(component)
+                if not self._functionworker:
+                    # Make a worker thread-pool that will run functions
+                    self._functionworker = FunctionWorker(process=False)
+                    self._functionworker.register(self.root)
             else:
                 continue
 
@@ -660,6 +674,12 @@ class Actions(ResilientComponent):
             if traceback and isinstance(traceback, list):
                 message = message + "\n" + ("".join(traceback))
             LOG.exception(u"%s (%s): %s", repr(fevent), repr(etype), message)
+            # Try find the underlying Action or Function message
+            if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
+                for arg in fevent.args:
+                    if isinstance(arg, ActionMessageBase):
+                        fevent = arg
+                        break
             if fevent and isinstance(fevent, ActionMessageBase):
                 fevent.stop()  # Stop further event processing
                 status = 1

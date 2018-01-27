@@ -34,7 +34,7 @@ class function(object):
         self.kwargs = kwargs
 
     def __call__(self, func):
-        """Called at decoration time, with function"""
+        """Called at decoration time, with the bare function being decorated"""
         LOG.debug("@function %s", func)
 
         func.handler = True
@@ -61,16 +61,17 @@ class function(object):
             def _the_task(event, *args, **kwargs):
                 return func(itself, event, *args, **kwargs)
 
-            def _call_the_task(**kwds):
+            def _call_the_task(evt, **kwds):
+                # On the worker thread, call the function, and handle a single or generator result.
                 result_list = []
-                task_result_or_gen = _the_task(self, event, **kwds)
+                task_result_or_gen = _the_task(self, evt, **kwds)
                 if not isinstance(task_result_or_gen, GeneratorType):
                     task_result_or_gen = [task_result_or_gen]
                 for val in task_result_or_gen:
                     if isinstance(val, StatusMessage):
                         # Fire the wrapped status message event to notify resilient
                         LOG.debug(val)
-                        itself.fire(StatusMessageEvent(parent=event, message=val.text))
+                        itself.fire(StatusMessageEvent(parent=evt, message=val.text))
                     elif isinstance(val, FunctionResult):
                         # Collect the result for return
                         LOG.debug(val)
@@ -84,7 +85,8 @@ class function(object):
                         result_list.append(val)
                 return result_list
 
-            ret = yield itself.call(task(_call_the_task, **function_parameters), channel="functions_worker")
+            the_task = task(_call_the_task, event, **function_parameters)
+            ret = yield itself.call(the_task, channel="functionworker")
             xxx = ret.value
             # Return value is the result_list that was yielded from the wrapped function
             yield xxx
