@@ -91,12 +91,12 @@ class ComponentLoader(Loader):
         """ register all installed components and ones from componentsdir """
         LOG.info("Loading %d components", len(component_list))
         for component_class in component_list:
-            LOG.info("Loading %s", component_class.__name__)
+            LOG.info("Loading %s", repr(component_class))
             try:
                 component_class(opts=self.opts).register(self)
-                LOG.info("Loaded component %s", component_class.__name__)
+                LOG.info("Loaded %s", component_class.__name__)
             except Exception as e:
-                LOG.error("Failed to load component %s", component_class.__name__, exc_info=1)
+                LOG.error("Failed to load %s", component_class.__name__, exc_info=1)
                 self.fire(load_all_failure())
                 return False
         return True

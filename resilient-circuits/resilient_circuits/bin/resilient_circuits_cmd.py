@@ -6,13 +6,15 @@ from __future__ import absolute_import
 
 import argparse
 import logging
-import os, os.path
+import os
+import os.path
 import sys
 from collections import defaultdict
 import pkg_resources
 import resilient
 from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.bin.resilient_codegen import list_functions, codegen_functions
+from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
+from resilient_circuits.util.resilient_customize import customize_resilient
 
 if sys.version_info.major == 2:
     from io import open
@@ -63,7 +65,8 @@ def manage_service(service_args, res_circuits_args):
     if os.name == 'nt':
         windows_service(service_args, res_circuits_args)
     else:
-        supervisor_service(service_args, res_circuits_args)
+        LOG.error("Not implemented")
+        # supervisor_service(service_args, res_circuits_args)
 
 
 def run(resilient_circuits_args, restartable=False, config_file=None):
@@ -86,17 +89,17 @@ def list_installed():
     LOG.debug("resilient-circuits.list")
     components = defaultdict(list)
     entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.components')]
-    LOG.debug("Found %d installed components", len(entry_points))
+    LOG.debug(u"Found %d installed components", len(entry_points))
     for ep in entry_points:
         components[ep.dist].append(ep.name)
     if not components:
-        LOG.info("No resilient-circuits components are installed")
+        LOG.info(u"No resilient-circuits components are installed")
         return
-    LOG.info("The following packages and components are installed:")
+    LOG.info(u"The following packages and components are installed:")
     for dist, component_list in components.items():
         pkg = dist.project_name
         version = dist._version
-        LOG.info("%s (%s) installed components:\n\t%s",
+        LOG.info(u"%s (%s) installed components:\n\t%s",
                  pkg,
                  version,
                  "\n\t".join(component_list))
@@ -113,9 +116,9 @@ def generate_default():
     base_config_fn = pkg_resources.resource_filename("resilient_circuits", "data/app.config.base")
     with open(base_config_fn, 'r') as base_config_file:
         base_config = base_config_file.read()
-        additional_sections = [func() for func  in discover_required_config_sections()]
+        additional_sections = [func() for func in discover_required_config_sections()]
         LOG.debug("Found %d sections to generate", len(additional_sections))
-        return "\n\n".join(([base_config,] + additional_sections))
+        return "\n\n".join(([base_config, ] + additional_sections))
 
 
 def generate_or_update_config(args):
@@ -127,7 +130,7 @@ def generate_or_update_config(args):
         config_filename = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
         resilient_dir = os.path.dirname(config_filename)
         if not os.path.exists(resilient_dir):
-            LOG.info("Creating %s", resilient_dir)
+            LOG.info(u"Creating %s", resilient_dir)
             os.makedirs(resilient_dir)
     else:
         config_filename = os.path.expandvars(os.path.expanduser(args.filename))
@@ -137,22 +140,22 @@ def generate_or_update_config(args):
         if args.create:
             choice = ""
             while choice not in ('y', 'n'):
-                choice = input("%s exists. Do you want to overwrite? y/n: " % config_filename)
+                choice = input(u"%s exists. Do you want to overwrite? (y/n): " % config_filename)
             if choice == 'n':
-                LOG.error("Config file creation cancelled.")
+                LOG.error(u"Config file creation cancelled.")
                 return
     elif args.update:
-        LOG.error("File %s does not exist. Update cancelled.", config_filename)
+        LOG.error(u"File %s does not exist. Update cancelled.", config_filename)
         return
 
-    LOG.info("%s config file %s", usage_type, config_filename)
+    LOG.info(u"%s config file %s", usage_type, config_filename)
 
     if args.create:
         # Write out default file
         with open(config_filename, "w+", encoding="utf-8") as config_file:
             config_file.write(generate_default())
-            LOG.info("Config generated. %s  Please manually edit with your specific configuration values",
-                     config_filename)
+            LOG.info(u"Configuration file generated: %s", config_filename)
+            LOG.info(u"Please manually edit with your specific configuration values.")
 
     else:
         # Update existing file
@@ -166,25 +169,41 @@ def generate_or_update_config(args):
             config.read_file(config_file)
             existing_sections = config.sections()
 
+        entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
+
         with open(config_filename, "a", encoding="utf-8") as config_file:
-            for config_data in [func() for func  in discover_required_config_sections()]:
-                required_config = configparser.ConfigParser(interpolation=None)
-                LOG.debug("Config Data String:\n%s", config_data)
-                required_config.read_string(unicode(config_data))
-                new_section = required_config.sections()[0]
-                LOG.debug("Required Section: %s", new_section)
+            for entry in entry_points:
+                dist = entry.dist
+                try:
+                    func = entry.load()
+                except ImportError:
+                    LOG.exception(u"Failed to load configuration defaults for module '%s'", repr(dist))
+                    continue
+
+                try:
+                    config_data = func()
+                    required_config = configparser.ConfigParser(interpolation=None)
+                    LOG.debug(u"Config Data String:\n%s", config_data)
+                    required_config.read_string(unicode(config_data))
+                    new_section = required_config.sections()[0]
+                except:
+                    LOG.exception(u"Failed to get configuration defaults for module '%s'", repr(dist))
+                    continue
+
+                LOG.debug(u"Required Section: %s", new_section)
                 if new_section not in existing_sections:
                     # Add the default data for this required section to the config file
-                    LOG.info("Adding new section %s", new_section)
+                    LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
                     config_file.write(u"\n" + config_data)
                     updated = True
                 else:
-                    LOG.debug("Section %s already present, not adding", new_section)
+                    LOG.debug(u"Section '%s' already present, not adding", new_section)
 
             if updated:
-                LOG.info("Update finished. New sections may require manual edits with your specific configuration values")
+                LOG.info(u"Update finished.  "
+                         u"New sections may require manual edits with your specific configuration values.")
             else:
-                LOG.info("No updates required.")
+                LOG.info(u"No updates.")
 
 
 def generate_code(args):
@@ -193,20 +212,26 @@ def generate_code(args):
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
 
-    if args.function:
+    if args.package:
+        # codegen an installable package
+        output_base = os.path.join(os.curdir, args.package)
+        codegen_package(client, args.package, args.function, os.path.expanduser(output_base))
+    elif args.function:
         # codegen a component for one or more functions
         if len(args.function) > 1:
             default_name = "functions.py"
         else:
             default_name = "{}.py".format(args.function[0])
-        output_file = os.path.join(opts["componentsdir"] or os.curdir, args.output or default_name)
-        codegen_functions(client, args.function, os.path.expanduser(output_file))
+        output_dir = os.path.expanduser(opts["componentsdir"] or os.curdir)
+        output_file = args.output or default_name
+        codegen_functions(client, args.function, output_dir, output_file)
     else:
         # list the available functions from the server
         list_functions(client)
 
 
 def main():
+    """Main commandline"""
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Print debug output", action="store_true")
 
@@ -226,6 +251,8 @@ def main():
                                           help="Create or update a basic configuration file")
     codegen_parser = subparsers.add_parser("codegen",
                                            help="Generate template code for Python components")
+    customize_parser = subparsers.add_parser("customize",
+                                             help="Apply customizations to the Resilient platform")
 
     # Options for 'config'
     file_option_group = config_parser.add_mutually_exclusive_group(required=True)
@@ -260,9 +287,16 @@ def main():
     codegen_parser.add_argument("-f", "--function",
                                 help="Name of the function(s) to generate code for",
                                 nargs="*")
+    codegen_parser.add_argument("-p", "--package",
+                                help="Name of the package to generate")
     codegen_parser.add_argument("-o", "--output",
-                                help="Output file name",
-                                nargs="?")
+                                help="Output file name")
+
+    # Options for 'customize'
+    customize_parser.add_argument("-y",
+                                  dest="yflag",
+                                  help="Customize without prompting for confirmation",
+                                  action="store_true")
 
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
@@ -278,7 +312,6 @@ def main():
             restartable=args.auto_restart,
             config_file=args.config_file)
     else:
-        logging.basicConfig(format='%(message)s', level=logging.INFO)
         if args.cmd == "config":
             generate_or_update_config(args)
         elif args.cmd == "list":
@@ -286,7 +319,11 @@ def main():
         elif args.cmd == "service":
             manage_service(unknown_args + args.service_args, args.res_circuits_args)
         elif args.cmd == "codegen":
+            logging.basicConfig(format='%(message)s', level=logging.INFO)
             generate_code(args)
+        elif args.cmd == "customize":
+            logging.basicConfig(format='%(message)s', level=logging.INFO)
+            customize_resilient(args)
 
 
 if __name__ == "__main__":

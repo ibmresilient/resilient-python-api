@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from setuptools import setup, find_packages
+
+setup(
+    name='{{package}}',
+    license='<<insert here>>',
+    author='{{author}}',
+    install_requires=[
+        'resilient_circuits>=29.0.0'
+    ],
+    author_email='you@example.com',
+    description="Resilient Circuits Component for '{{package}}'",
+    long_description = "Resilient Circuits Component for '{{package}}'",
+    packages=find_packages(),
+    include_package_data=True,
+    platforms='any',
+    classifiers=[
+        'Programming Language :: Python',
+    ],
+    entry_points={
+        "resilient.circuits.components": [{%set comma=joiner(",")%}{%for function_name in functions.keys()%}{{comma()}}
+            "{{function_name|title}}FunctionComponent = {{package}}.components.{{function_name}}:FunctionComponent"{%endfor%}
+        ],
+        "resilient.circuits.configsection": ["gen_config = {{package}}.util.config:config_section_data"],
+        "resilient.circuits.customize": ["customize = {{package}}.util.config:customization_data"]
+    }
+)

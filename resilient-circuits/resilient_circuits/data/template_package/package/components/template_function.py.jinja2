@@ -1,0 +1,56 @@
+{%- macro paramvalue(param) -%}{%if param.input_type in ["select", "multiselect"]%}get_select_label(kwargs.get("{{param.name}}")){%
+elif param.input_type in ["textarea"]%}get_textarea_content(kwargs.get("{{param.name}}")){%
+else %}kwargs.get("{{param.name}}"){%endif%}{%- endmacro -%}
+{%- macro paramcomment(param) -%}type: {{param.input_type}}{%if param.input_type in ["select", "multiselect"]%}, values: "{{param["values"]|list|map(attribute="label")|join('", "')}}"{%endif%}{%- endmacro -%}
+# -*- coding: utf-8 -*-
+# pragma pylint: disable=unused-argument, no-self-use
+"""Function implementation"""
+
+import logging
+from resilient_circuits import ResilientComponent, function, StatusMessage, FunctionResult
+
+
+def get_select_label(value):
+    """Helper: get the label from a select-type parameter"""
+    if isinstance(value, dict):
+        return value.get("name")
+    return value
+
+
+def get_textarea_content(value):
+    """Helper: get the content from a textarea-type parameter"""
+    if isinstance(value, dict):
+        return value.get("content")
+    return value
+
+
+class FunctionComponent(ResilientComponent):
+    """Component that implements Resilient function '{{loopvar}}"""
+
+#    def __init__(self, opts):
+#        """constructor provides access to the configuration options"""
+#        super(MyComponent, self).__init__(opts)
+#        self.options = opts.get("my_config_section", {})
+
+#    @handler("reload")
+#    def reload_options(self, event, opts):
+#        """Configuration options have changed, save new values"""
+#        self.options = opts.get("my_config_section", {})
+
+    @function("{{loopvar|js}}")
+    def _{{loopvar}}_function(self, event, *args, **kwargs):
+        """Function: {{functions[loopvar].description}}"""
+
+        # Get the function parameters:
+        log = logging.getLogger(__name__)
+{%for p in functions[loopvar].parameters%}
+        {{p.name}} = {{paramvalue(p)}}  # {{paramcomment(p)}}{%endfor%}
+{%for p in functions[loopvar].parameters if not 'pass' in p|lower%}
+        log.info("{{p.text}}: %s", {{p.name}}){%endfor%}
+
+        # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
+        #  yield StatusMessage("starting...")
+        #  yield StatusMessage("done...")
+
+        # Produce a FunctionResult with string or dictionary value
+        yield FunctionResult("xyz")
