@@ -209,6 +209,7 @@ class StompClient(BaseComponent):
 
     @handler("generate_events")
     def generate_events(self, event):
+        event.reduce_time_left(0.1)
         if not self.connected:
             return
         try:
