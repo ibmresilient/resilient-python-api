@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 from __future__ import print_function
 
 """Resilient Circuits Action Test Tool"""

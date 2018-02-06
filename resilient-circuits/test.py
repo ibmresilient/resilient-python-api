@@ -1,8 +1,9 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
 """ nosetests --with-coverage --cover-package=resilient_circuits """
+
 
 def test():
     """The most basic tests"""

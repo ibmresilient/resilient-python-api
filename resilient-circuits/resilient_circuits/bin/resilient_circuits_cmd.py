@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
 """ Command line tool to manage and run resilient-circuits """
 from __future__ import absolute_import

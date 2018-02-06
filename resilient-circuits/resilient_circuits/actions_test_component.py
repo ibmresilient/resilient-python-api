@@ -1,4 +1,6 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+
 """Test Server component for injecting test Action Module messages"""
 
 from __future__ import print_function
