@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+
 """ Circuits component for handling Stomp Connection """
 
 import logging
@@ -209,6 +210,7 @@ class StompClient(BaseComponent):
 
     @handler("generate_events")
     def generate_events(self, event):
+        event.reduce_time_left(0.1)
         if not self.connected:
             return
         try:
