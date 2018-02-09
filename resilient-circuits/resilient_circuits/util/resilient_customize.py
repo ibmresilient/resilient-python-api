@@ -141,7 +141,7 @@ class Customizations(object):
     def load_message_destinations(self, definition):
         """Load one or more message destinations"""
         new_destinations = definition.value
-        if not isinstance(new_destinations, list):
+        if not isinstance(new_destinations, (tuple, list)):
             new_destinations = [new_destinations]
         uri = "/message_destinations"
         existing_destinations = self.client.get(uri)["entities"]
@@ -236,7 +236,7 @@ class Customizations(object):
     def load_actions(self, definition):
         """Load custom actions"""
         new_actions = definition.value
-        if not isinstance(new_actions, list):
+        if not isinstance(new_actions, (tuple, list)):
             new_actions = [new_actions]
         uri = "/actions"
         existing_actions = self.client.get(uri)["entities"]
@@ -256,7 +256,7 @@ class Customizations(object):
     def load_functions(self, definition):
         """Load custom functions"""
         new_functions = definition.value
-        if not isinstance(new_functions, list):
+        if not isinstance(new_functions, (tuple, list)):
             new_functions = [new_functions]
         uri = "/functions"
         existing_functions = self.client.get(uri)["entities"]

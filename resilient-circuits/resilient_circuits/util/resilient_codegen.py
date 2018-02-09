@@ -4,11 +4,12 @@
 """Utility to codegen a resilient-circuits component or package"""
 
 from __future__ import print_function
-
 import os
 import io
 import json
 import logging
+import keyword
+import re
 import pkg_resources
 from resilient import SimpleHTTPException
 from resilient_circuits import template_functions
@@ -62,6 +63,25 @@ MESSAGE_DESTINATION_ATTRIBUTES = [
     "expect_ack",
     "destination_type"
 ]
+
+
+def valid_identifier(name):
+    """Test if 'name' is a valid identifier for a package or module
+
+       >>> valid_identifier("")
+       False
+       >>> valid_identifier("get")
+       True
+       >>> valid_identifier("bang!")
+       False
+       >>> valid_identifier("_something")
+       True
+    """
+    if keyword.iskeyword(name):
+        return False
+    if name in dir(__builtins__):
+        return False
+    return re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) is not None
 
 
 def list_functions(client):
@@ -170,7 +190,8 @@ def codegen_from_template(client, template_file_path, package, function_names, o
     # (includes all the configuration elements related to the functions)
     functions = {}
     function_fields = {}
-    all_destinations = dict((dest["programmatic_name"], dest) for dest in client.get("/message_destinations")["entities"])
+    all_destinations = dict((dest["programmatic_name"], dest)
+                            for dest in client.get("/message_destinations")["entities"])
     message_destinations = {}
     for function_name in (function_names or []):
         # Get the function definition
@@ -230,6 +251,10 @@ def codegen_from_template(client, template_file_path, package, function_names, o
 
 def codegen_package(client, package, function_names, output_dir):
     """Generate a an installable python package"""
+    if not valid_identifier(package):
+        LOG.error(u"ERROR: %s is not a valid package name.", package)
+        return
+
     # Make the output directory (usually a new subdirectory of cwd)
     try:
         os.makedirs(output_dir)

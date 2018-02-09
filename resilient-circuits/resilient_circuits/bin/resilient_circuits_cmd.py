@@ -224,6 +224,8 @@ def generate_code(args):
             default_name = "{}.py".format(args.function[0])
         output_dir = os.path.expanduser(opts["componentsdir"] or os.curdir)
         output_file = args.output or default_name
+        if not output_file.endswith(".py"):
+            output_file = output_file + ".py"
         codegen_functions(client, args.function, output_dir, output_file)
     else:
         # list the available functions from the server

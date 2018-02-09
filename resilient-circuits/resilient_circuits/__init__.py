@@ -4,7 +4,7 @@ import pkg_resources
 try:
     __version__ = pkg_resources.get_distribution(__name__).version
 except pkg_resources.DistributionNotFound:
-    pass
+    __version__ = None
 
 from .actions_component import ResilientComponent
 from .action_message import ActionMessageBase, ActionMessage, FunctionMessage, FunctionResult, StatusMessage
