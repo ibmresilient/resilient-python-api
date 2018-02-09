@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
 """Utility to access schema metadata with the Resilient REST API"""
 
@@ -189,7 +189,7 @@ def list_types(client):
     t = client.get("/types")
 
     def print_types(parent, indent):
-        if indent>10:
+        if indent > 10:
             return
         for type in sorted(t.keys()):
             typedef = t[type]

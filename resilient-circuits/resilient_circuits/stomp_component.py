@@ -235,7 +235,7 @@ class StompClient(BaseComponent):
             LOG.error("Error sending frame")
             event.success = False
             self.fire(OnStompError(None, err))
-            raise # To fire Send_failure event
+            raise  # To fire Send_failure event
 
     @handler("Subscribe")
     def _subscribe(self, event, destination, additional_headers=None, ack=ACK_CLIENT_INDIVIDUAL):
@@ -284,11 +284,11 @@ class StompClient(BaseComponent):
         try:
             self._client.ack(frame)
             LOG.debug("Ack Sent")
-        except (StompConnectionError, StompError)  as err:
+        except (StompConnectionError, StompError) as err:
             LOG.error("Error sending ack")
             event.success = False
             self.fire(OnStompError(frame, err))
-            raise # To fire Ack_failure event
+            raise  # To fire Ack_failure event
 
     def get_subscription(self, frame):
         """ Get subscription from frame """

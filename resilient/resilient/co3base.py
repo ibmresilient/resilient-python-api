@@ -26,6 +26,7 @@ except:
 
 LOG = logging.getLogger(__name__)
 
+
 class TLSHttpAdapter(HTTPAdapter):
     """
     Adapter that ensures that we use the best available SSL/TLS version.
@@ -182,10 +183,10 @@ class BaseClient(object):
             raise Exception(msg.format(self.org_name))
 
         if not selected_org.get("enabled", False):
-            msg = "This organization is not accessible to you.\n\n" + \
-                  "This can occur because of one of the following:\n\n" + \
-                  "The organization does not allow access from your current IP address.\n" + \
-                  "The organization requires authentication with a different provider than you are currently using.\n" + \
+            msg = "This organization is not accessible to you.\n\n" \
+                  "This can occur because of one of the following:\n\n" \
+                  "The organization does not allow access from your current IP address.\n" \
+                  "The organization requires authentication with a different provider than you are currently using.\n" \
                   "Your IP address is {0}"
             raise Exception(msg.format(session["session_ip"]))
 
@@ -301,7 +302,8 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+    def post_attachment(self, uri, filepath,
+                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
@@ -311,7 +313,7 @@ class BaseClient(object):
         :param filepath: the path of the file to post
         :param filename: optional name of the file when posted
         :param mimetype: optional override for the guessed MIME type
-        :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
+        :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
         """
@@ -326,7 +328,7 @@ class BaseClient(object):
             multipart_data.update(data or {})
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.make_headers(co3_context_token,
-                                          additional_headers={'content-type': encoder.content_type})
+                                        additional_headers={'content-type': encoder.content_type})
             response = self._execute_request(self.session.post,
                                              url,
                                              data=encoder,
@@ -338,7 +340,8 @@ class BaseClient(object):
             BasicHTTPException.raise_if_error(response)
             return json.loads(response.text)
 
-    def post_artifact_file(self, uri, artifact_type, artifact_filepath, description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
+    def post_artifact_file(self, uri, artifact_type, artifact_filepath,
+                           description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
         """
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"

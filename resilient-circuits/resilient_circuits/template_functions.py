@@ -11,7 +11,10 @@ import jinja2
 import json
 import pprint
 import logging
-import time, calendar, datetime, pytz
+import time
+import calendar
+import datetime
+import pytz
 
 try:
     # Python 3.2 adds html.escape() and deprecates cgi.escape().
@@ -124,11 +127,13 @@ def pretty_filter(val, indent=2):
     """Jinja2 filter function 'pretty' produces pretty-printed string of the value"""
     if isinstance(val, jinja2.Undefined):
         return "[undefined]"
+
     def nice_repr(object, context, maxlevels, level):
         typ = pprint._type(object)
         if typ is unicode:
             object = object.encode("utf-8")
         return pprint._safe_repr(object, context, maxlevels, level)
+
     printer = pprint.PrettyPrinter(indent=indent)
     printer.format = nice_repr
     return printer.pformat(val)
@@ -186,7 +191,7 @@ def uniq(val, key=None):
             thiskey = value[key]
         except:
             thiskey = repr(value)
-        if not thiskey in keys:
+        if thiskey not in keys:
             keys.append(thiskey)
             values.append(value)
     return values
@@ -319,7 +324,7 @@ def render_json(template, data):
 def environment():
     return ENV
 
-    
+
 def test(template):
     """Test some basic functionality
 

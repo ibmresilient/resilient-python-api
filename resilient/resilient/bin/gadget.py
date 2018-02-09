@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
 """Utility to exercise basic REST endpoints in the Resilient API"""
 
@@ -69,7 +69,6 @@ class ExampleArgumentParser(resilient.ArgumentParser):
 
         self.add_argument('--search',
                           help="Search using the specified JSON file (SearchExInputDTO)")
-
 
 
 def show_incident_list(client, query_template_file_name):

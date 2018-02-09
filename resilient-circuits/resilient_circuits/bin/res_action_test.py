@@ -128,7 +128,9 @@ class ResilientTestProcessor(cmd.Cmd):
     # end do_submit
 
     def do_submitfile(self, arg):
-        """Submit action stored in a file from specified queue:  submitfile <destination_queue> <file containing action_json> """
+        """Submit action stored in a file from specified queue:
+           submitfile <destination_queue> <file containing action_json>
+        """
         queue, filename = self._parse_arg(arg)
         try:
             with open(filename) as action_file:
@@ -193,6 +195,7 @@ class ResilientTestProcessor(cmd.Cmd):
         return two_parts
     # end parse_arg
 
+
 def main():
     description = 'Resilient Circuits Action Test Tool'
     parser = argparse.ArgumentParser(description=description)
@@ -204,6 +207,7 @@ def main():
                               "test server is listening. defaults to 8008"))
     args = parser.parse_args()
     ResilientTestProcessor(args.host, args.port).cmdloop()
-    
+
+
 if __name__ == '__main__':
     main()

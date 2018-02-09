@@ -300,7 +300,8 @@ def run(*args, **kwargs):
 
     except filelock.Timeout:
         # file is probably already locked
-        print("Failed to acquire lock on {0} - you may have another instance of Resilient Circuits running".format(os.path.abspath(lock.lock_file)))
+        print("Failed to acquire lock on {0} - "
+              "you may have another instance of Resilient Circuits running".format(os.path.abspath(lock.lock_file)))
     except OSError as exc:
         # Some other problem accessing the lockfile
         print("Unable to lock {0}: {1}".format(os.path.abspath(lock.lock_file), exc))

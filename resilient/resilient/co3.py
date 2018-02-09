@@ -125,6 +125,7 @@ def get_client(opts):
 
     return resilient_client
 
+
 class SimpleHTTPException(Exception):
     """Exception for HTTP errors."""
     def __init__(self, response):
@@ -152,6 +153,7 @@ def _raise_if_error(response):
     """
     if response.status_code != 200:
         raise SimpleHTTPException(response)
+
 
 class SimpleClient(co3base.BaseClient):
     """Python helper class for using the Resilient REST API."""
@@ -305,7 +307,7 @@ class SimpleClient(co3base.BaseClient):
                                          proxies=self.proxies,
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token,
-                                                                     additional_headers=hdrs),
+                                                                   additional_headers=hdrs),
                                          verify=self.verify,
                                          timeout=timeout)
 
@@ -423,7 +425,8 @@ class SimpleClient(co3base.BaseClient):
 
         return response
 
-    def post_attachment(self, uri, filepath, filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+    def post_attachment(self, uri, filepath,
+                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
@@ -433,7 +436,7 @@ class SimpleClient(co3base.BaseClient):
         :param filepath: the path of the file to post
         :param filename: optional name of the file when posted
         :param mimetype: optional override for the guessed MIME type
-        :param data: optional dict with additional MIME parts (not required for file attachments, but used in artifacts)
+        :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)
         :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
         :param timeout: optional timeout (seconds)
         """
@@ -475,7 +478,7 @@ class SimpleClient(co3base.BaseClient):
     def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Safely performs an update operation by a GET, calls your `apply_func` callback, then PUT
         with the updated value.  If the put call returns a 409 error, these steps are retried.
-        
+
         Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
         if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
         `https://app.resilientsystems.com/rest/orgs/201/incidents`
@@ -538,6 +541,7 @@ class SimpleClient(co3base.BaseClient):
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
+
 
 class LoggingSimpleClient(SimpleClient):
     """ Simple Client version that logs all Resilient REST API responses to disk.  Useful when building a Mock."""

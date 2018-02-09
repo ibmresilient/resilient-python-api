@@ -11,7 +11,7 @@ def pytest_addoption(parser):
                      required=False)
     parser.addoption('--co3args',
                      help="Optional Resilient Args",
-                     default = "",
+                     default="",
                      required=False)
 
 

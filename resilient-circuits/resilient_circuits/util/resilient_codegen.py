@@ -71,7 +71,7 @@ def valid_identifier(name):
        >>> valid_identifier("")
        False
        >>> valid_identifier("get")
-       True
+       False
        >>> valid_identifier("bang!")
        False
        >>> valid_identifier("_something")

@@ -19,7 +19,8 @@ from resilient import ensure_unicode
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
-from resilient_circuits.action_message import ActionMessageBase, ActionMessage, FunctionMessage, StatusMessage, FunctionResult
+from resilient_circuits.action_message import ActionMessageBase, ActionMessage, \
+    FunctionMessage, StatusMessage, FunctionResult
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 
@@ -767,16 +768,20 @@ class Actions(ResilientComponent):
             LOG.info("Skipping retry of any failed messages because STOMP connection is down")
             return
 
-        to_retry = {key: value for key, value in self._stomp_ack_delivery_failures.items() if not value["from_prev_conn"]}
+        to_retry = {key: value for key, value in self._stomp_ack_delivery_failures.items()
+                    if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
-            self._stomp_ack_delivery_failures[msgid]["retry_count"] = self._stomp_ack_delivery_failures[msgid]["retry_count"] + 1
+            self._stomp_ack_delivery_failures[msgid]["retry_count"] = \
+                self._stomp_ack_delivery_failures[msgid]["retry_count"] + 1
             LOG.info("Retrying failed STOMP ACK for message %s", msgid)
             self.fire(Ack(failure_info["message_frame"]))
 
-        to_retry = {key: value for key, value in self._resilient_ack_delivery_failures.items() if not value["from_prev_conn"]}
+        to_retry = {key: value for key, value in self._resilient_ack_delivery_failures.items()
+                    if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
             LOG.info("Retrying failed Resilient ACK for message %s", msgid)
-            self._resilient_ack_delivery_failures[msgid]["retry_count"] = self._resilient_ack_delivery_failures[msgid]["retry_count"] + 1
+            self._resilient_ack_delivery_failures[msgid]["retry_count"] = \
+                self._resilient_ack_delivery_failures[msgid]["retry_count"] + 1
             self.fire(Send(headers=failure_info["result"]["headers"],
                            body=failure_info["result"]["body"],
                            destination=failure_info["result"]["destination"],

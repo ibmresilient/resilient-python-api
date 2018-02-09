@@ -52,6 +52,7 @@ class Message(StompEvent):
 
 class Send(StompEvent):
     failure = True
+
     def __init__(self, headers, body, destination, message_id=None):
         self.headers = headers
         self.body = body
@@ -112,6 +113,7 @@ class Unsubscribe(StompEvent):
 
 class Ack(StompEvent):
     failure = True
+
     def __init__(self, frame, message_id=None):
         super(Ack, self).__init__(frame=frame)
         self.frame = frame
