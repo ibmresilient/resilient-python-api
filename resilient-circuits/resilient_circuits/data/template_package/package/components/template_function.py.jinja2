@@ -1,5 +1,5 @@
-{%- macro paramvalue(param) -%}{%if param.input_type in ["select", "multiselect"]%}get_select_label(kwargs.get("{{param.name}}")){%
-elif param.input_type in ["textarea"]%}get_textarea_content(kwargs.get("{{param.name}}")){%
+{%- macro paramvalue(param) -%}{%if param.input_type in ["select", "multiselect"]%}self.get_select_param(kwargs.get("{{param.name}}")){%
+elif param.input_type in ["textarea"]%}self.get_textarea_param(kwargs.get("{{param.name}}")){%
 else %}kwargs.get("{{param.name}}"){%endif%}{%- endmacro -%}
 {%- macro paramcomment(param) -%}type: {{param.input_type}}{%if param.input_type in ["select", "multiselect"]%}, values: "{{param["values"]|list|map(attribute="label")|join('", "')}}"{%endif%}{%- endmacro -%}
 # -*- coding: utf-8 -*-
@@ -8,20 +8,6 @@ else %}kwargs.get("{{param.name}}"){%endif%}{%- endmacro -%}
 
 import logging
 from resilient_circuits import ResilientComponent, function, StatusMessage, FunctionResult
-
-
-def get_select_label(value):
-    """Helper: get the label from a select-type parameter"""
-    if isinstance(value, dict):
-        return value.get("name")
-    return value
-
-
-def get_textarea_content(value):
-    """Helper: get the content from a textarea-type parameter"""
-    if isinstance(value, dict):
-        return value.get("content")
-    return value
 
 
 class FunctionComponent(ResilientComponent):
@@ -52,5 +38,5 @@ class FunctionComponent(ResilientComponent):
         #  yield StatusMessage("starting...")
         #  yield StatusMessage("done...")
 
-        # Produce a FunctionResult with string or dictionary value
-        yield FunctionResult("xyz")
+        # Produce a FunctionResult with the return value
+        yield FunctionResult({"value": "xyz"})

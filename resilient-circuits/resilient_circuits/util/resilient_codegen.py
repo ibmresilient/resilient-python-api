@@ -185,6 +185,13 @@ def codegen_from_template(client, template_file_path, package, function_names, o
                 return
             else:
                 raise
+        # Check that each function is available
+        available_names = [function_def["name"] for function_def in function_defs["entities"]]
+        for function_name in function_names:
+            if function_name not in available_names:
+                LOG.error(u"ERROR: Function '%s' not found on this Resilient appliance.", function_name)
+                list_functions(client)
+                return
 
     # Prepare the dictionary of substitution values for jinja2
     # (includes all the configuration elements related to the functions)

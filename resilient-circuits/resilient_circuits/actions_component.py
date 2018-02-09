@@ -221,6 +221,22 @@ class ResilientComponent(BaseComponent):
                     return value["label"]
         return ensure_unicode(value_id)  # fallback
 
+    @staticmethod
+    def get_select_param(value):
+        """Function Helper: get the label from a select- or multi-select parameter"""
+        if isinstance(value, list):
+            return [ResilientComponent.get_select_param(val) for val in value]
+        if isinstance(value, dict):
+            return value.get("name")
+        return value
+
+    @staticmethod
+    def get_textarea_param(value):
+        """Function Helper: get the content from a textarea-type parameter"""
+        if isinstance(value, dict):
+            return value.get("content")
+        return value
+
     @handler("reload")
     def reload(self, event, opts):
         """Event handler called when the configuration options have changed."""
