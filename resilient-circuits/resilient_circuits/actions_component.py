@@ -934,7 +934,7 @@ class Actions(ResilientComponent):
                              "complete": True}
                 if function_result:
                     LOG.debug("Result: %s", function_result.value)
-                    reply_dto["variables"] = {"result": function_result.value}
+                    reply_dto["variables"] = function_result.value
                 reply_message = json.dumps(reply_dto)
                 if not fevent.test:
                     self.fire(Send(headers={'correlation-id': correlation_id},
