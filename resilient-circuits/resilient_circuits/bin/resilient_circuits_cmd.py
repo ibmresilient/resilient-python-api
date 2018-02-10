@@ -84,25 +84,29 @@ def run(resilient_circuits_args, restartable=False, config_file=None):
     app.run(**kwargs)
 
 
-def list_installed():
+def list_installed(args):
     """print list of installed packages with their components"""
     LOG.debug("resilient-circuits.list")
     components = defaultdict(list)
     entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.components')]
     LOG.debug(u"Found %d installed components", len(entry_points))
     for ep in entry_points:
-        components[ep.dist].append(ep.name)
+        components[ep.dist].append(ep)
     if not components:
         LOG.info(u"No resilient-circuits components are installed")
         return
     LOG.info(u"The following packages and components are installed:")
     for dist, component_list in components.items():
-        pkg = dist.project_name
-        version = dist._version
-        LOG.info(u"%s (%s) installed components:\n\t%s",
-                 pkg,
-                 version,
-                 "\n\t".join(component_list))
+        if args.verbose:
+            LOG.info(u"%s (%s):\n\t%s",
+                     dist.egg_info,
+                     dist.as_requirement(),
+                     "\n\t".join([str(ep) for ep in component_list]))
+        else:
+            LOG.info(u"%s (%s) installed components:\n\t%s",
+                     dist.project_name,
+                     dist.version,
+                     "\n\t".join([ep.name for ep in component_list]))
 
 
 def generate_default():
@@ -275,6 +279,9 @@ def main():
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
 
+    # Options for 'list'
+    list_parser.add_argument("-v", "--verbose", action="store_true")
+
     # Options for 'config'
     file_option_group = config_parser.add_mutually_exclusive_group(required=True)
     file_option_group.add_argument("-u", "--update",
@@ -339,7 +346,7 @@ def main():
         if args.cmd == "config":
             generate_or_update_config(args)
         elif args.cmd == "list":
-            list_installed()
+            list_installed(args)
         elif args.cmd == "service":
             manage_service(unknown_args + args.service_args, args.res_circuits_args)
         elif args.cmd == "codegen":
