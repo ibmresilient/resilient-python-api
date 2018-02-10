@@ -1,21 +1,20 @@
 {
+    "MANIFEST.in": "template_package/MANIFEST.in.jinja2",
+    "README.md":   "template_package/README.md.jinja2",
+    "setup.py":    "template_package/setup.py.jinja2",
     "{{package}}": {
-        "MANIFEST.in": "template_package/MANIFEST.in.jinja2",
-        "README.md":   "template_package/README.md.jinja2",
-        "setup.py":    "template_package/setup.py.jinja2",
-        "{{package}}": {
-            "LICENSE":     "template_package/package/LICENSE",
-            "__init__.py": "template_package/package/__init__.py.jinja2",
-            "components": {
+        "LICENSE":     "template_package/package/LICENSE",
+        "__init__.py": "template_package/package/__init__.py.jinja2",
+        "components": {
 {%for function_name in functions.keys()%}
-                "{{function_name}}.py@{{function_name}}": "template_package/package/components/template_function.py.jinja2",
+            "{{function_name}}.py@{{function_name}}": "template_package/package/components/template_function.py.jinja2",
 {%endfor%}
-                "__init__.py": "template_package/package/components/__init__.py.jinja2"
-            },
-            "util": {
-                "config.py":   "template_package/package/util/config.py.jinja2",
-                "__init__.py": "template_package/package/util/__init__.py.jinja2"
-            }
+            "__init__.py": "template_package/package/components/__init__.py.jinja2"
+        },
+        "util": {
+            "config.py":   "template_package/package/util/config.py.jinja2",
+            "customize.py":   "template_package/package/util/customize.py.jinja2",
+            "__init__.py": "template_package/package/util/__init__.py.jinja2"
         }
     }
 }

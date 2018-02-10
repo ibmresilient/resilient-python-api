@@ -85,7 +85,7 @@ def do_customize_resilient(client, entry_points, yflag):
         try:
             func = entry.load()
         except ImportError:
-            LOG.exception(u"Customizations for module '%s' cannot be loaded.", repr(dist))
+            LOG.exception(u"Customizations for package '%s' cannot be loaded.", repr(dist))
             continue
 
         # The entrypoint function should be a generator
@@ -95,7 +95,7 @@ def do_customize_resilient(client, entry_points, yflag):
         # - then message destinations,
         # - then actions, functions, etc
 
-        LOG.info(u"Module '%s'", dist)
+        LOG.info(u"Package '%s':", dist)
         definitions = func()
         for definition in definitions:
             def_count = def_count + 1
@@ -117,7 +117,7 @@ def do_customize_resilient(client, entry_points, yflag):
             except SimpleHTTPException:
                 LOG.error(u"Failed, %s", customizations.doing)
                 raise
-        LOG.info(u"Module '%s' applied %s customizations", dist, def_count)
+        LOG.info(u"Package '%s' done.", dist)
 
     if ep_count == 0:
         LOG.info(u"No customizations are defined by installed packages.")
@@ -139,13 +139,13 @@ class Customizations(object):
         self.doing = u"creating {}".format(activity)
         if self.prompt:
             yes = False
-            inp = input(u"OK to create {}? (y/n):".format(activity))
+            inp = input(u"    OK to create {}? (y/n):".format(activity))
             try:
                 yes = strtobool(inp)
             except ValueError:
                 pass
         if not yes:
-            print(u"Not creating {}".format(activity))
+            print(u"    Not creating {}".format(activity))
         return yes
 
     def load_message_destinations(self, definition):
@@ -159,9 +159,9 @@ class Customizations(object):
         existing_destination_dnames = [dest["name"] for dest in existing_destinations]
         for dest in new_destinations:
             if dest["programmatic_name"] in existing_destination_names:
-                LOG.info(u"Message destination exists: %s", dest["programmatic_name"])
+                LOG.info(u"    Message destination exists: %s", dest["programmatic_name"])
             elif dest["name"] in existing_destination_dnames:
-                LOG.info(u"Message destination exists: %s", dest["name"])
+                LOG.info(u"    Message destination exists: %s", dest["name"])
             else:
                 setdefault(dest, {
                     "name": dest["programmatic_name"],
@@ -176,7 +176,7 @@ class Customizations(object):
                 # Create the message destination
                 if self.confirm(u"message destination '{}'".format(dest["programmatic_name"])):
                     self.client.post(uri, dest)
-                    LOG.info(u"Message destination created: %s ('%s')", dest["programmatic_name"], dest["name"])
+                    LOG.info(u"    Message destination created: %s ('%s')", dest["programmatic_name"], dest["name"])
 
     def load_types(self, definition):
         """Load a type definition (action fields, incident fields, data table, etc)"""
@@ -192,14 +192,14 @@ class Customizations(object):
             uri = "/types"
             if self.confirm("type '{}'".format(new_types["type_name"])):
                 self.client.post(uri, new_types)
-                LOG.info(u"Type created: %s ('%s')", new_types["type_name"], new_types["display_name"])
+                LOG.info(u"    Type created: %s ('%s')", new_types["type_name"], new_types["display_name"])
             return
         existing_fields = existing_types["fields"]
         for fieldname in new_fields:
             field = new_fields[fieldname]
             if fieldname in existing_fields.keys():
                 # Merge the field values and update
-                LOG.info(u"Field exists: %s", fieldname)
+                LOG.info(u"    Field exists: %s", fieldname)
                 new_values = field.get("values", [])
                 # Remove any ids from the new stuff
                 for value in new_values:
@@ -232,7 +232,7 @@ class Customizations(object):
                     if self.confirm("values for field '{}'".format(fieldname)):
                         uri = "/types/{0}/fields/{1}".format(type_name, existing_id)
                         self.client.put(uri, field)
-                        LOG.info(u"Field updated: %s ('%s')", fieldname, field["text"])
+                        LOG.info(u"    Field updated: %s ('%s')", fieldname, field["text"])
             else:
                 # Don't re-use id
                 if "id" in field:
@@ -241,7 +241,7 @@ class Customizations(object):
                 fields_uri = "/types/{0}/fields".format(type_name)
                 if self.confirm("field '{}'".format(fieldname)):
                     self.client.post(fields_uri, field)
-                    LOG.info(u"Field created: %s ('%s')", fieldname, field["text"])
+                    LOG.info(u"    Field created: %s ('%s')", fieldname, field["text"])
 
     def load_actions(self, definition):
         """Load custom actions"""
@@ -253,7 +253,7 @@ class Customizations(object):
         existing_action_names = [action["name"] for action in existing_actions]
         for action in new_actions:
             if action["name"] in existing_action_names:
-                LOG.info(u"Action exists: %s", action["name"])
+                LOG.info(u"    Action exists: %s", action["name"])
             else:
                 # Don't re-use id
                 if "id" in action:
@@ -261,7 +261,7 @@ class Customizations(object):
                 # Create the action
                 if self.confirm("action '{}'".format(action["name"])):
                     self.client.post(uri, action)
-                    LOG.info(u"Action created: %s", action["name"])
+                    LOG.info(u"    Action created: %s", action["name"])
 
     def load_functions(self, definition):
         """Load custom functions"""
@@ -273,7 +273,7 @@ class Customizations(object):
         existing_function_names = [function["name"] for function in existing_functions]
         for function in new_functions:
             if function["name"] in existing_function_names:
-                LOG.info(u"Function exists: %s", function["name"])
+                LOG.info(u"    Function exists: %s", function["name"])
             else:
                 setdefault(function, {
                     "display_name": function["name"]
@@ -284,7 +284,7 @@ class Customizations(object):
                 # Create the function
                 if self.confirm("function '{}'".format(function["name"])):
                     self.client.post(uri, function)
-                    LOG.info(u"Function created: %s", function["name"])
+                    LOG.info(u"    Function created: %s", function["name"])
 
     def load_workflows(self, definition):
         """Load workflows"""
@@ -296,7 +296,7 @@ class Customizations(object):
         existing_workflow_names = [workflow["programmatic_name"] for workflow in existing_workflows]
         for workflow in new_workflows:
             if workflow["programmatic_name"] in existing_workflow_names:
-                LOG.info(u"Workflow exists: %s", workflow["programmatic_name"])
+                LOG.info(u"    Workflow exists: %s", workflow["programmatic_name"])
             else:
                 # Create the workflow
                 if self.confirm("workflow '{}'".format(workflow["programmatic_name"])):
@@ -318,4 +318,4 @@ class Customizations(object):
                                                             verify=self.client.verify)
                     if response.status_code != 200:
                         raise SimpleHTTPException(response)
-                    LOG.info(u"Workflow created: %s", workflow["programmatic_name"])
+                    LOG.info(u"    Workflow created: %s", workflow["programmatic_name"])

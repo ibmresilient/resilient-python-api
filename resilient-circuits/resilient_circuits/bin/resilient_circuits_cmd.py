@@ -119,7 +119,7 @@ def generate_default():
         try:
             func = entry.load()
         except ImportError:
-            LOG.exception(u"Failed to load configuration defaults for module '%s'", repr(dist))
+            LOG.exception(u"Failed to load configuration defaults for package '%s'", repr(dist))
             continue
 
         new_section = None
@@ -131,7 +131,7 @@ def generate_default():
                 required_config.read_string(unicode(config_data))
                 new_section = required_config.sections()[0]
         except:
-            LOG.exception(u"Failed to get configuration defaults for module '%s'", repr(dist))
+            LOG.exception(u"Failed to get configuration defaults for package '%s'", repr(dist))
             continue
         if new_section:
             additional_sections.append(new_section)
@@ -198,7 +198,7 @@ def generate_or_update_config(args):
                 try:
                     func = entry.load()
                 except ImportError:
-                    LOG.exception(u"Failed to load configuration defaults for module '%s'", repr(dist))
+                    LOG.exception(u"Failed to load configuration defaults for package '%s'", repr(dist))
                     continue
 
                 new_section = None
@@ -210,7 +210,7 @@ def generate_or_update_config(args):
                         required_config.read_string(unicode(config_data))
                         new_section = required_config.sections()[0]
                 except:
-                    LOG.exception(u"Failed to get configuration defaults for module '%s'", repr(dist))
+                    LOG.exception(u"Failed to get configuration defaults for package '%s'", repr(dist))
                     continue
 
                 LOG.debug(u"Required Section: %s", new_section)

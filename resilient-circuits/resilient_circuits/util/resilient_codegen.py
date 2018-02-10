@@ -130,7 +130,7 @@ def list_workflows(client):
 
 def clean(dictionary, keep):
     """Remove attributes that are not in the 'keep' list"""
-    for key in dictionary.keys():
+    for key in dictionary.copy().keys():
         if key not in keep:
             dictionary.pop(key)
     return dictionary
@@ -323,7 +323,7 @@ def codegen_package(client, package, function_names, workflow_names, output_dir)
     try:
         os.makedirs(output_dir)
     except OSError as exc:
-        LOG.warn("%s", exc)
+        LOG.warn(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
     return codegen_from_template(client, template_file_path, package, function_names, workflow_names, output_dir, None)

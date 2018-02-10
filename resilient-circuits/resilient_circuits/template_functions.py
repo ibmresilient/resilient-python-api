@@ -7,6 +7,7 @@
 # Jinja template functions
 
 from __future__ import print_function
+import sys
 import jinja2
 import json
 import pprint
@@ -129,9 +130,10 @@ def pretty_filter(val, indent=2):
         return "[undefined]"
 
     def nice_repr(object, context, maxlevels, level):
-        typ = pprint._type(object)
-        if typ is unicode:
-            object = object.encode("utf-8")
+        if sys.version_info.major < 3:
+            typ = type(object)
+            if typ is unicode:
+                object = object.encode("utf-8")
         return pprint._safe_repr(object, context, maxlevels, level)
 
     printer = pprint.PrettyPrinter(indent=indent)

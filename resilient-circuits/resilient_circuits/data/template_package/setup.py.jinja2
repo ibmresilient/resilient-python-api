@@ -7,13 +7,13 @@ setup(
     name='{{package}}',
     version='1.0.0',
     license='<<insert here>>',
-    author='{{author}}',
+    author='<<your name here>>',
+    author_email='you@example.com',
+    description="Resilient Circuits Components for '{{package}}'",
+    long_description="Resilient Circuits Components for '{{package}}'",
     install_requires=[
         'resilient_circuits>=30.0.0'
     ],
-    author_email='you@example.com',
-    description="Resilient Circuits Component for '{{package}}'",
-    long_description="Resilient Circuits Component for '{{package}}'",
     packages=find_packages(),
     include_package_data=True,
     platforms='any',
@@ -25,6 +25,6 @@ setup(
             "{{function_name|title}}FunctionComponent = {{package}}.components.{{function_name}}:FunctionComponent"{%endfor%}
         ],
         "resilient.circuits.configsection": ["gen_config = {{package}}.util.config:config_section_data"],
-        "resilient.circuits.customize": ["customize = {{package}}.util.config:customization_data"]
+        "resilient.circuits.customize": ["customize = {{package}}.util.customize:customization_data"]
     }
 )

@@ -1,12 +1,8 @@
-"""Action Module circuits component to lookup a value in a local CSV file"""
+# -*- coding: utf-8 -*-
+
+"""Generate a default configuration-file section for {{package}}"""
 
 from __future__ import print_function
-import pkg_resources
-from circuits import Component, Debugger
-from circuits.core.handlers import handler
-from resilient_circuits.actions_component import ResilientComponent, ActionMessage
-import os
-import csv
 import logging
 LOG = logging.getLogger(__name__)
 
@@ -20,36 +16,3 @@ def config_section_data():
 #"""
 #    return config_data
     return None
-
-
-def customization_data():
-    """Produce any customization definitions (types, fields, message destinations, etc)
-       that should be installed by `resilient-circuits customize`
-    """
-    from resilient_circuits.util import \
-        TypeDefinition, \
-        MessageDestinationDefinition, \
-        ActionDefinition, \
-        FunctionDefinition, \
-        WorkflowDefinition
-
-    # Function-field definitions
-    yield TypeDefinition(
-        {
-            "type_name": "__function",
-            "fields": {{function_params|pretty}}
-        }
-    )
-{%for dest_name in message_destinations.keys()%}
-    # Message destination: {{dest_name}}
-    yield MessageDestinationDefinition({{message_destinations[dest_name]|pretty}}
-    )
-{%endfor%}{%for function_name in functions.keys()%}
-    # Function: {{function_name}}
-    yield FunctionDefinition({{functions[function_name]|pretty}}
-    )
-{%endfor%}{%for workflow_name in workflows.keys()%}
-    # Workflow: {{workflow_name}}
-    yield WorkflowDefinition({{workflows[workflow_name]|pretty}}
-    )
-{%endfor%}
