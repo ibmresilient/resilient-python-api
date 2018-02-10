@@ -94,7 +94,7 @@ class ComponentLoader(Loader):
             LOG.info("Loading %s", repr(component_class))
             try:
                 component_class(opts=self.opts).register(self)
-                LOG.info("Loaded %s", component_class.__name__)
+                LOG.info("Loaded: %s", repr(component_class))
             except Exception as e:
                 LOG.error("Failed to load %s", component_class.__name__, exc_info=1)
                 self.fire(load_all_failure())

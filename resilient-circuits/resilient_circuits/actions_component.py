@@ -61,6 +61,7 @@ class FunctionWorker(Worker):
 
     @handler("task", override=True)
     def _on_task(self, f, *args, **kwargs):
+        LOG.debug("Task: %s", f)
         result = self.pool.apply_async(f, args, kwargs)
         while not result.ready():
             yield
