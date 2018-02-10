@@ -1,7 +1,7 @@
 {%- macro paramvalue(param) -%}{%if param.input_type in ["select", "multiselect"]%}self.get_select_param(kwargs.get("{{param.name}}")){%
 elif param.input_type in ["textarea"]%}self.get_textarea_param(kwargs.get("{{param.name}}")){%
 else %}kwargs.get("{{param.name}}"){%endif%}{%- endmacro -%}
-{%- macro paramcomment(param) -%}type: {{param.input_type}}{%if param.input_type in ["select", "multiselect"]%}, values: "{{param["values"]|list|map(attribute="label")|join('", "')}}"{%endif%}{%- endmacro -%}
+{%- macro paramcomment(param) -%}{{param.input_type}}{%if param.input_type in ["select", "multiselect"]%}, values: "{{param["values"]|list|map(attribute="label")|join('", "')}}"{%endif%}{%- endmacro -%}
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
 """Function implementation"""
@@ -12,27 +12,17 @@ from resilient_circuits import ResilientComponent, function, StatusMessage, Func
 
 class FunctionComponent(ResilientComponent):
     """Component that implements Resilient function(s)"""
-
-#    def __init__(self, opts):
-#        """constructor provides access to the configuration options"""
-#        super(MyComponent, self).__init__(opts)
-#        self.options = opts.get("my_config_section", {})
-
-#    @handler("reload")
-#    def reload_options(self, event, opts):
-#        """Configuration options have changed, save new values"""
-#        self.options = opts.get("my_config_section", {})
 {%for function_name in functions.keys()%}{%set function_def=functions[function_name]%}
     @function("{{function_name|js}}")
     def _{{function_name}}_function(self, event, *args, **kwargs):
-        """Function: {{function_def.description}}"""
+        """Function: {{function_def.description.content}}"""
 
         # Get the function parameters:
         log = logging.getLogger(__name__)
-{%for p in function_def.parameters%}
-        {{p.name}} = {{paramvalue(p)}}  # {{paramcomment(p)}}{%endfor%}
-{%for p in function_def.parameters if not 'pass' in p|lower%}
-        log.info("{{p.text}}: %s", {{p.name}}){%endfor%}
+{%for p in function_def.view_items%}{%set pdef=function_params[p.content] %}
+        {{p.content}} = {{paramvalue(pdef)}}  # {{paramcomment(pdef)}}{%endfor%}
+{%for p in function_def.view_items if not 'pass' in p|lower%}{%set pdef=function_params[p.content] %}
+        log.info("{{pdef.text}}: %s", {{p.content}}){%endfor%}
 
         # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
         #  yield StatusMessage("starting...")

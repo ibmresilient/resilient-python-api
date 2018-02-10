@@ -11,6 +11,7 @@ import pkg_resources
 import resilient
 from resilient import SimpleHTTPException
 from resilient_circuits.app import AppArgumentParser
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 try:
     from builtins import input
@@ -45,6 +46,11 @@ class ActionDefinition(Definition):
 
 class FunctionDefinition(Definition):
     """Definition of a function"""
+    pass
+
+
+class WorkflowDefinition(Definition):
+    """Definition of a workflow"""
     pass
 
 
@@ -104,6 +110,10 @@ def do_customize_resilient(client, entry_points, yflag):
                     customizations.load_actions(definition)
                 elif isinstance(definition, FunctionDefinition):
                     customizations.load_functions(definition)
+                elif isinstance(definition, WorkflowDefinition):
+                    customizations.load_workflows(definition)
+                else:
+                    LOG.error(u"Not implemented: %s", type(definition))
             except SimpleHTTPException:
                 LOG.error(u"Failed, %s", customizations.doing)
                 raise
@@ -272,6 +282,40 @@ class Customizations(object):
                 if "id" in function:
                     function.pop("id", None)
                 # Create the function
-                if self.confirm("creating function '{}'".format(function["name"])):
+                if self.confirm("function '{}'".format(function["name"])):
                     self.client.post(uri, function)
                     LOG.info(u"Function created: %s", function["name"])
+
+    def load_workflows(self, definition):
+        """Load workflows"""
+        new_workflows = definition.value
+        if not isinstance(new_workflows, (tuple, list)):
+            new_workflows = [new_workflows]
+        uri = "/workflows"
+        existing_workflows = self.client.get(uri)["entities"]
+        existing_workflow_names = [workflow["programmatic_name"] for workflow in existing_workflows]
+        for workflow in new_workflows:
+            if workflow["programmatic_name"] in existing_workflow_names:
+                LOG.info(u"Workflow exists: %s", workflow["programmatic_name"])
+            else:
+                # Create the workflow
+                if self.confirm("workflow '{}'".format(workflow["programmatic_name"])):
+                    # Post multi-part MIME with the workflow XML as a mime part
+                    url = u"{0}/rest/orgs/{1}{2}".format(self.client.base_url, self.client.org_id, uri)
+                    multipart_data = {
+                        "file": workflow["content"]["xml"],
+                        "object_type": workflow.get("object_type", 0)
+                    }
+                    encoder = MultipartEncoder(fields=multipart_data)
+                    headers = self.client.make_headers(None,
+                                                       additional_headers={'content-type': encoder.content_type})
+                    response = self.client._execute_request(self.client.session.post,
+                                                            url,
+                                                            data=encoder,
+                                                            proxies=self.client.proxies,
+                                                            cookies=self.client.cookies,
+                                                            headers=headers,
+                                                            verify=self.client.verify)
+                    if response.status_code != 200:
+                        raise SimpleHTTPException(response)
+                    LOG.info(u"Workflow created: %s", workflow["programmatic_name"])

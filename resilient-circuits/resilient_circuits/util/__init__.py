@@ -4,6 +4,7 @@ from .resilient_customize import \
     TypeDefinition, \
     MessageDestinationDefinition, \
     ActionDefinition, \
-    FunctionDefinition
+    FunctionDefinition, \
+    WorkflowDefinition
 
 from .resilient_codegen import list_functions, valid_identifier

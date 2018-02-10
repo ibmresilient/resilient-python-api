@@ -46,7 +46,9 @@ PARAMETER_ATTRIBUTES = [
 ]
 
 VIEW_ITEM_ATTRIBUTES = [
-    "content"
+    "element",
+    "content",
+    "field_type"
 ]
 
 FUNCTION_ATTRIBUTES = [
@@ -55,6 +57,16 @@ FUNCTION_ATTRIBUTES = [
     "name",
     "description",
     "destination_handle"
+]
+
+WORKFLOW_ATTRIBUTES = [
+    "programmatic_name",
+    "object_type",
+    "content"
+]
+
+WORKFLOW_CONTENT_ATTRIBUTES = [
+    "xml"
 ]
 
 MESSAGE_DESTINATION_ATTRIBUTES = [
@@ -98,6 +110,22 @@ def list_functions(client):
     print(u"Available functions:")
     for function_def in function_defs["entities"]:
         print(u"    {}".format(function_def["name"]))
+
+
+def list_workflows(client):
+    """List all the workflows"""
+    try:
+        workflow_defs = client.get("/workflows?handle_format=names")
+    except SimpleHTTPException as exc:
+        if exc.response.status_code == 500:
+            LOG.error(u"ERROR: Workflows are not available on this Resilient appliance.")
+            return
+        else:
+            raise
+
+    print(u"Available workflows:")
+    for workflow_def in workflow_defs["entities"]:
+        print(u"    {}".format(workflow_def["programmatic_name"]))
 
 
 def clean(dictionary, keep):
@@ -159,7 +187,8 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                 outfile.write(source_rendered)
 
 
-def codegen_from_template(client, template_file_path, package, function_names, output_dir, output_file):
+def codegen_from_template(client, template_file_path, package, function_names, workflow_names,
+                          output_dir, output_file):
     """Based on a template-file, produce the generated file or package.
 
        To codegen a single file, the template will be a JSON dict with just one entry,
@@ -173,6 +202,7 @@ def codegen_from_template(client, template_file_path, package, function_names, o
        :param template_file_path: a file that defines the item(s) to be codegenned.
        :param package: name of the package to be generated
        :param function_names: list of named functions to be generated
+       :param workflow_names: list of named workflows to be generated
 
     """
     if function_names:
@@ -185,7 +215,7 @@ def codegen_from_template(client, template_file_path, package, function_names, o
                 return
             else:
                 raise
-        # Check that each function is available
+        # Check that each named function is available
         available_names = [function_def["name"] for function_def in function_defs["entities"]]
         for function_name in function_names:
             if function_name not in available_names:
@@ -193,20 +223,42 @@ def codegen_from_template(client, template_file_path, package, function_names, o
                 list_functions(client)
                 return
 
+    if workflow_names:
+        # Check that 'workflows' are available (v28 onward)
+        try:
+            workflow_defs = client.get("/workflows?handle_format=names")
+        except SimpleHTTPException as exc:
+            if exc.response.status_code == 500:
+                LOG.error(u"ERROR: Workflows are not available on this Resilient appliance.")
+                return
+            else:
+                raise
+        # Check that each named workflow is available
+        available_names = [workflow_def["programmatic_name"] for workflow_def in workflow_defs["entities"]]
+        for workflow_name in workflow_names:
+            if workflow_name not in available_names:
+                LOG.error(u"ERROR: Workflow '%s' not found on this Resilient appliance.", workflow_name)
+                list_workflows(client)
+                return
+
     # Prepare the dictionary of substitution values for jinja2
     # (includes all the configuration elements related to the functions)
     functions = {}
-    function_fields = {}
+    function_params = {}
+    message_destinations = {}
+    workflows = {}
     all_destinations = dict((dest["programmatic_name"], dest)
                             for dest in client.get("/message_destinations")["entities"])
-    message_destinations = {}
+
     for function_name in (function_names or []):
         # Get the function definition
-        function_def = client.get("/functions/{}?handle_format=names".format(function_name))
+        function_def = client.get("/functions/{}?handle_format=names&text_content_output_format=objects_no_convert"
+                                  .format(function_name))
         # Remove the attributes we don't want to serialize
         clean(function_def, FUNCTION_ATTRIBUTES)
         for view_item in function_def.get("view_items", []):
             clean(view_item, VIEW_ITEM_ATTRIBUTES)
+        functions[function_name] = function_def
 
         # Get the parameters (input fields)
         param_names = [item["content"] for item in function_def["view_items"]]
@@ -219,7 +271,7 @@ def codegen_from_template(client, template_file_path, package, function_names, o
             for value in param.get("values", []):
                 clean(value, VALUE_ATTRIBUTES)
             params.append(param)
-            function_fields[param["name"]] = param
+            function_params[param["name"]] = param
 
         # Get the message destination
         dest_name = function_def["destination_handle"]
@@ -228,9 +280,13 @@ def codegen_from_template(client, template_file_path, package, function_names, o
             clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
             message_destinations[dest_name] = dest
 
-        # Write out the template values
-        function_def["parameters"] = params
-        functions[function_name] = function_def
+    for workflow_name in (workflow_names or []):
+        # Get the workflow definition
+        workflow_def = client.get("/workflows/{}?handle_format=names".format(workflow_name))
+        # Remove the attributes we don't want to serialize
+        clean(workflow_def, WORKFLOW_ATTRIBUTES)
+        clean(workflow_def["content"], WORKFLOW_CONTENT_ATTRIBUTES)
+        workflows[workflow_name] = workflow_def
 
     data = {
         "package": package,
@@ -238,7 +294,8 @@ def codegen_from_template(client, template_file_path, package, function_names, o
         "output_dir": output_dir,
         "output_file": output_file,
         "functions": functions,
-        "function_fields": function_fields,
+        "function_params": function_params,
+        "workflows": workflows,
         "message_destinations": message_destinations
     }
     LOG.debug(u"Configuration data:\n%s", json.dumps(data, indent=2))
@@ -256,7 +313,7 @@ def codegen_from_template(client, template_file_path, package, function_names, o
     render_file_mapping(file_mapping, data, src_dir, output_dir)
 
 
-def codegen_package(client, package, function_names, output_dir):
+def codegen_package(client, package, function_names, workflow_names, output_dir):
     """Generate a an installable python package"""
     if not valid_identifier(package):
         LOG.error(u"ERROR: %s is not a valid package name.", package)
@@ -269,10 +326,10 @@ def codegen_package(client, package, function_names, output_dir):
         LOG.warn("%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, package, function_names, output_dir, None)
+    return codegen_from_template(client, template_file_path, package, function_names, workflow_names, output_dir, None)
 
 
-def codegen_functions(client, function_names, output_dir, output_file):
+def codegen_functions(client, function_names, workflow_names, output_dir, output_file):
     """Generate a python file that implements one or more functions"""
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, None, function_names, output_dir, output_file)
+    return codegen_from_template(client, template_file_path, None, function_names, workflow_names, output_dir, output_file)

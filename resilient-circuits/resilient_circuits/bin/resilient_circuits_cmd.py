@@ -105,19 +105,36 @@ def list_installed():
                  "\n\t".join(component_list))
 
 
-def discover_required_config_sections():
-    """return list of functions to call to generate sample config sections"""
-    entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
-    return [ep.load() for ep in entry_points]
-
-
 def generate_default():
     """ return string containing entire default app.config """
     base_config_fn = pkg_resources.resource_filename("resilient_circuits", "data/app.config.base")
+    entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
+    additional_sections = []
+    for entry in entry_points:
+        dist = entry.dist
+        try:
+            func = entry.load()
+        except ImportError:
+            LOG.exception(u"Failed to load configuration defaults for module '%s'", repr(dist))
+            continue
+
+        new_section = None
+        try:
+            config_data = func()
+            if config_data:
+                required_config = configparser.ConfigParser(interpolation=None)
+                LOG.debug(u"Config Data String:\n%s", config_data)
+                required_config.read_string(unicode(config_data))
+                new_section = required_config.sections()[0]
+        except:
+            LOG.exception(u"Failed to get configuration defaults for module '%s'", repr(dist))
+            continue
+        if new_section:
+            additional_sections.append(new_section)
+
+    LOG.debug("Found %d sections to generate", len(additional_sections))
     with open(base_config_fn, 'r') as base_config_file:
         base_config = base_config_file.read()
-        additional_sections = [func() for func in discover_required_config_sections()]
-        LOG.debug("Found %d sections to generate", len(additional_sections))
         return "\n\n".join(([base_config, ] + additional_sections))
 
 
@@ -180,18 +197,20 @@ def generate_or_update_config(args):
                     LOG.exception(u"Failed to load configuration defaults for module '%s'", repr(dist))
                     continue
 
+                new_section = None
                 try:
                     config_data = func()
-                    required_config = configparser.ConfigParser(interpolation=None)
-                    LOG.debug(u"Config Data String:\n%s", config_data)
-                    required_config.read_string(unicode(config_data))
-                    new_section = required_config.sections()[0]
+                    if config_data:
+                        required_config = configparser.ConfigParser(interpolation=None)
+                        LOG.debug(u"Config Data String:\n%s", config_data)
+                        required_config.read_string(unicode(config_data))
+                        new_section = required_config.sections()[0]
                 except:
                     LOG.exception(u"Failed to get configuration defaults for module '%s'", repr(dist))
                     continue
 
                 LOG.debug(u"Required Section: %s", new_section)
-                if new_section not in existing_sections:
+                if new_section and new_section not in existing_sections:
                     # Add the default data for this required section to the config file
                     LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
                     config_file.write(u"\n" + config_data)
@@ -215,7 +234,7 @@ def generate_code(args):
     if args.package:
         # codegen an installable package
         output_base = os.path.join(os.curdir, args.package)
-        codegen_package(client, args.package, args.function, os.path.expanduser(output_base))
+        codegen_package(client, args.package, args.function, args.workflow, os.path.expanduser(output_base))
     elif args.function:
         # codegen a component for one or more functions
         if len(args.function) > 1:
@@ -226,7 +245,7 @@ def generate_code(args):
         output_file = args.output or default_name
         if not output_file.endswith(".py"):
             output_file = output_file + ".py"
-        codegen_functions(client, args.function, output_dir, output_file)
+        codegen_functions(client, args.function, args.workflow, output_dir, output_file)
     else:
         # list the available functions from the server
         list_functions(client)
@@ -286,13 +305,16 @@ def main():
     service_parser.add_argument("service_args", help="Args to pass to service manager", nargs=argparse.REMAINDER)
 
     # Options for 'codegen'
-    codegen_parser.add_argument("-f", "--function",
-                                help="Name of the function(s) to generate code for",
-                                nargs="*")
     codegen_parser.add_argument("-p", "--package",
                                 help="Name of the package to generate")
     codegen_parser.add_argument("-o", "--output",
                                 help="Output file name")
+    codegen_parser.add_argument("-f", "--function",
+                                help="Name of function(s) to generate code for",
+                                nargs="*")
+    codegen_parser.add_argument("-w", "--workflow",
+                                help="Name of workflow(s) to include in the package",
+                                nargs="*")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",
