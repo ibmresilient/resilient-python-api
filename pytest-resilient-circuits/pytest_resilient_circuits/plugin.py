@@ -2,10 +2,15 @@
 
 """ py.test plugin configuration for pytest-resilient-circuits """
 
+from pytest_resilient_circuits.circuits_fixtures import *
+from pytest_resilient_circuits.resilient_circuits_fixtures import *
+
+
 _help_email = "Resilient user email"
 _help_host = "Resilient host"
 _help_password = "Resilient password"
 _help_org = "Resilient org"
+
 
 def pytest_addoption(parser):
     """ Configuration Options """
@@ -32,7 +37,3 @@ def pytest_addoption(parser):
                      action="store",
                      default="",
                      required=False)
-
-from pytest_resilient_circuits.circuits_fixtures import *
-from pytest_resilient_circuits.resilient_circuits_fixtures import *
-

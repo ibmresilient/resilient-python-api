@@ -16,6 +16,8 @@ import time
 import calendar
 import datetime
 import pytz
+import random
+import re
 
 try:
     # Python 3.2 adds html.escape() and deprecates cgi.escape().
@@ -199,6 +201,33 @@ def uniq(val, key=None):
     return values
 
 
+def sample_filter(val, count=None):
+    """Return a random sample from a list"""
+    if count is None:
+        # Return a single value
+        try:
+            return random.sample(list(val), 1)[0]
+        except ValueError:
+            return None
+    else:
+        # Return a list
+        try:
+            return random.sample(list(val), count)
+        except ValueError:
+            return []
+
+
+def camel_filter(val):
+    """Return CamelCase
+
+       >>> camel_filter("a#bc_def")
+       'ABcDef'
+    """
+    titlecase = val.title()
+    return re.sub(r"[\W^_]", "", titlecase)
+
+
+
 JINJA_FILTERS = {"json": json_filter,
                  "js": js_filter,
                  "html": html_filter,
@@ -211,7 +240,9 @@ JINJA_FILTERS = {"json": json_filter,
                  "pretty": pretty_filter,
                  "timestamp": timestamp,
                  "iso8601": iso8601,
-                 "uniq": uniq}
+                 "uniq": uniq,
+                 "sample": sample_filter,
+                 "camel": camel_filter}
 
 
 # Maintain one global Environment

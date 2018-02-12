@@ -10,9 +10,8 @@ from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-version = "28.0"
-
-major, minor = version.split('.', 2)[:2]
+requires_resilient_version = "29.0"
+major, minor = requires_resilient_version.split('.', 2)[:2]
 
 setup(
     name='resilient_circuits',

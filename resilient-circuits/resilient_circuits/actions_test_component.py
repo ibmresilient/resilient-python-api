@@ -23,6 +23,19 @@ class SubmitTestAction(Event):
         super(SubmitTestAction, self).__init__(queue=queue, msg_id=msg_id, message=message)
 
 
+class SubmitTestFunction(Event):
+    """ Circuits event to insert a test Function Message """
+    def __init__(self, function_name, function_params):
+        if not function_name or not isinstance(function_params, dict):
+            raise ValueError("function_name and function_params are required")
+        super(SubmitTestFunction, self).__init__(queue="example", msg_id="wdc", message={
+            "function": {
+                "name": function_name
+            },
+            "inputs": function_params
+        })
+
+
 class ResilientTestActions(Component):
     """ Mock the stomp connection for testing"""
 
@@ -38,7 +51,8 @@ class ResilientTestActions(Component):
     def usage(self):
         return "Submit actions with format: <queue> <message json>"
 
-    def SubmitTestAction(self, queue, msg_id, message, channel="*"):
+    @handler("SubmitTestAction", "SubmitTestFunction")
+    def _submit_message(self, queue, msg_id, message, channel="*"):
         """ Create and fire an ActionMessage """
         try:
             message_id = "ID:resilient-54199-{val}-6:2:12:1:1".format(val=msg_id)

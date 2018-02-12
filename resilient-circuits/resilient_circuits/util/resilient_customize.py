@@ -23,6 +23,34 @@ except ImportError:
 LOG = logging.getLogger(__name__)
 
 
+def get_customization_definitions(package):
+    """Read the default configuration-data section from the given package"""
+    data = None
+    try:
+        dist = pkg_resources.get_distribution(package)
+        entries = pkg_resources.get_entry_map(dist, "resilient.circuits.customize")
+        if entries:
+            for entry in iter(entries):
+                func = entries[entry].load()
+                data = func()
+    except pkg_resources.DistributionNotFound:
+        pass
+    return data or []
+
+
+def get_function_definition(package, function_name):
+    """Find a function in the default configuration-data section from the given package"""
+    for definition in get_customization_definitions(package):
+        if isinstance(definition, FunctionDefinition):
+            new_functions = definition.value
+            if not isinstance(new_functions, (tuple, list)):
+                new_functions = [new_functions]
+            for func in new_functions:
+                if func["name"] == function_name:
+                    # Found it!  Success.
+                    return func
+
+
 class Definition(object):
     """A definition that can be loaded by this helper."""
     def __init__(self, value):

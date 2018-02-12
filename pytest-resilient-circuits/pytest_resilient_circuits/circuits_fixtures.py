@@ -18,21 +18,21 @@ class Watcher(BaseComponent):
 
     def init(self):
         self._lock = threading.Lock()
-        self.events = deque()
+        self._events = deque()
 
     @handler(channel="*", priority=999.9)
     def _on_event(self, event, *args, **kwargs):
         # print("WATCHER GOT ", event)
         with self._lock:
-            self.events.append(event)
+            self._events.append(event)
 
     def clear(self):
-        self.events.clear()
+        self._events.clear()
 
     def wait(self, name, channel=None, timeout=6.0):
         for i in range(int(timeout / TIMEOUT)):
             with self._lock:
-                for event in self.events:
+                for event in self._events:
                     if event.name == name and event.waitingHandlers == 0:
                         if (channel is None) or (channel in event.channels):
                             return event

@@ -5,3 +5,6 @@ try:
     __version__ = pkg_resources.get_distribution(__name__).version
 except pkg_resources.DistributionNotFound:
     pass
+
+from .mocks import BasicResilientMock
+from .circuits_fixtures import call_event, call_event_from_name, wait_for

@@ -11,7 +11,6 @@ import json
 import traceback
 import logging
 import pytest
-from circuits import Event
 from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
 from resilient import SimpleHTTPException
@@ -19,9 +18,11 @@ import resilient_circuits.app
 
 DATATABLE_TYPE_ID = 8
 
+
 class ConfiguredAppliance:
     """ configure resilient org with specs from the test module """
     def __init__(self, request):
+        # TODO: replace/supplement with the 'resilient.circuits.customize' entry-point
         # TODO: Add support for phases, tasks, incident types.
         # TODO: Add support for optional action and custom fields (currently all set as required)
 
@@ -39,9 +40,9 @@ class ConfiguredAppliance:
         # Retrieve constants from appliance
         constants = self._get_constants()["actions_framework"]
         # Invert the dictionaries so they are {"name": id,...}
-        action_object_types = {value:int(key) for key, value in constants["action_object_types"].items()}
-        action_types = {value:int(key) for key, value in constants["action_types"].items()}
-        destination_types = {value:int(key) for key, value in constants["destination_types"].items()}
+        action_object_types = {value: int(key) for key, value in constants["action_object_types"].items()}
+        action_types = {value: int(key) for key, value in constants["action_types"].items()}
+        destination_types = {value: int(key) for key, value in constants["destination_types"].items()}
 
         # Delete all existing configuration items
         self._clear_org()
@@ -67,7 +68,7 @@ class ConfiguredAppliance:
                 assert success
 
         destinations = self.client.get("/message_destinations")["entities"]
-        destinations = {dest["programmatic_name"]:int(dest["id"]) for dest in destinations}
+        destinations = {dest["programmatic_name"]: int(dest["id"]) for dest in destinations}
         manual_actions = getattr(request.cls, "manual_actions", None)
         if manual_actions:
             for action_name, info in manual_actions.items():
@@ -124,7 +125,7 @@ class ConfiguredAppliance:
 
         types = self.client.get("/types")
         data_tables = [res_type["type_name"] for res_type in types.values() if res_type['type_id'] == DATATABLE_TYPE_ID]
-        for dt_name in data_tables :
+        for dt_name in data_tables:
             print("Delete /types/%s" % dt_name)
             self.client.delete("/types/%s" % dt_name)
     # end _clear_org
@@ -209,7 +210,7 @@ class ConfiguredAppliance:
                   "view_items": [{"field_type": "actioninvocation",
                                   "element": "field",
                                   "content": fieldname} for fieldname in fields]
-        }
+                  }
         try:
             action_obj = self.client.post(endpoint, action)
             if not action_obj:
@@ -230,7 +231,7 @@ class ConfiguredAppliance:
                   "type": action_type_id,
                   "object_type": object_type_id,
                   "message_destinations": [destination_id]
-        }
+                  }
         if conditions:
             action["conditions"] = conditions
         try:
@@ -254,7 +255,7 @@ class ConfiguredAppliance:
         table = {"type_name": table_name,
                  "display_name": table_name,
                  "type_id": DATATABLE_TYPE_ID,
-                 "parent_types": ["incident",]}
+                 "parent_types": ["incident", ]}
         try:
             dt_obj = self.client.post(endpoint, table)
             if not dt_obj:
@@ -310,16 +311,38 @@ test_actions = True
 
         resilient_mock = getattr(request.module, "resilient_mock", None)
         self.config_file = tmpdir_factory.mktemp('data').join("%dapp.config" % id(self))
-        print(self.config_file.strpath)
+        print("TEST config={}".format(self.config_file.strpath))
+
         self.logs = tmpdir_factory.mktemp("logs")
+        print("TEST logdir={}".format(self.logs))
+
         config_data = getattr(request.module, "config_data", "")
         self.config_file.write(resilient_config_data)
-        host = os.environ.get("TEST_RESILIENT_APPLIANCE", request.config.option.resilient_host)
+
+        host = os.environ.get("TEST_RESILIENT_APPLIANCE")
+        if host:
+            print("TEST host={} (from environment)".format(host))
+        else:
+            host = request.config.option.resilient_host
+            print("TEST host={} (from configuration data)".format(host))
         self.config_file.write("host = %s\n" % host, mode='a')
-        self.org = os.environ.get("TEST_RESILIENT_ORG", request.config.option.resilient_org)
+
+        self.org = os.environ.get("TEST_RESILIENT_ORG")
+        if self.org:
+            print("TEST org={} (from environment)".format(self.org))
+        else:
+            self.org = request.config.option.resilient_org
+            print("TEST org={} (from configuration data)".format(self.org))
         self.config_file.write("org = %s\n" % self.org, mode='a')
-        self.user = os.environ.get("TEST_RESILIENT_USER", request.config.option.resilient_email)
+
+        self.user = os.environ.get("TEST_RESILIENT_USER")
+        if self.user:
+            print("TEST user={} (from environment)".format(self.user))
+        else:
+            self.org = request.config.option.resilient_email
+            print("TEST user={} (from configuration data)".format(self.user))
         self.config_file.write("email = %s\n" % self.user, mode='a')
+
         password = os.environ.get("TEST_RESILIENT_PASSWORD", request.config.option.resilient_password)
         self.config_file.write("password = %s\n" % password, mode='a')
         self.config_file.write("log_http_responses = %s\n" % self.logs, mode='a')
@@ -337,7 +360,7 @@ test_actions = True
         self.watcher = watcher
 
         # Remove the pytest commandline arguments so they don't break ArgParse in resilient
-        sys.argv=sys.argv[0:1]
+        sys.argv = sys.argv[0:1]
 
         self.app = resilient_circuits.app.App().register(manager)
         assert watcher.wait("registered")
@@ -382,7 +405,7 @@ def new_incident(circuits_app):
     client = circuits_app.app.action_component.rest_client()
     incident = {}
     fields = client.get('/types/incident/fields')
-    for field_def  in fields:
+    for field_def in fields:
         if field_def.get('required', '') != 'always':
             continue
         fieldname = field_def['name']
@@ -396,7 +419,7 @@ def new_incident(circuits_app):
         elif field_type in ("text", "textarea"):
             value = "test"
         elif field_type == "datetimepicker":
-            value = int(calendar.timegm(time.gmtime())) *1000
+            value = int(calendar.timegm(time.gmtime())) * 1000
         elif field_type == "number":
             value = 1
 

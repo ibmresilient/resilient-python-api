@@ -7,9 +7,8 @@
 import os
 from setuptools import setup
 
-version = "28.0"
-
-major, minor = version.split('.', 2)[:2]
+requires_resilient_version = "29.0"
+major, minor = requires_resilient_version.split('.', 2)[:2]
 
 requirements = [
     'pytest>=3.0.0',

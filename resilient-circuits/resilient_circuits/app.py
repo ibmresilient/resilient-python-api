@@ -16,7 +16,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import filelock
-from circuits import Component, Debugger
+from circuits import Manager, BaseComponent, Component, Debugger
 import resilient
 from resilient import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
@@ -27,6 +27,7 @@ import resilient_circuits.keyring_arguments as keyring_arguments
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 
 application = None
+logging_initialized = False
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
@@ -38,6 +39,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
 
     def __init__(self, config_file=None):
+
         # Temporary logging handler until the real one is created later
         temp_handler = logging.StreamHandler()
         temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
@@ -199,10 +201,17 @@ class App(Component):
 
     def config_logging(self, logdir, loglevel, logfile):
         """ set up some logging """
-        global LOG_PATH, LOG
+        global LOG_PATH, LOG, logging_initialized
+
         LOG_PATH = os.path.join(logdir, logfile)
         LOG_PATH = os.path.expanduser(LOG_PATH)
         LOG = logging.getLogger(__name__)
+
+        # Only do this once! (mostly for pytest)
+        if logging_initialized:
+            LOG.info("Logging already initialized.")
+            return
+        logging_initialized = True
 
         # Ignore syslog errors from message-too-long
         logging.raiseExceptions = False
@@ -235,12 +244,14 @@ class App(Component):
         # For debugging, print out the tree of all loaded components
         def walk(depth, component):
             yield (u"  " * depth) + repr(component)
-            for event in component.events():
-                channels = ", ".join([h.channel or '*' for h in list(component._handlers[event])])
-                yield u"{}{}/{}".format((u"  " * (depth+1)), event, channels)
-            for c in component.components:
-                for thing in walk(depth+1, c):
-                    yield thing
+            if isinstance(component, BaseComponent) and callable(component.events):
+                for event in component.events():
+                    channels = ", ".join([h.channel or '*' for h in list(component._handlers[event])])
+                    yield u"{}{}/{}".format((u"  " * (depth+1)), event, channels)
+            if isinstance(component, Manager):
+                for c in component.components:
+                    for thing in walk(depth+1, c):
+                        yield thing
         tree = walk(1, self.root)
         LOG.debug(u"Components:\n" + ("\n".join(tree)))
 

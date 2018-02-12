@@ -3,12 +3,14 @@
 
 """Circuits component for Action Module subscription and message handling"""
 
+import sys
 import json
 import re
 import os.path
 import random
 import datetime
 import logging
+import traceback
 from circuits import Event, Timer
 
 LOG = logging.getLogger(__name__)
@@ -252,10 +254,49 @@ class FunctionResult(object):
         self.value = value
 
 
+def FunctionError(*args):
+    """A convenient error to be raised in a function call."""
+    # Just grab the stack trace and wrap in a FunctionError_.
+    exc = sys.exc_info()
+    if not exc[0]:
+        return FunctionError_(*args)
+    return FunctionException_(*exc)
+
+
+class FunctionException_(ValueError):
+    """Wraps an exception from a function call."""
+    def __init__(self, *args, **kwargs):
+        super(FunctionException_, self).__init__(*args, **kwargs)
+
+    def __str__(self):
+        return "".join(traceback.format_exception(*self.args))
+
+
+class FunctionError_(ValueError):
+    """Wraps a simple "we failed" error from a function call."""
+    def __init__(self, *args, **kwargs):
+        super(FunctionError_, self).__init__(*args, **kwargs)
+
+    def __str__(self):
+        return self.args[0]
+
+
 class StatusMessageEvent(Event):
     """Event that we use to send "action status" update back to resilient"""
     def __init__(self, parent=None, message=None):
         super(StatusMessageEvent, self).__init__(message)
+        self.parent = parent
+
+    @property
+    def text(self):
+        """Text of the message"""
+        return self.args[0]
+
+
+class FunctionErrorEvent(Event):
+    """Event that we use to send "action failure" update back to resilient"""
+    def __init__(self, parent=None, message=None):
+        super(FunctionErrorEvent, self).__init__(message)
         self.parent = parent
 
     @property

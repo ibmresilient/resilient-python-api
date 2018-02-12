@@ -9,7 +9,9 @@ from functools import wraps
 from types import GeneratorType
 from circuits import Timer, task, Event
 import circuits.core.handlers
-from resilient_circuits.action_message import FunctionResult, StatusMessage, StatusMessageEvent
+from resilient_circuits.action_message import FunctionResult, \
+    StatusMessage, StatusMessageEvent, \
+    FunctionError_, FunctionErrorEvent
 
 LOG = logging.getLogger(__name__)
 
@@ -70,18 +72,26 @@ class function(object):
                 for val in task_result_or_gen:
                     if isinstance(val, StatusMessage):
                         # Fire the wrapped status message event to notify resilient
-                        LOG.debug(val)
+                        LOG.info("[%s] StatusMessage: %s", evt.name, val)
                         itself.fire(StatusMessageEvent(parent=evt, message=val.text))
                     elif isinstance(val, FunctionResult):
                         # Collect the result for return
-                        LOG.debug(val)
+                        LOG.debug("[%s] FunctionResult: %s", evt.name, val)
                         result_list.append(val)
                     elif isinstance(val, Event):
                         # Some other event, just fire it
                         LOG.debug(val)
                         itself.fire(val)
+                    elif isinstance(val, FunctionError_):
+                        LOG.error("[%s] FunctionError: %s", evt.name, val)
+                        itself.fire(FunctionErrorEvent(parent=evt, message=str(val)))
+                        evt.success = False
+                        return  # Don't wait for more results!
+                    elif isinstance(val, Exception):
+                        raise val
                     else:
                         # Whatever this is, add it to the results
+                        LOG.debug(val)
                         result_list.append(val)
                 return result_list
 

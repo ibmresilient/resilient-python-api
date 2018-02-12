@@ -63,6 +63,14 @@ def get_client(opts):
 
     :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`
 
+    A standard way to initialize a SimpleClient with default configuration is,
+
+    .. code-block:: python
+
+        parser = resilient.ArgumentParser(config_file=resilient.get_config_file())
+        opts = parser.parse_args()
+        client = resilient.get_client(opts)
+
     Returns: a connected and verified instance of SimpleClient.
     """
     if isinstance(opts, Namespace):

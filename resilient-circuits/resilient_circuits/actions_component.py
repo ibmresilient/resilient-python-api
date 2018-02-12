@@ -270,11 +270,14 @@ class Actions(ResilientComponent):
         self.stomp_component = None
         self.logging_directory = None
         self.subscribe_headers = None
-        self._functionworker = None
         self._configure_opts(opts)
 
         _retry_timer = Timer(RETRY_TIMER_INTERVAL, Event.create("retry_failed_deliveries"), persist=True)
         _retry_timer.register(self)
+
+        # Make a worker thread-pool that will run functions
+        self._functionworker = FunctionWorker(process=False)
+        self._functionworker.register(self.root)
 
         if opts.get("test_actions", False):
             # Let user submit test actions from the command line for testing
@@ -545,17 +548,20 @@ class Actions(ResilientComponent):
             if str(channel).startswith("actions."):
                 # Action module handler, channel "actions.xx" subscribes to "xx"
                 queue_name = channel.split(".", 1)[1]
-                LOG.info("Component %s registered to '%s'", str(component), queue_name)
+                LOG.info("'%s.%s' actions registered to '%s'",
+                         type(component).__module__, type(component).__name__, queue_name)
             elif str(channel).startswith("functions.") and self._functions:
                 # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
                 func_name = channel.split(".", 1)[1]
+                if func_name not in self._functions:
+                    # Unknown function.  Log it and continue.
+                    LOG.warn("'%s.%s' function '%s' is not defined!",
+                             type(component).__module__, type(component).__name__, func_name)
+                    continue
                 queue_id = self._functions[func_name]["destination_handle"]
                 queue_name = self._destinations[queue_id]["programmatic_name"]
-                LOG.info("Component %s function '%s' registered to '%s'", str(component), func_name, queue_name)
-                if not self._functionworker:
-                    # Make a worker thread-pool that will run functions
-                    self._functionworker = FunctionWorker(process=False)
-                    self._functionworker.register(self.root)
+                LOG.info("'%s.%s' function '%s' registered to '%s'",
+                         type(component).__module__, type(component).__name__, func_name, queue_name)
             else:
                 continue
 
@@ -710,7 +716,8 @@ class Actions(ResilientComponent):
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
                 reply_message = json.dumps({"message_type": status,
-                                            "message": message, "complete": True})
+                                            "message": message,
+                                            "complete": True})
                 if not fevent.test and self.stomp_component:
                     self.fire(Send(headers={'correlation-id': correlation_id},
                                    body=reply_message,
@@ -828,30 +835,40 @@ class Actions(ResilientComponent):
             yield self.wait(subscribe_event)
         event.success = True
 
-    @handler("StatusMessageEvent")
+    @handler("StatusMessageEvent", "FunctionErrorEvent")
     def _status(self, event, *args, **kwargs):
         """Report an interim status"""
         if not isinstance(event.parent, ActionMessageBase):
             return
         fevent = event.parent
-        if fevent.test:
-            return
         # Reply with interim status
         message = event.text
         if not message:
-            return
-        status = 0
+            message = "(No status)"
+        if isinstance(event, FunctionErrorEvent):
+            status = 1
+            complete = True
+            fevent.stop()  # Stop further event processing
+        else:
+            status = 0
+            complete = False
         headers = fevent.hdr()
         message_id = headers.get('message-id', None)
         reply_to = headers['reply-to']
         correlation_id = headers['correlation-id']
         reply_message = json.dumps({"message_type": status,
                                     "message": message,
-                                    "complete": False})
-        self.fire(Send(headers={'correlation-id': correlation_id},
-                       body=reply_message,
-                       destination=reply_to,
-                       message_id=message_id))
+                                    "complete": complete})
+        if not fevent.test:
+            self.fire(Send(headers={'correlation-id': correlation_id},
+                           body=reply_message,
+                           destination=reply_to,
+                           message_id=message_id))
+        else:
+            # Test action, nothing to Ack
+            # Send a message back to the test client
+            self.fire(Event.create("test_response", fevent.test_msg_id, reply_message), '*')
+            LOG.debug("Test Action: No ack done.")
 
     @handler()
     def _on_event(self, event, *args, **kwargs):
@@ -944,6 +961,11 @@ class Actions(ResilientComponent):
                                    message_id=message_id))
                 else:
                     # Test action, nothing to Ack
-                    self.fire(Event.create("test_response", fevent.test_msg_id,
-                                           reply_message), '*')
+                    if isinstance(event.parent, FunctionMessage):
+                        # Send the value back to the test
+                        result = Event.create("{}_result".format(event.parent.name), result=function_result)
+                        result.parent = event.parent
+                        self.fire(result, '*')
+                    # Send a message back to the test client
+                    self.fire(Event.create("test_response", fevent.test_msg_id, reply_message), '*')
                     LOG.debug("Test Action: No ack done.")

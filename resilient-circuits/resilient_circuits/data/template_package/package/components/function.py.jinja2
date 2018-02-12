@@ -7,7 +7,7 @@ else %}kwargs.get("{{param.name}}"){%endif%}{%- endmacro -%}
 """Function implementation"""
 
 import logging
-from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult
+from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
 
 
 class FunctionComponent(ResilientComponent):
@@ -26,17 +26,18 @@ class FunctionComponent(ResilientComponent):
     @function("{{loopvar|js}}")
     def _{{loopvar}}_function(self, event, *args, **kwargs):
         """Function: {{functions[loopvar].description.content}}"""
+        try:
+            # Get the function parameters:{%for p in functions[loopvar].view_items%}{%set pdef=function_params[p.content] %}
+            {{p.content}} = {{paramvalue(pdef)}}  # {{paramcomment(pdef)}}{%endfor%}
 
-        # Get the function parameters:
-        log = logging.getLogger(__name__)
-{%for p in functions[loopvar].view_items%}{%set pdef=function_params[p.content] %}
-        {{p.content}} = {{paramvalue(pdef)}}  # {{paramcomment(pdef)}}{%endfor%}
-{%for p in functions[loopvar].view_items if not 'pass' in p.content|lower%}{%set pdef=function_params[p.content] %}
-        log.info("{{pdef.text}}: %s", {{p.content}}){%endfor%}
+            log = logging.getLogger(__name__){%for p in functions[loopvar].view_items if not 'pass' in p.content|lower%}{%set pdef=function_params[p.content] %}
+            log.info("{{pdef.text}}: %s", {{p.content}}){%endfor%}
 
-        # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
-        #  yield StatusMessage("starting...")
-        #  yield StatusMessage("done...")
+            # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
+            #  yield StatusMessage("starting...")
+            #  yield StatusMessage("done...")
 
-        # Produce a FunctionResult with the return value
-        yield FunctionResult({"value": "xyz"})
+            # Produce a FunctionResult with the return value
+            yield FunctionResult({"value": "xyz"})
+        except Exception:
+            yield FunctionError()

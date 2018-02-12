@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         "resilient.circuits.components": [{%set comma=joiner(",")%}{%for function_name in functions.keys()%}{{comma()}}
-            "{{function_name|title}}FunctionComponent = {{package}}.components.{{function_name}}:FunctionComponent"{%endfor%}
+            "{{function_name|camel}}FunctionComponent = {{package}}.components.{{function_name}}:FunctionComponent"{%endfor%}
         ],
         "resilient.circuits.configsection": ["gen_config = {{package}}.util.config:config_section_data"],
         "resilient.circuits.customize": ["customize = {{package}}.util.customize:customization_data"]

@@ -17,11 +17,34 @@ import sys
 import struct
 import argparse
 import signal
+import json
+import resilient
+import shlex
 
 try:
     from queue import Queue, Empty
 except:
     from Queue import Queue, Empty
+
+
+def get_input(datatype, prompt, value):
+    if value is None:
+        if sys.version_info[0] >= 3:
+            value = input(prompt)
+        else:
+            value = raw_input(prompt)
+            value = value.decode(sys.stdin.encoding)
+    else:
+        print("{} {}".format(prompt, value))
+    if datatype == "number":
+        value = int(value)
+    elif datatype in ["datepicker", "datetimepicker"]:
+        value = int(value)
+    elif datatype == "boolean":
+        value = value
+    elif datatype == "textarea":
+        value = {"type": "text", "content": value}
+    return value
 
 
 class ConnectionThread(threading.Thread):
@@ -117,6 +140,8 @@ class ResilientTestProcessor(cmd.Cmd):
 
     def postloop(self):
         self.conn_thread.stop()
+        self.conn_thread.join()
+        print("")
 
     #
     # -------- Test Commands --------
@@ -162,6 +187,44 @@ class ResilientTestProcessor(cmd.Cmd):
     def do_EOF(self, *args):
         """ Ctrl+D """
         return self.do_quit()
+
+    def do_function(self, arg):
+        """Execute a function"""
+        if not arg:
+            print("function command requires a function-name")
+            return
+
+        parser = resilient.ArgumentParser(config_file=resilient.get_config_file())
+        opts = parser.parse_args()
+        client = resilient.get_client(opts)
+
+        args = iter(shlex.split(arg))
+        try:
+            function_name = next(args)
+            function_def = client.get("/functions/{}?handle_format=names".format(function_name))
+            function_params = {}
+            for param in function_def["view_items"]:
+                param_name = param["content"]
+                param_def = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
+                prompt = "{} ({}, {}): ".format(param_name, param_def["input_type"], param_def["tooltip"])
+                try:
+                    arg = next(args)
+                except StopIteration:
+                    arg = None
+                function_params[param_name] = get_input(param_def["input_type"], prompt, arg)
+
+            action_message = {
+                "function": {
+                    "name": function_name
+                },
+                "inputs": function_params
+            }
+            message = json.dumps(action_message, indent=2)
+            print(message)
+            self._submit_action("function", message)
+        except Exception as e:
+            print(e)
+    # end do_function
 
     def killed(self, *args):
         """ Handle kill signal """
