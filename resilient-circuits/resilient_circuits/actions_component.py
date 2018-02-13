@@ -934,7 +934,13 @@ class Actions(ResilientComponent):
                     if not status_messages:
                         status_messages.append(StatusMessage(u"Completed"))
 
-                message = "\n".join(map(str, status_messages))
+                messages = []
+                for status in status_messages:
+                    try:
+                        messages.append(str(status))
+                    except:
+                        messages.append(repr(status))
+                message = "\n".join(messages)
                 LOG.debug(u"Message: %s", message)
                 status = 0
                 headers = fevent.hdr()
@@ -952,7 +958,7 @@ class Actions(ResilientComponent):
                              "complete": True}
                 if function_result:
                     LOG.debug("Result: %s", function_result.value)
-                    reply_dto["variables"] = function_result.value
+                    reply_dto["results"] = function_result.value
                 reply_message = json.dumps(reply_dto)
                 if not fevent.test:
                     self.fire(Send(headers={'correlation-id': correlation_id},
