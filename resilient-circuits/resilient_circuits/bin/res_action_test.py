@@ -41,9 +41,13 @@ def get_input(datatype, prompt, value):
     elif datatype in ["datepicker", "datetimepicker"]:
         value = int(value)
     elif datatype == "boolean":
-        value = value
+        value = value.lower()[0:1] in ["y", "t", "1"]
     elif datatype == "textarea":
         value = {"type": "text", "content": value}
+    elif datatype == "select":
+        value = {"id": 123, "name": value}
+    elif datatype == "multiselect":
+        value = [{"id": 123, "name": value}]
     return value
 
 

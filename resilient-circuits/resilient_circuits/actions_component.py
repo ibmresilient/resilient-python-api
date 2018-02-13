@@ -137,14 +137,18 @@ class ResilientComponent(BaseComponent):
     def _get_fields(self):
         """Get Incident and Action fields"""
         client = self.rest_client()
-        self._fields = dict((field["name"], field) for field in client.get("/types/incident/fields"))
-        self._action_fields = dict((field["name"], field) for field in client.get("/types/actioninvocation/fields"))
-        self._destinations = dict((dest["id"], dest) for dest in client.get("/message_destinations")["entities"])
+        self._fields = dict((field["name"], field)
+                            for field in client.cached_get("/types/incident/fields"))
+        self._action_fields = dict((field["name"], field)
+                                   for field in client.cached_get("/types/actioninvocation/fields"))
+        self._destinations = dict((dest["id"], dest)
+                                  for dest in client.cached_get("/message_destinations")["entities"])
         try:
             self._functions = {}
-            for func in client.get("/functions")["entities"]:
-                self._functions[func["name"]] = client.get("/functions/{}".format(func["name"]))
-            self._function_fields = dict((field["name"], field) for field in client.get("/types/__function/fields"))
+            for func in client.cached_get("/functions")["entities"]:
+                self._functions[func["name"]] = client.cached_get("/functions/{}".format(func["name"]))
+            self._function_fields = dict((field["name"], field)
+                                         for field in client.cached_get("/types/__function/fields"))
         except resilient.SimpleHTTPException:
             # functions are not available, pre-v30 server
             self._functions = None
