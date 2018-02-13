@@ -10,6 +10,7 @@ import os.path
 import base64
 from collections import Callable
 from signal import SIGINT, SIGTERM
+from six import string_types
 from circuits import BaseComponent, Worker
 from circuits.core.manager import ExceptionWrapper
 from circuits.core.handlers import handler
@@ -932,7 +933,7 @@ class Actions(ResilientComponent):
                             pass
                         elif isinstance(val, StatusMessage):
                             status_messages.append(val)
-                        elif val is not None:
+                        elif isinstance(val, string_types):
                             status_messages.append(StatusMessage(val))
                     # If the function didn't return a status message, let's make one.
                     if not status_messages:
