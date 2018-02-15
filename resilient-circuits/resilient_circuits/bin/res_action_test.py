@@ -36,6 +36,8 @@ def get_input(datatype, prompt, value):
             value = value.decode(sys.stdin.encoding)
     else:
         print("{} {}".format(prompt, value))
+    if value == "":
+        return None
     if datatype == "number":
         value = int(value)
     elif datatype in ["datepicker", "datetimepicker"]:

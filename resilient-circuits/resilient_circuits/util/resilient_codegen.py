@@ -42,6 +42,7 @@ PARAMETER_ATTRIBUTES = [
     "blank_option",
     "input_type",
     "placeholder",
+    "required",
     "name"
 ]
 
