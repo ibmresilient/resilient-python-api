@@ -75,7 +75,7 @@ class ComponentLoader(Loader):
                         if cname in self.noload:
                             LOG.info("Not loading %s", cname)
                         else:
-                            LOG.debug("Loading %s", cname)
+                            LOG.info("Loading '%s' from %s", cname, filepath)
                             self.pending_components.append(cname)
                             self.fire(load(cname))
         if not self.pending_components:

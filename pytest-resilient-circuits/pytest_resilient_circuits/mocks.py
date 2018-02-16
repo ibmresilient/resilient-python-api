@@ -217,6 +217,13 @@ class BasicResilientMock(ResilientMock):
         data = test_data("200_JSON_GET__functions.json")
         return requests_mock.create_response(request, status_code=200, json=data)
 
+    @resilient_endpoint("GET", "/functions/.*$")
+    def functions_get_xxx(self, request):
+        """ Callback for GET to /orgs/<org_id>/functions/nnn """
+        LOG.debug("functions_get_xxx")
+        data = test_data("200_JSON_GET__functions.json")
+        return requests_mock.create_response(request, status_code=200, json=data["entities"][0])
+
     @resilient_endpoint("GET", "/incidents/[0-9]+/attachments/[0-9]+/contents$")
     def attachment_contents_get(self, request):
         """ Callback for GET to attachment contents """

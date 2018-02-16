@@ -18,8 +18,9 @@ import struct
 import argparse
 import signal
 import json
-import resilient
 import shlex
+import resilient
+from resilient_circuits.app import AppArgumentParser
 
 try:
     from queue import Queue, Empty
@@ -200,8 +201,8 @@ class ResilientTestProcessor(cmd.Cmd):
             print("function command requires a function-name")
             return
 
-        parser = resilient.ArgumentParser(config_file=resilient.get_config_file())
-        opts = parser.parse_args()
+        parser = AppArgumentParser(config_file=resilient.get_config_file())
+        (opts, more) = parser.parse_known_args()
         client = resilient.get_client(opts)
 
         args = iter(shlex.split(arg))
