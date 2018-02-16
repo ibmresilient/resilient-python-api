@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""Generate a customizations {{package}}"""
+"""Generate the Resilient customizations required for {{package}}"""
 
 from __future__ import print_function
 from resilient_circuits.util import *
 
 
-def customization_data():
+def customization_data(client):
     """Produce any customization definitions (types, fields, message destinations, etc)
        that should be installed by `resilient-circuits customize`
     """

@@ -124,7 +124,7 @@ def do_customize_resilient(client, entry_points, yflag):
         # - then actions, functions, etc
 
         LOG.info(u"Package '%s':", dist)
-        definitions = func()
+        definitions = func(client)
         for definition in definitions:
             def_count = def_count + 1
             if not isinstance(definition, Definition):
