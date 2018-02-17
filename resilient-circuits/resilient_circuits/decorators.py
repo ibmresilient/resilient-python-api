@@ -4,6 +4,7 @@
 """Circuits component for Action Module subscription and message handling"""
 
 import logging
+import threading
 from inspect import getargspec
 from functools import wraps
 from types import GeneratorType
@@ -65,6 +66,7 @@ class function(object):
 
             def _call_the_task(evt, **kwds):
                 # On the worker thread, call the function, and handle a single or generator result.
+                LOG.debug("%s: _call_the_task", threading.currentThread().name)
                 result_list = []
                 task_result_or_gen = _the_task(self, evt, **kwds)
                 if not isinstance(task_result_or_gen, GeneratorType):
@@ -96,7 +98,7 @@ class function(object):
                 return result_list
 
             the_task = task(_call_the_task, event, **function_parameters)
-            ret = yield itself.call(the_task, channel="functionworker")
+            ret = yield itself.call(the_task, "functionworker")
             xxx = ret.value
             # Return value is the result_list that was yielded from the wrapped function
             yield xxx

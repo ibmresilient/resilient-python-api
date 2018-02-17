@@ -85,7 +85,13 @@ class ComponentLoader(Loader):
 
     def discover_installed_components(self):
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
-        return [ep.load() for ep in entry_points if ep.name not in self.noload]
+        ep = None
+        try:
+            return [ep.load() for ep in entry_points if ep.name not in self.noload]
+        except ImportError:
+            LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
+            raise
+
 
     def _register_components(self, component_list):
         """ register all installed components and ones from componentsdir """
