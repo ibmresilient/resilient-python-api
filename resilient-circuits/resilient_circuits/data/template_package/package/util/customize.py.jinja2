@@ -6,11 +6,11 @@ from __future__ import print_function
 from resilient_circuits.util import *
 
 
-def customization_data(client):
+def customization_data(client=None):
     """Produce any customization definitions (types, fields, message destinations, etc)
        that should be installed by `resilient-circuits customize`
     """
-
+{%if function_params|length > 0 %}
     # Function-field definitions
     yield TypeDefinition(
         {
@@ -18,17 +18,29 @@ def customization_data(client):
             "fields": {{function_params|pretty}}
         }
     )
-{%for dest_name in message_destinations.keys()%}
-    # Message destination: {{dest_name}}
+{%endif%}{%if action_fields|length > 0 %}
+    # Activity-field definitions
+    yield TypeDefinition(
+        {
+            "type_name": "actioninvocation",
+            "fields": {{action_fields|pretty}}
+        }
+    )
+{%endif%}{%for dest_name in message_destinations.keys()%}
+    # Message destination: '{{dest_name}}'
     yield MessageDestinationDefinition({{message_destinations[dest_name]|pretty}}
     )
 {%endfor%}{%for function_name in functions.keys()%}
-    # Function: {{function_name}}
+    # Function: '{{function_name}}'
     yield FunctionDefinition({{functions[function_name]|pretty}}
     )
 {%endfor%}{%for workflow_name in workflows.keys()%}
-    # Workflow: {{workflow_name}}
+    # Workflow: '{{workflow_name}}'
     yield WorkflowDefinition({{workflows[workflow_name]|pretty}}
+    )
+{%endfor%}{%for action_name in actions.keys()%}
+    # Rule: '{{action_name}}'
+    yield ActionDefinition({{actions[action_name]|pretty}}
     )
 {%endfor%}
 

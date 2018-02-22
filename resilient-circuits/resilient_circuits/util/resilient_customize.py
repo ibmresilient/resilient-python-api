@@ -32,7 +32,7 @@ def get_customization_definitions(package):
         if entries:
             for entry in iter(entries):
                 func = entries[entry].load()
-                data = func()
+                data = func(client=None)
     except pkg_resources.DistributionNotFound:
         pass
     return data or []
@@ -124,7 +124,7 @@ def do_customize_resilient(client, entry_points, yflag):
         # - then actions, functions, etc
 
         LOG.info(u"Package '%s':", dist)
-        definitions = func(client)
+        definitions = func(client=client)
         for definition in definitions:
             def_count = def_count + 1
             if not isinstance(definition, Definition):

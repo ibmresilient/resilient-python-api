@@ -46,6 +46,8 @@ PARAMETER_ATTRIBUTES = [
     "name"
 ]
 
+ACTION_FIELD_ATTRIBUTES = PARAMETER_ATTRIBUTES
+
 VIEW_ITEM_ATTRIBUTES = [
     "element",
     "content",
@@ -75,6 +77,19 @@ MESSAGE_DESTINATION_ATTRIBUTES = [
     "name",
     "expect_ack",
     "destination_type"
+]
+
+ACTION_ATTRIBUTES = [
+    "logic_type",
+    "name",
+    "view_items",
+    "type",
+    "workflows",
+    "object_type",
+    "timeout_seconds",
+    "automations",
+    "conditions",
+    "message_destinations"
 ]
 
 
@@ -127,6 +142,22 @@ def list_workflows(client):
     print(u"Available workflows:")
     for workflow_def in workflow_defs["entities"]:
         print(u"    {}".format(workflow_def["programmatic_name"]))
+
+
+def list_actions(client):
+    """List all the actions (rules)"""
+    try:
+        action_defs = client.get("/actions?handle_format=names")
+    except SimpleHTTPException as exc:
+        if exc.response.status_code == 500:
+            LOG.error(u"ERROR: Rules are not available on this Resilient appliance.")
+            return
+        else:
+            raise
+
+    print(u"Available rules:")
+    for action_def in action_defs["entities"]:
+        print(u"    {}".format(action_def["name"]))
 
 
 def clean(dictionary, keep):
@@ -188,7 +219,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                 outfile.write(source_rendered)
 
 
-def codegen_from_template(client, template_file_path, package, function_names, workflow_names,
+def codegen_from_template(client, template_file_path, package, function_names, workflow_names, action_names,
                           output_dir, output_file):
     """Based on a template-file, produce the generated file or package.
 
@@ -206,6 +237,18 @@ def codegen_from_template(client, template_file_path, package, function_names, w
        :param workflow_names: list of named workflows to be generated
 
     """
+    actions = {}
+    action_fields = {}
+    workflows = {}
+    functions = {}
+    function_params = {}
+    message_destinations = {}
+
+    all_destinations = dict((dest["programmatic_name"], dest)
+                            for dest in client.get("/message_destinations")["entities"])
+    all_destinations_2 = dict((dest["name"], dest)
+                            for dest in client.get("/message_destinations")["entities"])
+
     if function_names:
         # Check that 'functions' are available (v30 onward)
         try:
@@ -241,15 +284,58 @@ def codegen_from_template(client, template_file_path, package, function_names, w
                 LOG.error(u"ERROR: Workflow '%s' not found on this Resilient appliance.", workflow_name)
                 list_workflows(client)
                 return
+    else:
+        workflow_names = []
 
-    # Prepare the dictionary of substitution values for jinja2
-    # (includes all the configuration elements related to the functions)
-    functions = {}
-    function_params = {}
-    message_destinations = {}
-    workflows = {}
-    all_destinations = dict((dest["programmatic_name"], dest)
-                            for dest in client.get("/message_destinations")["entities"])
+    if action_names:
+        # Check that 'actions' are available
+        try:
+            action_defs = client.get("/actions?handle_format=names")
+        except SimpleHTTPException as exc:
+            if exc.response.status_code == 500:
+                LOG.error(u"ERROR: Rules are not available on this Resilient appliance.")
+                return
+            else:
+                raise
+        # Check that each named action is available
+        actions = {action_def["name"]: clean(action_def.copy(), ACTION_ATTRIBUTES)
+                   for action_def in action_defs["entities"]
+                   if action_def["name"] in action_names}
+        for action_name in action_names:
+            if action_name not in actions:
+                LOG.error(u"ERROR: Rule '%s' not found on this Resilient appliance.", action_name)
+                list_actions(client)
+                return
+            action_def = actions[action_name]
+
+            # Get the activity-fields for this action (if any)
+            field_names = [item.get("content")
+                           for item in action_def["view_items"]
+                           if "content" in item]
+            fields = []
+            for field_name in field_names:
+                field = client.get("/types/actioninvocation/fields/{}?handle_format=names".format(field_name))
+                clean(field, ACTION_FIELD_ATTRIBUTES)
+                for template in field.get("templates", []):
+                    clean(template, TEMPLATE_ATTRIBUTES)
+                for value in field.get("values", []):
+                    clean(value, VALUE_ATTRIBUTES)
+                fields.append(field)
+                action_fields[field["name"]] = field
+
+            # Get the workflow(s) for this rule (if any)
+            wf_names = action_def["workflows"]
+            for wf_name in wf_names:
+                if wf_name not in workflow_names:
+                    workflow_names.append(wf_name)
+
+            # Get the message destination(s) for this rule (if any)
+            dest_names = action_def["message_destinations"]
+            for dest_name in dest_names:
+                if dest_name not in message_destinations:
+                    dest = all_destinations_2[dest_name]
+                    clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
+                    message_destinations[dest_name] = dest
 
     for function_name in (function_names or []):
         # Get the function definition
@@ -261,8 +347,10 @@ def codegen_from_template(client, template_file_path, package, function_names, w
             clean(view_item, VIEW_ITEM_ATTRIBUTES)
         functions[function_name] = function_def
 
-        # Get the parameters (input fields)
-        param_names = [item["content"] for item in function_def["view_items"]]
+        # Get the parameters (input fields) for this function
+        param_names = [item.get("content")
+                       for item in function_def["view_items"]
+                       if "content" in item]
         params = []
         for param_name in param_names:
             param = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
@@ -274,7 +362,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
             params.append(param)
             function_params[param["name"]] = param
 
-        # Get the message destination
+        # Get the message destination for this function
         dest_name = function_def["destination_handle"]
         if dest_name not in message_destinations:
             dest = all_destinations[dest_name]
@@ -289,6 +377,8 @@ def codegen_from_template(client, template_file_path, package, function_names, w
         clean(workflow_def["content"], WORKFLOW_CONTENT_ATTRIBUTES)
         workflows[workflow_name] = workflow_def
 
+    # Prepare the dictionary of substitution values for jinja2
+    # (includes all the configuration elements related to the functions)
     data = {
         "package": package,
         "function_names": function_names,
@@ -297,6 +387,8 @@ def codegen_from_template(client, template_file_path, package, function_names, w
         "functions": functions,
         "function_params": function_params,
         "workflows": workflows,
+        "actions": actions,
+        "action_fields": action_fields,
         "message_destinations": message_destinations
     }
     LOG.debug(u"Configuration data:\n%s", json.dumps(data, indent=2))
@@ -314,7 +406,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
     render_file_mapping(file_mapping, data, src_dir, output_dir)
 
 
-def codegen_package(client, package, function_names, workflow_names, output_dir):
+def codegen_package(client, package, function_names, workflow_names, action_names, output_dir):
     """Generate a an installable python package"""
     if not valid_identifier(package):
         LOG.error(u"ERROR: %s is not a valid package name.", package)
@@ -327,10 +419,12 @@ def codegen_package(client, package, function_names, workflow_names, output_dir)
         LOG.warn(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, package, function_names, workflow_names, output_dir, None)
+    return codegen_from_template(client, template_file_path, package, function_names, workflow_names, action_names,
+                                 output_dir, None)
 
 
-def codegen_functions(client, function_names, workflow_names, output_dir, output_file):
+def codegen_functions(client, function_names, workflow_names, action_names, output_dir, output_file):
     """Generate a python file that implements one or more functions"""
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, None, function_names, workflow_names, output_dir, output_file)
+    return codegen_from_template(client, template_file_path, None, function_names, workflow_names, action_names,
+                                 output_dir, output_file)
