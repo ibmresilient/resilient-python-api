@@ -12,6 +12,11 @@ from circuits import Component, Event, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
 from resilient_circuits.action_message import ActionMessage, FunctionMessage
+
+
+DEFAULT_TEST_HOST = "localhost"
+DEFAULT_TEST_PORT = 8008
+
 LOG = logging.getLogger(__name__)
 
 
@@ -39,7 +44,7 @@ class SubmitTestFunction(Event):
 class ResilientTestActions(Component):
     """ Mock the stomp connection for testing"""
 
-    def __init__(self, org_id, host="localhost", port=8008):
+    def __init__(self, org_id, host=DEFAULT_TEST_HOST, port=DEFAULT_TEST_PORT):
         super(ResilientTestActions, self).__init__()
         self.org_id = org_id
         bind = (host, port)

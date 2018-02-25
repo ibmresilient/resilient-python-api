@@ -266,12 +266,14 @@ def main():
                                        dest="cmd")
     subparsers.required = True
 
-    list_parser = subparsers.add_parser("list",
-                                        help="List the installed Resilient Circuits components")
     run_parser = subparsers.add_parser("run",
                                        help="Run the Resilient Circuits application")
+    list_parser = subparsers.add_parser("list",
+                                        help="List the installed Resilient Circuits components")
+    test_parser = subparsers.add_parser("test",
+                                        help="An interactive client for testing Resilient Circuits messages")
     service_parser = subparsers.add_parser("service",
-                                           help="Manage Resilient Circuits as a service with Windows or Supervisord")
+                                           help="Manage Resilient Circuits as a service")
     config_parser = subparsers.add_parser("config",
                                           help="Create or update a basic configuration file")
     codegen_parser = subparsers.add_parser("codegen",
@@ -345,19 +347,21 @@ def main():
         run(unknown_args + args.resilient_circuits_args,
             restartable=args.auto_restart,
             config_file=args.config_file)
-    else:
-        if args.cmd == "config":
-            generate_or_update_config(args)
-        elif args.cmd == "list":
-            list_installed(args)
-        elif args.cmd == "service":
-            manage_service(unknown_args + args.service_args, args.res_circuits_args)
-        elif args.cmd == "codegen":
-            logging.basicConfig(format='%(message)s', level=logging.INFO)
-            generate_code(args)
-        elif args.cmd == "customize":
-            logging.basicConfig(format='%(message)s', level=logging.INFO)
-            customize_resilient(args)
+    elif args.cmd == "test":
+        from resilient_circuits.bin import res_action_test
+        res_action_test.ResilientTestProcessor().cmdloop()
+    elif args.cmd == "config":
+        generate_or_update_config(args)
+    elif args.cmd == "list":
+        list_installed(args)
+    elif args.cmd == "service":
+        manage_service(unknown_args + args.service_args, args.res_circuits_args)
+    elif args.cmd == "codegen":
+        logging.basicConfig(format='%(message)s', level=logging.INFO)
+        generate_code(args)
+    elif args.cmd == "customize":
+        logging.basicConfig(format='%(message)s', level=logging.INFO)
+        customize_resilient(args)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ import json
 import shlex
 import resilient
 from resilient_circuits.app import AppArgumentParser
+from resilient_circuits.actions_test_component import DEFAULT_TEST_HOST, DEFAULT_TEST_PORT
 
 try:
     from queue import Queue, Empty
@@ -134,13 +135,18 @@ class ResilientTestProcessor(cmd.Cmd):
              "Type help or ? to list commands.\n")
     prompt = "(restest) "
 
-    def __init__(self, host, port):
+    def __init__(self, host=DEFAULT_TEST_HOST, port=DEFAULT_TEST_PORT):
         cmd.Cmd.__init__(self)
         self.message_queue = Queue()
         self.response_queue = Queue()
         self.message_id = 0
-        self.conn_thread = ConnectionThread(host, port, self.message_queue,
+        try:
+            self.conn_thread = ConnectionThread(host, port, self.message_queue,
                                             self.print_response)
+        except socket.error:
+            print("ERROR: Unable to connect.\n"
+                  "The test client requires resilient-circuits already running, with the '--test-actions' option.\n")
+            raise
         signal.signal(signal.SIGINT, self.killed)
         signal.signal(signal.SIGTERM, self.killed)
         self.conn_thread.start()
@@ -269,14 +275,14 @@ class ResilientTestProcessor(cmd.Cmd):
 def main():
     description = 'Resilient Circuits Action Test Tool'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--host', dest='host', default='localhost',
+    parser.add_argument('--host', dest='host', default=DEFAULT_TEST_HOST,
                         help=("hostname where resilient_circuits program "
                               "is running. Defaults to localhost."))
-    parser.add_argument('--port', dest='port', default=8008, type=int,
+    parser.add_argument('--port', dest='port', type=int, default=DEFAULT_TEST_PORT,
                         help=("port where resilient_circuits action "
                               "test server is listening. defaults to 8008"))
     args = parser.parse_args()
-    ResilientTestProcessor(args.host, args.port).cmdloop()
+    ResilientTestProcessor(host=args.host, port=args.port).cmdloop()
 
 
 if __name__ == '__main__':
