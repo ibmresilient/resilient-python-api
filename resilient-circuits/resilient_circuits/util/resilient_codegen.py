@@ -33,7 +33,8 @@ VALUE_ATTRIBUTES = [
     "label"
 ]
 
-PARAMETER_ATTRIBUTES = [
+FUNCTION_FIELD_ATTRIBUTES = [
+    "uuid",  # note - workflows reference function inputs by uuid
     "templates",
     "text",
     "tooltip",
@@ -46,7 +47,7 @@ PARAMETER_ATTRIBUTES = [
     "name"
 ]
 
-ACTION_FIELD_ATTRIBUTES = PARAMETER_ATTRIBUTES
+ACTION_FIELD_ATTRIBUTES = FUNCTION_FIELD_ATTRIBUTES
 
 VIEW_ITEM_ATTRIBUTES = [
     "element",
@@ -55,6 +56,7 @@ VIEW_ITEM_ATTRIBUTES = [
 ]
 
 FUNCTION_ATTRIBUTES = [
+    "uuid",  # note - workflows reference functions by uuid
     "display_name",
     "view_items",
     "name",
@@ -354,7 +356,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
         params = []
         for param_name in param_names:
             param = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
-            clean(param, PARAMETER_ATTRIBUTES)
+            clean(param, FUNCTION_FIELD_ATTRIBUTES)
             for template in param.get("templates", []):
                 clean(template, TEMPLATE_ATTRIBUTES)
             for value in param.get("values", []):
