@@ -1,4 +1,9 @@
 
+2018-02-22: version 29.1.0
+
+Fix an issue with performance receiving STOMP messages
+
+
 2017-12-12: version 29.0.1
 
 Fix an issue with backward compatibility between 'co3' and 'resilient' package names
