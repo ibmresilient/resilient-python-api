@@ -89,6 +89,17 @@ def setdefault(dictionary, defaults):
             dictionary[key] = defaults[key]
 
 
+def type_displayname(typename):
+    """A readable displayname for a type
+
+        >>> type_displayname('__function')
+        'Function'
+        >>> type_displayname('my_data_table')
+        'MyDataTable'
+    """
+    return typename.title().replace("_", "")
+
+
 def customize_resilient(args):
     """install customizations to the resilient server"""
     parser = AppArgumentParser(config_file=resilient.get_config_file())
@@ -218,7 +229,7 @@ class Customizations(object):
             # There is no type (data-table) of this name.
             # So let's create it.
             uri = "/types"
-            if self.confirm("type '{}'".format(new_types["type_name"])):
+            if self.confirm(u"type '{}'".format(new_types["type_name"])):
                 self.client.post(uri, new_types)
                 LOG.info(u"    Type created: %s ('%s')", new_types["type_name"], new_types["display_name"])
             return
@@ -227,7 +238,7 @@ class Customizations(object):
             field = new_fields[fieldname]
             if fieldname in existing_fields.keys():
                 # Merge the field values and update
-                LOG.info(u"    Field exists: %s", fieldname)
+                LOG.info(u"    %s field exists: %s", type_displayname(type_name), fieldname)
                 new_values = field.get("values", [])
                 # Remove any ids from the new stuff
                 for value in new_values:
@@ -257,19 +268,19 @@ class Customizations(object):
                     # Post the update
                     LOG.debug(json.dumps(field, indent=2))
                     existing_id = existing_fields[fieldname]["id"]
-                    if self.confirm("values for field '{}'".format(fieldname)):
+                    if self.confirm(u"values for {} field '{}'".format(type_displayname(type_name), fieldname)):
                         uri = "/types/{0}/fields/{1}".format(type_name, existing_id)
                         self.client.put(uri, field)
-                        LOG.info(u"    Field updated: %s ('%s')", fieldname, field["text"])
+                        LOG.info(u"    %s field updated: %s ('%s')", type_displayname(type_name), fieldname, field["text"])
             else:
                 # Don't re-use id
                 if "id" in field:
                     field.remove("id")
                 # Create the field
                 fields_uri = "/types/{0}/fields".format(type_name)
-                if self.confirm("field '{}'".format(fieldname)):
+                if self.confirm(u"{} field '{}'".format(type_displayname(type_name), fieldname)):
                     self.client.post(fields_uri, field)
-                    LOG.info(u"    Field created: %s ('%s')", fieldname, field["text"])
+                    LOG.info(u"    %s field created: %s ('%s')", type_displayname(type_name), fieldname, field["text"])
 
     def load_actions(self, definition):
         """Load custom actions"""
@@ -287,7 +298,7 @@ class Customizations(object):
                 if "id" in action:
                     action.pop("id", None)
                 # Create the action
-                if self.confirm("action '{}'".format(action["name"])):
+                if self.confirm(u"action '{}'".format(action["name"])):
                     self.client.post(uri, action)
                     LOG.info(u"    Action created: %s", action["name"])
 
@@ -310,7 +321,7 @@ class Customizations(object):
                 if "id" in function:
                     function.pop("id", None)
                 # Create the function
-                if self.confirm("function '{}'".format(function["name"])):
+                if self.confirm(u"function '{}'".format(function["name"])):
                     self.client.post(uri, function)
                     LOG.info(u"    Function created: %s", function["name"])
 
@@ -327,7 +338,7 @@ class Customizations(object):
                 LOG.info(u"    Workflow exists: %s", workflow["programmatic_name"])
             else:
                 # Create the workflow
-                if self.confirm("workflow '{}'".format(workflow["programmatic_name"])):
+                if self.confirm(u"workflow '{}'".format(workflow["programmatic_name"])):
                     # Post multi-part MIME with the workflow XML as a mime part
                     url = u"{0}/rest/orgs/{1}{2}".format(self.client.base_url, self.client.org_id, uri)
                     multipart_data = {

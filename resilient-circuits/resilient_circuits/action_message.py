@@ -49,6 +49,8 @@ class ActionMessageBase(Event):
 
         self.name = "_unknown_"
         self.displayname = "Unknown"
+        self.principal = (message.get("principal") or {}).get("name", "None")
+        self.workflow = (message.get("workflow") or {}).get("programmatic_name", "None")
 
         # Fire a {name}_success event when this event is successfully processed
         self.success = True
@@ -61,8 +63,12 @@ class ActionMessageBase(Event):
             channels = str(self.channels[0])
         else:
             channels = ""
-        return "<%s[%s] (%s) %s>" % (self.name, channels,
-                                     self.action_id, self.timestamp)
+        return "<%s[%s] (id=%s, workflow=%s, user=%s) %s>" % (self.name,
+                                                              channels,
+                                                              self.action_id,
+                                                              self.workflow,
+                                                              self.principal,
+                                                              self.timestamp)
 
     def __getattr__(self, name):
         """Message attributes are made accessible as properties
