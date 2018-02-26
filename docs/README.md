@@ -6,6 +6,6 @@ To build the documentation,
 ```
 
 Additional developer documentation and reference materials are available here:
-* [Developer Portal](https://developer.ibm.com/resilient/reference/)
+* [Developer Portal](https://developer.ibm.com/security/resilient/reference/)
 * [Reference Repository](https://github.com/ibmresilient/resilient-reference)
 
