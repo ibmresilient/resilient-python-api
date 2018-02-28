@@ -238,7 +238,9 @@ def generate_code(args):
     if args.package:
         # codegen an installable package
         output_base = os.path.join(os.curdir, args.package)
-        codegen_package(client, args.package, args.function, args.workflow, args.rule, os.path.expanduser(output_base))
+        codegen_package(client, args.package,
+                        args.messagedestination, args.function, args.workflow, args.rule,
+                        os.path.expanduser(output_base))
     elif args.function:
         # codegen a component for one or more functions
         if len(args.function) > 1:
@@ -319,13 +321,16 @@ def main():
     codegen_parser.add_argument("-o", "--output",
                                 help="Output file name")
     codegen_parser.add_argument("-f", "--function",
-                                help="Name of function(s) to generate code for",
+                                help="Generate code for the specified function(s)",
+                                nargs="*")
+    codegen_parser.add_argument("-m", "--messagedestination",
+                                help="Generate code for all functions that use the specified message destination(s)",
                                 nargs="*")
     codegen_parser.add_argument("-w", "--workflow",
-                                help="Name of workflow(s) to include in the package",
+                                help="Include customization data for the specified workflow(s)",
                                 nargs="*")
     codegen_parser.add_argument("-r", "--rule",
-                                help="Name of rule(s) to include in the package",
+                                help="Include customization data for the specified rule(s)",
                                 nargs="*")
 
     # Options for 'customize'

@@ -117,7 +117,7 @@ def valid_identifier(name):
 def list_functions(client):
     """List all the functions"""
     try:
-        function_defs = client.get("/functions?handle_format=names")
+        function_defs = client.cached_get("/functions?handle_format=names")
     except SimpleHTTPException as exc:
         if exc.response.status_code == 500:
             LOG.error(u"ERROR: Functions are not available on this Resilient appliance.")
@@ -133,7 +133,7 @@ def list_functions(client):
 def list_workflows(client):
     """List all the workflows"""
     try:
-        workflow_defs = client.get("/workflows?handle_format=names")
+        workflow_defs = client.cached_get("/workflows?handle_format=names")
     except SimpleHTTPException as exc:
         if exc.response.status_code == 500:
             LOG.error(u"ERROR: Workflows are not available on this Resilient appliance.")
@@ -149,7 +149,7 @@ def list_workflows(client):
 def list_actions(client):
     """List all the actions (rules)"""
     try:
-        action_defs = client.get("/actions?handle_format=names")
+        action_defs = client.cached_get("/actions?handle_format=names")
     except SimpleHTTPException as exc:
         if exc.response.status_code == 500:
             LOG.error(u"ERROR: Rules are not available on this Resilient appliance.")
@@ -183,7 +183,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
     :param source_dir: path to the root of the source files
     :param target_dir: path where the target files and directories should be written
     """
-    for (key, value) in file_mapping_dict.items():
+    for (key, value) in sorted(file_mapping_dict.items()):
         if not key:
             LOG.error(u"Cannot render empty target for %s", value)
             continue
@@ -221,7 +221,8 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                 outfile.write(source_rendered)
 
 
-def codegen_from_template(client, template_file_path, package, function_names, workflow_names, action_names,
+def codegen_from_template(client, template_file_path, package,
+                          message_destination_names, function_names, workflow_names, action_names,
                           output_dir, output_file):
     """Based on a template-file, produce the generated file or package.
 
@@ -247,22 +248,33 @@ def codegen_from_template(client, template_file_path, package, function_names, w
     message_destinations = {}
 
     all_destinations = dict((dest["programmatic_name"], dest)
-                            for dest in client.get("/message_destinations")["entities"])
+                            for dest in client.cached_get("/message_destinations")["entities"])
     all_destinations_2 = dict((dest["name"], dest)
-                            for dest in client.get("/message_destinations")["entities"])
+                            for dest in client.cached_get("/message_destinations")["entities"])
 
-    if function_names:
+    if function_names or message_destination_names:
         # Check that 'functions' are available (v30 onward)
         try:
-            function_defs = client.get("/functions?handle_format=names")
+            function_defs = client.cached_get("/functions?handle_format=names")
         except SimpleHTTPException as exc:
             if exc.response.status_code == 500:
                 LOG.error(u"ERROR: Functions are not available on this Resilient appliance.")
                 return
             else:
                 raise
-        # Check that each named function is available
+        function_names = function_names or []
         available_names = [function_def["name"] for function_def in function_defs["entities"]]
+        if message_destination_names:
+            # Build a list of all the functions that use the specified message destination(s)
+            for function_name in available_names:
+                # Get the function definition
+                function_def = client.cached_get(
+                    "/functions/{}?handle_format=names&text_content_output_format=objects_no_convert"
+                    .format(function_name))
+                if function_def["destination_handle"] in message_destination_names:
+                    function_names.append(function_name)
+
+        # Check that each named function is available
         for function_name in function_names:
             if function_name not in available_names:
                 LOG.error(u"ERROR: Function '%s' not found on this Resilient appliance.", function_name)
@@ -272,7 +284,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
     if workflow_names:
         # Check that 'workflows' are available (v28 onward)
         try:
-            workflow_defs = client.get("/workflows?handle_format=names")
+            workflow_defs = client.cached_get("/workflows?handle_format=names")
         except SimpleHTTPException as exc:
             if exc.response.status_code == 500:
                 LOG.error(u"ERROR: Workflows are not available on this Resilient appliance.")
@@ -292,7 +304,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
     if action_names:
         # Check that 'actions' are available
         try:
-            action_defs = client.get("/actions?handle_format=names")
+            action_defs = client.cached_get("/actions?handle_format=names")
         except SimpleHTTPException as exc:
             if exc.response.status_code == 500:
                 LOG.error(u"ERROR: Rules are not available on this Resilient appliance.")
@@ -316,7 +328,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
                            if "content" in item]
             fields = []
             for field_name in field_names:
-                field = client.get("/types/actioninvocation/fields/{}?handle_format=names".format(field_name))
+                field = client.cached_get("/types/actioninvocation/fields/{}?handle_format=names".format(field_name))
                 clean(field, ACTION_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
@@ -341,8 +353,8 @@ def codegen_from_template(client, template_file_path, package, function_names, w
 
     for function_name in (function_names or []):
         # Get the function definition
-        function_def = client.get("/functions/{}?handle_format=names&text_content_output_format=objects_no_convert"
-                                  .format(function_name))
+        function_def = client.cached_get("/functions/{}?handle_format=names&text_content_output_format=objects_no_convert"
+                                         .format(function_name))
         # Remove the attributes we don't want to serialize
         clean(function_def, FUNCTION_ATTRIBUTES)
         for view_item in function_def.get("view_items", []):
@@ -355,7 +367,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
                        if "content" in item]
         params = []
         for param_name in param_names:
-            param = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
+            param = client.cached_get("/types/__function/fields/{}?handle_format=names".format(param_name))
             clean(param, FUNCTION_FIELD_ATTRIBUTES)
             for template in param.get("templates", []):
                 clean(template, TEMPLATE_ATTRIBUTES)
@@ -373,7 +385,7 @@ def codegen_from_template(client, template_file_path, package, function_names, w
 
     for workflow_name in (workflow_names or []):
         # Get the workflow definition
-        workflow_def = client.get("/workflows/{}?handle_format=names".format(workflow_name))
+        workflow_def = client.cached_get("/workflows/{}?handle_format=names".format(workflow_name))
         # Remove the attributes we don't want to serialize
         clean(workflow_def, WORKFLOW_ATTRIBUTES)
         clean(workflow_def["content"], WORKFLOW_CONTENT_ATTRIBUTES)
@@ -408,7 +420,9 @@ def codegen_from_template(client, template_file_path, package, function_names, w
     render_file_mapping(file_mapping, data, src_dir, output_dir)
 
 
-def codegen_package(client, package, function_names, workflow_names, action_names, output_dir):
+def codegen_package(client, package,
+                    message_destination_names, function_names, workflow_names, action_names,
+                    output_dir):
     """Generate a an installable python package"""
     if not valid_identifier(package):
         LOG.error(u"ERROR: %s is not a valid package name.", package)
@@ -421,12 +435,15 @@ def codegen_package(client, package, function_names, workflow_names, action_name
         LOG.warn(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, package, function_names, workflow_names, action_names,
+    return codegen_from_template(client, template_file_path, package,
+                                 message_destination_names, function_names, workflow_names, action_names,
                                  output_dir, None)
 
 
 def codegen_functions(client, function_names, workflow_names, action_names, output_dir, output_file):
     """Generate a python file that implements one or more functions"""
+    message_destination_names = None
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, None, function_names, workflow_names, action_names,
+    return codegen_from_template(client, template_file_path, None,
+                                 message_destination_names, function_names, workflow_names, action_names,
                                  output_dir, output_file)
