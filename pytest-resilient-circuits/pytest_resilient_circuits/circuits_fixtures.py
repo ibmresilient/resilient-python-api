@@ -29,13 +29,21 @@ class Watcher(BaseComponent):
     def clear(self):
         self._events.clear()
 
-    def wait(self, name, channel=None, timeout=6.0):
+    def wait(self, name, parent=None, channel=None, timeout=6.0):
         for i in range(int(timeout / TIMEOUT)):
             with self._lock:
                 for event in self._events:
                     if event.name == name and event.waitingHandlers == 0:
                         if (channel is None) or (channel in event.channels):
-                            return event
+                            if parent:
+                                # match a parent of this event
+                                p = event
+                                while p:
+                                    if p == parent:
+                                        return event
+                                    p = p.parent
+                            else:
+                                return event
             sleep(TIMEOUT)
         else:
             return False

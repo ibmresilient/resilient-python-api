@@ -349,7 +349,10 @@ test_actions = True
         self.config_file.write("logdir = %s\n" % self.logs, mode='a')
         self.config_file.write("test_port = 0\n", mode='a')
         if resilient_mock:
-            self.config_file.write("resilient_mock = %s\n" % resilient_mock, mode='a')
+            if isinstance(resilient_mock, type):
+                self.config_file.write("resilient_mock = %s.%s\n" % (resilient_mock.__module__, resilient_mock.__name__), mode='a')
+            else:
+                self.config_file.write("resilient_mock = %s\n" % resilient_mock, mode='a')
 
         self.config_file.write(config_data, mode='a')
         os.environ["APP_CONFIG_FILE"] = self.config_file.strpath

@@ -571,9 +571,14 @@ class LoggingSimpleClient(SimpleClient):
                              response.request.method,
                              url.path, url.params,
                              datetime.datetime.now().isoformat())).replace('/', '_').replace(':', '-')
-        with open(os.path.join(self.logging_directory,
-                               filename.format("JSON")), "w+") as logfile:
-            logfile.write(json.dumps(response.json(), indent=2))
+        try:
+            with open(os.path.join(self.logging_directory,
+                                   filename.format("JSON")), "w+") as logfile:
+                logfile.write(json.dumps(response.json(), indent=2))
+        except:
+            with open(os.path.join(self.logging_directory,
+                                   filename.format("DATA")), "w+b") as logfile:
+                logfile.write(response.content)
         with open(os.path.join(self.logging_directory,
                                filename.format("HEADER")), "w+") as logfile:
             logfile.write(json.dumps(dict(response.headers), indent=2))

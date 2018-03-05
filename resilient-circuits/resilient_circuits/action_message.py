@@ -284,7 +284,9 @@ class FunctionError_(ValueError):
         super(FunctionError_, self).__init__(*args, **kwargs)
 
     def __str__(self):
-        return self.args[0]
+        if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
+            return self.args[0]
+        return ""
 
 
 class StatusMessageEvent(Event):
@@ -296,7 +298,9 @@ class StatusMessageEvent(Event):
     @property
     def text(self):
         """Text of the message"""
-        return self.args[0]
+        if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
+            return self.args[0]
+        return ""
 
 
 class FunctionErrorEvent(Event):
@@ -308,4 +312,6 @@ class FunctionErrorEvent(Event):
     @property
     def text(self):
         """Text of the message"""
-        return self.args[0]
+        if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
+            return self.args[0]
+        return ""

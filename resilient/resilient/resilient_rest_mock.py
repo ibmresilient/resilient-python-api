@@ -23,7 +23,10 @@ def resilient_endpoint(request_type, uri):
 class ResilientMockType(type):
     def __new__(mcl, name, bases, nmspc):
         Endpoint = namedtuple("Endpoint", "type uri")
-        endpoints = {}
+        try:
+            endpoints = bases[0].registered_endpoints
+        except:
+            endpoints = {}
         for obj in nmspc.values():
             if hasattr(obj, 'uri'):
                 endpoints[Endpoint(type=obj.request_type, uri=obj.uri)] = obj

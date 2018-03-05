@@ -8,6 +8,7 @@ import logging
 import time
 import json
 import struct
+import uuid
 from circuits import Component, Event, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
@@ -33,7 +34,8 @@ class SubmitTestFunction(Event):
     def __init__(self, function_name, function_params):
         if not function_name or not isinstance(function_params, dict):
             raise ValueError("function_name and function_params are required")
-        super(SubmitTestFunction, self).__init__(queue="example", msg_id="wdc", message={
+        msg_id = str(uuid.uuid4())
+        super(SubmitTestFunction, self).__init__(queue="example", msg_id=msg_id, message={
             "function": {
                 "name": function_name
             },
@@ -57,7 +59,7 @@ class ResilientTestActions(Component):
         return "Submit actions with format: <queue> <message json>"
 
     @handler("SubmitTestAction", "SubmitTestFunction")
-    def _submit_message(self, queue, msg_id, message, channel="*"):
+    def _submit_message(self, event, queue, msg_id, message, channel="*"):
         """ Create and fire an ActionMessage """
         try:
             message_id = "ID:resilient-54199-{val}-6:2:12:1:1".format(val=msg_id)
@@ -91,19 +93,20 @@ class ResilientTestActions(Component):
 
             if message.get("function"):
                 channel = "functions." + message["function"]["name"]
-                event = FunctionMessage(source=self.parent,
-                                        headers=headers,
-                                        message=message,
-                                        test=True,
-                                        test_msg_id=msg_id)
+                action_event = FunctionMessage(source=self.parent,
+                                               headers=headers,
+                                               message=message,
+                                               test=True,
+                                               test_msg_id=msg_id)
             else:
                 channel = "actions." + queue
-                event = ActionMessage(source=self.parent,
-                                      headers=headers,
-                                      message=message,
-                                      test=True,
-                                      test_msg_id=msg_id)
-            self.fire(event, channel)
+                action_event = ActionMessage(source=self.parent,
+                                             headers=headers,
+                                             message=message,
+                                             test=True,
+                                             test_msg_id=msg_id)
+            action_event.parent = event
+            self.fire(action_event, channel)
             if sock:
                 self.fire_message(sock, "Action Submitted<action %d>" % msg_id)
         except Exception as e:
