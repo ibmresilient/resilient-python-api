@@ -58,4 +58,4 @@ class Test{{loopvar|camel}}:
             "{{p.content}}": {{p.content}}{%endfor%}
         }
         result = call_{{loopvar}}_function(circuits_app, function_params)
-        assert(result == expected_result)
+        assert(expected_result == result)
