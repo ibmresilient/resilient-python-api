@@ -88,8 +88,17 @@ def list_installed(args):
     """print list of installed packages with their components"""
     LOG.debug("resilient-circuits.list")
     components = defaultdict(list)
-    entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.components')]
-    LOG.debug(u"Found %d installed components", len(entry_points))
+    # Resilient packages can have several entry-points,
+    # - resilient.circuits.config: produces default configuration sections
+    # - resilient.circuits.customize: produces schema customizations
+    # - resilient.circuits.components: identifies components that implement actions, functions, etc.
+    # We want to list all components, but include (as "empty") packages that define the other entry-points too.
+    entry_points = []
+    entry_points.extend([ep for ep in pkg_resources.iter_entry_points('resilient.circuits.config')])
+    entry_points.extend([ep for ep in pkg_resources.iter_entry_points('resilient.circuits.customize')])
+    component_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.components')]
+    entry_points.extend(component_entry_points)
+    LOG.debug(u"Found %d installed entry-points", len(entry_points))
     for ep in entry_points:
         components[ep.dist].append(ep)
     if not components:
@@ -98,15 +107,25 @@ def list_installed(args):
     LOG.info(u"The following packages and components are installed:")
     for dist, component_list in components.items():
         if args.verbose:
-            LOG.info(u"%s (%s):\n\t%s",
-                     dist.egg_info,
-                     dist.as_requirement(),
-                     "\n\t".join([str(ep) for ep in component_list]))
+            clist = "\n\t".join([str(ep) for ep in component_list if ep in component_entry_points])
+            if clist == "":
+                LOG.info(u"%s (%s):\n\t(Package does not define any components)",
+                         dist.as_requirement(),
+                         dist.egg_info)
+            else:
+                LOG.info(u"%s (%s):\n\t%s",
+                         dist.as_requirement(),
+                         dist.egg_info,
+                         clist)
         else:
-            LOG.info(u"%s (%s) installed components:\n\t%s",
-                     dist.project_name,
-                     dist.version,
-                     "\n\t".join([ep.name for ep in component_list]))
+            clist = "\n\t".join([ep.name for ep in component_list if ep in component_entry_points])
+            if clist == "":
+                LOG.info(u"%s:\n\t(Package does not define any components)",
+                         dist.as_requirement())
+            else:
+                LOG.info(u"%s:\n\t%s",
+                         dist.as_requirement(),
+                         clist)
 
 
 def generate_default():
