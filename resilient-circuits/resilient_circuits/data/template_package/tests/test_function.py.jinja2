@@ -48,14 +48,14 @@ class Test{{loopvar|camel}}:
         func = get_function_definition(PACKAGE_NAME, FUNCTION_NAME)
         assert func is not None
 
-    @pytest.mark.parametrize("{%set comma=joiner(", ")%}{%for p in functions[loopvar].view_items%}{{comma()}}{{p.content}}{%endfor%}{{comma()}}expected_result", [
+    @pytest.mark.parametrize("{%set comma=joiner(", ")%}{%for p in functions[loopvar].view_items%}{{comma()}}{{p.content}}{%endfor%}{{comma()}}expected_results", [
         ({%set comma=joiner(", ")%}{%for p in functions[loopvar].view_items%}{%set pdef=function_params[p.content]%}{{comma()}}{{paramsample(pdef)}}{%endfor%}{{comma()}}{"value": "xyz"}),
         ({%set comma=joiner(", ")%}{%for p in functions[loopvar].view_items%}{%set pdef=function_params[p.content]%}{{comma()}}{{paramsample(pdef)}}{%endfor%}{{comma()}}{"value": "xyz"})
     ])
-    def test_success(self, circuits_app, {%set comma=joiner(", ")%}{%for p in functions[loopvar].view_items%}{{comma()}}{{p.content}}{%endfor%}{{comma()}}expected_result):
+    def test_success(self, circuits_app, {%set comma=joiner(", ")%}{%for p in functions[loopvar].view_items%}{{comma()}}{{p.content}}{%endfor%}{{comma()}}expected_results):
         """ Test calling with sample values for the parameters """
         function_params = { {%set comma=joiner(",")%}{%for p in functions[loopvar].view_items%}{{comma()}}
             "{{p.content}}": {{p.content}}{%endfor%}
         }
-        result = call_{{loopvar}}_function(circuits_app, function_params)
-        assert(expected_result == result)
+        results = call_{{loopvar}}_function(circuits_app, function_params)
+        assert(expected_results == results)

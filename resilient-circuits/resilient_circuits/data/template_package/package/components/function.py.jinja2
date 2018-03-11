@@ -37,7 +37,11 @@ class FunctionComponent(ResilientComponent):
             #  yield StatusMessage("starting...")
             #  yield StatusMessage("done...")
 
-            # Produce a FunctionResult with the return value
-            yield FunctionResult({"value": "xyz"})
+            results = {
+                "value": "xyz"
+            }
+
+            # Produce a FunctionResult with the results
+            yield FunctionResult(results)
         except Exception:
             yield FunctionError()
