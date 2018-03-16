@@ -43,7 +43,9 @@ class Watcher(BaseComponent):
                                         return event
                                     p = p.parent
                             else:
-                                return event
+                                e = event
+                                self._events.remove(event)
+                                return e
             sleep(TIMEOUT)
         else:
             return False
