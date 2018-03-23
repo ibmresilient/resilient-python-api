@@ -351,10 +351,13 @@ def codegen_from_template(client, template_file_path, package,
                     clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
                     message_destinations[dest_name] = dest
 
+    function_fields = dict((field["uuid"], field) for field in client.cached_get("/types/__function/fields"))
+
     for function_name in (function_names or []):
         # Get the function definition
-        function_def = client.cached_get("/functions/{}?handle_format=names&text_content_output_format=objects_no_convert"
-                                         .format(function_name))
+        function_def = client.cached_get(
+            "/functions/{}?handle_format=names&text_content_output_format=objects_no_convert".format(function_name)
+        )
         # Remove the attributes we don't want to serialize
         clean(function_def, FUNCTION_ATTRIBUTES)
         for view_item in function_def.get("view_items", []):
@@ -367,14 +370,14 @@ def codegen_from_template(client, template_file_path, package,
                        if "content" in item]
         params = []
         for param_name in param_names:
-            param = client.cached_get("/types/__function/fields/{}?handle_format=names".format(param_name))
+            param = function_fields[param_name]
             clean(param, FUNCTION_FIELD_ATTRIBUTES)
             for template in param.get("templates", []):
                 clean(template, TEMPLATE_ATTRIBUTES)
             for value in param.get("values", []):
                 clean(value, VALUE_ATTRIBUTES)
             params.append(param)
-            function_params[param["name"]] = param
+            function_params[param["uuid"]] = param
 
         # Get the message destination for this function
         dest_name = function_def["destination_handle"]

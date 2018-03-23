@@ -53,6 +53,7 @@ def get_function_definition(package, function_name):
 
 class Definition(object):
     """A definition that can be loaded by this helper."""
+
     def __init__(self, value):
         self.value = value
 
@@ -234,8 +235,9 @@ class Customizations(object):
                 LOG.info(u"    Type created: %s ('%s')", new_types["type_name"], new_types["display_name"])
             return
         existing_fields = existing_types["fields"]
-        for fieldname in new_fields:
-            field = new_fields[fieldname]
+        for fielduuid in new_fields:
+            field = new_fields[fielduuid]
+            fieldname = field["name"]
             if fieldname in existing_fields.keys():
                 # Merge the field values and update
                 LOG.info(u"    %s field exists: %s", type_displayname(type_name), fieldname)
