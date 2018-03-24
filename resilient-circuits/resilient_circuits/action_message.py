@@ -257,6 +257,10 @@ class FunctionResult(object):
     """Encapsulates the result of a function call."""
     def __init__(self, value):
         super(FunctionResult, self).__init__()
+        if not isinstance(value, dict):
+            msg = "FunctionResult must be a dictionary. " \
+                  "'{}' may cause the workflow to fail.".format(type(value).__name__)
+            logging.getLogger(__name__).error(msg)
         self.value = value
 
 

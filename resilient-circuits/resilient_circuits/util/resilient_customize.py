@@ -82,6 +82,16 @@ class WorkflowDefinition(Definition):
     pass
 
 
+class PhaseDefinition(Definition):
+    """Definition of an incident phase"""
+    pass
+
+
+class AutomaticTaskDefinition(Definition):
+    """Definition of an automatic task"""
+    pass
+
+
 def setdefault(dictionary, defaults):
     """Fill in the blanks"""
     for key in defaults.keys():
@@ -151,6 +161,10 @@ def do_customize_resilient(client, entry_points, yflag):
                     customizations.load_functions(definition)
                 elif isinstance(definition, WorkflowDefinition):
                     customizations.load_workflows(definition)
+                elif isinstance(definition, PhaseDefinition):
+                    customizations.load_phases(definition)
+                elif isinstance(definition, AutomaticTaskDefinition):
+                    customizations.load_automatic_tasks(definition)
                 else:
                     LOG.error(u"Not implemented: %s", type(definition))
             except SimpleHTTPException:
@@ -358,3 +372,46 @@ class Customizations(object):
                     if response.status_code != 200:
                         raise SimpleHTTPException(response)
                     LOG.info(u"    Workflow created: %s", workflow["programmatic_name"])
+
+    def load_phases(self, definition):
+        """Load phase definitions"""
+        new_phases = definition.value
+        if not isinstance(new_phases, (tuple, list)):
+            new_phases = [new_phases]
+        uri = "/phases"
+        existing_phases = self.client.get(uri)["entities"]
+        existing_phase_names = [phase["name"] for phase in existing_phases]
+        for phase in new_phases:
+            if phase["name"] in existing_phase_names:
+                LOG.info(u"    Phase exists: %s", phase["name"])
+            else:
+                # Don't re-use id
+                if "id" in phase:
+                    phase.pop("id", None)
+                # Create the phase
+                if self.confirm(u"phase '{}'".format(phase["name"])):
+                    self.client.post(uri, phase)
+                    LOG.info(u"    Phase created: %s", phase["name"])
+
+    def load_automatic_tasks(self, definition):
+        """Load task definitions"""
+        new_tasks = definition.value
+        if not isinstance(new_tasks, (tuple, list)):
+            new_tasks = [new_tasks]
+        uri = "/automatic_tasks"
+        existing_tasks = self.client.get(uri)
+        existing_task_names = [task["programmatic_name"] for task in existing_tasks]
+        for task in new_tasks:
+            if task["programmatic_name"] in existing_task_names:
+                LOG.info(u"    Task exists: %s", task["programmatic_name"])
+            else:
+                setdefault(task, {
+                    "name": task["programmatic_name"]
+                })
+                # Don't re-use id
+                if "id" in task:
+                    task.pop("id", None)
+                # Create the task
+                if self.confirm(u"task '{}'".format(task["programmatic_name"])):
+                    self.client.post(uri, task)
+                    LOG.info(u"    Task created: %s", task["programmatic_name"])
