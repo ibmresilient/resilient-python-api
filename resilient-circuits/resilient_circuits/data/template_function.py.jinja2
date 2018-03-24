@@ -18,10 +18,10 @@ class FunctionComponent(ResilientComponent):
         """Function: {{function_def.description.content}}"""
         try:
             # Get the function parameters:{%for p in function_def.view_items%}{%set pdef=function_params[p.content] %}
-            {{p.content}} = {{paramvalue(pdef)}}  # {{paramcomment(pdef)}}{%endfor%}
+            {{pdef.name}} = {{paramvalue(pdef)}}  # {{paramcomment(pdef)}}{%endfor%}
 
             log = logging.getLogger(__name__){%for p in function_def.view_items if not 'pass' in p.content|lower%}{%set pdef=function_params[p.content] %}
-            log.info("{{pdef.text}}: %s", {{p.content}}){%endfor%}
+            log.info("{{pdef.text}}: %s", {{pdef.name}}){%endfor%}
 
             # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
             #  yield StatusMessage("starting...")
