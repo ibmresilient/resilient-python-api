@@ -339,7 +339,7 @@ test_actions = True
         if self.user:
             print("TEST user={} (from environment)".format(self.user))
         else:
-            self.org = request.config.option.resilient_email
+            self.user = request.config.option.resilient_email
             print("TEST user={} (from configuration data)".format(self.user))
         self.config_file.write("email = %s\n" % self.user, mode='a')
 
