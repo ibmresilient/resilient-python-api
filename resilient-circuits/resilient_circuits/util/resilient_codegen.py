@@ -250,7 +250,7 @@ def codegen_from_template(client, template_file_path, package,
     all_destinations = dict((dest["programmatic_name"], dest)
                             for dest in client.cached_get("/message_destinations")["entities"])
     all_destinations_2 = dict((dest["name"], dest)
-                            for dest in client.cached_get("/message_destinations")["entities"])
+                              for dest in client.cached_get("/message_destinations")["entities"])
 
     if function_names or message_destination_names:
         # Check that 'functions' are available (v30 onward)
@@ -351,7 +351,10 @@ def codegen_from_template(client, template_file_path, package,
                     clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
                     message_destinations[dest_name] = dest
 
-    function_fields = dict((field["uuid"], field) for field in client.cached_get("/types/__function/fields"))
+    function_fields = dict(
+        (field["uuid"], field) for field in
+        client.cached_get("/types/__function/fields?text_content_output_format=objects_no_convert")
+    )
 
     for function_name in (function_names or []):
         # Get the function definition
