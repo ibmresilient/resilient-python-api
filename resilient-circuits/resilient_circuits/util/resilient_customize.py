@@ -303,7 +303,7 @@ class Customizations(object):
         new_actions = definition.value
         if not isinstance(new_actions, (tuple, list)):
             new_actions = [new_actions]
-        uri = "/actions"
+        uri = "/actions?handle_format=names"
         existing_actions = self.client.get(uri)["entities"]
         existing_action_names = [action["name"] for action in existing_actions]
         for action in new_actions:
