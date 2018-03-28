@@ -215,16 +215,17 @@ class ResilientTestProcessor(cmd.Cmd):
         try:
             function_name = next(args)
             function_def = client.get("/functions/{}?handle_format=names".format(function_name))
+            param_defs = dict({fld["uuid"]: fld for fld in client.get("/types/__function/fields?handle_format=names")})
             function_params = {}
             for param in function_def["view_items"]:
-                param_name = param["content"]
-                param_def = client.get("/types/__function/fields/{}?handle_format=names".format(param_name))
-                prompt = "{} ({}, {}): ".format(param_name, param_def["input_type"], param_def["tooltip"])
+                param_uuid = param["content"]
+                param_def = param_defs[param_uuid]
+                prompt = "{} ({}, {}): ".format(param_def["name"], param_def["input_type"], param_def["tooltip"])
                 try:
                     arg = next(args)
                 except StopIteration:
                     arg = None
-                function_params[param_name] = get_input(param_def["input_type"], prompt, arg)
+                function_params[param_def["name"]] = get_input(param_def["input_type"], prompt, arg)
 
             action_message = {
                 "function": {

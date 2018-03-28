@@ -286,8 +286,7 @@ class Actions(ResilientComponent):
 
         if opts.get("test_actions", False):
             # Let user submit test actions from the command line for testing
-            LOG.info(("Action Tests Enabled! Run res-action-test "
-                      "and type help for usage"))
+            LOG.info("Action Tests enabled. Run 'resilient-circuits test' for the interactive action test tool.")
             test_options = {}
             if opts.get("test_port", None) != None:
                 test_options["port"] = int(opts["test_port"])
