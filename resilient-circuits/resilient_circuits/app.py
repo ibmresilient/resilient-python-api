@@ -140,7 +140,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         if self.config:
             for section in self.config.sections():
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
-                opts.update({section: parse_parameters(items)})
+                opts.update({section: items})
+
+            parse_parameters(opts)
         return opts
 
     @staticmethod
