@@ -153,7 +153,7 @@ def generate_default():
             LOG.exception(u"Failed to get configuration defaults for package '%s'", repr(dist))
             continue
         if new_section:
-            additional_sections.append(new_section)
+            additional_sections.append(config_data)
 
     LOG.debug("Found %d sections to generate", len(additional_sections))
     with open(base_config_fn, 'r') as base_config_file:
