@@ -78,11 +78,6 @@ class FunctionDefinition(Definition):
     pass
 
 
-class WorkflowDefinition(Definition):
-    """Definition of a workflow"""
-    pass
-
-
 class PhaseDefinition(Definition):
     """Definition of an incident phase"""
     pass
@@ -90,6 +85,16 @@ class PhaseDefinition(Definition):
 
 class AutomaticTaskDefinition(Definition):
     """Definition of an automatic task"""
+    pass
+
+
+class ScriptDefinition(Definition):
+    """Definition of a script"""
+    pass
+
+
+class WorkflowDefinition(Definition):
+    """Definition of a workflow"""
     pass
 
 
@@ -156,16 +161,18 @@ def do_customize_resilient(client, entry_points, yflag):
                     customizations.load_types(definition)
                 elif isinstance(definition, MessageDestinationDefinition):
                     customizations.load_message_destinations(definition)
-                elif isinstance(definition, ActionDefinition):
-                    customizations.load_actions(definition)
                 elif isinstance(definition, FunctionDefinition):
                     customizations.load_functions(definition)
-                elif isinstance(definition, WorkflowDefinition):
-                    customizations.load_workflows(definition)
                 elif isinstance(definition, PhaseDefinition):
                     customizations.load_phases(definition)
                 elif isinstance(definition, AutomaticTaskDefinition):
                     customizations.load_automatic_tasks(definition)
+                elif isinstance(definition, ScriptDefinition):
+                    customizations.load_scripts(definition)
+                elif isinstance(definition, WorkflowDefinition):
+                    customizations.load_workflows(definition)
+                elif isinstance(definition, ActionDefinition):
+                    customizations.load_actions(definition)
                 else:
                     LOG.error(u"Not implemented: %s", type(definition))
             except SimpleHTTPException:
@@ -404,16 +411,42 @@ class Customizations(object):
         existing_tasks = self.client.get(uri)
         existing_task_names = [task["programmatic_name"] for task in existing_tasks]
         for task in new_tasks:
-            if task["programmatic_name"] in existing_task_names:
+            if task.get("programmatic_name") in existing_task_names:
                 LOG.info(u"    Task exists: %s", task["programmatic_name"])
             else:
                 setdefault(task, {
-                    "name": task["programmatic_name"]
+                    "name": task.get("programmatic_name")
                 })
                 # Don't re-use id
                 if "id" in task:
                     task.pop("id", None)
                 # Create the task
-                if self.confirm(u"task '{}'".format(task["programmatic_name"])):
-                    self.client.post(uri, task)
-                    LOG.info(u"    Task created: %s", task["programmatic_name"])
+                if self.confirm(u"task '{}'".format(task.get("programmatic_name"))):
+                    try:
+                        self.client.post(uri, task)
+                        LOG.info(u"    Task created: %s", task.get("programmatic_name"))
+                    except SimpleHTTPException as exc:
+                        # v30: deleted automatic tasks retain their uuid but cannot be recreated,
+                        # however they can still be referenced from workflows... so this is ok.
+                        LOG.warn(u"    Task not created: %s", task.get("programmatic_name"))
+                        pass
+
+    def load_scripts(self, definition):
+        """Load script definitions"""
+        new_scripts = definition.value
+        if not isinstance(new_scripts, (tuple, list)):
+            new_scripts = [new_scripts]
+        uri = "/scripts"
+        existing_scripts = self.client.get(uri)["entities"]
+        existing_script_names = [script["name"] for script in existing_scripts]
+        for script in new_scripts:
+            if script["name"] in existing_script_names:
+                LOG.info(u"    Script exists: %s", script["name"])
+            else:
+                # Don't re-use id
+                if "id" in script:
+                    script.pop("id", None)
+                # Create the script
+                if self.confirm(u"script '{}'".format(script["name"])):
+                    self.client.post(uri, script)
+                    LOG.info(u"    Script created: %s", script["name"])

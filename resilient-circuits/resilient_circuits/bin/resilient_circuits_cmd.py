@@ -259,6 +259,7 @@ def generate_code(args):
         output_base = os.path.join(os.curdir, args.package)
         codegen_package(client, args.package,
                         args.messagedestination, args.function, args.workflow, args.rule,
+                        args.field, args.datatable, args.task, args.script,
                         os.path.expanduser(output_base))
     elif args.function:
         # codegen a component for one or more functions
@@ -345,11 +346,23 @@ def main():
     codegen_parser.add_argument("-m", "--messagedestination",
                                 help="Generate code for all functions that use the specified message destination(s)",
                                 nargs="*")
-    codegen_parser.add_argument("-w", "--workflow",
+    codegen_parser.add_argument("--workflow",
                                 help="Include customization data for the specified workflow(s)",
                                 nargs="*")
-    codegen_parser.add_argument("-r", "--rule",
+    codegen_parser.add_argument("--rule",
                                 help="Include customization data for the specified rule(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--field",
+                                help="Include customization data for the specified incident field(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--datatable",
+                                help="Include customization data for the specified datatable(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--task",
+                                help="Include customization data for the specified automatic task(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--script",
+                                help="Include customization data for the specified script(s)",
                                 nargs="*")
 
     # Options for 'customize'

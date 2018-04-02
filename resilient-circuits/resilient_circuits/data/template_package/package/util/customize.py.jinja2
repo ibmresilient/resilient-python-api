@@ -10,7 +10,15 @@ def customization_data(client=None):
     """Produce any customization definitions (types, fields, message destinations, etc)
        that should be installed by `resilient-circuits customize`
     """
-{%if function_params|length > 0 %}
+{%if incident_fields|length > 0 %}
+    # Custom incident-field definitions
+    yield TypeDefinition(
+        {
+            "type_name": "incident",
+            "fields": {{incident_fields|pretty}}
+        }
+    )
+{%endif%}{%if function_params|length > 0 %}
     # Function-field definitions
     yield TypeDefinition(
         {
@@ -26,13 +34,33 @@ def customization_data(client=None):
             "fields": {{action_fields|pretty}}
         }
     )
-{%endif%}{%for dest_name in message_destinations.keys()%}
+{%endif%}{%for datatable_name in datatables.keys()%}
+    # DataTable definitions
+    yield TypeDefinition(
+        {
+            "type_name": "{{datatable_name|js}}",
+            "fields": {{datatables[datatable_name]|pretty}}
+        }
+    )
+{%endfor%}{%for dest_name in message_destinations.keys()%}
     # Message destination: '{{dest_name}}'
     yield MessageDestinationDefinition({{message_destinations[dest_name]|pretty}}
     )
 {%endfor%}{%for function_name in functions.keys()%}
     # Function: '{{function_name}}'
     yield FunctionDefinition({{functions[function_name]|pretty}}
+    )
+{%endfor%}{%for phase_name in phases.keys()%}
+    # Phase: '{{phase_name}}'
+    yield PhaseDefinition({{phases[phase_name]|pretty}}
+    )
+{%endfor%}{%for task_name in automatic_tasks.keys()%}
+    # Automatic Task: '{{task_name}}'
+    yield AutomaticTaskDefinition({{automatic_tasks[task_name]|pretty}}
+    )
+{%endfor%}{%for script_name in scripts.keys()%}
+    # Script: '{{script_name}}'
+    yield ScriptDefinition({{scripts[script_name]|pretty}}
     )
 {%endfor%}{%for workflow_name in workflows.keys()%}
     # Workflow: '{{workflow_name}}'

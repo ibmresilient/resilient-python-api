@@ -5,6 +5,7 @@ from .resilient_customize import \
     MessageDestinationDefinition, \
     ActionDefinition, \
     FunctionDefinition, \
+    ScriptDefinition, \
     WorkflowDefinition, \
     PhaseDefinition, \
     AutomaticTaskDefinition
