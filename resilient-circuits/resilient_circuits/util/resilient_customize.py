@@ -6,12 +6,12 @@
 from __future__ import print_function
 import logging
 import json
+import base64
 from distutils.util import strtobool
 import pkg_resources
 import resilient
 from resilient import SimpleHTTPException
 from resilient_circuits.app import AppArgumentParser
-from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 try:
     from builtins import input
@@ -68,33 +68,18 @@ class MessageDestinationDefinition(Definition):
     pass
 
 
-class ActionDefinition(Definition):
-    """Definition of an action"""
-    pass
-
-
 class FunctionDefinition(Definition):
     """Definition of a function"""
     pass
 
 
-class PhaseDefinition(Definition):
-    """Definition of an incident phase"""
+class ActionDefinition(Definition):
+    """Definition of a custom action (rule)"""
     pass
 
 
-class AutomaticTaskDefinition(Definition):
-    """Definition of an automatic task"""
-    pass
-
-
-class ScriptDefinition(Definition):
-    """Definition of a script"""
-    pass
-
-
-class WorkflowDefinition(Definition):
-    """Definition of a workflow"""
+class ImportDefinition(Definition):
+    """Definition of a set of importable customizations"""
     pass
 
 
@@ -157,22 +142,16 @@ def do_customize_resilient(client, entry_points, yflag):
             if not isinstance(definition, Definition):
                 pass
             try:
-                if isinstance(definition, TypeDefinition):
+                if isinstance(definition, ImportDefinition):
+                    customizations.load_import(definition, dist)
+                elif isinstance(definition, TypeDefinition):
                     customizations.load_types(definition)
                 elif isinstance(definition, MessageDestinationDefinition):
                     customizations.load_message_destinations(definition)
-                elif isinstance(definition, FunctionDefinition):
-                    customizations.load_functions(definition)
-                elif isinstance(definition, PhaseDefinition):
-                    customizations.load_phases(definition)
-                elif isinstance(definition, AutomaticTaskDefinition):
-                    customizations.load_automatic_tasks(definition)
-                elif isinstance(definition, ScriptDefinition):
-                    customizations.load_scripts(definition)
-                elif isinstance(definition, WorkflowDefinition):
-                    customizations.load_workflows(definition)
                 elif isinstance(definition, ActionDefinition):
                     customizations.load_actions(definition)
+                elif isinstance(definition, FunctionDefinition):
+                    customizations.load_functions(definition)
                 else:
                     LOG.error(u"Not implemented: %s", type(definition))
             except SimpleHTTPException:
@@ -208,6 +187,22 @@ class Customizations(object):
         if not yes:
             print(u"    Not creating {}".format(activity))
         return yes
+
+    def load_import(self, definition, dist):
+        """Load an importable block of customizations"""
+        import_data = json.loads(base64.b64decode(definition.value).decode("utf-8"))
+        LOG.debug(json.dumps(import_data, indent=2))
+        uri = "/configurations/imports"
+        if self.confirm(u"customizations from '{}'".format(dist)):
+            result = self.client.post(uri, import_data)
+            import_id = result["id"]
+            LOG.debug(result)
+            for message in result.get("messages", []):
+                LOG.info(u"    %s: %s", message["type"], message["text"])
+            if result["status"] == "PENDING" and self.confirm(u""):
+                uri = "/configurations/imports/{}".format(import_id)
+                result["status"] = "ACCEPTED"
+                self.client.put(uri, result)
 
     def load_message_destinations(self, definition):
         """Load one or more message destinations"""
@@ -347,106 +342,3 @@ class Customizations(object):
                 if self.confirm(u"function '{}'".format(function["name"])):
                     self.client.post(uri, function)
                     LOG.info(u"    Function created: %s", function["name"])
-
-    def load_workflows(self, definition):
-        """Load workflows"""
-        new_workflows = definition.value
-        if not isinstance(new_workflows, (tuple, list)):
-            new_workflows = [new_workflows]
-        uri = "/workflows"
-        existing_workflows = self.client.get(uri)["entities"]
-        existing_workflow_names = [workflow["programmatic_name"] for workflow in existing_workflows]
-        for workflow in new_workflows:
-            if workflow["programmatic_name"] in existing_workflow_names:
-                LOG.info(u"    Workflow exists: %s", workflow["programmatic_name"])
-            else:
-                # Create the workflow
-                if self.confirm(u"workflow '{}'".format(workflow["programmatic_name"])):
-                    # Post multi-part MIME with the workflow XML as a mime part
-                    url = u"{0}/rest/orgs/{1}{2}".format(self.client.base_url, self.client.org_id, uri)
-                    multipart_data = {
-                        "file": workflow["content"]["xml"],
-                        "object_type": workflow.get("object_type", 0)
-                    }
-                    encoder = MultipartEncoder(fields=multipart_data)
-                    headers = self.client.make_headers(None,
-                                                       additional_headers={'content-type': encoder.content_type})
-                    response = self.client._execute_request(self.client.session.post,
-                                                            url,
-                                                            data=encoder,
-                                                            proxies=self.client.proxies,
-                                                            cookies=self.client.cookies,
-                                                            headers=headers,
-                                                            verify=self.client.verify)
-                    if response.status_code != 200:
-                        raise SimpleHTTPException(response)
-                    LOG.info(u"    Workflow created: %s", workflow["programmatic_name"])
-
-    def load_phases(self, definition):
-        """Load phase definitions"""
-        new_phases = definition.value
-        if not isinstance(new_phases, (tuple, list)):
-            new_phases = [new_phases]
-        uri = "/phases"
-        existing_phases = self.client.get(uri)["entities"]
-        existing_phase_names = [phase["name"] for phase in existing_phases]
-        for phase in new_phases:
-            if phase["name"] in existing_phase_names:
-                LOG.info(u"    Phase exists: %s", phase["name"])
-            else:
-                # Don't re-use id
-                if "id" in phase:
-                    phase.pop("id", None)
-                # Create the phase
-                if self.confirm(u"phase '{}'".format(phase["name"])):
-                    self.client.post(uri, phase)
-                    LOG.info(u"    Phase created: %s", phase["name"])
-
-    def load_automatic_tasks(self, definition):
-        """Load task definitions"""
-        new_tasks = definition.value
-        if not isinstance(new_tasks, (tuple, list)):
-            new_tasks = [new_tasks]
-        uri = "/automatic_tasks"
-        existing_tasks = self.client.get(uri)
-        existing_task_names = [task["programmatic_name"] for task in existing_tasks]
-        for task in new_tasks:
-            if task.get("programmatic_name") in existing_task_names:
-                LOG.info(u"    Task exists: %s", task["programmatic_name"])
-            else:
-                setdefault(task, {
-                    "name": task.get("programmatic_name")
-                })
-                # Don't re-use id
-                if "id" in task:
-                    task.pop("id", None)
-                # Create the task
-                if self.confirm(u"task '{}'".format(task.get("programmatic_name"))):
-                    try:
-                        self.client.post(uri, task)
-                        LOG.info(u"    Task created: %s", task.get("programmatic_name"))
-                    except SimpleHTTPException as exc:
-                        # v30: deleted automatic tasks retain their uuid but cannot be recreated,
-                        # however they can still be referenced from workflows... so this is ok.
-                        LOG.warn(u"    Task not created: %s", task.get("programmatic_name"))
-                        pass
-
-    def load_scripts(self, definition):
-        """Load script definitions"""
-        new_scripts = definition.value
-        if not isinstance(new_scripts, (tuple, list)):
-            new_scripts = [new_scripts]
-        uri = "/scripts"
-        existing_scripts = self.client.get(uri)["entities"]
-        existing_script_names = [script["name"] for script in existing_scripts]
-        for script in new_scripts:
-            if script["name"] in existing_script_names:
-                LOG.info(u"    Script exists: %s", script["name"])
-            else:
-                # Don't re-use id
-                if "id" in script:
-                    script.pop("id", None)
-                # Create the script
-                if self.confirm(u"script '{}'".format(script["name"])):
-                    self.client.post(uri, script)
-                    LOG.info(u"    Script created: %s", script["name"])

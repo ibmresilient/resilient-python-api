@@ -257,7 +257,7 @@ def generate_code(args):
     if args.package:
         # codegen an installable package
         output_base = os.path.join(os.curdir, args.package)
-        codegen_package(client, args.package,
+        codegen_package(client, args.exportfile, args.package,
                         args.messagedestination, args.function, args.workflow, args.rule,
                         args.field, args.datatable, args.task, args.script,
                         os.path.expanduser(output_base))
@@ -271,7 +271,7 @@ def generate_code(args):
         output_file = args.output or default_name
         if not output_file.endswith(".py"):
             output_file = output_file + ".py"
-        codegen_functions(client, args.function, args.workflow, args.rule, output_dir, output_file)
+        codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
     else:
         # list the available functions from the server
         list_functions(client)
@@ -364,6 +364,8 @@ def main():
     codegen_parser.add_argument("--script",
                                 help="Include customization data for the specified script(s)",
                                 nargs="*")
+    codegen_parser.add_argument("--exportfile",
+                                help="Generate based on organization export file (.res)")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",

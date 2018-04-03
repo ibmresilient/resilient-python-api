@@ -5,10 +5,7 @@ from .resilient_customize import \
     MessageDestinationDefinition, \
     ActionDefinition, \
     FunctionDefinition, \
-    ScriptDefinition, \
-    WorkflowDefinition, \
-    PhaseDefinition, \
-    AutomaticTaskDefinition
+    ImportDefinition
 
 from .resilient_codegen import list_functions, valid_identifier
 from .resilient_config import get_config_data

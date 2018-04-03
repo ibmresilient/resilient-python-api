@@ -12,11 +12,16 @@ import keyword
 import re
 import pkg_resources
 import datetime
+import uuid
+import time
 from resilient_circuits import template_functions
 
 
 LOG = logging.getLogger("__name__")
 
+
+# A (const, random) namespace for import
+UUID_CODEGEN = uuid.UUID('bfeec2d4-3770-11e8-ad39-4a0004044aa0')
 
 # Template files that drive codegen
 FUNCTION_TEMPLATE_PATH = "data/template_function.jinja2"
@@ -275,7 +280,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                 outfile.write(source_rendered)
 
 
-def codegen_from_template(client, template_file_path, package,
+def codegen_from_template(client, export_file, template_file_path, package,
                           message_destination_names, function_names, workflow_names, action_names,
                           field_names, datatable_names, task_names, script_names,
                           output_dir, output_file):
@@ -290,6 +295,7 @@ def codegen_from_template(client, template_file_path, package,
        then written to the target ("file_to_generate.py").
 
        :param client: the REST client
+       :param export_file: file containing customization exports (default is to use the server's latest)
        :param template_file_path: location of templates
        :param package: name of the package to be generated
        :param message_destination_names: list of message desctinations; generate all the functions that use them
@@ -316,24 +322,29 @@ def codegen_from_template(client, template_file_path, package,
     workflows = {}
     actions = {}
 
-    # Get the most recent org export that includes actions and tasks
-    export_uri = "/configurations/exports/history"
-    export_list = client.get(export_uri)["histories"]
-    last_date = 0
-    last_id = 0
-    for export in export_list:
-        if export["options"]["actions"] and export["options"]["phases_and_tasks"]:
-            if export["date"] > last_date:
-                last_date = export["date"]
-                last_id = export["id"]
-    if last_date == 0:
-        LOG.error(u"ERROR: No suitable export is available.  "
-                  u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
-        return
-    dt = datetime.datetime.utcfromtimestamp(last_date/1000.0)
-    LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
-    export_uri = "/configurations/exports/{}".format(last_id)
-    export_data = client.get(export_uri)
+    if export_file:
+        with io.open(export_file, 'r', encoding="utf-8") as export:
+            export_data = json.loads(export.read())
+        LOG.info(u"Codegen is based on the organization export from '{}'.".format(export_file))
+    else:
+        # Get the most recent org export that includes actions and tasks
+        export_uri = "/configurations/exports/history"
+        export_list = client.get(export_uri)["histories"]
+        last_date = 0
+        last_id = 0
+        for export in export_list:
+            if export["options"]["actions"] and export["options"]["phases_and_tasks"]:
+                if export["date"] > last_date:
+                    last_date = export["date"]
+                    last_id = export["id"]
+        if last_date == 0:
+            LOG.error(u"ERROR: No suitable export is available.  "
+                      u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
+            return
+        dt = datetime.datetime.utcfromtimestamp(last_date/1000.0)
+        LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
+        export_uri = "/configurations/exports/{}".format(last_id)
+        export_data = client.get(export_uri)
 
     all_destinations = dict((dest["programmatic_name"], dest)
                             for dest in export_data.get("message_destinations", []))
@@ -559,6 +570,66 @@ def codegen_from_template(client, template_file_path, package,
                 list_scripts(export_data.get("scripts", []))
                 return
 
+    # Minify the export_data
+    fields_list = []
+    if len(incident_fields) == 0:
+        # import requires at least one, use placeholder
+        fields_list.extend(["incident/inc_training"])
+    else:
+        fields_list.extend(["incident/{}".format(fld["name"]) for fld in incident_fields.values()])
+    fields_list.extend(["actioninvocation/{}".format(fld["name"]) for fld in action_fields.values()])
+    fields_list.extend(["__function/{}".format(fld["name"]) for fld in function_params.values()])
+    keep_keys = [
+        "export_date",
+        "export_format_version",
+        "id",
+        "server_version"
+    ]
+    minify_keys = {
+        "actions": {"name": actions.keys()},
+        "automatic_tasks": {"programmatic_name": automatic_tasks.keys()},
+        "fields": {"export_key": fields_list},
+        "functions": {"name": functions.keys()},
+        "message_destinations": {"name": message_destinations.keys()},
+        "phases": {"name": phases.keys()},
+        "scripts": {"name": scripts.keys()},
+        "types": {"type_name": datatables.keys()},
+        "workflows": {"name": workflows.keys()},
+    }
+    for key in export_data.keys():
+        if key in keep_keys:
+            pass
+        elif key in minify_keys.keys():
+            name = list(minify_keys[key].keys())[0]
+            values = minify_keys[key][name]
+            for data in list(export_data[key]):
+                if not data.get(name):
+                    LOG.warning("No %s in %s", name, key)
+                if not data.get(name) in values:
+                    export_data[key].remove(data)
+            pass
+        elif isinstance(export_data[key], list):
+            export_data[key] = []
+        elif isinstance(export_data[key], dict):
+            export_data[key] = {}
+        else:
+            export_data[key] = None
+    # Incident types are special, add one for this specific package
+    # (because not enabled, this doesn't actually get loaded into the destination)
+    export_data["incident_types"] = [{
+        "update_date": int(time.time()*1000),
+        "create_date": int(time.time()*1000),
+        "uuid": str(UUID_CODEGEN),
+        "description": "Customization Packages (internal)",
+        "export_key": "Customization Packages (internal)",
+        "name": "Customization Packages (internal)",
+        "enabled": False,
+        "system": False,
+        "parent_id": None,
+        "hidden": False,
+        "id": 0
+    }]
+
     # Prepare the dictionary of substitution values for jinja2
     # (includes all the configuration elements related to the functions)
     data = {
@@ -577,7 +648,8 @@ def codegen_from_template(client, template_file_path, package,
         "automatic_tasks": automatic_tasks,
         "scripts": scripts,
         "workflows": workflows,
-        "actions": actions
+        "actions": actions,
+        "export_data": export_data
     }
     LOG.debug(u"Configuration data:\n%s", json.dumps(data, indent=2))
 
@@ -594,7 +666,7 @@ def codegen_from_template(client, template_file_path, package,
     render_file_mapping(file_mapping, data, src_dir, output_dir)
 
 
-def codegen_package(client, package,
+def codegen_package(client, export_file, package,
                     message_destination_names, function_names, workflow_names, action_names,
                     field_names, datatable_names, task_names, script_names,
                     output_dir):
@@ -610,17 +682,17 @@ def codegen_package(client, package,
         LOG.warn(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, package,
+    return codegen_from_template(client, export_file, template_file_path, package,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  field_names, datatable_names, task_names, script_names,
                                  output_dir, None)
 
 
-def codegen_functions(client, function_names, workflow_names, action_names, output_dir, output_file):
+def codegen_functions(client, export_file, function_names, workflow_names, action_names, output_dir, output_file):
     """Generate a python file that implements one or more functions"""
     message_destination_names = None
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
-    return codegen_from_template(client, template_file_path, None,
+    return codegen_from_template(client, export_file, template_file_path, None,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  None, None, None, None,
                                  output_dir, output_file)
