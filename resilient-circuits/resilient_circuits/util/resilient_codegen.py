@@ -11,7 +11,7 @@ import logging
 import keyword
 import re
 import pkg_resources
-from resilient import SimpleHTTPException
+import datetime
 from resilient_circuits import template_functions
 
 
@@ -22,7 +22,10 @@ LOG = logging.getLogger("__name__")
 FUNCTION_TEMPLATE_PATH = "data/template_function.jinja2"
 PACKAGE_TEMPLATE_PATH = "data/template_package.jinja2"
 
+INCIDENT_TYPE_ID = 0
+ACTION_TYPE_ID = 6
 DATATABLE_TYPE_ID = 8
+FUNCTION_TYPE_ID = 11
 
 # The attributes we want to keep from the object definitions
 TEMPLATE_ATTRIBUTES = [
@@ -155,101 +158,61 @@ def valid_identifier(name):
     return re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) is not None
 
 
-def list_functions(client):
+def list_functions(function_defs):
     """List all the functions"""
-    try:
-        function_defs = client.cached_get("/functions?handle_format=names")
-    except SimpleHTTPException as exc:
-        if exc.response.status_code == 500:
-            LOG.error(u"ERROR: Functions are not available on this Resilient appliance.")
-            return
-        else:
-            raise
-
     print(u"Available functions:")
-    for function_def in function_defs["entities"]:
+    for function_def in function_defs:
         print(u"    {}".format(function_def["name"]))
 
 
-def list_workflows(client):
+def list_workflows(workflow_defs):
     """List all the workflows"""
-    try:
-        workflow_defs = client.cached_get("/workflows?handle_format=names")
-    except SimpleHTTPException as exc:
-        if exc.response.status_code == 500:
-            LOG.error(u"ERROR: Workflows are not available on this Resilient appliance.")
-            return
-        else:
-            raise
-
     print(u"Available workflows:")
-    for workflow_def in workflow_defs["entities"]:
+    for workflow_def in workflow_defs:
         print(u"    {}".format(workflow_def["programmatic_name"]))
 
 
-def list_actions(client):
+def list_actions(action_defs):
     """List all the actions (rules)"""
-    try:
-        action_defs = client.cached_get("/actions?handle_format=names")
-    except SimpleHTTPException as exc:
-        if exc.response.status_code == 500:
-            LOG.error(u"ERROR: Rules are not available on this Resilient appliance.")
-            return
-        else:
-            raise
-
     print(u"Available rules:")
-    for action_def in action_defs["entities"]:
+    for action_def in action_defs:
         print(u"    {}".format(action_def["name"]))
 
 
-def list_message_destinations(client):
+def list_message_destinations(message_destination_defs):
     """List all the message destinations"""
-    try:
-        message_destination_defs = client.cached_get("/message_destinations?handle_format=names")
-    except SimpleHTTPException as exc:
-        if exc.response.status_code == 500:
-            LOG.error(u"ERROR: Message destinations are not available on this Resilient appliance.")
-            return
-        else:
-            raise
-
     print(u"Available message destinations:")
-    for message_destination_def in message_destination_defs["entities"]:
+    for message_destination_def in message_destination_defs:
         print(u"    {}".format(message_destination_def["programmatic_name"]))
 
 
-def list_incident_fields(client):
+def list_incident_fields(field_defs):
     """List all the custom incident fields"""
-    field_defs = client.cached_get("/types/incident/fields?handle_format=names")
     print(u"Available incident fields:")
     for field_def in field_defs:
-        if field_def.get("prefix") == "properties":
+        if field_def["type_id"] == INCIDENT_TYPE_ID and field_def.get("prefix") == "properties":
             print(u"    {}".format(field_def["name"]))
 
 
-def list_datatables(client):
+def list_datatables(datatable_defs):
     """List all the datatables"""
-    datatable_defs = client.cached_get("/types?handle_format=names")
     print(u"Available datatables:")
-    for datatable_name, datatable_def in datatable_defs.items():
+    for datatable_def in datatable_defs:
         if datatable_def["type_id"] == DATATABLE_TYPE_ID:
-            print(u"    {}".format(datatable_name))
+            print(u"    {}".format(datatable_def["type_name"]))
 
 
-def list_automatic_tasks(client):
+def list_automatic_tasks(task_defs):
     """List all the tasks (built-in and custom are not distinguished)"""
-    task_defs = client.cached_get("/automatic_tasks?handle_format=names")
     print(u"Available tasks:")
     for task_def in task_defs:
         print(u"    {}".format(task_def["programmatic_name"]))
 
 
-def list_scripts(client):
+def list_scripts(script_defs):
     """List all the scripts"""
-    script_defs = client.cached_get("/scripts?handle_format=names")
     print(u"Available scripts:")
-    for script_def in script_defs["entities"]:
+    for script_def in script_defs:
         print(u"    {}".format(script_def["name"]))
 
 
@@ -340,102 +303,109 @@ def codegen_from_template(client, template_file_path, package,
        :param output_dir: output location
        :param output_file: output file name
     """
-    actions = {}
-    action_fields = {}
-    workflows = {}
     functions = {}
     function_params = {}
     message_destinations = {}
+    incident_fields = {}
+    action_fields = {}
+    datatables = {}
+    datatable_fields = {}
+    phases = {}
+    automatic_tasks = {}
+    scripts = {}
+    workflows = {}
+    actions = {}
+
+    # Get the most recent org export that includes actions and tasks
+    export_uri = "/configurations/exports/history"
+    export_list = client.get(export_uri)["histories"]
+    last_date = 0
+    last_id = 0
+    for export in export_list:
+        if export["options"]["actions"] and export["options"]["phases_and_tasks"]:
+            if export["date"] > last_date:
+                last_date = export["date"]
+                last_id = export["id"]
+    if last_date == 0:
+        LOG.error(u"ERROR: No suitable export is available.  "
+                  u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
+        return
+    dt = datetime.datetime.utcfromtimestamp(last_date/1000.0)
+    LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
+    export_uri = "/configurations/exports/{}".format(last_id)
+    export_data = client.get(export_uri)
 
     all_destinations = dict((dest["programmatic_name"], dest)
-                            for dest in client.cached_get("/message_destinations")["entities"])
+                            for dest in export_data.get("message_destinations", []))
     all_destinations_2 = dict((dest["name"], dest)
-                              for dest in client.cached_get("/message_destinations")["entities"])
+                              for dest in export_data.get("message_destinations", []))
 
     if function_names or message_destination_names:
         # Check that 'functions' are available (v30 onward)
-        try:
-            function_defs = client.cached_get("/functions?handle_format=names")
-        except SimpleHTTPException as exc:
-            if exc.response.status_code == 500:
-                LOG.error(u"ERROR: Functions are not available on this Resilient appliance.")
-                return
-            else:
-                raise
+        function_defs = export_data.get("functions")
+        if not function_defs:
+            LOG.error(u"ERROR: Functions are not available in this export.")
+            return
         function_names = function_names or []
-        available_names = [function_def["name"] for function_def in function_defs["entities"]]
+        available_names = [function_def["name"] for function_def in function_defs]
         if message_destination_names:
             # Build a list of all the functions that use the specified message destination(s)
-            for function_name in available_names:
-                # Get the function definition
-                function_def = client.cached_get(
-                    "/functions/{}?handle_format=names&text_content_output_format=objects_no_convert"
-                    .format(function_name))
+            for function_def in function_defs:
                 if function_def["destination_handle"] in message_destination_names:
-                    function_names.append(function_name)
+                    function_names.append(function_def["name"])
 
         # Check that each named function is available
         for function_name in function_names or []:
             if function_name not in available_names:
-                LOG.error(u"ERROR: Function '%s' not found on this Resilient appliance.", function_name)
-                list_functions(client)
+                LOG.error(u"ERROR: Function '%s' not found in this export.", function_name)
+                list_functions(function_defs)
                 return
 
         # Check that the named message destination is available
         for message_destination_name in message_destination_names or []:
             if message_destination_name not in all_destinations:
-                LOG.error(u"ERROR: Message destination '%s' not found on this Resilient appliance.", message_destination_name)
-                list_message_destinations(client)
+                LOG.error(u"ERROR: Message destination '%s' not found in this export.", message_destination_name)
+                list_message_destinations(export_data.get("message_destinations"))
                 return
 
     if workflow_names:
         # Check that 'workflows' are available (v28 onward)
-        try:
-            workflow_defs = client.cached_get("/workflows?handle_format=names")
-        except SimpleHTTPException as exc:
-            if exc.response.status_code == 500:
-                LOG.error(u"ERROR: Workflows are not available on this Resilient appliance.")
-                return
-            else:
-                raise
-        # Check that each named workflow is available
-        available_names = [workflow_def["programmatic_name"] for workflow_def in workflow_defs["entities"]]
-        for workflow_name in workflow_names:
-            if workflow_name not in available_names:
-                LOG.error(u"ERROR: Workflow '%s' not found on this Resilient appliance.", workflow_name)
-                list_workflows(client)
-                return
+        workflow_defs = export_data.get("workflows")
+        if not workflow_defs:
+            LOG.error(u"ERROR: Workflows are not available in this export.")
+            return
     else:
         workflow_names = []
 
     if action_names:
         # Check that 'actions' are available
-        try:
-            action_defs = client.cached_get("/actions?handle_format=names")
-        except SimpleHTTPException as exc:
-            if exc.response.status_code == 500:
-                LOG.error(u"ERROR: Rules are not available on this Resilient appliance.")
-                return
-            else:
-                raise
+        action_defs = export_data.get("actions")
+        if not action_defs:
+            LOG.error(u"ERROR: Rules are not available in this export.")
+            return
+
         # Check that each named action is available
         actions = {action_def["name"]: clean(action_def.copy(), ACTION_ATTRIBUTES)
-                   for action_def in action_defs["entities"]
+                   for action_def in action_defs
                    if action_def["name"] in action_names}
+        all_action_fields = dict((field["uuid"], field)
+                                 for field in export_data.get("fields")
+                                 if field["type_id"] == ACTION_TYPE_ID)
+
         for action_name in action_names:
             if action_name not in actions:
-                LOG.error(u"ERROR: Rule '%s' not found on this Resilient appliance.", action_name)
-                list_actions(client)
+                LOG.error(u"ERROR: Rule '%s' not found in this export.", action_name)
+                list_actions(action_defs)
                 return
             action_def = actions[action_name]
 
             # Get the activity-fields for this action (if any)
-            action_field_names = [item.get("content")
+            action_field_uuids = [item.get("content")
                                   for item in action_def["view_items"]
                                   if "content" in item]
             fields = []
-            for field_name in action_field_names:
-                field = client.cached_get("/types/actioninvocation/fields/{}?handle_format=names".format(field_name))
+            for field_uuid in action_field_uuids:
+                field = all_action_fields.get(field_uuid).copy()
                 clean(field, ACTION_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
@@ -454,20 +424,19 @@ def codegen_from_template(client, template_file_path, package,
             dest_names = action_def["message_destinations"]
             for dest_name in dest_names:
                 if dest_name not in message_destinations:
-                    dest = all_destinations_2[dest_name]
+                    dest = all_destinations_2[dest_name].copy()
                     clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
                     message_destinations[dest_name] = dest
 
-    function_fields = dict(
-        (field["uuid"], field) for field in
-        client.cached_get("/types/__function/fields?text_content_output_format=objects_no_convert")
-    )
+    all_functions = dict((function["name"], function)
+                         for function in export_data.get("functions"))
+    all_function_fields = dict((field["uuid"], field)
+                               for field in export_data.get("fields")
+                               if field["type_id"] == FUNCTION_TYPE_ID)
 
     for function_name in (function_names or []):
         # Get the function definition
-        function_def = client.cached_get(
-            "/functions/{}?handle_format=names&text_content_output_format=objects_no_convert".format(function_name)
-        )
+        function_def = all_functions.get(function_name).copy()
         # Remove the attributes we don't want to serialize
         clean(function_def, FUNCTION_ATTRIBUTES)
         for view_item in function_def.get("view_items", []):
@@ -480,7 +449,7 @@ def codegen_from_template(client, template_file_path, package,
                        if "content" in item]
         params = []
         for param_name in param_names:
-            param = function_fields[param_name]
+            param = all_function_fields[param_name].copy()
             clean(param, FUNCTION_FIELD_ATTRIBUTES)
             for template in param.get("templates", []):
                 clean(template, TEMPLATE_ATTRIBUTES)
@@ -492,110 +461,103 @@ def codegen_from_template(client, template_file_path, package,
         # Get the message destination for this function
         dest_name = function_def["destination_handle"]
         if dest_name not in message_destinations:
-            dest = all_destinations[dest_name]
+            dest = all_destinations[dest_name].copy()
             clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
             message_destinations[dest_name] = dest
 
-    for workflow_name in (workflow_names or []):
-        # Get the workflow definition
-        workflow_def = client.cached_get("/workflows/{}?handle_format=names".format(workflow_name))
-        # Remove the attributes we don't want to serialize
-        clean(workflow_def, WORKFLOW_ATTRIBUTES)
-        clean(workflow_def["content"], WORKFLOW_CONTENT_ATTRIBUTES)
-        workflows[workflow_name] = workflow_def
+    if workflow_names:
+        all_workflows = dict((workflow["programmatic_name"], workflow)
+                             for workflow in export_data.get("workflows"))
+        for workflow_name in workflow_names:
+            # Get the workflow definition
+            workflow_def = all_workflows.get(workflow_name)
+            if workflow_def:
+                # Remove the attributes we don't want to serialize
+                workflow = clean(workflow_def.copy(), WORKFLOW_ATTRIBUTES)
+                clean(workflow["content"], WORKFLOW_CONTENT_ATTRIBUTES)
+                workflows[workflow_name] = workflow
+            else:
+                LOG.error(u"ERROR: Workflow '%s' not found in this export.", workflow_name)
+                list_workflows(export_data.get("workflows"))
+                return
 
-    incident_fields = {}
     if field_names:
         # Get definitions for custom incident fields
+        all_fields = dict((field["name"], field)
+                          for field in export_data.get("fields")
+                          if field["type_id"] == INCIDENT_TYPE_ID and field.get("prefix") == "properties")
         for field_name in field_names:
-            try:
-                field = client.cached_get("/types/incident/fields/{}?handle_format=names".format(field_name))
-                if field.get("prefix") != "properties":
-                    # NB we only include custom fields (others are built-in so don't include customization)
-                    LOG.error(u"Field '%s' is built-in, not included in customization.", field_name)
-                    list_incident_fields(client)
-                    return
-                clean(field, INCIDENT_FIELD_ATTRIBUTES)
+            fielddef = all_fields.get(field_name)
+            if fielddef:
+                field = clean(fielddef.copy(), INCIDENT_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
                 for value in field.get("values", []):
                     clean(value, VALUE_ATTRIBUTES)
                 incident_fields[field["uuid"]] = field
-            except SimpleHTTPException as exc:
-                if exc.response.status_code == 404:
-                    LOG.error(u"ERROR: Field '%s' not found on this Resilient appliance.", field_name)
-                    list_incident_fields(client)
-                    return
-                else:
-                    raise
+            else:
+                LOG.error(u"ERROR: Custom incident field '%s' not found in this export.", field_name)
+                list_incident_fields(export_data.get("fields"))
+                return
 
-    datatables = {}
     if datatable_names:
         # Get datatable definitions
+        all_datatables = dict((table["type_name"], table)
+                              for table in export_data.get("types")
+                              if table["type_id"] == DATATABLE_TYPE_ID)
         for datatable_name in datatable_names:
-            try:
-                datatable_fields = {}
-                for field in client.cached_get("/types/{}/fields?handle_format=names".format(datatable_name)):
-                    clean(field, DATATABLE_FIELD_ATTRIBUTES)
+            datatable = all_datatables.get(datatable_name)
+            if datatable:
+                for (fieldname, fielddef) in datatable["fields"].items():
+                    field = clean(fielddef.copy(), DATATABLE_FIELD_ATTRIBUTES)
                     for template in field.get("templates", []):
                         clean(template, TEMPLATE_ATTRIBUTES)
                     for value in field.get("values", []):
                         clean(value, VALUE_ATTRIBUTES)
                     datatable_fields[field["uuid"]] = field
-                datatables[datatable_name] = datatable_fields
-            except SimpleHTTPException as exc:
-                if exc.response.status_code == 404:
-                    LOG.error(u"ERROR: Datatable '%s' not found on this Resilient appliance.", datatable_name)
-                    list_datatables(client)
-                    return
-                else:
-                    raise
+                datatables[datatable_name] = datatable
+            else:
+                LOG.error(u"ERROR: Datatable '%s' not found in this export.", datatable_name)
+                list_datatables(export_data.get("types", []))
+                return
 
     # Automtic tasks determine the list of phases
     phase_names = set()
-    automatic_tasks = {}
     if task_names:
         # Get task definitions
+        all_tasks = dict((task["programmatic_name"], task)
+                          for task in export_data.get("automatic_tasks"))
         for task_name in task_names:
-            try:
-                task = client.cached_get("/automatic_tasks/{}?handle_format=names".format(task_name))
-                clean(task, AUTOMATIC_TASK_ATTRIBUTES)
-                automatic_tasks[task_name] = task
+            task = all_tasks.get(task_name)
+            if task:
+                automatic_tasks[task_name] = clean(task.copy(), AUTOMATIC_TASK_ATTRIBUTES)
                 phase_names.add(task["phase_id"])
-            except SimpleHTTPException as exc:
-                if exc.response.status_code == 404:
-                    LOG.error(u"ERROR: Task '%s' not found on this Resilient appliance.", task_name)
-                    list_automatic_tasks(client)
-                    return
-                else:
-                    raise
+            else:
+                LOG.error(u"ERROR: Task '%s' not found in this export.", task_name)
+                list_automatic_tasks(export_data.get("automatic_tasks", []))
+                return
 
-    phases = {}
     if phase_names:
         # Get phase definitions
         all_phases = dict((phase["name"], phase)
-                          for phase in client.cached_get("/phases?handle_format=names")["entities"])
+                          for phase in export_data.get("phases"))
         for phase_name in phase_names:
             # Assume phase-name is found.  It was derived from the automatic task.
             phase = all_phases[phase_name]
-            clean(phase, PHASE_ATTRIBUTES)
-            phases[phase_name] = phase
+            phases[phase_name] = clean(phase.copy(), PHASE_ATTRIBUTES)
 
-    scripts = {}
     if script_names:
         # Get script definitions
+        all_scripts = dict((script["name"], script)
+                           for script in export_data.get("scripts"))
         for script_name in script_names:
-            try:
-                script = client.cached_get("/scripts/{}?handle_format=names".format(script_name))
-                clean(script, SCRIPT_ATTRIBUTES)
-                scripts[script_name] = script
-            except SimpleHTTPException as exc:
-                if exc.response.status_code == 404:
-                    LOG.error(u"ERROR: Script '%s' not found on this Resilient appliance.", script_name)
-                    list_scripts(client)
-                    return
-                else:
-                    raise
+            script = all_scripts.get(script_name)
+            if script:
+                scripts[script_name] = clean(script.copy(), SCRIPT_ATTRIBUTES)
+            else:
+                LOG.error(u"ERROR: Script '%s' not found in this export.", script_name)
+                list_scripts(export_data.get("scripts", []))
+                return
 
     # Prepare the dictionary of substitution values for jinja2
     # (includes all the configuration elements related to the functions)
@@ -610,6 +572,7 @@ def codegen_from_template(client, template_file_path, package,
         "incident_fields": incident_fields,
         "action_fields": action_fields,
         "datatables": datatables,
+        "datatable_fields": datatable_fields,
         "phases": phases,
         "automatic_tasks": automatic_tasks,
         "scripts": scripts,
