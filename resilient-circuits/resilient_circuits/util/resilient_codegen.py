@@ -616,9 +616,10 @@ def codegen_from_template(client, export_file, template_file_path, package,
             export_data[key] = None
     # Incident types are special, add one for this specific package
     # (because not enabled, this doesn't actually get loaded into the destination)
+    t0 = int(time.time()*1000)
     export_data["incident_types"] = [{
-        "update_date": int(time.time()*1000),
-        "create_date": int(time.time()*1000),
+        "update_date": t0,
+        "create_date": t0,
         "uuid": str(UUID_CODEGEN),
         "description": "Customization Packages (internal)",
         "export_key": "Customization Packages (internal)",

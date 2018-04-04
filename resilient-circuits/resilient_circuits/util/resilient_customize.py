@@ -199,9 +199,12 @@ class Customizations(object):
             LOG.debug(result)
             for message in result.get("messages", []):
                 LOG.info(u"    %s: %s", message["type"], message["text"])
-            if result["status"] == "PENDING" and self.confirm(u""):
+            if result["status"] == "PENDING":
+                if self.confirm(u""):
+                    result["status"] = "ACCEPTED"
+                else:
+                    result["status"] = "REJECTED"
                 uri = "/configurations/imports/{}".format(import_id)
-                result["status"] = "ACCEPTED"
                 self.client.put(uri, result)
 
     def load_message_destinations(self, definition):
