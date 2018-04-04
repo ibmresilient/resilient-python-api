@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
-"""Utility to install customizations"""
+"""Utility to import customizations"""
 
 from __future__ import print_function
 import logging
@@ -102,7 +102,7 @@ def type_displayname(typename):
 
 
 def customize_resilient(args):
-    """install customizations to the resilient server"""
+    """import customizations to the resilient server"""
     parser = AppArgumentParser(config_file=resilient.get_config_file())
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
@@ -114,7 +114,7 @@ def customize_resilient(args):
 
 
 def do_customize_resilient(client, entry_points, yflag):
-    """install customizations to the resilient server"""
+    """import customizations to the resilient server"""
     ep_count = 0
     customizations = Customizations(client, yflag)
     for entry in entry_points:
