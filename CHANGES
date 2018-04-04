@@ -1,4 +1,17 @@
 
+2018-04-04: version 30.0
+
+Add '@function' decorator to implement workflow functions
+Add 'resilient-circuits test' command to replace res-action-test
+Add 'resilient-circuits codegen' command to generate boilerplate functions and installable packages
+Add 'resilient-circuits customize' command to import customizations from installed packages
+Fix an issue with keyring values outside the [resilient] config section
+Fix various issues with pytest-resilient-circuits mocks and fixtures
+Update action message log format for greater readability
+Update 'resilient-circuits list' to show packages with no components
+Add '-v' flag to 'resilient-circuits list'
+
+
 2018-02-22: version 29.1.0
 
 Fix an issue with performance receiving STOMP messages

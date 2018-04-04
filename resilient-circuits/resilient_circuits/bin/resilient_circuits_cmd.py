@@ -257,8 +257,9 @@ def generate_code(args):
     if args.package:
         # codegen an installable package
         output_base = os.path.join(os.curdir, args.package)
-        codegen_package(client, args.package,
+        codegen_package(client, args.exportfile, args.package,
                         args.messagedestination, args.function, args.workflow, args.rule,
+                        args.field, args.datatable, args.task, args.script,
                         os.path.expanduser(output_base))
     elif args.function:
         # codegen a component for one or more functions
@@ -270,10 +271,7 @@ def generate_code(args):
         output_file = args.output or default_name
         if not output_file.endswith(".py"):
             output_file = output_file + ".py"
-        codegen_functions(client, args.function, args.workflow, args.rule, output_dir, output_file)
-    else:
-        # list the available functions from the server
-        list_functions(client)
+        codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
 
 def main():
@@ -345,12 +343,26 @@ def main():
     codegen_parser.add_argument("-m", "--messagedestination",
                                 help="Generate code for all functions that use the specified message destination(s)",
                                 nargs="*")
-    codegen_parser.add_argument("-w", "--workflow",
-                                help="Include customization data for the specified workflow(s)",
+    codegen_parser.add_argument("--workflow",
+                                help="Include customization data for workflow(s)",
                                 nargs="*")
-    codegen_parser.add_argument("-r", "--rule",
-                                help="Include customization data for the specified rule(s)",
+    codegen_parser.add_argument("--rule",
+                                help="Include customization data for rule(s)",
                                 nargs="*")
+    codegen_parser.add_argument("--field",
+                                help="Include customization data for incident field(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--datatable",
+                                help="Include customization data for datatable(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--task",
+                                help="Include customization data for automatic task(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--script",
+                                help="Include customization data for script(s)",
+                                nargs="*")
+    codegen_parser.add_argument("--exportfile",
+                                help="Generate based on organization export file (.res)")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",
@@ -381,8 +393,11 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd == "codegen":
-        logging.basicConfig(format='%(message)s', level=logging.INFO)
-        generate_code(args)
+        if not args.package or args.function:
+            codegen_parser.print_usage()
+        else:
+            logging.basicConfig(format='%(message)s', level=logging.INFO)
+            generate_code(args)
     elif args.cmd == "customize":
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)

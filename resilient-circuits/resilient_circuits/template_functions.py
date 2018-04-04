@@ -24,6 +24,13 @@ try:
     from html import escape as html_escape
 except ImportError:
     from cgi import escape as html_escape
+
+try:
+    # Python 3.x
+    from base64 import encodebytes as b64encode
+except ImportError:
+    from base64 import encodestring as b64encode
+
 import urllib
 
 LOG = logging.getLogger(__name__)
@@ -227,6 +234,13 @@ def camel_filter(val):
     return re.sub(r"[\W^_]", "", titlecase)
 
 
+def base64_filter(val, indent=2):
+    """Jinja2 filter function 'base64' breaks text into fixed-width blocks"""
+    if isinstance(val, jinja2.Undefined):
+        return ""
+    s = json.dumps(val).encode("utf-8")
+    return b64encode(s).decode("utf-8")
+
 
 JINJA_FILTERS = {"json": json_filter,
                  "js": js_filter,
@@ -242,7 +256,8 @@ JINJA_FILTERS = {"json": json_filter,
                  "iso8601": iso8601,
                  "uniq": uniq,
                  "sample": sample_filter,
-                 "camel": camel_filter}
+                 "camel": camel_filter,
+                 "base64": base64_filter}
 
 
 # Maintain one global Environment
