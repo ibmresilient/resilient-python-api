@@ -393,7 +393,7 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd == "codegen":
-        if not args.package or args.function:
+        if args.package is None or args.function is None:
             codegen_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)
