@@ -176,16 +176,16 @@ class Customizations(object):
     def confirm(self, activity):
         """Prompt, if self.prompt"""
         yes = True
-        self.doing = u"creating {}".format(activity)
+        self.doing = u"importing {}".format(activity)
         if self.prompt:
             yes = False
-            inp = input(u"    OK to create {}? (y/n):".format(activity))
+            inp = input(u"    OK to import {}? (y/n):".format(activity))
             try:
                 yes = strtobool(inp)
             except ValueError:
                 pass
         if not yes:
-            print(u"    Not creating {}".format(activity))
+            print(u"    Not importing {}".format(activity))
         return yes
 
     def load_import(self, definition, dist):
