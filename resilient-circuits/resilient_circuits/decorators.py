@@ -68,7 +68,7 @@ class function(object):
                 # On the worker thread, call the function, and handle a single or generator result.
                 LOG.debug("%s: _call_the_task", threading.currentThread().name)
                 result_list = []
-                task_result_or_gen = _the_task(self, evt, **kwds)
+                task_result_or_gen = _the_task(evt, *args, **kwds)
                 if not isinstance(task_result_or_gen, GeneratorType):
                     task_result_or_gen = [task_result_or_gen]
                 for val in task_result_or_gen:
