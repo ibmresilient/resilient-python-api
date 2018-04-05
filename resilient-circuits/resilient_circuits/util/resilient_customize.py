@@ -49,6 +49,13 @@ def get_function_definition(package, function_name):
                 if func["name"] == function_name:
                     # Found it!  Success.
                     return func
+        elif isinstance(definition, ImportDefinition):
+            import_data = json.loads(base64.b64decode(definition.value).decode("utf-8"))
+            for func in import_data.get("functions"):
+                if func["name"] == function_name:
+                    # Found it!  Success.
+                    return func
+
 
 
 class Definition(object):
