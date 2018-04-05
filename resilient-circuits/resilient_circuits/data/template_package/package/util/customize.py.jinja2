@@ -10,6 +10,21 @@ def customization_data(client=None):
     """Produce any customization definitions (types, fields, message destinations, etc)
        that should be installed by `resilient-circuits customize`
     """
+
+    # This import data contains:
+{%if incident_fields|length > 0 %}    #   Incident fields: {{incident_fields.values()|map(attribute="name")|join(", ")}}
+{%endif%}{%if action_fields|length > 0 %}    #   Action fields: {{action_fields.values()|map(attribute="name")|join(", ")}}
+{%endif%}{%if function_params|length > 0 %}    #   Function inputs: {{function_params.values()|map(attribute="name")|join(", ")}}
+{%endif%}{%if datatables.keys()%}    #   DataTables: {{datatables.keys()|join(", ")}}
+{%endif%}{%if message_destinations.keys()%}    #   Message Destinations: {{message_destinations.keys()|join(", ")}}
+{%endif%}{%if functions.keys()%}    #   Functions: {{functions.keys()|join(", ")}}
+{%endif%}{%if phases.keys()%}    #   Phases: {{phases.keys()|join(", ")}}
+{%endif%}{%if automatic_tasks.keys()%}    #   Tasks: {{automatic_tasks.keys()|join(", ")}}
+{%endif%}{%if scripts.keys()%}    #   Scripts: {{scripts.keys()|join(", ")}}
+{%endif%}{%if workflows.keys()%}    #   Workflows: {{workflows.keys()|join(", ")}}
+{%endif%}{%if actions.keys()%}    #   Rules: {{actions.keys()|join(", ")}}
+{%endif%}
+
     yield ImportDefinition(u"""
 {{export_data|base64}}"""
     )
