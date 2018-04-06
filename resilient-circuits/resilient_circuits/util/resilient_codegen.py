@@ -594,20 +594,19 @@ def codegen_from_template(client, export_file, template_file_path, package,
         "phases": {"name": phases.keys()},
         "scripts": {"name": scripts.keys()},
         "types": {"type_name": datatables.keys()},
-        "workflows": {"name": workflows.keys()},
+        "workflows": {"programmatic_name": workflows.keys()},
     }
     for key in export_data.keys():
         if key in keep_keys:
             pass
         elif key in minify_keys.keys():
-            name = list(minify_keys[key].keys())[0]
-            values = minify_keys[key][name]
+            name = list(minify_keys[key].keys())[0]   # The property we match on
+            values = minify_keys[key][name]           # These are the names of the things to keep
             for data in list(export_data[key]):
                 if not data.get(name):
                     LOG.warning("No %s in %s", name, key)
                 if not data.get(name) in values:
                     export_data[key].remove(data)
-            pass
         elif isinstance(export_data[key], list):
             export_data[key] = []
         elif isinstance(export_data[key], dict):
