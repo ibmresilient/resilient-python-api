@@ -14,6 +14,7 @@ import pkg_resources
 import datetime
 import uuid
 import time
+import copy
 from resilient_circuits import template_functions
 
 
@@ -396,7 +397,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
             return
 
         # Check that each named action is available
-        actions = {action_def["name"]: clean(action_def.copy(), ACTION_ATTRIBUTES)
+        actions = {action_def["name"]: clean(copy.deepcopy(action_def), ACTION_ATTRIBUTES)
                    for action_def in action_defs
                    if action_def["name"] in action_names}
         all_action_fields = dict((field["uuid"], field)
@@ -416,7 +417,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                                   if "content" in item]
             fields = []
             for field_uuid in action_field_uuids:
-                field = all_action_fields.get(field_uuid).copy()
+                field = copy.deepcopy(all_action_fields.get(field_uuid))
                 clean(field, ACTION_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
@@ -435,7 +436,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
             dest_names = action_def["message_destinations"]
             for dest_name in dest_names:
                 if dest_name not in message_destinations:
-                    dest = all_destinations_2[dest_name].copy()
+                    dest = copy.deepcopy(all_destinations_2[dest_name])
                     clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
                     message_destinations[dest_name] = dest
 
@@ -447,7 +448,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
 
     for function_name in (function_names or []):
         # Get the function definition
-        function_def = all_functions.get(function_name).copy()
+        function_def = copy.deepcopy(all_functions.get(function_name))
         # Remove the attributes we don't want to serialize
         clean(function_def, FUNCTION_ATTRIBUTES)
         for view_item in function_def.get("view_items", []):
@@ -460,7 +461,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                        if "content" in item]
         params = []
         for param_name in param_names:
-            param = all_function_fields[param_name].copy()
+            param = copy.deepcopy(all_function_fields[param_name])
             clean(param, FUNCTION_FIELD_ATTRIBUTES)
             for template in param.get("templates", []):
                 clean(template, TEMPLATE_ATTRIBUTES)
@@ -472,7 +473,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
         # Get the message destination for this function
         dest_name = function_def["destination_handle"]
         if dest_name not in message_destinations:
-            dest = all_destinations[dest_name].copy()
+            dest = copy.deepcopy(all_destinations[dest_name])
             clean(dest, MESSAGE_DESTINATION_ATTRIBUTES)
             message_destinations[dest_name] = dest
 
@@ -484,7 +485,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
             workflow_def = all_workflows.get(workflow_name)
             if workflow_def:
                 # Remove the attributes we don't want to serialize
-                workflow = clean(workflow_def.copy(), WORKFLOW_ATTRIBUTES)
+                workflow = clean(copy.deepcopy(workflow_def), WORKFLOW_ATTRIBUTES)
                 clean(workflow["content"], WORKFLOW_CONTENT_ATTRIBUTES)
                 workflows[workflow_name] = workflow
             else:
@@ -500,7 +501,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
         for field_name in field_names:
             fielddef = all_fields.get(field_name)
             if fielddef:
-                field = clean(fielddef.copy(), INCIDENT_FIELD_ATTRIBUTES)
+                field = clean(copy.deepcopy(fielddef), INCIDENT_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
                 for value in field.get("values", []):
@@ -520,7 +521,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
             datatable = all_datatables.get(datatable_name)
             if datatable:
                 for (fieldname, fielddef) in datatable["fields"].items():
-                    field = clean(fielddef.copy(), DATATABLE_FIELD_ATTRIBUTES)
+                    field = clean(copy.deepcopy(fielddef), DATATABLE_FIELD_ATTRIBUTES)
                     for template in field.get("templates", []):
                         clean(template, TEMPLATE_ATTRIBUTES)
                     for value in field.get("values", []):
@@ -541,7 +542,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
         for task_name in task_names:
             task = all_tasks.get(task_name)
             if task:
-                automatic_tasks[task_name] = clean(task.copy(), AUTOMATIC_TASK_ATTRIBUTES)
+                automatic_tasks[task_name] = clean(copy.deepcopy(task), AUTOMATIC_TASK_ATTRIBUTES)
                 phase_names.add(task["phase_id"])
             else:
                 LOG.error(u"ERROR: Task '%s' not found in this export.", task_name)
@@ -555,7 +556,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
         for phase_name in phase_names:
             # Assume phase-name is found.  It was derived from the automatic task.
             phase = all_phases[phase_name]
-            phases[phase_name] = clean(phase.copy(), PHASE_ATTRIBUTES)
+            phases[phase_name] = clean(copy.deepcopy(phase), PHASE_ATTRIBUTES)
 
     if script_names:
         # Get script definitions
@@ -564,7 +565,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
         for script_name in script_names:
             script = all_scripts.get(script_name)
             if script:
-                scripts[script_name] = clean(script.copy(), SCRIPT_ATTRIBUTES)
+                scripts[script_name] = clean(copy.deepcopy(script), SCRIPT_ATTRIBUTES)
             else:
                 LOG.error(u"ERROR: Script '%s' not found in this export.", script_name)
                 list_scripts(export_data.get("scripts", []))
