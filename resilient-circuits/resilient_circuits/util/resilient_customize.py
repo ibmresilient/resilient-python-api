@@ -57,7 +57,6 @@ def get_function_definition(package, function_name):
                     return func
 
 
-
 class Definition(object):
     """A definition that can be loaded by this helper."""
 
@@ -200,6 +199,7 @@ class Customizations(object):
         import_data = json.loads(base64.b64decode(definition.value).decode("utf-8"))
         LOG.debug(json.dumps(import_data, indent=2))
         uri = "/configurations/imports"
+        done = False
         if self.confirm(u"customizations from '{}'".format(dist)):
             result = self.client.post(uri, import_data)
             import_id = result["id"]
@@ -209,10 +209,33 @@ class Customizations(object):
             if result["status"] == "PENDING":
                 if self.confirm(u""):
                     result["status"] = "ACCEPTED"
+                    done = True
                 else:
                     result["status"] = "REJECTED"
                 uri = "/configurations/imports/{}".format(import_id)
                 self.client.put(uri, result)
+
+        if done:
+            # For each message destination in the import:
+            # Set this API account to be a user of the message destination
+            # (otherwise the function won't be able to connect!)
+
+            def update_user(dest):
+                # Callback for get/put to update the user list
+                if self.client.user_id not in dest["users"]:
+                    LOG.info(u"    Adding user to message destinaion {}".format(dest["programmatic_name"]))
+                    dest["users"].append(self.client.user_id)
+                return dest
+
+            uri = "/message_destinations"
+            all_destinations = dict((dest["programmatic_name"], dest) for dest in self.client.get(uri)["entities"])
+            [dest.get("programmatic_name") for dest in import_data.get("message_destinations", [])]
+            for dest in import_data.get("message_destinations", []):
+                dest_name = dest.get("programmatic_name")
+                if dest_name in all_destinations:
+                    dest_id = all_destinations[dest_name]["id"]
+                    uri = "/message_destinations/{}".format(dest_id)
+                    self.client.get_put(uri, update_user)
 
     def load_message_destinations(self, definition):
         """Load one or more message destinations"""
@@ -299,7 +322,8 @@ class Customizations(object):
                     if self.confirm(u"values for {} field '{}'".format(type_displayname(type_name), fieldname)):
                         uri = "/types/{0}/fields/{1}".format(type_name, existing_id)
                         self.client.put(uri, field)
-                        LOG.info(u"    %s field updated: %s ('%s')", type_displayname(type_name), fieldname, field["text"])
+                        LOG.info(u"    %s field updated: %s ('%s')",
+                                 type_displayname(type_name), fieldname, field["text"])
             else:
                 # Don't re-use id
                 if "id" in field:
