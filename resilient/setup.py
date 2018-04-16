@@ -8,8 +8,13 @@ from __future__ import print_function
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
-from pip import get_installed_distributions
 from pkg_resources import get_distribution, DistributionNotFound
+
+try:
+    # pip version 10 onward
+    from pip._internal.utils.misc import get_installed_distributions
+except ImportError:
+    from pip import get_installed_distributions
 
 
 def check_deps():
