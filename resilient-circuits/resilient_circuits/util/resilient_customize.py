@@ -223,7 +223,7 @@ class Customizations(object):
             def update_user(dest):
                 # Callback for get/put to update the user list
                 if self.client.user_id not in dest["users"]:
-                    LOG.info(u"    Adding user to message destinaion {}".format(dest["programmatic_name"]))
+                    LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
                     dest["users"].append(self.client.user_id)
                 return dest
 
