@@ -417,7 +417,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
             # Get the activity-fields for this action (if any)
             action_field_uuids = [item.get("content")
                                   for item in action_def["view_items"]
-                                  if "content" in item]
+                                  if "content" in item and item.get("field_type")]
             fields = []
             for field_uuid in action_field_uuids:
                 field = copy.deepcopy(all_action_fields.get(field_uuid))
