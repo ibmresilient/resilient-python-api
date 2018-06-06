@@ -403,6 +403,9 @@ def codegen_from_template(client, export_file, template_file_path, package,
         all_action_fields = dict((field["uuid"], field)
                                  for field in export_data.get("fields")
                                  if field["type_id"] == ACTION_TYPE_ID)
+        all_action_fields_2 = dict((field["name"], field)
+                                 for field in export_data.get("fields")
+                                 if field["type_id"] == ACTION_TYPE_ID)
 
         for action_name in action_names:
             if action_name not in actions:
@@ -418,6 +421,9 @@ def codegen_from_template(client, export_file, template_file_path, package,
             fields = []
             for field_uuid in action_field_uuids:
                 field = copy.deepcopy(all_action_fields.get(field_uuid))
+                if field is None:
+                    # v29-style export where layout indexed by field name
+                    field = copy.deepcopy(all_action_fields_2.get(field_uuid))
                 clean(field, ACTION_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
@@ -441,7 +447,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                     message_destinations[dest_name] = dest
 
     all_functions = dict((function["name"], function)
-                         for function in export_data.get("functions"))
+                         for function in export_data.get("functions") or [])
     all_function_fields = dict((field["uuid"], field)
                                for field in export_data.get("fields")
                                if field["type_id"] == FUNCTION_TYPE_ID)
