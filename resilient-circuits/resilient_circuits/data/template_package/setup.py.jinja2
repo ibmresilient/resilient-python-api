@@ -25,6 +25,7 @@ setup(
             "{{function_name|camel}}FunctionComponent = {{package}}.components.{{function_name}}:FunctionComponent"{%endfor%}
         ],
         "resilient.circuits.configsection": ["gen_config = {{package}}.util.config:config_section_data"],
-        "resilient.circuits.customize": ["customize = {{package}}.util.customize:customization_data"]
+        "resilient.circuits.customize": ["customize = {{package}}.util.customize:customization_data"],
+        "resilient.circuits.selftest": ["selftest = {{package}}.util.selftest:FunctionComponent"]
     }
 )

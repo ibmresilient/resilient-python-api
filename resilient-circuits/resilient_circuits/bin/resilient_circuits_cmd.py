@@ -273,6 +273,58 @@ def generate_code(args):
             output_file = output_file + ".py"
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
+def selftest(args):
+    """loop through every selftest for every eligible package, call and store returned state, print out package and their selftest states"""
+    components = defaultdict(list)
+
+    # custom entry_point only for selftest functions
+    selftest_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.selftest')]
+    for ep in selftest_entry_points:
+        components[ep.dist].append(ep)
+
+    if len(selftest_entry_points) == 0:
+        LOG.info("No selftest entry points found.")
+        return None
+
+    # Generate opts array neccessary for ResilientComponent instantiation
+    from resilient_circuits import app
+    opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
+
+    # contains package names and their selftest statuses
+    package_status = []
+
+    for dist, component_list in components.items():
+        # add an entry for the package
+        package_status.append({"package_name": str(dist.as_requirement()), "selftests": []})
+        for ep in component_list:
+            state = "unimplemented"
+                
+            # load the module
+            module = ep.load()
+            try:
+                # try to instantiate the FunctionComponent
+                instantiatedClass = module(opts=opts)
+                    
+                if not instantiatedClass._selftest_function():
+                    raise Exception("_selftest_function function doesn't exist.")
+
+                status = instantiatedClass._selftest_function()
+                if status["state"] is not None:
+                    state = status["state"]
+            except Exception as e:
+                LOG.error("Error while calling %s selftest function. Exception: %s", ep.name, str(e))
+                continue
+
+            # find the entry in package_status we added before and add the selftest
+            for status in package_status:
+                if status["package_name"] == str(dist.as_requirement()):
+                    status["selftests"].append({"function_name": ep.name, "state": state})
+
+    # print the status for each package
+    for status in package_status:
+        LOG.info("%s:", status["package_name"])
+        for selftest in status["selftests"]:
+            LOG.info("\t%s: %s", selftest["function_name"], selftest["state"])
 
 def main():
     """Main commandline"""
@@ -299,6 +351,8 @@ def main():
                                            help="Generate template code for Python components")
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
+    selftest_parser = subparsers.add_parser("selftest",
+                                        help="Calls selftest functions for every package and prints out their return states")
 
     # Options for 'list'
     list_parser.add_argument("-v", "--verbose", action="store_true")
@@ -401,7 +455,8 @@ def main():
     elif args.cmd == "customize":
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
-
+    elif args.cmd == "selftest":
+        selftest(args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
