@@ -286,6 +286,10 @@ def selftest(args):
         LOG.info("No selftest entry points found.")
         return None
 
+    # Generate opts array neccessary for ResilientComponent instantiation
+    from resilient_circuits import app
+    opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
+
     # contains package names and their selftest statuses
     package_status = []
 
@@ -298,8 +302,8 @@ def selftest(args):
             # load the entry point
             fSelftest = ep.load()
             try:
-                # fSelftest is the selftest function
-                status = fSelftest()
+                # fSelftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                status = fSelftest(opts)
                 if status["state"] is not None:
                     state = status["state"]
             except Exception as e:
