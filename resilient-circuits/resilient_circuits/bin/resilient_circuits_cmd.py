@@ -300,10 +300,10 @@ def selftest(args):
             state = "unimplemented"
                 
             # load the entry point
-            fSelftest = ep.load()
+            f_selftest = ep.load()
             try:
-                # fSelftest is the selftest function, we pass the selftest resilient options in case it wants to use it
-                status = fSelftest(opts)
+                # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                status = f_selftest(opts)
                 if status["state"] is not None:
                     state = status["state"]
             except Exception as e:
