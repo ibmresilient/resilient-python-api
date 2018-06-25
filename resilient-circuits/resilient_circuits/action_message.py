@@ -264,25 +264,48 @@ class FunctionResult(object):
         self.value = value
 
 
-def FunctionError(*args):
+class BaseFunctionError(ValueError):
+    """
+    Provides an extra layer between FunctionError_/FunctionException_ that allows to check
+    more precisely if it's a resilient-circuits error, and not a ValueError, but doesn't require
+    to check for both separately.
+    """
+    def __init__(self, *args, **kwargs):
+        super(BaseFunctionError, self).__init__(*args, **kwargs)
+
+
+def FunctionError(*args, **kwargs):
     """A convenient error to be raised in a function call."""
     # Just grab the stack trace and wrap in a FunctionError_.
     exc = sys.exc_info()
     if not exc[0]:
         return FunctionError_(*args)
-    return FunctionException_(*exc)
+    return FunctionException_(*exc, messages=args, **kwargs)
 
 
-class FunctionException_(ValueError):
+class FunctionException_(BaseFunctionError):
     """Wraps an exception from a function call."""
     def __init__(self, *args, **kwargs):
+        messages = kwargs.pop("messages", None)
+        trace = kwargs.pop("trace", True)
         super(FunctionException_, self).__init__(*args, **kwargs)
+        self.messages = messages
+        self.trace = trace
 
     def __str__(self):
-        return "".join(traceback.format_exception(*self.args))
+        """
+        If error messages are provided by user, add them to the str representation.
+        If trace is True, add trace to the str representation.
+        """
+        message = ""
+        if self.messages is not None:
+            message += "".join([str(msg)+"\n" for msg in self.messages])
+        if self.trace:
+            message += "".join(traceback.format_exception(*self.args))
+        return message
 
 
-class FunctionError_(ValueError):
+class FunctionError_(BaseFunctionError):
     """Wraps a simple "we failed" error from a function call."""
     def __init__(self, *args, **kwargs):
         super(FunctionError_, self).__init__(*args, **kwargs)

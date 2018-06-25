@@ -21,7 +21,7 @@ import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessageBase, ActionMessage, \
-    FunctionMessage, StatusMessage, FunctionResult
+    FunctionMessage, StatusMessage, FunctionResult, BaseFunctionError
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 
@@ -695,11 +695,18 @@ class Actions(ResilientComponent):
         """Report an exception thrown during handling of an action event"""
         try:
             if etype:
-                message = etype.__name__ + u": <" + u"{}".format(value) + u">"
+                print(issubclass(etype, BaseFunctionError))
+                if issubclass(etype, BaseFunctionError) and not value.trace:
+                    message = str(value)
+                else:
+                    message = etype.__name__ + u": <" + u"{}".format(value) + u">"
             else:
                 message = u"Processing failed"
             if traceback and isinstance(traceback, list):
-                message = message + "\n" + ("".join(traceback))
+                if issubclass(etype, BaseFunctionError) and not value.trace:
+                    pass
+                else:
+                    message = message + "\n" + ("".join(traceback))
             LOG.exception(u"%s (%s): %s", repr(fevent), repr(etype), message)
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
@@ -734,6 +741,7 @@ class Actions(ResilientComponent):
                     LOG.debug("Test Action: No ack done.")
         except Exception as err:
             LOG.error("Exception handler threw exception! Response to action module may not have sent.")
+            LOG.error(str(err))
             LOG.error(traceback)
 
     @handler("Ack_failure")
