@@ -15,6 +15,8 @@ import resilient
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
 from resilient_circuits.util.resilient_customize import customize_resilient
+from resilient_circuits import app
+import time
 
 if sys.version_info.major == 2:
     from io import open
@@ -287,39 +289,32 @@ def selftest(args):
         return None
 
     # Generate opts array neccessary for ResilientComponent instantiation
-    from resilient_circuits import app
     opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
-
-    # contains package names and their selftest statuses
-    package_status = []
 
     for dist, component_list in components.items():
         # add an entry for the package
-        package_status.append({"package_name": str(dist.as_requirement()), "selftests": []})
-        for ep in component_list:
-            state = "unimplemented"
-                
+        LOG.info("%s:", str(dist.as_requirement()))
+        for ep in component_list:                
             # load the entry point
             f_selftest = ep.load()
+
             try:
                 # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                start_time_milliseconds = int(round(time.time() * 1000))
+
                 status = f_selftest(opts)
+
+                end_time_milliseconds = int(round(time.time() * 1000))
+
+                delta_milliseconds = end_time_milliseconds - start_time_milliseconds
+                seconds = int(round(delta_milliseconds / 1000))
+                millisecond_remainder = delta_milliseconds % 1000
+
                 if status["state"] is not None:
-                    state = status["state"]
+                   LOG.info("\t%s: %s, Elapsed time: %i.%i seconds", ep.name, status["state"], seconds, millisecond_remainder)
             except Exception as e:
-                LOG.error("Error while calling %s selftest function. Exception: %s", ep.name, str(e))
+                LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
                 continue
-
-            # find the entry in package_status we added before and add the selftest
-            for status in package_status:
-                if status["package_name"] == str(dist.as_requirement()):
-                    status["selftests"].append({"function_name": ep.name, "state": state})
-
-    # print the status for each package
-    for status in package_status:
-        LOG.info("%s:", status["package_name"])
-        for selftest in status["selftests"]:
-            LOG.info("\t%s: %s", selftest["function_name"], selftest["state"])
 
 def main():
     """Main commandline"""
