@@ -304,7 +304,6 @@ class FunctionException_(BaseFunctionError):
             message += "".join(traceback.format_exception(*self.args))
         return message
 
-
 class FunctionError_(BaseFunctionError):
     """Wraps a simple "we failed" error from a function call."""
     def __init__(self, *args, **kwargs):

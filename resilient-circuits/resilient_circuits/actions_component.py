@@ -694,19 +694,18 @@ class Actions(ResilientComponent):
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
         try:
-            if etype:
-                print(issubclass(etype, BaseFunctionError))
-                if issubclass(etype, BaseFunctionError) and not value.trace:
-                    message = str(value)
-                else:
-                    message = etype.__name__ + u": <" + u"{}".format(value) + u">"
+            message = u""
+            print(etype is not None, traceback is not None)
+            if etype and issubclass(etype, BaseFunctionError):
+                message = str(value)
             else:
-                message = u"Processing failed"
-            if traceback and isinstance(traceback, list):
-                if issubclass(etype, BaseFunctionError) and not value.trace:
-                    pass
+                if etype:
+                    message = message + etype.__name__ + u": <" + u"{}".format(value) + u">"
                 else:
+                    message = u"Processing failed"
+                if traceback and isinstance(traceback, list):
                     message = message + "\n" + ("".join(traceback))
+
             LOG.exception(u"%s (%s): %s", repr(fevent), repr(etype), message)
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
