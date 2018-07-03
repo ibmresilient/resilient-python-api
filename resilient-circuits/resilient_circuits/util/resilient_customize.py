@@ -116,10 +116,10 @@ def customize_resilient(args):
     # Call each of the 'customize' entry points to get type definitions,
     # then apply them to the resilient server
     entry_points = pkg_resources.iter_entry_points('resilient.circuits.customize')
-    do_customize_resilient(client, entry_points, args.yflag)
+    do_customize_resilient(client, entry_points, args.yflag, args.install_list)
 
 
-def do_customize_resilient(client, entry_points, yflag):
+def do_customize_resilient(client, entry_points, yflag, install_list):
     """import customizations to the resilient server"""
     ep_count = 0
     customizations = Customizations(client, yflag)
@@ -127,43 +127,45 @@ def do_customize_resilient(client, entry_points, yflag):
         ep_count = ep_count + 1
         def_count = 0
         dist = entry.dist
+        dist_str = str(entry.dist).replace(' ', '==')
 
-        try:
-            func = entry.load()
-        except ImportError:
-            LOG.exception(u"Customizations for package '%s' cannot be loaded.", repr(dist))
-            continue
-
-        # The entrypoint function should be a generator
-        # that produces Definitions in the sequence required:
-        # usually that means:
-        # - fields first,
-        # - then message destinations,
-        # - then actions, functions, etc
-
-        LOG.info(u"Package '%s':", dist)
-        definitions = func(client=client)
-        for definition in definitions:
-            def_count = def_count + 1
-            if not isinstance(definition, Definition):
-                pass
+        if install_list is None or dist_str in install_list:
             try:
-                if isinstance(definition, ImportDefinition):
-                    customizations.load_import(definition, dist)
-                elif isinstance(definition, TypeDefinition):
-                    customizations.load_types(definition)
-                elif isinstance(definition, MessageDestinationDefinition):
-                    customizations.load_message_destinations(definition)
-                elif isinstance(definition, ActionDefinition):
-                    customizations.load_actions(definition)
-                elif isinstance(definition, FunctionDefinition):
-                    customizations.load_functions(definition)
-                else:
-                    LOG.error(u"Not implemented: %s", type(definition))
-            except SimpleHTTPException:
-                LOG.error(u"Failed, %s", customizations.doing)
-                raise
-        LOG.info(u"Package '%s' done.", dist)
+                func = entry.load()
+            except ImportError:
+                LOG.exception(u"Customizations for package '%s' cannot be loaded.", repr(dist))
+                continue
+
+            # The entrypoint function should be a generator
+            # that produces Definitions in the sequence required:
+            # usually that means:
+            # - fields first,
+            # - then message destinations,
+            # - then actions, functions, etc
+
+            LOG.info(u"Package '%s':", dist)
+            definitions = func(client=client)
+            for definition in definitions:
+                def_count = def_count + 1
+                if not isinstance(definition, Definition):
+                    pass
+                try:
+                    if isinstance(definition, ImportDefinition):
+                        customizations.load_import(definition, dist)
+                    elif isinstance(definition, TypeDefinition):
+                        customizations.load_types(definition)
+                    elif isinstance(definition, MessageDestinationDefinition):
+                        customizations.load_message_destinations(definition)
+                    elif isinstance(definition, ActionDefinition):
+                        customizations.load_actions(definition)
+                    elif isinstance(definition, FunctionDefinition):
+                        customizations.load_functions(definition)
+                    else:
+                        LOG.error(u"Not implemented: %s", type(definition))
+                except SimpleHTTPException:
+                    LOG.error(u"Failed, %s", customizations.doing)
+                    raise
+            LOG.info(u"Package '%s' done.", dist)
 
     if ep_count == 0:
         LOG.info(u"No customizations are defined by installed packages.")
