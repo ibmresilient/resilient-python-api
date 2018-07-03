@@ -169,8 +169,9 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
                     raise
             LOG.info(u"Package '%s' done.", dist)
 
-    for function in install_list:
-        print(function + ' not found')
+    if install_list is not None:
+        for function in install_list:
+            print(function + ' not found')
 
     if ep_count == 0:
         LOG.info(u"No customizations are defined by installed packages.")
