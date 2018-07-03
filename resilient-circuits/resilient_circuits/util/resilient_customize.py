@@ -130,6 +130,8 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
         dist_str = str(entry.dist).replace(' ', '==')
 
         if install_list is None or dist_str in install_list:
+            if install_list is not None:
+                install_list.remove(dist_str)
             try:
                 func = entry.load()
             except ImportError:
@@ -166,6 +168,9 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
                     LOG.error(u"Failed, %s", customizations.doing)
                     raise
             LOG.info(u"Package '%s' done.", dist)
+
+    for function in install_list:
+        print(function + ' not found')
 
     if ep_count == 0:
         LOG.info(u"No customizations are defined by installed packages.")
