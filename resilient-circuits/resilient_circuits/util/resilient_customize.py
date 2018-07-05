@@ -127,7 +127,7 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
         ep_count = ep_count + 1
         def_count = 0
         dist = entry.dist
-        dist_str = str(entry.dist).replace(' ', '==')
+        dist_str = str(dist.as_requirement())
 
         if install_list is None or dist_str in install_list:
             if install_list is not None:
