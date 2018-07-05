@@ -157,7 +157,20 @@ def iso8601(val):
 
 
 def timestamp(val):
-    """Try convert non-timestamp values to a timestamp"""
+    """Try convert non-timestamp values to a timestamp
+
+       >>> timestamp({"year": 2018, "month": 8, "day": 1, "timezoneID": "CET"})
+       1533078000000
+
+       >>> timestamp(jinja2.Undefined())
+       'null'
+
+       >>> timestamp("now") > 1530000000000
+       True
+
+       >>> timestamp("now") > 2000000000000 # 2033
+       False
+    """
     if isinstance(val, dict):
         y = val.get("year", 1970)
         m = val.get("month", 1)
@@ -173,6 +186,8 @@ def timestamp(val):
         return "null"
     if isinstance(val, datetime.datetime):
         return int(calendar.timegm(val.utctimetuple()) * 1000)
+    if val == "now":
+        return int(calendar.timegm(datetime.datetime.now().utctimetuple()) * 1000)
     return val
 
 
