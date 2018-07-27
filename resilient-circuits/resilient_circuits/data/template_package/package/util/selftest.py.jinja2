@@ -12,10 +12,11 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
 
-def _selftest_function(opts):
+
+def selftest_function(opts):
     """
     Placeholder for selftest function. An example use would be to test package api connectivity.
-	Suggested return values are be unimplemented, success, or failure.
+    Suggested return values are be unimplemented, success, or failure.
     """
-    self.options = opts.get("{{package}}", {})
-    return { "state": "unimplemented" }
+    options = opts.get("{{package}}", {})
+    return {"state": "unimplemented"}
