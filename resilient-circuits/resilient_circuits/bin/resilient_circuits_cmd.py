@@ -369,6 +369,10 @@ def main():
                                   dest="yflag",
                                   help="Customize without prompting for confirmation",
                                   action="store_true")
+    customize_parser.add_argument("-i", "--install",
+                                  dest="install_list",
+                                  help="Install specified function(s)",
+                                  nargs="+")
 
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
