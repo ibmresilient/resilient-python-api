@@ -276,7 +276,8 @@ def generate_code(args):
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
 def selftest(args):
-    """loop through every selftest for every eligible package, call and store returned state, print out package and their selftest states"""
+    """loop through every selftest for every eligible package, call and store returned state, 
+    print out package and their selftest states"""
     components = defaultdict(list)
 
     # custom entry_point only for selftest functions
