@@ -308,11 +308,10 @@ def selftest(args):
                 end_time_milliseconds = int(round(time.time() * 1000))
 
                 delta_milliseconds = end_time_milliseconds - start_time_milliseconds
-                seconds = int(round(delta_milliseconds / 1000))
-                millisecond_remainder = delta_milliseconds % 1000
+                delta_seconds = delta_milliseconds / 1000
 
                 if status["state"] is not None:
-                   LOG.info("\t%s: %s, Elapsed time: %i.%i seconds", ep.name, status["state"], seconds, millisecond_remainder)
+                   LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
             except Exception as e:
                 LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
                 continue
