@@ -270,12 +270,18 @@ class BaseFunctionError(ValueError):
     more precisely if it's a resilient-circuits error, and not a ValueError, but doesn't require
     to check for both separately.
     """
+
     def __init__(self, *args, **kwargs):
+        messages = kwargs.pop("messages", None)
+        trace = kwargs.pop("trace", False)
         super(BaseFunctionError, self).__init__(*args, **kwargs)
+        self.messages = messages
+        self.trace = trace
 
 
 def FunctionError(*args, **kwargs):
-    """A convenient error to be raised in a function call."""
+    """A convenient error to be raised in a function call.
+    """
     # Just grab the stack trace and wrap in a FunctionError_.
     exc = sys.exc_info()
     if not exc[0]:
@@ -285,12 +291,9 @@ def FunctionError(*args, **kwargs):
 
 class FunctionException_(BaseFunctionError):
     """Wraps an exception from a function call."""
+
     def __init__(self, *args, **kwargs):
-        messages = kwargs.pop("messages", None)
-        trace = kwargs.pop("trace", True)
         super(FunctionException_, self).__init__(*args, **kwargs)
-        self.messages = messages
-        self.trace = trace
 
     def __str__(self):
         """
@@ -310,9 +313,12 @@ class FunctionError_(BaseFunctionError):
         super(FunctionError_, self).__init__(*args, **kwargs)
 
     def __str__(self):
-        if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
-            return self.args[0]
-        return ""
+        message = ""
+        if self.trace and isinstance(self.args, (tuple, list)) and len(self.args) > 0:
+            message += "".join([str(msg)+"\n" for msg in self.args])
+        else:
+            message += self.args[0]
+        return message
 
 
 class StatusMessageEvent(Event):
