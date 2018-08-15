@@ -371,7 +371,8 @@ def main():
                                   action="store_true")
     customize_parser.add_argument("-i", "--install",
                                   dest="install_list",
-                                  help="Install specified function(s)",
+                                  help="Apply customizations for the specified package(s). "
+                                       "The package name must include the version, i.e. fn_package==1.0.0",
                                   nargs="+")
 
     args, unknown_args = parser.parse_known_args()
