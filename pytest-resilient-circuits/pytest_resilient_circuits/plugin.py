@@ -10,6 +10,7 @@ _help_email = "Resilient user email"
 _help_host = "Resilient host"
 _help_password = "Resilient password"
 _help_org = "Resilient org"
+_help_app_config = "Resilient app.config file"
 
 
 def pytest_addoption(parser):
@@ -34,6 +35,12 @@ def pytest_addoption(parser):
 
     parser.addoption("--resilient_org",
                      help=_help_org,
+                     action="store",
+                     default="",
+                     required=False)
+
+    parser.addoption("--resilient_app_config",
+                     help=_help_app_config,
                      action="store",
                      default="",
                      required=False)

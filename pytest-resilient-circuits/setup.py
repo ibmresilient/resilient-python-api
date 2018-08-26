@@ -13,7 +13,8 @@ major, minor = requires_resilient_version.split('.', 2)[:2]
 requirements = [
     'pytest>=3.0.0',
     'resilient>={}.{}'.format(major, minor),
-    'resilient-circuits>={}.{}'.format(major, minor)
+    'resilient-circuits>={}.{}'.format(major, minor),
+    'ConfigParser'
 ]
 
 setup(

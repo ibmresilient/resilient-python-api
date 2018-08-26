@@ -15,6 +15,15 @@ from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
 from resilient import SimpleHTTPException
 import resilient_circuits.app
+try:
+    import StringIO
+except:
+    from io import StringIO
+
+try:
+    import ConfigParser as configarser
+except:
+    import configparser
 
 DATATABLE_TYPE_ID = 8
 
@@ -294,6 +303,7 @@ class ConfiguredAppliance:
 
 class ResilientCircuits:
     def __init__(self, tmpdir_factory, manager, watcher, request):
+        RESILIENT = "resilient"
 
         # Reset the rest client b/c it is a global variable
         resilient_circuits.rest_helper.reset_resilient_client()
@@ -307,57 +317,113 @@ no_prompt_password = True
 port = 443
 test_actions = True
 """
+        resilient_properties = {
+            "logfile": "app.log",
+            "loglevel": "INFO",
+            "cafile": "false",
+            "stomp_port": 65001,
+            "port": 443
+        }
+
         print("CURRENT WORKING DIR:  Addr: ", os.getcwd(), id(self))
 
-        resilient_mock = getattr(request.module, "resilient_mock", None)
-        self.config_file = tmpdir_factory.mktemp('data').join("%dapp.config" % id(self))
-        print("TEST config={}".format(self.config_file.strpath))
+        # see if a app.config file is given, otherwise review all the other environment variables to build one
+        app_config = os.environ.get("TEST_RESILIENT_APP_CONFIG")
+        if app_config:
+            print("TEST app.config={} (from environment)".format(app_config))
+        else:
+            app_config = request.config.option.resilient_app_config
+            print("TEST app.config={} (from configuration data)".format(app_config))
 
-        self.logs = tmpdir_factory.mktemp("logs")
-        print("TEST logdir={}".format(self.logs))
+        # temp files for app config settings and logs
+        config_file = tmpdir_factory.mktemp('data').join("%dapp.config" % id(self))
+        print("TEST config={}".format(config_file.strpath))
 
-        config_data = getattr(request.module, "config_data", "")
-        self.config_file.write(resilient_config_data)
+        logs = tmpdir_factory.mktemp("logs")
+        print("TEST logdir={}".format(logs.strpath))
 
+        # if an existing config file is given, use it
+        config_parser = configparser.ConfigParser()
+        if app_config:
+            app_config = config_parser.read(app_config)
+            #with open(app_config, 'r') as f:
+            #    self.config_file.write(f.read())
+        else:
+            # build a config file using canned values for [resilient] and the integration we're testing
+            #self.config_file.write(resilient_config_data)
+            # use canned values
+            config_parser[RESILIENT] = resilient_properties
+            config_data = getattr(request.module, "config_data", "")
+            config_parser.readfp(StringIO.StringIO(config_data))
+
+        # add environment variables which override existing values
         host = os.environ.get("TEST_RESILIENT_APPLIANCE")
         if host:
             print("TEST host={} (from environment)".format(host))
         else:
             host = request.config.option.resilient_host
             print("TEST host={} (from configuration data)".format(host))
-        self.config_file.write("host = %s\n" % host, mode='a')
 
-        self.org = os.environ.get("TEST_RESILIENT_ORG")
-        if self.org:
-            print("TEST org={} (from environment)".format(self.org))
-        else:
-            self.org = request.config.option.resilient_org
-            print("TEST org={} (from configuration data)".format(self.org))
-        self.config_file.write("org = %s\n" % self.org, mode='a')
+        if host:
+            config_parser[RESILIENT]["host"] = host
+        #self.config_file.write("host = %s\n" % host, mode='a')
 
-        self.user = os.environ.get("TEST_RESILIENT_USER")
-        if self.user:
-            print("TEST user={} (from environment)".format(self.user))
+        org = os.environ.get("TEST_RESILIENT_ORG")
+        if org:
+            print("TEST org={} (from environment)".format(org))
         else:
-            self.user = request.config.option.resilient_email
-            print("TEST user={} (from configuration data)".format(self.user))
-        self.config_file.write("email = %s\n" % self.user, mode='a')
+            org = request.config.option.resilient_org
+            print("TEST org={} (from configuration data)".format(org))
+
+        if org:
+            config_parser[RESILIENT]["org"] = org
+        #self.config_file.write("org = %s\n" % org, mode='a')
+
+        user = os.environ.get("TEST_RESILIENT_USER")
+        if user:
+            print("TEST user={} (from environment)".format(user))
+        else:
+            user = request.config.option.resilient_email
+            print("TEST user={} (from configuration data)".format(user))
+
+        if user:
+            config_parser[RESILIENT]["email"] = user
+        #self.config_file.write("email = %s\n" % user, mode='a')
 
         password = os.environ.get("TEST_RESILIENT_PASSWORD", request.config.option.resilient_password)
-        self.config_file.write("password = %s\n" % password, mode='a')
-        self.config_file.write("log_http_responses = %s\n" % self.logs, mode='a')
-        self.config_file.write("logdir = %s\n" % self.logs, mode='a')
-        self.config_file.write("test_port = 0\n", mode='a')
+        if password:
+            config_parser[RESILIENT]["password"] = password
+        #self.config_file.write("password = %s\n" % password, mode='a')
+
+        # common values
+        config_parser[RESILIENT]["no_prompt_password"] = "True"
+        config_parser[RESILIENT]["test_actions"] = "True"
+        config_parser[RESILIENT]["log_http_responses"] = logs.strpath
+        config_parser[RESILIENT]["logdir"] = logs.strpath
+        config_parser[RESILIENT]["test_port"] = "0"
+        #self.config_file.write("log_http_responses = %s\n" % logs, mode='a')
+        #self.config_file.write("logdir = %s\n" % logs, mode='a')
+        #self.config_file.write("test_port = 0\n", mode='a')
+
+        resilient_mock = getattr(request.module, "resilient_mock", None)
         if resilient_mock:
             if isinstance(resilient_mock, type):
-                self.config_file.write("resilient_mock = %s.%s\n" % (resilient_mock.__module__, resilient_mock.__name__), mode='a')
+                config_parser[RESILIENT]["resilient_mock"] = "%s.%s".format(resilient_mock.__module__, resilient_mock.__name__)
+                #self.config_file.write("resilient_mock = %s.%s\n" % (resilient_mock.__module__, resilient_mock.__name__), mode='a')
             else:
-                self.config_file.write("resilient_mock = %s\n" % resilient_mock, mode='a')
+                config_parser[RESILIENT]["resilient_mock"] = resilient_mock
+                #self.config_file.write("resilient_mock = %s\n" % resilient_mock, mode='a')
 
-        self.config_file.write(config_data, mode='a')
-        os.environ["APP_CONFIG_FILE"] = self.config_file.strpath
+        # write the contents to our temporary file
+        with open(config_file, 'w') as f:    # save
+            config_parser.write(f)
+
+        #config_data = getattr(request.module, "config_data", "")
+        #self.config_file.write(config_data, mode='a')
+
+        os.environ["APP_CONFIG_FILE"] = config_file.strpath
         # Set this manually b/c it is only read on import in app.py
-        resilient_circuits.app.APP_CONFIG_FILE = self.config_file.strpath
+        resilient_circuits.app.APP_CONFIG_FILE = config_file.strpath
 
         self.manager = manager
         self.watcher = watcher
