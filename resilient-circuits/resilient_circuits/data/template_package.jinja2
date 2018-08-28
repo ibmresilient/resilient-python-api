@@ -18,6 +18,7 @@
             "__init__.py":  "template_package/package/util/__init__.py.jinja2"
         }
     },
+    "doc":{},
     "tests": {
 {%set comma=joiner(",")%}{%for function_name in functions.keys()%}{{comma()}}
         "test_{{function_name}}.py@{{function_name}}": "template_package/tests/test_function.py.jinja2"
