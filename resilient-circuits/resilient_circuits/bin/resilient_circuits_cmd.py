@@ -468,8 +468,10 @@ def main():
                                   nargs="+")
 
     clone_parser.add_argument("--workflow",
-                              help="Clone workflows. <old-api-name> <new-api-name>",
-                              nargs="*")
+                              help='Clone workflows. "old-api-name" "new-api-name". Workflows are based off of the'
+                                   'the last export. To update exports Administrator Settings > Organization >'
+                                   ' Export > Export Button',
+                              nargs=2)
 
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
