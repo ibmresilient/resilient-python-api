@@ -320,7 +320,6 @@ def clone(args):
         if len(workflow_names) != 2:
             raise Exception("Only specify the original workflow api name and a new workflow api name")
 
-            if workflow_defs is None:
         # Check that 'workflows' are available (v28 onward)
         workflow_defs = export_data.get("workflows")
         if workflow_defs is None:
