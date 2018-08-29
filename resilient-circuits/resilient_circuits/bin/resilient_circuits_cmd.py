@@ -320,35 +320,36 @@ def clone(args):
         if len(workflow_names) != 2:
             raise Exception("Only specify the original workflow api name and a new workflow api name")
 
-        if workflow_names:
-            # Check that 'workflows' are available (v28 onward)
-            workflow_defs = export_data.get("workflows")
             if workflow_defs is None:
-                raise Exception("Export does not contain workflows")
-        else:
-            workflow_names = []
+        # Check that 'workflows' are available (v28 onward)
+        workflow_defs = export_data.get("workflows")
+        if workflow_defs is None:
+            raise Exception("Export does not contain workflows")
 
         original_workflow_api_name = workflow_names[0]
         new_workflow_api_name = workflow_names[1]
 
-        duplicate_check = find_workflow_by_programmatic_name(export_data.get("workflows"), new_workflow_api_name)
+        duplicate_check = find_workflow_by_programmatic_name(workflow_defs, new_workflow_api_name)
         if duplicate_check is not None:
             raise Exception("Workflow with the api name {} already exists!".format(new_workflow_api_name))
 
-        original_workflow = find_workflow_by_programmatic_name(export_data.get("workflows"), original_workflow_api_name)
+        original_workflow = find_workflow_by_programmatic_name(workflow_defs, original_workflow_api_name)
         if original_workflow is None:
             raise Exception("Could not find original workflow {}!".format(original_workflow_api_name))
 
         # This section just fills out the stuff we need to replace to duplicate
         new_workflow = original_workflow.copy()
-        new_workflow["uuid"] = str(uuid.uuid4())  # Random UUID
+        # Random UUID, not guaranteed to not collide but is extremely extremely extremely unlikely to collide
+        new_workflow["uuid"] = str(uuid.uuid4())
         new_workflow["programmatic_name"] = new_workflow_api_name
         new_workflow["export_key"] = new_workflow_api_name
         old_workflow_name = new_workflow["name"]
         new_workflow["name"] = new_workflow_api_name
         new_workflow["content"]["workflow_id"] = new_workflow_api_name
-        new_workflow["content"]["xml"] = new_workflow["content"]["xml"].replace(original_workflow_api_name, new_workflow_api_name)
-        new_workflow["content"]["xml"] = new_workflow["content"]["xml"].replace(old_workflow_name, new_workflow_api_name)
+        new_workflow["content"]["xml"] = new_workflow["content"]["xml"].replace(original_workflow_api_name,
+                                                                                new_workflow_api_name)
+        new_workflow["content"]["xml"] = new_workflow["content"]["xml"].replace(old_workflow_name,
+                                                                                new_workflow_api_name)
 
         new_export_data["workflows"] = [new_workflow]
 
@@ -469,7 +470,7 @@ def main():
 
     clone_parser.add_argument("--workflow",
                               help='Clone workflows. "old-api-name" "new-api-name". Workflows are based off of the'
-                                   'the last export. To update exports Administrator Settings > Organization >'
+                                   ' last export. To update exports Administrator Settings > Organization >'
                                    ' Export > Export Button',
                               nargs=2)
 
@@ -505,7 +506,11 @@ def main():
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
     elif args.cmd == "clone":
-        clone(args)
+        if args.workflow is None:
+            print('Please specify a workflow to clone')
+            clone_parser.print_usage()
+        else:
+            clone(args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
