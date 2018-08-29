@@ -12,10 +12,13 @@ import sys
 from collections import defaultdict
 import pkg_resources
 import resilient
+import datetime
+import uuid
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
 from resilient_circuits.util.resilient_customize import customize_resilient
-
+import io
+import json
 if sys.version_info.major == 2:
     from io import open
 else:
@@ -274,6 +277,94 @@ def generate_code(args):
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
 
+def find_workflow_by_programmatic_name(workflows, pname):
+    for workflow in workflows:
+        if workflow.get("programmatic_name") == pname:
+            return workflow
+
+    return None
+
+
+def clone(args):
+    parser = AppArgumentParser(config_file=resilient.get_config_file())
+    (opts, extra) = parser.parse_known_args()
+    client = resilient.get_client(opts)
+
+    export_uri = "/configurations/exports/history"
+    export_list = client.get(export_uri)["histories"]
+    last_date = 0
+    last_id = 0
+    for export in export_list:
+        if export["options"]["actions"] and export["options"]["phases_and_tasks"]:
+            if export["date"] > last_date:
+                last_date = export["date"]
+                last_id = export["id"]
+    if last_date == 0:
+        LOG.error(u"ERROR: No suitable export is available.  "
+                  u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
+        return
+
+    dt = datetime.datetime.utcfromtimestamp(last_date / 1000.0)
+    LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
+    export_uri = "/configurations/exports/{}".format(last_id)
+    export_data = client.get(export_uri)  # Get latest export
+
+    new_export_data = export_data.copy()
+    whitelist_dict_keys = ["incident_types", "fields"]  # Mandatory keys
+    for dict_key in new_export_data:
+        if dict_key not in whitelist_dict_keys and type(new_export_data[dict_key]) is list:
+            new_export_data[dict_key] = []  # clear the new export data, the stuff we clear isn't necessary for cloning
+
+    workflow_names = args.workflow  # names of workflow a (target) and b (new workflow)
+    if workflow_names:  # if we're importing workflows
+        if len(workflow_names) != 2:
+            raise Exception("Only specify the original workflow api name and a new workflow api name")
+
+        # Check that 'workflows' are available (v28 onward)
+        workflow_defs = export_data.get("workflows")
+        if workflow_defs is None:
+            raise Exception("Export does not contain workflows")
+
+        original_workflow_api_name = workflow_names[0]
+        new_workflow_api_name = workflow_names[1]
+
+        duplicate_check = find_workflow_by_programmatic_name(workflow_defs, new_workflow_api_name)
+        if duplicate_check is not None:
+            raise Exception("Workflow with the api name {} already exists!".format(new_workflow_api_name))
+
+        original_workflow = find_workflow_by_programmatic_name(workflow_defs, original_workflow_api_name)
+        if original_workflow is None:
+            raise Exception("Could not find original workflow {}!".format(original_workflow_api_name))
+
+        # This section just fills out the stuff we need to replace to duplicate
+        new_workflow = original_workflow.copy()
+        # Random UUID, not guaranteed to not collide but is extremely extremely extremely unlikely to collide
+        new_workflow["uuid"] = str(uuid.uuid4())
+        new_workflow["programmatic_name"] = new_workflow_api_name
+        new_workflow["export_key"] = new_workflow_api_name
+        old_workflow_name = new_workflow["name"]
+        new_workflow["name"] = new_workflow_api_name
+        new_workflow["content"]["workflow_id"] = new_workflow_api_name
+        new_workflow["content"]["xml"] = new_workflow["content"]["xml"].replace(original_workflow_api_name,
+                                                                                new_workflow_api_name)
+        new_workflow["content"]["xml"] = new_workflow["content"]["xml"].replace(old_workflow_name,
+                                                                                new_workflow_api_name)
+
+        new_export_data["workflows"] = [new_workflow]
+
+    uri = "/configurations/imports"
+    result = client.post(uri, new_export_data)
+    import_id = result["id"]  # if this isn't here and the response code is 200 OK, something went really wrong
+
+    if result["status"] == "PENDING":
+        result["status"] = "ACCEPTED"      # Have to confirm changes
+        uri = "/configurations/imports/{}".format(import_id)
+        client.put(uri, result)
+        LOG.info("Imported successfully")
+    else:
+        raise Exception("Could not import because the server did not return an import ID")
+
+
 def main():
     """Main commandline"""
     parser = argparse.ArgumentParser()
@@ -299,6 +390,8 @@ def main():
                                            help="Generate template code for Python components")
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
+    clone_parser = subparsers.add_parser("clone",
+                                         help="Clone Resilient objects")
 
     # Options for 'list'
     list_parser.add_argument("-v", "--verbose", action="store_true")
@@ -371,9 +464,14 @@ def main():
                                   action="store_true")
     customize_parser.add_argument("-i", "--install",
                                   dest="install_list",
-                                  help="Apply customizations for the specified package(s). "
-                                       "The package name must include the version, i.e. fn_package==1.0.0",
+                                  help="Install specified function(s)",
                                   nargs="+")
+
+    clone_parser.add_argument("--workflow",
+                              help='Clone workflows. "old-api-name" "new-api-name". Workflows are based off of the'
+                                   ' last export. To update exports Administrator Settings > Organization >'
+                                   ' Export > Export Button',
+                              nargs=2)
 
     args, unknown_args = parser.parse_known_args()
     if args.verbose:
@@ -406,7 +504,12 @@ def main():
     elif args.cmd == "customize":
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
-
+    elif args.cmd == "clone":
+        if args.workflow is None:
+            print('Please specify a workflow to clone')
+            clone_parser.print_usage()
+        else:
+            clone(args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
