@@ -275,6 +275,16 @@ def generate_code(args):
         if not output_file.endswith(".py"):
             output_file = output_file + ".py"
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
+    elif args.reload:
+        output_base = os.path.join(os.curdir, args.package)
+
+        if os.path.isfile()
+            os.rename()
+
+        codegen_package(client, args.exportfile, args.package,
+                        args.messagedestination, args.function, args.workflow, args.rule,
+                        args.field, args.datatable, args.task, args.script,
+                        os.path.expanduser(output_base))
 
 
 def find_workflow_by_programmatic_name(workflows, pname):
@@ -455,7 +465,9 @@ def main():
                                 help="Include customization data for script(s)",
                                 nargs="*")
     codegen_parser.add_argument("--exportfile",
-                                help="Generate based on organization export file (.res)")
+                                help="Generate based on organization export file (.res)"),
+    codegen_parser.add_argument("--reload",
+                                help="Reload customizations and create new customize.py")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",
