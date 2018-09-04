@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
 """ Command line tool to manage and run resilient-circuits """
@@ -17,11 +18,8 @@ import uuid
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
 from resilient_circuits.util.resilient_customize import customize_resilient
-from resilient_circuits import app
 import time
 
-import io
-import json
 if sys.version_info.major == 2:
     from io import open
 else:
@@ -220,6 +218,7 @@ def generate_or_update_config(args):
         with open(config_filename, "a", encoding="utf-8") as config_file:
             for entry in entry_points:
                 dist = entry.dist
+                package_name = entry.dist.project_name
                 try:
                     func = entry.load()
                 except ImportError:
@@ -240,10 +239,11 @@ def generate_or_update_config(args):
 
                 LOG.debug(u"Required Section: %s", new_section)
                 if new_section and new_section not in existing_sections:
-                    # Add the default data for this required section to the config file
-                    LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
-                    config_file.write(u"\n" + config_data)
-                    updated = True
+                    if args.install_list is None or package_name in args.install_list:
+                        # Add the default data for this required section to the config file
+                        LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
+                        config_file.write(u"\n" + config_data)
+                        updated = True
                 else:
                     LOG.debug(u"Section '%s' already present, not adding", new_section)
 
@@ -281,7 +281,8 @@ def generate_code(args):
 
 def selftest(args):
     """loop through every selftest for every eligible package, call and store returned state,
-    print out package and their selftest states"""
+        print out package and their selftest states"""
+
     components = defaultdict(list)
 
     # custom entry_point only for selftest functions
@@ -293,32 +294,33 @@ def selftest(args):
         LOG.info("No selftest entry points found.")
         return None
 
-    # Generate opts array neccessary for ResilientComponent instantiation
+    # Generate opts array necessary for ResilientComponent instantiation
     opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
 
     for dist, component_list in components.items():
-        # add an entry for the package
-        LOG.info("%s:", str(dist.as_requirement()))
-        for ep in component_list:
-            # load the entry point
-            f_selftest = ep.load()
+        if args.install_list is None or dist.project_name in args.install_list:
+            # add an entry for the package
+            LOG.info("%s:", str(dist.as_requirement()))
+            for ep in component_list:
+                # load the entry point
+                f_selftest = ep.load()
 
-            try:
-                # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
-                start_time_milliseconds = int(round(time.time() * 1000))
+                try:
+                    # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                    start_time_milliseconds = int(round(time.time() * 1000))
 
-                status = f_selftest(opts)
+                    status = f_selftest(opts)
 
-                end_time_milliseconds = int(round(time.time() * 1000))
+                    end_time_milliseconds = int(round(time.time() * 1000))
 
-                delta_milliseconds = end_time_milliseconds - start_time_milliseconds
-                delta_seconds = delta_milliseconds / 1000
+                    delta_milliseconds = end_time_milliseconds - start_time_milliseconds
+                    delta_seconds = delta_milliseconds / 1000
 
-                if status["state"] is not None:
-                   LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
-            except Exception as e:
-                LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
-                continue
+                    if status["state"] is not None:
+                       LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
+                except Exception as e:
+                    LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
+                    continue
 
 def find_workflow_by_programmatic_name(workflows, pname):
     for workflow in workflows:
@@ -438,6 +440,12 @@ def main():
     clone_parser = subparsers.add_parser("clone",
                                          help="Clone Resilient objects")
 
+    # Options for selftest
+    selftest_parser.add_argument("-l", "--list",
+                               dest="install_list",
+                               help="Test specified list of package(s)",
+                               nargs="+")
+
     # Options for 'list'
     list_parser.add_argument("-v", "--verbose", action="store_true")
 
@@ -453,6 +461,10 @@ def main():
                                help="Config file to write to; e.g. 'app.config'",
                                default="",
                                nargs="?")
+    config_parser.add_argument("-l", "--list",
+                                  dest="install_list",
+                                  help="Config specified list of package(s)",
+                                  nargs="+")
 
     # Options for 'run'
     run_parser.add_argument("-r", "--auto-restart",
@@ -507,9 +519,9 @@ def main():
                                   dest="yflag",
                                   help="Customize without prompting for confirmation",
                                   action="store_true")
-    customize_parser.add_argument("-i", "--install",
+    customize_parser.add_argument("-l", "--list",
                                   dest="install_list",
-                                  help="Install specified function(s)",
+                                  help="Install specified list of package(s)",
                                   nargs="+")
 
     clone_parser.add_argument("--workflow",
