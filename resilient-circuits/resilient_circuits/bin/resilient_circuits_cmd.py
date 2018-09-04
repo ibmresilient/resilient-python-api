@@ -17,6 +17,9 @@ import uuid
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
 from resilient_circuits.util.resilient_customize import customize_resilient
+from resilient_circuits import app
+import time
+
 import io
 import json
 if sys.version_info.major == 2:
@@ -276,6 +279,46 @@ def generate_code(args):
             output_file = output_file + ".py"
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
+def selftest(args):
+    """loop through every selftest for every eligible package, call and store returned state,
+    print out package and their selftest states"""
+    components = defaultdict(list)
+
+    # custom entry_point only for selftest functions
+    selftest_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.selftest')]
+    for ep in selftest_entry_points:
+        components[ep.dist].append(ep)
+
+    if len(selftest_entry_points) == 0:
+        LOG.info("No selftest entry points found.")
+        return None
+
+    # Generate opts array neccessary for ResilientComponent instantiation
+    opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
+
+    for dist, component_list in components.items():
+        # add an entry for the package
+        LOG.info("%s:", str(dist.as_requirement()))
+        for ep in component_list:
+            # load the entry point
+            f_selftest = ep.load()
+
+            try:
+                # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                start_time_milliseconds = int(round(time.time() * 1000))
+
+                status = f_selftest(opts)
+
+                end_time_milliseconds = int(round(time.time() * 1000))
+
+                delta_milliseconds = end_time_milliseconds - start_time_milliseconds
+                delta_seconds = delta_milliseconds / 1000
+
+                if status["state"] is not None:
+                   LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
+            except Exception as e:
+                LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
+                continue
 
 def find_workflow_by_programmatic_name(workflows, pname):
     for workflow in workflows:
@@ -390,6 +433,8 @@ def main():
                                            help="Generate template code for Python components")
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
+    selftest_parser = subparsers.add_parser("selftest",
+                                        help="Calls selftest functions for every package and prints out their return states")
     clone_parser = subparsers.add_parser("clone",
                                          help="Clone Resilient objects")
 
@@ -510,6 +555,8 @@ def main():
             clone_parser.print_usage()
         else:
             clone(args)
+    elif args.cmd == "selftest":
+        selftest(args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
