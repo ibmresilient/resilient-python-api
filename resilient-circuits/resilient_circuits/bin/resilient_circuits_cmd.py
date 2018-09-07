@@ -15,7 +15,7 @@ import resilient
 import datetime
 import uuid
 from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
+from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, get_codegen_reload_data
 from resilient_circuits.util.resilient_customize import customize_resilient
 import io
 import json
@@ -257,7 +257,9 @@ def generate_code(args):
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
 
-    if args.package:
+    if args.reload:
+        codegen_reload_package(client, args)
+    elif args.package:
         # codegen an installable package
         output_base = os.path.join(os.curdir, args.package)
         codegen_package(client, args.exportfile, args.package,
@@ -276,6 +278,68 @@ def generate_code(args):
             output_file = output_file + ".py"
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
+def codegen_reload_package(client, args):
+    """Generate a package using previous codegen parameters and add any new ones from the commandline."""
+    # Get the location of current customize.py for this package
+    output_base = os.path.join(os.getcwd(), args.reload)
+    customize_dir = os.path.join(output_base, args.reload, "util")
+    customize_file = os.path.join(customize_dir, "customize.py")
+
+    # Check if there is a customize.py already.  We need to get the
+    # reload commands from the current customize.py and if it's not
+    # there then exit.
+    if not os.path.isfile(customize_file):
+        raise Exception(u"{} does not exist. Run resilient_circuits codegen without --reload option to create it.".format(customize_file))
+
+    # Get the previous params for codegen from the customize.py
+    # codegen_reload_data function.
+    codegen_params = get_codegen_reload_data(args.reload)
+
+    # Rename the old customize.py file to customize-yyyymmdd-hhmmss.py
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    old_customize_file = os.path.join(customize_dir, "customize-{}.py".format(now))
+    LOG.info(u"Renaming customize.py to %s", old_customize_file)
+    os.rename(customize_file, old_customize_file)
+
+    # If there are new commandline parameters, append them to the old commandline
+    # list for each param type.
+    if args.messagedestination is not None:
+        codegen_params["message_destinations"].extend(args.messagedestination)
+
+    if args.function is not None:
+        codegen_params["functions"].extend(args.function)
+
+    if args.rule is not None:
+        codegen_params["actions"].extend(args.rule)
+
+    if args.workflow is not None:
+        codegen_params["workflows"].extend(args.workflow)
+
+    if args.field is not None:
+        codegen_params["incident_fields"].extend(args.field)
+
+    if args.datatable is not None:
+        codegen_params["datatables"].extend(args.datatable)
+
+    if args.task is not None:
+        codegen_params["automatic_tasks"].extend(args.task)
+
+    if args.script is not None:
+        codegen_params["scripts"].extend(args.script)
+
+    # Call codegen to recreate package with the new parameter list.
+    codegen_package(client,
+                    args.exportfile,
+                    args.reload,
+                    codegen_params["message_destinations"],
+                    codegen_params["functions"],
+                    codegen_params["workflows"],
+                    codegen_params["actions"],
+                    codegen_params["incident_fields"],
+                    codegen_params["datatables"],
+                    codegen_params["automatic_tasks"],
+                    codegen_params["scripts"],
+                    output_base)
 
 def find_workflow_by_programmatic_name(workflows, pname):
     for workflow in workflows:
@@ -498,7 +562,7 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd == "codegen":
-        if args.package is None and args.function is None:
+        if args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)

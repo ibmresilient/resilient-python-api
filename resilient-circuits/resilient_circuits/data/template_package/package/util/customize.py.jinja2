@@ -5,6 +5,23 @@
 from __future__ import print_function
 from resilient_circuits.util import *
 
+def codegen_reload_data(client=None):
+    """Parameters to codegen used to generate the {{package}} package"""
+    reload_params = {"package":"{{package}}",
+                   {%if incident_fields|length > 0 %} "incident_fields": ["{{incident_fields.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "incident_fields": [], {%endif%}
+                   {%if action_fields|length > 0 %} "action_fields": ["{{action_fields.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "action_fields": [], {%endif%}
+                   {%if function_params|length > 0 %} "function_params": ["{{function_params.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "functions_params": [], {%endif%}
+                   {%if datatables.keys()%} "datatables": ["{{datatables.keys()|sort|join('", "')}}"], {%else%} "datatables": [], {%endif%}
+                   {%if message_destinations.keys()%} "message_destinations": ["{{message_destinations.keys()|sort|join('", "')}}"], {%else%} "message_destinations": [] {%endif%}
+                   {%if functions.keys()%} "functions": ["{{functions.keys()|sort|join('", "')}}"], {%else%} "functions": [], {%endif%}
+                   {%if phases.keys()%} "phases": ["{{phases.keys()|sort|join('", "')}}"], {%else%} "phases": [], {%endif%}
+                   {%if automatic_tasks.keys()%} "automatic_tasks": ["{{automatic_tasks.keys()|sort|join('", "')}}"], {%else%} "automatic_tasks": [], {%endif%}
+                   {%if scripts.keys()%} "scripts": ["{{scripts.keys()|sort|join('", "')}}"], {%else%} "scripts": [], {%endif%}
+                   {%if workflows.keys()%} "workflows": ["{{workflows.keys()|sort|join('", "')}}"], {%else%} "workflows": [],{%endif%}
+                   {%if actions.keys()%} "actions": ["{{actions.keys()|sort|join('", "')}}"] {%else%} "actions": [] {%endif%}
+                    }
+    return reload_params
+
 
 def customization_data(client=None):
     """Produce any customization definitions (types, fields, message destinations, etc)
@@ -39,4 +56,3 @@ def customization_data(client=None):
     yield ImportDefinition(u"""
 {{export_data|base64}}"""
     )
-

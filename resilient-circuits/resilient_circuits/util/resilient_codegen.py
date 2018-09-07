@@ -144,7 +144,6 @@ ACTION_ATTRIBUTES = [
     "message_destinations"
 ]
 
-
 def valid_identifier(name):
     """Test if 'name' is a valid identifier for a package or module
 
@@ -703,3 +702,17 @@ def codegen_functions(client, export_file, function_names, workflow_names, actio
                                  message_destination_names, function_names, workflow_names, action_names,
                                  None, None, None, None,
                                  output_dir, output_file)
+
+def get_codegen_reload_data(package):
+    """Read the default codegen_reload_data section from the given package"""
+    data = None
+    try:
+        dist = pkg_resources.get_distribution(package)
+        entries = pkg_resources.get_entry_map(dist, "resilient.circuits.codegen_reload")
+        if entries:
+            for entry in iter(entries):
+                func = entries[entry].load()
+                data = func(client=None)
+    except pkg_resources.DistributionNotFound:
+        pass
+    return data or []
