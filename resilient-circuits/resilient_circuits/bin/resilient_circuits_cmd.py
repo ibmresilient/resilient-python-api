@@ -375,11 +375,11 @@ def clone(args):
 
         duplicate_check = find_workflow_by_programmatic_name(workflow_defs, new_workflow_api_name)
         if duplicate_check is not None:
-            raise Exception("Workflow with the api name {} already exists!".format(new_workflow_api_name))
+            raise Exception("Workflow with the api name {} already exists".format(new_workflow_api_name))
 
         original_workflow = find_workflow_by_programmatic_name(workflow_defs, original_workflow_api_name)
         if original_workflow is None:
-            raise Exception("Could not find original workflow {}!".format(original_workflow_api_name))
+            raise Exception("Could not find original workflow {}".format(original_workflow_api_name))
 
         # This section just fills out the stuff we need to replace to duplicate
         new_workflow = original_workflow.copy()
@@ -526,8 +526,7 @@ def main():
 
     clone_parser.add_argument("--workflow",
                               help='Clone workflows. "old-api-name" "new-api-name". Workflows are based off of the'
-                                   ' last export. To update exports Administrator Settings > Organization >'
-                                   ' Export > Export Button',
+                                   ' last export.',
                               nargs=2)
 
     args, unknown_args = parser.parse_known_args()
