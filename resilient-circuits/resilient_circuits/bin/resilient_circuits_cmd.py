@@ -15,10 +15,9 @@ import resilient
 import datetime
 import uuid
 from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, get_codegen_reload_data
+from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, get_codegen_reload_data, print_codegen_reload_commandline
 from resilient_circuits.util.resilient_customize import customize_resilient
-import io
-import json
+
 if sys.version_info.major == 2:
     from io import open
 else:
@@ -522,6 +521,9 @@ def main():
                                 help="Generate based on organization export file (.res)"),
     codegen_parser.add_argument("--reload",
                                 help="Reload customizations and create new customize.py")
+    codegen_parser.add_argument("--verify",
+                                help="Used with --reload option to printout the commandline to codegen",
+                                action="store_true")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",
@@ -562,7 +564,9 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd == "codegen":
-        if args.package is None and args.function is None and args.reload is None:
+        if args.reload and args.verify:
+            print_codegen_reload_commandline(args.reload)
+        elif args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)

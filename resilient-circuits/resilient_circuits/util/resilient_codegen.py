@@ -716,3 +716,55 @@ def get_codegen_reload_data(package):
     except pkg_resources.DistributionNotFound:
         pass
     return data or []
+
+def print_codegen_reload_commandline(package):
+    """Print the resilient-circuits codegen commandline for a given package
+       This is executed when:
+       resilient-circuits codegen --reload package_name --verify
+       is typed at the command line"""
+    # Get the codegen parameters.
+    codegen_params = get_codegen_reload_data(package)
+
+    # Build the commandline string
+    commandline = "resilient-circuits codegen -p {}".format(codegen_params["package"])
+    if len(codegen_params["message_destinations"]) > 0:
+        commandline = commandline + " -m "
+        for md in codegen_params["message_destinations"]:
+            commandline = commandline + " {}".format(md)
+
+    if len(codegen_params["functions"]) > 0:
+        commandline = commandline + " -f "
+        for function in codegen_params["functions"]:
+            commandline = commandline + " {}".format(function)
+
+    if len(codegen_params["workflows"]) > 0:
+        commandline = commandline + " -w "
+        for workflow in codegen_params["workflows"]:
+            commandline = commandline + " {}".format(workflow)
+
+    if len(codegen_params["actions"]) > 0:
+        commandline = commandline + " --rule "
+        for action in codegen_params["actions"]:
+            commandline = commandline + " '{}'".format(action)
+
+    if len(codegen_params["incident_fields"]) > 0:
+        commandline = commandline + " --field "
+        for field in codegen_params["incident_fields"]:
+            commandline = commandline + " {}".format(field)
+
+    if len(codegen_params["datatables"]) > 0:
+        commandline = commandline + " --datatable "
+        for datatable in codegen_params["datatables"]:
+            commandline = commandline + " {}".format(datatable)
+
+    if len(codegen_params["automatic_tasks"]) > 0:
+        commandline = commandline + " --task "
+        for task in codegen_params["automatic_tasks"]:
+            commandline = commandline + " {}".format(task)
+
+    if len(codegen_params["scripts"]) > 0:
+        commandline = commandline + " --script "
+        for script in codegen_params["scripts"]:
+            commandline = commandline + " {}".format(script)
+
+    print (commandline)
