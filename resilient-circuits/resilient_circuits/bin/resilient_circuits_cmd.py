@@ -15,7 +15,7 @@ import resilient
 import datetime
 import uuid
 from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, get_codegen_reload_data, print_codegen_reload_commandline
+from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline
 from resilient_circuits.util.resilient_customize import customize_resilient
 
 if sys.version_info.major == 2:
@@ -277,79 +277,6 @@ def generate_code(args):
             output_file = output_file + ".py"
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
 
-def codegen_reload_package(client, args):
-    """Generate a package using previous codegen parameters and add any new ones from the commandline."""
-    # Get the location of current customize.py for this package
-    output_base = os.path.join(os.getcwd(), args.reload)
-    customize_dir = os.path.join(output_base, args.reload, "util")
-    customize_file = os.path.join(customize_dir, "customize.py")
-
-    # Check if there is a customize.py already.  We need to get the
-    # reload commands from the current customize.py and if it's not
-    # there then exit.
-    if not os.path.isfile(customize_file):
-        raise Exception(u"{} does not exist. Run resilient_circuits codegen without --reload option to create it.".format(customize_file))
-
-    # Get the previous params for codegen from the customize.py
-    # codegen_reload_data function.
-    codegen_params = get_codegen_reload_data(args.reload)
-
-    if codegen_params == None or codegen_params == []:
-        raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
-
-    # Rename the old customize.py file to customize-yyyymmdd-hhmmss.py
-    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    old_customize_file = os.path.join(customize_dir, "customize-{}.py".format(now))
-    LOG.info(u"Renaming customize.py to %s", old_customize_file)
-    os.rename(customize_file, old_customize_file)
-
-    try:
-        # If there are new commandline parameters, append them to the old commandline
-        # list for each param type.
-        if args.messagedestination is not None:
-            codegen_params["message_destinations"].extend(args.messagedestination)
-
-        if args.function is not None:
-            codegen_params["functions"].extend(args.function)
-
-        if args.rule is not None:
-            codegen_params["actions"].extend(args.rule)
-
-        if args.workflow is not None:
-            codegen_params["workflows"].extend(args.workflow)
-
-        if args.field is not None:
-            codegen_params["incident_fields"].extend(args.field)
-
-        if args.datatable is not None:
-            codegen_params["datatables"].extend(args.datatable)
-
-        if args.task is not None:
-            codegen_params["automatic_tasks"].extend(args.task)
-
-        if args.script is not None:
-            codegen_params["scripts"].extend(args.script)
-
-        # Call codegen to recreate package with the new parameter list.
-        codegen_package(client,
-                    args.exportfile,
-                    args.reload,
-                    codegen_params["message_destinations"],
-                    codegen_params["functions"],
-                    codegen_params["workflows"],
-                    codegen_params["actions"],
-                    codegen_params["incident_fields"],
-                    codegen_params["datatables"],
-                    codegen_params["automatic_tasks"],
-                    codegen_params["scripts"],
-                    output_base)
-    except Exception as e:
-        LOG.error(u"Error running codegen --reload %s", e.message)
-        # An error occurred, so if no customize.py was created rename the
-        # saved off version back to customize.py
-        if not os.path.isfile(customize_file):
-            LOG.info(u"Renaming %s back to %s", old_customize_file, customize_file)
-            os.rename(old_customize_file, customize_file)
 
 def find_workflow_by_programmatic_name(workflows, pname):
     for workflow in workflows:

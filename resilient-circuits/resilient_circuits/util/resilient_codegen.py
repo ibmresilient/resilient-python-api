@@ -719,6 +719,122 @@ def get_codegen_reload_data(package):
         pass
     return data or []
 
+def codegen_reload_package(client, args):
+    """Generate a package using previous codegen parameters and add any new ones from the commandline."""
+    # Get the location of current customize.py for this package
+    output_base = os.path.join(os.getcwd(), args.reload)
+    customize_dir = os.path.join(output_base, args.reload, "util")
+    customize_file = os.path.join(customize_dir, "customize.py")
+
+    # Check if there is a customize.py already.  We need to get the
+    # reload commands from the current customize.py and if it's not
+    # there then exit.
+    if not os.path.isfile(customize_file):
+        raise Exception(u"{} does not exist. Run resilient_circuits codegen without --reload option to create it.".format(customize_file))
+
+    # Get the previous params for codegen from the customize.py
+    # codegen_reload_data function.
+    codegen_params = get_codegen_reload_data(args.reload)
+
+    if codegen_params == None or codegen_params == []:
+        raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
+
+    # Rename the old customize.py file to customize-yyyymmdd-hhmmss.py
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    old_customize_file = os.path.join(customize_dir, "customize-{}.py".format(now))
+    LOG.info(u"Renaming customize.py to %s", old_customize_file)
+    os.rename(customize_file, old_customize_file)
+
+    try:
+        # If there are new commandline parameters, append them to the old commandline
+        # list for each param type. Check if the item is already in the package before adding it.
+        if args.messagedestination:
+            for md in args.messagedestination:
+                if md in codegen_params["message_destinations"]:
+                    LOG.error(u"Message destination {} is already in package".format(md))
+                else:
+                    LOG.info(u"Adding message destination to package".format(md))
+                    codegen_params["message_destinations"].append(md)
+
+        if args.function:
+            for func in args.function:
+                if func in codegen_params["functions"]:
+                    LOG.error(u"Function {} is already in package".format(func))
+                else:
+                    LOG.info(u"Adding function {} to package".format(func))
+                    codegen_params["functions"].append(func)
+
+        if args.rule:
+            for rule in args.rule:
+                if rule in codegen_params["actions"]:
+                    LOG.error(u"Rule {} is already in package".format(rule))
+                else:
+                    LOG.info(u"Adding rule {} to package".format(rule))
+                    codegen_params["actions"].append(rule)
+
+        if args.workflow:
+            for workflow in args.workflow:
+                if workflow in codegen_params["workflows"]:
+                    LOG.error(u"Workflow {} is already in package".format(workflow))
+                else:
+                    LOG.info(u"Adding workflow {} to package".format(workflow))
+                    codegen_params["workflows"].append(workflow)
+
+        if args.field:
+            for field in args.field:
+                if field in codegen_params["incident_fields"]:
+                    LOG.error(u"Incident field {} is already in package".format(field))
+                else:
+                    LOG.info(u"Adding incident field {} to package".format(field))
+                    codegen_params["incident_fields"].append(field)
+
+        if args.datatable:
+            for datatable in args.datatable:
+                if datatable in codegen_params["datatables"]:
+                    LOG.error(u"Datatable {} is already in package".format(datatable))
+                else:
+                    LOG.info(u"Adding datatable {} to package".format(datatable))
+                    codegen_params["datatables"].append(datatable)
+
+        if args.task:
+            for task in args.task:
+                if task in codegen_params["automatic_tasks"]:
+                    LOG.error(u"Task {} is already in package".format(task))
+                else:
+                    LOG.info(u"Adding task {} to package".format(task))
+                    codegen_params["automatic_tasks"].append(task)
+
+        if args.script:
+            for script in args.script:
+                if script in codegen_params["scripts"]:
+                    LOG.error(u"task {} is already in package".format(script))
+                else:
+                    LOG.info(u"Adding script {} to package".format(script))
+                    codegen_params["scripts"].append(script)
+
+        # Call codegen to recreate package with the new parameter list.
+        codegen_package(client,
+                    args.exportfile,
+                    args.reload,
+                    codegen_params["message_destinations"],
+                    codegen_params["functions"],
+                    codegen_params["workflows"],
+                    codegen_params["actions"],
+                    codegen_params["incident_fields"],
+                    codegen_params["datatables"],
+                    codegen_params["automatic_tasks"],
+                    codegen_params["scripts"],
+                    output_base)
+    except Exception as e:
+        LOG.error(u"Error running codegen --reload %s", e.message)
+    finally:
+        # If no customize.py was created an error occurred somewhere in codegen.
+        # Rename the saved off version back to customize.py
+        if not os.path.isfile(customize_file):
+            LOG.info(u"Renaming %s back to %s", old_customize_file, customize_file)
+            os.rename(old_customize_file, customize_file)
+
+
 def print_codegen_reload_commandline(package):
     """Print the resilient-circuits codegen commandline for a given package
        This is executed when:
@@ -728,7 +844,7 @@ def print_codegen_reload_commandline(package):
     codegen_params = get_codegen_reload_data(package)
 
     # Build the commandline string
-    commandline = "resilient-circuits codegen --package {}".format(codegen_params["package"])
+    commandline = "resilient-circuits codegen --reload {}".format(codegen_params["package"])
     if len(codegen_params["message_destinations"]) > 0:
         commandline = commandline + " --messagedestination"
         for md in codegen_params["message_destinations"]:
