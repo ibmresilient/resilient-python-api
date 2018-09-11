@@ -294,40 +294,44 @@ def codegen_reload_package(client, args):
     # codegen_reload_data function.
     codegen_params = get_codegen_reload_data(args.reload)
 
+    if codegen_params == None or codegen_params == []:
+        raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
+
     # Rename the old customize.py file to customize-yyyymmdd-hhmmss.py
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     old_customize_file = os.path.join(customize_dir, "customize-{}.py".format(now))
     LOG.info(u"Renaming customize.py to %s", old_customize_file)
     os.rename(customize_file, old_customize_file)
 
-    # If there are new commandline parameters, append them to the old commandline
-    # list for each param type.
-    if args.messagedestination is not None:
-        codegen_params["message_destinations"].extend(args.messagedestination)
+    try:
+        # If there are new commandline parameters, append them to the old commandline
+        # list for each param type.
+        if args.messagedestination is not None:
+            codegen_params["message_destinations"].extend(args.messagedestination)
 
-    if args.function is not None:
-        codegen_params["functions"].extend(args.function)
+        if args.function is not None:
+            codegen_params["functions"].extend(args.function)
 
-    if args.rule is not None:
-        codegen_params["actions"].extend(args.rule)
+        if args.rule is not None:
+            codegen_params["actions"].extend(args.rule)
 
-    if args.workflow is not None:
-        codegen_params["workflows"].extend(args.workflow)
+        if args.workflow is not None:
+            codegen_params["workflows"].extend(args.workflow)
 
-    if args.field is not None:
-        codegen_params["incident_fields"].extend(args.field)
+        if args.field is not None:
+            codegen_params["incident_fields"].extend(args.field)
 
-    if args.datatable is not None:
-        codegen_params["datatables"].extend(args.datatable)
+        if args.datatable is not None:
+            codegen_params["datatables"].extend(args.datatable)
 
-    if args.task is not None:
-        codegen_params["automatic_tasks"].extend(args.task)
+        if args.task is not None:
+            codegen_params["automatic_tasks"].extend(args.task)
 
-    if args.script is not None:
-        codegen_params["scripts"].extend(args.script)
+        if args.script is not None:
+            codegen_params["scripts"].extend(args.script)
 
-    # Call codegen to recreate package with the new parameter list.
-    codegen_package(client,
+        # Call codegen to recreate package with the new parameter list.
+        codegen_package(client,
                     args.exportfile,
                     args.reload,
                     codegen_params["message_destinations"],
@@ -339,6 +343,13 @@ def codegen_reload_package(client, args):
                     codegen_params["automatic_tasks"],
                     codegen_params["scripts"],
                     output_base)
+    except Exception as e:
+        LOG.error(u"Error running codegen --reload %s", e.message)
+        # An error occurred, so if no customize.py was created rename the
+        # saved off version back to customize.py
+        if not os.path.isfile(customize_file):
+            LOG.info(u"Renaming %s back to %s", old_customize_file, customize_file)
+            os.rename(old_customize_file, customize_file)
 
 def find_workflow_by_programmatic_name(workflows, pname):
     for workflow in workflows:

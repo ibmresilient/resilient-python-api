@@ -711,8 +711,10 @@ def get_codegen_reload_data(package):
         entries = pkg_resources.get_entry_map(dist, "resilient.circuits.codegen_reload")
         if entries:
             for entry in iter(entries):
-                func = entries[entry].load()
-                data = func(client=None)
+                if entry == 'codegen_reload':
+                    func = entries[entry].load()
+                    data = func(client=None)
+                    break
     except pkg_resources.DistributionNotFound:
         pass
     return data or []
@@ -726,19 +728,19 @@ def print_codegen_reload_commandline(package):
     codegen_params = get_codegen_reload_data(package)
 
     # Build the commandline string
-    commandline = "resilient-circuits codegen -p {}".format(codegen_params["package"])
+    commandline = "resilient-circuits codegen --package {}".format(codegen_params["package"])
     if len(codegen_params["message_destinations"]) > 0:
-        commandline = commandline + " -m "
+        commandline = commandline + " --messagedestination"
         for md in codegen_params["message_destinations"]:
             commandline = commandline + " {}".format(md)
 
     if len(codegen_params["functions"]) > 0:
-        commandline = commandline + " -f "
+        commandline = commandline + " --function "
         for function in codegen_params["functions"]:
             commandline = commandline + " {}".format(function)
 
     if len(codegen_params["workflows"]) > 0:
-        commandline = commandline + " -w "
+        commandline = commandline + " --workflow "
         for workflow in codegen_params["workflows"]:
             commandline = commandline + " {}".format(workflow)
 
