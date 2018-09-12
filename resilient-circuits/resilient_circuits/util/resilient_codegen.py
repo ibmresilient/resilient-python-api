@@ -843,12 +843,20 @@ def print_codegen_reload_commandline(package):
     # Get the codegen parameters.
     codegen_params = get_codegen_reload_data(package)
 
+    if codegen_params == None or codegen_params == []:
+        raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
+
     # Build the commandline string
     commandline = u"resilient-circuits codegen --reload {}".format(codegen_params["package"])
     if len(codegen_params["message_destinations"]) > 0:
         commandline = commandline + u" --messagedestination"
         for md in codegen_params["message_destinations"]:
             commandline = commandline + u" {}".format(md)
+
+    if len(codegen_params["actions"]) > 0:
+        commandline = commandline + u" --rule "
+        for action in codegen_params["actions"]:
+            commandline = commandline + u" '{}'".format(action)
 
     if len(codegen_params["functions"]) > 0:
         commandline = commandline + u" --function "
@@ -859,11 +867,6 @@ def print_codegen_reload_commandline(package):
         commandline = commandline + u" --workflow "
         for workflow in codegen_params["workflows"]:
             commandline = commandline + u" {}".format(workflow)
-
-    if len(codegen_params["actions"]) > 0:
-        commandline = commandline + u" --rule "
-        for action in codegen_params["actions"]:
-            commandline = commandline + u" '{}'".format(action)
 
     if len(codegen_params["incident_fields"]) > 0:
         commandline = commandline + u" --field "
