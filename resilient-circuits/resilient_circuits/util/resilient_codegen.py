@@ -719,6 +719,17 @@ def get_codegen_reload_data(package):
         pass
     return data or []
 
+
+def append_codegen_param(arg_list, params, key, type):
+    """Append argument list params to the codegen reload params already stored."""
+    if arg_list:
+        for item in arg_list:
+            if item in params[key]:
+                LOG.warn(u"WARN {} {} is already in package {}".format(type, item, params["package"]))
+            else:
+                LOG.info(u"Adding {} {} to package {}".format(type, item, params["package"]))
+                params[key].append(item)
+
 def codegen_reload_package(client, args):
     """Generate a package using previous codegen parameters and add any new ones from the commandline."""
     # Get the location of current customize.py for this package
@@ -748,69 +759,14 @@ def codegen_reload_package(client, args):
     try:
         # If there are new commandline parameters, append them to the old commandline
         # list for each param type. Check if the item is already in the package before adding it.
-        if args.messagedestination:
-            for md in args.messagedestination:
-                if md in codegen_params["message_destinations"]:
-                    LOG.error(u"Message destination {} is already in package".format(md))
-                else:
-                    LOG.info(u"Adding message destination to package".format(md))
-                    codegen_params["message_destinations"].append(md)
-
-        if args.function:
-            for func in args.function:
-                if func in codegen_params["functions"]:
-                    LOG.error(u"Function {} is already in package".format(func))
-                else:
-                    LOG.info(u"Adding function {} to package".format(func))
-                    codegen_params["functions"].append(func)
-
-        if args.rule:
-            for rule in args.rule:
-                if rule in codegen_params["actions"]:
-                    LOG.error(u"Rule {} is already in package".format(rule))
-                else:
-                    LOG.info(u"Adding rule {} to package".format(rule))
-                    codegen_params["actions"].append(rule)
-
-        if args.workflow:
-            for workflow in args.workflow:
-                if workflow in codegen_params["workflows"]:
-                    LOG.error(u"Workflow {} is already in package".format(workflow))
-                else:
-                    LOG.info(u"Adding workflow {} to package".format(workflow))
-                    codegen_params["workflows"].append(workflow)
-
-        if args.field:
-            for field in args.field:
-                if field in codegen_params["incident_fields"]:
-                    LOG.error(u"Incident field {} is already in package".format(field))
-                else:
-                    LOG.info(u"Adding incident field {} to package".format(field))
-                    codegen_params["incident_fields"].append(field)
-
-        if args.datatable:
-            for datatable in args.datatable:
-                if datatable in codegen_params["datatables"]:
-                    LOG.error(u"Datatable {} is already in package".format(datatable))
-                else:
-                    LOG.info(u"Adding datatable {} to package".format(datatable))
-                    codegen_params["datatables"].append(datatable)
-
-        if args.task:
-            for task in args.task:
-                if task in codegen_params["automatic_tasks"]:
-                    LOG.error(u"Task {} is already in package".format(task))
-                else:
-                    LOG.info(u"Adding task {} to package".format(task))
-                    codegen_params["automatic_tasks"].append(task)
-
-        if args.script:
-            for script in args.script:
-                if script in codegen_params["scripts"]:
-                    LOG.error(u"task {} is already in package".format(script))
-                else:
-                    LOG.info(u"Adding script {} to package".format(script))
-                    codegen_params["scripts"].append(script)
+        append_codegen_param(args.messagedestination, codegen_params, "message_destination", "message destination")
+        append_codegen_param(args.function, codegen_params, "functions", "function")
+        append_codegen_param(args.rule, codegen_params, "actions", "action")
+        append_codegen_param(args.workflow, codegen_params, "workflows", "workflow")
+        append_codegen_param(args.field, codegen_params, "incident_fields", "incident field")
+        append_codegen_param(args.datatable, codegen_params, "datatables", "datatable")
+        append_codegen_param(args.task, codegen_params, "automatic_tasks", "task")
+        append_codegen_param(args.script, codegen_params, "scripts", "script")
 
         # Call codegen to recreate package with the new parameter list.
         codegen_package(client,
@@ -834,6 +790,17 @@ def codegen_reload_package(client, args):
             LOG.info(u"Renaming %s back to %s", old_customize_file, customize_file)
             os.rename(old_customize_file, customize_file)
 
+def create_command(params, key, command, quotes):
+    """Create commandline substring for codegen --reload commandline """
+    if len(params[key]) > 0:
+        for item in params[key]:
+            if quotes:
+                command = command + u" '{}'".format(item)
+            else:
+                command = command + u" {}".format(item)
+    else:
+        command = u""
+    return command
 
 def print_codegen_reload_commandline(package):
     """Print the resilient-circuits codegen commandline for a given package
@@ -848,44 +815,13 @@ def print_codegen_reload_commandline(package):
 
     # Build the commandline string
     commandline = u"resilient-circuits codegen --reload {}".format(codegen_params["package"])
-    if len(codegen_params["message_destinations"]) > 0:
-        commandline = commandline + u" --messagedestination"
-        for md in codegen_params["message_destinations"]:
-            commandline = commandline + u" {}".format(md)
-
-    if len(codegen_params["actions"]) > 0:
-        commandline = commandline + u" --rule "
-        for action in codegen_params["actions"]:
-            commandline = commandline + u" '{}'".format(action)
-
-    if len(codegen_params["functions"]) > 0:
-        commandline = commandline + u" --function "
-        for function in codegen_params["functions"]:
-            commandline = commandline + u" {}".format(function)
-
-    if len(codegen_params["workflows"]) > 0:
-        commandline = commandline + u" --workflow "
-        for workflow in codegen_params["workflows"]:
-            commandline = commandline + u" {}".format(workflow)
-
-    if len(codegen_params["incident_fields"]) > 0:
-        commandline = commandline + u" --field "
-        for field in codegen_params["incident_fields"]:
-            commandline = commandline + u" {}".format(field)
-
-    if len(codegen_params["datatables"]) > 0:
-        commandline = commandline + u" --datatable "
-        for datatable in codegen_params["datatables"]:
-            commandline = commandline + u" {}".format(datatable)
-
-    if len(codegen_params["automatic_tasks"]) > 0:
-        commandline = commandline + u" --task "
-        for task in codegen_params["automatic_tasks"]:
-            commandline = commandline + u" {}".format(task)
-
-    if len(codegen_params["scripts"]) > 0:
-        commandline = commandline + u" --script "
-        for script in codegen_params["scripts"]:
-            commandline = commandline + u" {}".format(script)
+    commandline = commandline + create_command(codegen_params, "message_destinations", u" --messagedestination", False)
+    commandline = commandline + create_command(codegen_params, "actions", u" --rule", True)
+    commandline = commandline + create_command(codegen_params, "workflows", u" --workflow", False)
+    commandline = commandline + create_command(codegen_params, "functions", u" --function", False)
+    commandline = commandline + create_command(codegen_params, "incident_fields", u" --field", False)
+    commandline = commandline + create_command(codegen_params, "datatables", u" --datatable", False)
+    commandline = commandline + create_command(codegen_params, "automatic_tasks", u" --automatic_tasks", False)
+    commandline = commandline + create_command(codegen_params, "scripts", u" --scripts", False)
 
     print (commandline)
