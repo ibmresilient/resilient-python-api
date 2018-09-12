@@ -336,6 +336,9 @@ port = 443
         # if an existing config file is given, use it
         config_parser = configparser.ConfigParser()
         if app_config:
+            if not os.path.isfile(app_config):
+                raise ValueError("app_config file not found: {}".format(app_config))
+
             config_parser.read(app_config)
         else:
             # build a config file using canned values for [resilient] and the integration we're testing
