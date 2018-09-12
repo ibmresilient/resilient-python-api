@@ -739,7 +739,7 @@ def codegen_reload_package(client, args):
     if codegen_params == None or codegen_params == []:
         raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
 
-    # Rename the old customize.py file to customize-yyyymmdd-hhmmss.py
+    # Rename the old customize.py file to customize-yyyymmdd-hhmmss.bak
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     old_customize_file = os.path.join(customize_dir, "customize-{}.bak".format(now))
     LOG.info(u"Renaming customize.py to %s", old_customize_file)
