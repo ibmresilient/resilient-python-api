@@ -5,7 +5,7 @@
 from __future__ import print_function
 from resilient_circuits.util import *
 
-def codegen_reload_data(client=None):
+def codegen_reload_data():
     """Parameters to codegen used to generate the {{package}} package"""
     reload_params = {"package":"{{package}}",
                    {%if incident_fields|length > 0 %} "incident_fields": ["{{incident_fields.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "incident_fields": [], {%endif%}

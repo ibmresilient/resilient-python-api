@@ -741,7 +741,7 @@ def codegen_reload_package(client, args):
 
     # Rename the old customize.py file to customize-yyyymmdd-hhmmss.py
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    old_customize_file = os.path.join(customize_dir, "customize-{}.py".format(now))
+    old_customize_file = os.path.join(customize_dir, "customize-{}.bak".format(now))
     LOG.info(u"Renaming customize.py to %s", old_customize_file)
     os.rename(customize_file, old_customize_file)
 
