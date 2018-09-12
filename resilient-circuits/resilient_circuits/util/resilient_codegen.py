@@ -839,50 +839,50 @@ def print_codegen_reload_commandline(package):
     """Print the resilient-circuits codegen commandline for a given package
        This is executed when:
        resilient-circuits codegen --reload package_name --verify
-       is typed at the command line"""
+       is typed at the commandline"""
     # Get the codegen parameters.
     codegen_params = get_codegen_reload_data(package)
 
     # Build the commandline string
-    commandline = "resilient-circuits codegen --reload {}".format(codegen_params["package"])
+    commandline = u"resilient-circuits codegen --reload {}".format(codegen_params["package"])
     if len(codegen_params["message_destinations"]) > 0:
-        commandline = commandline + " --messagedestination"
+        commandline = commandline + u" --messagedestination"
         for md in codegen_params["message_destinations"]:
-            commandline = commandline + " {}".format(md)
+            commandline = commandline + u" {}".format(md)
 
     if len(codegen_params["functions"]) > 0:
-        commandline = commandline + " --function "
+        commandline = commandline + u" --function "
         for function in codegen_params["functions"]:
-            commandline = commandline + " {}".format(function)
+            commandline = commandline + u" {}".format(function)
 
     if len(codegen_params["workflows"]) > 0:
-        commandline = commandline + " --workflow "
+        commandline = commandline + u" --workflow "
         for workflow in codegen_params["workflows"]:
-            commandline = commandline + " {}".format(workflow)
+            commandline = commandline + u" {}".format(workflow)
 
     if len(codegen_params["actions"]) > 0:
-        commandline = commandline + " --rule "
+        commandline = commandline + u" --rule "
         for action in codegen_params["actions"]:
-            commandline = commandline + " '{}'".format(action)
+            commandline = commandline + u" '{}'".format(action)
 
     if len(codegen_params["incident_fields"]) > 0:
-        commandline = commandline + " --field "
+        commandline = commandline + u" --field "
         for field in codegen_params["incident_fields"]:
-            commandline = commandline + " {}".format(field)
+            commandline = commandline + u" {}".format(field)
 
     if len(codegen_params["datatables"]) > 0:
-        commandline = commandline + " --datatable "
+        commandline = commandline + u" --datatable "
         for datatable in codegen_params["datatables"]:
-            commandline = commandline + " {}".format(datatable)
+            commandline = commandline + u" {}".format(datatable)
 
     if len(codegen_params["automatic_tasks"]) > 0:
-        commandline = commandline + " --task "
+        commandline = commandline + u" --task "
         for task in codegen_params["automatic_tasks"]:
-            commandline = commandline + " {}".format(task)
+            commandline = commandline + u" {}".format(task)
 
     if len(codegen_params["scripts"]) > 0:
-        commandline = commandline + " --script "
+        commandline = commandline + u" --script "
         for script in codegen_params["scripts"]:
-            commandline = commandline + " {}".format(script)
+            commandline = commandline + u" {}".format(script)
 
     print (commandline)
