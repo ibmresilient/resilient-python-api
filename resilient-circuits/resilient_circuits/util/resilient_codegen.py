@@ -713,7 +713,7 @@ def get_codegen_reload_data(package):
             for entry in iter(entries):
                 if entry == 'codegen_reload':
                     func = entries[entry].load()
-                    data = func(client=None)
+                    data = func()
                     break
     except pkg_resources.DistributionNotFound:
         pass
