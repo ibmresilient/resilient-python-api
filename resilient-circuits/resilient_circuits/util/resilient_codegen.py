@@ -759,7 +759,7 @@ def codegen_reload_package(client, args):
     try:
         # If there are new commandline parameters, append them to the old commandline
         # list for each param type. Check if the item is already in the package before adding it.
-        append_codegen_param(args.messagedestination, codegen_params, "message_destination", "message destination")
+        append_codegen_param(args.messagedestination, codegen_params, "message_destinations", "message destination")
         append_codegen_param(args.function, codegen_params, "functions", "function")
         append_codegen_param(args.rule, codegen_params, "actions", "action")
         append_codegen_param(args.workflow, codegen_params, "workflows", "workflow")
@@ -792,15 +792,16 @@ def codegen_reload_package(client, args):
 
 def create_command(params, key, command, quotes):
     """Create commandline substring for codegen --reload commandline """
+    command_list = command
     if len(params[key]) > 0:
         for item in params[key]:
             if quotes:
-                command = command + u" '{}'".format(item)
+                command_list = command_list + u" '{}'".format(item)
             else:
-                command = command + u" {}".format(item)
+                command_list = command_list + u" {}".format(item)
     else:
-        command = u""
-    return command
+        command_list = u""
+    return command_list
 
 def print_codegen_reload_commandline(package):
     """Print the resilient-circuits codegen commandline for a given package
