@@ -792,16 +792,16 @@ def codegen_reload_package(client, args):
 
 def create_command(params, key, command, quotes):
     """Create commandline substring for codegen --reload commandline """
-    command_list = command
+    result_command = command
     if len(params[key]) > 0:
         for item in params[key]:
             if quotes:
-                command_list = command_list + u" '{}'".format(item)
+                result_command = result_command + u" '{}'".format(item)
             else:
-                command_list = command_list + u" {}".format(item)
+                result_command = result_command + u" {}".format(item)
     else:
-        command_list = u""
-    return command_list
+        result_command = u""
+    return result_command
 
 def print_codegen_reload_commandline(package):
     """Print the resilient-circuits codegen commandline for a given package
