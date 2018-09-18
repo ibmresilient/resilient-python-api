@@ -298,12 +298,12 @@ def selftest(args):
     opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
 
     # make a copy
-    install_list = list(args.install_list) if args.install_list is not None else None
+    install_list = list(args.install_list) if args.install_list else []
 
     for dist, component_list in components.items():
         if args.install_list is None or dist.project_name in install_list:
             # remove name from list
-            if install_list is not None:
+            if dist.project_name in install_list:
                 install_list.remove(dist.project_name)
 
             # add an entry for the package
@@ -329,8 +329,8 @@ def selftest(args):
                     LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
                     continue
 
-    # any missed projects?
-    if install_list and len(install_list):
+    # any missed packages?
+    if len(install_list):
         LOG.warn("%s untested. Check package name(s)", install_list)
 
 
