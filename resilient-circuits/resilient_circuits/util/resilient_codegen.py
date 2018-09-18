@@ -720,14 +720,14 @@ def get_codegen_reload_data(package):
     return data or []
 
 
-def append_codegen_param(arg_list, params, key, type):
+def append_codegen_param(arg_list, params, key, param_type):
     """Append argument list params to the codegen reload params already stored."""
     if arg_list:
         for item in arg_list:
             if item in params[key]:
-                LOG.warn(u"WARN {} {} is already in package {}".format(type, item, params["package"]))
+                LOG.warn(u"WARN {} {} is already in package {}".format(param_type, item, params["package"]))
             else:
-                LOG.info(u"Adding {} {} to package {}".format(type, item, params["package"]))
+                LOG.info(u"Adding {} {} to package {}".format(param_type, item, params["package"]))
                 params[key].append(item)
 
 def codegen_reload_package(client, args):
