@@ -297,10 +297,17 @@ def selftest(args):
     # Generate opts array necessary for ResilientComponent instantiation
     opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
 
+    # make a copy
+    install_list = list(args.install_list) if args.install_list is not None else None
+
     for dist, component_list in components.items():
-        if args.install_list is None or dist.project_name in args.install_list:
+        if args.install_list is None or dist.project_name in install_list:
+            # remove name from list
+            if install_list is not None:
+                install_list.remove(dist.project_name)
+
             # add an entry for the package
-            LOG.info("%s:", str(dist.as_requirement()))
+            LOG.info("%s: ", dist.project_name)
             for ep in component_list:
                 # load the entry point
                 f_selftest = ep.load()
@@ -321,6 +328,11 @@ def selftest(args):
                 except Exception as e:
                     LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
                     continue
+
+    # any missed projects?
+    if install_list and len(install_list):
+        LOG.warn("%s untested. Check package name(s)", install_list)
+
 
 def find_workflow_by_programmatic_name(workflows, pname):
     for workflow in workflows:
