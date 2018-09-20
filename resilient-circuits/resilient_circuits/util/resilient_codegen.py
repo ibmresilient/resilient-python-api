@@ -767,14 +767,14 @@ def codegen_reload_package(client, args):
     try:
         # If there are new commandline parameters, append them to the old commandline
         # list for each param type. Check if the item is already in the package before adding it.
-        message_destinations = merge_codegen_params(args.messagedestination, codegen_params["message_destinations"])
-        functions            = merge_codegen_params(args.function, codegen_params["functions"])
-        rules                = merge_codegen_params(args.rule, codegen_params["actions"])
-        workflows            = merge_codegen_params(args.workflow, codegen_params["workflows"])
-        incident_fields      = merge_codegen_params(args.field, codegen_params["incident_fields"])
-        datatables           = merge_codegen_params(args.datatable, codegen_params["datatables"])
-        automatic_tasks      = merge_codegen_params(args.task, codegen_params["automatic_tasks"])
-        scripts              = merge_codegen_params(args.script, codegen_params["scripts"])
+        message_destinations = merge_codegen_params(codegen_params["message_destinations"], args.messagedestination)
+        functions            = merge_codegen_params(codegen_params["functions"], args.function)
+        rules                = merge_codegen_params(codegen_params["actions"], args.rule)
+        workflows            = merge_codegen_params(codegen_params["workflows"], args.workflow)
+        incident_fields      = merge_codegen_params(codegen_params["incident_fields"], args.field)
+        datatables           = merge_codegen_params(codegen_params["datatables"], args.datatable)
+        automatic_tasks      = merge_codegen_params(codegen_params["automatic_tasks"], args.task)
+        scripts              = merge_codegen_params(codegen_params["scripts"], args.script)
 
         # Call codegen to recreate package with the new parameter list.
         codegen_package(client,
