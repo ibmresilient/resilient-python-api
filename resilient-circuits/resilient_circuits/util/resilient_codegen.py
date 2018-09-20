@@ -720,15 +720,23 @@ def get_codegen_reload_data(package):
     return data or []
 
 
-def append_codegen_param(arg_list, params, key, param_type):
-    """Append argument list params to the codegen reload params already stored."""
+def merge_codegen_params(reload_list, arg_list):
+    """Merge the codegen reload params list additional arguments list with no duplicates"""
+
+    if reload_list:
+        new_reload_list = reload_list
+    else:
+        new_reload_list = []
+
     if arg_list:
-        for item in arg_list:
-            if item in params[key]:
-                LOG.warn(u"WARN {} {} is already in package {}".format(param_type, item, params["package"]))
-            else:
-                LOG.info(u"Adding {} {} to package {}".format(param_type, item, params["package"]))
-                params[key].append(item)
+        new_arg_list = arg_list
+    else:
+        new_arg_list = []
+
+    # Combine the reload and new argument list without duplicates
+    combined_args_list = list(set(new_reload_list).union(set(new_arg_list)))
+
+    return combined_args_list
 
 def codegen_reload_package(client, args):
     """Generate a package using previous codegen parameters and add any new ones from the commandline."""
@@ -759,27 +767,27 @@ def codegen_reload_package(client, args):
     try:
         # If there are new commandline parameters, append them to the old commandline
         # list for each param type. Check if the item is already in the package before adding it.
-        append_codegen_param(args.messagedestination, codegen_params, "message_destinations", "message destination")
-        append_codegen_param(args.function, codegen_params, "functions", "function")
-        append_codegen_param(args.rule, codegen_params, "actions", "action")
-        append_codegen_param(args.workflow, codegen_params, "workflows", "workflow")
-        append_codegen_param(args.field, codegen_params, "incident_fields", "incident field")
-        append_codegen_param(args.datatable, codegen_params, "datatables", "datatable")
-        append_codegen_param(args.task, codegen_params, "automatic_tasks", "task")
-        append_codegen_param(args.script, codegen_params, "scripts", "script")
+        message_destinations = merge_codegen_params(args.messagedestination, codegen_params["message_destinations"])
+        functions            = merge_codegen_params(args.function, codegen_params["functions"])
+        rules                = merge_codegen_params(args.rule, codegen_params["actions"])
+        workflows            = merge_codegen_params(args.workflow, codegen_params["workflows"])
+        incident_fields      = merge_codegen_params(args.field, codegen_params["incident_fields"])
+        datatables           = merge_codegen_params(args.datatable, codegen_params["datatables"])
+        automatic_tasks      = merge_codegen_params(args.task, codegen_params["automatic_tasks"])
+        scripts              = merge_codegen_params(args.script, codegen_params["scripts"])
 
         # Call codegen to recreate package with the new parameter list.
         codegen_package(client,
                     args.exportfile,
                     args.reload,
-                    codegen_params["message_destinations"],
-                    codegen_params["functions"],
-                    codegen_params["workflows"],
-                    codegen_params["actions"],
-                    codegen_params["incident_fields"],
-                    codegen_params["datatables"],
-                    codegen_params["automatic_tasks"],
-                    codegen_params["scripts"],
+                    message_destinations,
+                    functions,
+                    workflows,
+                    rules,
+                    incident_fields,
+                    datatables,
+                    automatic_tasks,
+                    scripts,
                     output_base)
     except Exception as e:
         LOG.error(u"Error running codegen --reload %s", e.message)
