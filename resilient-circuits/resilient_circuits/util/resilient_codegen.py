@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 import os
+import sys
 import io
 import json
 import logging
@@ -17,6 +18,10 @@ import time
 import copy
 from resilient_circuits import template_functions
 
+if sys.version_info.major == 2:
+    import imp
+else:
+    import importlib.util
 
 LOG = logging.getLogger("__name__")
 
@@ -703,20 +708,42 @@ def codegen_functions(client, export_file, function_names, workflow_names, actio
                                  None, None, None, None,
                                  output_dir, output_file)
 
+def get_customize_file_path(package):
+    # Get the location of current customize.py for this package
+    output_base = os.path.join(os.getcwd(), package)
+    customize_dir = os.path.join(output_base, package, "util")
+    customize_file = os.path.join(customize_dir, "customize.py")
+    return customize_file, output_base, customize_dir
+
 def get_codegen_reload_data(package):
     """Read the default codegen_reload_data section from the given package"""
+
+    # Get the file path of the customize file for the package
+    customize_file, base_dir, customize_dir = get_customize_file_path(package)
+
+    # Check if customize.py exits.  We need to get the reload commands
+    # from the current customize.py and if it's not there then exit.
+    if not os.path.isfile(customize_file):
+        raise Exception(u"{} does not exist. Run resilient_circuits codegen without --reload option to create it.".format(customize_file))
+
     data = None
-    try:
-        dist = pkg_resources.get_distribution(package)
-        entries = pkg_resources.get_entry_map(dist, "resilient.circuits.codegen_reload")
-        if entries:
-            for entry in iter(entries):
-                if entry == 'codegen_reload':
-                    func = entries[entry].load()
-                    data = func()
-                    break
-    except pkg_resources.DistributionNotFound:
-        pass
+
+    # Dynamically load the customize module and call the codegen_reload_date routine.
+    # Different pacakges are used in Python 2 and Python 3.
+    if sys.version_info.major == 2:      # Python 2
+        try:
+            customize_module = imp.load_source("customize", customize_file)
+            data = customize_module.codegen_reload_data()
+        except Exception as e:
+            LOG.error(u"Error loading codegen_reload_data %s", e.message)
+    else:                                # Python 3
+        try:
+            spec = importlib.util.spec_from_file_location("codegen_reload_data", customize_file)
+            customize_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(customize_module)
+            data = customize_module.codegen_reload_data()
+        except Exception as e:
+            LOG.error(u"Error loading codegen_reload_data %s", e.message)
     return data or []
 
 
@@ -738,27 +765,22 @@ def merge_codegen_params(reload_list, arg_list):
 
     return combined_args_list
 
+
+
 def codegen_reload_package(client, args):
     """Generate a package using previous codegen parameters and add any new ones from the commandline."""
-    # Get the location of current customize.py for this package
-    output_base = os.path.join(os.getcwd(), args.reload)
-    customize_dir = os.path.join(output_base, args.reload, "util")
-    customize_file = os.path.join(customize_dir, "customize.py")
-
-    # Check if there is a customize.py already.  We need to get the
-    # reload commands from the current customize.py and if it's not
-    # there then exit.
-    if not os.path.isfile(customize_file):
-        raise Exception(u"{} does not exist. Run resilient_circuits codegen without --reload option to create it.".format(customize_file))
 
     # Get the previous params for codegen from the customize.py
     # codegen_reload_data function.
     codegen_params = get_codegen_reload_data(args.reload)
 
     if codegen_params == None or codegen_params == []:
-        raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
+        raise Exception(u"codegen_reload_data entry point returned empty list")
 
     # Rename the old customize.py file to customize-yyyymmdd-hhmmss.bak
+    customize_file, output_base, customize_dir = get_customize_file_path(args.reload)
+
+    # Get time now.
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     old_customize_file = os.path.join(customize_dir, "customize-{}.bak".format(now))
     LOG.info(u"Renaming customize.py to %s", old_customize_file)
@@ -766,7 +788,7 @@ def codegen_reload_package(client, args):
 
     try:
         # If there are new commandline parameters, append them to the old commandline
-        # list for each param type. Check if the item is already in the package before adding it.
+        # list for each param type.
         message_destinations = merge_codegen_params(codegen_params["message_destinations"], args.messagedestination)
         functions            = merge_codegen_params(codegen_params["functions"], args.function)
         rules                = merge_codegen_params(codegen_params["actions"], args.rule)

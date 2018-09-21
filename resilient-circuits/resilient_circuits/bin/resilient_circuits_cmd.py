@@ -502,13 +502,13 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd == "codegen":
-        if args.reload and args.verify:
-            print_codegen_reload_commandline(args.reload)
-        elif args.package is None and args.function is None and args.reload is None:
+        if args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)
             generate_code(args)
+            if args.reload and args.verify:
+                print_codegen_reload_commandline(args.reload)
     elif args.cmd == "customize":
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
