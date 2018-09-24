@@ -459,9 +459,6 @@ def main():
                                 help="Generate based on organization export file (.res)"),
     codegen_parser.add_argument("--reload",
                                 help="Reload customizations and create new customize.py")
-    codegen_parser.add_argument("--verify",
-                                help="Used with --reload option to printout the commandline to codegen",
-                                action="store_true")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",
@@ -507,8 +504,6 @@ def main():
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)
             generate_code(args)
-            if args.reload and args.verify:
-                print_codegen_reload_commandline(args.reload)
     elif args.cmd == "customize":
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)

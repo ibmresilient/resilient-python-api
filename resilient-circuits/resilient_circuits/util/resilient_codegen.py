@@ -798,6 +798,17 @@ def codegen_reload_package(client, args):
         automatic_tasks      = merge_codegen_params(codegen_params["automatic_tasks"], args.task)
         scripts              = merge_codegen_params(codegen_params["scripts"], args.script)
 
+        # Print the codegen --reload command with all arguments.
+        print_codegen_reload_commandline(args.reload, args.exportfile,
+                                         message_destinations,
+                                         functions,
+                                         workflows,
+                                         rules,
+                                         incident_fields,
+                                         datatables,
+                                         automatic_tasks,
+                                         scripts)
+
         # Call codegen to recreate package with the new parameter list.
         codegen_package(client,
                     args.exportfile,
@@ -820,11 +831,11 @@ def codegen_reload_package(client, args):
             LOG.info(u"Renaming %s back to %s", old_customize_file, customize_file)
             os.rename(old_customize_file, customize_file)
 
-def create_command(params, key, command, quotes):
+def create_command(command, params, quotes):
     """Create commandline substring for codegen --reload commandline """
     result_command = command
-    if len(params[key]) > 0:
-        for item in params[key]:
+    if len(params) > 0:
+        for item in params:
             if quotes:
                 result_command = result_command + u" '{}'".format(item)
             else:
@@ -833,26 +844,21 @@ def create_command(params, key, command, quotes):
         result_command = u""
     return result_command
 
-def print_codegen_reload_commandline(package):
-    """Print the resilient-circuits codegen commandline for a given package
-       This is executed when:
-       resilient-circuits codegen --reload package_name --verify
-       is typed at the commandline"""
-    # Get the codegen parameters.
-    codegen_params = get_codegen_reload_data(package)
-
-    if codegen_params == None or codegen_params == []:
-        raise Exception(u"codegen_reload_data entry point returned empty list. Make sure package {} is installed.".format(args.reload))
+def print_codegen_reload_commandline(package, export_file, message_destinations, rules, workflows,
+                                     functions, incident_fields, datatables, tasks, scripts):
+    """Print the resilient-circuits codegen --reload commandline for a given package"""
 
     # Build the commandline string
-    commandline = u"resilient-circuits codegen --reload {}".format(codegen_params["package"])
-    commandline = commandline + create_command(codegen_params, "message_destinations", u" --messagedestination", False)
-    commandline = commandline + create_command(codegen_params, "actions", u" --rule", True)
-    commandline = commandline + create_command(codegen_params, "workflows", u" --workflow", False)
-    commandline = commandline + create_command(codegen_params, "functions", u" --function", False)
-    commandline = commandline + create_command(codegen_params, "incident_fields", u" --field", False)
-    commandline = commandline + create_command(codegen_params, "datatables", u" --datatable", False)
-    commandline = commandline + create_command(codegen_params, "automatic_tasks", u" --automatic_tasks", False)
-    commandline = commandline + create_command(codegen_params, "scripts", u" --scripts", False)
+    commandline = u"resilient-circuits codegen --reload {}".format(package)
+    if export_file:
+        commandline = commandline + u"--export {}".format(export)
+    commandline = commandline + create_command(u" --messagedestination", message_destinations, False)
+    commandline = commandline + create_command(u" --rule", rules, True)
+    commandline = commandline + create_command(u" --workflow", workflows, False)
+    commandline = commandline + create_command(u" --function", functions, False)
+    commandline = commandline + create_command(u" --field", incident_fields, False)
+    commandline = commandline + create_command(u" --datatable", datatables, False)
+    commandline = commandline + create_command(u" --task", tasks, False)
+    commandline = commandline + create_command(u" --scripts", scripts, False)
 
     print (commandline)
