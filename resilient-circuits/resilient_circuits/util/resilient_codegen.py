@@ -844,8 +844,8 @@ def create_command(command, params, quotes):
         result_command = u""
     return result_command
 
-def print_codegen_reload_commandline(package, export_file, message_destinations, rules, workflows,
-                                     functions, incident_fields, datatables, tasks, scripts):
+def print_codegen_reload_commandline(package, export_file, message_destinations, functions, workflows,
+                                     rules, incident_fields, datatables, tasks, scripts):
     """Print the resilient-circuits codegen --reload commandline for a given package"""
 
     # Build the commandline string
