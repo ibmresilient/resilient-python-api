@@ -7,7 +7,7 @@ from resilient_circuits.util import *
 
 def codegen_reload_data():
     """Parameters to codegen used to generate the {{package}} package"""
-    reload_params = {"package":"{{package}}",
+    reload_params = {"package": "{{package}}",
                    {%if incident_fields|length > 0 %} "incident_fields": ["{{incident_fields.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "incident_fields": [], {%endif%}
                    {%if action_fields|length > 0 %} "action_fields": ["{{action_fields.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "action_fields": [], {%endif%}
                    {%if function_params|length > 0 %} "function_params": ["{{function_params.values()|map(attribute="name")|sort|join('", "')}}"], {%else%} "functions_params": [], {%endif%}

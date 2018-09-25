@@ -11,11 +11,11 @@ import json
 import logging
 import keyword
 import re
-import pkg_resources
 import datetime
 import uuid
 import time
 import copy
+import pkg_resources
 from resilient_circuits import template_functions
 
 if sys.version_info.major == 2:
@@ -735,7 +735,7 @@ def get_codegen_reload_data(package):
             customize_module = imp.load_source("customize", customize_file)
             data = customize_module.codegen_reload_data()
         except Exception as e:
-            LOG.error(u"Error loading codegen_reload_data %s", e.message)
+            LOG.error(u"Error loading codegen_reload_data: %s", e)
     else:                                # Python 3
         try:
             spec = importlib.util.spec_from_file_location("codegen_reload_data", customize_file)
@@ -743,7 +743,7 @@ def get_codegen_reload_data(package):
             spec.loader.exec_module(customize_module)
             data = customize_module.codegen_reload_data()
         except Exception as e:
-            LOG.error(u"Error loading codegen_reload_data %s", e.message)
+            LOG.error(u"Error loading codegen_reload_data for package %s", e)
     return data or []
 
 
@@ -823,7 +823,7 @@ def codegen_reload_package(client, args):
                     scripts,
                     output_base)
     except Exception as e:
-        LOG.error(u"Error running codegen --reload %s", e.message)
+        LOG.error(u"Error running codegen --reload %s", e)
     finally:
         # If no customize.py was created an error occurred somewhere in codegen.
         # Rename the saved off version back to customize.py
@@ -837,7 +837,7 @@ def create_command(command, params, quotes):
     if len(params) > 0:
         for item in params:
             if quotes:
-                result_command = result_command + u" '{}'".format(item)
+                result_command = result_command + u' "{}"'.format(item)
             else:
                 result_command = result_command + u" {}".format(item)
     else:
@@ -851,7 +851,7 @@ def print_codegen_reload_commandline(package, export_file, message_destinations,
     # Build the commandline string
     commandline = u"resilient-circuits codegen --reload {}".format(package)
     if export_file:
-        commandline = commandline + u"--export {}".format(export)
+        commandline = commandline + u"--export {}".format(export_file)
     commandline = commandline + create_command(u" --messagedestination", message_destinations, False)
     commandline = commandline + create_command(u" --rule", rules, True)
     commandline = commandline + create_command(u" --workflow", workflows, False)
