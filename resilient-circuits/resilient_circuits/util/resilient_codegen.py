@@ -851,7 +851,7 @@ def print_codegen_reload_commandline(package, export_file, message_destinations,
     # Build the commandline string
     commandline = u"resilient-circuits codegen --reload {}".format(package)
     if export_file:
-        commandline = commandline + u"--export {}".format(export_file)
+        commandline = commandline + u" --export {}".format(export_file)
     commandline = commandline + create_command(u" --messagedestination", message_destinations, False)
     commandline = commandline + create_command(u" --rule", rules, True)
     commandline = commandline + create_command(u" --workflow", workflows, False)
@@ -859,6 +859,6 @@ def print_codegen_reload_commandline(package, export_file, message_destinations,
     commandline = commandline + create_command(u" --field", incident_fields, False)
     commandline = commandline + create_command(u" --datatable", datatables, False)
     commandline = commandline + create_command(u" --task", tasks, False)
-    commandline = commandline + create_command(u" --scripts", scripts, False)
+    commandline = commandline + create_command(u" --script", scripts, True)
 
     print (commandline)
