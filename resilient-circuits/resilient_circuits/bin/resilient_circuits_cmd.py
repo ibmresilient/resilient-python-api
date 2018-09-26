@@ -366,10 +366,6 @@ def clone(args):
     else:
         raise Exception("Could not import because the server did not return an import ID")
 
-def commandline_unicode_arg(arg_string):
-    """Routine used to force commandline arg string to unicode. """
-    return ensure_unicode(arg_string)
-
 def main():
     """Main commandline"""
     parser = argparse.ArgumentParser()
@@ -432,48 +428,48 @@ def main():
 
     # Options for 'codegen'
     codegen_parser.add_argument("-p", "--package",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Name of the package to generate")
     codegen_parser.add_argument("-o", "--output",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Output file name")
     codegen_parser.add_argument("-f", "--function",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Generate code for the specified function(s)",
                                 nargs="*")
     codegen_parser.add_argument("-m", "--messagedestination",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Generate code for all functions that use the specified message destination(s)",
                                 nargs="*")
     codegen_parser.add_argument("--workflow",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Include customization data for workflow(s)",
                                 nargs="*")
     codegen_parser.add_argument("--rule",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Include customization data for rule(s)",
                                 nargs="*")
     codegen_parser.add_argument("--field",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Include customization data for incident field(s)",
                                 nargs="*")
     codegen_parser.add_argument("--datatable",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Include customization data for datatable(s)",
                                 nargs="*")
     codegen_parser.add_argument("--task",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Include customization data for automatic task(s)",
                                 nargs="*")
     codegen_parser.add_argument("--script",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Include customization data for script(s)",
                                 nargs="*")
     codegen_parser.add_argument("--exportfile",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Generate based on organization export file (.res)"),
     codegen_parser.add_argument("--reload",
-                                type=commandline_unicode_arg,
+                                type=ensure_unicode,
                                 help="Reload customizations and create new customize.py")
 
     # Options for 'customize'
