@@ -366,8 +366,9 @@ def clone(args):
     else:
         raise Exception("Could not import because the server did not return an import ID")
 
-def commandline_unicode_arg(bytestring):
-    return ensure_unicode(bytestring)
+def commandline_unicode_arg(arg_string):
+    """Routine used to force commandline arg string to unicode. """
+    return ensure_unicode(arg_string)
 
 def main():
     """Main commandline"""
@@ -461,6 +462,7 @@ def main():
                                 help="Include customization data for datatable(s)",
                                 nargs="*")
     codegen_parser.add_argument("--task",
+                                type=commandline_unicode_arg,
                                 help="Include customization data for automatic task(s)",
                                 nargs="*")
     codegen_parser.add_argument("--script",

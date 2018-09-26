@@ -709,7 +709,7 @@ def codegen_functions(client, export_file, function_names, workflow_names, actio
                                  output_dir, output_file)
 
 def get_customize_file_path(package):
-    # Get the location of current customize.py for this package
+    """Get the location of current customize.py for this package"""
     output_base = os.path.join(os.getcwd(), package)
     customize_dir = os.path.join(output_base, package, "util")
     customize_file = os.path.join(customize_dir, "customize.py")
