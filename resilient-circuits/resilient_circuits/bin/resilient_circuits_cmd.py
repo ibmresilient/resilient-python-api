@@ -17,6 +17,7 @@ import uuid
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline
 from resilient_circuits.util.resilient_customize import customize_resilient
+from resilient import ensure_unicode
 
 if sys.version_info.major == 2:
     from io import open
@@ -365,6 +366,8 @@ def clone(args):
     else:
         raise Exception("Could not import because the server did not return an import ID")
 
+def commandline_unicode_arg(bytestring):
+    return ensure_unicode(bytestring)
 
 def main():
     """Main commandline"""
@@ -428,36 +431,47 @@ def main():
 
     # Options for 'codegen'
     codegen_parser.add_argument("-p", "--package",
+                                type=commandline_unicode_arg,
                                 help="Name of the package to generate")
     codegen_parser.add_argument("-o", "--output",
+                                type=commandline_unicode_arg,
                                 help="Output file name")
     codegen_parser.add_argument("-f", "--function",
+                                type=commandline_unicode_arg,
                                 help="Generate code for the specified function(s)",
                                 nargs="*")
     codegen_parser.add_argument("-m", "--messagedestination",
+                                type=commandline_unicode_arg,
                                 help="Generate code for all functions that use the specified message destination(s)",
                                 nargs="*")
     codegen_parser.add_argument("--workflow",
+                                type=commandline_unicode_arg,
                                 help="Include customization data for workflow(s)",
                                 nargs="*")
     codegen_parser.add_argument("--rule",
+                                type=commandline_unicode_arg,
                                 help="Include customization data for rule(s)",
                                 nargs="*")
     codegen_parser.add_argument("--field",
+                                type=commandline_unicode_arg,
                                 help="Include customization data for incident field(s)",
                                 nargs="*")
     codegen_parser.add_argument("--datatable",
+                                type=commandline_unicode_arg,
                                 help="Include customization data for datatable(s)",
                                 nargs="*")
     codegen_parser.add_argument("--task",
                                 help="Include customization data for automatic task(s)",
                                 nargs="*")
     codegen_parser.add_argument("--script",
+                                type=commandline_unicode_arg,
                                 help="Include customization data for script(s)",
                                 nargs="*")
     codegen_parser.add_argument("--exportfile",
+                                type=commandline_unicode_arg,
                                 help="Generate based on organization export file (.res)"),
     codegen_parser.add_argument("--reload",
+                                type=commandline_unicode_arg,
                                 help="Reload customizations and create new customize.py")
 
     # Options for 'customize'
