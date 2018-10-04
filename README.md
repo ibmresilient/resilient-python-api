@@ -6,7 +6,7 @@ This directory contains
  * [resilient_circuits](resilient-circuits), an application framework for Resilient Action Module.
  * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures. 
  * [rc_cts](rc-cts), a lightweight Custom Threat Service for Resilient.
- * [[rc_webserver](rc-webserver), a web server which can be extended by additional components.
+ * [rc_webserver](rc-webserver), a web server which can be extended by additional components.
 
 
 ## Python Client Module
