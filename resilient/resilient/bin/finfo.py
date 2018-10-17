@@ -131,9 +131,16 @@ def list_fields_csv(client, objecttype="incident"):
         columns["name"] = apiname(field)
         columns["required"] = field.get("required", "")
         columns["input_type"] = field.get("input_type", "")
-        columns["text"] = field.get("text", "").encode("utf-8")
-        columns["tooltip"] = field.get("tooltip", "").encode("utf-8")
-        columns["placeholder"] = field.get("placeholder", "").encode("utf-8")
+
+        if sys.version_info.major < 3:
+            columns["text"] = field.get("text", "").encode("utf-8")
+            columns["tooltip"] = field.get("tooltip", "").encode("utf-8")
+            columns["placeholder"] = field.get("placeholder", "").encode("utf-8")
+        else:
+            columns["text"] = field.get("text", "")
+            columns["tooltip"] = field.get("tooltip", "")
+            columns["placeholder"] = field.get("placeholder", "")
+
         if not writer:
             writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
             writer.writeheader()
@@ -163,10 +170,16 @@ def list_fields_values(client, objecttype="incident"):
                             e = "False"
                         columns = collections.OrderedDict()
                         columns["name"] = apiname(field)
-                        columns["default"] = str(value["default"] or "").encode("utf-8")
                         columns["enabled"] = e
                         columns["value"] = value["value"]
-                        columns["label"] = (value["label"] or "").encode("utf-8")
+
+                        if sys.version_info.major < 3:
+                            columns["default"] = str(value["default"] or "").encode("utf-8")
+                            columns["label"] = (value["label"] or "").encode("utf-8")
+                        else:
+                            columns["default"] = str(value["default"] or "")
+                            columns["label"] = str(value["label"] or "")
+
                         if not writer:
                             writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
                             writer.writeheader()
