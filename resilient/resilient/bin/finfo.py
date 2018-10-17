@@ -138,7 +138,12 @@ def list_fields_csv(client, objecttype="incident"):
             writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
             writer.writeheader()
         writer.writerow(columns)
-    print(iostr.getvalue().decode("utf-8"))
+
+    result = iostr.getvalue()
+    if sys.version_info.major < 3:
+        print(result.decode("utf-8"))
+    else:
+        print(result)
 
 
 def list_fields_values(client, objecttype="incident"):
@@ -166,7 +171,12 @@ def list_fields_values(client, objecttype="incident"):
                             writer = csv.DictWriter(iostr, fieldnames=columns.keys(), dialect='excel')
                             writer.writeheader()
                         writer.writerow(columns)
-    print(iostr.getvalue().decode("utf-8"))
+
+    result = iostr.getvalue()
+    if sys.version_info.major < 3:
+        print(result.decode("utf-8"))
+    else:
+        print(result)
 
 
 def list_fields(client, objecttype="incident"):
