@@ -14,11 +14,12 @@ from collections import defaultdict
 import pkg_resources
 import resilient
 import datetime
-import uuid
-from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.util.resilient_codegen import list_functions, codegen_functions, codegen_package
-from resilient_circuits.util.resilient_customize import customize_resilient
 import time
+import uuid
+from resilient import ensure_unicode
+from resilient_circuits.app import AppArgumentParser
+from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline
+from resilient_circuits.util.resilient_customize import customize_resilient
 
 if sys.version_info.major == 2:
     from io import open
@@ -35,7 +36,6 @@ try:
 except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
-
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -285,7 +285,9 @@ def generate_code(args):
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
 
-    if args.package:
+    if args.reload:
+        codegen_reload_package(client, args)
+    elif args.package:
         # codegen an installable package
         output_base = os.path.join(os.curdir, args.package)
         codegen_package(client, args.exportfile, args.package,
@@ -446,7 +448,6 @@ def clone(args):
     else:
         raise Exception("Could not import because the server did not return an import ID")
 
-
 def main():
     """Main commandline"""
     parser = argparse.ArgumentParser()
@@ -521,35 +522,49 @@ def main():
 
     # Options for 'codegen'
     codegen_parser.add_argument("-p", "--package",
+                                type=ensure_unicode,
                                 help="Name of the package to generate")
     codegen_parser.add_argument("-o", "--output",
+                                type=ensure_unicode,
                                 help="Output file name")
     codegen_parser.add_argument("-f", "--function",
+                                type=ensure_unicode,
                                 help="Generate code for the specified function(s)",
                                 nargs="*")
     codegen_parser.add_argument("-m", "--messagedestination",
+                                type=ensure_unicode,
                                 help="Generate code for all functions that use the specified message destination(s)",
                                 nargs="*")
     codegen_parser.add_argument("--workflow",
+                                type=ensure_unicode,
                                 help="Include customization data for workflow(s)",
                                 nargs="*")
     codegen_parser.add_argument("--rule",
+                                type=ensure_unicode,
                                 help="Include customization data for rule(s)",
                                 nargs="*")
     codegen_parser.add_argument("--field",
+                                type=ensure_unicode,
                                 help="Include customization data for incident field(s)",
                                 nargs="*")
     codegen_parser.add_argument("--datatable",
+                                type=ensure_unicode,
                                 help="Include customization data for datatable(s)",
                                 nargs="*")
     codegen_parser.add_argument("--task",
+                                type=ensure_unicode,
                                 help="Include customization data for automatic task(s)",
                                 nargs="*")
     codegen_parser.add_argument("--script",
+                                type=ensure_unicode,
                                 help="Include customization data for script(s)",
                                 nargs="*")
     codegen_parser.add_argument("--exportfile",
-                                help="Generate based on organization export file (.res)")
+                                type=ensure_unicode,
+                                help="Generate based on organization export file (.res)"),
+    codegen_parser.add_argument("--reload",
+                                type=ensure_unicode,
+                                help="Reload customizations and create new customize.py")
 
     # Options for 'customize'
     customize_parser.add_argument("-y",
@@ -589,7 +604,7 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd == "codegen":
-        if args.package is None and args.function is None:
+        if args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)

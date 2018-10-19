@@ -2,9 +2,11 @@
 
 This directory contains
 
- * [resilient](resilient), the Resilient Python Client Module for the Resilient APIs,
- * [resilient_circuits](resilient-circuits), an application framework for Resilient Action Module,
+ * [resilient](resilient), the Resilient Python Client Module for the Resilient APIs.
+ * [resilient_circuits](resilient-circuits), an application framework for Resilient Action Module.
  * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures. 
+ * [rc_cts](rc-cts), a lightweight Custom Threat Service for Resilient.
+ * [rc_webserver](rc-webserver), a web server which can be extended by additional components.
 
 
 ## Python Client Module
@@ -182,5 +184,19 @@ When connecting to a Resilient server with the Python libraries,
 the hostname you specify must match exactly the name in the server
 certificate.  If there is a mismatch, the permanent solution is to either
 change your DNS server or change the server certificate so it matches. It is
-also possible to modify your hosts file temporarily, but that is not a permanent
+also possible to modify your 'hosts' file temporarily, but that is not a permanent
 solution.
+
+
+
+# Contributing
+
+Please report issues using the [Issues](https://github.com/ibmresilient/resilient-python-api/issues) tab on GitHub.
+
+Contributions are welcome.  Please read the [CONTRIBUTING](CONTRIBUTING.md) guidelines for more about the process.
+
+
+# Open Source @ IBM
+
+[Find more open source projects on the IBM Github Page](http://ibm.github.io/)
+
