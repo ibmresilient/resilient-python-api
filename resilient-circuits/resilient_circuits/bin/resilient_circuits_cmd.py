@@ -132,13 +132,23 @@ def list_installed(args):
                          clist)
 
 
-def generate_default():
+def generate_default(install_list):
     """ return string containing entire default app.config """
     base_config_fn = pkg_resources.resource_filename("resilient_circuits", "data/app.config.base")
     entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
     additional_sections = []
+    remaining_list = install_list[:] if install_list else []
     for entry in entry_points:
         dist = entry.dist
+        package_name = entry.dist.project_name
+
+        # if a list is provided, use it to filter which packages to add to the app.config file
+        if install_list is not None and package_name not in remaining_list:
+            LOG.debug("{} bypassed".format(package_name))
+            continue
+        elif package_name in remaining_list:
+            remaining_list.remove(package_name)
+
         try:
             func = entry.load()
         except ImportError:
@@ -156,10 +166,15 @@ def generate_default():
         except:
             LOG.exception(u"Failed to get configuration defaults for package '%s'", repr(dist))
             continue
+
         if new_section:
             additional_sections.append(config_data)
 
     LOG.debug("Found %d sections to generate", len(additional_sections))
+
+    if install_list and len(remaining_list) > 0:
+        LOG.warn("%s not found. Check package name(s)", remaining_list)
+
     with open(base_config_fn, 'r') as base_config_file:
         base_config = base_config_file.read()
         return "\n\n".join(([base_config, ] + additional_sections))
@@ -197,7 +212,7 @@ def generate_or_update_config(args):
     if args.create:
         # Write out default file
         with open(config_filename, "w+", encoding="utf-8") as config_file:
-            config_file.write(generate_default())
+            config_file.write(generate_default(args.install_list))
             LOG.info(u"Configuration file generated: %s", config_filename)
             LOG.info(u"Please manually edit with your specific configuration values.")
 
@@ -214,6 +229,7 @@ def generate_or_update_config(args):
             existing_sections = config.sections()
 
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
+        remaining_list = args.install_list[:] if args.install_list else []
 
         with open(config_filename, "a", encoding="utf-8") as config_file:
             for entry in entry_points:
@@ -239,13 +255,22 @@ def generate_or_update_config(args):
 
                 LOG.debug(u"Required Section: %s", new_section)
                 if new_section and new_section not in existing_sections:
-                    if args.install_list is None or package_name in args.install_list:
+                    if args.install_list is None or package_name in remaining_list:
                         # Add the default data for this required section to the config file
                         LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
+                        if package_name in remaining_list:
+                            remaining_list.remove(package_name)
+
                         config_file.write(u"\n" + config_data)
                         updated = True
                 else:
                     LOG.debug(u"Section '%s' already present, not adding", new_section)
+                    LOG.debug(u"%s %s", new_section, package_name)
+                    if package_name in remaining_list:
+                        remaining_list.remove(package_name)
+
+            if args.install_list and len(remaining_list) > 0:
+                LOG.warn("%s not found. Check package name(s)", remaining_list)
 
             if updated:
                 LOG.info(u"Update finished.  "
@@ -331,7 +356,7 @@ def selftest(args):
 
     # any missed packages?
     if len(install_list):
-        LOG.warn("%s untested. Check package name(s)", install_list)
+        LOG.warn("%s not found. Check package name(s)", install_list)
 
 
 def find_workflow_by_programmatic_name(workflows, pname):
