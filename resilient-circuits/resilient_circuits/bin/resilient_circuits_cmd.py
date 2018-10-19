@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
 """ Command line tool to manage and run resilient-circuits """
@@ -13,11 +14,12 @@ from collections import defaultdict
 import pkg_resources
 import resilient
 import datetime
+import time
 import uuid
+from resilient import ensure_unicode
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline
 from resilient_circuits.util.resilient_customize import customize_resilient
-from resilient import ensure_unicode
 
 if sys.version_info.major == 2:
     from io import open
@@ -34,7 +36,6 @@ try:
 except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
-
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -131,13 +132,23 @@ def list_installed(args):
                          clist)
 
 
-def generate_default():
+def generate_default(install_list):
     """ return string containing entire default app.config """
     base_config_fn = pkg_resources.resource_filename("resilient_circuits", "data/app.config.base")
     entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
     additional_sections = []
+    remaining_list = install_list[:] if install_list else []
     for entry in entry_points:
         dist = entry.dist
+        package_name = entry.dist.project_name
+
+        # if a list is provided, use it to filter which packages to add to the app.config file
+        if install_list is not None and package_name not in remaining_list:
+            LOG.debug("{} bypassed".format(package_name))
+            continue
+        elif package_name in remaining_list:
+            remaining_list.remove(package_name)
+
         try:
             func = entry.load()
         except ImportError:
@@ -155,10 +166,15 @@ def generate_default():
         except:
             LOG.exception(u"Failed to get configuration defaults for package '%s'", repr(dist))
             continue
+
         if new_section:
             additional_sections.append(config_data)
 
     LOG.debug("Found %d sections to generate", len(additional_sections))
+
+    if install_list and len(remaining_list) > 0:
+        LOG.warn("%s not found. Check package name(s)", remaining_list)
+
     with open(base_config_fn, 'r') as base_config_file:
         base_config = base_config_file.read()
         return "\n\n".join(([base_config, ] + additional_sections))
@@ -196,7 +212,7 @@ def generate_or_update_config(args):
     if args.create:
         # Write out default file
         with open(config_filename, "w+", encoding="utf-8") as config_file:
-            config_file.write(generate_default())
+            config_file.write(generate_default(args.install_list))
             LOG.info(u"Configuration file generated: %s", config_filename)
             LOG.info(u"Please manually edit with your specific configuration values.")
 
@@ -213,10 +229,12 @@ def generate_or_update_config(args):
             existing_sections = config.sections()
 
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
+        remaining_list = args.install_list[:] if args.install_list else []
 
         with open(config_filename, "a", encoding="utf-8") as config_file:
             for entry in entry_points:
                 dist = entry.dist
+                package_name = entry.dist.project_name
                 try:
                     func = entry.load()
                 except ImportError:
@@ -237,12 +255,22 @@ def generate_or_update_config(args):
 
                 LOG.debug(u"Required Section: %s", new_section)
                 if new_section and new_section not in existing_sections:
-                    # Add the default data for this required section to the config file
-                    LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
-                    config_file.write(u"\n" + config_data)
-                    updated = True
+                    if args.install_list is None or package_name in remaining_list:
+                        # Add the default data for this required section to the config file
+                        LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
+                        if package_name in remaining_list:
+                            remaining_list.remove(package_name)
+
+                        config_file.write(u"\n" + config_data)
+                        updated = True
                 else:
                     LOG.debug(u"Section '%s' already present, not adding", new_section)
+                    LOG.debug(u"%s %s", new_section, package_name)
+                    if package_name in remaining_list:
+                        remaining_list.remove(package_name)
+
+            if args.install_list and len(remaining_list) > 0:
+                LOG.warn("%s not found. Check package name(s)", remaining_list)
 
             if updated:
                 LOG.info(u"Update finished.  "
@@ -277,6 +305,60 @@ def generate_code(args):
         if not output_file.endswith(".py"):
             output_file = output_file + ".py"
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
+
+def selftest(args):
+    """loop through every selftest for every eligible package, call and store returned state,
+        print out package and their selftest states"""
+
+    components = defaultdict(list)
+
+    # custom entry_point only for selftest functions
+    selftest_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.selftest')]
+    for ep in selftest_entry_points:
+        components[ep.dist].append(ep)
+
+    if len(selftest_entry_points) == 0:
+        LOG.info("No selftest entry points found.")
+        return None
+
+    # Generate opts array necessary for ResilientComponent instantiation
+    opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
+
+    # make a copy
+    install_list = list(args.install_list) if args.install_list else []
+
+    for dist, component_list in components.items():
+        if args.install_list is None or dist.project_name in install_list:
+            # remove name from list
+            if dist.project_name in install_list:
+                install_list.remove(dist.project_name)
+
+            # add an entry for the package
+            LOG.info("%s: ", dist.project_name)
+            for ep in component_list:
+                # load the entry point
+                f_selftest = ep.load()
+
+                try:
+                    # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                    start_time_milliseconds = int(round(time.time() * 1000))
+
+                    status = f_selftest(opts)
+
+                    end_time_milliseconds = int(round(time.time() * 1000))
+
+                    delta_milliseconds = end_time_milliseconds - start_time_milliseconds
+                    delta_seconds = delta_milliseconds / 1000
+
+                    if status["state"] is not None:
+                       LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
+                except Exception as e:
+                    LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
+                    continue
+
+    # any missed packages?
+    if len(install_list):
+        LOG.warn("%s not found. Check package name(s)", install_list)
 
 
 def find_workflow_by_programmatic_name(workflows, pname):
@@ -332,11 +414,11 @@ def clone(args):
 
         duplicate_check = find_workflow_by_programmatic_name(workflow_defs, new_workflow_api_name)
         if duplicate_check is not None:
-            raise Exception("Workflow with the api name {} already exists!".format(new_workflow_api_name))
+            raise Exception("Workflow with the api name {} already exists".format(new_workflow_api_name))
 
         original_workflow = find_workflow_by_programmatic_name(workflow_defs, original_workflow_api_name)
         if original_workflow is None:
-            raise Exception("Could not find original workflow {}!".format(original_workflow_api_name))
+            raise Exception("Could not find original workflow {}".format(original_workflow_api_name))
 
         # This section just fills out the stuff we need to replace to duplicate
         new_workflow = original_workflow.copy()
@@ -391,8 +473,16 @@ def main():
                                            help="Generate template code for Python components")
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
+    selftest_parser = subparsers.add_parser("selftest",
+                                        help="Calls selftest functions for every package and prints out their return states")
     clone_parser = subparsers.add_parser("clone",
                                          help="Clone Resilient objects")
+
+    # Options for selftest
+    selftest_parser.add_argument("-l", "--list",
+                               dest="install_list",
+                               help="Test specified list of package(s)",
+                               nargs="+")
 
     # Options for 'list'
     list_parser.add_argument("-v", "--verbose", action="store_true")
@@ -409,6 +499,10 @@ def main():
                                help="Config file to write to; e.g. 'app.config'",
                                default="",
                                nargs="?")
+    config_parser.add_argument("-l", "--list",
+                                  dest="install_list",
+                                  help="Config specified list of package(s)",
+                                  nargs="+")
 
     # Options for 'run'
     run_parser.add_argument("-r", "--auto-restart",
@@ -477,15 +571,14 @@ def main():
                                   dest="yflag",
                                   help="Customize without prompting for confirmation",
                                   action="store_true")
-    customize_parser.add_argument("-i", "--install",
+    customize_parser.add_argument("-l", "--list",
                                   dest="install_list",
-                                  help="Install specified function(s)",
+                                  help="Install specified list of package(s)",
                                   nargs="+")
 
     clone_parser.add_argument("--workflow",
                               help='Clone workflows. "old-api-name" "new-api-name". Workflows are based off of the'
-                                   ' last export. To update exports Administrator Settings > Organization >'
-                                   ' Export > Export Button',
+                                   ' last export.',
                               nargs=2)
 
     args, unknown_args = parser.parse_known_args()
@@ -525,6 +618,8 @@ def main():
             clone_parser.print_usage()
         else:
             clone(args)
+    elif args.cmd == "selftest":
+        selftest(args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")

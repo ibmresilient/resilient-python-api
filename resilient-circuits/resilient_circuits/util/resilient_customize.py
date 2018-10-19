@@ -127,7 +127,7 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
         ep_count = ep_count + 1
         def_count = 0
         dist = entry.dist
-        dist_str = str(dist.as_requirement())
+        dist_str = entry.dist.project_name
 
         if install_list is None or dist_str in install_list:
             if install_list is not None:
@@ -170,8 +170,7 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
             LOG.info(u"Package '%s' done.", dist)
 
     if install_list is not None:
-        for function in install_list:
-            print(function + ' not found')
+        LOG.warn("%s not found. Check package name(s)", install_list)
 
     if ep_count == 0:
         LOG.info(u"No customizations are defined by installed packages.")
