@@ -4,7 +4,9 @@ else %}kwargs.get("{{param.name}}"){%endif%}{%- endmacro -%}
 {%- macro paramcomment(param) -%}{{param.input_type}}{%if param.input_type in ["select", "multiselect"]%}, values: "{{param["values"]|list|map(attribute="label")|join('", "')}}"{%endif%}{%- endmacro -%}
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
-"""Function implementation"""
+"""Function implementation
+   test with: resilient-circuits selftest -l {{package}}
+"""
 
 import logging
 
