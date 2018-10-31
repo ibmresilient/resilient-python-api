@@ -1,0 +1,25 @@
+# Resilient Library for Integrations
+
+This package contains common library calls which facilitate the development of functions for IBM Resilient.
+
+It contains the following modules:
+* function_metrics - a class to collect metrics information to be added to a json payload
+* integration_errors - contains a simple exception for function failures: Integrations
+* requests_common - common code for making REST API calls which return json results
+* resilient_common - common code for interacting with Resilient
+
+Prerequisites:
+```
+resilient version 30 or later
+resilient_circuits version 30 or later
+```
+
+Usage:
+```
+from resilient_lib.components.resilient_common build_incident_url, build_resilient_url
+
+url_to_incident = build_incident_url(build_resilient_url("https://my.resilient.com", 443), 12345)
+```
+
+
+

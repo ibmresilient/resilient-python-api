@@ -1,0 +1,78 @@
+import unittest
+from resilient_lib.components.resilient_common import parse_bool, readable_datetime, validate_fields, \
+    unescape, clean_html, build_function_result, build_incident_url, build_resilient_url
+
+class TestFunctionMetrics(unittest.TestCase):
+    """ Tests for the attachment_hash function"""
+
+    def test_parse_bool(self):
+        self.assertTrue(parse_bool('True'))
+        self.assertTrue(parse_bool('true'))
+        self.assertTrue(parse_bool('YES'))
+        self.assertFalse(parse_bool('truex'))
+        self.assertTrue(parse_bool(1))
+        self.assertFalse(parse_bool(0))
+        self.assertFalse(parse_bool('0'))
+
+    def test_readable_datetime(self):
+        # readable_datetime(timestamp, milliseconds=True, str_format='%Y-%m-%dT%H:%M:%SZ'):
+
+        ts = 1536194194
+        str_ts = readable_datetime(ts, milliseconds=False)
+        self.assertEqual(str_ts, '2018-09-06T00:36:34Z')
+
+        str_ts = readable_datetime(ts*1000, rtn_format='%Y-%m-%d')
+        self.assertEqual(str_ts, '2018-09-06')
+
+    def test_validate_fields(self):
+        # validate_fields(fieldList, kwargs)
+        test_dict = { "a": "a", "b": "b", "c": ''}
+
+        validate_fields(("a", "b"), test_dict)
+
+        with self.assertRaises(ValueError):
+            validate_fields(("c"), test_dict)
+            validate_fields(("d"), test_dict)
+
+    def test_unescape(self):
+        # unescape(data)
+        test_data = "&lt;-&gt;"
+        self.assertEqual(unescape(test_data), '<->')
+
+        self.assertEqual(unescape("&ab;xx"), '&ab;xx')
+        self.assertIsNone(unescape(None))
+
+
+    def test_clean_html(self):
+        # clean_html(htmlFragment)
+        self.assertEqual(clean_html("<div>abc</div>"), "abc")
+        self.assertEqual(clean_html("<div><ul><li>abc</li><li>def</li></ul></div>"), "abc def")
+        self.assertEqual(clean_html("abc"), "abc")
+        self.assertIsNone(clean_html(None))
+
+    def test_build_function_result(self):
+        # build_function_result(success, reason, result, metrics_json, inputs_json)
+        reason = "reason"
+        result = { "key": "key1", "value": "value1"}
+        metrics = {
+            "package": "pkg",
+            "version": "1.0.0",
+            "host": "localhost",
+            "execution_time_ms": 1000,
+            "timestamp": "2018-10-23 16:00"
+        }
+        inputs = { "input_a": "a", "input_b": "b"}
+        result = build_function_result(True, reason, result, metrics, inputs)
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['reason'], reason)
+        self.assertEqual(result['content']['key'], 'key1')
+        self.assertEqual(result['metrics']['host'], 'localhost')
+        self.assertEqual(result['inputs']['input_a'], 'a')
+
+    def test_build_incident_url(self):
+        url = build_incident_url(build_resilient_url("https://localhost", 8443), 12345)
+        self.assertEqual(url, "https://localhost:8443/#incidents/12345")
+
+        url = build_incident_url(build_resilient_url("localhost", 8443), 12345)
+        self.assertEqual(url, "https://localhost:8443/#incidents/12345")
