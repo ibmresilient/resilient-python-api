@@ -8,7 +8,7 @@ from six import string_types
 try:
     from HTMLParser import HTMLParser as htmlparser
 except:
-    import html.parser as htmlparser
+    from html.parser import HTMLParser as htmlparser
 
 
 INCIDENT_FRAGMENT = '#incidents'
@@ -51,8 +51,9 @@ def clean_html(html_fragment):
     return ' '.join(s.strings)
 
 def unescape(data):
-    """ Return unescaped data such as &gt; -> >, &quot -> ', etc. """
-    #try:
+    """ Return unescaped data such as &gt; -> >, &quot -> ', etc.
+    :param data: text to convert
+    """
     if data is None:
         return None
 
@@ -92,7 +93,7 @@ def build_function_result(success, reason, result, metrics_json, inputs_json):
 
     return payload
 
-def get_file_attachment(res_client, incident_id, artifact_id, task_id, attachment_id):
+def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
     """ call the Resilient REST API to get the attachment or artifact data"""
 
     if incident_id and artifact_id:

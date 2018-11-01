@@ -3,7 +3,7 @@
 # pragma pylint: disable=unused-argument, no-self-use
 
 import requests
-from .integration_errors import IntegrationError
+from resilient_lib.components.integration_errors import IntegrationError
 
 
 def execute_call(verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,

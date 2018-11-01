@@ -7,6 +7,10 @@ import platform
 import pkg_resources  # part of setuptools
 
 class FunctionMetrics:
+    """
+    Use this function to track metrics on the function's operation. It tracks information on the package,
+    it's environment and the execution time
+    """
 
     def finish(self):
         self.end_time = datetime.now()
@@ -28,9 +32,3 @@ class FunctionMetrics:
         self.start_time = datetime.now()
         self.func = func
 
-
-if __name__ == "__main__":
-    fm = FunctionMetrics("requests")
-    result = fm.finish()
-
-    print(result)
