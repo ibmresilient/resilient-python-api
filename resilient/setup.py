@@ -95,7 +95,7 @@ setup(
         'requests-toolbelt>=0.6.0',
         'requests-mock>=1.2.0',
         'six',
-        'cachetools'
+        'cachetools<3.0.0'
     ],
     extras_require={
         ':python_version < "3.2"': [
