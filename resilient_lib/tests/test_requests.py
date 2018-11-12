@@ -36,6 +36,10 @@ class TestFunctionRequests(unittest.TestCase):
     def test_verbs(self):
         URL = "https://jsonplaceholder.typicode.com/posts"
 
+        headers = {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+
         payload = {
             'title': 'foo',
             'body': 'bar',
@@ -43,7 +47,7 @@ class TestFunctionRequests(unittest.TestCase):
         }
 
         # P O S T
-        resp = execute_call("post", URL, payload, log=TestFunctionRequests.LOG)
+        resp = execute_call("post", URL, payload, headers=headers, log=TestFunctionRequests.LOG)
         self.assertTrue(resp.get("id"))
 
 
@@ -57,7 +61,10 @@ class TestFunctionRequests(unittest.TestCase):
         # P U T
         put_payload = copy.deepcopy(payload)
         put_payload['title'] = 'put'
-        resp = execute_call("put", id_url, put_payload, log=TestFunctionRequests.LOG)
+        put_payload['id'] = id
+
+        resp = execute_call("put", id_url, put_payload, headers=headers, log=TestFunctionRequests.LOG)
+        TestFunctionRequests.LOG.info(resp)
         self.assertTrue(resp.get("title"))
         self.assertEqual(resp.get("title"), 'put')
 
@@ -66,7 +73,7 @@ class TestFunctionRequests(unittest.TestCase):
             'title': 'patch'
         }
 
-        resp = execute_call("patch", id_url, patch, log=TestFunctionRequests.LOG)
+        resp = execute_call("patch", id_url, patch, headers=headers, log=TestFunctionRequests.LOG)
         self.assertTrue(resp.get("title"))
         self.assertEqual(resp.get("title"), 'patch')
 

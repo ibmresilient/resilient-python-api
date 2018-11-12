@@ -31,23 +31,11 @@ def execute_call(verb, url, payload, log=None, basicauth=None, verify_flag=True,
     try:
         (payload and log) and log.debug(payload)
 
-        if verb == 'get':
-            resp = requests.get(url, verify=verify_flag, headers=headers, params=payload,
-                                auth=basicauth, timeout=timeout, proxies=proxies)
-        elif verb == 'post':
-            resp = requests.post(url, verify=verify_flag, headers=headers, data=payload,
-                                 auth=basicauth, timeout=timeout, proxies=proxies)
-        elif verb == 'put':
-            resp = requests.put(url, verify=verify_flag, headers=headers, data=payload,
-                                auth=basicauth, timeout=timeout, proxies=proxies)
-        elif verb == 'patch':
-            resp = requests.patch(url, verify=verify_flag, headers=headers, data=payload,
-                                  auth=basicauth, timeout=timeout, proxies=proxies)
-        elif verb == 'delete':
-            resp = requests.delete(url, verify=verify_flag, headers=headers, data=payload,
-                                   auth=basicauth, timeout=timeout, proxies=proxies)
-        else:
+        if verb.lower() not in ('get', 'post', 'put', 'patch', 'delete', 'head'):
             raise IntegrationError("unknown verb {}".format(verb))
+
+        resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
+                            auth=basicauth, timeout=timeout, proxies=proxies)
 
         if resp is None:
             raise IntegrationError('no response returned')
