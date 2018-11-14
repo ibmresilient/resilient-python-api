@@ -153,7 +153,6 @@ class MarkdownParser(HTMLParser):
         :param data:
         :return: None
         """
-        print("data: "+data)
         # clean data of prefix whitespace
         cleaned = re.search(r"^[\n\t\r]*(.*)", data, re.S)
         cleaned and self.data.append(cleaned.group(1))
@@ -174,12 +173,7 @@ class MarkdownParser(HTMLParser):
             raise ValueError("Mismatch tag {} expecting {}".format(tag, prev_tag))
 
         if tag == "div":
-            cls = self.get_attr(prev_attrs, 'class')
-            # don't need extra line breaks when parsing the enclosing <div> tag
-            if cls and cls == MarkdownParser.QUILL_RTE:
-                self.data_post.append(MarkdownParser.MARKDOWN_NEWLINE)
-            else:
-                self.data_post.append(MarkdownParser.MARKDOWN_NEWSECTION)
+            self.data_post.append(MarkdownParser.MARKDOWN_NEWLINE)
 
         elif tag in ("ol", "ul"):
             if len(self.curr_list) > 0:
@@ -189,7 +183,6 @@ class MarkdownParser(HTMLParser):
                         self.list_bullets.insert(0, bullet)      # clear top item on list symbols
                     else:
                         self.list_bullets = [bullet]
-            self.data_post.insert(0, MarkdownParser.MARKDOWN_NEWLINE)
 
         elif tag == "br":
             # this is data rather than pre or post data
@@ -204,10 +197,7 @@ class MarkdownParser(HTMLParser):
         :return: None
         """
 
-        # only push buffers if there's data. pre and post data alone is not pushed
-        #  this avoids excessive newlines when nesting <div>
-        if len(''.join(self.data)) > 0:
-            self.buffer.extend([item for sublist in [self.data_pre, self.data, self.data_post] for item in sublist])
+        self.buffer.extend([item for sublist in [self.data_pre, self.data, self.data_post] for item in sublist])
 
         # clean up
         self.data = []
@@ -277,4 +267,9 @@ class MarkdownParser(HTMLParser):
         """
         self.push_data()
 
-        return ''.join(self.buffer)
+        result = ''.join(self.buffer)
+        # clean up ending new line characters
+        while result[-1:] == '\n':
+            result = result[:-1]
+
+        return result

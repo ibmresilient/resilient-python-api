@@ -18,7 +18,7 @@ This is also the place to tell me if you are interested in pre-releases of me, o
 
     def test_paragraph(self):
         data = """<div class="rte"><div>this is line 1</div><div>this is line 2</div><div>this is line 3</div></div>"""
-        markdown = "this is line 1\n\nthis is line 2\n\nthis is line 3\n\n"
+        markdown = "this is line 1\n\nthis is line 2\n\nthis is line 3"
 
         parser = MarkdownParser()
         converted= parser.convert(data)
@@ -94,7 +94,7 @@ this is line 3</blockquote></div>"""
         self.assertEqual(str(parser), markdown)
 
         data = """<div><h1>this is a header</h1><h2>h2</h2></div>"""
-        markdown = "* this is a header\n** h2\n"
+        markdown = "* this is a header\n** h2"
 
         parser = MarkdownParser(headers=['*', '**', '***'])
         parser.feed(data)
@@ -278,3 +278,10 @@ this is line 3</blockquote></div>"""
         converted_ordered = parser.convert(data_ordered)
         self.assertEqual(converted_ordered, markdown_ordered)
 
+    def test_monospace(self):
+        data = """<div class="rte"><div><strong style="font-family: monospace;">monospace</strong><strong> and bold</strong></div><div><u>underline</u></div><div><strong><u>bold and underline</u></strong></div><div><br /></div></div>"""
+        markdown_monospace = """**{{monospace}}**** and bold**\n\n__underline__\n\n**__bold and underline__**"""
+
+        parser = MarkdownParser(number='#')
+        converted_monospace = parser.convert(data)
+        self.assertEqual(converted_monospace, markdown_monospace)
