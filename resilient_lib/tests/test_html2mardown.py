@@ -7,7 +7,11 @@ class TestFunctionMetrics(unittest.TestCase):
     def test_no_html(self):
 
         parser = MarkdownParser()
-        data =  "The General Preferences Pane allows you to tell me how you want me to behave. For example, do you want me to make sure there is a document open when I launch? You can also tell me if I should constantly update the preview window as you type, or wait for you to hit command-R instead. Maybe you prefer your editor window on the right? Or to see the word-count as you type. This is also the place to tell me if you are interested in pre-releases of me, or just want to stick to better-tested official releases."""
+        data =  """The General Preferences Pane allows you to tell me how you want me to behave. 
+For example, do you want me to make sure there is a document open when I launch?
+You can also tell me if I should constantly update the preview window as you type, or wait for you to hit command-R instead.
+Maybe you prefer your editor window on the right? Or to see the word-count as you type. 
+This is also the place to tell me if you are interested in pre-releases of me, or just want to stick to better-tested official releases."""
 
         converted = parser.convert(data)
         self.assertEqual(converted, data)
@@ -15,6 +19,16 @@ class TestFunctionMetrics(unittest.TestCase):
     def test_paragraph(self):
         data = """<div class="rte"><div>this is line 1</div><div>this is line 2</div><div>this is line 3</div></div>"""
         markdown = "this is line 1\n\nthis is line 2\n\nthis is line 3\n\n"
+
+        parser = MarkdownParser()
+        converted= parser.convert(data)
+        self.assertEqual(converted, markdown)
+
+    def test_blockquote(self):
+        data = """<div class="rte"><blockquote>this is line 1
+this is line 2
+this is line 3</blockquote></div>"""
+        markdown = "```this is line 1\nthis is line 2\nthis is line 3```"
 
         parser = MarkdownParser()
         converted= parser.convert(data)
@@ -37,9 +51,9 @@ class TestFunctionMetrics(unittest.TestCase):
         converted_monospace = parser_monospace.convert(data_monospace)
         self.assertEqual(converted_monospace, markdown_monospace)
 
-    def test_emphasis(self):
-        data = """<div><strong>bold</strong><span> </span><em>italic</em><span> </span><u>underline</u><span> </span><s>scoreout</s></div>"""
-        markdown = "**bold** *italic* __underline__ ~~scoreout~~"
+    def test_strong_emphasis_underline_strikeout(self):
+        data = """<div><strong>bold</strong><span> </span><em>italic</em><span> </span><u>underline</u><span> </span><s>strikeout</s></div>"""
+        markdown = "**bold** *italic* __underline__ ~~strikeout~~"
 
         parser = MarkdownParser()
         converted = parser.convert(data)
@@ -71,8 +85,23 @@ class TestFunctionMetrics(unittest.TestCase):
         # same test but using str() which calls __str__()
         self.assertEqual(str(parser), markdown)
 
-    def test_unknown_tag(self):
+    def test_h(self):
         data = """<div><h1>this is a header</h1><strong>strong</strong></div>"""
+        markdown = "h1. this is a header\n**strong**"
+
+        parser = MarkdownParser()
+        parser.feed(data)
+        self.assertEqual(str(parser), markdown)
+
+        data = """<div><h1>this is a header</h1><h2>h2</h2></div>"""
+        markdown = "* this is a header\n** h2\n"
+
+        parser = MarkdownParser(headers=['*', '**', '***'])
+        parser.feed(data)
+        self.assertEqual(str(parser), markdown)
+
+    def test_unknown(self):
+        data = """<div><x>this is a header</x><strong>strong</strong></div>"""
         markdown = "this is a header\n\n**strong**"
 
         parser = MarkdownParser()
@@ -188,3 +217,64 @@ class TestFunctionMetrics(unittest.TestCase):
         parser = MarkdownParser()
         converted_ol_ul_ol = parser.convert(data_nested_ol_ul_ol)
         self.assertEqual(converted_ol_ul_ol, markdown_ol_ul_ol)
+
+        data_custom = """<div class="rte"><ul><li>1</li><li>2</li><li>3</li></ul><ul><ul><li>a</li><li>b</li><li>c</li></ul></ul><ul><ul><ul><li>i</li><li>ii</li><li>iii</li></ul></ul></ul></div>"""
+        markdown_custom = """
+    * 1
+    * 2
+    * 3
+        + a
+        + b
+        + c
+            - i
+            - ii
+            - iii"""
+
+        parser = MarkdownParser(bullets=["*", "+", "-"])
+        converted_custom = parser.convert(data_custom)
+        self.assertEqual(converted_custom, markdown_custom)
+
+        markdown_custom_single = """
+* 1
+* 2
+* 3
+* a
+* b
+* c
+* i
+* ii
+* iii"""
+
+        parser = MarkdownParser(bullets="*", indent=0)
+        converted_custom = parser.convert(data_custom)
+        self.assertEqual(converted_custom, markdown_custom_single)
+
+
+    def test_modify_symbols(self):
+        data = "<div class='rte'><div><strong><u>underline and strong</u></strong></div></div>"
+        markdown = "*_underline and strong_*"
+
+        parser = MarkdownParser(bold="*", underline="_")
+        converted = parser.convert(data)
+        self.assertEqual(converted, markdown)
+
+        data_unordered = """<div><ul><li>1</li><li>2</li><li>3</li></ul></div>"""
+        markdown_unordered = """
+  + 1
+  + 2
+  + 3"""
+
+        parser = MarkdownParser(indent=2, bullets='+')
+        converted_unordered = parser.convert(data_unordered)
+        self.assertEqual(converted_unordered, markdown_unordered)
+
+        data_ordered = """<div><ol><li>1</li><li>2</li><li>3</li></ol></div>"""
+        markdown_ordered = """
+    # 1
+    # 2
+    # 3"""
+
+        parser = MarkdownParser(number='#')
+        converted_ordered = parser.convert(data_ordered)
+        self.assertEqual(converted_ordered, markdown_ordered)
+
