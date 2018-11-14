@@ -18,7 +18,7 @@ This is also the place to tell me if you are interested in pre-releases of me, o
 
     def test_paragraph(self):
         data = """<div class="rte"><div>this is line 1</div><div>this is line 2</div><div>this is line 3</div></div>"""
-        markdown = "this is line 1\n\nthis is line 2\n\nthis is line 3"
+        markdown = "this is line 1\nthis is line 2\nthis is line 3"
 
         parser = MarkdownParser()
         converted= parser.convert(data)
@@ -102,7 +102,7 @@ this is line 3</blockquote></div>"""
 
     def test_unknown(self):
         data = """<div><x>this is a header</x><strong>strong</strong></div>"""
-        markdown = "this is a header\n\n**strong**"
+        markdown = "this is a header\n**strong**"
 
         parser = MarkdownParser()
         parser.feed(data)
@@ -280,8 +280,16 @@ this is line 3</blockquote></div>"""
 
     def test_monospace(self):
         data = """<div class="rte"><div><strong style="font-family: monospace;">monospace</strong><strong> and bold</strong></div><div><u>underline</u></div><div><strong><u>bold and underline</u></strong></div><div><br /></div></div>"""
-        markdown_monospace = """**{{monospace}}**** and bold**\n\n__underline__\n\n**__bold and underline__**"""
+        markdown_monospace = """**{{monospace}}**** and bold**\n__underline__\n**__bold and underline__**"""
 
         parser = MarkdownParser(number='#')
         converted_monospace = parser.convert(data)
         self.assertEqual(converted_monospace, markdown_monospace)
+
+    def test_mixed(self):
+        data = """<div class="rte"><div>this is a line with <strong>bold</strong> and <span style="color: rgb(255,0,0);">red</span></div></div>"""
+        markdown_mixed="""this is a line with **bold** and {color:#ff0000}red{color}"""
+
+        parser = MarkdownParser()
+        converted_mixed = parser.convert(data)
+        self.assertEqual(converted_mixed, markdown_mixed)

@@ -61,6 +61,9 @@ class MarkdownParser(HTMLParser):
         :return: None
         """
 
+        # flush any data accumulated
+        self.push_data(True)
+
         # retain the hierarchy of nested command, which may be needed
         self.curr_tag.append(tag)
         self.curr_attrs.append(attrs)
@@ -125,7 +128,7 @@ class MarkdownParser(HTMLParser):
 
         elif tag not in MarkdownParser.SUPPORTED_TAGS:
             self.log.warning("Unknown html tag: {}".format(tag))
-            self.data_post.insert(0, MarkdownParser.MARKDOWN_NEWSECTION)
+            self.data_post.insert(0, MarkdownParser.MARKDOWN_NEWLINE)
 
         # determine if styling is needed
         style = self.get_attr(attrs, 'style')
@@ -191,18 +194,22 @@ class MarkdownParser(HTMLParser):
         self.push_data()
 
 
-    def push_data(self):
+    def push_data(self, data_only=False):
         """
         flush the data buffer and reset for next html tag
         :return: None
         """
 
-        self.buffer.extend([item for sublist in [self.data_pre, self.data, self.data_post] for item in sublist])
+        if data_only:
+            self.buffer.extend(self.data)
+            self.data = []
+        else:
+            self.buffer.extend([item for sublist in [self.data_pre, self.data, self.data_post] for item in sublist])
 
-        # clean up
-        self.data = []
-        self.data_pre = []
-        self.data_post = []
+            # clean up
+            self.data = []
+            self.data_pre = []
+            self.data_post = []
 
 
     def convert_rgb(self, rgb):
