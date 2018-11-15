@@ -289,7 +289,7 @@ def generate_code(args):
         extract_to_res(client, args.exportfile,
                           args.messagedestination, args.function, args.workflow, args.rule,
                           args.field, args.datatable, args.task, args.script,
-                          args.output)
+                          args.output, args.zip)
     elif args.reload:
         codegen_reload_package(client, args)
     elif args.package:
@@ -577,7 +577,10 @@ def main():
     codegen_parser.add_argument("--reload",
                                 type=ensure_unicode,
                                 help="Reload customizations and create new customize.py")
-
+    # Options for extract
+    extractfile_parser.add_argument("--zip",
+                                    action='store_true',
+                                    help="zip of the resulting file")
     # Options for 'customize'
     customize_parser.add_argument("-y",
                                   dest="yflag",
