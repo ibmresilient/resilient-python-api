@@ -288,7 +288,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
 def codegen_from_template(client, export_file, template_file_path, package,
                           message_destination_names, function_names, workflow_names, action_names,
                           field_names, datatable_names, task_names, script_names,
-                          output_dir, output_file):
+                          output_dir, output_file, extract_file):
     """Based on a template-file, produce the generated file or package.
 
        To codegen a single file, the template will be a JSON dict with just one entry,
@@ -313,6 +313,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
        :param script_names: list of scripts whose customization def should be included in the package
        :param output_dir: output location
        :param output_file: output file name
+       :param extract_file: used with command 'extract' to only capture .res file information for distribution
     """
     functions = {}
     function_params = {}
@@ -330,7 +331,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
     if export_file:
         with io.open(export_file, 'r', encoding="utf-8") as export:
             export_data = json.loads(export.read())
-        LOG.info(u"Codegen is based on the organization export from '{}'.".format(export_file))
+        LOG.info(u"Operation is based on the organization export from '{}'.".format(export_file))
     else:
         # Get the most recent org export that includes actions and tasks
         export_uri = "/configurations/exports/history"
@@ -347,7 +348,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                       u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
             return
         dt = datetime.datetime.utcfromtimestamp(last_date/1000.0)
-        LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
+        LOG.info(u"Operation is based on the organization export from {}.".format(dt))
         export_uri = "/configurations/exports/{}".format(last_id)
         export_data = client.get(export_uri)
 
@@ -543,7 +544,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                 list_datatables(export_data.get("types", []))
                 return
 
-    # Automtic tasks determine the list of phases
+    # Automatic tasks determine the list of phases
     phase_names = set()
     if task_names:
         # Get task definitions
@@ -641,6 +642,13 @@ def codegen_from_template(client, export_file, template_file_path, package,
         "id": 0
     }]
 
+    # if an extract, write the file and return
+    if extract_file:
+        print (u"Writing {}".format(extract_file))
+        with io.open(extract_file, 'w', encoding="utf-8") as extract_fh:
+            extract_fh.write(unicode(json.dumps(export_data, ensure_ascii=False)))
+        return
+
     # Prepare the dictionary of substitution values for jinja2
     # (includes all the configuration elements related to the functions)
     data = {
@@ -696,7 +704,7 @@ def codegen_package(client, export_file, package,
     return codegen_from_template(client, export_file, template_file_path, package,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  field_names, datatable_names, task_names, script_names,
-                                 output_dir, None)
+                                 output_dir, None, None)
 
 
 def codegen_functions(client, export_file, function_names, workflow_names, action_names, output_dir, output_file):
@@ -706,7 +714,31 @@ def codegen_functions(client, export_file, function_names, workflow_names, actio
     return codegen_from_template(client, export_file, template_file_path, None,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  None, None, None, None,
-                                 output_dir, output_file)
+                                 output_dir, output_file, None)
+
+def extract_to_res(client, export_file,
+                     message_destination_names, function_names, workflow_names, action_names,
+                     field_names, datatable_names, task_names, script_names,
+                     extract_file):
+    """
+    extract portions of a .res file as directed by the parameters below and save to a specified file
+    :param client:
+    :param export_file: .res to use otherwise the most recent one produced will be used
+    :param message_destination_names:
+    :param function_names:
+    :param workflow_names:
+    :param action_names:
+    :param field_names:
+    :param datatable_names:
+    :param task_names:
+    :param script_names:
+    :param extract_file: file to produce or overwrite
+    :return: None
+    """
+    return codegen_from_template(client, export_file, None, None,
+                                 message_destination_names, function_names, workflow_names, action_names,
+                                 field_names, datatable_names, task_names, script_names,
+                                 None, None, extract_file)
 
 def get_customize_file_path(package):
     """Get the location of current customize.py for this package"""
