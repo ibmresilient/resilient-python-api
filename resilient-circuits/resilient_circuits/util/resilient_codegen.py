@@ -285,10 +285,10 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                 outfile.write(source_rendered)
 
 
-def codegen_from_template(client, export_file, template_file_path, package,
+def codegen_from_template(cmd, client, export_file, template_file_path, package,
                           message_destination_names, function_names, workflow_names, action_names,
                           field_names, datatable_names, task_names, script_names,
-                          output_dir, output_file, extract_file):
+                          output_dir, output_file):
     """Based on a template-file, produce the generated file or package.
 
        To codegen a single file, the template will be a JSON dict with just one entry,
@@ -299,6 +299,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
        Each source ("path/to/template.jinja2") will be rendered using jinja2,
        then written to the target ("file_to_generate.py").
 
+       :param cmd: 'codegen' or 'extract'
        :param client: the REST client
        :param export_file: file containing customization exports (default is to use the server's latest)
        :param template_file_path: location of templates
@@ -312,8 +313,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
        :param task_names: list of automatic tasks whose customization def should be included in the package
        :param script_names: list of scripts whose customization def should be included in the package
        :param output_dir: output location
-       :param output_file: output file name
-       :param extract_file: used with command 'extract' to only capture .res file information for distribution
+       :param output_file: output file name, also .res file produced for 'extract'
     """
     functions = {}
     function_params = {}
@@ -331,7 +331,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
     if export_file:
         with io.open(export_file, 'r', encoding="utf-8") as export:
             export_data = json.loads(export.read())
-        LOG.info(u"Operation is based on the organization export from '{}'.".format(export_file))
+        LOG.info(u"{} is based on the organization export from '{}'.".format(cmd, export_file))
     else:
         # Get the most recent org export that includes actions and tasks
         export_uri = "/configurations/exports/history"
@@ -348,7 +348,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                       u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
             return
         dt = datetime.datetime.utcfromtimestamp(last_date/1000.0)
-        LOG.info(u"Operation is based on the organization export from {}.".format(dt))
+        LOG.info(u"{} is based on the organization export from {}.".format(cmd, dt))
         export_uri = "/configurations/exports/{}".format(last_id)
         export_data = client.get(export_uri)
 
@@ -643,9 +643,9 @@ def codegen_from_template(client, export_file, template_file_path, package,
     }]
 
     # if an extract, write the file and return
-    if extract_file:
-        print (u"Writing {}".format(extract_file))
-        with io.open(extract_file, 'w', encoding="utf-8") as extract_fh:
+    if cmd == "extract":
+        print (u"Writing {}".format(output_file))
+        with io.open(output_file, 'w', encoding="utf-8") as extract_fh:
             extract_fh.write(unicode(json.dumps(export_data, ensure_ascii=False)))
         return
 
@@ -701,25 +701,25 @@ def codegen_package(client, export_file, package,
         LOG.warn(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
-    return codegen_from_template(client, export_file, template_file_path, package,
+    return codegen_from_template('codegen', client, export_file, template_file_path, package,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  field_names, datatable_names, task_names, script_names,
-                                 output_dir, None, None)
+                                 output_dir, None)
 
 
 def codegen_functions(client, export_file, function_names, workflow_names, action_names, output_dir, output_file):
     """Generate a python file that implements one or more functions"""
     message_destination_names = None
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
-    return codegen_from_template(client, export_file, template_file_path, None,
+    return codegen_from_template('codegen', client, export_file, template_file_path, None,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  None, None, None, None,
-                                 output_dir, output_file, None)
+                                 output_dir, output_file)
 
 def extract_to_res(client, export_file,
                      message_destination_names, function_names, workflow_names, action_names,
                      field_names, datatable_names, task_names, script_names,
-                     extract_file):
+                     output_file):
     """
     extract portions of a .res file as directed by the parameters below and save to a specified file
     :param client:
@@ -732,13 +732,13 @@ def extract_to_res(client, export_file,
     :param datatable_names:
     :param task_names:
     :param script_names:
-    :param extract_file: file to produce or overwrite
+    :param output_file: file to produce or overwrite
     :return: None
     """
-    return codegen_from_template(client, export_file, None, None,
+    return codegen_from_template('extract', client, export_file, None, None,
                                  message_destination_names, function_names, workflow_names, action_names,
                                  field_names, datatable_names, task_names, script_names,
-                                 None, None, extract_file)
+                                 None, output_file)
 
 def get_customize_file_path(package):
     """Get the location of current customize.py for this package"""

@@ -285,11 +285,11 @@ def generate_code(args):
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
 
-    if args.cmd == "extract" and args.extractfile:
+    if args.cmd == "extract" and args.output:
         extract_to_res(client, args.exportfile,
                           args.messagedestination, args.function, args.workflow, args.rule,
                           args.field, args.datatable, args.task, args.script,
-                          args.extractfile)
+                          args.output)
     elif args.reload:
         codegen_reload_package(client, args)
     elif args.package:
@@ -494,6 +494,9 @@ def main():
     common_parser.add_argument("--exportfile",
                                 type=ensure_unicode,
                                 help="Generate based on organization export file (.res)")
+    common_parser.add_argument("-o", "--output",
+                                type=ensure_unicode,
+                                help="Output file name")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Print debug output", action="store_true")
@@ -571,17 +574,10 @@ def main():
     codegen_parser.add_argument("-p", "--package",
                                 type=ensure_unicode,
                                 help="Name of the package to generate")
-    codegen_parser.add_argument("-o", "--output",
-                                type=ensure_unicode,
-                                help="Output file name")
     codegen_parser.add_argument("--reload",
                                 type=ensure_unicode,
                                 help="Reload customizations and create new customize.py")
 
-    # additional parameters for extractfile
-    extractfile_parser.add_argument("--extractfile",
-                                    type=ensure_unicode,
-                                    help="Named file to contain extracted customization data results. Ex. scripts.res")
     # Options for 'customize'
     customize_parser.add_argument("-y",
                                   dest="yflag",
@@ -622,7 +618,7 @@ def main():
     elif args.cmd in ("codegen", "extract"):
         if args.cmd == "codegen" and args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
-        elif args.cmd == "extract" and args.extractfile is None:
+        elif args.cmd == "extract" and args.output is None:
             extractfile_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)
