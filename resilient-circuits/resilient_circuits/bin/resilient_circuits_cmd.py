@@ -18,7 +18,7 @@ import time
 import uuid
 from resilient import ensure_unicode
 from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline
+from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline, extract_to_res
 from resilient_circuits.util.resilient_customize import customize_resilient
 
 if sys.version_info.major == 2:
@@ -285,7 +285,12 @@ def generate_code(args):
     (opts, extra) = parser.parse_known_args()
     client = resilient.get_client(opts)
 
-    if args.reload:
+    if args.cmd == "extract" and args.output:
+        extract_to_res(client, args.exportfile,
+                          args.messagedestination, args.function, args.workflow, args.rule,
+                          args.field, args.datatable, args.task, args.script,
+                          args.output, args.zip)
+    elif args.reload:
         codegen_reload_package(client, args)
     elif args.package:
         # codegen an installable package
@@ -450,6 +455,49 @@ def clone(args):
 
 def main():
     """Main commandline"""
+    # create base parser for extract and codgen
+    common_parser = argparse.ArgumentParser(add_help=False)
+
+    # Options for 'codegen'
+    common_parser.add_argument("-f", "--function",
+                                type=ensure_unicode,
+                                help="Generate code for the specified function(s)",
+                                nargs="*")
+    common_parser.add_argument("-m", "--messagedestination",
+                                type=ensure_unicode,
+                                help="Generate code for all functions that use the specified message destination(s)",
+                                nargs="*")
+    common_parser.add_argument("--workflow",
+                                type=ensure_unicode,
+                                help="Include customization data for workflow(s)",
+                                nargs="*")
+    common_parser.add_argument("--rule",
+                                type=ensure_unicode,
+                                help="Include customization data for rule(s)",
+                                nargs="*")
+    common_parser.add_argument("--field",
+                                type=ensure_unicode,
+                                help="Include customization data for incident field(s)",
+                                nargs="*")
+    common_parser.add_argument("--datatable",
+                                type=ensure_unicode,
+                                help="Include customization data for datatable(s)",
+                                nargs="*")
+    common_parser.add_argument("--task",
+                                type=ensure_unicode,
+                                help="Include customization data for automatic task(s)",
+                                nargs="*")
+    common_parser.add_argument("--script",
+                                type=ensure_unicode,
+                                help="Include customization data for script(s)",
+                                nargs="*")
+    common_parser.add_argument("--exportfile",
+                                type=ensure_unicode,
+                                help="Generate based on organization export file (.res)")
+    common_parser.add_argument("-o", "--output",
+                                type=ensure_unicode,
+                                help="Output file name")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Print debug output", action="store_true")
 
@@ -469,8 +517,10 @@ def main():
                                            help="Manage Resilient Circuits as a service")
     config_parser = subparsers.add_parser("config",
                                           help="Create or update a basic configuration file")
-    codegen_parser = subparsers.add_parser("codegen",
+    codegen_parser = subparsers.add_parser("codegen", parents=[common_parser],
                                            help="Generate template code for Python components")
+    extractfile_parser = subparsers.add_parser("extract", parents=[common_parser],
+                                                help="Extract data in order to publish a .res file")
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
     selftest_parser = subparsers.add_parser("selftest",
@@ -520,52 +570,17 @@ def main():
                                 default="")
     service_parser.add_argument("service_args", help="Args to pass to service manager", nargs=argparse.REMAINDER)
 
-    # Options for 'codegen'
+    # Options for codegen
     codegen_parser.add_argument("-p", "--package",
                                 type=ensure_unicode,
                                 help="Name of the package to generate")
-    codegen_parser.add_argument("-o", "--output",
-                                type=ensure_unicode,
-                                help="Output file name")
-    codegen_parser.add_argument("-f", "--function",
-                                type=ensure_unicode,
-                                help="Generate code for the specified function(s)",
-                                nargs="*")
-    codegen_parser.add_argument("-m", "--messagedestination",
-                                type=ensure_unicode,
-                                help="Generate code for all functions that use the specified message destination(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--workflow",
-                                type=ensure_unicode,
-                                help="Include customization data for workflow(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--rule",
-                                type=ensure_unicode,
-                                help="Include customization data for rule(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--field",
-                                type=ensure_unicode,
-                                help="Include customization data for incident field(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--datatable",
-                                type=ensure_unicode,
-                                help="Include customization data for datatable(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--task",
-                                type=ensure_unicode,
-                                help="Include customization data for automatic task(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--script",
-                                type=ensure_unicode,
-                                help="Include customization data for script(s)",
-                                nargs="*")
-    codegen_parser.add_argument("--exportfile",
-                                type=ensure_unicode,
-                                help="Generate based on organization export file (.res)"),
     codegen_parser.add_argument("--reload",
                                 type=ensure_unicode,
                                 help="Reload customizations and create new customize.py")
-
+    # Options for extract
+    extractfile_parser.add_argument("--zip",
+                                    action='store_true',
+                                    help="zip of the resulting file")
     # Options for 'customize'
     customize_parser.add_argument("-y",
                                   dest="yflag",
@@ -603,9 +618,11 @@ def main():
         list_installed(args)
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
-    elif args.cmd == "codegen":
-        if args.package is None and args.function is None and args.reload is None:
+    elif args.cmd in ("codegen", "extract"):
+        if args.cmd == "codegen" and args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
+        elif args.cmd == "extract" and args.output is None:
+            extractfile_parser.print_usage()
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)
             generate_code(args)
