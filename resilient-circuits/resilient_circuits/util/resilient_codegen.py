@@ -692,7 +692,11 @@ def do_extract(output_file, export_data, zip):
     :param zip: True if zipping up file
     :return: None
     """
-    res_data = unicode(json.dumps(export_data, ensure_ascii=False))
+    if sys.version_info.major >= 3:
+        res_data = json.dumps(export_data, ensure_ascii=False)
+    else:
+        res_data = unicode(json.dumps(export_data, ensure_ascii=False))
+
     if zip:
         # get the base name of the file to create so we know what to call our file inside the zip file
         if not output_file.endswith(".zip"):
