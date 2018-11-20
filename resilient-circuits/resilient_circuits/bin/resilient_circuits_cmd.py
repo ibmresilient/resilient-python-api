@@ -256,7 +256,7 @@ def generate_code(args):
 
     if args.package:
         # codegen an installable package
-        output_base = os.path.join(os.curdir, args.package)
+        output_base = args.output_base or os.path.join(os.curdir, args.package)
         codegen_package(client, args.exportfile, args.package,
                         args.messagedestination, args.function, args.workflow, args.rule,
                         args.field, args.datatable, args.task, args.script,
@@ -335,6 +335,10 @@ def main():
     # Options for 'codegen'
     codegen_parser.add_argument("-p", "--package",
                                 help="Name of the package to generate")
+    codegen_parser.add_argument("--output-base",
+                                help="Name of the directory to write all codegen output to."
+                                     "(default's to the package name in the current folder)."
+                                )
     codegen_parser.add_argument("-o", "--output",
                                 help="Output file name")
     codegen_parser.add_argument("-f", "--function",
