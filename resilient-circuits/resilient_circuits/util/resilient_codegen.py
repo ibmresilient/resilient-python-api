@@ -396,6 +396,9 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
     else:
         workflow_names = []
 
+    if not task_names:
+        task_names = []
+
     if action_names:
         # Check that 'actions' are available
         action_defs = export_data.get("actions")
@@ -444,6 +447,13 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
             for wf_name in wf_names:
                 if wf_name not in workflow_names:
                     workflow_names.append(wf_name)
+
+            # Get the task(s) for this rule (if any)
+            for automation in action_def["automations"]:
+                if automation.get("tasks_to_create"):
+                    for task_name in automation["tasks_to_create"]:
+                        if task_name not in task_names:
+                            task_names.append(task_name)
 
             # Get the message destination(s) for this rule (if any)
             dest_names = action_def["message_destinations"]
