@@ -15,9 +15,15 @@ from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
 from resilient import SimpleHTTPException
 import resilient_circuits.app
-try:
-    import StringIO
-except:
+
+"""
+Depending on which version of python we are on
+we may either need to import the StringIO package 
+or the io package which contains the equivelant class on that platform
+"""
+if sys.version_info.major < 3:
+    from StringIO import StringIO
+else:
     from io import StringIO
 
 try:
@@ -344,9 +350,9 @@ port = 443
             # build a config file using canned values for [resilient] and the integration we're testing
             #self.config_file.write(resilient_config_data)
             # use canned values
-            config_parser.readfp(StringIO.StringIO(resilient_config_data))
+            config_parser.readfp(StringIO(resilient_config_data))
             config_data = getattr(request.module, "config_data", "")
-            config_parser.readfp(StringIO.StringIO(config_data))
+            config_parser.readfp(StringIO(config_data))
 
         # add environment variables which override existing values
         host = os.environ.get("TEST_RESILIENT_APPLIANCE")
