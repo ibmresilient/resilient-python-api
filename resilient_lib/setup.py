@@ -21,5 +21,8 @@ setup(
     classifiers=[
         'Programming Language :: Python',
     ],
-    tests_require=['pytest']
+    tests_require=['pytest'],
+    entry_points={
+        "resilient.circuits.configsection": ["gen_config = resilient_lib.util.config:config_section_data"]
+    }
 )
