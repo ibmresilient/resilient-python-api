@@ -1,6 +1,6 @@
 import unittest
 from resilient_lib.components.resilient_common import parse_bool, readable_datetime, validate_fields, \
-    unescape, clean_html, build_function_result, build_incident_url, build_resilient_url
+    unescape, clean_html, build_incident_url, build_resilient_url
 
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
@@ -49,26 +49,6 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertEqual(clean_html("<div><ul><li>abc</li><li>def</li></ul></div>"), "abc def")
         self.assertEqual(clean_html("abc"), "abc")
         self.assertIsNone(clean_html(None))
-
-    def test_build_function_result(self):
-        # build_function_result(success, reason, result, metrics_json, inputs_json)
-        reason = "reason"
-        result = { "key": "key1", "value": "value1"}
-        metrics = {
-            "package": "pkg",
-            "version": "1.0.0",
-            "host": "localhost",
-            "execution_time_ms": 1000,
-            "timestamp": "2018-10-23 16:00"
-        }
-        inputs = { "input_a": "a", "input_b": "b"}
-        result = build_function_result(True, reason, result, metrics, inputs)
-
-        self.assertTrue(result['success'])
-        self.assertEqual(result['reason'], reason)
-        self.assertEqual(result['content']['key'], 'key1')
-        self.assertEqual(result['metrics']['host'], 'localhost')
-        self.assertEqual(result['inputs']['input_a'], 'a')
 
     def test_build_incident_url(self):
         url = build_incident_url(build_resilient_url("https://localhost", 8443), 12345)

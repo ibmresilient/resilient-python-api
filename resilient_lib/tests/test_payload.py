@@ -1,4 +1,5 @@
 import unittest
+import json
 from resilient_lib.components.function_result import FunctionResult
 
 class TestFunctionMetrics(unittest.TestCase):
@@ -16,6 +17,7 @@ class TestFunctionMetrics(unittest.TestCase):
                    "result2": "value2",
                    "result3": "value3"
                  }
+        result_dumps = json.dumps(result)
 
         result = fr.done(True, None, result)
 
@@ -24,8 +26,8 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertTrue(result['success'])
         self.assertEqual(result['reason'], None)
         self.assertEqual(result['content']["result1"], "value1")
+        self.assertEqual(result['raw'], result_dumps)
         self.assertIsNotNone(result.get('metrics'))
         self.assertEqual(result.get('metrics')['package'], pgkname)
         self.assertIsNotNone(result.get('inputs'))
         self.assertEqual(result['inputs']['param1'], 'value1')
-

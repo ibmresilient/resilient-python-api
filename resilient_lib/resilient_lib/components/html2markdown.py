@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2018. All Rights Reserved.
+# pragma pylint: disable=unused-argument, no-self-use
+
 import re
 import logging
 
@@ -7,7 +11,7 @@ except:
     from html.parser import HTMLParser
 
 class MarkdownParser(HTMLParser):
-    QUILL_RTE = "rte"       # first <div> will have this class
+    QUILL_RTE = "rte"       # first <div> will have this class. This is part of quill
 
     HTML_STYLE_COLOR = r'rgb\(([\d]*)[,\s]*([\d]*)[,\s]*([\d]*)\)'
 

@@ -7,7 +7,15 @@ from resilient_lib.components.requests_common import RequestsCommon
 from resilient_lib.components.integration_errors import IntegrationError
 
 class TestFunctionRequests(unittest.TestCase):
-    """ Tests for the attachment_hash function"""
+    """ Tests for the attachment_hash function
+
+    live tests against endpoints are listed below
+    """
+
+    URL_TEST_DATA_RESULTS = "https://api.ipify.org"
+    URL_TEST_HTTP_VERBS = "https://postman-echo.com"
+    URL_TEST_HTTP_STATUS_CODES = "http://httpstat.us"
+    URL_TEST_PROXY = "https://gimmeproxy.com/api/getProxy"
 
     #rc.execute_call(verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,
     #            proxies=None, timeout=None, resp_type=json, callback=None):
@@ -37,7 +45,7 @@ class TestFunctionRequests(unittest.TestCase):
         
 
     def test_resp_types(self):
-        IPIFY = "https://api.ipify.org"
+        IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
         rc = RequestsCommon({})
 
@@ -60,7 +68,7 @@ class TestFunctionRequests(unittest.TestCase):
 
 
     def test_verbs(self):
-        URL = "https://postman-echo.com"
+        URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
 
         headers = {
             "Content-type": "application/json; charset=UTF-8"
@@ -111,7 +119,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call("bad", URL, None, log=TestFunctionRequests.LOG)
 
     def test_statuscode(self):
-        URL = "http://httpstat.us" #/200?sleep=5000
+        URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
         rc = RequestsCommon({})
 
@@ -121,7 +129,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call("get", "/".join((URL, "300")), None, resp_type='text')
 
     def test_statuscode(self):
-        URL = "http://httpstat.us/300"
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
 
         def callback(resp):
             if resp.status_code != 300:
@@ -132,7 +140,7 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call("get", URL, None, resp_type='text', callback=callback)
 
     def test_timeout(self):
-        URL = "http://httpstat.us/200?sleep=30000"
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
         rc = RequestsCommon({})
 
@@ -141,7 +149,7 @@ class TestFunctionRequests(unittest.TestCase):
 
 
     def test_basicauth(self):
-        URL = "https://postman-echo.com/basic-auth"
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
         basicauth = ("postman", "password")
 
         rc = RequestsCommon({})
@@ -153,7 +161,7 @@ class TestFunctionRequests(unittest.TestCase):
     def test_proxy(self):
         rc = RequestsCommon({})
 
-        proxy_url = "https://gimmeproxy.com/api/getProxy"
+        proxy_url = TestFunctionRequests.URL_TEST_PROXY
         proxy_result = rc.execute_call("get", proxy_url, None)
 
         proxies = {
@@ -161,7 +169,7 @@ class TestFunctionRequests(unittest.TestCase):
             'https': proxy_result['curl'] if proxy_result['protocol'] == 'https' else None
         }
 
-        URL = "https://api.ipify.org?format=json"
+        URL = "?".join((TestFunctionRequests.URL_TEST_DATA_RESULTS, "format=json"))
 
         # J S O N
         json_result = rc.execute_call("get", URL, None, proxies=proxies)
@@ -184,7 +192,7 @@ class TestFunctionRequests(unittest.TestCase):
             "Content-type": "application/json; charset=UTF-8",
             "my-sample-header": "my header"
         }
-        URL = "https://postman-echo.com/headers"
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "headers"))
 
         rc = RequestsCommon({})
 

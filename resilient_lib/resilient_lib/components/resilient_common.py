@@ -39,8 +39,9 @@ def clean_html(html_fragment):
     """
     Resilient textarea fields return html fragments. This routine will remove the html and insert any code within <div></div>
     with a linefeed
-    :param html_fragment:
-    :return: cleaned up code
+    :param html_fragment: str presenting the html to clean up
+    :return: cleaned up code. This may not format well as no presentation of line feeds are preserved in the way supported by
+       tags such as <br> or <ol>, <ul>, etc. See html2markdown for a better way to translate html input to markdown.
     """
 
     if not html_fragment or not isinstance(html_fragment, string_types):
@@ -72,29 +73,17 @@ def validate_fields(field_list, kwargs):
         if field not in kwargs or kwargs.get(field) == '':
             raise ValueError('Required field is missing or empty: '+field)
 
-def build_function_result(success, reason, result, metrics_json, inputs_json):
-    """
-    build a standard payload for functions
-    :param success:
-    :param reason:
-    :param result:
-    :param metrics_json:
-    :param inputs_json:
-    :return:
-    """
-    payload = {
-                "version": PAYLOAD_VERSION,
-                "success": success,
-                "reason": reason,
-                "content": result,
-                "inputs": inputs_json,
-                "metrics": metrics_json
-              }
-
-    return payload
 
 def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
-    """ call the Resilient REST API to get the attachment or artifact data"""
+    """
+    call the Resilient REST API to get the attachment or artifact data
+    :param res_client: required for communication back to resilient
+    :param incident_id: required
+    :param artifact_id: optional
+    :param task_id: optional
+    :param attachment_id: optional
+    :return: byte string of attachment
+    """
 
     if incident_id and artifact_id:
         data_uri = "/incidents/{}/artifacts/{}/contents".format(incident_id, artifact_id)

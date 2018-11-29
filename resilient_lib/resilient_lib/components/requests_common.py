@@ -7,6 +7,15 @@ from resilient_lib.components.integration_errors import IntegrationError
 
 
 class RequestsCommon:
+    """
+    This class represents common functions around the use of the requests package for REST based APIs.
+    It incorporates the app.config section "integrations" which can be used to define a common set of proxies
+    for use by all functions using this library:
+
+    [integrations]
+    http_proxy=
+    https_proxy=
+    """
     def __init__(self, opts):
         self.options = opts.get("integrations", {}) if opts else None
 
@@ -21,11 +30,11 @@ class RequestsCommon:
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """
         Function: perform the http API call. Different types of http operations are supported:
-        GET, POST, PUT
+        GET, HEAD, PATCH, POST, PUT, DELETE
         Errors raise IntegrationError
         If a callback method is provided, then it's called to handle the error
 
-        :param verb: GET, POST, PUT, DELETE
+        :param verb: GET, HEAD, PATCH, POST, PUT, DELETE
         :param url:
         :param basicauth: used for basic authentication - (user, password)
         :param payload:

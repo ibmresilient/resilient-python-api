@@ -12,7 +12,19 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertIsNotNone(result['package'])
         self.assertEqual(result['package'], 'requests')
-        self.assertIsNotNone(result['version'])
+        self.assertIsNotNone(result['package_version'])
+        self.assertIsNotNone(result['host'])
+        self.assertIsNotNone(result['execution_time_ms'])
+        self.assertIsNotNone(result['timestamp'])
+
+    def test_bad_pkg(self):
+        fm = FunctionMetrics("missing")
+        result = fm.finish()
+
+        self.assertIsNotNone(result)
+        self.assertIsNotNone(result['package'])
+        self.assertEqual(result['package'], 'unknown')
+        self.assertEqual(result['package_version'], 'unknown')
         self.assertIsNotNone(result['host'])
         self.assertIsNotNone(result['execution_time_ms'])
         self.assertIsNotNone(result['timestamp'])
