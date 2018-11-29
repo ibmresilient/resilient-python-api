@@ -13,8 +13,7 @@ except:
 class MarkdownParser(HTMLParser):
     QUILL_RTE = "rte"       # first <div> will have this class. This is part of quill
 
-    HTML_STYLE_COLOR = r'rgb\(([\d]*)[,\s]*([\d]*)[,\s]*([\d]*)\)'
-
+    HTML_STYLE_COLOR = r'rgb\(([\d]+),[\s]*([\d]+),[\s]*([\d]+)\)'
     SUPPORTED_TAGS = ["div", "span", "br", "strong", "em", "s", "u", "ol", "ul", "li", "a",
                       "h", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"]
 
