@@ -1,6 +1,7 @@
 import unittest
 from resilient_lib.components.function_metrics import FunctionMetrics
 
+
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
 
