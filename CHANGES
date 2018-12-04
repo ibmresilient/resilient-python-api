@@ -7,7 +7,7 @@ Add 'resilient-circuits codegen --reload' command to reload existing package
 Add 'resilient-circuits extract' command to extract customization data into a single file
 Added support for specifying lists of packages to run 'config/customize/selftest' against
 Added 'rc-webserver' and 'rc-cts' to repo and PyPi
-Added codegen inprovements
+Added codegen improvements
 Jinja template imporvements
 Bug Fixes
 
