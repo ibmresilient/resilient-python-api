@@ -1,4 +1,17 @@
 
+2018-12-05: version 31.0
+
+Add 'resilient-circuits selftest' command to call selftest functions for every package and prints their return state
+Add 'resilient-circuits clone' Clone Resilient objects
+Add 'resilient-circuits codegen --reload' command to reload existing package
+Add 'resilient-circuits extract' command to extract customization data into a single file
+Added support for specifying lists of packages to run 'config/customize/selftest' against
+Added 'rc-webserver' and 'rc-cts' to repo and PyPi
+Added codegen inprovements
+Jinja template imporvements
+Bug Fixes
+
+
 2018-04-15: version 30.0
 
 Add '@function' decorator to implement workflow functions
