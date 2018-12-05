@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Generate a default configuration-file section for fn_cisco_umbrella_inv"""
-
-from __future__ import print_function
+"""Generate a default configuration-file section for all integrations to use when proxies are involved"""
 
 
 def config_section_data():
