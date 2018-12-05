@@ -7,7 +7,7 @@ from .function_metrics import FunctionMetrics
 
 PAYLOAD_VERSION = "1.0"
 
-class FunctionResult:
+class ResultPayload:
     """ Class to create a standard payload for functions. The resulting payload follows the following format:
         1.0
         { "version": "1.0"       -- used to track different versions of the payload

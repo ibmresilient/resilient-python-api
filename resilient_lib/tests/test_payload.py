@@ -1,6 +1,6 @@
 import unittest
 import json
-from resilient_lib.components.function_result import FunctionResult
+from resilient_lib.components.function_result import ResultPayload
 
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
@@ -11,7 +11,7 @@ class TestFunctionMetrics(unittest.TestCase):
                     "param2": "value2",
                     "param3": "value3"
                  }
-        fr = FunctionResult(pgkname, **params)
+        fr = ResultPayload(pgkname, **params)
 
         result = { "result1": "value1",
                    "result2": "value2",
