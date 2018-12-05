@@ -1,18 +1,18 @@
 import unittest
-from resilient_lib.components.resilient_common import parse_bool, readable_datetime, validate_fields, \
+from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url
 
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
 
-    def test_parse_bool(self):
-        self.assertTrue(parse_bool('True'))
-        self.assertTrue(parse_bool('true'))
-        self.assertTrue(parse_bool('YES'))
-        self.assertFalse(parse_bool('truex'))
-        self.assertTrue(parse_bool(1))
-        self.assertFalse(parse_bool(0))
-        self.assertFalse(parse_bool('0'))
+    def test_str_to_bool(self):
+        self.assertTrue(str_to_bool('True'))
+        self.assertTrue(str_to_bool('true'))
+        self.assertTrue(str_to_bool('YES'))
+        self.assertFalse(str_to_bool('truex'))
+        self.assertTrue(str_to_bool(1))
+        self.assertFalse(str_to_bool(0))
+        self.assertFalse(str_to_bool('0'))
 
     def test_readable_datetime(self):
         # readable_datetime(timestamp, milliseconds=True, str_format='%Y-%m-%dT%H:%M:%SZ'):

@@ -115,7 +115,7 @@ def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%
 
     return datetime.datetime.utcfromtimestamp(ts).strftime(rtn_format)
 
-def parse_bool(value):
+def str_to_bool(value):
     """Represents value as boolean.
     :param value:
     :rtype: bool
