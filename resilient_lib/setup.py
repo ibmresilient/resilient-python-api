@@ -13,7 +13,9 @@ setup(
     description="library for resilient-circuits functions",
     long_description="This package contains common library calls which facilitate the development of functions for IBM Resilient.",
     install_requires=[
-        'resilient_circuits>=30.0.0'
+        'bs4',
+        'resilient_circuits>=30.0.0',
+        'six'
     ],
     packages=find_packages(),
     include_package_data=True,
