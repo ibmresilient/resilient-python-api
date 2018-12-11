@@ -16,14 +16,20 @@ class RequestsCommon:
     http_proxy=
     https_proxy=
     """
-    def __init__(self, opts):
-        self.options = opts.get("integrations", {}) if opts else None
+    def __init__(self, opts, function_opts):
+        self.integration_options = opts.get('integrations', None) if opts else None
+        self.function_opts = function_opts
 
     def get_proxies(self):
-        """ proxies can be specified globally for all integrations """
-        if self.options and (self.options.get("http_proxy") or self.options.get("https_proxy")):
-            return {'http': self.options.get("http_proxy"), 'https': self.options.get("https_proxy")}
-        return None
+        """ proxies can be specified globally for all integrations or specifically per function """
+        proxies = None
+        if self.integration_options and (self.integration_options.get("http_proxy") or self.integration_options.get("https_proxy")):
+            proxies = {'http': self.integration_options.get("http_proxy"), 'https': self.integration_options.get("https_proxy")}
+
+        if self.function_opts and (self.function_opts.get("http_proxy") or self.function_opts.get("https_proxy")):
+            proxies = {'http': self.function_opts.get("http_proxy"), 'https': self.function_opts.get("https_proxy")}
+
+        return proxies
 
 
     def execute_call(self, verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,
@@ -88,5 +94,6 @@ class RequestsCommon:
             # Produce a IntegrationError with the return value
             return r      # json object needed, not a string representation
         except Exception as err:
-            log and log.error(err)
-            raise IntegrationError(err)
+            msg = str(err)
+            log and log.error(msg)
+            raise IntegrationError(msg)

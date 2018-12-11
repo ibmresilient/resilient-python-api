@@ -24,21 +24,21 @@ class TestFunctionRequests(unittest.TestCase):
     def test_resilient_common_proxies(self):
         integrations = { }
 
-        rc = RequestsCommon(integrations)
+        rc = RequestsCommon(integrations, None)
         self.assertIsNone(rc.get_proxies())
 
         integrations = { "integrations": { } }
-        rc = RequestsCommon(integrations)
+        rc = RequestsCommon(integrations, None)
         self.assertIsNone(rc.get_proxies())
 
         integrations = { "integrations": { "https_proxy": "abc" } }
-        rc = RequestsCommon(integrations)
+        rc = RequestsCommon(integrations, None)
         proxies = rc.get_proxies()
         self.assertEqual("abc", proxies['https'])
         self.assertIsNone(proxies['http'])
 
         integrations = { "integrations": { "https_proxy": "abc", 'http_proxy': 'def' } }
-        rc = RequestsCommon(integrations)
+        rc = RequestsCommon(integrations, None)
         proxies = rc.get_proxies()
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
@@ -47,7 +47,7 @@ class TestFunctionRequests(unittest.TestCase):
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         # J S O N
         json_result = rc.execute_call("get", "{}?format=json".format(IPIFY), None)
@@ -80,7 +80,7 @@ class TestFunctionRequests(unittest.TestCase):
             'userId': 1
         }
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         # P O S T
         resp = rc.execute_call("post", "/".join((URL, "post")), payload, headers=headers, log=TestFunctionRequests.LOG)
@@ -121,7 +121,7 @@ class TestFunctionRequests(unittest.TestCase):
     def test_statuscode(self):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         resp = rc.execute_call("get", "/".join((URL, "200")), None, resp_type='text')
 
@@ -135,14 +135,14 @@ class TestFunctionRequests(unittest.TestCase):
             if resp.status_code != 300:
                 raise ValueError(resp.status_code)
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         resp = rc.execute_call("get", URL, None, resp_type='text', callback=callback)
 
     def test_timeout(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("get", URL, None, resp_type='text', timeout=10)
@@ -152,14 +152,14 @@ class TestFunctionRequests(unittest.TestCase):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
         basicauth = ("postman", "password")
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         resp = rc.execute_call("get", URL, None, basicauth=basicauth)
         self.assertTrue(resp.get("authenticated"))
 
     #@pytest.mark.skip(reason="may be over the limit")
     def test_proxy(self):
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         proxy_url = TestFunctionRequests.URL_TEST_PROXY
         proxy_result = rc.execute_call("get", proxy_url, None)
@@ -176,15 +176,40 @@ class TestFunctionRequests(unittest.TestCase):
 
         self.assertTrue(json_result.get("ip"))
 
-        integrations = { "integrations": {
+        integrations =  { "integrations": {
             'http_proxy': proxy_result['curl'] if proxy_result['protocol'] == 'http' else None,
             'https_proxy': proxy_result['curl'] if proxy_result['protocol'] == 'https' else None
+            }
+          }
+
+        rc = RequestsCommon(integrations, None)
+        json_result = rc.execute_call("get", URL, None)
+        self.assertTrue(json_result.get("ip"))
+
+
+        rc = RequestsCommon(None, integrations)
+        json_result = rc.execute_call("get", URL, None)
+        self.assertTrue(json_result.get("ip"))
+
+        bad_proxies =  { "integrations": {
+            'http_proxy': "http://xyz.com",
+            'https_proxy': "https://xyz.com"
           }
         }
 
-        rc = RequestsCommon(integrations)
+        rc = RequestsCommon(bad_proxies, integrations)
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
+
+        no_proxy = {
+            'http_proxy': None,
+            'https_proxy': None
+        }
+
+        rc = RequestsCommon(bad_proxies, no_proxy)
+        json_result = rc.execute_call("get", URL, None)
+        self.assertTrue(json_result.get("ip"))
+
 
     def test_headers(self):
         # G E T with headers
@@ -194,7 +219,7 @@ class TestFunctionRequests(unittest.TestCase):
         }
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "headers"))
 
-        rc = RequestsCommon({})
+        rc = RequestsCommon(None, None)
 
         json_result = rc.execute_call("get", URL, None, headers=headers)
         self.assertEqual(json_result['headers'].get("my-sample-header"), "my header")
