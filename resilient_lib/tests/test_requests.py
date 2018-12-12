@@ -157,6 +157,66 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call("get", URL, None, basicauth=basicauth)
         self.assertTrue(resp.get("authenticated"))
 
+
+    def test_proxy_override(self):
+        rc = RequestsCommon(None, None)
+        proxies = rc.get_proxies()
+        self.assertIsNone(proxies)
+
+        # test only integration proxies
+        integrations_xyz =  {
+            "integrations": {
+                'http_proxy': "http://xyz.com",
+                'https_proxy': "https://xyz.com"
+            }
+        }
+
+        function_proxy_none =  {
+            'http_proxy': None,
+            'https_proxy': None
+        }
+
+        rc = RequestsCommon(integrations_xyz, None)
+        proxies = rc.get_proxies()
+        self.assertEqual(proxies['http'], "http://xyz.com")
+        self.assertEqual(proxies['https'], "https://xyz.com")
+
+        rc = RequestsCommon(integrations_xyz, function_proxy_none)
+        proxies = rc.get_proxies()
+        self.assertEqual(proxies['http'], "http://xyz.com")
+        self.assertEqual(proxies['https'], "https://xyz.com")
+
+        # test only function proxies
+        integrations_none =  {
+            "integrations": {
+                'http_proxy': None,
+                'https_proxy': None
+            }
+        }
+
+        function_proxy_abc =  {
+            'http_proxy': "http://abc.com",
+            'https_proxy': "https://abc.com"
+        }
+
+        rc = RequestsCommon(None, function_proxy_abc)
+        proxies = rc.get_proxies()
+        self.assertEqual(proxies['http'], "http://abc.com")
+        self.assertEqual(proxies['https'], "https://abc.com")
+
+        rc = RequestsCommon(integrations_none, function_proxy_abc)
+        proxies = rc.get_proxies()
+        self.assertEqual(proxies['http'], "http://abc.com")
+        self.assertEqual(proxies['https'], "https://abc.com")
+
+
+        # test integration and function proxies (override)
+        rc = RequestsCommon(integrations_xyz, function_proxy_abc)
+        proxies = rc.get_proxies()
+        self.assertEqual(proxies['http'], "http://abc.com")
+        self.assertEqual(proxies['https'], "https://abc.com")
+
+
     #@pytest.mark.skip(reason="may be over the limit")
     def test_proxy(self):
         rc = RequestsCommon(None, None)
@@ -179,34 +239,10 @@ class TestFunctionRequests(unittest.TestCase):
         integrations =  { "integrations": {
             'http_proxy': proxy_result['curl'] if proxy_result['protocol'] == 'http' else None,
             'https_proxy': proxy_result['curl'] if proxy_result['protocol'] == 'https' else None
-            }
-          }
+        }
+        }
 
         rc = RequestsCommon(integrations, None)
-        json_result = rc.execute_call("get", URL, None)
-        self.assertTrue(json_result.get("ip"))
-
-
-        rc = RequestsCommon(None, integrations)
-        json_result = rc.execute_call("get", URL, None)
-        self.assertTrue(json_result.get("ip"))
-
-        bad_proxies =  { "integrations": {
-            'http_proxy': "http://xyz.com",
-            'https_proxy': "https://xyz.com"
-          }
-        }
-
-        rc = RequestsCommon(bad_proxies, integrations)
-        json_result = rc.execute_call("get", URL, None)
-        self.assertTrue(json_result.get("ip"))
-
-        no_proxy = {
-            'http_proxy': None,
-            'https_proxy': None
-        }
-
-        rc = RequestsCommon(bad_proxies, no_proxy)
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
 
