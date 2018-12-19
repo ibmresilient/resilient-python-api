@@ -1,6 +1,6 @@
 import unittest
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
-    unescape, clean_html, build_incident_url, build_resilient_url
+    unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment
 
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
@@ -56,3 +56,12 @@ class TestFunctionMetrics(unittest.TestCase):
 
         url = build_incident_url(build_resilient_url("localhost", 8443), 12345)
         self.assertEqual(url, "https://localhost:8443/#incidents/12345")
+
+    def test_file_attachment(self):
+        with self.assertRaises(ValueError):
+            get_file_attachment(None, 123)
+
+        with self.assertRaises(ValueError):
+            get_file_attachment(None, None, attachment_id=123)
+
+
