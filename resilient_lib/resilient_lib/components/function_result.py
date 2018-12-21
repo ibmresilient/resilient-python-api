@@ -12,7 +12,7 @@ class ResultPayload:
         1.0
         { "version": "1.0"       -- used to track different versions of the payload
           "success": True|False
-          "reason": str          -- a string to explaining if success=False
+          "reason": str          -- a string to explain if success=False
           "content": json        -- the result of the function call
           "raw": str             -- a string representation of content. This is sometimes needed when the result of one function is
                                     piped into the next
