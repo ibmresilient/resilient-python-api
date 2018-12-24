@@ -90,14 +90,14 @@ this is line 3</blockquote></div>"""
         markdown = "h1. this is a header\n**strong**"
 
         parser = MarkdownParser()
-        parser.feed(data)
+        parser.convert(data)
         self.assertEqual(str(parser), markdown)
 
         data = """<div><h1>this is a header</h1><h2>h2</h2></div>"""
         markdown = "* this is a header\n** h2"
 
         parser = MarkdownParser(headers=['*', '**', '***'])
-        parser.feed(data)
+        parser.convert(data)
         self.assertEqual(str(parser), markdown)
 
     def test_unknown(self):
@@ -105,7 +105,7 @@ this is line 3</blockquote></div>"""
         markdown = "this is a header\n**strong**"
 
         parser = MarkdownParser()
-        parser.feed(data)
+        parser.convert(data)
         self.assertEqual(str(parser), markdown)
 
     def test_mismatch_tag(self):
@@ -114,7 +114,7 @@ this is line 3</blockquote></div>"""
         parser = MarkdownParser()
 
         with self.assertRaises(ValueError):
-            parser.feed(data)
+            parser.convert(data)
 
     def test_missing_tag(self):
         data = """<div><h1>this is a header</h1><strong>strong</div>"""
@@ -122,7 +122,7 @@ this is line 3</blockquote></div>"""
         parser = MarkdownParser()
 
         with self.assertRaises(ValueError):
-            parser.feed(data)
+            parser.convert(data)
 
 
     def test_lists(self):
@@ -249,6 +249,13 @@ this is line 3</blockquote></div>"""
         converted_custom = parser.convert(data_custom)
         self.assertEqual(converted_custom, markdown_custom_single)
 
+    def test_end_list(self):
+        data = u'<div class="rte"><div><strong>rich text</strong></div><div><br /></div><ol><li>111</li><li>2222</li><li>333</li><li>444</li></ol><div>normal</div></div>'
+        data_result = "**rich text**\n\n\n\n\n    1. 111\n    2. 2222\n    3. 333\n    4. 444\n\nnormal"
+
+        parser = MarkdownParser()
+        converted_custom = parser.convert(data)
+        self.assertEqual(converted_custom, data_result)
 
     def test_modify_symbols(self):
         data = "<div class='rte'><div><strong><u>underline and strong</u></strong></div></div>"

@@ -63,8 +63,12 @@ class RequestsCommon:
             if proxies is None:
                 proxies = self.get_proxies()
 
-            resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
-                                auth=basicauth, timeout=timeout, proxies=proxies)
+            if verb.lower() == 'post':
+                resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
+                                        auth=basicauth, timeout=timeout, proxies=proxies)
+            else:
+                resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
+                                        auth=basicauth, timeout=timeout, proxies=proxies)
 
             if resp is None:
                 raise IntegrationError('no response returned')

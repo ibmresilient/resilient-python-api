@@ -4,6 +4,7 @@
 
 import re
 import logging
+from six import string_types
 
 try:
     from HTMLParser import HTMLParser
@@ -27,14 +28,6 @@ class MarkdownParser(HTMLParser):
         HTMLParser.__init__(self)
         self.log = logging.getLogger(__name__)
 
-        self.buffer = []      # end markdown buffer
-        self.curr_tag = []    # stack of tags to track
-        self.curr_attrs = []  # stack of tag attributes to track
-        self.curr_list = []   # stack of embedded ordered and unordered list symbols
-        self.data = []        # buffer for a given tag, cleared when and ending tag is found (ex. </p>)
-        self.data_pre = []    # markdown data to prefix the data
-        self.data_post = []   # markdown data to follow the data
-
         # customizable attributes
         self.bold = bold
         self.italic = italic
@@ -47,12 +40,29 @@ class MarkdownParser(HTMLParser):
         self.headers = headers
         self.blockquote = blockquote
 
+    def init_buffers(self):
+        self.buffer = []      # end markdown buffer
+        self.curr_tag = []    # stack of tags to track
+        self.curr_attrs = []  # stack of tag attributes to track
+        self.curr_list = []   # stack of embedded ordered and unordered list symbols
+        self.data = []        # buffer for a given tag, cleared when and ending tag is found (ex. </p>)
+        self.data_pre = []    # markdown data to prefix the data
+        self.data_post = []   # markdown data to follow the data
+        self.prev_tag = None
+        self.prev_attrs = []
+
     def convert(self, data):
         """
         starting point for app, wrapper to htmlparser.feed
         :param data: html string
         :return: converted text to markdown
         """
+
+        self.init_buffers()
+
+        if not data or not isinstance(data, string_types):
+            return data
+
         self.feed(data)
         return self.toString()
 
@@ -70,6 +80,10 @@ class MarkdownParser(HTMLParser):
         # retain the hierarchy of nested command, which may be needed
         self.curr_tag.append(tag)
         self.curr_attrs.append(attrs)
+
+        if tag == "div":
+            if self.prev_tag in ("ol", "ul"):
+                self.data_pre.append(MarkdownParser.MARKDOWN_NEWSECTION)
 
         if tag == "strong":
             self.data_pre.append(self.bold)
@@ -172,11 +186,11 @@ class MarkdownParser(HTMLParser):
         """
 
         # remove existing tag from stack
-        prev_tag = self.curr_tag.pop()
-        prev_attrs = self.curr_attrs.pop()
+        self.prev_tag = self.curr_tag.pop()
+        self.prev_attrs = self.curr_attrs.pop()
 
-        if prev_tag != tag:
-            raise ValueError("Mismatch tag {} expecting {}".format(tag, prev_tag))
+        if self.prev_tag != tag:
+            raise ValueError("Mismatch tag {} expecting {}".format(tag, self.prev_tag))
 
         if tag == "div":
             self.data_post.append(MarkdownParser.MARKDOWN_NEWLINE)
