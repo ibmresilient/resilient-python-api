@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(
     name='resilient_lib',
     version='1.0.0',
-    url='https://ibm.biz/resilient',
+    url='https://ibm.biz/resilientcommunity',
     license='MIT',
     author='IBM Resilient',
     author_email='support@resilientsystems.com',
@@ -25,6 +25,6 @@ setup(
     ],
     tests_require=['pytest'],
     entry_points={
-        "resilient.circuits.configsection": ["gen_config = resilient_lib.util.config:config_section_data"]
+        "resilient.lib.configsection": ["gen_config = resilient_lib.util.config:config_section_data"]
     }
 )

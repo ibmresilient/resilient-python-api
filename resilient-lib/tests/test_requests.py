@@ -84,7 +84,8 @@ class TestFunctionRequests(unittest.TestCase):
 
         # P O S T
         resp = rc.execute_call("post", "/".join((URL, "post")), payload, headers=headers, log=TestFunctionRequests.LOG)
-        self.assertEqual(resp['args'].get("body"), "bar")
+        print (resp)
+        self.assertEqual(resp['json'].get("body"), "bar")
 
 
         resp = rc.execute_call("get", "/".join((URL, "get")), payload, log=TestFunctionRequests.LOG)

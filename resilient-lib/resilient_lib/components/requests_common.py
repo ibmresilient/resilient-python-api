@@ -64,7 +64,7 @@ class RequestsCommon:
                 proxies = self.get_proxies()
 
             if verb.lower() == 'post':
-                resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
+                resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
                                         auth=basicauth, timeout=timeout, proxies=proxies)
             else:
                 resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
