@@ -75,7 +75,10 @@ class MarkdownParser(HTMLParser):
         """
 
         # flush any data accumulated
-        self.push_data(True)
+        if tag in ('ol', 'ul'):
+            self.push_data(False)
+        else:
+            self.push_data(True)
 
         # retain the hierarchy of nested command, which may be needed
         self.curr_tag.append(tag)

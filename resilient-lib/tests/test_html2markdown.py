@@ -300,3 +300,11 @@ this is line 3</blockquote></div>"""
         parser = MarkdownParser()
         converted_mixed = parser.convert(data)
         self.assertEqual(converted_mixed, markdown_mixed)
+
+    def test_nested(self):
+        data = """<div class="rte"><ol><li>111</li><li>222<ol><li>aaa</li><li>bbb</li></ol></li><li>333</li></ol></div>"""
+        markdown = "\n    1. 111\n    2. 222\n        1. aaa\n        2. bbb\n    3. 333"
+
+        parser = MarkdownParser(bullets=["*", "+", "-"])
+        converted_mixed = parser.convert(data)
+        self.assertEqual(converted_mixed, markdown)
