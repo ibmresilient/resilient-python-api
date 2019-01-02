@@ -8,8 +8,9 @@ import collections
 
 def searcher_channel(*sub_urls):
     """
-    Channel name for searchers
-    lookup_channel("sub", "url") ==> channel for searcher at /<root>/sub/url
+    Helper method to construct the `channel` name for threat lookup searchers.
+
+    :samp:`lookup_channel("sub", "url")` ==> channel for searcher at :samp:`/<root>/sub/url`
     """
     return "cts_search." + ".".join(sub_urls)
 

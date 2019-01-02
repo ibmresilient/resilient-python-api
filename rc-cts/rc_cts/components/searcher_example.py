@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-"""Circuits component to implement a simple custom threat 'searcher'
+"""Example of a Circuits component that implements a simple custom threat 'searcher'
 
     To implement your own searcher:
 
@@ -44,7 +44,9 @@ LOG = logging.getLogger(__name__)
 
 class SearcherExample(BaseComponent):
     """
-    Example of a custom threat searcher component
+    Example of a custom threat searcher component.
+
+    You can use this as a template when implementing custom searcher(s) in your own package.
     """
 
     # Register this as an async searcher for the URL /<root>/example

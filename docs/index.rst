@@ -13,6 +13,8 @@ Resilient Python API Library
    resilient
    resilient_circuits
    pytest_resilient_circuits
+   rc-webserver
+   rc-cts
 
 
 Indices and tables

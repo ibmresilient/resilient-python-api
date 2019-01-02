@@ -22,6 +22,8 @@ import sys
 sys.path.insert(0, os.path.abspath("../resilient"))
 sys.path.insert(0, os.path.abspath("../resilient-circuits"))
 sys.path.insert(0, os.path.abspath("../pytest-resilient-circuits"))
+sys.path.insert(0, os.path.abspath("../rc-cts"))
+sys.path.insert(0, os.path.abspath("../rc-webserver"))
 import resilient
 
 # -- General configuration ------------------------------------------------
@@ -51,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Resilient Python API'
-copyright = u'2010-2017 International Business Machines Corporation'
+copyright = u'2010-2019 International Business Machines Corporation'
 author = u'IBM Resilient'
 
 # The version info for the project you're documenting, acts as replacement for
