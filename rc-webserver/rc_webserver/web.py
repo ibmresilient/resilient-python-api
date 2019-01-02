@@ -21,6 +21,58 @@ LOG = logging.getLogger(__name__)
 
 
 def exposeWeb(*channels, **config):
+    """
+    A decorator that identifies your Circuits function as a Web service endpoint.
+
+    :param channels: A path/fragment to handle calls that begin with that path.  A path of "index" is the
+        handler for the "root document" or empty path.  Paths are all relative to `self.channel`.
+        Alternatively, a HTTP verb ("GET", "POST", etc.) to handle all incoming events with that verb;
+    :param config: Optional (ignored)
+    :return: Dictionary that should be returned as JSON by the web service.
+
+    Your class should inherit from :class:`circuits.web.BaseController`, and may additionally
+    inherit from :class:`resilient_circuits.ResilientComponent` to handle action and access the Resilient REST API.
+
+    For example, to handle a specific path for a REST method:
+
+    .. code-block:: python
+
+        class WebExample(BaseController, ResilientComponent):
+
+            def __init__(self, opts):
+                super(WebExample, self).__init__(opts)
+                # 'self.channel' declares the topmost path that will be handled in this class.
+                self.channel = "/example"
+
+            @exposeWeb("incident")
+            def _create_note(self, event, *args, **kwargs):
+                # Handle POST to /example/incident/<inc_id>/note
+                request = event.args[0]
+                response = event.args[1]
+                if request.method != "POST":
+                    raise MethodNotAllowed(request.method)
+                response.status = 200
+                return {"status":"OK"}
+
+    To handle requests for the index (root) path:
+
+    .. code-block:: python
+
+        @exposeWeb("index")
+        def _index_request(self, event, *args, **kwargs):
+            # handle any request for the root ("/")
+            pass
+
+    A generic handler that sends all POST requests to one function:
+
+    .. code-block:: python
+
+        @exposeWeb("POST")
+        def _post_request(self, event, *args, **kwargs):
+            # handle any POST
+            pass
+
+    """
     def decorate(f):
         @handler(*channels, **config)
         def wrapper(self, event, *args, **kwargs):

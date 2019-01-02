@@ -82,8 +82,9 @@ class ThreatLookupIncompleteException(Exception):
 class ThreatServiceLookupEvent(Event):
     """
     An event fired to lookup an artifact.
-    The event is fired to a channel named (LOOKUP_CHANNEL + ...sub-url...)
-    The event name is the artifact type (threat-service artifact type names, 'net.uri', etc).
+
+    The event is fired to a channel named :samp:`LOOKUP_CHANNEL + ...sub-url...`
+    The event name is the artifact type (threat-service artifact type names, :samp:`net.uri`, etc).
     """
     complete = True
     complete_channels = (LOOKUP_COMPLETE_CHANNEL,)
