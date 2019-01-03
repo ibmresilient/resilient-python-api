@@ -5,8 +5,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='resilient_lib',
-    version='1.0.0',
-    url='https://ibm.biz/resilientcommunity',
+    use_scm_version={"root": "../", "relative_to": __file__},
+    setup_requires=['setuptools_scm'],
+    url='https://github.com/ibmresilient/resilient-circuits-packages',
     license='MIT',
     author='IBM Resilient',
     author_email='support@resilientsystems.com',
