@@ -100,6 +100,38 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
     # Get the data
     return res_client.get_content(data_uri)
 
+
+def get_file_attachment_name(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
+    """
+    call the Resilient REST API to get the attachment or artifact attachment name
+    :param res_client: required for communication back to resilient
+    :param incident_id: required
+    :param artifact_id: optional
+    :param task_id: optional
+    :param attachment_id: optional
+    :return: file attachment name
+    """
+
+    name = ""
+    if incident_id and artifact_id:
+        name_url = "/incidents/{}/artifacts/{}".format(incident_id, artifact_id)
+        name = str(res_client.get(name_url)["attachment"]["name"])
+    elif attachment_id:
+        if task_id:
+            name_url = "/tasks/{}/attachments/{}".format(task_id, attachment_id)
+            name = str(res_client.get(name_url)["name"])
+        elif incident_id:
+            name_url = "/incidents/{}/attachments/{}".format(incident_id, attachment_id)
+            name = str(res_client.get(name_url)["name"])
+        else:
+            raise ValueError("task_id or incident_id must be specified with attachment")
+    else:
+        raise ValueError("artifact or attachment or incident id must be specified")
+
+    # Return name string
+    return name
+
+
 def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%SZ'):
     """
     convert an epoch timestamp to a string using a format
