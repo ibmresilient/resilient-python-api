@@ -14,10 +14,13 @@ json structure created:
   "success": True|False,
   "reason": str,          -- a string to explain if success=False
   "content": json,        -- the result of the function call
-  "raw": str,             -- a string representation of content. This is sometimes needed when the result of one function is
-                            piped into the next
-  "inputs": json,         -- a copy of the input parameters, useful for post-processor script use
-  "metrics": json        -- a set of information to capture specifics metrics about the function's runtime environment
+  "raw": str,             -- a string representation of content. This is sometimes
+                             needed when the result of one function is piped into 
+                             the next
+  "inputs": json,         -- a copy of the input parameters, useful for post-processor 
+                             script use
+  "metrics": json         -- a set of information to capture specifics metrics 
+                             about the function's runtime environment
 }
 ```
 * function\_metrics - A class to collect metrics information to be added to the resulting json payload. This is embedded in `function_results.ResultPayload`
@@ -26,12 +29,13 @@ json structure created:
 
 ```
 {
-    "version": :1.0",
+    "version": "1.0",
     "package": str,            -- function name
     "package_version": str,    -- function version
     "host": str,               -- hostname of execution node
     "execution_time_ms": int   -- execution time of function in milliseconds
-    "timestamp": str           -- execution date/time formatted as: yyyy-MM-dd hh:mm:ss
+    "timestamp": str           -- execution date/time formatted as: 
+                                  yyyy-MM-dd hh:mm:ss
 }
 ```
 * html2markdown - A class to convert html code to markdown. Parameters exist to customize the conversion to the type of markdown output required.
@@ -45,6 +49,7 @@ json structure created:
       * unescape - Restore data which has been encoded for URL transmission (ex. \&gt; = >).
       * validate_fields - Ensure require fields from Resilient or the app.config file are present.
       * get\_file_attachment - Return a byte string of a Resilient attachment related to an incident, task or artifact.
+      * get\_file\_attachment\_name - Return the name of an attachment
       * readable_datetime - Convert epoch formatted data and time value into a string.
       * str\_to_bool - Convert string values into boolean.
 
@@ -60,7 +65,8 @@ Usage examples:
 ```
 from resilient_lib import build_incident_url, build_resilient_url
 
-url_to_incident = build_incident_url(build_resilient_url("https://my.resilient.com", 8443), 12345)
+url_to_incident = build_incident_url(build_resilient_url("https://my.resilient.com", 
+                                     8443), 12345)
 self.assertEqual("https://my.resilient.com:8443/#incidents/12345", url_to_incident)
 ```
 
@@ -71,7 +77,10 @@ from resilient_lib import ResultPayload
 fr = ResultPayload(pgkname, **function_params)
 
 req_common = RequestsCommon(app_config_params, function_params)
-result = req_common.execute_call('post', issue_url, payload, log=log, basicauth=(function_params['user'], function_params['password']), verify_flag= function_params['verifyFlag'], headers=HTTP_HEADERS)
+result = req_common.execute_call('post', issue_url, payload, log=log,
+                                 basicauth=(function_params['user'], 
+                                 function_params['password']), verify_flag= 
+                                 function_params['verifyFlag'], headers=HTTP_HEADERS)
 
 results_payload = fr.done(True, None, result)
 
