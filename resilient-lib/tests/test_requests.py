@@ -22,9 +22,12 @@ class TestFunctionRequests(unittest.TestCase):
     LOG = logging.getLogger(__name__)
 
     def test_resilient_common_proxies(self):
+        rc = RequestsCommon()
+        self.assertIsNone(rc.get_proxies())
+
         integrations = { }
 
-        rc = RequestsCommon(integrations, None)
+        rc = RequestsCommon(opts=integrations)
         self.assertIsNone(rc.get_proxies())
 
         integrations = { "integrations": { } }
@@ -32,13 +35,13 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertIsNone(rc.get_proxies())
 
         integrations = { "integrations": { "https_proxy": "abc" } }
-        rc = RequestsCommon(integrations, None)
+        rc = RequestsCommon(function_opts=None, opts=integrations)
         proxies = rc.get_proxies()
         self.assertEqual("abc", proxies['https'])
         self.assertIsNone(proxies['http'])
 
         integrations = { "integrations": { "https_proxy": "abc", 'http_proxy': 'def' } }
-        rc = RequestsCommon(integrations, None)
+        rc = RequestsCommon(integrations)
         proxies = rc.get_proxies()
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
@@ -177,7 +180,7 @@ class TestFunctionRequests(unittest.TestCase):
             'https_proxy': None
         }
 
-        rc = RequestsCommon(integrations_xyz, None)
+        rc = RequestsCommon(integrations_xyz)
         proxies = rc.get_proxies()
         self.assertEqual(proxies['http'], "http://xyz.com")
         self.assertEqual(proxies['https'], "https://xyz.com")
@@ -200,7 +203,7 @@ class TestFunctionRequests(unittest.TestCase):
             'https_proxy': "https://abc.com"
         }
 
-        rc = RequestsCommon(None, function_proxy_abc)
+        rc = RequestsCommon(function_opts=function_proxy_abc)
         proxies = rc.get_proxies()
         self.assertEqual(proxies['http'], "http://abc.com")
         self.assertEqual(proxies['https'], "https://abc.com")
@@ -220,7 +223,7 @@ class TestFunctionRequests(unittest.TestCase):
 
     #@pytest.mark.skip(reason="may be over the limit")
     def test_proxy(self):
-        rc = RequestsCommon(None, None)
+        rc = RequestsCommon()
 
         proxy_url = TestFunctionRequests.URL_TEST_PROXY
         proxy_result = rc.execute_call("get", proxy_url, None)
@@ -243,7 +246,7 @@ class TestFunctionRequests(unittest.TestCase):
         }
         }
 
-        rc = RequestsCommon(integrations, None)
+        rc = RequestsCommon(opts=integrations)
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
 
@@ -256,7 +259,7 @@ class TestFunctionRequests(unittest.TestCase):
         }
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "headers"))
 
-        rc = RequestsCommon(None, None)
+        rc = RequestsCommon()
 
         json_result = rc.execute_call("get", URL, None, headers=headers)
         self.assertEqual(json_result['headers'].get("my-sample-header"), "my header")

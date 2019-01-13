@@ -19,7 +19,7 @@ class TestFunctionMetrics(unittest.TestCase):
                  }
         result_dumps = json.dumps(result)
 
-        result = fr.done(True, None, result)
+        result = fr.done(True, result)
 
         self.assertIsNotNone(result)
         self.assertIsNotNone(result['success'])

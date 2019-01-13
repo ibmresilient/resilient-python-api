@@ -76,7 +76,7 @@ from resilient_lib import ResultPayload
 
 fr = ResultPayload(pgkname, **function_params)
 
-req_common = RequestsCommon(app_config_params, function_params)
+req_common = RequestsCommon(function_params, app_config_params)
 result = req_common.execute_call('post', issue_url, payload, log=log,
                                  basicauth=(function_params['user'], 
                                  function_params['password']), verify_flag= 
@@ -97,4 +97,23 @@ converted = parser.convert(data)
 self.assertEqual(converted, markdown)
 ```
 
+## Installation
 
+Install this package as:
+   
+```
+$ pip install resilient_lib-<version>.tar.gz
+```
+
+## Setup
+
+To configure the library properties, run: `resilient-circuits config [-u | -c]`. 
+Then edit the [integrations] section to define proxy settings which will be used for all integrations which use this library:
+
+```
+[integrations]
+# These proxy settings will be used by all integrations. 
+# To override, add http_proxy= and https_proxy= to your specific integration section
+http_proxy=
+https_proxy=
+```

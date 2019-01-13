@@ -37,12 +37,12 @@ class ResultPayload:
             "metrics": None
         }
 
-    def done(self, success, reason, content):
+    def done(self, success, content, reason=None):
         """
          complete the function payload
         :param success: True|False
-        :param reason: comment fields when success=False
         :param content: json result to pass back
+        :param reason: comment fields when success=False
         :return: completed payload in json
         """
         self.payload['success'] = success

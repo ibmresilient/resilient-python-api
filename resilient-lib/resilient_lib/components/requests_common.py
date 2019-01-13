@@ -15,8 +15,11 @@ class RequestsCommon:
     [integrations]
     http_proxy=
     https_proxy=
+
+    Similar properties may exist in the function's section which would override the [integrations] properties.
     """
-    def __init__(self, opts, function_opts):
+    def __init__(self, opts=None, function_opts=None):
+        # capture the properties for the integration as well as the global settings for all integrations for proxy urls
         self.integration_options = opts.get('integrations', None) if opts else None
         self.function_opts = function_opts
 
@@ -32,7 +35,7 @@ class RequestsCommon:
         return proxies
 
 
-    def execute_call(self, verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,
+    def execute_call(self, verb, url, payload={ }, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """
         Function: perform the http API call. Different types of http operations are supported:
