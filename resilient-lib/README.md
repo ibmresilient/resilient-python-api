@@ -76,7 +76,7 @@ from resilient_lib import ResultPayload
 
 fr = ResultPayload(pgkname, **function_params)
 
-req_common = RequestsCommon(function_params, app_config_params)
+req_common = RequestsCommon(app_config_params, function_params)
 result = req_common.execute_call('post', issue_url, payload, log=log,
                                  basicauth=(function_params['user'], 
                                  function_params['password']), verify_flag= 
