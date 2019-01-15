@@ -1,4 +1,11 @@
 
+2019-01-15: version 32.0
+
+Added `resilient-lib` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
+Added Sphinx documentation builder
+Fixed an issue with `resilient-circuits extract`
+
+
 2018-12-05: version 31.0
 
 Add 'resilient-circuits selftest' command to call selftest functions for every package and prints their return state
