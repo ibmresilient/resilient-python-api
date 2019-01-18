@@ -369,6 +369,11 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
         export_uri = "/configurations/exports/{}".format(last_id)
         export_data = client.get(export_uri)
 
+    # Get definitions for custom incident fields - used in multiple areas
+    all_fields = dict((field["name"], field)
+                      for field in export_data.get("fields")
+                      if field["type_id"] == INCIDENT_TYPE_ID and field.get("prefix") == "properties")
+
     all_destinations = dict((dest["programmatic_name"], dest)
                             for dest in export_data.get("message_destinations", []))
     all_destinations_2 = dict((dest["name"], dest)
@@ -484,7 +489,7 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
 
                 elif automation.get("field"):
                     field_name = automation["field"]
-                    if field_name not in field_names:
+                    if field_name not in field_names and field_name in all_fields:
                         field_names.append(field_name)
 
             # Get the message destination(s) for this rule (if any)
@@ -549,10 +554,6 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
                 return
 
     if field_names:
-        # Get definitions for custom incident fields
-        all_fields = dict((field["name"], field)
-                          for field in export_data.get("fields")
-                          if field["type_id"] == INCIDENT_TYPE_ID and field.get("prefix") == "properties")
         for field_name in field_names:
             fielddef = all_fields.get(field_name)
             if fielddef:
