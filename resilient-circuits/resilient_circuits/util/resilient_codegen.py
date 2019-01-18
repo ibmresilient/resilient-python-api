@@ -411,15 +411,18 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
     else:
         workflow_names = []
 
+    # ensure empty lists as we may dynamically add to them
     if not task_names:
         task_names = []
     if not script_names:
         script_names = []
     if not artifact_type_names:
         artifact_type_names = []
+    if not field_names:
+        field_names = []
 
     if action_names:
-        # Check that 'actions' are available
+        # Check that 'actions' are available. actions are rules
         action_defs = export_data.get("actions")
         if not action_defs:
             LOG.error(u"ERROR: Rules are not available in this export.")
@@ -478,6 +481,11 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
                     script_name = automation["scripts_to_run"]
                     if script_name not in script_names:
                         script_names.append(script_name)
+
+                elif automation.get("field"):
+                    field_name = automation["field"]
+                    if field_name not in field_names:
+                        field_names.append(field_name)
 
             # Get the message destination(s) for this rule (if any)
             dest_names = action_def["message_destinations"]
