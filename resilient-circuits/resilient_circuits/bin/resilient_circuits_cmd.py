@@ -288,7 +288,7 @@ def generate_code(args):
     if args.cmd == "extract" and args.output:
         extract_to_res(client, args.exportfile,
                           args.messagedestination, args.function, args.workflow, args.rule,
-                          args.field, args.datatable, args.task, args.script,
+                          args.field, args.datatable, args.task, args.script, args.artifacttype,
                           args.output, args.zip)
     elif args.reload:
         codegen_reload_package(client, args)
@@ -297,7 +297,7 @@ def generate_code(args):
         output_base = os.path.join(os.curdir, args.package)
         codegen_package(client, args.exportfile, args.package,
                         args.messagedestination, args.function, args.workflow, args.rule,
-                        args.field, args.datatable, args.task, args.script,
+                        args.field, args.datatable, args.task, args.script, args.artifacttype,
                         os.path.expanduser(output_base))
     elif args.function:
         # codegen a component for one or more functions
@@ -491,12 +491,17 @@ def main():
                                 type=ensure_unicode,
                                 help="Include customization data for script(s)",
                                 nargs="*")
+    common_parser.add_argument("--artifacttype",
+                               type=ensure_unicode,
+                               help="Include customization data for artifact types(s)",
+                               nargs="*")
     common_parser.add_argument("--exportfile",
                                 type=ensure_unicode,
                                 help="Generate based on organization export file (.res)")
     common_parser.add_argument("-o", "--output",
                                 type=ensure_unicode,
                                 help="Output file name")
+
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Print debug output", action="store_true")

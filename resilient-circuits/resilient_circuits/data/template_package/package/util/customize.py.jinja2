@@ -18,7 +18,8 @@ def codegen_reload_data():
                    {%if automatic_tasks.keys()%} "automatic_tasks": [u"{{automatic_tasks.keys()|sort|join('", u"')}}"], {%else%} "automatic_tasks": [], {%endif%}
                    {%if scripts.keys()%} "scripts": [u"{{scripts.keys()|sort|join('", u"')}}"], {%else%} "scripts": [], {%endif%}
                    {%if workflows.keys()%} "workflows": [u"{{workflows.keys()|sort|join('", u"')}}"], {%else%} "workflows": [],{%endif%}
-                   {%if actions.keys()%} "actions": [u"{{actions.keys()|sort|join('", u"')}}"] {%else%} "actions": [] {%endif%}
+                   {%if actions.keys()%} "actions": [u"{{actions.keys()|sort|join('", u"')}}"], {%else%} "actions": [],{%endif%}
+                   {%if incident_artifact_types.keys()%} "incident_artifact_types": [u"{{incident_artifact_types.keys()|sort|join('", u"')}}"] {%else%} "incident_artifact_types": [] {%endif%}
                     }
     return reload_params
 
@@ -51,6 +52,8 @@ def customization_data(client=None):
     #     {{workflows.keys()|sort|join("\n    #     ")}}
 {%endif%}{%if actions.keys()%}    #   Rules:
     #     {{actions.keys()|sort|join("\n    #     ")}}
+{%endif%}{%if incident_artifact_types.keys()%}    #   Incident artifact types:
+    #     {{incident_artifact_types.keys()|sort|join("\n    #     ")}}
 {%endif%}
 
     yield ImportDefinition(u"""
