@@ -4,9 +4,10 @@ This directory contains
 
  * [resilient](resilient), the Resilient Python Client Module for the Resilient APIs.
  * [resilient_circuits](resilient-circuits), an application framework for Resilient Action Module.
- * [pytest_resilient_circuits](pytest-resilient-circuits), a collection of pytest fixtures. 
+ * [pytest_resilient\_circuits](pytest-resilient-circuits), a collection of pytest fixtures. 
  * [rc_cts](rc-cts), a lightweight Custom Threat Service for Resilient.
  * [rc_webserver](rc-webserver), a web server which can be extended by additional components.
+ * [resilient_lib](resilient-lib), a package with common library calls which facilitate the development of functions for IBM Resilient.
 
 
 ## Python Client Module
