@@ -77,6 +77,7 @@ class ResilientComponent(BaseComponent):
 
        This is the superclass for custom Resilient Action Module components.
        If a component inherits from ResilientComponent, it will automatically be loaded,
+       If a component inherits from ResilientComponent, it will automatically be loaded,
        and actions and functions will be dispatched to its `handler` and `function` methods.
     """
     test_mode = False  # True with --test-actions option
@@ -466,7 +467,7 @@ class Actions(ResilientComponent):
 
         # Give the STOMP library our TLS/SSL configuration.
         cafile = self.opts.get("stomp_cafile") or self.opts.cafile
-        if cafile == "false":
+        if cafile.strip().lower() == "false":
             # Explicitly disable TLS certificate validation, if you need to
             cafile = None
             LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
