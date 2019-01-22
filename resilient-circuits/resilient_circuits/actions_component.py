@@ -77,7 +77,6 @@ class ResilientComponent(BaseComponent):
 
        This is the superclass for custom Resilient Action Module components.
        If a component inherits from ResilientComponent, it will automatically be loaded,
-       If a component inherits from ResilientComponent, it will automatically be loaded,
        and actions and functions will be dispatched to its `handler` and `function` methods.
     """
     test_mode = False  # True with --test-actions option
