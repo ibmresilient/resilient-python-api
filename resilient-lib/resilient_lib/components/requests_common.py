@@ -34,14 +34,16 @@ class RequestsCommon:
 
         return proxies
 
-
-    def execute_call(self, verb, url, payload={ }, log=None, basicauth=None, verify_flag=True, headers=None,
+    def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """
         Function: perform the http API call. Different types of http operations are supported:
         GET, HEAD, PATCH, POST, PUT, DELETE
         Errors raise IntegrationError
         If a callback method is provided, then it's called to handle the error
+
+        Using the 'json' parameter in the request will change the Content-Type in the header to application/json.
+        If the headers you send include a specific Content-Type, your payload will be send as 'data' and not 'json'.
 
         :param verb: GET, HEAD, PATCH, POST, PUT, DELETE
         :param url:
@@ -67,8 +69,16 @@ class RequestsCommon:
                 proxies = self.get_proxies()
 
             if verb.lower() == 'post':
-                resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
-                                        auth=basicauth, timeout=timeout, proxies=proxies)
+                if headers and headers.get("Content-Type"):
+                    # Pass payload to the data argument.
+                    # Use Content-Type specified in headers.
+                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
+                                            auth=basicauth, timeout=timeout, proxies=proxies)
+                else:
+                    # Pass payload to the json argument.
+                    # Content-Type in the header is set to application/json.
+                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
+                                            auth=basicauth, timeout=timeout, proxies=proxies)
             else:
                 resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
                                         auth=basicauth, timeout=timeout, proxies=proxies)
