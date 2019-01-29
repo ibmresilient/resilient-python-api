@@ -4,23 +4,11 @@
 import logging
 import ssl
 import socket
-import re
 from stompest.sync.transport import StompFrameTransport
 from stompest.error import StompConnectionError
 
 LOG = logging.getLogger(__name__)
 
-class RedactingFilter(logging.Filter):
-    """ Redacting logging filter to prevent Resilient circuits passcode value from being logged.
-
-    """
-    def __init__(self):
-        super(RedactingFilter, self).__init__()
-
-    def filter(self, record):
-        if re.search("passcode", record.msg):
-            record.msg = re.sub(r"(.*'passcode':\s+)(.+?)(,\s+.*)", r"\1***\3", record.msg)
-        return True
 
 class EnhancedStompFrameTransport(StompFrameTransport):
     """ add support for older ssl module and http proxy """
@@ -51,11 +39,6 @@ class EnhancedStompFrameTransport(StompFrameTransport):
     def connect(self, timeout=None):
         """ Allow older versions of ssl module, allow http proxy connections """
         LOG.debug("stomp_transport.connect()")
-
-        # Pre-instantiate logger for "stompest.sync.client" and add Redacting filter
-        # to prevent passcode value from being logged.
-        logging.getLogger("stompest.sync.client").addFilter(RedactingFilter())
-
         ssl_params = None
         if isinstance(self.sslContext, dict):
             # This is actually a dictionary of ssl parameters for wrapping the socket
