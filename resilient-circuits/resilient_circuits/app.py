@@ -25,6 +25,7 @@ import resilient_circuits.keyring_arguments as keyring_arguments
 import re
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
+PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin']
 
 application = None
 logging_initialized = False
@@ -38,10 +39,9 @@ class RedactingFilter(logging.Filter):
 
     def filter(self, record):
         # Best effort regex filter pattern to redact password logging.
-        pass_msg_patts = ['passcode','password','passwd','secret','pin']
-        for p in pass_msg_patts:
+        for p in PASSWD_PATTERNS:
             if p in record.msg.lower():
-                record.msg = re.sub(r"(?i)^(.*)(passwd|passcode|password|secret|pin)(.*?:\s*)(.+?)((?:[\s,].*)*)$",
+                record.msg = re.sub(r"(?i)^(.*)(%s)(.*?:\s*)(.+?)((?:[\s,].*)*)$" % p,
                                     r"\1\2\3***\5", record.msg)
         return True
 
