@@ -93,7 +93,9 @@ class RequestsCommon:
             # standard error handling
             if resp.status_code >= 300:
                 # get the result
-                raise IntegrationError(resp.text)
+                # log resp.status_code in case resp.text isn't available
+                raise IntegrationError(
+                    "status_code: {}, msg: {}".format(resp.status_code, resp.text if resp.text else "N/A"))
 
             # check if anything returned
             log and log.debug(resp.text)
