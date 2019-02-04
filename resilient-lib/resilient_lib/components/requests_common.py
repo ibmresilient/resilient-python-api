@@ -69,14 +69,16 @@ class RequestsCommon:
                 proxies = self.get_proxies()
 
             if verb.lower() == 'post':
-                if headers and headers.get("Content-Type"):
-                    # Pass payload to the data argument.
+                if verify_headers(headers):
+                    # If headers dict specifies Content-Type,
+                    # pass the payload to the data argument.
                     # Use Content-Type specified in headers.
                     resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
                                             auth=basicauth, timeout=timeout, proxies=proxies)
                 else:
-                    # Pass payload to the json argument.
-                    # Content-Type in the header is set to application/json.
+                    # If headers dict does not specify Content-Type,
+                    # pass payload to the json argument.
+                    # Content-Type will automatically set to application/json.
                     resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
                                             auth=basicauth, timeout=timeout, proxies=proxies)
             else:
@@ -116,3 +118,18 @@ class RequestsCommon:
             msg = str(err)
             log and log.error(msg)
             raise IntegrationError(msg)
+
+
+def verify_headers(headers):
+    """
+    Verify if headers dict includes 'Content-Type' key.
+    :param headers:
+    :return: True or False
+    """
+    if headers is None:
+        return False
+
+    for key in headers:
+        if key.lower() == "content-type":
+            return True
+    return False
