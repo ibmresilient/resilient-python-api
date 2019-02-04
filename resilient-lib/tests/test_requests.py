@@ -3,7 +3,8 @@ import json
 import logging
 import unittest
 import pytest
-from resilient_lib.components.requests_common import RequestsCommon
+from parameterized import parameterized
+from resilient_lib.components.requests_common import RequestsCommon, verify_headers
 from resilient_lib.components.integration_errors import IntegrationError
 
 class TestFunctionRequests(unittest.TestCase):
@@ -86,11 +87,18 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(None, None)
 
         # P O S T
+        # test data argument
         resp = rc.execute_call("post", "/".join((URL, "post")), payload, headers=headers, log=TestFunctionRequests.LOG)
+        print (resp)
+        self.assertEqual(resp['data'], "body=bar&userId=1&title=foo")
+
+        # test json argument
+        resp = rc.execute_call("post", "/".join((URL, "post")), payload, log=TestFunctionRequests.LOG)
         print (resp)
         self.assertEqual(resp['json'].get("body"), "bar")
 
 
+        # G E T
         resp = rc.execute_call("get", "/".join((URL, "get")), payload, log=TestFunctionRequests.LOG)
         self.assertTrue(resp['args'].get("userId"))
         self.assertEqual(resp['args'].get("userId"), '1')
@@ -264,3 +272,14 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = rc.execute_call("get", URL, None, headers=headers)
         self.assertEqual(json_result['headers'].get("my-sample-header"), "my header")
 
+
+    @parameterized.expand([
+        [None, False],
+        [{"Content-type": "mock_data"}, True],
+        [{"my-sample-header": "my header"}, False]
+    ])
+    def test_verify_headers(self, headers, result):
+
+        is_data_argument = verify_headers(headers)
+
+        self.assertEqual(is_data_argument, result)
