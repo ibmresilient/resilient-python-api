@@ -464,7 +464,7 @@ class Actions(ResilientComponent):
             LOG.warn("Using Mock. No Stomp connection")
             return
 
-        # Give the STOMP library our TLS/SSL configuration.
+        # Gather the stomp_cafile for if specified or fallback to the resilient host. Used for TLS / SSL
         cafile = self.opts.get("stomp_cafile") or self.opts.cafile
         if cafile == "false":
             # Explicitly disable TLS certificate validation, if you need to
@@ -489,9 +489,12 @@ class Actions(ResilientComponent):
             context = None
             ca_certs = cafile
 
+        # Gather the stomp_host if specified or fallback to the resilient host if not
+        stomp_port = self.opts["stomp_host"] or self.opts["host"]
+
         # Set up a STOMP connection to the Resilient action services
         if not self.stomp_component:
-            self.stomp_component = StompClient(self.opts["host"], self.opts["stomp_port"],
+            self.stomp_component = StompClient(stomp_port, self.opts["stomp_port"],
                                                username=self.opts["email"],
                                                password=self.opts["password"],
                                                heartbeats=(STOMP_CLIENT_HEARTBEAT,
@@ -504,7 +507,7 @@ class Actions(ResilientComponent):
             self.stomp_component.register(self)
         else:
             # Component exists, just update it
-            self.stomp_component.init(self.opts["host"], self.opts["stomp_port"],
+            self.stomp_component.init(stomp_port, self.opts["stomp_port"],
                                       username=self.opts["email"],
                                       password=self.opts["password"],
                                       heartbeats=(STOMP_CLIENT_HEARTBEAT,
