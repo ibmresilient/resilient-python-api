@@ -1,4 +1,10 @@
 
+2019-03-06: version 32.0.126
+
+Removed selftest from function template
+Improvements to resilient-lib
+
+
 2019-01-15: version 32.0
 
 Added `resilient-lib` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
