@@ -2,6 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
+import glob
+import ntpath
+import re
+
+def get_module_name(filename):
+    return ntpath.split(filename)[1].split(".")[0]
+
+def snake_to_camel(word):
+    return ''.join(x.capitalize() or '_' for x in word.split('_'))
 
 setup(
     name='{{package}}',
@@ -22,8 +31,8 @@ setup(
         'Programming Language :: Python',
     ],
     entry_points={
-        "resilient.circuits.components": [{%set comma=joiner(",")%}{%for function_name in functions.keys()%}{{comma()}}
-            "{{function_name|camel}}FunctionComponent = {{package}}.components.{{function_name}}:FunctionComponent"{%endfor%}
+        "resilient.circuits.components": [
+            "{}FunctionComponent = {{package}}.components.{}:FunctionComponent".format(snake_to_camel(get_module_name(filename)), get_module_name(filename)) for filename in glob.glob("./{{package}}/components/[a-z]*.py")
         ],
         "resilient.circuits.configsection": ["gen_config = {{package}}.util.config:config_section_data"],
         "resilient.circuits.customize": ["customize = {{package}}.util.customize:customization_data"],
