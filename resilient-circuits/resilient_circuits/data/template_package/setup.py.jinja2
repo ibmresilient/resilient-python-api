@@ -4,7 +4,6 @@
 from setuptools import setup, find_packages
 import glob
 import ntpath
-import re
 
 def get_module_name(module_path):
     """
@@ -39,7 +38,7 @@ setup(
     entry_points={
         "resilient.circuits.components": [
             # When setup.py is executed, loop through the .py files in the components directory and create the entry points.
-            "{}FunctionComponent = {{package}}.components.{}:FunctionComponent".format(snake_to_camel(get_module_name(filename)), get_module_name(filename)) for filename in glob.glob("./{{package}}/components/[a-Z]*.py")
+            "{}FunctionComponent = {{package}}.components.{}:FunctionComponent".format(snake_to_camel(get_module_name(filename)), get_module_name(filename)) for filename in glob.glob("./{{package}}/components/[a-zA-Z]*.py")
         ],
         "resilient.circuits.configsection": ["gen_config = {{package}}.util.config:config_section_data"],
         "resilient.circuits.customize": ["customize = {{package}}.util.customize:customization_data"],
