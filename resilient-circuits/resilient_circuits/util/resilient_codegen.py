@@ -804,7 +804,7 @@ def codegen_functions(client, export_file, function_names, workflow_names, actio
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
     return codegen_from_template('codegen', client, export_file, template_file_path, None,
                                  message_destination_names, function_names, workflow_names, action_names,
-                                 None, None, None, None, None,
+                                 None, None, None, None, artifact_type_names,
                                  output_dir, output_file, False)
 
 def extract_to_res(client, export_file,

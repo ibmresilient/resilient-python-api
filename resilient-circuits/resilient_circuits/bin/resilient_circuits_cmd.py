@@ -309,7 +309,8 @@ def generate_code(args):
         output_file = args.output or default_name
         if not output_file.endswith(".py"):
             output_file = output_file + ".py"
-        codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, output_dir, output_file)
+        codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, args.artifacttype,
+                          output_dir, output_file)
 
 def selftest(args):
     """loop through every selftest for every eligible package, call and store returned state,
