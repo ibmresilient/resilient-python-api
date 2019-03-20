@@ -335,6 +335,10 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
             export_data = json.loads(export.read())
         LOG.info(u"{} is based on the organization export from '{}'.".format(cmd, export_file))
     else:
+        # Force a recent export
+        latest_export_uri = "/configurations/exports/"
+        client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
+
         # Get the most recent org export that includes actions and tasks
         export_uri = "/configurations/exports/history"
         export_list = client.get(export_uri)["histories"]
