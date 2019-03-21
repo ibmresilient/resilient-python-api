@@ -131,7 +131,7 @@ def is_payload_in_json(content_type):
     if not content_type:
         return True
 
-    return content_type.lower() == "application/json"
+    return content_type.lower().startswith("application/json")
 
 
 def get_case_insensitive_key_value(dictionary, key):
