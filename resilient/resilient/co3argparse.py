@@ -108,6 +108,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
         default_email = self.getopt("resilient", "email")
         default_password = self.getopt("resilient", "password")
+        default_client_id = self.getopt("resilient", "client_id")
+        default_key_secret = self.getopt("resilient", "api_key_secret")
         default_host = self.getopt("resilient", "host")
         default_port = self.getopt("resilient", "port") or self.DEFAULT_PORT
         default_proxy = self.getopts("resilient", "proxy")
@@ -122,12 +124,22 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self.add_argument("--email",
                           default=default_email,
-                          required=default_email is None,
                           help="The email address to use to authenticate to the Resilient server.")
 
         self.add_argument("--password",
                           default=default_password,
                           help="WARNING:  This is an insecure option since the password "
+                               "will be visible to other processes and stored in the "
+                               "command history.  The password to use to authenticate "
+                               "to the Resilient server.  If omitted, the you will be prompted.")
+
+        self.add_argument("--client_id",
+                          default=default_client_id,
+                          help="The client_id for API key.")
+
+        self.add_argument("--api_key_secret",
+                          default=default_key_secret,
+                          help="WARNING:  This is an insecure option since the key secret "
                                "will be visible to other processes and stored in the "
                                "command history.  The password to use to authenticate "
                                "to the Resilient server.  If omitted, the you will be prompted.")
@@ -211,7 +223,9 @@ def _post_process_args(args):
 
     # Post-processing for other special options
     password = args.password
-    while (not password) and (not args.get("no_prompt_password")):
+    email = args.email
+
+    while (not password and email) and (not args.get("no_prompt_password")):
         password = getpass.getpass()
     args["password"] = ensure_unicode(password)
 

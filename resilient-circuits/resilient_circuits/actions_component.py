@@ -489,11 +489,21 @@ class Actions(ResilientComponent):
             context = None
             ca_certs = cafile
 
+        #
+        #   client_id and key_secret is the preferrable one
+        #
+        if self.opts.get("client_id", None) is not None and self.opts.get("api_key_secret", None) is not None:
+            stomp_email = self.opts["client_id"]
+            stomp_password = self.opts["api_key_secret"]
+        else:
+            stomp_email = self.opts["email"]
+            stomp_password = self.opts["password"]
+
         # Set up a STOMP connection to the Resilient action services
         if not self.stomp_component:
             self.stomp_component = StompClient(self.opts["host"], self.opts["stomp_port"],
-                                               username=self.opts["email"],
-                                               password=self.opts["password"],
+                                               username=stomp_email,
+                                               password=stomp_password,
                                                heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                            STOMP_SERVER_HEARTBEAT),
                                                connected_timeout=STOMP_TIMEOUT,
@@ -505,8 +515,8 @@ class Actions(ResilientComponent):
         else:
             # Component exists, just update it
             self.stomp_component.init(self.opts["host"], self.opts["stomp_port"],
-                                      username=self.opts["email"],
-                                      password=self.opts["password"],
+                                      username=stomp_email,
+                                      password=stomp_password,
                                       heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                   STOMP_SERVER_HEARTBEAT),
                                       connected_timeout=STOMP_TIMEOUT,

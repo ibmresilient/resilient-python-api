@@ -29,7 +29,8 @@ def get_resilient_client(opts):
                 opts.get("proxy_port"),
                 opts.get("proxy_user"),
                 opts.get("proxy_password"),
-                opts.get("email"))
+                opts.get("email"),
+                opts.get("client_id"))
     if new_opts != connection_opts:
         resilient_client = None
         connection_opts = new_opts
