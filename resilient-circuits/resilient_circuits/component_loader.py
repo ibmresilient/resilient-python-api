@@ -61,6 +61,13 @@ class ComponentLoader(Loader):
         self.finished = False
 
         # Load all installed components
+        if opts.get("resilient").get("loadinstalled", "true") == "false":
+            LOG.info("config property: loadinstalled=false skipping installed components")
+        else:
+            installed_components = self.discover_installed_components()
+            if installed_components:
+                self._register_components(installed_components)
+        
         installed_components = self.discover_installed_components()
         if installed_components:
             self._register_components(installed_components)
