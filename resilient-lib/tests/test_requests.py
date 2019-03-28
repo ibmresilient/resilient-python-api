@@ -4,7 +4,7 @@ import logging
 import unittest
 import pytest
 from parameterized import parameterized
-from resilient_lib.components.requests_common import RequestsCommon, verify_headers
+from resilient_lib.components.requests_common import RequestsCommon, get_case_insensitive_key_value, is_payload_in_json
 from resilient_lib.components.integration_errors import IntegrationError
 
 class TestFunctionRequests(unittest.TestCase):
@@ -86,14 +86,23 @@ class TestFunctionRequests(unittest.TestCase):
 
         rc = RequestsCommon(None, None)
 
+
         # P O S T
-        # test data argument
+        # test json argument without headers
+        resp = rc.execute_call("post", "/".join((URL, "post")), payload, log=TestFunctionRequests.LOG)
+        print (resp)
+        self.assertEqual(resp['json'].get("body"), "bar")
+
+        # test json argument with headers
         resp = rc.execute_call("post", "/".join((URL, "post")), payload, headers=headers, log=TestFunctionRequests.LOG)
         print (resp)
-        self.assertEqual(resp['data'], "body=bar&userId=1&title=foo")
+        self.assertEqual(resp['json'].get("body"), "bar")
 
-        # test json argument
-        resp = rc.execute_call("post", "/".join((URL, "post")), payload, log=TestFunctionRequests.LOG)
+        # test data argument
+        headers_data = {
+            "Content-type": "application/x-www-form-urlencoded"
+        }
+        resp = rc.execute_call("post", "/".join((URL, "post")), payload, headers=headers_data, log=TestFunctionRequests.LOG)
         print (resp)
         self.assertEqual(resp['json'].get("body"), "bar")
 
@@ -274,12 +283,26 @@ class TestFunctionRequests(unittest.TestCase):
 
 
     @parameterized.expand([
-        [None, False],
-        [{"Content-type": "mock_data"}, True],
-        [{"my-sample-header": "my header"}, False]
+        [None, True],
+        ["application/json", True],
+        ["application/json; charset=UTF-8", True],
+        ["charset=UTF-8; application/json", True],
+        ["application/x-www-form-urlencoded", False]
     ])
-    def test_verify_headers(self, headers, result):
+    def test_is_payload_in_json(self, content_type, result):
 
-        is_data_argument = verify_headers(headers)
+        payload_in_json = is_payload_in_json(content_type)
 
-        self.assertEqual(is_data_argument, result)
+        self.assertEqual(payload_in_json, result)
+
+
+    @parameterized.expand([
+        [None, None],
+        [{"Content-Type": "mock_type"}, "mock_type"],
+        [{"my-sample-header": "my header"}, None]
+    ])
+    def test_get_case_insensitive_key_value(self, dictionary, result):
+
+        value = get_case_insensitive_key_value(dictionary, "content-type")
+
+        self.assertEqual(value, result)
