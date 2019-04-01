@@ -591,6 +591,10 @@ class Actions(ResilientComponent):
             if not self.stomp_component.connected:
                 LOG.error("Can't subscribe to queues with STOMP disconnected, trying reconnect")
                 self.fire(Event.create("reconnect"))
+
+        if self.stomp_component.connected:
+            LOG.info("resilient-circuits has started successfully and is now running...")
+
         for queue_name in self.listeners:
             self._subscribe(queue_name)
 
