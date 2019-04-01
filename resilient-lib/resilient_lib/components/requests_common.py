@@ -42,8 +42,7 @@ class RequestsCommon:
         Errors raise IntegrationError
         If a callback method is provided, then it's called to handle the error
 
-        Using the 'json' parameter in the request will change the Content-Type in the header to application/json.
-        If the headers you send include a specific Content-Type, your payload will be send as 'data' and not 'json'.
+        When using argument 'json' Content-Type will automatically be set to "application/json" by requests lib.
 
         :param verb: GET, HEAD, PATCH, POST, PUT, DELETE
         :param url:
@@ -69,17 +68,14 @@ class RequestsCommon:
                 proxies = self.get_proxies()
 
             if verb.lower() == 'post':
-                if verify_headers(headers):
-                    # If headers dict specifies Content-Type,
-                    # pass the payload to the data argument.
-                    # Use Content-Type specified in headers.
-                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
+
+                content_type = get_case_insensitive_key_value(headers, "Content-Type")
+
+                if is_payload_in_json(content_type):
+                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
                                             auth=basicauth, timeout=timeout, proxies=proxies)
                 else:
-                    # If headers dict does not specify Content-Type,
-                    # pass payload to the json argument.
-                    # Content-Type will automatically set to application/json.
-                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
+                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
                                             auth=basicauth, timeout=timeout, proxies=proxies)
             else:
                 resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
@@ -120,16 +116,32 @@ class RequestsCommon:
             raise IntegrationError(msg)
 
 
-def verify_headers(headers):
+def is_payload_in_json(content_type):
     """
-    Verify if headers dict includes 'Content-Type' key.
-    :param headers:
+    Verify the content_type.
+    If "Content-Type" is NOT specified pass the payload to the "json" argument - return True.
+
+    If "Content-Type" is specified:
+        - if the value is "application/json" pass the payload to the "json" argument - return True.
+        - if the value is NOT "application/json" pass the payload to the "data" argument - return False.
+    :param content_type:
     :return: True or False
     """
-    if headers is None:
-        return False
 
-    for key in headers:
-        if key.lower() == "content-type":
-            return True
-    return False
+    if not content_type:
+        return True
+
+    return "application/json" in content_type.lower()
+
+
+def get_case_insensitive_key_value(dictionary, key):
+    """
+    Get case insensitive key value from dictionary.
+    :param dictionary:
+    :param key:
+    :return: value or None
+    """
+    if dictionary is None:
+        return None
+
+    return next((v for k, v in dictionary.items() if k.lower() == key.lower()), None)
