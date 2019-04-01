@@ -590,7 +590,7 @@ class Actions(ResilientComponent):
                 self.fire(Event.create("reconnect"))
 
         if self.stomp_component.connected:
-            LOG.info("Resilient-circuits started successfully.")
+            LOG.info("resilient-circuits has started successfully and is now running...")
 
         for queue_name in self.listeners:
             self._subscribe(queue_name)
