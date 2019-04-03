@@ -22,6 +22,7 @@ from resilient import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
+from six import string_types
 import re
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
@@ -39,11 +40,13 @@ class RedactingFilter(logging.Filter):
 
     def filter(self, record):
         # Best effort regex filter pattern to redact password logging.
-        for p in PASSWD_PATTERNS:
-            if p in record.msg.lower():
-                record.msg = re.sub(r"(?i)^(.*)(%s)(.*?:\s*)(.+?)((?:[\s,].*)*)$" % p,
-                                    r"\1\2\3***\5", record.msg)
+        if isinstance(record.msg, string_types):
+            for p in PASSWD_PATTERNS:
+                if p in record.msg.lower():
+                    record.msg = re.sub(r"(?i)^(.*)({})(.*?:\s*)(.+?)((?:[\s,].*)*)$".format(p),
+                                        r"\1\2\3***\5", record.msg)
         return True
+
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
     """Helper to parse command line arguments."""
