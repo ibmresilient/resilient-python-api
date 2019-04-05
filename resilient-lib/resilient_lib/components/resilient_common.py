@@ -101,7 +101,7 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
     return res_client.get_content(data_uri)
 
 
-def get_file_attachment_name(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
+def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, task_id=None, attachment_id=None):
     """
     call the Resilient REST API to get the attachment or artifact attachment name
     :param res_client: required for communication back to resilient

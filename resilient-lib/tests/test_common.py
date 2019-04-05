@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name
+
 
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
@@ -42,7 +45,6 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertEqual(unescape("&ab;xx"), '&ab;xx')
         self.assertIsNone(unescape(None))
 
-
     def test_clean_html(self):
         # clean_html(htmlFragment)
         self.assertEqual(clean_html("<div>abc</div>"), "abc")
@@ -64,9 +66,86 @@ class TestFunctionMetrics(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_file_attachment(None, None, attachment_id=123)
 
-    def test_file_attachment_name(self):
+    def test_file_attachment_name_error(self):
         with self.assertRaises(ValueError):
             get_file_attachment_name(None, 123)
 
         with self.assertRaises(ValueError):
             get_file_attachment_name(None, None, attachment_id=123)
+
+    # Mocking attachment name tests using a dict
+    def test_file_inc_attachment_name_str(self):
+        inc_id = "1234"
+        attachment_id = "123"
+        expected_name = "This is a string attachment name"
+        str_name_mock = {
+            "/incidents/{}/attachments/{}".format(inc_id, attachment_id): {
+                "name": expected_name
+            }
+        }
+        actual_name = get_file_attachment_name(str_name_mock, inc_id, attachment_id=attachment_id)
+        assert actual_name == expected_name
+
+    def test_file_inc_attachment_name_unicode(self):
+        inc_id = "1234"
+        attachment_id = "123"
+        expected_name = u'ÒÓı◊OIDÁÓØØÎ¨¨˝ Unicode attachment name'
+        str_name_mock = {
+            "/incidents/{}/attachments/{}".format(inc_id, attachment_id): {
+                "name": expected_name
+            }
+        }
+        actual_name = get_file_attachment_name(str_name_mock, inc_id, attachment_id=attachment_id)
+        assert actual_name == expected_name
+
+    def test_file_task_attachment_name_str(self):
+        task_id = "1234"
+        attachment_id = "123"
+        expected_name = "This is a string attachment name"
+        str_name_mock = {
+            "/tasks/{}/attachments/{}".format(task_id, attachment_id): {
+                "name": expected_name
+            }
+        }
+        actual_name = get_file_attachment_name(str_name_mock, task_id=task_id, attachment_id=attachment_id)
+        assert actual_name == expected_name
+
+    def test_file_task_attachment_name_unicode(self):
+        task_id = "1234"
+        attachment_id = "123"
+        expected_name = u'ÒÓı◊OIDÁÓØØÎ¨¨˝ Unicode attachment name'
+        str_name_mock = {
+            "/tasks/{}/attachments/{}".format(task_id, attachment_id): {
+                "name": expected_name
+            }
+        }
+        actual_name = get_file_attachment_name(str_name_mock, task_id=task_id, attachment_id=attachment_id)
+        assert actual_name == expected_name
+
+    def test_file_artifact_attachment_name_str(self):
+        inc_id = "1234"
+        artifact_id = "123"
+        expected_name = "This is a string attachment name"
+        str_name_mock = {
+            "/incidents/{}/artifacts/{}".format(inc_id, artifact_id): {
+                "attachment": {
+                    "name": expected_name
+                }
+            }
+        }
+        actual_name = get_file_attachment_name(str_name_mock, incident_id=inc_id, artifact_id=artifact_id)
+        assert actual_name == expected_name
+
+    def test_file_artifact_attachment_name_unicode(self):
+        inc_id = "1234"
+        artifact_id = "123"
+        expected_name = u'ÒÓı◊OIDÁÓØØÎ¨¨˝ Unicode attachment name'
+        str_name_mock = {
+            "/incidents/{}/artifacts/{}".format(inc_id, artifact_id): {
+                "attachment": {
+                    "name": expected_name
+                }
+            }
+        }
+        actual_name = get_file_attachment_name(str_name_mock, incident_id=inc_id, artifact_id=artifact_id)
+        assert actual_name == expected_name
