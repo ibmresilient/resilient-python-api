@@ -115,14 +115,14 @@ def get_file_attachment_name(res_client, incident_id, artifact_id=None, task_id=
     name = ""
     if incident_id and artifact_id:
         name_url = "/incidents/{}/artifacts/{}".format(incident_id, artifact_id)
-        name = str(res_client.get(name_url)["attachment"]["name"])
+        name = res_client.get(name_url)["attachment"]["name"]
     elif attachment_id:
         if task_id:
             name_url = "/tasks/{}/attachments/{}".format(task_id, attachment_id)
-            name = str(res_client.get(name_url)["name"])
+            name = res_client.get(name_url)["name"]
         elif incident_id:
             name_url = "/incidents/{}/attachments/{}".format(incident_id, attachment_id)
-            name = str(res_client.get(name_url)["name"])
+            name = res_client.get(name_url)["name"]
         else:
             raise ValueError("task_id or incident_id must be specified with attachment")
     else:
