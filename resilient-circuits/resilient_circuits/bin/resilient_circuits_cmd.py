@@ -581,6 +581,7 @@ def main():
                                 type=ensure_unicode,
                                 help="Name of the package to generate")
     codegen_parser.add_argument("--reload",
+                                metavar='PACKAGE',
                                 type=ensure_unicode,
                                 help="Reload customizations and create new customize.py")
     # Options for extract

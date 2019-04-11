@@ -239,6 +239,12 @@ def list_scripts(script_defs):
     for script_def in script_defs:
         print(u"    {}".format(script_def["name"]))
 
+def list_artifact_types(artifact_type_defs):
+    """List all the artifact types"""
+    print(u"Available artifact types:")
+    for artifact_type_def in artifact_type_defs:
+        print(u"    {}".format(artifact_type_def["name"]))
+
 
 def clean(dictionary, keep):
     """Remove attributes that are not in the 'keep' list"""
@@ -642,6 +648,13 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
                 if artifact["programmatic_name"] == artifact_type_name:
                     artifact_types[artifact["programmatic_name"]] = clean(copy.deepcopy(artifact), ARTIFACT_TYPE_ATTRIBUTES)
 
+        # confirm we got all the custom artifact types
+        for artifact_name in artifact_type_names:
+            if artifact_name not in artifact_types:
+                LOG.error(u"ERROR: Artifact Type '%s' not found in this export.", artifact_name)
+                list_artifact_types(export_data.get("incident_artifact_types", []))
+                return
+
     # Minify the export_data
     fields_list = []
     if len(incident_fields) == 0:
@@ -918,15 +931,15 @@ def codegen_reload_package(client, args):
     try:
         # If there are new commandline parameters, append them to the old commandline
         # list for each param type.
-        message_destinations = merge_codegen_params(codegen_params["message_destinations"], args.messagedestination)
-        functions            = merge_codegen_params(codegen_params["functions"], args.function)
-        rules                = merge_codegen_params(codegen_params["actions"], args.rule)
-        workflows            = merge_codegen_params(codegen_params["workflows"], args.workflow)
-        incident_fields      = merge_codegen_params(codegen_params["incident_fields"], args.field)
-        datatables           = merge_codegen_params(codegen_params["datatables"], args.datatable)
-        automatic_tasks      = merge_codegen_params(codegen_params["automatic_tasks"], args.task)
-        scripts              = merge_codegen_params(codegen_params["scripts"], args.script)
-        artifact_types       = merge_codegen_params(codegen_params["incident_artifact_types"], args.script)
+        message_destinations = merge_codegen_params(codegen_params.get("message_destinations", []), args.messagedestination)
+        functions            = merge_codegen_params(codegen_params.get("functions", []), args.function)
+        rules                = merge_codegen_params(codegen_params.get("actions", []), args.rule)
+        workflows            = merge_codegen_params(codegen_params.get("workflows", []), args.workflow)
+        incident_fields      = merge_codegen_params(codegen_params.get("incident_fields", []), args.field)
+        datatables           = merge_codegen_params(codegen_params.get("datatables", []), args.datatable)
+        automatic_tasks      = merge_codegen_params(codegen_params.get("automatic_tasks", []), args.task)
+        scripts              = merge_codegen_params(codegen_params.get("scripts", []), args.script)
+        artifact_types       = merge_codegen_params(codegen_params.get("incident_artifact_types", []), args.artifacttype)
 
         # Print the codegen --reload command with all arguments.
         print_codegen_reload_commandline(args.reload, args.exportfile,
