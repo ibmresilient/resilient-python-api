@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """
-    connect.py
+    res-utils.py
     ----------
 
-    This is a utility tool for customer to make a quick connection to a resilient
-    server. The purpose is to check whether the connection works.
+    This is a utility tool resilient SDK. Customers can
+    1. Verify the connection to a resilient server
+    2. Create/get incidents
+    3. Attach files
+    4. Get type information
+    5. Get action information
+    6. ...
 """
 import resilient
 import argparse
