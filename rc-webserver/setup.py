@@ -31,7 +31,7 @@ setup(
     install_requires=[
         'resilient_circuits>=28.0.0'
     ],
-    tests_require=["pytest",
+    tests_require=["pytest>=3.0.0, <4.1.0",
                    "pytest_resilient_circuits"],
     cmdclass = {"test" : PyTest},
     author_email='support@resilientsystems.com',

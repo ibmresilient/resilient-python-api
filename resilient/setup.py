@@ -112,7 +112,7 @@ setup(
             'keyring==5.4'
         ]
     },
-    tests_require=["pytest", ],
+    tests_require=["pytest>=3.0.0, <4.1.0", ],
     cmdclass={"test": PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',

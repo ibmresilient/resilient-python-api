@@ -464,9 +464,9 @@ class Actions(ResilientComponent):
             LOG.warn("Using Mock. No Stomp connection")
             return
 
-        # Give the STOMP library our TLS/SSL configuration.
+        # Gather the stomp_cafile for if specified or fallback to the resilient host. Used for TLS / SSL
         cafile = self.opts.get("stomp_cafile") or self.opts.cafile
-        if cafile == "false":
+        if cafile.strip().lower() == "false":
             # Explicitly disable TLS certificate validation, if you need to
             cafile = None
             LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
@@ -489,6 +489,8 @@ class Actions(ResilientComponent):
             context = None
             ca_certs = cafile
 
+        # Gather the stomp_host if specified or fallback to the resilient host if not
+        stomp_host = self.opts["resilient"].get("stomp_host", None) or self.opts["host"]
         #
         #   client_id and key_secret is the preferrable one
         #
@@ -501,7 +503,7 @@ class Actions(ResilientComponent):
 
         # Set up a STOMP connection to the Resilient action services
         if not self.stomp_component:
-            self.stomp_component = StompClient(self.opts["host"], self.opts["stomp_port"],
+            self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
                                                username=stomp_email,
                                                password=stomp_password,
                                                heartbeats=(STOMP_CLIENT_HEARTBEAT,
@@ -514,7 +516,7 @@ class Actions(ResilientComponent):
             self.stomp_component.register(self)
         else:
             # Component exists, just update it
-            self.stomp_component.init(self.opts["host"], self.opts["stomp_port"],
+            self.stomp_component.init(stomp_host, self.opts["stomp_port"],
                                       username=stomp_email,
                                       password=stomp_password,
                                       heartbeats=(STOMP_CLIENT_HEARTBEAT,
@@ -598,6 +600,10 @@ class Actions(ResilientComponent):
             if not self.stomp_component.connected:
                 LOG.error("Can't subscribe to queues with STOMP disconnected, trying reconnect")
                 self.fire(Event.create("reconnect"))
+
+        if self.stomp_component.connected:
+            LOG.info("resilient-circuits has started successfully and is now running...")
+
         for queue_name in self.listeners:
             self._subscribe(queue_name)
 

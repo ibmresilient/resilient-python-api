@@ -22,12 +22,30 @@ from resilient import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
-
+from six import string_types
+import re
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
+PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin']
 
 application = None
 logging_initialized = False
+
+class RedactingFilter(logging.Filter):
+    """ Redacting logging filter to prevent Resilient circuits sensitive password values from being logged.
+
+    """
+    def __init__(self):
+        super(RedactingFilter, self).__init__()
+
+    def filter(self, record):
+        # Best effort regex filter pattern to redact password logging.
+        if isinstance(record.msg, string_types):
+            for p in PASSWD_PATTERNS:
+                if p in record.msg.lower():
+                    record.msg = re.sub(r"(?i)^(.*)({})(.*?:\s*)(.+?)((?:[\s,].*)*)$".format(p),
+                                        r"\1\2\3***\5", record.msg)
+        return True
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
@@ -238,6 +256,10 @@ class App(Component):
         stderr = logging.StreamHandler()
         stderr.setFormatter(logging.Formatter(self.STDERR_LOG_FORMAT))
         logging.getLogger().addHandler(stderr)
+        # Add password redacting filter for logging.
+        syslog.addFilter(RedactingFilter())
+        file_handler.addFilter(RedactingFilter())
+        stderr.addFilter(RedactingFilter())
 
     def load_all_success(self, event):
         """OK, component loader says we're ready"""
