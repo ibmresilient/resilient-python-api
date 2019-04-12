@@ -1,6 +1,6 @@
 2019-04-12: version 32.0.140
 
-Fix for exposed passwords in resilient-circuits logs when run in DEBUG mode
+Fix for exposed Resilient passwords in resilient-circuits log when run in DEBUG mode
 'codgen' creates setup.py files which will programmatically compute function component entry points
 Added WorkflowStatus class
 Running 'codegen', 'codegen --reload', and 'extract' now automatically creates export files in Resilient to run against. Manually export no longer needed
