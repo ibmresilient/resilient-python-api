@@ -42,7 +42,7 @@ class ResClient(object):
         email = arg_parser.email
         password = arg_parser.password
         org = arg_parser.org
-        client_id = arg_parser.client_id
+        api_key_id = arg_parser.api_key_id
         api_key_secret = arg_parser.api_key_secret
 
         cafile = arg_parser.cafile
@@ -69,7 +69,7 @@ class ResClient(object):
 
             print("Done")
         else:
-            self.res_client.set_api_key(client_id=client_id,
+            self.res_client.set_api_key(apikey_id=api_key_id,
                                         apikey_secret=api_key_secret)
 
     def create_incident(self, infile):

@@ -492,10 +492,10 @@ class Actions(ResilientComponent):
         # Gather the stomp_host if specified or fallback to the resilient host if not
         stomp_host = self.opts["resilient"].get("stomp_host", None) or self.opts["host"]
         #
-        #   client_id and key_secret is the preferrable one
+        #   key_id and key_secret are the preferrable one
         #
-        if self.opts.get("client_id", None) is not None and self.opts.get("api_key_secret", None) is not None:
-            stomp_email = self.opts["client_id"]
+        if self.opts.get("api_key_id", None) is not None and self.opts.get("api_key_secret", None) is not None:
+            stomp_email = self.opts["api_key_id"]
             stomp_password = self.opts["api_key_secret"]
         else:
             stomp_email = self.opts["email"]

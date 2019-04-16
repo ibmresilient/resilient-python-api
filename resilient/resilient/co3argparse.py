@@ -108,7 +108,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         default_email = self.getopt("resilient", "email")
         default_password = self.getopt("resilient", "password")
-        default_client_id = self.getopt("resilient", "client_id")
+        default_key_id = self.getopt("resilient", "api_key_id")
         default_key_secret = self.getopt("resilient", "api_key_secret")
         default_host = self.getopt("resilient", "host")
         default_port = self.getopt("resilient", "port") or self.DEFAULT_PORT
@@ -133,9 +133,9 @@ class ArgumentParser(argparse.ArgumentParser):
                                "command history.  The password to use to authenticate "
                                "to the Resilient server.  If omitted, the you will be prompted.")
 
-        self.add_argument("--client_id",
-                          default=default_client_id,
-                          help="The client_id for API key.")
+        self.add_argument("--api_key_id",
+                          default=default_key_id,
+                          help="The api key id for API key.")
 
         self.add_argument("--api_key_secret",
                           default=default_key_secret,

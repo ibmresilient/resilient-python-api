@@ -135,25 +135,25 @@ class BaseClient(object):
         self.session.mount(u'https://', TLSHttpAdapter())
 
         # API key
-        self.client_id = None
+        self.apikey_id = None
         self.apikey_secret = None
         self.use_api_key = False
 
-    def set_api_key(self, client_id, apikey_secret, timeout=None):
+    def set_api_key(self, apikey_id, apikey_secret, timeout=None):
         """
         Call this method instead of the connect method in order to use API key
         Just like the connect method, this method calls the session endpoint
         to get org_id information.
-        :param client_id:
+        :param apikey_id:
         :param apikey_secret:
         :return:
         """
-        self.client_id = client_id
+        self.apikey_id = apikey_id
         self.apikey_secret = apikey_secret
         self.use_api_key = True
 
         response = self.session.get(u"{0}/rest/session".format(self.base_url),
-                                    auth=HTTPBasicAuth(self.client_id, self.apikey_secret),
+                                    auth=HTTPBasicAuth(self.apikey_id, self.apikey_secret),
                                     proxies=self.proxies,
                                     headers=self.make_headers(),
                                     verify=self.verify,
@@ -253,7 +253,7 @@ class BaseClient(object):
            If unauthorized (likely due to a session timeout), retry.
         """
         if self.use_api_key:
-            kwargs["auth"] = HTTPBasicAuth(self.client_id, self.apikey_secret)
+            kwargs["auth"] = HTTPBasicAuth(self.apikey_id, self.apikey_secret)
             #
             #   Note this is a temporary walk around. Theoretically the server
             #   shall ignore the session id if api key is used. But we don't have

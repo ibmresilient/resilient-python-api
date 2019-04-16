@@ -93,11 +93,11 @@ class TestCo3:
                                         base_url=url,
                                         verify=False,
                                         proxies=co3_args.proxy)
-        if (co3_args.client_id is not None and co3_args.api_key_secret is not None):
+        if (co3_args.api_key_id is not None and co3_args.api_key_secret is not None):
             try:
                 # Erase org_id
                 client.org_id = None
-                ret = client.set_api_key(co3_args.client_id, co3_args.api_key_secret)
+                ret = client.set_api_key(co3_args.api_key_id, co3_args.api_key_secret)
                 assert client.org_id
             except Exception as e:
                 assert False
