@@ -119,8 +119,8 @@ def get_client(opts):
     #   preferable one if we can find from the opts
     #
     if opts.get("api_key_id", None) is not None and opts.get("api_key_secret", None) is not None:
-        userinfo = resilient_client.set_api_key(apikey_id=opts["api_key_id"],
-                                                apikey_secret=opts["api_key_secret"])
+        userinfo = resilient_client.set_api_key(api_key_id=opts["api_key_id"],
+                                                api_key_secret=opts["api_key_secret"])
     else:
         userinfo = resilient_client.connect(opts["email"], opts["password"])
 

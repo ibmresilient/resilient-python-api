@@ -69,8 +69,8 @@ class ResClient(object):
 
             print("Done")
         else:
-            self.res_client.set_api_key(apikey_id=api_key_id,
-                                        apikey_secret=api_key_secret)
+            self.res_client.set_api_key(api_key_id=api_key_id,
+                                        api_key_secret=api_key_secret)
 
     def create_incident(self, infile):
         self.connect()
