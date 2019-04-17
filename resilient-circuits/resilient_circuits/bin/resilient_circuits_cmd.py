@@ -20,6 +20,8 @@ from resilient import ensure_unicode
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline, extract_to_res
 from resilient_circuits.util.resilient_customize import customize_resilient
+from resilient_circuits.util.resilient_ext import ExtCommands
+
 
 if sys.version_info.major == 2:
     from io import open
@@ -534,6 +536,17 @@ def main():
     clone_parser = subparsers.add_parser("clone",
                                          help="Clone Resilient objects")
 
+    # Add parser for ext:package
+    # Usage: resilient-circuits ext:package path_to_package
+    ext_parser = subparsers.add_parser("ext:package",
+                                        usage="%(prog)s path_to_package",
+                                        help="Package an Integration into a Resilient Extension",
+                                        argument_default=argparse.SUPPRESS)
+
+    ext_parser.add_argument('path_to_package',
+                            help="Path to the directory containing the setup.py file",
+                            nargs="?", default=os.getcwd())
+
     # Options for selftest
     selftest_parser.add_argument("-l", "--list",
                                dest="install_list",
@@ -644,6 +657,11 @@ def main():
             clone(args)
     elif args.cmd == "selftest":
         selftest(args)
+
+    elif args.cmd == "ext:package":
+        # Instansiate ExtCommands class passing it the command and path_to_package
+        ExtCommands(args.cmd, os.path.abspath(args.path_to_package))
+        # package_extension(args.cmd, os.path.abspath(args.path_to_package))
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
