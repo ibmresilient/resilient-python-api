@@ -9,8 +9,12 @@ import os
 import json
 import re
 import shutil
+import io
+import hashlib
+import uuid
 from setuptools import sandbox as use_setuptools
 
+# TODO: Investigate using LOG.setLevel value from app.config file
 # Setup logging
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -65,6 +69,24 @@ class ExtCommands(object):
         with open(path, "r") as the_file:
             file_lines = the_file.readlines()
         return file_lines
+
+    @staticmethod
+    def generate_md5_uuid_from_file(path_to_file):
+        """Returns String representation of the UUID of a hex md5 hash of the given file"""
+
+        # Instansiate new md5_hash
+        md5_hash = hashlib.md5()
+
+        # Open a stream to the file. Read 4096 bytes at a time. Pass these bytes to md5_hash object
+        with open(path_to_file, mode="rb") as f:
+            for chunk in iter(lambda: f.read(4096), b''):
+                md5_hash.update(chunk)
+
+        # Generate the hex md5 hash of all the read bytes
+        the_md5_hex_str = md5_hash.hexdigest()
+
+        # Return a String repersenation of the uuid of the md5 hash
+        return str(uuid.UUID(the_md5_hex_str))
 
     @staticmethod
     def __validate_directory__(path_to_extension_dir, path_to_setup_py_file):
@@ -201,6 +223,7 @@ class ExtCommands(object):
 
         # Generate all paths to the directories and files we will use
         path_dist = os.path.join(path_to_extension, "dist")
+        path_python_tar_package = os.path.join(path_dist, "{0}.tar.gz".format(extension_name))
         path_extension_zip = os.path.join(path_dist, "ext-{0}".format(extension_name))
         path_build = os.path.join(path_dist, "build")
         path_extension_json = os.path.join(path_build, "extension.json")
@@ -224,6 +247,7 @@ class ExtCommands(object):
         # Write the executable.json file
         cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True, indent=4))
 
+        # TODO: Render this String from from a JINJA Template
         # Generate the contents for the Dockerfile
         the_dockerfile_contents = """FROM resilient:v32_1\n
 COPY *.tar.gz /app/data\n
@@ -236,7 +260,7 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist"])
 
         # Copy the tar.gz to the executable_zip dir
-        shutil.copy(os.path.join(path_dist, "{0}.tar.gz".format(extension_name)), path_executable_zip)
+        shutil.copy(path_python_tar_package, path_executable_zip)
 
         # zip the executable_zip dir
         shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)
@@ -248,7 +272,6 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
         # TODO: icons?
         # TODO: author website?
         # TODO: tag?
-        # TODO: uuid?
         # TODO: min version - customize.py?
         the_extension_json_file_contents = {
             "author": {
@@ -283,9 +306,9 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
                 "prefix": "TODO",
                 "name": "TODO",
                 "display_name": "TODO",
-                "uuid": "TODO"
+                "uuid": cls.generate_md5_uuid_from_file(path_python_tar_package)
             },
-            "uuid": "TODO",
+            "uuid": cls.generate_md5_uuid_from_file("{0}.zip".format(path_executable_zip)),
             "version": setup_py_attributes.get("version")
         }
 
