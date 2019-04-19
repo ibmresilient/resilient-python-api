@@ -295,6 +295,7 @@ class ExtCommands(object):
         }
 
         # Write the executable.json file
+        # TODO: remove the indent formatting so the file is minified when written
         cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True, indent=4))
 
         # TODO: Render this String from from a JINJA Template
@@ -320,13 +321,11 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
 
         # Generate the contents for the extension.json file
         # TODO: icons?
-        # TODO: author website?
-        # TODO: tag?
 
         the_extension_json_file_contents = {
             "author": {
                 "name": setup_py_attributes.get("author"),
-                "website": setup_py_attributes.get("author_email"),
+                "website": setup_py_attributes.get("url"),
                 "icon": {
                     "data": "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",
                     "media_type": "image/png"
@@ -353,9 +352,9 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
             },
             "name": setup_py_attributes.get("name"),
             "tag": {
-                "prefix": "TODO",
-                "name": "TODO",
-                "display_name": "TODO",
+                "prefix": setup_py_attributes.get("name"),
+                "name": setup_py_attributes.get("name"),
+                "display_name": setup_py_attributes.get("name"),
                 "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package)
             },
             "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),
@@ -363,9 +362,11 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
         }
 
         # Write the executable.json file
+        # TODO: remove the indent formatting so the file is minified when written
         cls.__write_file__(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True, indent=4))
 
         # Write the customize ImportDefinition to the export.res file
+        # TODO: remove the indent formatting so the file is minified when written
         cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True, indent=4))
 
         # zip the build dir
