@@ -31,13 +31,13 @@ LOG.addHandler(logging.StreamHandler())
 class ExtException(Exception):
     """Custom Exception for ext commands"""
     def __init__(self, message):
-        self.message = message
+        self.message = "\nresilient-circuits %s FAILED\nERROR: %s" % (ExtCommands.command_ran, message)
 
         # Call the base class
         super(ExtException, self).__init__(message)
 
     def __str__(self):
-        return "\nresilient-circuits %s FAILED\nERROR: %s" % (ExtCommands.command_ran, self.message)
+        return self.message
 
 
 class ExtCommands(object):
@@ -360,116 +360,123 @@ class ExtCommands(object):
         path_executable_json = os.path.join(path_executable_zip, "executable.json")
         path_executable_dockerfile = os.path.join(path_executable_zip, "Dockerfile")
 
-        # Create the directories for the path "./dist/build/executables/exe-<package-name>/"
-        os.makedirs(path_executable_zip)
+        try:
+            # Create the directories for the path "./dist/build/executables/exe-<package-name>/"
+            os.makedirs(path_executable_zip)
 
-        # Generate the contents for the executable.json file
-        the_executable_json_file_contents = {
-            "name": extension_name
-        }
+            # Generate the contents for the executable.json file
+            the_executable_json_file_contents = {
+                "name": extension_name
+            }
 
-        # Write the executable.json file
-        # TODO: remove the indent formatting so the file is minified when written
-        cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True, indent=4))
+            # Write the executable.json file
+            # TODO: remove the indent formatting so the file is minified when written
+            cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True, indent=4))
 
-        # TODO: Render this String from from a JINJA Template
-        # Generate the contents for the Dockerfile
-        the_dockerfile_contents = """FROM resilient:v32_1\n
+            # TODO: Render this String from from a JINJA Template
+            # Generate the contents for the Dockerfile
+            the_dockerfile_contents = """FROM resilient:v32_1\n
 COPY *.tar.gz /app/data\n
 RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".format(extension_name, setup_py_attributes.get("name").replace("_", "-"))
 
-        # Write the Dockerfile
-        cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
+            # Write the Dockerfile
+            cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
 
-        # Generate the tar.gz
-        use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist"])
+            # Generate the tar.gz
+            use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist"])
 
-        # Copy the tar.gz to the executable_zip dir
-        shutil.copy(path_python_tar_package, path_executable_zip)
+            # Copy the tar.gz to the executable_zip dir
+            shutil.copy(path_python_tar_package, path_executable_zip)
 
-        # zip the executable_zip dir
-        shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)
+            # zip the executable_zip dir
+            shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)
 
-        # Remove the executable_zip dir
-        shutil.rmtree(path_executable_zip)
+            # Remove the executable_zip dir
+            shutil.rmtree(path_executable_zip)
 
-        # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
-        extension_logo = cls.__get_icon__(
-            path_to_icon=os.path.join(path_to_extension, "icons", "extension_logo.png"),
-            width_accepted=200,
-            height_accepted=72,
-            default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png"))
+            # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
+            extension_logo = cls.__get_icon__(
+                path_to_icon=os.path.join(path_to_extension, "icons", "extension_logo.png"),
+                width_accepted=200,
+                height_accepted=72,
+                default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png"))
 
-        company_logo = cls.__get_icon__(
-            path_to_icon=os.path.join(path_to_extension, "icons", "company_logo.png"),
-            width_accepted=100,
-            height_accepted=100,
-            default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png"))
+            company_logo = cls.__get_icon__(
+                path_to_icon=os.path.join(path_to_extension, "icons", "company_logo.png"),
+                width_accepted=100,
+                height_accepted=100,
+                default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png"))
 
-        # Generate the contents for the extension.json file
-        the_extension_json_file_contents = {
-            "author": {
-                "name": setup_py_attributes.get("author"),
-                # TODO: validate this is a url
-                # some or our Integrations do not have this set by default so we don't want to fail here
-                # Maybe when we run the "convert" command we use a default/blank url / None value?
-                # If we are packaging, we can get the user to change the setup.py file
-                # "website": setup_py_attributes.get("url"),
-                # Also, where is this displayed on the UI?
-                "website": "www.example.com",
-                "icon": {
-                    "data": company_logo,
-                    "media_type": "image/png"
-                }
-            },
-            "description": {
-                "content": setup_py_attributes.get("description"),
-                "format": "text"
-            },
-            # TODO: For ext:package - take Display Name as an input parameter
-            # Or do we provide another .config file where all values for setup.py
-            # and extension.json are stored, then on package, the setup.py file is updated?
-            # For ext:convert use setup_py_attributes.get("name")?
-            "display_name": setup_py_attributes.get("name"),
-            "icon": {
-                "data": extension_logo,
-                "media_type": "image/png"
-            },
-            "long_description": {
-                "content": "<div>{0}</div>".format(setup_py_attributes.get("long_description")),
-                "format": "html"
-            },
-            "minimum_resilient_version": {
-                "major": customize_py_import_definition.get("server_version").get("major"),
-                "minor": customize_py_import_definition.get("server_version").get("minor"),
-                "build_number": customize_py_import_definition.get("server_version").get("build_number"),
-                "version": customize_py_import_definition.get("server_version").get("version")
-            },
-            # TODO: figure out on the Resilient UI where this field is displayed
-            # Do we need to do any manipulations to make it look nicer?
-            "name": setup_py_attributes.get("name"),
-            "tag": {
-                "prefix": setup_py_attributes.get("name"),
-                "name": setup_py_attributes.get("name"),
+            # Generate the contents for the extension.json file
+            the_extension_json_file_contents = {
+                "author": {
+                    "name": setup_py_attributes.get("author"),
+                    # TODO: validate this is a url
+                    # some or our Integrations do not have this set by default so we don't want to fail here
+                    # Maybe when we run the "convert" command we use a default/blank url / None value?
+                    # If we are packaging, we can get the user to change the setup.py file
+                    # "website": setup_py_attributes.get("url"),
+                    # Also, where is this displayed on the UI?
+                    "website": "www.example.com",
+                    "icon": {
+                        "data": company_logo,
+                        "media_type": "image/png"
+                    }
+                },
+                "description": {
+                    "content": setup_py_attributes.get("description"),
+                    "format": "text"
+                },
+                # TODO: For ext:package - take Display Name as an input parameter
+                # Or do we provide another .config file where all values for setup.py
+                # and extension.json are stored, then on package, the setup.py file is updated?
+                # For ext:convert use setup_py_attributes.get("name")?
                 "display_name": setup_py_attributes.get("name"),
-                "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package)
-            },
-            "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),
-            "version": setup_py_attributes.get("version")
-        }
+                "icon": {
+                    "data": extension_logo,
+                    "media_type": "image/png"
+                },
+                "long_description": {
+                    "content": "<div>{0}</div>".format(setup_py_attributes.get("long_description")),
+                    "format": "html"
+                },
+                "minimum_resilient_version": {
+                    "major": customize_py_import_definition.get("server_version").get("major"),
+                    "minor": customize_py_import_definition.get("server_version").get("minor"),
+                    "build_number": customize_py_import_definition.get("server_version").get("build_number"),
+                    "version": customize_py_import_definition.get("server_version").get("version")
+                },
+                # TODO: figure out on the Resilient UI where this field is displayed
+                # Do we need to do any manipulations to make it look nicer?
+                "name": setup_py_attributes.get("name"),
+                "tag": {
+                    "prefix": setup_py_attributes.get("name"),
+                    "name": setup_py_attributes.get("name"),
+                    "display_name": setup_py_attributes.get("name"),
+                    "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package)
+                },
+                "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),
+                "version": setup_py_attributes.get("version")
+            }
 
-        # Write the executable.json file
-        # TODO: remove the indent formatting so the file is minified when written
-        cls.__write_file__(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True, indent=4))
+            # Write the executable.json file
+            # TODO: remove the indent formatting so the file is minified when written
+            cls.__write_file__(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True, indent=4))
 
-        # Write the customize ImportDefinition to the export.res file
-        # TODO: remove the indent formatting so the file is minified when written
-        cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True, indent=4))
+            # Write the customize ImportDefinition to the export.res file
+            # TODO: remove the indent formatting so the file is minified when written
+            cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True, indent=4))
 
-        # zip the build dir
-        shutil.make_archive(base_name=path_extension_zip, format="zip", root_dir=path_build)
+            # zip the build dir
+            shutil.make_archive(base_name=path_extension_zip, format="zip", root_dir=path_build)
 
-        # Remove the executable_zip dir
-        # TODO: ensure this gets called even on an exception
-        # Place in correct finally block
-        shutil.rmtree(path_build)
+        except Exception as err:
+            # If the .tar.gz file has been generated, delete it
+            if os.path.isfile(path_python_tar_package):
+                os.remove(path_python_tar_package)
+
+            raise Exception(err.message)
+
+        finally:
+            # Remove the executable_zip dir
+            shutil.rmtree(path_build)
