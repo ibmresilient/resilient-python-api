@@ -80,6 +80,22 @@ class ExtCommands(object):
         return file_lines
 
     @staticmethod
+    def is_valid_url(url):
+        """Returns True if url is valid, else False. Accepted url examples are:
+            "http://www.example.com", "https://www.example.com", "www.example.com", "example.com" """
+
+        if not url:
+            return False
+
+        regex = re.compile(
+            r'^(https?://)?'  # optional http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?)'  # domain/hostname
+            r'(?:/?|[/?]\S+)$', # .com etc.
+            re.IGNORECASE)
+
+        return regex.search(url) is not None
+
+    @staticmethod
     def __generate_md5_uuid_from_file__(path_to_file):
         """Returns String representation of the UUID of a hex md5 hash of the given file"""
 
@@ -184,6 +200,7 @@ class ExtCommands(object):
 
         # If we could not find an attribute with attribute_name, raise an Exception
         if not the_attribute_found:
+            # TODO: do we give warning or raise exception?
             # raise ExtException("{0} is not a valid attribute name in the provided setup.py file: {1}".format(attribute_name, path_to_setup_py))
             LOG.warning("WARNING: '%s' is not a valid attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
 
@@ -394,6 +411,13 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
             # Remove the executable_zip dir
             shutil.rmtree(path_executable_zip)
 
+            # Get and validate the website_url from the url supplied in the setup.py file
+            website_url = setup_py_attributes.get("url")
+
+            if not cls.is_valid_url(website_url):
+                LOG.warning("WARNING: URL specified in the setup.py file is not valid. '%s' is not a valid url. Ignoring.", website_url)
+                website_url = ""
+
             # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
             extension_logo = cls.__get_icon__(
                 path_to_icon=os.path.join(path_to_extension, "icons", "extension_logo.png"),
@@ -411,13 +435,7 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
             the_extension_json_file_contents = {
                 "author": {
                     "name": setup_py_attributes.get("author"),
-                    # TODO: validate this is a url
-                    # some or our Integrations do not have this set by default so we don't want to fail here
-                    # Maybe when we run the "convert" command we use a default/blank url / None value?
-                    # If we are packaging, we can get the user to change the setup.py file
-                    # "website": setup_py_attributes.get("url"),
-                    # Also, where is this displayed on the UI?
-                    "website": "www.example.com",
+                    "website": website_url,
                     "icon": {
                         "data": company_logo,
                         "media_type": "image/png"
@@ -427,10 +445,9 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
                     "content": setup_py_attributes.get("description"),
                     "format": "text"
                 },
-                # TODO: For ext:package - take Display Name as an input parameter
-                # Or do we provide another .config file where all values for setup.py
-                # and extension.json are stored, then on package, the setup.py file is updated?
-                # For ext:convert use setup_py_attributes.get("name")?
+                # TODO: For ext:package add 2 input parameters
+                # - one for display name, if not provided just use setup_py_attributes.get("name")
+                # - another to keep the build direcory so users can edit and then .zip themselves
                 "display_name": setup_py_attributes.get("name"),
                 "icon": {
                     "data": extension_logo,
@@ -446,8 +463,6 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
                     "build_number": customize_py_import_definition.get("server_version").get("build_number"),
                     "version": customize_py_import_definition.get("server_version").get("version")
                 },
-                # TODO: figure out on the Resilient UI where this field is displayed
-                # Do we need to do any manipulations to make it look nicer?
                 "name": setup_py_attributes.get("name"),
                 "tag": {
                     "prefix": setup_py_attributes.get("name"),
