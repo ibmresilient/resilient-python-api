@@ -80,7 +80,7 @@ class ExtCommands(object):
         return file_lines
 
     @staticmethod
-    def is_valid_url(url):
+    def __is_valid_url__(url):
         """Returns True if url is valid, else False. Accepted url examples are:
             "http://www.example.com", "https://www.example.com", "www.example.com", "example.com" """
 
@@ -94,6 +94,29 @@ class ExtCommands(object):
             re.IGNORECASE)
 
         return regex.search(url) is not None
+
+    @staticmethod
+    def __is_valid_package_name__(name):
+        """Returns True if name is valid, else False. Accepted name examples are:
+            "fn_my_new_package" """
+
+        if not name:
+            return False
+
+        regex = re.compile(r'^[0-9A-Z_]+$', re.IGNORECASE)
+
+        return regex.match(name) is not None
+
+    @staticmethod
+    def __is_valid_version_syntax__(version):
+        """Returns True if version is valid, else False. Accepted version examples are:
+            "1.0.0" "1.1.0" "123.0.123" """
+        if not version:
+            return False
+
+        regex = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+$')
+
+        return regex.match(version) is not None
 
     @staticmethod
     def __generate_md5_uuid_from_file__(path_to_file):
@@ -157,10 +180,11 @@ class ExtCommands(object):
 
     @staticmethod
     def __is_setup_attribute__(line):
-        """Use RegEx to check if the given file line starts with (for example) 'long_description='
+        """Use RegEx to check if the given file line starts with (for example) 'long_description='.
+        Will also handle if the attribute has been commented out: '# long_description='.
         Returns True if something like 'long_description=' is at the start of the line, else False"""
 
-        any_attribute_regex = r"^[a-z_]+="
+        any_attribute_regex = re.compile(r'^#?\s*[a-z_]+=')
 
         if re.match(pattern=any_attribute_regex, string=line) is not None:
             return True
@@ -200,9 +224,7 @@ class ExtCommands(object):
 
         # If we could not find an attribute with attribute_name, raise an Exception
         if not the_attribute_found:
-            # TODO: do we give warning or raise exception?
-            # raise ExtException("{0} is not a valid attribute name in the provided setup.py file: {1}".format(attribute_name, path_to_setup_py))
-            LOG.warning("WARNING: '%s' is not a valid attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
+            LOG.warning("WARNING: '%s' is not a defined attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
 
         # Create single string and trim (" , ' )
         the_attribute_value = " ".join(the_attribute_value)
@@ -350,17 +372,35 @@ class ExtCommands(object):
         # Parse the setup.py file
         setup_py_attributes = cls.__parse_setup_py__(path_setup_py_file, [
             "author",
-            "author_email",
             "name",
             "version",
             "description",
             "long_description",
-            "license",
             "url"
         ])
 
+        # Validate setup.py attributes
+
+        # Validate the name attribute. Raise exception if invalid
+        if not cls.__is_valid_package_name__(setup_py_attributes.get("name")):
+            raise ExtException("'{0}' is not a valid Extension name. The name attribute must be defined and can only include 'a-z and _'.\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("name"), path_setup_py_file))
+
+        # Validate the version attribute. Raise exception if invalid
+        if not cls.__is_valid_version_syntax__(setup_py_attributes.get("version")):
+            raise ExtException("'{0}' is not a valid Extension version syntax. The version attribute must be defined. Example: version=\"1.0.0\".\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("version"), path_setup_py_file))
+
+        # Validate the url supplied in the setup.py file, set to an empty string if not valid
+        if not cls.__is_valid_url__(setup_py_attributes.get("url")):
+            LOG.warning("WARNING: URL specified in the setup.py file is not valid. '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
+            setup_py_attributes["url"] = ""
+
         # Get ImportDefinition from customize.py
         customize_py_import_definition = cls.__get_import_definition_from_customize_py__(path_to_base_dir)
+
+        # TODO: inspect the customize_py_import_definition
+        # - for each Resilient Object, check if it has a tag
+        # - if it does not have a tag add one
+        # - what do we do it it already has a tag? will it have a tag?
 
         # Generate the 'main' name for the extension
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
@@ -399,6 +439,9 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
             # Write the Dockerfile
             cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
 
+            # TODO: avoid all the logs that get printed with this command
+            # Confirm the need for the .egg files
+            # Ensure all files in the tar.gz are needed and correct
             # Generate the tar.gz
             use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist"])
 
@@ -410,13 +453,6 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
 
             # Remove the executable_zip dir
             shutil.rmtree(path_executable_zip)
-
-            # Get and validate the website_url from the url supplied in the setup.py file
-            website_url = setup_py_attributes.get("url")
-
-            if not cls.is_valid_url(website_url):
-                LOG.warning("WARNING: URL specified in the setup.py file is not valid. '%s' is not a valid url. Ignoring.", website_url)
-                website_url = ""
 
             # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
             extension_logo = cls.__get_icon__(
@@ -435,7 +471,7 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
             the_extension_json_file_contents = {
                 "author": {
                     "name": setup_py_attributes.get("author"),
-                    "website": website_url,
+                    "website": setup_py_attributes.get("url"),
                     "icon": {
                         "data": company_logo,
                         "media_type": "image/png"
@@ -465,7 +501,7 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
                 },
                 "name": setup_py_attributes.get("name"),
                 "tag": {
-                    "prefix": setup_py_attributes.get("name"),
+                    "prefix": setup_py_attributes.get("name"), # TODO: What, where and why is this used?
                     "name": setup_py_attributes.get("name"),
                     "display_name": setup_py_attributes.get("name"),
                     "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package)
