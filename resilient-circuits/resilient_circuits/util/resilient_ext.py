@@ -26,6 +26,7 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
+# TODO: Add LOG.debug statements
 
 # Custom Extensions Exception
 class ExtException(Exception):
@@ -45,6 +46,15 @@ class ExtCommands(object):
 
     # Class variable to store what command was run
     command_ran = None
+
+    # Tuple of all Resilient Object Names we support when packaging/converting
+    supported_res_obj_names = (
+        "actions", "automatic_tasks", "fields",
+        "functions", "incident_artifact_types",
+        "incident_types", "message_destinations",
+        "phases", "roles", "scripts",
+        "types", "workflows", "workspaces"
+    )
 
     def __init__(self, command_ran, path_to_extension):
 
@@ -355,12 +365,82 @@ class ExtCommands(object):
 
         return encoded_icon_string
 
+    @staticmethod
+    def __add_tag__(tag_name, list_of_objs):
+        """Returns list_of_objs with tag_name added to each object"""
+
+        # Create tag_to_add
+        tag_to_add = {
+            "tag_handle": tag_name,
+            "value": None
+        }
+
+        err_msg = "Error adding tag '{0}'. '{1}' (printed above) is not a {2}. Instead a {3} was provided.\nProvided ImportDefinition in the customize.py file may be corrupt"
+
+        # Check list_of_objs is a List
+        if not isinstance(list_of_objs, list):
+            LOG.error("Error adding tag.\n'list_of_objs': %s", list_of_objs)
+            raise ExtException(err_msg.format(tag_name, "list_of_objs", "List", type(list_of_objs)))
+
+        # Loop each object in the List
+        for obj in list_of_objs:
+
+            # If its not a dict, error
+            if not isinstance(obj, dict):
+                LOG.error("Error adding tag.\n'list_of_objs': %s\n'obj': %s", list_of_objs, obj)
+                raise ExtException(err_msg.format(tag_name, "obj", "Dictionary", type(obj)))
+
+            # Try get current_tags
+            current_tags = obj.get("tags")
+
+            # If None, create new empty List
+            if current_tags is None:
+                current_tags = []
+
+            # If current_tags is not a list, error
+            if not isinstance(current_tags, list):
+                LOG.error("Error adding tag.\n'current_tags': %s", current_tags)
+                raise ExtException(err_msg.format(tag_name, "current_tags", "List", type(current_tags)))
+
+            # Append our tag_to_add to current_tags
+            current_tags.append(tag_to_add)
+
+            # Set the obj's 'tags' value to current_tags
+            obj["tags"] = current_tags
+
+        # Return the updated list_of_objs
+        return list_of_objs
+
+    @classmethod
+    def __add_tag_to_import_definition__(cls, tag_name, supported_res_obj_names, import_definition):
+        """Returns import_definition with tag_name added to each supported_res_object_name found
+        in the import_definition"""
+
+        for obj_name in supported_res_obj_names:
+
+            res_object_list = import_definition.get(obj_name)
+
+            if res_object_list:
+                res_object_list = cls.__add_tag__(tag_name, res_object_list)
+
+                # A 'function' object has a list of 'workflows' which also need the tag added to
+                if obj_name == "functions":
+                    res_functions_list = import_definition.get("functions")
+
+                    for fn in res_functions_list:
+                        fn_workflows_list = fn.get("workflows")
+
+                        if fn_workflows_list:
+                            fn_workflows_list = cls.__add_tag__(tag_name, fn_workflows_list)
+
+        return import_definition
+
     @classmethod
     def package_extension(cls, path_to_extension):
 
         LOG.info("Packaging extension. args: %s", path_to_extension)
 
-        # Generate path to setup.py, util dir and customize.py
+        # Generate path to setup.py, base dir and customize.py
         path_setup_py_file = os.path.join(path_to_extension, "setup.py")
         path_to_base_dir = os.path.join(path_to_extension, os.path.basename(path_to_extension))
         path_customize_py_file = os.path.join(path_to_base_dir, "util", "customize.py")
@@ -394,16 +474,11 @@ class ExtCommands(object):
             LOG.warning("WARNING: URL specified in the setup.py file is not valid. '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
             setup_py_attributes["url"] = ""
 
-        # Get ImportDefinition from customize.py
-        customize_py_import_definition = cls.__get_import_definition_from_customize_py__(path_to_base_dir)
-
-        # TODO: inspect the customize_py_import_definition
-        # - for each Resilient Object, check if it has a tag
-        # - if it does not have a tag add one
-        # - what do we do it it already has a tag? will it have a tag?
-
         # Generate the 'main' name for the extension
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+
+        # Generate the tag name
+        tag_name = "tag_{0}".format(setup_py_attributes.get("name"))
 
         # Generate all paths to the directories and files we will use
         path_dist = os.path.join(path_to_extension, "dist")
@@ -416,6 +491,12 @@ class ExtCommands(object):
         path_executable_zip = os.path.join(path_executables, "exe-{0}".format(extension_name))
         path_executable_json = os.path.join(path_executable_zip, "executable.json")
         path_executable_dockerfile = os.path.join(path_executable_zip, "Dockerfile")
+
+        # Get ImportDefinition from customize.py
+        customize_py_import_definition = cls.__get_import_definition_from_customize_py__(path_to_base_dir)
+
+        # Add the tag to the import defintion
+        customize_py_import_definition = cls.__add_tag_to_import_definition__(tag_name, cls.supported_res_obj_names, customize_py_import_definition)
 
         try:
             # Create the directories for the path "./dist/build/executables/exe-<package-name>/"
@@ -501,9 +582,9 @@ RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".fo
                 },
                 "name": setup_py_attributes.get("name"),
                 "tag": {
-                    "prefix": setup_py_attributes.get("name"), # TODO: What, where and why is this used?
-                    "name": setup_py_attributes.get("name"),
-                    "display_name": setup_py_attributes.get("name"),
+                    "prefix": tag_name, # TODO: What, where and why is this used?
+                    "name": tag_name,
+                    "display_name": tag_name,
                     "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package)
                 },
                 "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),
