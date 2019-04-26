@@ -1,0 +1,9 @@
+{#  Simple template for the Dockerfile #}
+FROM resilient:v32_1
+
+COPY *.tar.gz /app/data
+
+RUN pip install -U {{extension_name}}.tar.gz 
+ && resilient-circuits config -u -l {{installed_package_name}}
+
+ENTRYPOINT /app/bin/res_start.exp

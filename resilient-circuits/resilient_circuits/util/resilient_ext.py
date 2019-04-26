@@ -18,6 +18,7 @@ import importlib
 import struct
 from setuptools import sandbox as use_setuptools
 import pkg_resources
+from jinja2 import Environment, PackageLoader
 from resilient_circuits.util.resilient_customize import ImportDefinition
 
 # TODO: Investigate using LOG.setLevel value from app.config file
@@ -54,6 +55,11 @@ class ExtCommands(object):
         "incident_types", "message_destinations",
         "phases", "roles", "scripts",
         "types", "workflows", "workspaces"
+    )
+
+    # Instansiate Jinja2 Environment with path to Jinja2 templates
+    jinja_env = Environment(
+        loader=PackageLoader("resilient_circuits", "data/ext/templates")
     )
 
     def __init__(self, command_ran, path_to_extension):
@@ -512,11 +518,14 @@ class ExtCommands(object):
             # TODO: remove the indent formatting so the file is minified when written
             cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True, indent=4))
 
-            # TODO: Render this String from from a JINJA Template
-            # Generate the contents for the Dockerfile
-            the_dockerfile_contents = """FROM resilient:v32_1\n
-COPY *.tar.gz /app/data\n
-RUN pip install -U {0}.tar.gz \\\n  && resilient-circuits config -u -l {1}""".format(extension_name, setup_py_attributes.get("name").replace("_", "-"))
+            # Load Dockerfile template
+            docker_file_template = cls.jinja_env.get_template("docker_file_template.jinja2")
+
+            # Render Dockerfile template with required variables
+            the_dockerfile_contents = docker_file_template.render({
+                "extension_name": extension_name,
+                "installed_package_name": setup_py_attributes.get("name").replace("_", "-")
+            })
 
             # Write the Dockerfile
             cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
