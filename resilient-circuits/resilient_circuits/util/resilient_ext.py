@@ -451,6 +451,7 @@ class ExtCommands(object):
 
         # Parse the setup.py file
         setup_py_attributes = cls.__parse_setup_py__(path_setup_py_file, [
+            # TODO: move this list to top of file (add as class variable)
             "author",
             "name",
             "version",
@@ -477,8 +478,8 @@ class ExtCommands(object):
         # Generate the 'main' name for the extension
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
 
-        # Generate the tag name
-        tag_name = "tag_{0}".format(setup_py_attributes.get("name"))
+        # Get the tag name
+        tag_name = setup_py_attributes.get("name")
 
         # Generate all paths to the directories and files we will use
         path_dist = os.path.join(path_to_extension, "dist")
