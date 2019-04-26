@@ -21,12 +21,8 @@ import pkg_resources
 from jinja2 import Environment, PackageLoader
 from resilient_circuits.util.resilient_customize import ImportDefinition
 
-# TODO: Investigate using LOG.setLevel value from app.config file
-# Setup logging
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.INFO)
-LOG.addHandler(logging.StreamHandler())
-
+# Setup logger. '__main__' is the name of the parent logger set in resilient_circuits_cmd.py
+LOG = logging.getLogger("__main__")
 # TODO: Add LOG.debug statements
 
 # Custom Extensions Exception
