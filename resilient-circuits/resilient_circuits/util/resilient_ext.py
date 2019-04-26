@@ -293,6 +293,7 @@ class ExtCommands(object):
         sys.path.insert(0, path_to_base_dir)
 
         # TODO: investigate why customize.py has to "from resilient_circuits.util import *"??
+        # TODO: investigate why resilient-circuits customize command adds a default 'incident_type' and 'field'. Need to remove it. Can do by uuid
         # Import the customize module
         customize_py = importlib.import_module("util.customize")
 
@@ -509,8 +510,7 @@ class ExtCommands(object):
             }
 
             # Write the executable.json file
-            # TODO: remove the indent formatting so the file is minified when written
-            cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True, indent=4))
+            cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
 
             # Load Dockerfile template
             docker_file_template = cls.jinja_env.get_template("docker_file_template.jinja2")
@@ -596,12 +596,10 @@ class ExtCommands(object):
             }
 
             # Write the executable.json file
-            # TODO: remove the indent formatting so the file is minified when written
-            cls.__write_file__(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True, indent=4))
+            cls.__write_file__(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True))
 
             # Write the customize ImportDefinition to the export.res file
-            # TODO: remove the indent formatting so the file is minified when written
-            cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True, indent=4))
+            cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True))
 
             # zip the build dir
             shutil.make_archive(base_name=path_extension_zip, format="zip", root_dir=path_build)
