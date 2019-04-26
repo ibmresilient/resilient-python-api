@@ -44,6 +44,12 @@ class ExtCommands(object):
     # Class variable to store what command was run
     command_ran = None
 
+    # Tuple of the setup.py attributes we use
+    supported_setup_py_attribute_names = (
+        "author", "name", "version",
+        "description", "long_description", "url"
+    )
+
     # Tuple of all Resilient Object Names we support when packaging/converting
     supported_res_obj_names = (
         "actions", "automatic_tasks", "fields",
@@ -452,15 +458,7 @@ class ExtCommands(object):
         cls.__validate_file_paths__(os.R_OK, path_setup_py_file, path_customize_py_file)
 
         # Parse the setup.py file
-        setup_py_attributes = cls.__parse_setup_py__(path_setup_py_file, [
-            # TODO: move this list to top of file (add as class variable)
-            "author",
-            "name",
-            "version",
-            "description",
-            "long_description",
-            "url"
-        ])
+        setup_py_attributes = cls.__parse_setup_py__(path_setup_py_file, cls.supported_setup_py_attribute_names)
 
         # Validate setup.py attributes
 
