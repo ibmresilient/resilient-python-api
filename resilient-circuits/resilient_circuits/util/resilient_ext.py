@@ -21,6 +21,8 @@ import pkg_resources
 from jinja2 import Environment, PackageLoader
 from resilient_circuits.util.resilient_customize import ImportDefinition
 
+# TODO: this logging is not working when commands ran on the command line
+# It does work when ran in VS Code debugger!
 # Setup logger. '__main__' is the name of the parent logger set in resilient_circuits_cmd.py
 LOG = logging.getLogger("__main__")
 # TODO: Add LOG.debug statements
@@ -64,17 +66,18 @@ class ExtCommands(object):
         loader=PackageLoader("resilient_circuits", "data/ext/templates")
     )
 
-    def __init__(self, command_ran, path_to_extension):
+    def __init__(self, cmd, path_to_extension, display_name=None):
 
         # Set command_ran class variable
-        ExtCommands.command_ran = command_ran
+        ExtCommands.command_ran = cmd
 
-        if command_ran == "ext:package":
-            self.package_extension(path_to_extension)
+        if cmd == "ext:package":
+            self.package_extension(path_to_extension, custom_display_name=display_name)
 
-        elif command_ran == "ext:convert":
+        elif cmd == "ext:convert":
             # TODO
             # Validate the .zip or .tar.gz file passed
+            # Be smart enough to check the structure of the .zip and find the "old integration" tarball
             # Create a tmp directory
             # Extract the .zip/.tar.gz into tmp
             # Call package:ext on the tmp dir
@@ -445,7 +448,7 @@ class ExtCommands(object):
         return import_definition
 
     @classmethod
-    def package_extension(cls, path_to_extension):
+    def package_extension(cls, path_to_extension, custom_display_name=None):
 
         LOG.info("Packaging extension. args: %s", path_to_extension)
 
@@ -566,10 +569,7 @@ class ExtCommands(object):
                     "content": setup_py_attributes.get("description"),
                     "format": "text"
                 },
-                # TODO: For ext:package add 2 input parameters
-                # - one for display name, if not provided just use setup_py_attributes.get("name")
-                # - another to keep the build direcory so users can edit and then .zip themselves
-                "display_name": setup_py_attributes.get("name"),
+                "display_name": custom_display_name if custom_display_name is not None else setup_py_attributes.get("name"),
                 "icon": {
                     "data": extension_logo,
                     "media_type": "image/png"
@@ -589,9 +589,9 @@ class ExtCommands(object):
                     "prefix": tag_name, # TODO: What, where and why is this used?
                     "name": tag_name,
                     "display_name": tag_name,
-                    "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package)
+                    "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package) # TODO: if a developer changes FunctionComponent code, this uuid will change
                 },
-                "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),
+                "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)), # TODO: if a developer changes FunctionComponent code, this uuid will change. Use package-name/author instead
                 "version": setup_py_attributes.get("version")
             }
 
@@ -613,4 +613,6 @@ class ExtCommands(object):
 
         finally:
             # Remove the executable_zip dir
+            # TODO:
+            # - add an argument to keep the build direcory so users can edit and then .zip themselves
             shutil.rmtree(path_build)

@@ -456,6 +456,28 @@ def clone(args):
     else:
         raise Exception("Could not import because the server did not return an import ID")
 
+def add_ext_arguments(cmd, ext_parser):
+    """Add arguments to the given ext: command"""
+
+    # Add cmd specific arguments
+    if cmd == "ext:package":
+        ext_parser.add_argument("path_to_package",
+                help="Path to the directory containing the setup.py file",
+                nargs="?",
+                default=os.getcwd())
+
+    elif cmd == "ext:convert":
+        ext_parser.add_argument("path_to_built_distribution",
+            help="Path to the .tar.gz or .zip Distribution of an (old) Integration")
+
+    # Add common (optional) arguments
+    if cmd in ("ext:package", "ext:convert"):
+
+        ext_parser.add_argument("--display-name",
+                            help="The Display Name to give the Extension",
+                            nargs="?")
+    return ext_parser
+
 def main():
     """Main commandline"""
     # create base parser for extract and codgen
@@ -537,15 +559,23 @@ def main():
                                          help="Clone Resilient objects")
 
     # Add parser for ext:package
-    # Usage: resilient-circuits ext:package path_to_package
-    ext_parser = subparsers.add_parser("ext:package",
+    # Usage 1: resilient-circuits ext:package <<path_to_package>>
+    # Usage 2: resilient-circuits ext:package --display_name "My New Extension" <<path_to_package>>
+    ext_package_parser = subparsers.add_parser("ext:package",
                                         usage="%(prog)s path_to_package",
                                         help="Package an Integration into a Resilient Extension",
                                         argument_default=argparse.SUPPRESS)
 
-    ext_parser.add_argument('path_to_package',
-                            help="Path to the directory containing the setup.py file",
-                            nargs="?", default=os.getcwd())
+    ext_package_parser = add_ext_arguments("ext:package", ext_package_parser)
+
+    # Add parser for ext:convert
+    # Usage: resilient-circuits ext:convert <<path_to_built_distribution>>
+    ext_convert_parser = subparsers.add_parser("ext:convert",
+                                        usage="%(prog)s path_to_built_distribution",
+                                        help="Convert an old (built) Integration (in .tar.gz or .zip format) into a Resilient Extension",
+                                        argument_default=argparse.SUPPRESS)
+
+    ext_convert_parser = add_ext_arguments("ext:convert", ext_convert_parser)
 
     # Options for selftest
     selftest_parser.add_argument("-l", "--list",
@@ -658,10 +688,25 @@ def main():
     elif args.cmd == "selftest":
         selftest(args)
 
-    elif args.cmd == "ext:package":
-        # Instansiate ExtCommands class passing it the command and path_to_package
-        ExtCommands(args.cmd, os.path.abspath(args.path_to_package))
-        # package_extension(args.cmd, os.path.abspath(args.path_to_package))
+    elif args.cmd in ("ext:package", "ext:convert"):
+
+        path_to_extension = None
+        display_name = None
+
+        if hasattr(args, "path_to_package"):
+            path_to_extension = args.path_to_package
+
+        elif hasattr(args, "path_to_built_distribution"):
+            path_to_extension = args.path_to_built_distribution
+
+        if hasattr(args, "display_name"):
+            display_name = args.display_name
+
+        # Instansiate ExtCommands class
+        ExtCommands(
+            cmd=args.cmd,
+            path_to_extension=path_to_extension,
+            display_name=display_name)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
