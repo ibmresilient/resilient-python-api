@@ -462,9 +462,9 @@ def add_ext_arguments(cmd, ext_parser):
     # Add cmd specific arguments
     if cmd == "ext:package":
         ext_parser.add_argument("path_to_package",
-                help="Path to the directory containing the setup.py file",
-                nargs="?",
-                default=os.getcwd())
+            help="Path to the directory containing the setup.py file",
+            nargs="?",
+            default=os.getcwd())
 
     elif cmd == "ext:convert":
         ext_parser.add_argument("path_to_built_distribution",
@@ -474,8 +474,13 @@ def add_ext_arguments(cmd, ext_parser):
     if cmd in ("ext:package", "ext:convert"):
 
         ext_parser.add_argument("--display-name",
-                            help="The Display Name to give the Extension",
-                            nargs="?")
+            help="The Display Name to give the Extension",
+            nargs="?")
+        
+        ext_parser.add_argument("--keep-build-dir",
+            help="Do not delete the dist/build directory",
+            action="store_true")
+
     return ext_parser
 
 def main():
@@ -692,6 +697,7 @@ def main():
 
         path_to_extension = None
         display_name = None
+        keep_build_dir = False
 
         if hasattr(args, "path_to_package"):
             path_to_extension = args.path_to_package
@@ -702,11 +708,15 @@ def main():
         if hasattr(args, "display_name"):
             display_name = args.display_name
 
+        if hasattr(args, "keep_build_dir"):
+            keep_build_dir = args.keep_build_dir
+
         # Instansiate ExtCommands class
         ExtCommands(
             cmd=args.cmd,
             path_to_extension=path_to_extension,
-            display_name=display_name)
+            display_name=display_name,
+            keep_build_dir=keep_build_dir)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")

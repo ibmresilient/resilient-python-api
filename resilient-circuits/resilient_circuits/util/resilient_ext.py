@@ -66,13 +66,13 @@ class ExtCommands(object):
         loader=PackageLoader("resilient_circuits", "data/ext/templates")
     )
 
-    def __init__(self, cmd, path_to_extension, display_name=None):
+    def __init__(self, cmd, path_to_extension, display_name=None, keep_build_dir=False):
 
         # Set command_ran class variable
         ExtCommands.command_ran = cmd
 
         if cmd == "ext:package":
-            self.package_extension(path_to_extension, custom_display_name=display_name)
+            self.package_extension(path_to_extension, custom_display_name=display_name, keep_build_dir=keep_build_dir)
 
         elif cmd == "ext:convert":
             # TODO
@@ -448,7 +448,7 @@ class ExtCommands(object):
         return import_definition
 
     @classmethod
-    def package_extension(cls, path_to_extension, custom_display_name=None):
+    def package_extension(cls, path_to_extension, custom_display_name=None, keep_build_dir=False):
 
         LOG.info("Packaging extension. args: %s", path_to_extension)
 
@@ -612,7 +612,6 @@ class ExtCommands(object):
             raise Exception(err.message)
 
         finally:
-            # Remove the executable_zip dir
-            # TODO:
-            # - add an argument to keep the build direcory so users can edit and then .zip themselves
-            shutil.rmtree(path_build)
+            # Remove the executable_zip dir. Keep it if user passes --keep-build-dir
+            if not keep_build_dir:
+                shutil.rmtree(path_build)
