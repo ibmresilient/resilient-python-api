@@ -466,6 +466,10 @@ def add_ext_arguments(cmd, ext_parser):
             nargs="?",
             default=os.getcwd())
 
+        ext_parser.add_argument("--keep-build-dir",
+            help="Do not delete the dist/build directory",
+            action="store_true")
+
     elif cmd == "ext:convert":
         ext_parser.add_argument("path_to_built_distribution",
             help="Path to the .tar.gz or .zip Distribution of an (old) Integration")
@@ -476,10 +480,6 @@ def add_ext_arguments(cmd, ext_parser):
         ext_parser.add_argument("--display-name",
             help="The Display Name to give the Extension",
             nargs="?")
-        
-        ext_parser.add_argument("--keep-build-dir",
-            help="Do not delete the dist/build directory",
-            action="store_true")
 
     return ext_parser
 
@@ -700,10 +700,10 @@ def main():
         keep_build_dir = False
 
         if hasattr(args, "path_to_package"):
-            path_to_extension = args.path_to_package
+            path_to_extension = os.path.abspath(args.path_to_package)
 
         elif hasattr(args, "path_to_built_distribution"):
-            path_to_extension = args.path_to_built_distribution
+            path_to_extension = os.path.abspath(args.path_to_built_distribution)
 
         if hasattr(args, "display_name"):
             display_name = args.display_name

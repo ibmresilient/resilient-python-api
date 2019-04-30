@@ -16,15 +16,17 @@ import sys
 import base64
 import importlib
 import struct
+import tempfile
+import tarfile
 from setuptools import sandbox as use_setuptools
 import pkg_resources
 from jinja2 import Environment, PackageLoader
 from resilient_circuits.util.resilient_customize import ImportDefinition
 
-# TODO: this logging is not working when commands ran on the command line
-# It does work when ran in VS Code debugger!
-# Setup logger. '__main__' is the name of the parent logger set in resilient_circuits_cmd.py
-LOG = logging.getLogger("__main__")
+# TODO: investigate this logging. Should handle -v argument for debug statements
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+LOG.addHandler(logging.StreamHandler())
 # TODO: Add LOG.debug statements
 
 # Custom Extensions Exception
@@ -75,13 +77,7 @@ class ExtCommands(object):
             self.package_extension(path_to_extension, custom_display_name=display_name, keep_build_dir=keep_build_dir)
 
         elif cmd == "ext:convert":
-            # TODO
-            # Validate the .zip or .tar.gz file passed
-            # Be smart enough to check the structure of the .zip and find the "old integration" tarball
-            # Create a tmp directory
-            # Extract the .zip/.tar.gz into tmp
-            # Call package:ext on the tmp dir
-            pass
+            self.convert_package(path_to_extension, custom_display_name=display_name)
 
         else:
             raise ExtException("Unsupported command: {0}. Supported commands are: (ext:package, ext:convert)")
@@ -289,16 +285,16 @@ class ExtCommands(object):
         return return_dict
 
     @staticmethod
-    def __get_import_definition_from_customize_py__(path_to_base_dir):
+    def __get_import_definition_from_customize_py__(path_customize_py_file):
         """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
 
-        # Insert the path_to_base_dir to the start of our Python PATH at runtime so we can import the customize module from within it
-        sys.path.insert(0, path_to_base_dir)
+        # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
+        sys.path.insert(0, os.path.dirname(path_customize_py_file))
 
         # TODO: investigate why customize.py has to "from resilient_circuits.util import *"??
         # TODO: investigate why resilient-circuits customize command adds a default 'incident_type' and 'field'. Need to remove it. Can do by uuid
         # Import the customize module
-        customize_py = importlib.import_module("util.customize")
+        customize_py = importlib.import_module("customize")
 
         # Call customization_data() to get all ImportDefinitions that are "yielded"
         customize_py_import_definitions_generator = customize_py.customization_data()
@@ -330,7 +326,7 @@ class ExtCommands(object):
         path_icon_to_use = path_to_icon
 
         # Use default_path_to_icon is path_to icon does not exist
-        if not os.path.isfile(path_icon_to_use):
+        if not path_icon_to_use or not os.path.isfile(path_icon_to_use):
             path_icon_to_use = default_path_to_icon
 
         # Validate path_icon_to_use and ensure we have READ permissions
@@ -447,18 +443,27 @@ class ExtCommands(object):
 
         return import_definition
 
+    @staticmethod
+    def __get_tar_file_path_to_extract__(tar_members, file_name):
+        """Loop all the tar_members and return the path to the member that matcheds file_name.
+        Raise an Exception if cannot find file_name in the tar package"""
+
+        for member in tar_members:
+            tar_file_name = os.path.split(member.name)
+
+            if tar_file_name[1] == file_name:
+                return member.name
+
+        raise ExtException("Invalid built distribution. Could not find {0}".format(file_name))
+
     @classmethod
-    def package_extension(cls, path_to_extension, custom_display_name=None, keep_build_dir=False):
+    def create_extension(cls, path_setup_py_file, path_customize_py_file, output_dir,
+        path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
 
-        LOG.info("Packaging extension. args: %s", path_to_extension)
+        LOG.info("Creating extension...")
 
-        # Generate path to setup.py, base dir and customize.py
-        path_setup_py_file = os.path.join(path_to_extension, "setup.py")
-        path_to_base_dir = os.path.join(path_to_extension, os.path.basename(path_to_extension))
-        path_customize_py_file = os.path.join(path_to_base_dir, "util", "customize.py")
-
-        # Ensure the directory exists, we have WRITE access and ensure we can READ setup.py and customize.py
-        cls.__validate_directory__(os.W_OK, path_to_extension)
+        # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py
+        cls.__validate_directory__(os.W_OK, output_dir)
         cls.__validate_file_paths__(os.R_OK, path_setup_py_file, path_customize_py_file)
 
         # Parse the setup.py file
@@ -479,17 +484,22 @@ class ExtCommands(object):
             LOG.warning("WARNING: URL specified in the setup.py file is not valid. '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
             setup_py_attributes["url"] = ""
 
-        # Generate the 'main' name for the extension
-        extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+        # Get ImportDefinition from customize.py
+        customize_py_import_definition = cls.__get_import_definition_from_customize_py__(path_customize_py_file)
 
         # Get the tag name
         tag_name = setup_py_attributes.get("name")
 
-        # Generate all paths to the directories and files we will use
-        path_dist = os.path.join(path_to_extension, "dist")
-        path_python_tar_package = os.path.join(path_dist, "{0}.tar.gz".format(extension_name))
-        path_extension_zip = os.path.join(path_dist, "ext-{0}".format(extension_name))
-        path_build = os.path.join(path_dist, "build")
+        # Add the tag to the import defintion
+        customize_py_import_definition = cls.__add_tag_to_import_definition__(tag_name, cls.supported_res_obj_names, customize_py_import_definition)
+
+        # TODO: (optional) validate and parse app.config file
+
+        # Generate the name for the extension
+        extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+
+        # Generate paths to the directories and files we will use in the build directory
+        path_build = os.path.join(output_dir, "build")
         path_extension_json = os.path.join(path_build, "extension.json")
         path_export_res = os.path.join(path_build, "export.res")
         path_executables = os.path.join(path_build, "executables")
@@ -497,15 +507,19 @@ class ExtCommands(object):
         path_executable_json = os.path.join(path_executable_zip, "executable.json")
         path_executable_dockerfile = os.path.join(path_executable_zip, "Dockerfile")
 
-        # Get ImportDefinition from customize.py
-        customize_py_import_definition = cls.__get_import_definition_from_customize_py__(path_to_base_dir)
-
-        # Add the tag to the import defintion
-        customize_py_import_definition = cls.__add_tag_to_import_definition__(tag_name, cls.supported_res_obj_names, customize_py_import_definition)
-
         try:
-            # Create the directories for the path "./dist/build/executables/exe-<package-name>/"
+            # Create the directories for the path "/build/executables/exe-<package-name>/"
             os.makedirs(path_executable_zip)
+
+            # If no path_built_distribution is given, use the default: "<output_dir>/<package-name>.tar.gz"
+            if not path_built_distribution:
+                path_built_distribution = os.path.join(output_dir, "{0}.tar.gz".format(extension_name))
+
+            # Validate the build distribution exists and we have READ access
+            cls.__validate_file_paths__(os.R_OK, path_built_distribution)
+
+            # Copy the built distribution to the executable_zip dir
+            shutil.copy(path_built_distribution, path_executable_zip)
 
             # Generate the contents for the executable.json file
             the_executable_json_file_contents = {
@@ -516,6 +530,8 @@ class ExtCommands(object):
             cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
 
             # Load Dockerfile template
+            # TODO: Discuss this Dockerfile with App Node work and ensure we are reading app.config values correctly (if needed)
+            # TODO: this Dockerfile is only handling tar.gz file, what if we need to pip install a .zip?
             docker_file_template = cls.jinja_env.get_template("docker_file_template.jinja2")
 
             # Render Dockerfile template with required variables
@@ -527,15 +543,6 @@ class ExtCommands(object):
             # Write the Dockerfile
             cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
 
-            # TODO: avoid all the logs that get printed with this command
-            # Confirm the need for the .egg files
-            # Ensure all files in the tar.gz are needed and correct
-            # Generate the tar.gz
-            use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist"])
-
-            # Copy the tar.gz to the executable_zip dir
-            shutil.copy(path_python_tar_package, path_executable_zip)
-
             # zip the executable_zip dir
             shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)
 
@@ -544,13 +551,13 @@ class ExtCommands(object):
 
             # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
             extension_logo = cls.__get_icon__(
-                path_to_icon=os.path.join(path_to_extension, "icons", "extension_logo.png"),
+                path_to_icon=path_extension_logo,
                 width_accepted=200,
                 height_accepted=72,
                 default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png"))
 
             company_logo = cls.__get_icon__(
-                path_to_icon=os.path.join(path_to_extension, "icons", "company_logo.png"),
+                path_to_icon=path_company_logo,
                 width_accepted=100,
                 height_accepted=100,
                 default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png"))
@@ -589,7 +596,7 @@ class ExtCommands(object):
                     "prefix": tag_name, # TODO: What, where and why is this used?
                     "name": tag_name,
                     "display_name": tag_name,
-                    "uuid": cls.__generate_md5_uuid_from_file__(path_python_tar_package) # TODO: if a developer changes FunctionComponent code, this uuid will change
+                    "uuid": cls.__generate_md5_uuid_from_file__(path_built_distribution) # TODO: if a developer changes FunctionComponent code, this uuid will change
                 },
                 "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)), # TODO: if a developer changes FunctionComponent code, this uuid will change. Use package-name/author instead
                 "version": setup_py_attributes.get("version")
@@ -601,17 +608,124 @@ class ExtCommands(object):
             # Write the customize ImportDefinition to the export.res file
             cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True))
 
-            # zip the build dir
-            shutil.make_archive(base_name=path_extension_zip, format="zip", root_dir=path_build)
+            # create The Extension Zip by zipping the build directory
+            extension_zip_base_path = os.path.join(output_dir, "ext-{0}".format(extension_name))
+            extension_zip_name = shutil.make_archive(base_name=extension_zip_base_path, format="zip", root_dir=path_build)
+            path_the_extension_zip = os.path.join(extension_zip_base_path, extension_zip_name)
 
         except Exception as err:
-            # If the .tar.gz file has been generated, delete it
-            if os.path.isfile(path_python_tar_package):
-                os.remove(path_python_tar_package)
-
             raise Exception(err.message)
 
         finally:
             # Remove the executable_zip dir. Keep it if user passes --keep-build-dir
             if not keep_build_dir:
                 shutil.rmtree(path_build)
+
+        LOG.info("Extension created!")
+
+        # Return the path to the extension zip
+        return path_the_extension_zip
+
+    @classmethod
+    def package_extension(cls, path_to_src, custom_display_name=None, keep_build_dir=False):
+
+        # Generate paths to files required to create extension
+        path_setup_py_file = os.path.join(path_to_src, "setup.py")
+        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), "util", "customize.py")
+        path_output_dir = os.path.join(path_to_src, "dist")
+        path_extension_logo = os.path.join(path_to_src, "icons", "extension_logo.png")
+        path_company_logo = os.path.join(path_to_src, "icons", "company_logo.png")
+
+        # Ensure the src directory exists and we have WRITE access
+        cls.__validate_directory__(os.W_OK, path_to_src)
+
+        LOG.info("Creating built distribution in /dist directory")
+
+        # TODO: avoid all the logs that get printed with this command
+        # TODO: Confirm the need for the .egg files
+        # TODO: Ensure all files in the tar.gz are needed and correct
+        # Create the built distribution
+        use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+        # Create the extension
+        path_the_extension_zip = cls.create_extension(
+            path_setup_py_file=path_setup_py_file,
+            path_customize_py_file=path_customize_py_file,
+            output_dir=path_output_dir,
+            custom_display_name=custom_display_name,
+            keep_build_dir=keep_build_dir,
+            path_extension_logo=path_extension_logo,
+            path_company_logo=path_company_logo
+        )
+
+        LOG.info("Extension location: %s", path_the_extension_zip)
+
+
+    @classmethod
+    def convert_package(cls, path_built_distribution, custom_display_name=None):
+
+        LOG.info("Converting extension from: %s", path_built_distribution)
+
+        # Initialise path variables we need to create extension
+        path_tmp_built_distribution, path_tmp_setup_py_file, path_tmp_customize_py_file = None, None, None
+
+        # Validate we can read the built distribution
+        cls.__validate_file_paths__(os.R_OK, path_built_distribution)
+
+        # Create a tmp directory
+        path_tmp_dir = tempfile.mkdtemp(prefix="resilient-circuits-tmp-")
+
+        try:
+            # Copy built distribution to tmp directory
+            shutil.copy(path_built_distribution, path_tmp_dir)
+
+            # Get the path of the built distribution in the tmp directory
+            path_tmp_built_distribution = os.path.join(path_tmp_dir, os.path.split(path_built_distribution)[1])
+
+            # Handle if it is a .tar.gz file
+            if tarfile.is_tarfile(path_tmp_built_distribution):
+
+                with tarfile.open(name=path_tmp_built_distribution, mode="r") as tar_file:
+
+                    # Get all tar members
+                    tar_file_members = tar_file.getmembers()
+
+                    # Extract the setup.py + customize.py file into tmp directory
+                    tar_path_setup_py = cls.__get_tar_file_path_to_extract__(tar_file_members, "setup.py")
+                    tar_file.extract(member=tar_path_setup_py, path=path_tmp_dir)
+
+                    tar_path_customize_py = cls.__get_tar_file_path_to_extract__(tar_file_members, "customize.py")
+                    tar_file.extract(member=tar_path_customize_py, path=path_tmp_dir)
+
+                    path_tmp_setup_py_file = os.path.join(path_tmp_dir, tar_path_setup_py)
+                    path_tmp_customize_py_file = os.path.join(path_tmp_dir, tar_path_customize_py)
+
+            # TODO: elseif is zip file
+
+            # Else it is a file type we do not support
+            else:
+                raise ExtException("Supported Built Distributions are .tar.gz and .zip\nWe do not support this distribution: {0}".format(path_built_distribution))
+
+            # Create the extension
+            path_tmp_the_extension_zip = cls.create_extension(
+                path_setup_py_file=path_tmp_setup_py_file,
+                path_customize_py_file=path_tmp_customize_py_file,
+                output_dir=path_tmp_dir,
+                path_built_distribution=path_tmp_built_distribution,
+                custom_display_name=custom_display_name
+            )
+
+            # Copy the extension.zip to the same directory as the original built distribution
+            shutil.copy(path_tmp_the_extension_zip, os.path.dirname(path_built_distribution))
+
+            # Get the path to the final extension.zip
+            path_the_extension_zip = os.path.join(os.path.dirname(path_built_distribution), os.path.basename(path_tmp_the_extension_zip))
+
+            LOG.info("Extension location: %s", path_the_extension_zip)
+
+        except Exception as err:
+            raise Exception(err.message)
+
+        finally:
+            # Remove the tmp directory
+            shutil.rmtree(path_tmp_dir)
