@@ -707,7 +707,7 @@ class Actions(ResilientComponent):
                 message = u"Processing failed"
             if traceback and isinstance(traceback, list):
                 message = message + "\n" + ("".join(traceback))
-            LOG.exception(u"%s (%s): %s", repr(fevent), repr(etype), message)
+            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
                 for arg in fevent.args:
@@ -741,6 +741,8 @@ class Actions(ResilientComponent):
                     LOG.debug("Test Action: No ack done.")
         except Exception as err:
             LOG.error("Exception handler threw exception! Response to action module may not have sent.")
+            LOG.error(err)
+            LOG.error("Original exception traceback.")
             LOG.error(traceback)
 
     @handler("Ack_failure")
