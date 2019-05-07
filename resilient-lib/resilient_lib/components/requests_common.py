@@ -5,6 +5,7 @@
 import requests
 import logging
 from resilient_lib.components.integration_errors import IntegrationError
+from resilient_lib.util.lib_common import deprecated
 
 
 log = logging.getLogger(__name__)
@@ -102,6 +103,7 @@ class RequestsCommon:
             log and log.error(msg)
             raise IntegrationError(msg)
 
+    @deprecated("Use the new method execute_call_v2()")
     def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """
