@@ -586,6 +586,7 @@ class ExtCommands(object):
                 width_accepted=200,
                 height_accepted=72,
                 # TODO: Create constants for these paths
+                # TODO: use Marks new icons
                 default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png"))
 
             company_logo = cls.__get_icon__(
@@ -700,7 +701,7 @@ class ExtCommands(object):
 
         LOG.info("Converting extension from: %s", path_built_distribution)
 
-        path_tmp_built_distribution = None
+        path_tmp_built_distribution, path_extracted_tar = None, None
 
         # Dict of the required files we need to try extract in order to create an Extension
         extracted_required_files = {
@@ -731,6 +732,8 @@ class ExtCommands(object):
                     path_tar_file=path_tmp_built_distribution,
                     dict_required_files=extracted_required_files,
                     output_dir=path_tmp_dir)
+
+                path_extracted_tar = path_tmp_built_distribution
 
             # Handle if is a .zip file
             elif zipfile.is_zipfile(path_tmp_built_distribution):
@@ -764,7 +767,10 @@ class ExtCommands(object):
                         # Handle if it is a .tar.gz file
                         elif tarfile.is_tarfile(path_extracted_member):
 
-                            LOG.info("\t\t- Its a .tar.gz file!")
+                            LOG.info("\t\t- Is a .tar.gz file!")
+
+                            # Set the path to the extracted .tar.gz file
+                            path_extracted_tar = path_extracted_member
 
                             # Try to extract the required files from the .tar.gz 
                             try:
@@ -773,42 +779,22 @@ class ExtCommands(object):
                                     dict_required_files=extracted_required_files,
                                     output_dir=path_tmp_dir)
 
-                                LOG.info("\t\t- Found files: {0}".format(", ".join(extracted_required_files.keys())))
+                                LOG.info("\t\t- Found files: {0}\n\t\t- Its path: {1}\n\t\t- Is a valid Built Distribution!".format(", ".join(extracted_required_files.keys()), path_extracted_tar))
+                                break
 
                             except ExtException as err:
                                 # If "invalid" is in the error message,
-                                # then we did not find one or more of the required files in the .tar.gz
+                                # then we did not find one of the required files in the .tar.gz
                                 # so we warn the user, delete the extracted member and continue the loop
                                 if "invalid" in err.message.lower():
-                                    LOG.warning("\t\t- Failed to extract required files: {0}\n\t\t- Invalid format.".format(", ".join(extracted_required_files.keys())))
+                                    LOG.warning("\t\t- Failed to extract required files: {0}\n\t\t- Invalid format.\n{1}".format(", ".join(extracted_required_files.keys()), err.message))
                                     os.remove(path_extracted_member)
                                 else:
                                     raise ExtException(err.message)
 
-                        # Handle if it is a regular file
-                        elif os.path.isfile(path_extracted_member):
-
-                            # Get the file name
-                            file_name = os.path.basename(path_extracted_member)
-
-                            # If the file is a required one, add its path to the dict
-                            if extracted_required_files.has_key(file_name):
-                                LOG.info("\t\t- Found {0} file".format(file_name))
-                                extracted_required_files[file_name] = path_extracted_member
-
-                            # Else its some other file, so skip
-                            else:
-                                LOG.debug("\t\t- It is not a .tar.gz file\n\t\t- Skipping...")
-                                os.remove(path_extracted_member)
-
                         # Else its something else, just add a debug statement, do not try remove (to avoid unknown errors)
                         else:
                             LOG.debug("\t\t- Is not a valid .tar.gz built distribution\n\t\t- Skipping...")
-
-                        # if extracted_required_files contains values for all required files, then break
-                        if all(extracted_required_files.values()):
-                            LOG.info("\t\t- Is a valid Built Distribution!")
-                            break
 
             # Else it is a file type we do not support
             else:
@@ -816,15 +802,15 @@ class ExtCommands(object):
 
             # If we could not get all the required files to create an Extension, raise an error
             if not all(extracted_required_files.values()):
-                raise ExtException("Could not extract required files from given Built Distribution\nRequired Files: {0}\nFiles not found: {1}\nDistribution: {2}".format(
-                    ", ".join(extracted_required_files.keys()), ", ".join([k for k, v in extracted_required_files.items() if v is None]), path_built_distribution))
+                raise ExtException("Could not extract required files from given Built Distribution\nRequired Files: {0}\nDistribution: {1}".format(
+                    ", ".join(extracted_required_files.keys()), path_built_distribution))
 
             # Create the extension
             path_tmp_the_extension_zip = cls.create_extension(
                 path_setup_py_file=extracted_required_files.get("setup.py"),
                 path_customize_py_file=extracted_required_files.get("customize.py"),
                 output_dir=path_tmp_dir,
-                path_built_distribution=path_tmp_built_distribution,
+                path_built_distribution=path_extracted_tar,
                 custom_display_name=custom_display_name
             )
 
