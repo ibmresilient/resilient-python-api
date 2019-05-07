@@ -18,6 +18,7 @@ import importlib
 import struct
 import tempfile
 import tarfile
+import zipfile
 from setuptools import sandbox as use_setuptools
 import pkg_resources
 from jinja2 import Environment, PackageLoader
@@ -28,6 +29,7 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 # TODO: Add LOG.debug statements
+
 
 # Custom Extensions Exception
 class ExtException(Exception):
@@ -107,7 +109,7 @@ class ExtCommands(object):
         regex = re.compile(
             r'^(https?://)?'  # optional http:// or https://
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?)'  # domain/hostname
-            r'(?:/?|[/?]\S+)$', # .com etc.
+            r'(?:/?|[/?]\S+)$',  # .com etc.
             re.IGNORECASE)
 
         return regex.search(url) is not None
@@ -230,7 +232,7 @@ class ExtCommands(object):
                 the_attribute_value.append(re.split(pattern=the_attribute_regex, string=the_attribute_line)[1])
 
                 # Check preceding lines to see if this attribute value is multiline string
-                for preceding_line in setup_py_lines[i+1:]:
+                for preceding_line in setup_py_lines[i + 1:]:
                     if cls.__is_setup_attribute__(preceding_line):
                         break
 
@@ -239,7 +241,7 @@ class ExtCommands(object):
 
                 break
 
-        # If we could not find an attribute with attribute_name, raise an Exception
+        # If we could not find an attribute with attribute_name, log a warning
         if not the_attribute_found:
             LOG.warning("WARNING: '%s' is not a defined attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
 
@@ -256,7 +258,7 @@ class ExtCommands(object):
         # Read the setup.py file into a List
         setup_py_lines = cls.__read_file__(path)
 
-        # Raise an error is nothing found in the file
+        # Raise an error if nothing found in the file
         if not setup_py_lines:
             raise ExtException("No content found in provided setup.py file: {0}".format(path))
 
@@ -322,6 +324,8 @@ class ExtCommands(object):
         """Returns the icon at path_to_icon as a base64 encoded string if it is a valid .png file with the resolution
         width_accepted x height_accepted. If path_to_icon does not exist, default_path_to_icon is returned as a base64
         encoded string"""
+
+        # TODO: update resilient-circuits codegen to include default icons
 
         path_icon_to_use = path_to_icon
 
@@ -457,8 +461,35 @@ class ExtCommands(object):
         raise ExtException("Invalid built distribution. Could not find {0}".format(file_name))
 
     @classmethod
+    def __extract_file_from_tar__(cls, filename_to_extract, tar_file, output_dir):
+        """Extract the given filename to the output_dir from the given tar_file 
+        and return the path to the extracted file"""
+
+        tar_members = tar_file.getmembers()
+
+        tar_path = cls.__get_tar_file_path_to_extract__(tar_members, filename_to_extract)
+        tar_file.extract(member=tar_path, path=output_dir)
+
+        return os.path.join(output_dir, tar_path)
+
+    @classmethod
+    def __get_required_files_from_tar_file__(cls, path_tar_file, dict_required_files, output_dir):
+        """Loop the keys of dict_required_files (which will be file names).
+        Extract each file and get the path to the extracted file.
+        Return a dict of each file name and its extracted path"""
+
+        return_dict = {}
+
+        with tarfile.open(name=path_tar_file, mode="r") as tar_file:
+
+            for file_name in dict_required_files.keys():
+                return_dict[file_name] = cls.__extract_file_from_tar__(file_name, tar_file, output_dir)
+
+        return return_dict
+
+    @classmethod
     def create_extension(cls, path_setup_py_file, path_customize_py_file, output_dir,
-        path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
+                         path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
 
         LOG.info("Creating extension...")
 
@@ -493,7 +524,7 @@ class ExtCommands(object):
         # Add the tag to the import defintion
         customize_py_import_definition = cls.__add_tag_to_import_definition__(tag_name, cls.supported_res_obj_names, customize_py_import_definition)
 
-        # TODO: (optional) validate and parse app.config file
+        # TODO: validate and parse app.config file and add them to the Dockerfile
 
         # Generate the name for the extension
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
@@ -515,7 +546,7 @@ class ExtCommands(object):
             if not path_built_distribution:
                 path_built_distribution = os.path.join(output_dir, "{0}.tar.gz".format(extension_name))
 
-            # Validate the build distribution exists and we have READ access
+            # Validate the built distribution exists and we have READ access
             cls.__validate_file_paths__(os.R_OK, path_built_distribution)
 
             # Copy the built distribution to the executable_zip dir
@@ -554,6 +585,7 @@ class ExtCommands(object):
                 path_to_icon=path_extension_logo,
                 width_accepted=200,
                 height_accepted=72,
+                # TODO: Create constants for these paths
                 default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png"))
 
             company_logo = cls.__get_icon__(
@@ -593,12 +625,12 @@ class ExtCommands(object):
                 },
                 "name": setup_py_attributes.get("name"),
                 "tag": {
-                    "prefix": tag_name, # TODO: What, where and why is this used?
+                    "prefix": tag_name,  # TODO: What, where and why is this used?
                     "name": tag_name,
                     "display_name": tag_name,
-                    "uuid": cls.__generate_md5_uuid_from_file__(path_built_distribution) # TODO: if a developer changes FunctionComponent code, this uuid will change
+                    "uuid": cls.__generate_md5_uuid_from_file__(path_built_distribution)  # TODO: if a developer changes FunctionComponent code, this uuid will change
                 },
-                "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)), # TODO: if a developer changes FunctionComponent code, this uuid will change. Use package-name/author instead
+                "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),  # TODO: if a developer changes FunctionComponent code, this uuid will change. Use package-name/author instead
                 "version": setup_py_attributes.get("version")
             }
 
@@ -607,6 +639,9 @@ class ExtCommands(object):
 
             # Write the customize ImportDefinition to the export.res file
             cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True))
+
+            # Copy the built distribution to the build dir
+            shutil.copy(path_built_distribution, path_build)
 
             # create The Extension Zip by zipping the build directory
             extension_zip_base_path = os.path.join(output_dir, "ext-{0}".format(extension_name))
@@ -660,14 +695,18 @@ class ExtCommands(object):
 
         LOG.info("Extension location: %s", path_the_extension_zip)
 
-
     @classmethod
     def convert_package(cls, path_built_distribution, custom_display_name=None):
 
         LOG.info("Converting extension from: %s", path_built_distribution)
 
-        # Initialise path variables we need to create extension
-        path_tmp_built_distribution, path_tmp_setup_py_file, path_tmp_customize_py_file = None, None, None
+        path_tmp_built_distribution = None
+
+        # Dict of the required files we need to try extract in order to create an Extension
+        extracted_required_files = {
+            "setup.py": None,
+            "customize.py": None
+        }
 
         # Validate we can read the built distribution
         cls.__validate_file_paths__(os.R_OK, path_built_distribution)
@@ -685,31 +724,105 @@ class ExtCommands(object):
             # Handle if it is a .tar.gz file
             if tarfile.is_tarfile(path_tmp_built_distribution):
 
-                with tarfile.open(name=path_tmp_built_distribution, mode="r") as tar_file:
+                LOG.info("A .tar.gz file was provided. Will now attempt to convert it to a Resilient Extension.")
 
-                    # Get all tar members
-                    tar_file_members = tar_file.getmembers()
+                # Extract the required files to the tmp dir and return a dict of their paths
+                extracted_required_files = cls.__get_required_files_from_tar_file__(
+                    path_tar_file=path_tmp_built_distribution,
+                    dict_required_files=extracted_required_files,
+                    output_dir=path_tmp_dir)
 
-                    # Extract the setup.py + customize.py file into tmp directory
-                    tar_path_setup_py = cls.__get_tar_file_path_to_extract__(tar_file_members, "setup.py")
-                    tar_file.extract(member=tar_path_setup_py, path=path_tmp_dir)
+            # Handle if is a .zip file
+            elif zipfile.is_zipfile(path_tmp_built_distribution):
 
-                    tar_path_customize_py = cls.__get_tar_file_path_to_extract__(tar_file_members, "customize.py")
-                    tar_file.extract(member=tar_path_customize_py, path=path_tmp_dir)
+                LOG.info("A .zip file was provided. Will now attempt to convert it to a Resilient Extension.")
 
-                    path_tmp_setup_py_file = os.path.join(path_tmp_dir, tar_path_setup_py)
-                    path_tmp_customize_py_file = os.path.join(path_tmp_dir, tar_path_customize_py)
+                with zipfile.ZipFile(file=path_tmp_built_distribution, mode="r") as zip_file:
 
-            # TODO: elseif is zip file
+                    # Get a List of all the members of the zip file (including files in directories)
+                    zip_file_members = zip_file.infolist()
+
+                    LOG.info("\nValidating Built Distribution: {0}".format(path_built_distribution))
+
+                    # Loop the members
+                    for zip_member in zip_file_members:
+
+                        LOG.info("\t- {0}".format(zip_member.filename))
+
+                        # Extract the member
+                        path_extracted_member = zip_file.extract(member=zip_member, path=path_tmp_dir)
+
+                        # Handle if the member is a directory
+                        if os.path.isdir(path_extracted_member):
+
+                            LOG.debug("\t\t- Is a directory.\n\t\t- Skipping...")
+
+                            # delete the extracted member
+                            shutil.rmtree(path_extracted_member)
+                            continue
+
+                        # Handle if it is a .tar.gz file
+                        elif tarfile.is_tarfile(path_extracted_member):
+
+                            LOG.info("\t\t- Its a .tar.gz file!")
+
+                            # Try to extract the required files from the .tar.gz 
+                            try:
+                                extracted_required_files = cls.__get_required_files_from_tar_file__(
+                                    path_tar_file=path_extracted_member,
+                                    dict_required_files=extracted_required_files,
+                                    output_dir=path_tmp_dir)
+
+                                LOG.info("\t\t- Found files: {0}".format(", ".join(extracted_required_files.keys())))
+
+                            except ExtException as err:
+                                # If "invalid" is in the error message,
+                                # then we did not find one or more of the required files in the .tar.gz
+                                # so we warn the user, delete the extracted member and continue the loop
+                                if "invalid" in err.message.lower():
+                                    LOG.warning("\t\t- Failed to extract required files: {0}\n\t\t- Invalid format.".format(", ".join(extracted_required_files.keys())))
+                                    os.remove(path_extracted_member)
+                                else:
+                                    raise ExtException(err.message)
+
+                        # Handle if it is a regular file
+                        elif os.path.isfile(path_extracted_member):
+
+                            # Get the file name
+                            file_name = os.path.basename(path_extracted_member)
+
+                            # If the file is a required one, add its path to the dict
+                            if extracted_required_files.has_key(file_name):
+                                LOG.info("\t\t- Found {0} file".format(file_name))
+                                extracted_required_files[file_name] = path_extracted_member
+
+                            # Else its some other file, so skip
+                            else:
+                                LOG.debug("\t\t- It is not a .tar.gz file\n\t\t- Skipping...")
+                                os.remove(path_extracted_member)
+
+                        # Else its something else, just add a debug statement, do not try remove (to avoid unknown errors)
+                        else:
+                            LOG.debug("\t\t- Is not a valid .tar.gz built distribution\n\t\t- Skipping...")
+
+                        # if extracted_required_files contains values for all required files, then break
+                        if all(extracted_required_files.values()):
+                            LOG.info("\t\t- Is a valid Built Distribution!")
+                            break
 
             # Else it is a file type we do not support
             else:
                 raise ExtException("Supported Built Distributions are .tar.gz and .zip\nWe do not support this distribution: {0}".format(path_built_distribution))
 
+            # If we could not get all the required files to create an Extension, raise an error
+            if not all(extracted_required_files.values()):
+                raise ExtException("Could not extract required files from given Built Distribution\nRequired Files: {0}\nFiles not found: {1}\nDistribution: {2}".format(
+                    ", ".join(extracted_required_files.keys()), ", ".join([k for k, v in extracted_required_files.items() if v is None]), path_built_distribution))
+
             # Create the extension
             path_tmp_the_extension_zip = cls.create_extension(
-                path_setup_py_file=path_tmp_setup_py_file,
-                path_customize_py_file=path_tmp_customize_py_file,
+                path_setup_py_file=extracted_required_files.get("setup.py"),
+                path_customize_py_file=extracted_required_files.get("customize.py"),
                 output_dir=path_tmp_dir,
                 path_built_distribution=path_tmp_built_distribution,
                 custom_display_name=custom_display_name
