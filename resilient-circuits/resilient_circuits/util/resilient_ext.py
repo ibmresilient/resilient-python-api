@@ -530,6 +530,7 @@ class ExtCommands(object):
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
 
         # Generate paths to the directories and files we will use in the build directory
+        # TODO: make the path names CONSTANTS
         path_build = os.path.join(output_dir, "build")
         path_extension_json = os.path.join(path_build, "extension.json")
         path_export_res = os.path.join(path_build, "export.res")
@@ -562,7 +563,6 @@ class ExtCommands(object):
 
             # Load Dockerfile template
             # TODO: Discuss this Dockerfile with App Node work and ensure we are reading app.config values correctly (if needed)
-            # TODO: this Dockerfile is only handling tar.gz file, what if we need to pip install a .zip?
             docker_file_template = cls.jinja_env.get_template("docker_file_template.jinja2")
 
             # Render Dockerfile template with required variables
@@ -625,7 +625,7 @@ class ExtCommands(object):
                 },
                 "name": setup_py_attributes.get("name"),
                 "tag": {
-                    "prefix": tag_name,  # TODO: What, where and why is this used?
+                    "prefix": tag_name,
                     "name": tag_name,
                     "display_name": tag_name,
                     "uuid": cls.__generate_md5_uuid_from_file__(path_built_distribution)  # TODO: if a developer changes FunctionComponent code, this uuid will change

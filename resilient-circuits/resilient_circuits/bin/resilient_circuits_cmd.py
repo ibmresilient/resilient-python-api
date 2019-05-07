@@ -461,6 +461,7 @@ def add_ext_arguments(cmd, ext_parser):
 
     # Add cmd specific arguments
     if cmd == "ext:package":
+        # TODO: investigate using -p as a argument name here for the path_to_package
         ext_parser.add_argument("path_to_package",
             help="Path to the directory containing the setup.py file",
             nargs="?",
