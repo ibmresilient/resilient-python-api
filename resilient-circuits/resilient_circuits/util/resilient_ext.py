@@ -151,6 +151,22 @@ class ExtCommands(object):
         return regex.match(version) is not None
 
     @staticmethod
+    def __generate_uuid_from_string__(the_string):
+        """Returns String representation of the UUID of a hex md5 hash of the given string"""
+
+        # Instansiate new md5_hash
+        md5_hash = hashlib.md5()
+
+        # Pass the_string to the md5_hash
+        md5_hash.update(the_string)
+
+        # Generate the hex md5 hash of all the read bytes
+        the_md5_hex_str = md5_hash.hexdigest()
+
+        # Return a String repersenation of the uuid of the md5 hash
+        return str(uuid.UUID(the_md5_hex_str))
+
+    @staticmethod
     def __generate_md5_uuid_from_file__(path_to_file):
         """Returns String representation of the UUID of a hex md5 hash of the given file"""
 
@@ -640,9 +656,9 @@ class ExtCommands(object):
                     "prefix": tag_name,
                     "name": tag_name,
                     "display_name": tag_name,
-                    "uuid": cls.__generate_md5_uuid_from_file__(path_built_distribution)  # TODO: if a developer changes FunctionComponent code, this uuid will change
+                    "uuid": cls.__generate_uuid_from_string__(tag_name)
                 },
-                "uuid": cls.__generate_md5_uuid_from_file__("{0}.zip".format(path_executable_zip)),  # TODO: if a developer changes FunctionComponent code, this uuid will change. Use package-name/author instead
+                "uuid": cls.__generate_uuid_from_string__("{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))),
                 "version": setup_py_attributes.get("version")
             }
 
