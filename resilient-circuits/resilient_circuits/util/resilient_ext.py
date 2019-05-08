@@ -31,6 +31,23 @@ LOG.addHandler(logging.StreamHandler())
 # TODO: Add LOG.debug statements
 
 
+# Constants
+BASE_NAME_BUILD = "build"
+BASE_NAME_EXTENSION_JSON = "extension.json"
+BASE_NAME_EXPORT_RES = "export.res"
+BASE_NAME_EXECUTABLES = "executables"
+BASE_NAME_EXECUTABLE_JSON = "executable.json"
+BASE_NAME_EXECUTABLE_DOCKERFILE = "Dockerfile"
+
+PREFIX_EXECUTABLE_ZIP = "exe-"
+PREFIX_EXTENSION_ZIP = "ext-"
+
+JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
+
+PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png")
+PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png")
+
+
 # Custom Extensions Exception
 class ExtException(Exception):
     """Custom Exception for ext commands"""
@@ -462,7 +479,7 @@ class ExtCommands(object):
 
     @classmethod
     def __extract_file_from_tar__(cls, filename_to_extract, tar_file, output_dir):
-        """Extract the given filename to the output_dir from the given tar_file 
+        """Extract the given filename to the output_dir from the given tar_file
         and return the path to the extracted file"""
 
         tar_members = tar_file.getmembers()
@@ -530,14 +547,13 @@ class ExtCommands(object):
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
 
         # Generate paths to the directories and files we will use in the build directory
-        # TODO: make the path names CONSTANTS
-        path_build = os.path.join(output_dir, "build")
-        path_extension_json = os.path.join(path_build, "extension.json")
-        path_export_res = os.path.join(path_build, "export.res")
-        path_executables = os.path.join(path_build, "executables")
-        path_executable_zip = os.path.join(path_executables, "exe-{0}".format(extension_name))
-        path_executable_json = os.path.join(path_executable_zip, "executable.json")
-        path_executable_dockerfile = os.path.join(path_executable_zip, "Dockerfile")
+        path_build = os.path.join(output_dir, BASE_NAME_BUILD)
+        path_extension_json = os.path.join(path_build, BASE_NAME_EXTENSION_JSON)
+        path_export_res = os.path.join(path_build, BASE_NAME_EXPORT_RES)
+        path_executables = os.path.join(path_build, BASE_NAME_EXECUTABLES)
+        path_executable_zip = os.path.join(path_executables, "{0}{1}".format(PREFIX_EXECUTABLE_ZIP, extension_name))
+        path_executable_json = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_JSON)
+        path_executable_dockerfile = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_DOCKERFILE)
 
         try:
             # Create the directories for the path "/build/executables/exe-<package-name>/"
@@ -563,7 +579,8 @@ class ExtCommands(object):
 
             # Load Dockerfile template
             # TODO: Discuss this Dockerfile with App Node work and ensure we are reading app.config values correctly (if needed)
-            docker_file_template = cls.jinja_env.get_template("docker_file_template.jinja2")
+            # TODO: When packaging, if a Dockerfile exists already use that, else generate and use this default
+            docker_file_template = cls.jinja_env.get_template(JINJA_TEMPLATE_DOCKERFILE)
 
             # Render Dockerfile template with required variables
             the_dockerfile_contents = docker_file_template.render({
@@ -585,15 +602,13 @@ class ExtCommands(object):
                 path_to_icon=path_extension_logo,
                 width_accepted=200,
                 height_accepted=72,
-                # TODO: Create constants for these paths
-                # TODO: use Marks new icons
-                default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png"))
+                default_path_to_icon=PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
             company_logo = cls.__get_icon__(
                 path_to_icon=path_company_logo,
                 width_accepted=100,
                 height_accepted=100,
-                default_path_to_icon=pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png"))
+                default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
             # Generate the contents for the extension.json file
             the_extension_json_file_contents = {
@@ -645,7 +660,7 @@ class ExtCommands(object):
             shutil.copy(path_built_distribution, path_build)
 
             # create The Extension Zip by zipping the build directory
-            extension_zip_base_path = os.path.join(output_dir, "ext-{0}".format(extension_name))
+            extension_zip_base_path = os.path.join(output_dir, "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
             extension_zip_name = shutil.make_archive(base_name=extension_zip_base_path, format="zip", root_dir=path_build)
             path_the_extension_zip = os.path.join(extension_zip_base_path, extension_zip_name)
 
@@ -745,12 +760,12 @@ class ExtCommands(object):
                     # Get a List of all the members of the zip file (including files in directories)
                     zip_file_members = zip_file.infolist()
 
-                    LOG.info("\nValidating Built Distribution: {0}".format(path_built_distribution))
+                    LOG.info("\nValidating Built Distribution: %s", path_built_distribution)
 
                     # Loop the members
                     for zip_member in zip_file_members:
 
-                        LOG.info("\t- {0}".format(zip_member.filename))
+                        LOG.info("\t- %s", zip_member.filename)
 
                         # Extract the member
                         path_extracted_member = zip_file.extract(member=zip_member, path=path_tmp_dir)
@@ -772,14 +787,14 @@ class ExtCommands(object):
                             # Set the path to the extracted .tar.gz file
                             path_extracted_tar = path_extracted_member
 
-                            # Try to extract the required files from the .tar.gz 
+                            # Try to extract the required files from the .tar.gz
                             try:
                                 extracted_required_files = cls.__get_required_files_from_tar_file__(
                                     path_tar_file=path_extracted_member,
                                     dict_required_files=extracted_required_files,
                                     output_dir=path_tmp_dir)
 
-                                LOG.info("\t\t- Found files: {0}\n\t\t- Its path: {1}\n\t\t- Is a valid Built Distribution!".format(", ".join(extracted_required_files.keys()), path_extracted_tar))
+                                LOG.info("\t\t- Found files: %s\n\t\t- Its path: %s\n\t\t- Is a valid Built Distribution!", ", ".join(extracted_required_files.keys()), path_extracted_tar)
                                 break
 
                             except ExtException as err:
@@ -787,7 +802,7 @@ class ExtCommands(object):
                                 # then we did not find one of the required files in the .tar.gz
                                 # so we warn the user, delete the extracted member and continue the loop
                                 if "invalid" in err.message.lower():
-                                    LOG.warning("\t\t- Failed to extract required files: {0}\n\t\t- Invalid format.\n{1}".format(", ".join(extracted_required_files.keys()), err.message))
+                                    LOG.warning("\t\t- Failed to extract required files: %s\n\t\t- Invalid format.\n%s", ", ".join(extracted_required_files.keys()), err.message)
                                     os.remove(path_extracted_member)
                                 else:
                                     raise ExtException(err.message)
