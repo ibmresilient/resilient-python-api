@@ -229,9 +229,16 @@ class Customizations(object):
 
             def update_user(dest):
                 # Callback for get/put to update the user list
-                if self.client.user_id not in dest["users"]:
-                    LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
-                    dest["users"].append(self.client.user_id)
+                if self.client.user_id is None:
+                    # We are using API key
+                    if self.client.api_key_handle not in dest["api_keys"]:
+                        LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
+                        dest["api_keys"].append(self.client.api_key_handle)
+                else:
+                    # We are using user/password to authenticate
+                    if self.client.user_id not in dest["users"]:
+                        LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
+                        dest["users"].append(self.client.user_id)
                 return dest
 
             uri = "/message_destinations"
