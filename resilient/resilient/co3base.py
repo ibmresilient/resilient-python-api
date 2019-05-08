@@ -138,6 +138,7 @@ class BaseClient(object):
         self.api_key_id = None
         self.api_key_secret = None
         self.use_api_key = False
+        self.api_key_handle = None      # This is the principle ID for an api key. Also called handle
 
     def set_api_key(self, api_key_id, api_key_secret, timeout=None):
         """
@@ -161,6 +162,7 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
+        self.api_key_handle = session.get("api_key_handle", None)
         return session
 
     def connect(self, email, password, timeout=None):
