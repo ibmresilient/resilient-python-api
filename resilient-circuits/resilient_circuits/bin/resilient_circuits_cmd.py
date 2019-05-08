@@ -39,7 +39,7 @@ except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("resilient_circuits_cmd_logger")
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 

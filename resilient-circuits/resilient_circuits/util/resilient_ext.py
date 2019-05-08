@@ -24,12 +24,8 @@ import pkg_resources
 from jinja2 import Environment, PackageLoader
 from resilient_circuits.util.resilient_customize import ImportDefinition
 
-# TODO: investigate this logging. Should handle -v argument for debug statements
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.INFO)
-LOG.addHandler(logging.StreamHandler())
-# TODO: Add LOG.debug statements
-
+# Get the same logger object that is used in resilient_circuits_cmd.py
+LOG = logging.getLogger("resilient_circuits_cmd_logger")
 
 # Constants
 BASE_NAME_BUILD = "build"
