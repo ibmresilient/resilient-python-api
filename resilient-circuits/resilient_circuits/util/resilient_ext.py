@@ -7,6 +7,7 @@
 
 import logging
 import os
+import io
 import json
 import re
 import shutil
@@ -19,6 +20,8 @@ import struct
 import tempfile
 import tarfile
 import zipfile
+# TODO: handle PY3 as it was renamed to configparser
+import ConfigParser
 from setuptools import sandbox as use_setuptools
 import pkg_resources
 from jinja2 import Environment, PackageLoader
@@ -80,7 +83,8 @@ class ExtCommands(object):
 
     # Instansiate Jinja2 Environment with path to Jinja2 templates
     jinja_env = Environment(
-        loader=PackageLoader("resilient_circuits", "data/ext/templates")
+        loader=PackageLoader("resilient_circuits", "data/ext/templates"),
+        trim_blocks=True
     )
 
     def __init__(self, cmd, path_to_extension, display_name=None, keep_build_dir=False):
@@ -348,6 +352,49 @@ class ExtCommands(object):
 
         return customize_py_import_definitions[0]
 
+    @staticmethod
+    def __get_configs_from_config_py__(path_config_py_file):
+        """Return a list of (name, value) pairs of each 'uncommented' option found
+        in the given config.py file. If no configs found, return None. Raises Exception 
+        if it fails"""
+
+        return_list, section_name, parsed_configs = [], None, []
+
+        # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
+        sys.path.insert(0, os.path.dirname(path_config_py_file))
+
+        try:
+            # Import the config module
+            config_py = importlib.import_module("config")
+            
+            # Call config_section_data() to get the string containing the configs
+            config_str = config_py.config_section_data()
+
+            # Instansiate a new configparser
+            config_parser = ConfigParser.ConfigParser()
+
+            # Read and parse the configs from the config_str
+            config_parser.readfp(io.StringIO(config_str))
+
+            # TODO: Handle if multiple sections
+            # Get the configs from the first section safely
+            for section in config_parser.sections():
+                section_name = section
+                parsed_configs = config_parser.items(section)
+                break
+
+        except Exception as err:
+            raise ExtException("Failed to parse configs from config.py file\nReason: {0}".format(err))
+
+        for config in parsed_configs:
+            return_list.append({
+                "name": config[0],
+                "placeholder": config[1],
+                "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper())
+            })
+
+        return return_list
+
     @classmethod
     def __get_icon__(cls, path_to_icon, width_accepted, height_accepted, default_path_to_icon):
         """Returns the icon at path_to_icon as a base64 encoded string if it is a valid .png file with the resolution
@@ -517,7 +564,7 @@ class ExtCommands(object):
         return return_dict
 
     @classmethod
-    def create_extension(cls, path_setup_py_file, path_customize_py_file, output_dir,
+    def create_extension(cls, path_setup_py_file, path_customize_py_file, path_config_py_file, output_dir,
                          path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
 
         LOG.info("Creating extension...")
@@ -553,7 +600,8 @@ class ExtCommands(object):
         # Add the tag to the import defintion
         customize_py_import_definition = cls.__add_tag_to_import_definition__(tag_name, cls.supported_res_obj_names, customize_py_import_definition)
 
-        # TODO: validate and parse app.config file and add them to the Dockerfile
+        # Parse the app.configs from the config.py file
+        app_configs = cls.__get_configs_from_config_py__(path_config_py_file)
 
         # Generate the name for the extension
         extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
@@ -568,6 +616,10 @@ class ExtCommands(object):
         path_executable_dockerfile = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_DOCKERFILE)
 
         try:
+            # If there is an old build directory, remove it first
+            if os.path.exists(path_build):
+                shutil.rmtree(path_build)
+
             # Create the directories for the path "/build/executables/exe-<package-name>/"
             os.makedirs(path_executable_zip)
 
@@ -590,14 +642,14 @@ class ExtCommands(object):
             cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
 
             # Load Dockerfile template
-            # TODO: Discuss this Dockerfile with App Node work and ensure we are reading app.config values correctly (if needed)
             # TODO: When packaging, if a Dockerfile exists already use that, else generate and use this default
             docker_file_template = cls.jinja_env.get_template(JINJA_TEMPLATE_DOCKERFILE)
 
             # Render Dockerfile template with required variables
             the_dockerfile_contents = docker_file_template.render({
                 "extension_name": extension_name,
-                "installed_package_name": setup_py_attributes.get("name").replace("_", "-")
+                "installed_package_name": setup_py_attributes.get("name").replace("_", "-"),
+                "app_configs": app_configs
             })
 
             # Write the Dockerfile
@@ -677,7 +729,7 @@ class ExtCommands(object):
             path_the_extension_zip = os.path.join(extension_zip_base_path, extension_zip_name)
 
         except Exception as err:
-            raise Exception(err.message)
+            raise ExtException(err)
 
         finally:
             # Remove the executable_zip dir. Keep it if user passes --keep-build-dir
@@ -695,6 +747,7 @@ class ExtCommands(object):
         # Generate paths to files required to create extension
         path_setup_py_file = os.path.join(path_to_src, "setup.py")
         path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), "util", "customize.py")
+        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), "util", "config.py")
         path_output_dir = os.path.join(path_to_src, "dist")
         path_extension_logo = os.path.join(path_to_src, "icons", "extension_logo.png")
         path_company_logo = os.path.join(path_to_src, "icons", "company_logo.png")
@@ -714,6 +767,7 @@ class ExtCommands(object):
         path_the_extension_zip = cls.create_extension(
             path_setup_py_file=path_setup_py_file,
             path_customize_py_file=path_customize_py_file,
+            path_config_py_file=path_config_py_file,
             output_dir=path_output_dir,
             custom_display_name=custom_display_name,
             keep_build_dir=keep_build_dir,
@@ -733,7 +787,8 @@ class ExtCommands(object):
         # Dict of the required files we need to try extract in order to create an Extension
         extracted_required_files = {
             "setup.py": None,
-            "customize.py": None
+            "customize.py": None,
+            "config.py": None
         }
 
         # Validate we can read the built distribution
@@ -836,6 +891,7 @@ class ExtCommands(object):
             path_tmp_the_extension_zip = cls.create_extension(
                 path_setup_py_file=extracted_required_files.get("setup.py"),
                 path_customize_py_file=extracted_required_files.get("customize.py"),
+                path_config_py_file=extracted_required_files.get("config.py"),
                 output_dir=path_tmp_dir,
                 path_built_distribution=path_extracted_tar,
                 custom_display_name=custom_display_name
@@ -850,7 +906,7 @@ class ExtCommands(object):
             LOG.info("Extension location: %s", path_the_extension_zip)
 
         except Exception as err:
-            raise Exception(err.message)
+            raise ExtException(err)
 
         finally:
             # Remove the tmp directory
