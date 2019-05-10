@@ -20,7 +20,7 @@ from resilient import ensure_unicode
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline, extract_to_res
 from resilient_circuits.util.resilient_customize import customize_resilient
-from resilient_circuits.util.resilient_ext import ExtCommands
+from resilient_circuits.util.resilient_ext import ext_command_handler
 
 
 if sys.version_info.major == 2:
@@ -694,30 +694,9 @@ def main():
     elif args.cmd == "selftest":
         selftest(args)
 
-    elif args.cmd in ("ext:package", "ext:convert"):
-
-        path_to_extension = None
-        display_name = None
-        keep_build_dir = False
-
-        if hasattr(args, "path_to_package"):
-            path_to_extension = os.path.abspath(args.path_to_package)
-
-        elif hasattr(args, "path_to_built_distribution"):
-            path_to_extension = os.path.abspath(args.path_to_built_distribution)
-
-        if hasattr(args, "display_name"):
-            display_name = args.display_name
-
-        if hasattr(args, "keep_build_dir"):
-            keep_build_dir = args.keep_build_dir
-
-        # Instansiate ExtCommands class
-        ExtCommands(
-            cmd=args.cmd,
-            path_to_extension=path_to_extension,
-            display_name=display_name,
-            keep_build_dir=keep_build_dir)
+    elif "ext:" in args.cmd:
+        # Call the ext: command handler
+        ext_command_handler(args.cmd, args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
