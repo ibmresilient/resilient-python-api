@@ -13,6 +13,16 @@ from resilient_circuits.util.ext.ExtCreate import ExtCreate
 # Get the same logger object that is used in resilient_circuits_cmd.py
 LOG = logging.getLogger("resilient_circuits_cmd_logger")
 
+# Constants
+BASE_NAME_SETUP_PY = "setup.py"
+BASE_NAME_DIST_DIR = "dist"
+
+PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CONFIG_PY = os.path.join("util", "config.py")
+
+PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "extension_logo.png")
+PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
+
 
 class ExtPackage(ExtCreate):
     """ ExtPackage is a subclass of ExtCreate. It exposes one
@@ -29,13 +39,12 @@ class ExtPackage(ExtCreate):
         - The Extension.zip will also be produced in the /dist directory"""
 
         # Generate paths to files required to create extension
-        # TODO: Make these constants
-        path_setup_py_file = os.path.join(path_to_src, "setup.py")
-        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), "util", "customize.py")
-        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), "util", "config.py")
-        path_output_dir = os.path.join(path_to_src, "dist")
-        path_extension_logo = os.path.join(path_to_src, "icons", "extension_logo.png")
-        path_company_logo = os.path.join(path_to_src, "icons", "company_logo.png")
+        path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
+        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CONFIG_PY)
+        path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
+        path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
+        path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)
 
         # Ensure the src directory exists and we have WRITE access
         cls.__validate_directory__(os.W_OK, path_to_src)
