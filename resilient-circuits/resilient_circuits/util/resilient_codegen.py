@@ -298,11 +298,20 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
             # Render the source file as a JINJA template
             LOG.debug(u"Writing %s from template %s", target_file, source_file)
             LOG.info(u"Writing %s", target_file)
-            with io.open(source_file, 'r', encoding="utf-8") as source:
-                source_template = source.read()
-                source_rendered = template_functions.render(source_template, data)
-            with io.open(target_file, mode="w", encoding="utf-8") as outfile:
-                outfile.write(source_rendered)
+
+            # Handle if the file is a .png
+            if os.path.splitext(source_file)[1] == ".png":
+                with io.open(source_file, 'rb') as source:
+                    png_as_bytes = source.read()
+                with io.open(target_file, mode="wb") as outfile:
+                    outfile.write(png_as_bytes)
+
+            else:
+                with io.open(source_file, 'r', encoding="utf-8") as source:
+                    source_template = source.read()
+                    source_rendered = template_functions.render(source_template, data)
+                with io.open(target_file, mode="w", encoding="utf-8") as outfile:
+                    outfile.write(source_rendered)
 
 
 def codegen_from_template(cmd, client, export_file, template_file_path, package,
@@ -701,6 +710,9 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
             export_data[key] = None
     # Incident types are special, add one for this specific package
     # (because not enabled, this doesn't actually get loaded into the destination)
+    # TODO: Is this still needed?
+    # TODO: Every ImportDefinition is getting this incident_type added by default
+    # TODO: Now it is showing up when we import an extension
     t0 = int(time.time()*1000)
     export_data["incident_types"] = [{
         "update_date": t0,

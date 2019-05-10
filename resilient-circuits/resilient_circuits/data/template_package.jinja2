@@ -20,6 +20,10 @@
         }
     },
     "doc":{},
+    "icons": {
+        "company_logo.png": "ext/icons/company_logo.png",
+        "extension_logo.png": "ext/icons/extension_logo.png"
+    },
     "tests": {
 {%set comma=joiner(",")%}{%for function_name in functions.keys()%}{{comma()}}
         "test_{{function_name}}.py@{{function_name}}": "template_package/tests/test_function.py.jinja2"
