@@ -55,7 +55,6 @@ class ExtCreate(Ext):
     )
 
     # Tuple of all Resilient Object Names we support when packaging/converting
-    # TODO: Investigate we tag data tables
     supported_res_obj_names = (
         "actions", "automatic_tasks", "fields",
         "functions", "incident_artifact_types",
@@ -78,8 +77,6 @@ class ExtCreate(Ext):
         # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
         sys.path.insert(0, os.path.dirname(path_customize_py_file))
 
-        # TODO: investigate why customize.py has to "from resilient_circuits.util import *"??
-        # TODO: investigate why resilient-circuits customize command adds a default 'incident_type' and 'field'. Need to remove it. Can do by uuid
         # Import the customize module
         customize_py = importlib.import_module("customize")
 
@@ -102,7 +99,24 @@ class ExtCreate(Ext):
         elif len(customize_py_import_definitions) > 1:
             raise ExtException("Multiple ImportDefinitions found in the customize.py file. There must only be 1 ImportDefinition defined")
 
-        return customize_py_import_definitions[0]
+        # Get the import defintion as dict
+        customize_py_import_definition = customize_py_import_definitions[0]
+
+        # Get reference to incident_types if there are any
+        incident_types = customize_py_import_definition.get("incident_types", [])
+
+        if incident_types:
+
+            # Loop through and remove this custom one (that is originally added using codegen)
+            for incident_type in incident_types:
+                if incident_type.get("uuid") == u'bfeec2d4-3770-11e8-ad39-4a0004044aa0':
+                    incident_type_to_remove = incident_type
+                    break
+
+            if incident_type_to_remove:
+                incident_types.remove(incident_type_to_remove)
+
+        return customize_py_import_definition
 
     @staticmethod
     def __get_configs_from_config_py__(path_config_py_file):
