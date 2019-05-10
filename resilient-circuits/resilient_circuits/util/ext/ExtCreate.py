@@ -5,7 +5,6 @@
 
 """ Python Module that exposes the ExtCreate class """
 
-
 import logging
 import os
 import io
@@ -43,6 +42,7 @@ JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
 # TODO: Are these windows safe?
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png")
+
 
 class ExtCreate(Ext):
     """ ExtCreate is a subclass of Ext. It is inherited by
@@ -106,11 +106,14 @@ class ExtCreate(Ext):
 
     @staticmethod
     def __get_configs_from_config_py__(path_config_py_file):
-        """Return a list of (name, value) pairs of each 'un-commented' option found
-        in the given config.py file. If no configs found, return None. Raises Exception
-        if it fails"""
+        """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
+        Raises Exception if it fails to parse configs
+        - config_str: is the full string found in the config.py file
+        - config_list: is a list of dict objects that contain each un-commented config
+            - Each dict object has the attributes: name, placeholder and env_name
+        """
 
-        return_list, section_name, parsed_configs = [], None, []
+        config_str, config_list, section_name, parsed_configs = "", [], None, []
 
         # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
         sys.path.insert(0, os.path.dirname(path_config_py_file))
@@ -139,13 +142,13 @@ class ExtCreate(Ext):
             raise ExtException("Failed to parse configs from config.py file\nReason: {0}".format(err))
 
         for config in parsed_configs:
-            return_list.append({
+            config_list.append({
                 "name": config[0],
                 "placeholder": config[1],
                 "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper())
             })
 
-        return return_list
+        return (config_str, config_list)
 
     @staticmethod
     def __is_setup_attribute__(line):
@@ -466,7 +469,7 @@ class ExtCreate(Ext):
             the_dockerfile_contents = docker_file_template.render({
                 "extension_name": extension_name,
                 "installed_package_name": setup_py_attributes.get("name").replace("_", "-"),
-                "app_configs": app_configs
+                "app_configs": app_configs[1]
             })
 
             # Write the Dockerfile
@@ -528,7 +531,10 @@ class ExtCreate(Ext):
                     "uuid": cls.__generate_uuid_from_string__(tag_name)
                 },
                 "uuid": cls.__generate_uuid_from_string__("{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))),
-                "version": setup_py_attributes.get("version")
+                "version": setup_py_attributes.get("version"),
+                # TODO: discuss with Sasquatch. Can add the app_config_str here, but will not install
+                # TODO: get 'Unrecognized field "app_config_str"' error
+                # "app_config_str": app_configs[0]
             }
 
             # Write the executable.json file
