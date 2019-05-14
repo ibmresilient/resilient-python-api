@@ -165,9 +165,32 @@ class ExtConvert(ExtCreate):
                                     LOG.warning("\t\t- Failed to extract required files: %s\n\t\t- Invalid format.\n%s", ", ".join(extracted_required_files.keys()), err.message)
                                     os.remove(path_extracted_member)
                                 else:
-                                    raise ExtException(err.message)
+                                    raise ExtException(err)
 
-                        # Else its something else, just add a debug statement, do not try remove (to avoid unknown errors)
+                        # Handle if it is a regular file
+                        elif os.path.isfile(path_extracted_member):
+
+                            # Get the file name
+                            file_name = os.path.basename(path_extracted_member)
+
+                            # If the file is a required one, add its path to the dict
+                            if extracted_required_files.has_key(file_name):
+                                LOG.info("\t\t- Found {0} file".format(file_name))
+                                extracted_required_files[file_name] = path_extracted_member
+
+                                # Set the path to extracted tar to this zip file
+                                path_extracted_tar = zip_file.filename
+
+                            # Else its some other file, so skip
+                            else:
+                                LOG.debug("\t\t- It is not a .tar.gz file\n\t\t- Skipping...")
+                                os.remove(path_extracted_member)
+
+                        # if extracted_required_files contains values for all required files, then break
+                        if all(extracted_required_files.values()):
+                            LOG.info("\t\t- This is a valid Built Distribution!")
+                            break
+
                         else:
                             LOG.debug("\t\t- Is not a valid .tar.gz built distribution\n\t\t- Skipping...")
 
@@ -179,6 +202,15 @@ class ExtConvert(ExtCreate):
             if not all(extracted_required_files.values()):
                 raise ExtException("Could not extract required files from given Built Distribution\nRequired Files: {0}\nDistribution: {1}".format(
                     ", ".join(extracted_required_files.keys()), path_built_distribution))
+
+            # If the extracted_tar is a zip, rename it to a .tar.gz
+            # This means the built distribution was created using 'python setup.py sdist formats="zip"'
+            extracted_tar_root, extracted_tar_ext = os.path.splitext(path_extracted_tar)
+
+            if extracted_tar_ext == ".zip":
+                new_location = "{0}.tar.gz".format(extracted_tar_root)
+                shutil.move(path_extracted_tar, new_location)
+                path_extracted_tar = new_location
 
             # Create the extension
             path_tmp_the_extension_zip = cls.create_extension(
