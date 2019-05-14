@@ -39,7 +39,7 @@ class RequestsCommon:
 
         return proxies
 
-    def execute_call_v2(self, method, url, timeout=30, proxies=None, **kwargs):
+    def execute_call_v2(self, method, url, timeout=30, proxies=None, callback=None, **kwargs):
         """Constructs and sends a request. Returns :class:`Response` object.
 
             From the requests.requests() function, inputs are mapped to this function
@@ -70,10 +70,14 @@ class RequestsCommon:
                     to a CA bundle to use. Defaults to ``True``.
             :param stream: (optional) if ``False``, the response content will be immediately downloaded.
             :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+            :param callback: callback routine used to handle errors
             :return: :class:`Response <Response>` object
             :rtype: requests.Response
         """
         try:
+            if method.lower() not in ('get', 'post', 'put', 'patch', 'delete', 'head', 'options'):
+                raise IntegrationError("unknown method {}".format(method))
+
             # If proxies was not set check if they are set in the config
             if proxies is None:
                 proxies = self.get_proxies()
@@ -91,6 +95,10 @@ class RequestsCommon:
             # Debug logging
             log.debug(response.status_code)
             log.debug(response.content)
+
+            # custom handler for response handling
+            if callback:
+                return callback(response)
 
             # Raise error is bad status code is returned
             response.raise_for_status()
