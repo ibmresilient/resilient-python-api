@@ -15,13 +15,17 @@ import sys
 import base64
 import importlib
 import struct
-# TODO: handle PY3 as it was renamed to configparser
-import ConfigParser
 import pkg_resources
 from jinja2 import Environment, PackageLoader
 from resilient_circuits.util.resilient_customize import ImportDefinition
 from resilient_circuits.util.ext.Ext import Ext
 from resilient_circuits.util.ext.ExtException import ExtException
+
+# Handle import of ConfigParser for PY 2 + 3
+if sys.version_info.major < 3:
+    import ConfigParser as configparser
+else:
+    import configparser
 
 # Get the same logger object that is used in resilient_circuits_cmd.py
 LOG = logging.getLogger("resilient_circuits_cmd_logger")
@@ -140,7 +144,7 @@ class ExtCreate(Ext):
             config_str = config_py.config_section_data()
 
             # Instansiate a new configparser
-            config_parser = ConfigParser.ConfigParser()
+            config_parser = configparser.ConfigParser()
 
             # Read and parse the configs from the config_str
             config_parser.readfp(io.StringIO(config_str))
@@ -153,7 +157,7 @@ class ExtCreate(Ext):
                 break
 
         except Exception as err:
-            raise ExtException("Failed to parse configs from config.py file\nReason: {0}".format(err))
+            raise ExtException("Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
 
         for config in parsed_configs:
             config_list.append({
@@ -305,9 +309,9 @@ class ExtCreate(Ext):
         if icon_width != width_accepted or icon_height != height_accepted:
             raise ExtException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File:{4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
 
-        # If we get here all validations have passed. Open the file in Bytes mode and encode it as base64
+        # If we get here all validations have passed. Open the file in Bytes mode and encode it as base64 and decode to a utf-8 string
         with open(path_icon_to_use, "rb") as icon_file:
-            encoded_icon_string = base64.b64encode(icon_file.read())
+            encoded_icon_string = base64.b64encode(icon_file.read()).decode("utf-8")
 
         return encoded_icon_string
 

@@ -28,6 +28,9 @@ class Ext(object):
     @staticmethod
     def __write_file__(path, contents):
         """Writes the String contents to a file at path"""
+        # If contents is type str, encode to bytes. Needed to support PY3
+        if isinstance(contents, str):
+            contents = contents.encode("utf-8")
         with open(path, "wb") as the_file:
             the_file.write(contents)
 
@@ -127,8 +130,8 @@ class Ext(object):
         # Instansiate new md5_hash
         md5_hash = hashlib.md5()
 
-        # Pass the_string to the md5_hash
-        md5_hash.update(the_string)
+        # Pass the_string to the md5_hash as bytes
+        md5_hash.update(the_string.encode("utf-8"))
 
         # Generate the hex md5 hash of all the read bytes
         the_md5_hex_str = md5_hash.hexdigest()
