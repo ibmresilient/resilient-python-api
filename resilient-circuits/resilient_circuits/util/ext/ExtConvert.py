@@ -174,7 +174,7 @@ class ExtConvert(ExtCreate):
                             file_name = os.path.basename(path_extracted_member)
 
                             # If the file is a required one, add its path to the dict
-                            if extracted_required_files.has_key(file_name):
+                            if file_name in extracted_required_files:
                                 LOG.info("\t\t- Found {0} file".format(file_name))
                                 extracted_required_files[file_name] = path_extracted_member
 
