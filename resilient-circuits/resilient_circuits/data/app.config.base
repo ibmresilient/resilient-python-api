@@ -3,7 +3,7 @@
 host=resilient
 port=443
 email=api_user@example.com
-password=MyPasword
+password=MyPassword
 org=My Org
 
 # Actions Module connection
