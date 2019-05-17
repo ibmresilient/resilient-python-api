@@ -303,7 +303,7 @@ class ExtCreate(Ext):
                 # Bytes 21-24 = image height. Use struct to unpack big-endian encoded unsigned int
                 icon_height = struct.unpack(">I", icon_file.read(4))[0]
             except Exception as err:
-                raise ExtException("Failed to read icon's resolution. Icon file corrupt. Icon file must be .png\nIcon File: {1}".format(path_icon_to_use))
+                raise ExtException("Failed to read icon's resolution. Icon file corrupt. Icon file must be .png\nIcon File: {0}".format(path_icon_to_use))
 
         # Raise exception if resolution is not accepted
         if icon_width != width_accepted or icon_height != height_accepted:
