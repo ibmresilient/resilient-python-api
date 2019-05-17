@@ -30,7 +30,7 @@ setup(
     molestie a iaculis. Cursus risus at ultrices mi tempus imperdiet nulla 
     malesuada pellentesque. Curabitur vitae nunc sed velit. Quis imperdiet massa 
     tincidunt nunc pulvinar sapien et. Morbi blandit cursus risus at ultrices mi 
-    tempus imperdiet. Risus ultricies tristique nulla aliquet enim tortor at auctor urna.""",
+    tempus imperdiet. Risus ultricies tristique nulla aliquet enim tortor at auctor urna""",
     install_requires=[
         'resilient_circuits>=30.0.0'
     ],
