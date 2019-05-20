@@ -55,8 +55,8 @@ class Ext(object):
 
             raise ExtException("User does not have {0} permissions for: {1}".format(permissions, path))
 
-    @classmethod
-    def __validate_directory__(cls, permissions, path_to_dir):
+    @staticmethod
+    def __validate_directory__(permissions, path_to_dir):
         """Check the given path is absolute, exists and has the given permissions, else raises an Exception"""
 
         # Check the path is absolute
@@ -68,10 +68,10 @@ class Ext(object):
             raise ExtException("The path does not exist: {0}".format(path_to_dir))
 
         # Check we have the correct permissions
-        cls.__has_permissions__(permissions, path_to_dir)
+        Ext.__has_permissions__(permissions, path_to_dir)
 
-    @classmethod
-    def __validate_file_paths__(cls, permissions=None, *args):
+    @staticmethod
+    def __validate_file_paths__(permissions=None, *args):
         """Check the given *args paths exist and has the given permissions, else raises an Exception"""
 
         # For each *args
@@ -82,7 +82,7 @@ class Ext(object):
 
             if permissions:
                 # Check we have the correct permissions
-                cls.__has_permissions__(permissions, path_to_file)
+                Ext.__has_permissions__(permissions, path_to_file)
 
     @staticmethod
     def __is_valid_url__(url):

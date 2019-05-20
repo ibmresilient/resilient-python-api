@@ -307,7 +307,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                     outfile.write(png_as_bytes)
 
             else:
-                with io.open(source_file, 'r', encoding="utf-8") as source:
+                with io.open(source_file, mode='r', encoding="utf-8") as source:
                     source_template = source.read()
                     source_rendered = template_functions.render(source_template, data)
                 with io.open(target_file, mode="w", encoding="utf-8") as outfile:

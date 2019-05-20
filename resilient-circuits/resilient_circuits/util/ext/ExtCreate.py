@@ -47,6 +47,8 @@ JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png")
 
+# Default incident_type to remove from customize.py (if found)
+DEFAULT_INCIDENT_TYPE_UUID = u'bfeec2d4-3770-11e8-ad39-4a0004044aa0'
 
 class ExtCreate(Ext):
     """ ExtCreate is a subclass of Ext. It is inherited by
@@ -111,9 +113,11 @@ class ExtCreate(Ext):
 
         if incident_types:
 
+            incident_type_to_remove = None
+
             # Loop through and remove this custom one (that is originally added using codegen)
             for incident_type in incident_types:
-                if incident_type.get("uuid") == u'bfeec2d4-3770-11e8-ad39-4a0004044aa0':
+                if incident_type.get("uuid") == DEFAULT_INCIDENT_TYPE_UUID:
                     incident_type_to_remove = incident_type
                     break
 
