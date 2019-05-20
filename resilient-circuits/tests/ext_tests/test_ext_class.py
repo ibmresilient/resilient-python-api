@@ -5,7 +5,7 @@ import stat
 from resilient_circuits.util.ext.Ext import Ext
 from resilient_circuits.util.ext import ExtException
 
-class TestExtClass(unittest.TestCase):
+class TestExtClassIndividualFns(unittest.TestCase):
 
     def assertException(self, the_exception, message):
         self.assertIn(message, the_exception.message)
