@@ -468,8 +468,8 @@ class ExtCreate(Ext):
             # Validate the built distribution exists and we have READ access
             cls.__validate_file_paths__(os.R_OK, path_built_distribution)
 
-            # Copy the built distribution to the executable_zip dir
-            shutil.copy(path_built_distribution, path_executable_zip)
+            # Copy the built distribution to the executable_zip dir and  enforce rename to .tar.gz
+            shutil.copy(path_built_distribution, os.path.join(path_executable_zip, "{0}.tar.gz".format(extension_name)))
 
             # Generate the contents for the executable.json file
             the_executable_json_file_contents = {
@@ -561,8 +561,8 @@ class ExtCreate(Ext):
             # Write the customize ImportDefinition to the export.res file
             cls.__write_file__(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True))
 
-            # Copy the built distribution to the build dir
-            shutil.copy(path_built_distribution, path_build)
+            # Copy the built distribution to the build dir, enforce rename to .tar.gz
+            shutil.copy(path_built_distribution, os.path.join(path_build, "{0}.tar.gz".format(extension_name)))
 
             # create The Extension Zip by zipping the build directory
             extension_zip_base_path = os.path.join(output_dir, "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))

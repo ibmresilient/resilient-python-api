@@ -203,15 +203,6 @@ class ExtConvert(ExtCreate):
                 raise ExtException("Could not extract required files from given Built Distribution\nRequired Files: {0}\nDistribution: {1}".format(
                     ", ".join(extracted_required_files.keys()), path_built_distribution))
 
-            # If the extracted_tar is a zip, rename it to a .tar.gz
-            # This means the built distribution was created using 'python setup.py sdist formats="zip"'
-            extracted_tar_root, extracted_tar_ext = os.path.splitext(path_extracted_tar)
-
-            if extracted_tar_ext == ".zip":
-                new_location = "{0}.tar.gz".format(extracted_tar_root)
-                shutil.move(path_extracted_tar, new_location)
-                path_extracted_tar = new_location
-
             # Create the extension
             path_tmp_the_extension_zip = cls.create_extension(
                 path_setup_py_file=extracted_required_files.get("setup.py"),
