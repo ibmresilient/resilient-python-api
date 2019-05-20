@@ -40,3 +40,17 @@ mock_icon_company_logo = u"""iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAABfGl
 mock_message_destination_to_be_tagged = [{u'uuid': u'81951176-b7c3-4ecd-beab-8e4fe231426b', u'name': u'fn_mock_integration', u'tags': [], u'export_key': u'fn_mock_integration', u'expect_ack': True, u'destination_type': 0, u'users': [], u'api_keys': [], u'programmatic_name': u'fn_mock_integration'}]
 
 mock_message_destination_tagged = [{u'uuid': u'81951176-b7c3-4ecd-beab-8e4fe231426b', u'name': u'fn_mock_integration', u'tags': [{'tag_handle': 'fn_mock_integration', 'value': None}], u'export_key': u'fn_mock_integration', u'expect_ack': True, u'destination_type': 0, u'users': [], u'api_keys': [], u'programmatic_name': u'fn_mock_integration'}]
+
+mock_extension_zip_file_structure = [
+    "executables/",
+    "export.res",
+    "extension.json",
+    "{0}-1.0.0.tar.gz".format(MOCK_INTEGRATION_NAME),
+    "executables/exe-{0}-1.0.0.zip".format(MOCK_INTEGRATION_NAME)
+]
+
+mock_executables_zip_file_structure = [
+    "Dockerfile",
+    "executable.json",
+    "{0}-1.0.0.tar.gz".format(MOCK_INTEGRATION_NAME)
+]
