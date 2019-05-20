@@ -1,5 +1,6 @@
 import unittest
 import os
+import sys
 import shutil
 import copy
 import logging
@@ -7,7 +8,10 @@ import zipfile
 import json
 from resilient_circuits.util.ext.ExtCreate import ExtCreate, PATH_DEFAULT_ICON_EXTENSION_LOGO, PATH_DEFAULT_ICON_COMPANY_LOGO
 from resilient_circuits.util.ext import ExtException
-from mock_data.mock_data import MOCK_INTEGRATION_NAME, MOCK_INTEGRATION_URL, MOCK_INTEGRATION_LONG_DESCRIPTION, mock_import_definition, mock_import_definition_tagged, mock_config_str, mock_config_list, mock_setup_py_file_lines, mock_parsed_setup_py_attributes, mock_icon_extension_logo, mock_icon_company_logo, mock_message_destination_to_be_tagged, mock_message_destination_tagged, mock_extension_zip_file_structure, mock_executables_zip_file_structure
+
+# Import mock_data (need to add path to support relative imports in PY3) 
+sys.path.insert(0, os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
+from ext_tests.mock_data.mock_data import MOCK_INTEGRATION_NAME, MOCK_INTEGRATION_URL, MOCK_INTEGRATION_LONG_DESCRIPTION, mock_import_definition, mock_import_definition_tagged, mock_config_str, mock_config_list, mock_setup_py_file_lines, mock_parsed_setup_py_attributes, mock_icon_extension_logo, mock_icon_company_logo, mock_message_destination_to_be_tagged, mock_message_destination_tagged, mock_extension_zip_file_structure, mock_executables_zip_file_structure
 
 LOG = logging.getLogger("testing_logger")
 LOG.setLevel(logging.INFO)
@@ -35,9 +39,6 @@ def get_dict_from_json_file(file_path):
 class ExtClassTestIndividualFns(unittest.TestCase):
 
     maxDiff = None
-
-    def assertException(self, the_exception, message):
-        self.assertIn(message, the_exception.message)
 
     def setUp(self):
         self.ext_create_class = ExtCreate("ext:package")
@@ -99,24 +100,20 @@ class ExtClassTestIndividualFns(unittest.TestCase):
         self.assertEqual(company_logo_as_base64, mock_icon_company_logo)
 
         # Test invalid paths
-        with self.assertRaises(OSError) as cm:
+        with self.assertRaisesRegexp(OSError, "Could not find valid icon file. Looked at two locations:"):
             self.ext_create_class.__get_icon__("", 200, 72, "")
-        self.assertException(cm.exception, "Could not find valid icon file. Looked at two locations:")
 
         # Test not .png
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, ".jpg is not a supported icon file type. Icon file must be .png"):
             self.ext_create_class.__get_icon__(path_to_corrupt_jpg_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
-        self.assertException(cm.exception, ".jpg is not a supported icon file type. Icon file must be .png")
 
         # Test corrupt .png
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "Icon file corrupt"):
             self.ext_create_class.__get_icon__(path_to_corrupt_png_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
-        self.assertException(cm.exception, "Icon file corrupt")
 
         # Test invalid resolution
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "Resolution must be 10x10"):
             self.ext_create_class.__get_icon__(path_extension_logo, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
-        self.assertException(cm.exception, "Resolution must be 10x10")
 
     def test_add_tag(self):
         tag_name = MOCK_INTEGRATION_NAME
@@ -126,9 +123,8 @@ class ExtClassTestIndividualFns(unittest.TestCase):
         self.assertEqual(tagged_md, mock_message_destination_tagged)
         
          # Test invalid list_of_objs
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "is not a List"):
             self.ext_create_class.__add_tag__(tag_name, "")
-        self.assertException(cm.exception, "is not a List")
 
     def test_add_tag_to_import_definition(self):
         tag_name = MOCK_INTEGRATION_NAME

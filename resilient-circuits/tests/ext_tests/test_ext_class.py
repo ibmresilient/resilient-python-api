@@ -7,9 +7,6 @@ from resilient_circuits.util.ext import ExtException
 
 class TestExtClassIndividualFns(unittest.TestCase):
 
-    def assertException(self, the_exception, message):
-        self.assertIn(message, the_exception.message)
-
     def setUp(self):
         self.ext_class = Ext("ext:package")
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -37,28 +34,22 @@ class TestExtClassIndividualFns(unittest.TestCase):
         # Set permissions to Read only
         os.chmod(temp_permissions_file, stat.S_IRUSR)
 
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "User does not have WRITE permissions"):
             self.ext_class.__has_permissions__(os.W_OK, temp_permissions_file)
-
-        self.assertException(cm.exception, "User does not have WRITE permissions")
 
         # Set permissions to Write only
         os.chmod(temp_permissions_file, stat.S_IWUSR)
 
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "User does not have READ permissions"):
             self.ext_class.__has_permissions__(os.R_OK, temp_permissions_file)
-
-        self.assertException(cm.exception, "User does not have READ permissions")
 
     def test_validate_directory(self):
 
         non_exist_path = "/non_exits/path"
 
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "The path does not exist: " + non_exist_path):
             self.ext_class.__validate_directory__(os.R_OK, non_exist_path)
 
-        self.assertException(cm.exception, "The path does not exist: " + non_exist_path)
-    
         exists_dir = os.path.join(self.temp_dir, "mock_existing_dir")
         os.makedirs(exists_dir)
 
@@ -67,11 +58,8 @@ class TestExtClassIndividualFns(unittest.TestCase):
     def test_validate_file_paths(self):
 
         non_exist_path = "/non_exits/path"
-
-        with self.assertRaises(ExtException) as cm:
+        with self.assertRaisesRegexp(ExtException, "Could not find file: " + non_exist_path):
             self.ext_class.__validate_file_paths__(None, non_exist_path)
-
-        self.assertException(cm.exception, "Could not find file: " + non_exist_path)
 
         exists_file = os.path.join(self.temp_dir, "mock_existing_file.txt")
         self.ext_class.__write_file__(exists_file, self.mock_file_contents)
@@ -105,5 +93,4 @@ class TestExtClassIndividualFns(unittest.TestCase):
 
         the_generated_uuid = self.ext_class.__generate_uuid_from_string__(the_string)
 
-        self.assertEquals(the_generated_uuid, the_uuid)
-
+        self.assertEqual(the_generated_uuid, the_uuid)
