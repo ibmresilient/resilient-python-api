@@ -21,11 +21,14 @@ from resilient_circuits.util.resilient_customize import ImportDefinition
 from resilient_circuits.util.ext.Ext import Ext
 from resilient_circuits.util.ext.ExtException import ExtException
 
-# Handle import of ConfigParser for PY 2 + 3
+# Handle import of ConfigParser + importlib.reload() for PY 2 + 3
 if sys.version_info.major < 3:
     import ConfigParser as configparser
 else:
     import configparser
+
+    # reload(package) in PY2.7, importlib.reload(package) in PY3.6 
+    reload = importlib.reload
 
 # Get the same logger object that is used in resilient_circuits_cmd.py
 LOG = logging.getLogger("resilient_circuits_cmd_logger")
@@ -79,10 +82,16 @@ class ExtCreate(Ext):
         """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
 
         # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
-        sys.path.insert(0, os.path.dirname(path_customize_py_file))
+        path_to_util_dir = os.path.dirname(path_customize_py_file)
+        sys.path.insert(0, path_to_util_dir)
 
         # Import the customize module
         customize_py = importlib.import_module("customize")
+
+        # Reload the module so we get the latest one
+        # If we do not reload, can get stale results if
+        # this method is called more then once
+        reload(customize_py)
 
         # Call customization_data() to get all ImportDefinitions that are "yielded"
         customize_py_import_definitions_generator = customize_py.customization_data()
@@ -122,6 +131,9 @@ class ExtCreate(Ext):
             if incident_type_to_remove:
                 incident_types.remove(incident_type_to_remove)
 
+        # Remove the path from PYTHONPATH
+        sys.path.remove(path_to_util_dir)
+
         return customize_py_import_definition
 
     @staticmethod
@@ -136,11 +148,18 @@ class ExtCreate(Ext):
         config_str, config_list = "", []
 
         # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
-        sys.path.insert(0, os.path.dirname(path_config_py_file))
+        path_to_util_dir = os.path.dirname(path_config_py_file)
+        sys.path.insert(0, path_to_util_dir)
+
 
         try:
             # Import the config module
             config_py = importlib.import_module("config")
+
+            # Reload the module so we get the latest one
+            # If we do not reload, can get stale results if
+            # this method is called more then once
+            reload(config_py)
 
             # Call config_section_data() to get the string containing the configs
             config_str = config_py.config_section_data()
@@ -166,6 +185,10 @@ class ExtCreate(Ext):
 
         except Exception as err:
             raise ExtException("Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
+
+        finally:
+            # Remove the path from PYTHONPATH
+            sys.path.remove(path_to_util_dir)
 
         return (config_str, config_list)
 
