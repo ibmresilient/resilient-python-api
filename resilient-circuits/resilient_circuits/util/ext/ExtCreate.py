@@ -182,8 +182,8 @@ class ExtCreate(Ext):
 
         return False
 
-    @classmethod
-    def __parse_setup_attribute__(cls, path_to_setup_py, setup_py_lines, attribute_name):
+    @staticmethod
+    def __parse_setup_attribute__(path_to_setup_py, setup_py_lines, attribute_name):
         """Returns the attribute value from setup.py given the attribute name"""
 
         # Generate the regex to find the attribute line
@@ -205,7 +205,7 @@ class ExtCreate(Ext):
 
                 # Check preceding lines to see if this attribute value is multiline string
                 for preceding_line in setup_py_lines[i + 1:]:
-                    if cls.__is_setup_attribute__(preceding_line):
+                    if ExtCreate.__is_setup_attribute__(preceding_line):
                         break
 
                     # Append the line if it is not a new attribute
@@ -223,12 +223,12 @@ class ExtCreate(Ext):
 
         return the_attribute_value
 
-    @classmethod
-    def __parse_setup_py__(cls, path, attribute_names):
+    @staticmethod
+    def __parse_setup_py__(path, attribute_names):
         """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value"""
 
         # Read the setup.py file into a List
-        setup_py_lines = cls.__read_file__(path)
+        setup_py_lines = ExtCreate.__read_file__(path)
 
         # Raise an error if nothing found in the file
         if not setup_py_lines:
@@ -254,12 +254,12 @@ class ExtCreate(Ext):
 
         # Foreach attribute_name, get its value and add to return_dict
         for attribute_name in attribute_names:
-            return_dict[attribute_name] = cls.__parse_setup_attribute__(path, setup_py_lines, attribute_name)
+            return_dict[attribute_name] = ExtCreate.__parse_setup_attribute__(path, setup_py_lines, attribute_name)
 
         return return_dict
 
-    @classmethod
-    def __get_icon__(cls, path_to_icon, width_accepted, height_accepted, default_path_to_icon):
+    @staticmethod
+    def __get_icon__(path_to_icon, width_accepted, height_accepted, default_path_to_icon):
         """Returns the icon at path_to_icon as a base64 encoded string if it is a valid .png file with the resolution
         width_accepted x height_accepted. If path_to_icon does not exist, default_path_to_icon is returned as a base64
         encoded string"""
@@ -272,7 +272,7 @@ class ExtCreate(Ext):
 
         # Validate path_icon_to_use and ensure we have READ permissions
         try:
-            cls.__validate_file_paths__(os.R_OK, path_icon_to_use)
+            ExtCreate.__validate_file_paths__(os.R_OK, path_icon_to_use)
         except ExtException as err:
             raise OSError("Could not find valid icon file. Looked at two locations:\n{0}\n{1}\n{2}".format(path_to_icon, default_path_to_icon, err.message))
 
@@ -360,8 +360,8 @@ class ExtCreate(Ext):
         # Return the updated list_of_objs
         return list_of_objs
 
-    @classmethod
-    def __add_tag_to_import_definition__(cls, tag_name, supported_res_obj_names, import_definition):
+    @staticmethod
+    def __add_tag_to_import_definition__(tag_name, supported_res_obj_names, import_definition):
         """Returns import_definition with tag_name added to each supported_res_object_name found
         in the import_definition"""
 
@@ -370,7 +370,7 @@ class ExtCreate(Ext):
             res_object_list = import_definition.get(obj_name)
 
             if res_object_list:
-                res_object_list = cls.__add_tag__(tag_name, res_object_list)
+                res_object_list = ExtCreate.__add_tag__(tag_name, res_object_list)
 
                 # A 'function' object has a list of 'workflows' which also need the tag added to
                 if obj_name == "functions":
@@ -380,7 +380,7 @@ class ExtCreate(Ext):
                         fn_workflows_list = fn.get("workflows")
 
                         if fn_workflows_list:
-                            fn_workflows_list = cls.__add_tag__(tag_name, fn_workflows_list)
+                            fn_workflows_list = ExtCreate.__add_tag__(tag_name, fn_workflows_list)
 
         return import_definition
 

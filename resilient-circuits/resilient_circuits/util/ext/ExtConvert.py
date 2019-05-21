@@ -35,20 +35,20 @@ class ExtConvert(ExtCreate):
 
         raise ExtException("Invalid built distribution. Could not find {0}".format(file_name))
 
-    @classmethod
-    def __extract_file_from_tar__(cls, filename_to_extract, tar_file, output_dir):
+    @staticmethod
+    def __extract_file_from_tar__(filename_to_extract, tar_file, output_dir):
         """Extract the given filename to the output_dir from the given tar_file
         and return the path to the extracted file"""
 
         tar_members = tar_file.getmembers()
 
-        tar_path = cls.__get_tar_file_path_to_extract__(tar_members, filename_to_extract)
+        tar_path = ExtConvert.__get_tar_file_path_to_extract__(tar_members, filename_to_extract)
         tar_file.extract(member=tar_path, path=output_dir)
 
         return os.path.join(output_dir, tar_path)
 
-    @classmethod
-    def __get_required_files_from_tar_file__(cls, path_tar_file, dict_required_files, output_dir):
+    @staticmethod
+    def __get_required_files_from_tar_file__(path_tar_file, dict_required_files, output_dir):
         """Loop the keys of dict_required_files (which will be file names).
         Extract each file and get the path to the extracted file.
         Return a dict of each file name and its extracted path"""
@@ -58,7 +58,7 @@ class ExtConvert(ExtCreate):
         with tarfile.open(name=path_tar_file, mode="r") as tar_file:
 
             for file_name in dict_required_files.keys():
-                return_dict[file_name] = cls.__extract_file_from_tar__(file_name, tar_file, output_dir)
+                return_dict[file_name] = ExtConvert.__extract_file_from_tar__(file_name, tar_file, output_dir)
 
         return return_dict
 
