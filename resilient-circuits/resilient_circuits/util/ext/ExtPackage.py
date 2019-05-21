@@ -51,9 +51,6 @@ class ExtPackage(ExtCreate):
 
         LOG.info("Creating built distribution in /dist directory")
 
-        # TODO: avoid all the logs that get printed with this command
-        # TODO: Confirm the need for the .egg files
-        # TODO: Ensure all files in the tar.gz are needed and correct
         # Create the built distribution
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
 

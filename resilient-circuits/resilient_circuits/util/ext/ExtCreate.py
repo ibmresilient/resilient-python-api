@@ -43,7 +43,6 @@ PREFIX_EXTENSION_ZIP = "ext-"
 
 JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
 
-# TODO: Are these windows safe?
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/extension_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_circuits", "data/ext/icons/company_logo.png")
 
@@ -71,7 +70,6 @@ class ExtCreate(Ext):
 
     # Instansiate Jinja2 Environment with path to Jinja2 templates
     jinja_env = Environment(
-        # TODO: is this Windows friendly?
         loader=PackageLoader("resilient_circuits", "data/ext/templates"),
         trim_blocks=True
     )
@@ -266,8 +264,6 @@ class ExtCreate(Ext):
         """Returns the icon at path_to_icon as a base64 encoded string if it is a valid .png file with the resolution
         width_accepted x height_accepted. If path_to_icon does not exist, default_path_to_icon is returned as a base64
         encoded string"""
-
-        # TODO: update resilient-circuits codegen to include default icons
 
         path_icon_to_use = path_to_icon
 

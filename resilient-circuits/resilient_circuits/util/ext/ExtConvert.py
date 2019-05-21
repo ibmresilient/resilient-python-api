@@ -175,7 +175,7 @@ class ExtConvert(ExtCreate):
 
                             # If the file is a required one, add its path to the dict
                             if file_name in extracted_required_files:
-                                LOG.info("\t\t- Found {0} file".format(file_name))
+                                LOG.info("\t\t- Found %s file", file_name)
                                 extracted_required_files[file_name] = path_extracted_member
 
                                 # Set the path to extracted tar to this zip file

@@ -147,8 +147,8 @@ class Ext(object):
         md5_hash = hashlib.md5()
 
         # Open a stream to the file. Read 4096 bytes at a time. Pass these bytes to md5_hash object
-        with open(path_to_file, mode="rb") as f:
-            for chunk in iter(lambda: f.read(4096), b''):
+        with open(path_to_file, mode="rb") as the_file:
+            for chunk in iter(lambda: the_file.read(4096), b''):
                 md5_hash.update(chunk)
 
         # Generate the hex md5 hash of all the read bytes
