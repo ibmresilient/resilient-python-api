@@ -29,6 +29,7 @@ path_mock_bd_zipped_tar = os.path.join(path_this_dir, "mock_data", "built_distri
 
 path_mock_export_res = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "export.res")
 path_mock_extension_json = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "extension.json")
+path_mock_exectuable_json = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "executables", "executable.json")
 
 def get_dict_from_json_file(file_path):
     dict_to_return = {}
@@ -201,6 +202,25 @@ class ExtClassTestCreateExtension(unittest.TestCase):
         self.assertEqual(export_res, mock_export_res)
         self.assertEqual(mock_extension_json, extension_json)
 
+    def validate_executable_json(self, path_the_extension_zip):
+        # Get the mock data
+        mock_executable_json = get_dict_from_json_file(path_mock_exectuable_json)
+
+        # Open the extension_zip
+        with zipfile.ZipFile(file=path_the_extension_zip, mode="r") as the_extension_zip_file:
+            # Extract the executables_zip
+            path_the_executable_zip_file = the_extension_zip_file.extract(member="executables/exe-{0}-1.0.0.zip".format(MOCK_INTEGRATION_NAME), path=path_temp_test_dir)
+
+        # Open the executables_zip
+        with zipfile.ZipFile(file=path_the_executable_zip_file, mode="r") as the_executable_zip_file:
+            the_executable_zip_file.extractall(path=path_temp_test_dir)
+        
+        # Get the executable.json
+        executable_json = get_dict_from_json_file(os.path.join(path_temp_test_dir, "executable.json"))
+
+        # Compare
+        self.assertEqual(executable_json, mock_executable_json)
+
     ###################
     ## Test TRUE TAR ##
     ###################
@@ -231,6 +251,13 @@ class ExtClassTestCreateExtension(unittest.TestCase):
 
         # Validate export.res and extension.json
         self.validate_export_res_and_extension_json(path_the_extension_zip)
+
+    def test_true_tar_valid_executables_json(self):
+        # Create the extension
+        path_the_extension_zip = self.create_the_extension(path_mock_bd_true_tar)
+
+        # Validate export.res and extension.json
+        self.validate_executable_json(path_the_extension_zip)
 
     ###################
     ## Test TRUE ZIP ##
@@ -263,6 +290,13 @@ class ExtClassTestCreateExtension(unittest.TestCase):
         # Validate export.res and extension.json
         self.validate_export_res_and_extension_json(path_the_extension_zip)
 
+    def test_true_zip_valid_executables_json(self):
+        # Create the extension
+        path_the_extension_zip = self.create_the_extension(path_mock_bd_true_zip)
+
+        # Validate export.res and extension.json
+        self.validate_executable_json(path_the_extension_zip)
+
     #####################
     ## Test ZIPPED TAR ##
     #####################
@@ -293,3 +327,10 @@ class ExtClassTestCreateExtension(unittest.TestCase):
 
         # Validate export.res and extension.json
         self.validate_export_res_and_extension_json(path_the_extension_zip)
+
+    def test_zipped_tar_valid_executables_json(self):
+        # Create the extension
+        path_the_extension_zip = self.create_the_extension(path_mock_bd_zipped_tar)
+
+        # Validate export.res and extension.json
+        self.validate_executable_json(path_the_extension_zip)
