@@ -3,7 +3,6 @@ import os
 import sys
 import shutil
 import copy
-import logging
 import zipfile
 import json
 from resilient_circuits.util.ext.ExtCreate import ExtCreate, PATH_DEFAULT_ICON_EXTENSION_LOGO, PATH_DEFAULT_ICON_COMPANY_LOGO
@@ -12,10 +11,6 @@ from resilient_circuits.util.ext import ExtException
 # Import mock_data (need to add path to support relative imports in PY3) 
 sys.path.insert(0, os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 from ext_tests.mock_data.mock_data import MOCK_INTEGRATION_NAME, MOCK_INTEGRATION_URL, MOCK_INTEGRATION_LONG_DESCRIPTION, mock_import_definition, mock_import_definition_tagged, mock_config_str, mock_config_list, mock_setup_py_file_lines, mock_parsed_setup_py_attributes, mock_icon_extension_logo, mock_icon_company_logo, mock_message_destination_to_be_tagged, mock_message_destination_tagged, mock_extension_zip_file_structure, mock_executables_zip_file_structure
-
-LOG = logging.getLogger("testing_logger")
-LOG.setLevel(logging.INFO)
-LOG.addHandler(logging.StreamHandler())
 
 path_this_dir = os.path.dirname(os.path.realpath(__file__))
 path_temp_test_dir = os.path.join(path_this_dir, "test_temp")
@@ -37,18 +32,23 @@ def get_dict_from_json_file(file_path):
             dict_to_return = json.load(the_file)
     return dict_to_return
 
-class ExtClassTestIndividualFns(unittest.TestCase):
+class ExtCreateClassTestIndividualFns(unittest.TestCase):
 
     maxDiff = None
 
     def setUp(self):
         self.ext_create_class = ExtCreate("ext:package")
         self.original_import_definition = copy.deepcopy(mock_import_definition)
+        self.original_mock_message_destination_to_be_tagged = copy.deepcopy(mock_message_destination_to_be_tagged[0])
 
     def tearDown(self):
         # Reset mock_import_definition object
         mock_import_definition.clear()
         mock_import_definition.update(copy.deepcopy(self.original_import_definition))
+
+        # Reset mock_message_destination_to_be_tagged
+        mock_message_destination_to_be_tagged[0].clear()
+        mock_message_destination_to_be_tagged[0].update(copy.deepcopy(self.original_mock_message_destination_to_be_tagged))
 
     def test_get_import_definition_from_customize_py(self):
         import_definition = self.ext_create_class.__get_import_definition_from_customize_py__(path_mock_customize_py_file)
@@ -135,13 +135,12 @@ class ExtClassTestIndividualFns(unittest.TestCase):
         self.assertEqual(tagged_import_definition, mock_import_definition_tagged)
 
 
-class ExtClassTestCreateExtension(unittest.TestCase):
+class ExtCreateClassTestCreateExtension(unittest.TestCase):
 
     maxDiff = None
 
     def setUp(self):
         self.ext_create_class = ExtCreate("ext:package")
-        # self.original_import_definition = copy.deepcopy(mock_import_definition)
 
         # Create temp dir
         os.makedirs(path_temp_test_dir)

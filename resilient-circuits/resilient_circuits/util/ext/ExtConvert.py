@@ -67,11 +67,11 @@ class ExtConvert(ExtCreate):
         """ Function that converts an (old) Integration into a Resilient Extension.
         Validates then converts the given built_distribution (either .tar.gz or .zip).
         Returns the path to the new Extension.zip
-        - path_to_built_distribution [String]:
+        - path_built_distribution [String]:
             - If a .tar.gz: must include a setup.py, customize.py and config.py file.
             - If a .zip: must include a valid .tar.gz.
         - custom_display_name [String]: will give the Extension that display name. Default: name from setup.py file
-        - The Extension.zip will be produced in the same directory as path_to_built_distribution"""
+        - The Extension.zip will be produced in the same directory as path_built_distribution"""
 
         LOG.info("Converting extension from: %s", path_built_distribution)
 

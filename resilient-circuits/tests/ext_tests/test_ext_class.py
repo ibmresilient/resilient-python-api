@@ -5,7 +5,7 @@ import stat
 from resilient_circuits.util.ext.Ext import Ext
 from resilient_circuits.util.ext import ExtException
 
-class TestExtClassIndividualFns(unittest.TestCase):
+class ExtClassTestIndividualFns(unittest.TestCase):
 
     def setUp(self):
         self.ext_class = Ext("ext:package")
