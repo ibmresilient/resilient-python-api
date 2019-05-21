@@ -130,10 +130,10 @@ class ExtCreate(Ext):
         Raises Exception if it fails to parse configs
         - config_str: is the full string found in the config.py file
         - config_list: is a list of dict objects that contain each un-commented config
-            - Each dict object has the attributes: name, placeholder and env_name
+            - Each dict object has the attributes: name, placeholder, env_name, section_name
         """
 
-        config_str, config_list, section_name, parsed_configs = "", [], None, []
+        config_str, config_list = "", []
 
         # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
         sys.path.insert(0, os.path.dirname(path_config_py_file))
@@ -151,22 +151,21 @@ class ExtCreate(Ext):
             # Read and parse the configs from the config_str
             config_parser.readfp(io.StringIO(config_str))
 
-            # TODO: Handle if multiple sections
-            # Get the configs from the first section safely
-            for section in config_parser.sections():
-                section_name = section
-                parsed_configs = config_parser.items(section)
-                break
+            # Get the configs from each section
+            for section_name in config_parser.sections():
+
+                parsed_configs = config_parser.items(section_name)
+
+                for config in parsed_configs:
+                    config_list.append({
+                        "name": config[0],
+                        "placeholder": config[1],
+                        "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper()),
+                        "section_name": section_name
+                    })
 
         except Exception as err:
             raise ExtException("Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
-
-        for config in parsed_configs:
-            config_list.append({
-                "name": config[0],
-                "placeholder": config[1],
-                "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper())
-            })
 
         return (config_str, config_list)
 
