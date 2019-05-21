@@ -221,6 +221,8 @@ class ExtConvert(ExtCreate):
 
             LOG.info("Extension location: %s", path_the_extension_zip)
 
+            return path_the_extension_zip
+
         except Exception as err:
             raise ExtException(err)
 
