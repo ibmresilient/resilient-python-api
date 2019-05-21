@@ -710,9 +710,6 @@ def codegen_from_template(cmd, client, export_file, template_file_path, package,
             export_data[key] = None
     # Incident types are special, add one for this specific package
     # (because not enabled, this doesn't actually get loaded into the destination)
-    # TODO: Is this still needed?
-    # TODO: Every ImportDefinition is getting this incident_type added by default
-    # TODO: Now it is showing up when we import an extension
     t0 = int(time.time()*1000)
     export_data["incident_types"] = [{
         "update_date": t0,
