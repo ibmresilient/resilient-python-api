@@ -478,8 +478,9 @@ class ExtCreate(Ext):
             # Write the executable.json file
             cls.__write_file__(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
 
+            # NOTE: Dockerfile creation commented out for this release
+            '''
             # Load Dockerfile template
-            # TODO: When packaging, if a Dockerfile exists already use that, else generate and use this default
             docker_file_template = cls.jinja_env.get_template(JINJA_TEMPLATE_DOCKERFILE)
 
             # Render Dockerfile template with required variables
@@ -491,6 +492,7 @@ class ExtCreate(Ext):
 
             # Write the Dockerfile
             cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
+            '''
 
             # zip the executable_zip dir
             shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)

@@ -55,7 +55,7 @@ mock_extension_zip_file_structure = [
 ]
 
 mock_executables_zip_file_structure = [
-    "Dockerfile",
+    # "Dockerfile",
     "executable.json",
     "{0}-1.0.0.tar.gz".format(MOCK_INTEGRATION_NAME)
 ]
