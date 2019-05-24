@@ -5,7 +5,7 @@
 
 import logging
 import threading
-from inspect import getargspec
+import inspect as _inspect
 from functools import wraps
 from types import GeneratorType
 from circuits import Timer, task, Event
@@ -48,8 +48,12 @@ class function(object):
         func.priority = self.kwargs.get("priority", 0)
         func.channel = self.kwargs.get("channel", ",".join(["functions.{}".format(name) for name in self.names]))
         func.override = self.kwargs.get("override", False)
-
-        args = getargspec(func)[0]
+        
+        # If getfullargspec if available to us 
+        if hasattr(_inspect, 'getfullargspec'):
+            args = _inspect.getfullargspec(func)[0]
+        else:  # fall back to deprecated getargspec
+            args = _inspect.getargspec(func)[0]
 
         if args and args[0] == "self":
             del args[0]
