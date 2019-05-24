@@ -126,14 +126,14 @@ class ResilientComponent(BaseComponent):
             if getattr(func, "function", False):
                 func_names = getattr(func, "names", [])
                 if self._functions is None:
-                    LOG.warn("Functions are not available in this Resilient platform!  "
+                    LOG.warning("Functions are not available in this Resilient platform!  "
                              "Cannot run '{}'".format(", ".join(func_names)))
                 else:
                     for func_name in func_names:
                         try:
                             funcdef = self._functions[func_name]
                         except KeyError:
-                            LOG.warn("Function '{0}' is not defined in this Resilient platform!".format(func_name))
+                            LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(func_name))
 
     def _get_fields(self):
         """Get Incident and Action fields"""
@@ -326,7 +326,7 @@ class Actions(ResilientComponent):
         try:
             defn = self.action_defs[action_id]
         except KeyError:
-            LOG.warn("Action %s is unknown.", action_id)
+            LOG.warning("Action %s is unknown.", action_id)
             # Refresh the list of action definitions
             list_action_defs = self.rest_client().get("/actions")["entities"]
             self.action_defs = dict((int(action["id"]),
@@ -435,7 +435,7 @@ class Actions(ResilientComponent):
                 # Normally the event won't be ack'd.  Just report it and carry on.
                 if self.ignore_message_failure:
                     # Construct and fire anyway, which will ack the message
-                    LOG.warn("This message failure will be ignored...")
+                    LOG.warning("This message failure will be ignored...")
                     event = ActionMessage(source=self,
                                           headers=headers,
                                           message=None,
@@ -454,14 +454,14 @@ class Actions(ResilientComponent):
         rest_client = self.rest_client()
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
-            LOG.warn(("Resilient action module not enabled."
+            LOG.warning(("Resilient action module not enabled."
                       "No stomp connection attempted."))
             return
 
         self.resilient_mock = self.opts["resilient_mock"] or False
         if self.resilient_mock:
             # Using mock API, no need to create a real stomp connection
-            LOG.warn("Using Mock. No Stomp connection")
+            LOG.warning("Using Mock. No Stomp connection")
             return
 
         # Gather the stomp_cafile for if specified or fallback to the resilient host. Used for TLS / SSL
@@ -469,7 +469,7 @@ class Actions(ResilientComponent):
         if cafile.strip().lower() == "false":
             # Explicitly disable TLS certificate validation, if you need to
             cafile = None
-            LOG.warn(("Unverified STOMP TLS certificate (cafile=false)"))
+            LOG.warning(("Unverified STOMP TLS certificate (cafile=false)"))
         elif cafile is None:
             # Since the REST API (resilient library) uses 'requests', let's use its default certificate bundle
             # instead of the certificates from ssl.get_default_verify_paths().cafile
@@ -562,7 +562,7 @@ class Actions(ResilientComponent):
                 func_name = channel.split(".", 1)[1]
                 if func_name not in self._functions:
                     # Unknown function.  Log it and continue.
-                    LOG.warn("'%s.%s' function '%s' is not defined!",
+                    LOG.warning("'%s.%s' function '%s' is not defined!",
                              type(component).__module__, type(component).__name__, func_name)
                     continue
                 queue_id = self._functions[func_name]["destination_handle"]
@@ -671,7 +671,7 @@ class Actions(ResilientComponent):
             LOG.info("STOMP connection is not enabled")
         else:
             if self.stomp_component.socket_connected:
-                LOG.warn("Disconnecting socket before Connect attempt")
+                LOG.warning("Disconnecting socket before Connect attempt")
                 disconnect_event = Disconnect(reconnect=False, flush=False)
                 self.fire(disconnect_event)
                 yield self.wait(disconnect_event)
@@ -759,7 +759,7 @@ class Actions(ResilientComponent):
                        "message_frame": event.parent.frame}
             self._stomp_ack_delivery_failures[message_id] = failure
 
-        LOG.warn("Failed %d times to deliver stomp ack for message %s", failure["retry_count"], message_id)
+        LOG.warning("Failed %d times to deliver stomp ack for message %s", failure["retry_count"], message_id)
 
     @handler("Ack_success")
     def _on_ack_success(self, event, *args, **kwargs):
@@ -791,7 +791,7 @@ class Actions(ResilientComponent):
                                    "body": event.parent.body,
                                    "destination": event.parent.destination}}
             self._resilient_ack_delivery_failures[message_id] = failure
-        LOG.warn("Failed %d times to deliver Resilient ack for message %s", failure["retry_count"], message_id)
+        LOG.warning("Failed %d times to deliver Resilient ack for message %s", failure["retry_count"], message_id)
 
     @handler("retry_failed_deliveries")
     def _retry_send_failures(self, event):
