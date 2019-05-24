@@ -27,7 +27,7 @@ if sys.version_info.major < 3:
 else:
     import configparser
 
-    # reload(package) in PY2.7, importlib.reload(package) in PY3.6 
+    # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
 
 # Get the same logger object that is used in resilient_circuits_cmd.py
@@ -51,6 +51,7 @@ PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_circ
 
 # Default incident_type to remove from customize.py (if found)
 DEFAULT_INCIDENT_TYPE_UUID = u'bfeec2d4-3770-11e8-ad39-4a0004044aa0'
+
 
 class ExtCreate(Ext):
     """ ExtCreate is a subclass of Ext. It is inherited by
@@ -150,7 +151,6 @@ class ExtCreate(Ext):
         # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
         path_to_util_dir = os.path.dirname(path_config_py_file)
         sys.path.insert(0, path_to_util_dir)
-
 
         try:
             # Import the config module
@@ -408,7 +408,7 @@ class ExtCreate(Ext):
         return import_definition
 
     @classmethod
-    def create_extension(cls, path_setup_py_file, path_customize_py_file, path_config_py_file, output_dir, \
+    def create_extension(cls, path_setup_py_file, path_customize_py_file, path_config_py_file, output_dir,
                          path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
         """ Function that creates The Extension.zip file from the given setup.py, customize.py and config.py files
         and copies it to the output_dir. Returns the path to the Extension.zip

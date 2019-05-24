@@ -4,8 +4,8 @@ import sys
 from resilient_circuits.util.ext.ExtCreate import PREFIX_EXTENSION_ZIP
 from resilient_circuits.util.ext import ExtConvert, ExtException
 
-# Import mock_data (need to add path to support relative imports in PY3) 
-sys.path.insert(0, os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
+# Import mock_data (need to add path to support relative imports in PY3)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ext_tests.mock_data import mock_data
 
 path_this_dir = os.path.dirname(os.path.realpath(__file__))

@@ -8,8 +8,8 @@ import json
 from resilient_circuits.util.ext.ExtCreate import ExtCreate, PATH_DEFAULT_ICON_EXTENSION_LOGO, PATH_DEFAULT_ICON_COMPANY_LOGO
 from resilient_circuits.util.ext import ExtException
 
-# Import mock_data (need to add path to support relative imports in PY3) 
-sys.path.insert(0, os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
+# Import mock_data (need to add path to support relative imports in PY3)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ext_tests.mock_data.mock_data import MOCK_INTEGRATION_NAME, MOCK_INTEGRATION_URL, MOCK_INTEGRATION_LONG_DESCRIPTION, mock_import_definition, mock_import_definition_tagged, mock_config_str, mock_config_list, mock_setup_py_file_lines, mock_parsed_setup_py_attributes, mock_icon_extension_logo, mock_icon_company_logo, mock_message_destination_to_be_tagged, mock_message_destination_tagged, mock_extension_zip_file_structure, mock_executables_zip_file_structure
 
 path_this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -26,11 +26,13 @@ path_mock_export_res = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_int
 path_mock_extension_json = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "extension.json")
 path_mock_exectuable_json = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "executables", "executable.json")
 
+
 def get_dict_from_json_file(file_path):
     dict_to_return = {}
     with open(file_path, 'r') as the_file:
             dict_to_return = json.load(the_file)
     return dict_to_return
+
 
 class ExtCreateClassTestIndividualFns(unittest.TestCase):
 
@@ -80,7 +82,7 @@ class ExtCreateClassTestIndividualFns(unittest.TestCase):
 
         path_extension_logo = os.path.join(path_fn_mock_integration, "icons", "extension_logo.png")
         path_company_logo = os.path.join(path_fn_mock_integration, "icons", "company_logo.png")
-        
+
         path_to_corrupt_jpg_icon = os.path.join(path_fn_mock_integration, "icons", "mock_corrupt_icon.jpg")
         path_to_corrupt_png_icon = os.path.join(path_fn_mock_integration, "icons", "mock_corrupt_icon.png")
 
@@ -118,12 +120,12 @@ class ExtCreateClassTestIndividualFns(unittest.TestCase):
 
     def test_add_tag(self):
         tag_name = MOCK_INTEGRATION_NAME
-        
+
         # Test adding the tag
         tagged_md = self.ext_create_class.__add_tag__(tag_name, mock_message_destination_to_be_tagged)
         self.assertEqual(tagged_md, mock_message_destination_tagged)
-        
-         # Test invalid list_of_objs
+
+        # Test invalid list_of_objs
         with self.assertRaisesRegexp(ExtException, "is not a List"):
             self.ext_create_class.__add_tag__(tag_name, "")
 
@@ -169,7 +171,7 @@ class ExtCreateClassTestCreateExtension(unittest.TestCase):
         with zipfile.ZipFile(file=path_the_extension_zip, mode="r") as zip_file:
             # Get a List of all the member names
             zip_file_structure = zip_file.namelist()
-        
+
         self.assertEqual(zip_file_structure, mock_extension_zip_file_structure)
 
     def validate_executables_folder_structure(self, path_the_extension_zip):
@@ -213,16 +215,16 @@ class ExtCreateClassTestCreateExtension(unittest.TestCase):
         # Open the executables_zip
         with zipfile.ZipFile(file=path_the_executable_zip_file, mode="r") as the_executable_zip_file:
             the_executable_zip_file.extractall(path=path_temp_test_dir)
-        
+
         # Get the executable.json
         executable_json = get_dict_from_json_file(os.path.join(path_temp_test_dir, "executable.json"))
 
         # Compare
         self.assertEqual(executable_json, mock_executable_json)
 
-    ###################
-    ## Test TRUE TAR ##
-    ###################
+    #################
+    # Test TRUE TAR #
+    #################
     def test_true_tar_creation(self):
         # Create the extension
         path_the_extension_zip = self.create_the_extension(path_mock_bd_true_tar)
@@ -258,9 +260,9 @@ class ExtCreateClassTestCreateExtension(unittest.TestCase):
         # Validate export.res and extension.json
         self.validate_executable_json(path_the_extension_zip)
 
-    ###################
-    ## Test TRUE ZIP ##
-    ###################
+    #################
+    # Test TRUE ZIP #
+    #################
     def test_true_zip_creation(self):
         # Create the extension
         path_the_extension_zip = self.create_the_extension(path_mock_bd_true_zip)
@@ -296,9 +298,9 @@ class ExtCreateClassTestCreateExtension(unittest.TestCase):
         # Validate export.res and extension.json
         self.validate_executable_json(path_the_extension_zip)
 
-    #####################
-    ## Test ZIPPED TAR ##
-    #####################
+    ###################
+    # Test ZIPPED TAR #
+    ###################
     def test_zipped_tar_creation(self):
         # Create the extension
         path_the_extension_zip = self.create_the_extension(path_mock_bd_zipped_tar)

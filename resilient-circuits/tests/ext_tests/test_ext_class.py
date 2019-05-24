@@ -5,6 +5,7 @@ import stat
 from resilient_circuits.util.ext.Ext import Ext
 from resilient_circuits.util.ext import ExtException
 
+
 class ExtClassTestIndividualFns(unittest.TestCase):
 
     def setUp(self):
@@ -76,7 +77,6 @@ class ExtClassTestIndividualFns(unittest.TestCase):
         self.assertFalse(self.ext_class.__is_valid_url__("not a url"))
         self.assertFalse(self.ext_class.__is_valid_url__("https://www. example.com"))
 
-
     def test_is_valid_package_name(self):
         self.assertTrue(self.ext_class.__is_valid_package_name__("fn_valid_name"))
         self.assertTrue(self.ext_class.__is_valid_package_name__("fn_VALID"))
@@ -86,7 +86,6 @@ class ExtClassTestIndividualFns(unittest.TestCase):
         self.assertFalse(self.ext_class.__is_valid_package_name__("fn-not-valid"))
         self.assertFalse(self.ext_class.__is_valid_package_name__("fn -not-valid"))
         self.assertFalse(self.ext_class.__is_valid_package_name__("fn_!@#_not_valid"))
-
 
     def test_generate_uuid_from_string(self):
         the_string, the_uuid = "fn_test_package", "7627eab9-8500-cf1d-380d-14a2c4364acf"

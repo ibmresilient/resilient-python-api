@@ -7,8 +7,8 @@ import json
 from resilient_circuits.util.ext.ExtCreate import PREFIX_EXTENSION_ZIP
 from resilient_circuits.util.ext import ExtPackage, ExtException
 
-# Import mock_data (need to add path to support relative imports in PY3) 
-sys.path.insert(0, os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
+# Import mock_data (need to add path to support relative imports in PY3)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ext_tests.mock_data import mock_data
 
 path_this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -19,11 +19,13 @@ path_fn_mock_integration_dist_dir = os.path.join(path_this_dir, "mock_data", "fn
 path_mock_extension_json = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "extension.json")
 path_mock_extension_json_custom_display_name = os.path.join(path_this_dir, "mock_data", "ext-fn_mock_integration-1.0.0", "extension_custom_display_name.json")
 
+
 def get_dict_from_json_file(file_path):
     dict_to_return = {}
     with open(file_path, 'r') as the_file:
             dict_to_return = json.load(the_file)
     return dict_to_return
+
 
 class ExtPackageClassTestPackageExtension(unittest.TestCase):
 
