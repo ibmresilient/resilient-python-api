@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Simple client for Resilient REST API"""
 from __future__ import print_function
@@ -114,7 +114,15 @@ def get_client(opts):
         res_mock = mock_class(org_name=opts.get("org"), email=opts["email"])
         resilient_client.session.mount("https://", res_mock.adapter)
 
-    userinfo = resilient_client.connect(opts["email"], opts["password"])
+    #
+    #   Check if we are using API Key or user/password. API key is the
+    #   preferable one if we can find from the opts
+    #
+    if opts.get("api_key_id", None) is not None and opts.get("api_key_secret", None) is not None:
+        userinfo = resilient_client.set_api_key(api_key_id=opts["api_key_id"],
+                                                api_key_secret=opts["api_key_secret"])
+    else:
+        userinfo = resilient_client.connect(opts["email"], opts["password"])
 
     # Validate the org, and store org_id in the opts dictionary
     LOG.debug(json.dumps(userinfo, indent=2))
