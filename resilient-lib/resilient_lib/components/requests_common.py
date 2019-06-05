@@ -150,14 +150,14 @@ class RequestsCommon:
                 content_type = get_case_insensitive_key_value(headers, "Content-Type")
 
                 if is_payload_in_json(content_type):
-                    resp = self.execute_call_v2(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
-                                                auth=basicauth, timeout=timeout, proxies=proxies)
-                else:
-                    resp = self.execute_call_v2(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
-                                                auth=basicauth, timeout=timeout, proxies=proxies)
-            else:
-                resp = self.execute_call_v2(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
+                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, json=payload,
                                             auth=basicauth, timeout=timeout, proxies=proxies)
+                else:
+                    resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, data=payload,
+                                            auth=basicauth, timeout=timeout, proxies=proxies)
+            else:
+                resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
+                                        auth=basicauth, timeout=timeout, proxies=proxies)
 
             if resp is None:
                 raise IntegrationError('no response returned')
