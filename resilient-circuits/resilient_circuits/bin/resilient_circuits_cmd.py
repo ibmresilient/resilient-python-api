@@ -473,7 +473,7 @@ def add_ext_arguments(cmd, ext_parser):
 
     elif cmd == "ext:convert":
         ext_parser.add_argument("path_to_built_distribution",
-            help="Path to the .tar.gz or .zip Distribution of an (old) Integration")
+            help="Path to the (old) Integration that can be in .tar.gz or .zip format")
 
     # Add common (optional) arguments
     if cmd in ("ext:package", "ext:convert"):
@@ -567,18 +567,22 @@ def main():
     # Add parser for ext:package
     # Usage 1: resilient-circuits ext:package <<path_to_package>>
     # Usage 2: resilient-circuits ext:package --display_name "My New Extension" <<path_to_package>>
+    ext_package_help_msg = "Package an Integration into a Resilient Extension"
     ext_package_parser = subparsers.add_parser("ext:package",
                                         usage="%(prog)s path_to_package",
-                                        help="Package an Integration into a Resilient Extension",
+                                        help=ext_package_help_msg,
+                                        description=ext_package_help_msg,
                                         argument_default=argparse.SUPPRESS)
 
     ext_package_parser = add_ext_arguments("ext:package", ext_package_parser)
 
     # Add parser for ext:convert
     # Usage: resilient-circuits ext:convert <<path_to_built_distribution>>
+    ext_convert_help_msg = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient Extension"
     ext_convert_parser = subparsers.add_parser("ext:convert",
                                         usage="%(prog)s path_to_built_distribution",
-                                        help="Convert an old (built) Integration (in .tar.gz or .zip format) into a Resilient Extension",
+                                        help=ext_convert_help_msg,
+                                        description=ext_convert_help_msg,
                                         argument_default=argparse.SUPPRESS)
 
     ext_convert_parser = add_ext_arguments("ext:convert", ext_convert_parser)
