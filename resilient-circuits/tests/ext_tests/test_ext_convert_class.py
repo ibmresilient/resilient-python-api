@@ -18,13 +18,14 @@ path_mock_bd_zipped_tar = os.path.join(path_mock_built_distributions, "zipped_ta
 path_mock_bd_zipped_tar_in_sub_folder = os.path.join(path_mock_built_distributions, "zipped_tar_in_sub_folder.zip")
 path_mock_bd_corrupt_tar = os.path.join(path_mock_built_distributions, "mock_corrupt_tar.tar.gz")
 path_mock_bd_zipped_tar_corrupt = os.path.join(path_mock_built_distributions, "zipped_tar_corrupt.zip")
+path_mock_setup_py = os.path.join(path_this_dir, "mock_data", "fn_mock_integration", "setup.py")
 
 # Generate name and path for .zip that is expected to be created when convert completes
 expected_extension_zip_name = "{0}{1}-{2}.zip".format(PREFIX_EXTENSION_ZIP, mock_data.MOCK_INTEGRATION_NAME, mock_data.MOCK_INTEGRATION_VERSION)
 expected_path_the_extension_zip = os.path.join(path_mock_built_distributions, expected_extension_zip_name)
 
 
-class ExtPackageClassTestPackageExtension(unittest.TestCase):
+class ExtConvertClassTestConvertExtension(unittest.TestCase):
 
     maxDiff = None
 
@@ -73,3 +74,13 @@ class ExtPackageClassTestPackageExtension(unittest.TestCase):
         # Convert the built distribution
         with self.assertRaisesRegexp(ExtException, "Could not extract required files from given Built Distribution"):
             self.ext_creator.convert_to_extension(path_built_distribution=path_mock_bd_zipped_tar_corrupt)
+
+    def test_convert_directory(self):
+        # Try convert by passing a path to a directory
+        with self.assertRaisesRegexp(ExtException, "You must specify a Built Distribution. Not a Directory"):
+            self.ext_creator.convert_to_extension(path_built_distribution=path_mock_built_distributions)
+
+    def test_convert_file(self):
+        # Try convert by passing a path to a file
+        with self.assertRaisesRegexp(ExtException, "We do not support this type of Distribution"):
+            self.ext_creator.convert_to_extension(path_built_distribution=path_mock_setup_py)

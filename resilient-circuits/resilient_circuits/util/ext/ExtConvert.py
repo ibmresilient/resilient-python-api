@@ -84,6 +84,14 @@ class ExtConvert(ExtCreate):
             "config.py": None
         }
 
+        # Raise Exception if the user tries to pass a Directory
+        if os.path.isdir(path_built_distribution):
+            raise ExtException("You must specify a Built Distribution. Not a Directory\nDirectory Specified: {0}".format(path_built_distribution))
+
+        # Raise Exception if not a .tar.gz or .zip file
+        if not tarfile.is_tarfile(path_built_distribution) and not zipfile.is_zipfile(path_built_distribution):
+            raise ExtException("Supported Built Distributions are .tar.gz and .zip\nWe do not support this type of Distribution: {0}".format(path_built_distribution))
+
         # Validate we can read the built distribution
         cls.__validate_file_paths__(os.R_OK, path_built_distribution)
 
@@ -193,10 +201,6 @@ class ExtConvert(ExtCreate):
 
                         else:
                             LOG.debug("\t\t- Is not a valid .tar.gz built distribution\n\t\t- Skipping...")
-
-            # Else it is a file type we do not support
-            else:
-                raise ExtException("Supported Built Distributions are .tar.gz and .zip\nWe do not support this distribution: {0}".format(path_built_distribution))
 
             # If we could not get all the required files to create an Extension, raise an error
             if not all(extracted_required_files.values()):
