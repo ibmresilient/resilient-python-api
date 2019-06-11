@@ -448,7 +448,7 @@ class ExtCreate(Ext):
 
         # Validate the url supplied in the setup.py file, set to an empty string if not valid
         if not cls.__is_valid_url__(setup_py_attributes.get("url")):
-            LOG.warning("WARNING: URL specified in the setup.py file is not valid. '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
+            LOG.warning("WARNING: '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
             setup_py_attributes["url"] = ""
 
         # Get ImportDefinition from customize.py
