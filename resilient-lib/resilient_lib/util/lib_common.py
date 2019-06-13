@@ -11,6 +11,7 @@ Contains common functions which can be used throughout the resilient-lib module.
 import warnings
 import inspect
 import functools
+import sys
 
 
 def deprecated(reason):
@@ -20,7 +21,19 @@ def deprecated(reason):
     when the function is used.
     """
 
-    if isinstance(reason, (str, unicode)):
+    reason_text = False
+
+    # Python 3
+    if sys.version_info[0] > 2:
+        if isinstance(reason, str):
+            reason_text = True
+    # Python 2
+    else:
+        if isinstance(reason, basestring):
+            reason_text = True
+
+    # Above tests if reason is text for both python 2 and python 3
+    if reason_text:
 
         # The @deprecated is used with a 'reason'.
         #
