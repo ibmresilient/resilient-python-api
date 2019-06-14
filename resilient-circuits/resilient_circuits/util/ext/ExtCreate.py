@@ -289,9 +289,13 @@ class ExtCreate(Ext):
 
         path_icon_to_use = path_to_icon
 
-        # Use default_path_to_icon is path_to icon does not exist
+        # Use default_path_to_icon if path_to_icon does not exist
         if not path_icon_to_use or not os.path.isfile(path_icon_to_use):
+            LOG.warning("WARNING: Default Icon will be used\nProvided custom icon path is invalid: %s\nextension_logo.png + company_logo.png should be placed in the /icons directory", path_icon_to_use)
             path_icon_to_use = default_path_to_icon
+
+        else:
+            LOG.info("INFO: Using custom icon: %s", path_icon_to_use)
 
         # Validate path_icon_to_use and ensure we have READ permissions
         try:
