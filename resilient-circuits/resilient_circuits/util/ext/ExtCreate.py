@@ -427,7 +427,7 @@ class ExtCreate(Ext):
         - keep_build_dir [Boolean]: if True, build/ will not be remove. Default: False
         """
 
-        LOG.info("Creating extension...")
+        LOG.info("Creating Extension")
 
         # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py
         cls.__validate_directory__(os.W_OK, output_dir)
@@ -601,7 +601,7 @@ class ExtCreate(Ext):
             if not keep_build_dir:
                 shutil.rmtree(path_build)
 
-        LOG.info("Extension created!")
+        LOG.info("Extension %s created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
 
         # Return the path to the extension zip
         return path_the_extension_zip

@@ -82,5 +82,5 @@ class ExtConvertClassTestConvertExtension(unittest.TestCase):
 
     def test_convert_file(self):
         # Try convert by passing a path to a file
-        with self.assertRaisesRegexp(ExtException, "We do not support this type of Distribution"):
+        with self.assertRaisesRegexp(ExtException, "Invalid Built Distribution provided"):
             self.ext_creator.convert_to_extension(path_built_distribution=path_mock_setup_py)

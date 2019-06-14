@@ -49,10 +49,12 @@ class ExtPackage(ExtCreate):
         # Ensure the src directory exists and we have WRITE access
         cls.__validate_directory__(os.W_OK, path_to_src)
 
-        LOG.info("Creating built distribution in /dist directory")
+        LOG.info("Creating Built Distribution in /dist directory")
 
         # Create the built distribution
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+        LOG.info("Built Distribution (.tar.gz) created at: %s", path_output_dir)
 
         # Create the extension
         path_the_extension_zip = cls.create_extension(
@@ -66,6 +68,6 @@ class ExtPackage(ExtCreate):
             path_company_logo=path_company_logo
         )
 
-        LOG.info("Extension location: %s", path_the_extension_zip)
+        LOG.info("Extension created at: %s", path_the_extension_zip)
 
         return path_the_extension_zip

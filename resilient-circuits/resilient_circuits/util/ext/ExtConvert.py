@@ -89,8 +89,8 @@ class ExtConvert(ExtCreate):
             raise ExtException("You must specify a Built Distribution. Not a Directory\nDirectory Specified: {0}".format(path_built_distribution))
 
         # Raise Exception if not a .tar.gz or .zip file
-        if not tarfile.is_tarfile(path_built_distribution) and not zipfile.is_zipfile(path_built_distribution):
-            raise ExtException("Supported Built Distributions are .tar.gz and .zip\nWe do not support this type of Distribution: {0}".format(path_built_distribution))
+        if not os.path.isfile(path_built_distribution) or (not tarfile.is_tarfile(path_built_distribution) and not zipfile.is_zipfile(path_built_distribution)):
+            raise ExtException("File corrupt. Supported Built Distributions are .tar.gz and .zip\nInvalid Built Distribution provided: {0}".format(path_built_distribution))
 
         # Validate we can read the built distribution
         cls.__validate_file_paths__(os.R_OK, path_built_distribution)
@@ -223,7 +223,7 @@ class ExtConvert(ExtCreate):
             # Get the path to the final extension.zip
             path_the_extension_zip = os.path.join(os.path.dirname(path_built_distribution), os.path.basename(path_tmp_the_extension_zip))
 
-            LOG.info("Extension location: %s", path_the_extension_zip)
+            LOG.info("Extension created at: %s", path_the_extension_zip)
 
             return path_the_extension_zip
 
