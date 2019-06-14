@@ -597,6 +597,9 @@ class ExtCreate(Ext):
             extension_zip_name = shutil.make_archive(base_name=extension_zip_base_path, format="zip", root_dir=path_build)
             path_the_extension_zip = os.path.join(extension_zip_base_path, extension_zip_name)
 
+        except ExtException as err:
+            raise err
+
         except Exception as err:
             raise ExtException(err)
 
