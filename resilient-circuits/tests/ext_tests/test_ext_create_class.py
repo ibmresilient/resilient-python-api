@@ -87,36 +87,36 @@ class ExtCreateClassTestIndividualFns(unittest.TestCase):
         path_to_corrupt_png_icon = os.path.join(path_fn_mock_integration, "icons", "mock_corrupt_icon.png")
 
         # Test getting extension_logo
-        extension_logo_as_base64 = self.ext_create_class.__get_icon__(path_extension_logo, 200, 72, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+        extension_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_extension_logo, 200, 72, PATH_DEFAULT_ICON_EXTENSION_LOGO)
         self.assertEqual(extension_logo_as_base64, mock_icon_extension_logo)
 
         # Test getting default extension_logo
-        extension_logo_as_base64 = self.ext_create_class.__get_icon__("", 200, 72, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+        extension_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), "", 200, 72, PATH_DEFAULT_ICON_EXTENSION_LOGO)
         self.assertEqual(extension_logo_as_base64, mock_icon_extension_logo)
 
         # Test getting company_logo
-        company_logo_as_base64 = self.ext_create_class.__get_icon__(path_company_logo, 100, 100, PATH_DEFAULT_ICON_COMPANY_LOGO)
+        company_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), path_company_logo, 100, 100, PATH_DEFAULT_ICON_COMPANY_LOGO)
         self.assertEqual(company_logo_as_base64, mock_icon_company_logo)
 
         # Test getting default company_logo
-        company_logo_as_base64 = self.ext_create_class.__get_icon__("", 100, 100, PATH_DEFAULT_ICON_COMPANY_LOGO)
+        company_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), "", 100, 100, PATH_DEFAULT_ICON_COMPANY_LOGO)
         self.assertEqual(company_logo_as_base64, mock_icon_company_logo)
 
         # Test invalid paths
         with self.assertRaisesRegexp(OSError, "Could not find valid icon file. Looked at two locations:"):
-            self.ext_create_class.__get_icon__("", 200, 72, "")
+            self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), "", 200, 72, "")
 
         # Test not .png
         with self.assertRaisesRegexp(ExtException, ".jpg is not a supported icon file type. Icon file must be .png"):
-            self.ext_create_class.__get_icon__(path_to_corrupt_jpg_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+            self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_to_corrupt_jpg_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         # Test corrupt .png
         with self.assertRaisesRegexp(ExtException, "Icon file corrupt"):
-            self.ext_create_class.__get_icon__(path_to_corrupt_png_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+            self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_to_corrupt_png_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         # Test invalid resolution
         with self.assertRaisesRegexp(ExtException, "Resolution must be 10x10"):
-            self.ext_create_class.__get_icon__(path_extension_logo, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+            self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_extension_logo, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
     def test_add_tag(self):
         tag_name = MOCK_INTEGRATION_NAME

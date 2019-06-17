@@ -282,7 +282,7 @@ class ExtCreate(Ext):
         return return_dict
 
     @staticmethod
-    def __get_icon__(path_to_icon, width_accepted, height_accepted, default_path_to_icon):
+    def __get_icon__(icon_name, path_to_icon, width_accepted, height_accepted, default_path_to_icon):
         """Returns the icon at path_to_icon as a base64 encoded string if it is a valid .png file with the resolution
         width_accepted x height_accepted. If path_to_icon does not exist, default_path_to_icon is returned as a base64
         encoded string"""
@@ -291,11 +291,11 @@ class ExtCreate(Ext):
 
         # Use default_path_to_icon if path_to_icon does not exist
         if not path_icon_to_use or not os.path.isfile(path_icon_to_use):
-            LOG.warning("WARNING: Default Icon will be used\nProvided custom icon path is invalid: %s\nextension_logo.png + company_logo.png should be placed in the /icons directory", path_icon_to_use)
+            LOG.warning("WARNING: Default Extension Icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
             path_icon_to_use = default_path_to_icon
 
         else:
-            LOG.info("INFO: Using custom icon: %s", path_icon_to_use)
+            LOG.info("INFO: Using custom %s icon: %s", icon_name, path_icon_to_use)
 
         # Validate path_icon_to_use and ensure we have READ permissions
         try:
@@ -529,12 +529,14 @@ class ExtCreate(Ext):
 
             # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
             extension_logo = cls.__get_icon__(
+                icon_name=os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO),
                 path_to_icon=path_extension_logo,
                 width_accepted=200,
                 height_accepted=72,
                 default_path_to_icon=PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
             company_logo = cls.__get_icon__(
+                icon_name=os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO),
                 path_to_icon=path_company_logo,
                 width_accepted=100,
                 height_accepted=100,
