@@ -566,7 +566,7 @@ def main():
                                         help="Calls selftest functions for every package and prints out their return states")
     clone_parser = subparsers.add_parser("clone",
                                          help="Clone Resilient objects")
-
+    '''Commenting out ext commands until future release
     # Add parser for ext:package
     # Usage 1: resilient-circuits ext:package <<path_to_package>>
     # Usage 2: resilient-circuits ext:package --display_name "My New Extension" <<path_to_package>>
@@ -589,7 +589,7 @@ def main():
                                         argument_default=argparse.SUPPRESS)
 
     ext_convert_parser = add_ext_arguments("ext:convert", ext_convert_parser)
-
+    '''
     # Options for selftest
     selftest_parser.add_argument("-l", "--list",
                                dest="install_list",
