@@ -173,7 +173,7 @@ def generate_default(install_list):
     LOG.debug("Found %d sections to generate", len(additional_sections))
 
     if install_list and len(remaining_list) > 0:
-        LOG.warn("%s not found. Check package name(s)", remaining_list)
+        LOG.warning("%s not found. Check package name(s)", remaining_list)
 
     with open(base_config_fn, 'r') as base_config_file:
         base_config = base_config_file.read()
@@ -270,7 +270,7 @@ def generate_or_update_config(args):
                         remaining_list.remove(package_name)
 
             if args.install_list and len(remaining_list) > 0:
-                LOG.warn("%s not found. Check package name(s)", remaining_list)
+                LOG.warning("%s not found. Check package name(s)", remaining_list)
 
             if updated:
                 LOG.info(u"Update finished.  "
@@ -364,7 +364,7 @@ def selftest(args):
 
     # any missed packages?
     if len(install_list):
-        LOG.warn("%s not found. Check package name(s)", install_list)
+        LOG.warning("%s not found. Check package name(s)", install_list)
 
 
 def find_workflow_by_programmatic_name(workflows, pname):

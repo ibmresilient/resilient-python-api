@@ -46,7 +46,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     def on_modified(self, event):
         """ reload data from config file and restart components """
         if self.app.reloading:
-            LOG.warn("Configuration file change ignored because reload already in progress")
+            LOG.warning("Configuration file change ignored because reload already in progress")
             return
 
         LOG.info("Configuration file has changed! Notify components to reload")
