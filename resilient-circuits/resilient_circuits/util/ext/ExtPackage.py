@@ -38,6 +38,9 @@ class ExtPackage(ExtCreate):
         - The code will be packaged into a Built Distribution (.tar.gz) in the /dist directory
         - The Extension.zip will also be produced in the /dist directory"""
 
+        # Ensure the src directory exists and we have WRITE access
+        cls.__validate_directory__(os.W_OK, path_to_src)
+
         # Generate paths to files required to create extension
         path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
         path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
@@ -45,9 +48,6 @@ class ExtPackage(ExtCreate):
         path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
         path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
         path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)
-
-        # Ensure the src directory exists and we have WRITE access
-        cls.__validate_directory__(os.W_OK, path_to_src)
 
         LOG.info("Creating Built Distribution in /dist directory")
 

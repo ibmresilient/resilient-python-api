@@ -29,11 +29,8 @@ def ext_command_handler(cmd, args):
     keep_build_dir = False
 
     # Handle arguments
-    if hasattr(args, "path_to_package"):
-        path_to_src = os.path.abspath(args.path_to_package)
-
-    elif hasattr(args, "path_to_built_distribution"):
-        path_to_src = os.path.abspath(args.path_to_built_distribution)
+    if hasattr(args, "p"):
+        path_to_src = os.path.abspath(args.p)
 
     if hasattr(args, "display_name"):
         display_name = args.display_name

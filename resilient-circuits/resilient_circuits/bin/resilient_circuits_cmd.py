@@ -461,26 +461,29 @@ def add_ext_arguments(cmd, ext_parser):
 
     # Add cmd specific arguments
     if cmd == "ext:package":
-        # TODO: investigate using -p as a argument name here for the path_to_package
-        ext_parser.add_argument("path_to_package",
+        ext_parser.add_argument("-p",
             help="Path to the directory containing the setup.py file",
-            nargs="?",
-            default=os.getcwd())
+            default=os.getcwd(),
+            required=True,
+            metavar="path")
 
         ext_parser.add_argument("--keep-build-dir",
             help="Do not delete the dist/build directory",
             action="store_true")
 
     elif cmd == "ext:convert":
-        ext_parser.add_argument("path_to_built_distribution",
-            help="Path to the (old) Integration that can be in .tar.gz or .zip format")
+        ext_parser.add_argument("-p",
+            help="Path to the (old) Integration that can be in .tar.gz or .zip format",
+            required=True,
+            metavar="path")
 
     # Add common (optional) arguments
     if cmd in ("ext:package", "ext:convert"):
 
         ext_parser.add_argument("--display-name",
             help="The Display Name to give the Extension",
-            nargs="?")
+            nargs="?",
+            metavar="name")
 
     return ext_parser
 
@@ -569,7 +572,7 @@ def main():
     # Usage 2: resilient-circuits ext:package --display_name "My New Extension" <<path_to_package>>
     ext_package_help_msg = "Package an Integration into a Resilient Extension"
     ext_package_parser = subparsers.add_parser("ext:package",
-                                        usage="%(prog)s path_to_package",
+                                        usage="%(prog)s -p <<path_to_package>>",
                                         help=ext_package_help_msg,
                                         description=ext_package_help_msg,
                                         argument_default=argparse.SUPPRESS)
@@ -580,7 +583,7 @@ def main():
     # Usage: resilient-circuits ext:convert <<path_to_built_distribution>>
     ext_convert_help_msg = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient Extension"
     ext_convert_parser = subparsers.add_parser("ext:convert",
-                                        usage="%(prog)s path_to_built_distribution",
+                                        usage="%(prog)s -p <<path_to_built_distribution>>",
                                         help=ext_convert_help_msg,
                                         description=ext_convert_help_msg,
                                         argument_default=argparse.SUPPRESS)
