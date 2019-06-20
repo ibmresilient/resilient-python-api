@@ -39,6 +39,10 @@ class ExtCreateClassTestIndividualFns(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
+        # assertRaisesRegexp renamed to assertRaisesRegex in PY3.2
+        if sys.version_info < (3, 2):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
         self.ext_create_class = ExtCreate("ext:package")
         self.original_import_definition = copy.deepcopy(mock_import_definition)
         self.original_mock_message_destination_to_be_tagged = copy.deepcopy(mock_message_destination_to_be_tagged[0])
@@ -103,19 +107,19 @@ class ExtCreateClassTestIndividualFns(unittest.TestCase):
         self.assertEqual(company_logo_as_base64, mock_icon_company_logo)
 
         # Test invalid paths
-        with self.assertRaisesRegexp(OSError, "Could not find valid icon file. Looked at two locations:"):
+        with self.assertRaisesRegex(OSError, "Could not find valid icon file. Looked at two locations:"):
             self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), "", 200, 72, "")
 
         # Test not .png
-        with self.assertRaisesRegexp(ExtException, ".jpg is not a supported icon file type. Icon file must be .png"):
+        with self.assertRaisesRegex(ExtException, ".jpg is not a supported icon file type. Icon file must be .png"):
             self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_to_corrupt_jpg_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         # Test corrupt .png
-        with self.assertRaisesRegexp(ExtException, "Icon file corrupt"):
+        with self.assertRaisesRegex(ExtException, "Icon file corrupt"):
             self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_to_corrupt_png_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         # Test invalid resolution
-        with self.assertRaisesRegexp(ExtException, "Resolution must be 10x10"):
+        with self.assertRaisesRegex(ExtException, "Resolution must be 10x10"):
             self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_extension_logo, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
     def test_add_tag(self):
@@ -126,7 +130,7 @@ class ExtCreateClassTestIndividualFns(unittest.TestCase):
         self.assertEqual(tagged_md, mock_message_destination_tagged)
 
         # Test invalid list_of_objs
-        with self.assertRaisesRegexp(ExtException, "is not a List"):
+        with self.assertRaisesRegex(ExtException, "is not a List"):
             self.ext_create_class.__add_tag__(tag_name, "")
 
     def test_add_tag_to_import_definition(self):

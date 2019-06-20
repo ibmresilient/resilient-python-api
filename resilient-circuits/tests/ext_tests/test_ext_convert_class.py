@@ -30,6 +30,10 @@ class ExtConvertClassTestConvertExtension(unittest.TestCase):
     maxDiff = None
 
     def setUp(self):
+        # assertRaisesRegexp renamed to assertRaisesRegex in PY3.2
+        if sys.version_info < (3, 2):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
         self.ext_creator = ExtConvert("ext:convert")
 
     def tearDown(self):
@@ -67,20 +71,20 @@ class ExtConvertClassTestConvertExtension(unittest.TestCase):
 
     def test_convert_corrupt_tar(self):
         # Convert the built distribution
-        with self.assertRaisesRegexp(ExtException, "Invalid built distribution"):
+        with self.assertRaisesRegex(ExtException, "Invalid built distribution"):
             self.ext_creator.convert_to_extension(path_built_distribution=path_mock_bd_corrupt_tar)
 
     def test_convert_zipped_tar_corrupt(self):
         # Convert the built distribution
-        with self.assertRaisesRegexp(ExtException, "Could not extract required files from given Built Distribution"):
+        with self.assertRaisesRegex(ExtException, "Could not extract required files from given Built Distribution"):
             self.ext_creator.convert_to_extension(path_built_distribution=path_mock_bd_zipped_tar_corrupt)
 
     def test_convert_directory(self):
         # Try convert by passing a path to a directory
-        with self.assertRaisesRegexp(ExtException, "You must specify a Built Distribution. Not a Directory"):
+        with self.assertRaisesRegex(ExtException, "You must specify a Built Distribution. Not a Directory"):
             self.ext_creator.convert_to_extension(path_built_distribution=path_mock_built_distributions)
 
     def test_convert_file(self):
         # Try convert by passing a path to a file
-        with self.assertRaisesRegexp(ExtException, "Invalid Built Distribution provided"):
+        with self.assertRaisesRegex(ExtException, "Invalid Built Distribution provided"):
             self.ext_creator.convert_to_extension(path_built_distribution=path_mock_setup_py)

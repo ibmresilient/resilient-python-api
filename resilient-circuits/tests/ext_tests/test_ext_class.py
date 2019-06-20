@@ -1,5 +1,6 @@
 import unittest
 import os
+import sys
 import shutil
 import stat
 from resilient_circuits.util.ext.Ext import Ext
@@ -9,6 +10,10 @@ from resilient_circuits.util.ext import ExtException
 class ExtClassTestIndividualFns(unittest.TestCase):
 
     def setUp(self):
+        # assertRaisesRegexp renamed to assertRaisesRegex in PY3.2
+        if sys.version_info < (3, 2):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
         self.ext_class = Ext("ext:package")
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
         self.temp_dir = os.path.join(self.dir_path, "test_temp")
@@ -35,20 +40,20 @@ class ExtClassTestIndividualFns(unittest.TestCase):
         # Set permissions to Read only
         os.chmod(temp_permissions_file, stat.S_IRUSR)
 
-        with self.assertRaisesRegexp(ExtException, "User does not have WRITE permissions"):
+        with self.assertRaisesRegex(ExtException, "User does not have WRITE permissions"):
             self.ext_class.__has_permissions__(os.W_OK, temp_permissions_file)
 
         # Set permissions to Write only
         os.chmod(temp_permissions_file, stat.S_IWUSR)
 
-        with self.assertRaisesRegexp(ExtException, "User does not have READ permissions"):
+        with self.assertRaisesRegex(ExtException, "User does not have READ permissions"):
             self.ext_class.__has_permissions__(os.R_OK, temp_permissions_file)
 
     def test_validate_directory(self):
 
         non_exist_path = "/non_exits/path"
 
-        with self.assertRaisesRegexp(ExtException, "The path does not exist: " + non_exist_path):
+        with self.assertRaisesRegex(ExtException, "The path does not exist: " + non_exist_path):
             self.ext_class.__validate_directory__(os.R_OK, non_exist_path)
 
         exists_dir = os.path.join(self.temp_dir, "mock_existing_dir")
@@ -59,7 +64,7 @@ class ExtClassTestIndividualFns(unittest.TestCase):
     def test_validate_file_paths(self):
 
         non_exist_path = "/non_exits/path"
-        with self.assertRaisesRegexp(ExtException, "Could not find file: " + non_exist_path):
+        with self.assertRaisesRegex(ExtException, "Could not find file: " + non_exist_path):
             self.ext_class.__validate_file_paths__(None, non_exist_path)
 
         exists_file = os.path.join(self.temp_dir, "mock_existing_file.txt")

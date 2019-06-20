@@ -168,7 +168,12 @@ class ExtCreate(Ext):
             config_parser = configparser.ConfigParser()
 
             # Read and parse the configs from the config_str
-            config_parser.readfp(io.StringIO(config_str))
+            if sys.version_info < (3, 2):
+                # config_parser.readfp() was deprecated and replaced with read_file in PY3.2
+                config_parser.readfp(io.StringIO(config_str))
+
+            else:
+                config_parser.read_file(io.StringIO(config_str))
 
             # Get the configs from each section
             for section_name in config_parser.sections():
