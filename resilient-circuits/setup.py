@@ -44,6 +44,7 @@ setup(
         'jinja2>=2.10.0',
         'pysocks',
         'filelock>=2.0.5',
+        'setuptools>=41.0.0',
         'resilient>={}.{}'.format(major, minor)
     ],
     author_email='support@resilientsystems.com',

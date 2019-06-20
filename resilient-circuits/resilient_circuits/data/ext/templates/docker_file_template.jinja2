@@ -1,0 +1,17 @@
+{# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved #}
+FROM resilient:v33
+
+{% for app_config in app_configs %}
+ENV {{ app_config.env_name }}=''
+{% endfor %}
+
+COPY *.tar.gz /app/data
+
+RUN pip install -U {{ extension_name }}.tar.gz 
+ && resilient-circuits config -u -l {{ installed_package_name }}
+{% for app_config in app_configs %}
+ && sed -i "s/{{ app_config.name }}={{ app_config.placeholder }}/{{ app_config.name }}=\${{ app_config.env_name }}/g" ~/.resilient/app.config {%if app_config != app_configs|last %}\{% endif %}
+ 
+{% endfor %}
+
+ENTRYPOINT /app/bin/res_start.exp

@@ -20,6 +20,8 @@ from resilient import ensure_unicode
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline, extract_to_res
 from resilient_circuits.util.resilient_customize import customize_resilient
+from resilient_circuits.util.resilient_ext import ext_command_handler
+
 
 if sys.version_info.major == 2:
     from io import open
@@ -37,7 +39,7 @@ except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("resilient_circuits_cmd_logger")
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
@@ -454,6 +456,37 @@ def clone(args):
     else:
         raise Exception("Could not import because the server did not return an import ID")
 
+def add_ext_arguments(cmd, ext_parser):
+    """Add arguments to the given ext: command"""
+
+    # Add cmd specific arguments
+    if cmd == "ext:package":
+        ext_parser.add_argument("-p",
+            help="Path to the directory containing the setup.py file",
+            default=os.getcwd(),
+            required=True,
+            metavar="path")
+
+        ext_parser.add_argument("--keep-build-dir",
+            help="Do not delete the dist/build directory",
+            action="store_true")
+
+    elif cmd == "ext:convert":
+        ext_parser.add_argument("-p",
+            help="Path to the (old) Integration that can be in .tar.gz or .zip format",
+            required=True,
+            metavar="path")
+
+    # Add common (optional) arguments
+    if cmd in ("ext:package", "ext:convert"):
+
+        ext_parser.add_argument("--display-name",
+            help="The Display Name to give the Extension",
+            nargs="?",
+            metavar="name")
+
+    return ext_parser
+
 def main():
     """Main commandline"""
     # create base parser for extract and codgen
@@ -533,7 +566,30 @@ def main():
                                         help="Calls selftest functions for every package and prints out their return states")
     clone_parser = subparsers.add_parser("clone",
                                          help="Clone Resilient objects")
+    '''Commenting out ext commands until future release
+    # Add parser for ext:package
+    # Usage 1: resilient-circuits ext:package <<path_to_package>>
+    # Usage 2: resilient-circuits ext:package --display_name "My New Extension" <<path_to_package>>
+    ext_package_help_msg = "Package an Integration into a Resilient Extension"
+    ext_package_parser = subparsers.add_parser("ext:package",
+                                        usage="%(prog)s -p <<path_to_package>>",
+                                        help=ext_package_help_msg,
+                                        description=ext_package_help_msg,
+                                        argument_default=argparse.SUPPRESS)
 
+    ext_package_parser = add_ext_arguments("ext:package", ext_package_parser)
+
+    # Add parser for ext:convert
+    # Usage: resilient-circuits ext:convert <<path_to_built_distribution>>
+    ext_convert_help_msg = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient Extension"
+    ext_convert_parser = subparsers.add_parser("ext:convert",
+                                        usage="%(prog)s -p <<path_to_built_distribution>>",
+                                        help=ext_convert_help_msg,
+                                        description=ext_convert_help_msg,
+                                        argument_default=argparse.SUPPRESS)
+
+    ext_convert_parser = add_ext_arguments("ext:convert", ext_convert_parser)
+    '''
     # Options for selftest
     selftest_parser.add_argument("-l", "--list",
                                dest="install_list",
@@ -644,6 +700,10 @@ def main():
             clone(args)
     elif args.cmd == "selftest":
         selftest(args)
+
+    elif "ext:" in args.cmd:
+        # Call the ext: command handler
+        ext_command_handler(args.cmd, args)
 
 if __name__ == "__main__":
     LOG.debug("CALLING MAIN")
