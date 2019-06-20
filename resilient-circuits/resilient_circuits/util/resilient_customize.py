@@ -170,7 +170,7 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
             LOG.info(u"Package '%s' done.", dist)
 
     if install_list is not None and len(install_list) > 0:
-        LOG.warn("%s not found. Check package name(s)", install_list)
+        LOG.warning("%s not found. Check package name(s)", install_list)
 
     if ep_count == 0:
         LOG.info(u"No customizations are defined by installed packages.")

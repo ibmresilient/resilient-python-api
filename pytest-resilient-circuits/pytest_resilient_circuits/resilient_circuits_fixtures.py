@@ -338,7 +338,6 @@ port = 443
 
         logs = tmpdir_factory.mktemp("logs")
         print("TEST logdir={}".format(logs.strpath))
-
         # if an existing config file is given, use it
         config_parser = configparser.ConfigParser()
         if app_config:
@@ -350,9 +349,17 @@ port = 443
             # build a config file using canned values for [resilient] and the integration we're testing
             #self.config_file.write(resilient_config_data)
             # use canned values
-            config_parser.readfp(StringIO(resilient_config_data))
-            config_data = getattr(request.module, "config_data", "")
-            config_parser.readfp(StringIO(config_data))
+            if sys.version_info >= (3, 2):  # if we have ConfigParser and read_file available
+                config_parser = configparser.ConfigParser()
+                config_parser.read_file(StringIO(resilient_config_data))
+                config_data = getattr(request.module, "config_data", "")
+                config_parser.read_file(StringIO(config_data))
+            else:  # fall back to readfp using SafeConfigParser
+                config_parser = configparser.SafeConfigParser()
+                config_parser.readfp(StringIO(resilient_config_data))
+                config_data = getattr(request.module, "config_data", "")
+                config_parser.readfp(StringIO(config_data))
+            
 
         # add environment variables which override existing values
         host = os.environ.get("TEST_RESILIENT_APPLIANCE")

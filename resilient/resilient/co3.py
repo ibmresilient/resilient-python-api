@@ -79,7 +79,7 @@ def get_client(opts):
     # Allow explicit setting "do not verify certificates"
     verify = opts.get("cafile")
     if str(verify).lower() == "false":
-        LOG.warn("Unverified HTTPS requests (cafile=false).")
+        LOG.warning("Unverified HTTPS requests (cafile=false).")
         requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
 
@@ -94,7 +94,7 @@ def get_client(opts):
                           "base_url": url,
                           "verify": verify}
     if opts.get("log_http_responses"):
-        LOG.warn("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
+        LOG.warning("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
         simple_client = LoggingSimpleClient
         simple_client_args["logging_directory"] = opts["log_http_responses"]
     else:
@@ -104,7 +104,7 @@ def get_client(opts):
 
     if opts.get("resilient_mock"):
         # Use a Mock for the Resilient Rest API
-        LOG.warn("Using Mock '%s' for Resilient REST API", opts["resilient_mock"])
+        LOG.warning("Using Mock '%s' for Resilient REST API", opts["resilient_mock"])
         module_path, class_name = opts["resilient_mock"].rsplit('.', 1)
         path, module_name = os.path.split(module_path)
         sys.path.insert(0, path)

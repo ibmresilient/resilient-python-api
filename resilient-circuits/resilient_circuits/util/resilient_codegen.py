@@ -287,7 +287,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
             try:
                 os.mkdir(subdir)
             except OSError as exc:
-                LOG.warn(exc)
+                LOG.warning(exc)
             render_file_mapping(value, data, source_dir, subdir)
         else:
             target_file = os.path.join(target_dir, key)
@@ -814,7 +814,7 @@ def codegen_package(client, export_file, package,
     try:
         os.makedirs(output_dir)
     except OSError as exc:
-        LOG.warn(u"%s", exc)
+        LOG.warning(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
     return codegen_from_template('codegen', client, export_file, template_file_path, package,
