@@ -97,6 +97,8 @@ class RequestsCommon:
             log.debug(response.content)
 
             # custom handler for response handling
+            # set callback to be the name of the method you would like to call
+            # to do your custom error handling and return the response
             if callback:
                 return callback(response)
 
