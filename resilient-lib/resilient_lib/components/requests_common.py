@@ -3,7 +3,12 @@
 # pragma pylint: disable=unused-argument, no-self-use
 
 import requests
+import logging
 from resilient_lib.components.integration_errors import IntegrationError
+from resilient_lib.util.lib_common import deprecated
+
+
+log = logging.getLogger(__name__)
 
 
 class RequestsCommon:
@@ -34,6 +39,81 @@ class RequestsCommon:
 
         return proxies
 
+    def execute_call_v2(self, method, url, timeout=30, proxies=None, callback=None, **kwargs):
+        """Constructs and sends a request. Returns :class:`Response` object.
+
+            From the requests.requests() function, inputs are mapped to this function
+            :param method: GET, HEAD, PATCH, POST, PUT, DELETE, OPTIONS
+            :param url: URL for the request.
+            :param params: (optional) Dictionary, list of tuples or bytes to send
+                in the body of the :class:`Request`.
+            :param data: (optional) Dictionary, list of tuples, bytes, or file-like
+                object to send in the body of the :class:`Request`.
+            :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
+            :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
+            :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
+            :param files: (optional) Dictionary of ``'name': file-like-objects`` (or ``{'name': file-tuple}``) for multipart encoding upload.
+                ``file-tuple`` can be a 2-tuple ``('filename', fileobj)``, 3-tuple ``('filename', fileobj, 'content_type')``
+                or a 4-tuple ``('filename', fileobj, 'content_type', custom_headers)``, where ``'content-type'`` is a string
+                defining the content type of the given file and ``custom_headers`` a dict-like object containing additional headers
+                to add for the file.
+            :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
+            :param timeout: (optional) How many seconds to wait for the server to send data
+                before giving up, as a float, or a :ref:`(connect timeout, read
+                timeout) <timeouts>` tuple.
+            :type timeout: float or tuple
+            :param allow_redirects: (optional) Boolean. Enable/disable GET/OPTIONS/POST/PUT/PATCH/DELETE/HEAD redirection. Defaults to ``True``.
+            :type allow_redirects: bool
+            :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+            :param verify: (optional) Either a boolean, in which case it controls whether we verify
+                    the server's TLS certificate, or a string, in which case it must be a path
+                    to a CA bundle to use. Defaults to ``True``.
+            :param stream: (optional) if ``False``, the response content will be immediately downloaded.
+            :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+            :param callback: callback routine used to handle errors
+            :return: :class:`Response <Response>` object
+            :rtype: requests.Response
+        """
+        try:
+            if method.lower() not in ('get', 'post', 'put', 'patch', 'delete', 'head', 'options'):
+                raise IntegrationError("unknown method {}".format(method))
+
+            # If proxies was not set check if they are set in the config
+            if proxies is None:
+                proxies = self.get_proxies()
+
+            # Log the parameter inputs that are not None
+            args_dict = locals()
+            args = args_dict.keys()
+            for k in args:
+                if k != "self" and k != "kwargs" and args_dict[k] is not None:
+                    log.debug("  {}: {}".format(k, args_dict[k]))
+
+            # Pass request to requests.request() function
+            response = requests.request(method, url, timeout=timeout, proxies=proxies, **kwargs)
+
+            # Debug logging
+            log.debug(response.status_code)
+            log.debug(response.content)
+
+            # custom handler for response handling
+            # set callback to be the name of the method you would like to call
+            # to do your custom error handling and return the response
+            if callback:
+                return callback(response)
+
+            # Raise error is bad status code is returned
+            response.raise_for_status()
+
+            # Return requests.Response object
+            return response
+
+        except Exception as err:
+            msg = str(err)
+            log and log.error(msg)
+            raise IntegrationError(msg)
+
+    @deprecated("Use the new method execute_call_v2()")
     def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """

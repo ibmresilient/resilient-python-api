@@ -3,9 +3,11 @@ import json
 import logging
 import unittest
 import pytest
+import requests
 from parameterized import parameterized
 from resilient_lib.components.requests_common import RequestsCommon, get_case_insensitive_key_value, is_payload_in_json
 from resilient_lib.components.integration_errors import IntegrationError
+
 
 class TestFunctionRequests(unittest.TestCase):
     """ Tests for the attachment_hash function
@@ -46,7 +48,6 @@ class TestFunctionRequests(unittest.TestCase):
         proxies = rc.get_proxies()
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
-        
 
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
@@ -70,6 +71,15 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertIsNotNone(bytes_result)
         self.assertTrue(isinstance(bytes_result, bytes))
 
+    def test_v2_resp_type(self):
+        IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
+
+        rc = RequestsCommon(None, None)
+
+        # R E S P O N S E  Object
+        response = rc.execute_call_v2("get", "{}?format=json".format(IPIFY))
+
+        self.assertTrue(isinstance(response, requests.models.Response))
 
     def test_verbs(self):
         URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
@@ -139,6 +149,83 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("bad", URL, None, log=TestFunctionRequests.LOG)
 
+    def test_verbs_v2(self):
+        URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
+
+        headers = {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+
+        payload = {
+            'title': 'foo',
+            'body': 'bar',
+            'userId': 1
+        }
+
+        rc = RequestsCommon(None, None)
+
+        # P O S T
+        # test json argument without headers
+        resp = rc.execute_call_v2("post", "/".join((URL, "post")), json=payload)
+        print (resp.json())
+        self.assertEqual(resp.json()["json"].get("body"), "bar")
+
+        # test json argument with headers
+        resp = rc.execute_call_v2("post", "/".join((URL, "post")), json=payload, headers=headers)
+        print (resp.json())
+        self.assertEqual(resp.json()['json'].get("body"), "bar")
+
+        # test data argument
+        headers_data = {
+            "Content-type": "application/x-www-form-urlencoded"
+        }
+        resp = rc.execute_call_v2("post", "/".join((URL, "post")), data=payload, headers=headers_data)
+        print (resp.json())
+        self.assertEqual(resp.json()['json'].get("body"), "bar")
+
+        # G E T
+        resp = rc.execute_call_v2("get", "/".join((URL, "get")), params=payload)
+        self.assertTrue(resp.json()['args'].get("userId"))
+        self.assertEqual(resp.json()['args'].get("userId"), '1')
+
+        # P U T
+        # With params
+        resp = rc.execute_call_v2("put", "/".join((URL, "put")), params=payload, headers=headers)
+        TestFunctionRequests.LOG.info(resp)
+        self.assertTrue(resp.json()['args'].get("title"))
+        self.assertEqual(resp.json()['args'].get("title"), 'foo')
+
+        # With json body
+        resp = rc.execute_call_v2("put", "/".join((URL, "put")), json=payload, headers=headers)
+        TestFunctionRequests.LOG.info(resp)
+        self.assertTrue(resp.json()['json'].get("title"))
+        self.assertEqual(resp.json()['json'].get("title"), 'foo')
+
+        # P A T C H
+        patch = {
+            'title': 'patch'
+        }
+        # With params
+        resp = rc.execute_call_v2("patch", "/".join((URL, "patch")), params=patch, headers=headers)
+        print ("resp {}".format(resp.json()))
+        self.assertTrue(resp.json()['args'].get("title"))
+        self.assertEqual(resp.json()['args'].get("title"), 'patch')
+
+        # With json body
+        resp = rc.execute_call_v2("patch", "/".join((URL, "patch")), json=patch, headers=headers)
+        print ("resp {}".format(resp.json()))
+        self.assertTrue(resp.json()['json'].get("title"))
+        self.assertEqual(resp.json()['json'].get("title"), 'patch')
+
+        # D E L E T E
+        DEL_URL = "/".join((URL, "delete"))
+        resp = rc.execute_call_v2("delete", DEL_URL)
+        self.assertEqual(resp.json().get("url"), DEL_URL)
+
+        # bad verb
+        with self.assertRaises(IntegrationError):
+            resp = rc.execute_call_v2("bad", URL)
+
     def test_statuscode(self):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
@@ -149,7 +236,17 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("get", "/".join((URL, "300")), None, resp_type='text')
 
-    def test_statuscode(self):
+    def test_statuscode_v2(self):
+        URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
+
+        rc = RequestsCommon(None, None)
+
+        resp = rc.execute_call_v2("get", "/".join((URL, "200")))
+
+        with self.assertRaises(IntegrationError):
+            resp = rc.execute_call_v2("get", "/".join((URL, "400")))
+
+    def test_statuscode_callback(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
 
         def callback(resp):
@@ -160,14 +257,32 @@ class TestFunctionRequests(unittest.TestCase):
 
         resp = rc.execute_call("get", URL, None, resp_type='text', callback=callback)
 
+    def test_statuscode_callback_v2(self):
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
+
+        def callback(resp):
+            if resp.status_code != 300:
+                raise ValueError(resp.status_code)
+
+        rc = RequestsCommon(None, None)
+
+        resp = rc.execute_call_v2("get", URL, callback=callback)
+
     def test_timeout(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
         rc = RequestsCommon(None, None)
 
         with self.assertRaises(IntegrationError):
-            resp = rc.execute_call("get", URL, None, resp_type='text', timeout=10)
+            resp = rc.execute_call("get", URL, None, resp_type='text', timeout=2)
 
+    def test_timeout_v2(self):
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
+
+        rc = RequestsCommon(None, None)
+
+        with self.assertRaises(IntegrationError):
+            resp = rc.execute_call_v2("get", URL, timeout=2)
 
     def test_basicauth(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
@@ -178,6 +293,14 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call("get", URL, None, basicauth=basicauth)
         self.assertTrue(resp.get("authenticated"))
 
+    def test_basicauth_v2(self):
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
+        basicauth = ("postman", "password")
+
+        rc = RequestsCommon(None, None)
+
+        resp = rc.execute_call_v2("get", URL, auth=basicauth)
+        self.assertTrue(resp.json().get("authenticated"))
 
     def test_proxy_override(self):
         rc = RequestsCommon(None, None)
@@ -267,6 +390,36 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
 
+    def test_proxy_v2(self):
+        rc = RequestsCommon()
+
+        proxy_url = TestFunctionRequests.URL_TEST_PROXY
+        proxy_result = rc.execute_call_v2("get", proxy_url)
+        proxy_result_json = proxy_result.json()
+
+        proxies = {
+            'http': proxy_result_json['curl'] if proxy_result_json['protocol'] == 'http' else None,
+            'https': proxy_result_json['curl'] if proxy_result_json['protocol'] == 'https' else None
+        }
+
+        URL = "?".join((TestFunctionRequests.URL_TEST_DATA_RESULTS, "format=json"))
+
+        # J S O N
+        response = rc.execute_call_v2("get", URL, proxies=proxies)
+        json_result = response.json()
+
+        self.assertTrue(json_result.get("ip"))
+
+        integrations =  { "integrations": {
+            'http_proxy': proxy_result_json['curl'] if proxy_result_json['protocol'] == 'http' else None,
+            'https_proxy': proxy_result_json['curl'] if proxy_result_json['protocol'] == 'https' else None
+        }
+        }
+
+        rc = RequestsCommon(opts=integrations)
+        response = rc.execute_call_v2("get", URL)
+        json_result = response.json()
+        self.assertTrue(json_result.get("ip"))
 
     def test_headers(self):
         # G E T with headers
@@ -280,6 +433,19 @@ class TestFunctionRequests(unittest.TestCase):
 
         json_result = rc.execute_call("get", URL, None, headers=headers)
         self.assertEqual(json_result['headers'].get("my-sample-header"), "my header")
+
+    def test_headers_v2(self):
+        # G E T with headers
+        headers = {
+            "Content-type": "application/json; charset=UTF-8",
+            "my-sample-header": "my header"
+        }
+        URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "headers"))
+
+        rc = RequestsCommon()
+
+        json_result = rc.execute_call_v2("get", URL, headers=headers)
+        self.assertEqual(json_result.json()['headers'].get("my-sample-header"), "my header")
 
 
     @parameterized.expand([
