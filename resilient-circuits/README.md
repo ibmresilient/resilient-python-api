@@ -81,7 +81,4 @@ subcommands:
     selftest            Calls selftest functions for every package and prints
                         out their return states
     clone               Clone Resilient objects
-    ext:package         Package an Integration into a Resilient Extension
-    ext:convert         Convert an old (built) Integration that can be in
-                        .tar.gz or .zip format into a Resilient Extension
 ```
