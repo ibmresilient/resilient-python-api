@@ -1,4 +1,4 @@
-2019-07-02: version 32.0.145
+2019-07-03: version 32.0.186
 
 *  Added more flexible 'execute_call_v2()' method in resilient-lib
 *  Fix for deprecated log warnings
