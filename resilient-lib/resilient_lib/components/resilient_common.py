@@ -111,7 +111,7 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
 
 def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
     """
-    call the Resilient REST API to get the attachment or artifact attachment name
+    call the Resilient REST API to get the attachment or artifact attachment metadata
     :param res_client: required for communication back to resilient
     :param incident_id: required
     :param artifact_id: optional
@@ -231,6 +231,14 @@ def get_function_input(inputs, input_name, optional=False):
         err = "'{0}' is a mandatory function input".format(input_name)
         raise ValueError(err)
     else:
+        # Handle if select input type
+        if isinstance(the_input, dict):
+            the_input = the_input.get("name")
+
+        # Handle if multi-select input type
+        elif isinstance(the_input, list):
+            the_input = [i.get("name") for i in the_input]
+
         return the_input
 
 
