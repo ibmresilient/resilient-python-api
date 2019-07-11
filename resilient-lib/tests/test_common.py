@@ -2,6 +2,7 @@ import unittest
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name
 
+
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
 
@@ -21,12 +22,12 @@ class TestFunctionMetrics(unittest.TestCase):
         str_ts = readable_datetime(ts, milliseconds=False)
         self.assertEqual(str_ts, '2018-09-06T00:36:34Z')
 
-        str_ts = readable_datetime(ts*1000, rtn_format='%Y-%m-%d')
+        str_ts = readable_datetime(ts * 1000, rtn_format='%Y-%m-%d')
         self.assertEqual(str_ts, '2018-09-06')
 
     def test_validate_fields(self):
         # validate_fields(fieldList, kwargs)
-        test_dict = { "a": "a", "b": "b", "c": ''}
+        test_dict = {"a": "a", "b": "b", "c": ''}
 
         validate_fields(("a", "b"), test_dict)
 
@@ -41,7 +42,6 @@ class TestFunctionMetrics(unittest.TestCase):
 
         self.assertEqual(unescape("&ab;xx"), '&ab;xx')
         self.assertIsNone(unescape(None))
-
 
     def test_clean_html(self):
         # clean_html(htmlFragment)
