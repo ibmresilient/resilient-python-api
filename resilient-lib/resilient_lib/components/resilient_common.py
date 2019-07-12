@@ -72,14 +72,73 @@ def unescape(data):
 
 def validate_fields(field_list, kwargs):
     """
-    ensure required fields are present. Throw ValueError if not
-    :param field_list:
-    :param kwargs:
-    :return: no return
+    Ensure each mandatory field in field_list is present in kwargs.
+    Throw ValueError if not.
+
+    field_list can be a list/tuple of strings where each string is
+    a field name or it can be a list/tuple of dicts where each item
+    has the attributes 'name' (required) and 'placeholder' (optional).
+
+    If the value of the item in kwargs is equal to its placeholder
+    defined in field_list, a ValueError is raised.
+
+    If an item in kwargs is a Resilient Select Function Input, its
+    value will be a dict that has a 'name' attribute. This returns
+    the value of 'name'.
+
+    If an item in kwargs is a Resilient Multi-Select Function Input, its
+    value will be a list of dicts that have the 'name' attribute. This
+    returns a list of the 'name' values for that item.
+
+    - field_list: [list/tuple] of the mandatory fields. Can be an empty list if no mandatory fields.
+    - kwargs: [dict] of all the fields to search.
+    - return: a Dictionary of all fields with Select/Multi-Select fields handled.
     """
-    for field in field_list:
-        if field not in kwargs or kwargs.get(field) == '':
-            raise ValueError('Required field is missing or empty: ' + field)
+
+    mandatory_fields = field_list
+    provided_fields = kwargs
+    return_fields = {}
+
+    # This is needed to handle something like: validate_fields(('incident_id'), kwargs)
+    # In this case field_list will be a string and not a tuple
+    if isinstance(mandatory_fields, string_types):
+        mandatory_fields = tuple([mandatory_fields])
+
+    if not isinstance(mandatory_fields, list) and not isinstance(mandatory_fields, tuple):
+        raise ValueError("'field_list' must by of type list/tuple, not {0}".format(type(mandatory_fields)))
+
+    if not isinstance(provided_fields, dict):
+        raise ValueError("'kwargs' must by of type dict, not {0}".format(type(provided_fields)))
+
+    # Validate that mandatory fields exist + are not equal to their placeholder values
+    for field in mandatory_fields:
+
+        placeholder_value = None
+
+        if isinstance(field, dict):
+            placeholder_value = field.get("placeholder")
+            field = field.get("name")
+
+        if not provided_fields.get(field):
+            raise ValueError("'{0}' is mandatory and is not set. You must set this value to run this function".format(field))
+
+        elif placeholder_value and provided_fields.get(field) == placeholder_value:
+            raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(field, placeholder_value))
+
+    # Loop provided fields and get their value
+    for field_name, field_value in provided_fields.items():
+
+        # Handle if Select Function Input type
+        if isinstance(field_value, dict):
+            field_value = field_value.get("name")
+
+        # Handle if Multi-Select Function Input type
+        elif isinstance(field_value, list):
+            field_value = [f.get("name") for f in field_value]
+
+        return_fields[field_name] = field_value
+
+    return return_fields
 
 
 def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
@@ -192,76 +251,6 @@ def str_to_bool(value):
     """
     value = str(value).lower()
     return value in ('1', 'true', 'yes')
-
-
-def get_app_config_option(app_configs, option_name, optional=False, placeholder=None):
-    """Given option_name, checks if it is in app_configs. Raises ValueError if
-    optional=False and its value is None or equals the given placeholder
-
-    - app_configs: [Dict] of all appconfigs. (Generally self.options)
-    - option_name: [String] name of the option to get
-    - optional:    [Bool] if the option is mandatory or not. Default: False
-    - placeholder: [String] the default placeholder that is specified in the config.py file. If the
-    value of the option_name matches this placeholder, a ValueError is raised. Default: None.
-    - Return: the value of option_name"""
-
-    option = app_configs.get(option_name)
-    err = "'{0}' is mandatory and is not set in app.config file. You must set this value to run this function".format(option_name)
-
-    if not option and optional is False:
-        raise ValueError(err)
-    elif optional is False and placeholder is not None and option == placeholder:
-        raise ValueError(err)
-    else:
-        return option
-
-
-def get_function_input(inputs, input_name, optional=False):
-    """Given input_name, checks if it defined in inputs. Raises ValueError if
-    optional=False and input_name is not found or undefined
-
-    - inputs:     [Dict] of all function inputs. Generally 'kwargs'.
-    - input_name: [String] name of the input to get
-    - optional:   [Bool] if the input is mandatory or not. Default: False
-    - Return:     the value of input_name"""
-
-    the_input = inputs.get(input_name)
-
-    if not the_input and optional is False:
-        err = "'{0}' is a mandatory function input".format(input_name)
-        raise ValueError(err)
-    else:
-        # Handle if select input type
-        if isinstance(the_input, dict):
-            the_input = the_input.get("name")
-
-        # Handle if multi-select input type
-        elif isinstance(the_input, list):
-            the_input = [i.get("name") for i in the_input]
-
-        return the_input
-
-
-def get_all_function_inputs(inputs, mandatory_inputs=[]):
-    """If mandatory input is not defined in inputs, a ValueError is raised.
-
-    - inputs:           [Dict] of all function inputs. Generally 'kwargs'.
-    - mandatory_inputs: [List] of the names of inputs that are required for the function to run. Default is an empty List.
-    - Return: a Dict of each input input_name/input_value"""
-
-    fn_inputs = {}
-
-    try:
-        validate_fields(mandatory_inputs, inputs)
-
-    except ValueError as err:
-        raise ValueError("Mandatory function input not defined\n{0}".format(err))
-
-    for i in inputs:
-        optional = i not in mandatory_inputs
-        fn_inputs[i] = get_function_input(inputs=inputs, input_name=i, optional=optional)
-
-    return fn_inputs
 
 
 def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):

@@ -5,7 +5,7 @@ import sys
 import unittest
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, get_app_config_option, get_function_input, get_all_function_inputs, write_to_tmp_file
+    get_file_attachment_metadata, write_to_tmp_file
 
 
 class TestFunctionMetrics(unittest.TestCase):
@@ -37,13 +37,56 @@ class TestFunctionMetrics(unittest.TestCase):
 
     def test_validate_fields(self):
         # validate_fields(fieldList, kwargs)
-        test_dict = {"a": "a", "b": "b", "c": ''}
 
-        validate_fields(("a", "b"), test_dict)
+        inputs = {
+            "bool_input": True,
+            "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
+            "str_input": "some text",
+            "num_input": 123,
+            "select_input": {"id": 111, "name": "select choice"},
+            "multi_select_input": [{"id": 111, "name": "select choice one"}, {"id": 111, "name": "select choice two"}],
+            "empty_input": ''
+        }
 
-        with self.assertRaises(ValueError):
-            validate_fields(("c"), test_dict)
-            validate_fields(("d"), test_dict)
+        mandatory_fields = [
+            {"name": "str_input", "placeholder": "some text"}
+        ]
+
+        expected_output = {
+            "bool_input": True,
+            "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
+            "str_input": "some text",
+            "num_input": 123,
+            "select_input": "select choice",
+            "multi_select_input": ["select choice one", "select choice two"],
+            "empty_input": ''
+        }
+
+        # Test its runs as expected
+        validate_fields(("bool_input", "unicode_input"), inputs)
+
+        # Test mandatory fields missing
+        with self.assertRaisesRegex(ValueError, "'cx' is mandatory and is not set. You must set this value to run this function"):
+            validate_fields(("cx"), inputs)
+
+        # Test mandatory field is empty string
+        with self.assertRaisesRegex(ValueError, "'empty_input' is mandatory and is not set. You must set this value to run this function"):
+            validate_fields(("empty_input"), inputs)
+
+        # Test no mandatory fields
+        self.assertEquals(validate_fields([], inputs), expected_output)
+
+        # Test getting single input from returned dict
+        self.assertEquals(validate_fields(("bool_input"), inputs).get("bool_input"), True)
+        self.assertEquals(validate_fields([], inputs).get("bool_input"), True)
+
+        # Test select + multi-select type fields
+        self.assertEquals(validate_fields(["select_input"], inputs).get("select_input"), "select choice")
+        self.assertEquals(validate_fields([], inputs).get("multi_select_input"), ["select choice one", "select choice two"])
+
+        # Test placeholder
+        with self.assertRaisesRegex(ValueError, "'str_input' is mandatory and still has its placeholder value of 'some text'. You must set this value correctly to run this function"):
+            validate_fields(mandatory_fields, inputs)
 
     def test_unescape(self):
         # unescape(data)
@@ -87,74 +130,6 @@ class TestFunctionMetrics(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             get_file_attachment_metadata(None, None, attachment_id=123)
-
-    def test_get_app_config_option(self):
-        app_configs = {
-            "config_one": "abc",
-            "config_two": "<some placeholder>",
-            "config_three": None
-        }
-
-        # Test mandatory and exists
-        option_name = get_app_config_option(app_configs, "config_one", False)
-        self.assertEqual(option_name, "abc")
-
-        # Test mandatory and does not exist
-        with self.assertRaisesRegex(ValueError, "'config_four' is mandatory and is not set in app.config file. You must set this value to run this function"):
-            option_name = get_app_config_option(app_configs, "config_four", False)
-
-        # Test placeholder
-        with self.assertRaisesRegex(ValueError, "'config_two' is mandatory and is not set in app.config file. You must set this value to run this function"):
-            option_name = get_app_config_option(app_configs, "config_two", False, "<some placeholder>")
-
-        # Test optional
-        option_name = get_app_config_option(app_configs, "config_four", True)
-        self.assertEqual(option_name, None)
-
-    def test_get_function_input(self):
-        inputs = {
-            "bool_input": True,
-            "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
-            "str_input": "some text",
-            "num_input": 123,
-            "select_input": {"id": 111, "name": "select choice"},
-            "multi_select_input": [{"id": 111, "name": "select choice one"}, {"id": 111, "name": "select choice two"}]
-        }
-
-        self.assertEquals(get_function_input(inputs, "bool_input", False), True)
-        self.assertEquals(get_function_input(inputs, "unicode_input", False), u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ")
-        self.assertEquals(get_function_input(inputs, "num_input", False), 123)
-        self.assertEquals(get_function_input(inputs, "select_input", False), "select choice")
-        self.assertEquals(get_function_input(inputs, "multi_select_input", False), ["select choice one", "select choice two"])
-
-        # Test mandatory and does not exist
-        with self.assertRaisesRegex(ValueError, "'an_input' is a mandatory function input"):
-            get_function_input(inputs, "an_input", False)
-
-        # Test optional
-        the_input = get_function_input(inputs, "an_input", True)
-        self.assertEqual(the_input, None)
-
-    def test_get_all_function_inputs(self):
-        inputs = {
-            "bool_input": True,
-            "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
-            "multi_select_input": [{"id": 111, "name": "select choice one"}, {"id": 111, "name": "select choice two"}]
-        }
-
-        expected_output = {
-            "bool_input": True,
-            "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
-            "multi_select_input": ["select choice one", "select choice two"]
-        }
-
-        self.assertEquals(get_all_function_inputs(inputs), expected_output)
-
-        # Test mandatory inputs
-        mandatory_inputs = ["bool_input", "other_input"]
-
-        with self.assertRaisesRegex(ValueError, "Mandatory function input not defined\nRequired field is missing or empty: other_input"):
-            get_all_function_inputs(inputs, mandatory_inputs)
 
     def test_write_to_tmp_file(self):
 
