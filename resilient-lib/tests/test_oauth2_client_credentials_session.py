@@ -166,7 +166,8 @@ class TestAuthenticator(object):
         where token expired during the duration of request being made.
         """
         monkeypatch.setattr(requests, 'post', mock_token_request_factory(expires_in=10, elapsed_time=0))
-        monkeypatch.setattr(oauth2_client_credentials_session.time, 'time', return_values_each_call([time.time(), time.time(), time.time() + 15]))
+        monkeypatch.setattr(oauth2_client_credentials_session.time, 'time',
+                            return_values_each_call([time.time(), time.time(), time.time() + 15]))
         monkeypatch.setattr(requests.sessions.Session, 'request',
                             mock_token_request_factory(status_code=401, elapsed_time=20))
         monkeypatch.setattr(OAuth2ClientCredentialsSession, 'update_token', raise_error)

@@ -1,6 +1,6 @@
-import requests
-import logging
 import time
+import logging
+import requests
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
             raise ValueError("Missing fields required for OAuth2 authentication.")
 
         if tenant_id is None:
-            tenant_id="common"
+            tenant_id = "common"
             log.info("tenant_id wasn't provided, defaulting to 'common'.")
 
         self.tenant_id = tenant_id
@@ -147,9 +147,13 @@ class OAuth2ClientCredentialsSession(requests.Session):
         return requests.post(token_url, data=post_data)
 
     def update_token(self):
+        """
+        Institutes a request for a new access token.
+        """
         if not self.authenticate(self.authorization_url, self.tenant_id, self.client_id,
                                  self.client_secret, self.scope):
-            raise ValueError("Can't update the token, did the credentials for {0} change?".format(self.authorization_url))
+            raise ValueError("Can't update the token, did the credentials for {0} change?"
+                             .format(self.authorization_url))
         return True
 
     def request(self, method, url, *args, **kwargs):
@@ -180,4 +184,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         return resp
 
     def add_authorization_header(self, headers):
+        """
+        Create headers needed for authentication/authorization, overriding the default ones if needed.
+        """
         headers["Authorization"] = "{} {}".format(self.token_type, self.access_token)
