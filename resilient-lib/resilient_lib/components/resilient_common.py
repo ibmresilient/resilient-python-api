@@ -6,7 +6,6 @@ import datetime
 import tempfile
 import os
 import io
-import shutil
 from bs4 import BeautifulSoup
 from six import string_types
 try:
@@ -122,7 +121,7 @@ def validate_fields(field_list, kwargs):
         if not provided_fields.get(field):
             raise ValueError("'{0}' is mandatory and is not set. You must set this value to run this function".format(field))
 
-        elif placeholder_value and provided_fields.get(field) == placeholder_value:
+        if placeholder_value and provided_fields.get(field) == placeholder_value:
             raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(field, placeholder_value))
 
     # Loop provided fields and get their value
@@ -183,7 +182,7 @@ def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task
         metadata_url = "/incidents/{}/artifacts/{}".format(incident_id, artifact_id)
         return res_client.get(metadata_url)["attachment"]
 
-    elif attachment_id:
+    if attachment_id:
         if task_id:
             metadata_url = "/tasks/{}/attachments/{}".format(task_id, attachment_id)
         elif incident_id:
@@ -193,8 +192,7 @@ def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task
 
         return res_client.get(metadata_url)
 
-    else:
-        raise ValueError("artifact or attachment or incident id must be specified")
+    raise ValueError("artifact or attachment or incident id must be specified")
 
 
 def get_file_attachment_name(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
