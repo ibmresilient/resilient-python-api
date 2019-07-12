@@ -294,13 +294,3 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
         temp_file.write(data)
 
     return (path_tmp_file, path_tmp_dir)
-
-
-def remove_dir(path_to_dir):
-    """If path_to_dir is a valid directory, remove it
-
-    Return: void
-    """
-
-    if path_to_dir and os.path.isdir(path_to_dir):
-        shutil.rmtree(path_to_dir)
