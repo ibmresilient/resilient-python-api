@@ -17,9 +17,9 @@ class OAuth2ClientCredentialsSession(requests.Session):
     This session doesn't requests authorization from the user first, the scope should be pre-authorized.
 
     Usage:
-    >>> api1 = OAuth2ClientCredentialsSession('https://example1.com/{}/oauth/v2/', tenant_id='xxx',\
+    >>> api1 = OAuth2ClientCredentialsSession('https://example1.com/<tenant_id>/oauth/v2/',\
                         client_id='xxx', client_secret='xxx')
-    >>> api2 = OAuth2ClientCredentialsSession('https://example2.com/{}/oauth/v2/', tenant_id='xxx',\
+    >>> api2 = OAuth2ClientCredentialsSession('https://example2.com/<tenant_id>/oauth/v2/',\
                         client_id='xxx', client_secret='xxx')
     >>>
     >>> api1.post('https://example1.com/v4/me/messages', data={}) # use as a regular requests session object
@@ -30,7 +30,6 @@ class OAuth2ClientCredentialsSession(requests.Session):
     """
 
     AUTHORIZATION_ERROR_CODES = [401, 403]
-    DEFAULT_TENANT_ID = "common"
 
     def __new__(cls, *args, **kwargs):
         """
@@ -62,10 +61,10 @@ class OAuth2ClientCredentialsSession(requests.Session):
         dict_it[url] = it
         return it
 
-    def __init__(self, url=None, tenant_id=None, client_id=None, client_secret=None, scope=None, proxies=None):
+    def __init__(self, url=None, client_id=None, client_secret=None, scope=None, proxies=None):
         """
         Get OAuth2 tokens and save them to be used in session requests.
-        :param url: Pythonic template with authorization url where tenant_id gets inserted
+        :param url: authorization url, with tenant_id in it, if required
         :param client_id: API key/User Id
         :param client_secret: secret for API
         :param scope: optional, list of scopes
@@ -88,11 +87,6 @@ class OAuth2ClientCredentialsSession(requests.Session):
             raise ValueError("Missing fields ({}) required for OAuth2 authentication."
                              .format(",".join(missing_fields)))
 
-        if tenant_id is None:
-            tenant_id = self.DEFAULT_TENANT_ID
-            log.info("tenant_id wasn't provided, defaulting to '{}'.".format(self.DEFAULT_TENANT_ID))
-
-        self.tenant_id = tenant_id
         self.authorization_url = url
         self.client_id = client_id
         self.client_secret = client_secret
@@ -104,21 +98,21 @@ class OAuth2ClientCredentialsSession(requests.Session):
         self.token_type = None
         self.expiration_time = None
         self.proxies = proxies
+        self.close()  # release the socket, since all the requests will be made in a new session
 
-        if not self.authenticate(url, tenant_id, client_id, client_secret, scope, proxies):
+        if not self.authenticate(url, client_id, client_secret, scope, proxies):
             raise ValueError("Wrong credentials for OAuth2 authentication with {0}".format(url))
 
-    def authenticate(self, url, tenant_id, client_id, client_secret, scope, proxies=None):
+    def authenticate(self, url, client_id, client_secret, scope, proxies=None):
         """
         :param url: String - authorization url - end point for authentication
-        :param tenant_id: String - will default to 'common' if not supplied
         :param client_id: String
         :param client_secret: String
         :param scope: list<String> - list of scopes the token should provide access to
         :param proxies: object with proxy data
         :return: True/False - was/wasn't able to authenticate.
         """
-        token_url = self.get_token_url(url, tenant_id)
+        token_url = url
 
         log.debug("Requesting token from {0}".format(url))
         r = self.get_token(token_url, client_id, client_secret, scope, proxies)
@@ -140,12 +134,6 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
         return True
 
-    @staticmethod
-    def get_token_url(url, tenant_id):
-        """
-        Puts together token_url from url's template and tenant_id.
-        """
-        return url.format(tenant_id)
 
     @staticmethod
     def get_token(token_url, client_id, client_secret, scope=None, proxies=None):
@@ -166,15 +154,15 @@ class OAuth2ClientCredentialsSession(requests.Session):
         """
         Institutes a request for a new access token.
         """
-        if not self.authenticate(self.authorization_url, self.tenant_id, self.client_id,
+        if not self.authenticate(self.authorization_url, self.client_id,
                                  self.client_secret, self.scope, self.proxies):
             raise ValueError("Can't update the token, did the credentials for {0} change?"
                              .format(self.authorization_url))
         return True
 
     def request(self, method, url, *args, **kwargs):
-        """Constructs a :class:`Request <Request>`, injects it with tokens, sends it.
-        If the request fails, likely because it was made before token expired, but expired in the process - retry.
+        """Constructs a :class:`Request <Request>`, injects it with tokens, sends it
+        in a new session to avoid having one session constantly open.
         Returns :class:`Response <Response>` object.
         """
 
