@@ -160,7 +160,7 @@ class TestAuthenticator(object):
         auth.expiration_time = time.time() - 1
 
         with pytest.raises(ValueError):
-            auth.get("http://google.com")
+            auth.get("https://www.ibm.com")
 
     def test_detect_updating_token_after_request_ends_after_expiration(self, monkeypatch):
         """
