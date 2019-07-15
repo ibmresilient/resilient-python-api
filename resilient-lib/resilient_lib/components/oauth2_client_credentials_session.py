@@ -77,7 +77,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
         super(OAuth2ClientCredentialsSession, self).__init__()
         log.debug("Creating OAuth2 Session.")
-        if url is None or client_id is None or client_secret is None:
+        if not url or not client_id or not client_secret:
             missing_fields = list()
             if not url:
                 missing_fields.append("url")

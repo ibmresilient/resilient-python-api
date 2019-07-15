@@ -70,39 +70,40 @@ class TestAuthenticator(object):
 
     def test_authenticator_is_singleton(self, monkeypatch):
         monkeypatch.setattr(OAuth2ClientCredentialsSession, 'authenticate', lambda *_: True)
-        assert OAuth2ClientCredentialsSession("", "", "", "") is OAuth2ClientCredentialsSession("", "", "", "")
-        assert id(OAuth2ClientCredentialsSession("", "", "", "")) == id(OAuth2ClientCredentialsSession("", "", "", ""))
+        assert OAuth2ClientCredentialsSession("t", "e", "s", "t") is OAuth2ClientCredentialsSession("t", "e", "s", "t")
+        assert id(OAuth2ClientCredentialsSession("t", "e", "s", "t")) == \
+               id(OAuth2ClientCredentialsSession("t", "e", "s", "t"))
 
     def test_multiple_authentications_are_singletons(self, monkeypatch):
         monkeypatch.setattr(OAuth2ClientCredentialsSession, 'authenticate', lambda *_: True)
-        api1_1 = OAuth2ClientCredentialsSession("url:example1", "", "", "")
-        api1_2 = OAuth2ClientCredentialsSession("url:example1", "", "", "")
+        api1_1 = OAuth2ClientCredentialsSession("url:example1", "e", "s", "t")
+        api1_2 = OAuth2ClientCredentialsSession("url:example1", "e", "s", "t")
 
-        api2_1 = OAuth2ClientCredentialsSession("url:example2", "", "", "")
-        api2_2 = OAuth2ClientCredentialsSession("url:example2", "", "", "")
+        api2_1 = OAuth2ClientCredentialsSession("url:example2", "e", "s", "t")
+        api2_2 = OAuth2ClientCredentialsSession("url:example2", "e", "s", "t")
         assert id(api1_1) == id(api1_2)
         assert id(api2_1) == id(api2_2)
         assert id(api1_1) != id(api2_1)
 
     def test_multiple_sessions_multiple_tokens(self, monkeypatch):
         monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api1"))
-        api1 = OAuth2ClientCredentialsSession("url:example1", "", "", "")
+        api1 = OAuth2ClientCredentialsSession("url:example1", "e", "s", "t")
         monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api2"))
-        api2 = OAuth2ClientCredentialsSession("url:example2", "", "", "")
+        api2 = OAuth2ClientCredentialsSession("url:example2", "e", "s", "t")
 
         assert api1.access_token == "api1"
         assert api2.access_token == "api2"
 
         monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api3"))
 
-        api1_1 = OAuth2ClientCredentialsSession("url:example1", "", "", "")
+        api1_1 = OAuth2ClientCredentialsSession("url:example1", "e", "s", "t")
         assert api1_1.access_token == "api1"
-        assert OAuth2ClientCredentialsSession("url:example2", "", "", "").access_token == "api2"
+        assert OAuth2ClientCredentialsSession("url:example2", "e", "s", "t").access_token == "api2"
 
     def test_singleton_doesnt_break_classes(self, monkeypatch):
         monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api1"))
-        api1_1 = OAuth2ClientCredentialsSession("url:example1", "", "", "")
-        api1_2 = OAuth2ClientCredentialsSession("url:example1", "", "", "")
+        api1_1 = OAuth2ClientCredentialsSession("url:example1", "e", "s", "t")
+        api1_2 = OAuth2ClientCredentialsSession("url:example1", "e", "s", "t")
         assert isinstance(api1_1, OAuth2ClientCredentialsSession)
         assert isinstance(api1_2, OAuth2ClientCredentialsSession)
 
@@ -121,15 +122,15 @@ class TestAuthenticator(object):
         with pytest.raises(ValueError):
             OAuth2ClientCredentialsSession(None, None, None, None)
         with pytest.raises(ValueError):
-            OAuth2ClientCredentialsSession(None, "", "", "")
+            OAuth2ClientCredentialsSession(None, "e", "s", "t")
         with pytest.raises(ValueError):
-            OAuth2ClientCredentialsSession("", "", None, "")
+            OAuth2ClientCredentialsSession("t", "e", None, "t")
         with pytest.raises(ValueError):
-            OAuth2ClientCredentialsSession("", "", "", None)
+            OAuth2ClientCredentialsSession("t", "e", "s", None)
 
     def test_tenant_id_defaults_to_common(self, monkeypatch):
         monkeypatch.setattr(OAuth2ClientCredentialsSession, 'authenticate', lambda *_: True)
-        test = OAuth2ClientCredentialsSession("", None, "", "")
+        test = OAuth2ClientCredentialsSession("t", None, "s", "t")
         assert test.tenant_id == "common"
 
     def test_scope_gets_passed_when_given(self, monkeypatch):
