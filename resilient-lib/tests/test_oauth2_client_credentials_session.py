@@ -57,6 +57,10 @@ class MockTokenRequest(object):
     def json(self):
         return self.return_json
 
+    def raise_for_status(self):
+        if self.status_code > 299:
+            raise ValueError()
+
 
 class TestAuthenticator(object):
     @pytest.fixture(autouse=True)
@@ -177,5 +181,4 @@ class TestAuthenticator(object):
         auth = OAuth2ClientCredentialsSession("test", "test", "test", "test")
 
         with pytest.raises(ValueError):
-            auth.get("http://google.com")
-        assert oauth2_client_credentials_session.time.time.current == 3
+            auth.get("https://www.ibm.com")
