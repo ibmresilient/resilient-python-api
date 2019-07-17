@@ -146,12 +146,10 @@ def watcher(request, manager):
     return watcher
 
 
-def pytest_namespace():
-    return dict((
-        ("WaitEvent", WaitEvent),
-        ("wait_for", wait_for),
-        ("call_event", call_event),
-        ("PLATFORM", sys.platform),
-        ("PYVER", sys.version_info[:3]),
-        ("call_event_from_name", call_event_from_name),
-    ))
+def pytest_configure():
+    pytest.WaitEvent = WaitEvent
+    pytest.wait_for = wait_for
+    pytest.call_event = call_event
+    pytest.PLATFORM = sys.platform
+    pytest.PYVER = sys.version_info[:3]
+    pytest.call_event_from_name = call_event_from_name
