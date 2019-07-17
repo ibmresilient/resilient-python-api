@@ -5,18 +5,24 @@
 
 from __future__ import print_function
 import os
+import sys
 import io
 import json
 import logging
 import keyword
 import re
-import pkg_resources
 import datetime
 import uuid
 import time
 import copy
+import pkg_resources
+from zipfile import ZipFile
 from resilient_circuits import template_functions
 
+if sys.version_info.major == 2:
+    import imp
+else:
+    import importlib.util
 
 LOG = logging.getLogger("__name__")
 
@@ -144,6 +150,18 @@ ACTION_ATTRIBUTES = [
     "message_destinations"
 ]
 
+ARTIFACT_TYPE_ATTRIBUTES = [
+    "uuid",
+    "desc",
+    "name",
+    "programmatic_name",
+    "file",
+    "system",
+    "multi_aware",
+    "use_for_relationships",
+    "parse_for_csv",
+    "enabled"
+]
 
 def valid_identifier(name):
     """Test if 'name' is a valid identifier for a package or module
@@ -221,6 +239,12 @@ def list_scripts(script_defs):
     for script_def in script_defs:
         print(u"    {}".format(script_def["name"]))
 
+def list_artifact_types(artifact_type_defs):
+    """List all the artifact types"""
+    print(u"Available artifact types:")
+    for artifact_type_def in artifact_type_defs:
+        print(u"    {}".format(artifact_type_def["name"]))
+
 
 def clean(dictionary, keep):
     """Remove attributes that are not in the 'keep' list"""
@@ -263,7 +287,7 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
             try:
                 os.mkdir(subdir)
             except OSError as exc:
-                LOG.warn(exc)
+                LOG.warning(exc)
             render_file_mapping(value, data, source_dir, subdir)
         else:
             target_file = os.path.join(target_dir, key)
@@ -281,10 +305,10 @@ def render_file_mapping(file_mapping_dict, data, source_dir, target_dir):
                 outfile.write(source_rendered)
 
 
-def codegen_from_template(client, export_file, template_file_path, package,
+def codegen_from_template(cmd, client, export_file, template_file_path, package,
                           message_destination_names, function_names, workflow_names, action_names,
-                          field_names, datatable_names, task_names, script_names,
-                          output_dir, output_file):
+                          field_names, datatable_names, task_names, script_names, artifact_type_names,
+                          output_dir, output_file, zip):
     """Based on a template-file, produce the generated file or package.
 
        To codegen a single file, the template will be a JSON dict with just one entry,
@@ -295,6 +319,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
        Each source ("path/to/template.jinja2") will be rendered using jinja2,
        then written to the target ("file_to_generate.py").
 
+       :param cmd: 'codegen' or 'extract'
        :param client: the REST client
        :param export_file: file containing customization exports (default is to use the server's latest)
        :param template_file_path: location of templates
@@ -307,8 +332,10 @@ def codegen_from_template(client, export_file, template_file_path, package,
        :param datatable_names: list of data tables whose customization def should be included in the package
        :param task_names: list of automatic tasks whose customization def should be included in the package
        :param script_names: list of scripts whose customization def should be included in the package
+       :param artifact_type_names: lists of custom artifact groups to include
        :param output_dir: output location
-       :param output_file: output file name
+       :param output_file: output file name, also .res file produced for 'extract'
+       :param zip: True if resulting file(s) should be zipped up
     """
     functions = {}
     function_params = {}
@@ -322,12 +349,17 @@ def codegen_from_template(client, export_file, template_file_path, package,
     scripts = {}
     workflows = {}
     actions = {}
+    artifact_types = {}
 
     if export_file:
         with io.open(export_file, 'r', encoding="utf-8") as export:
             export_data = json.loads(export.read())
-        LOG.info(u"Codegen is based on the organization export from '{}'.".format(export_file))
+        LOG.info(u"{} is based on the organization export from '{}'.".format(cmd, export_file))
     else:
+        # Force a recent export
+        latest_export_uri = "/configurations/exports/"
+        client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
+
         # Get the most recent org export that includes actions and tasks
         export_uri = "/configurations/exports/history"
         export_list = client.get(export_uri)["histories"]
@@ -343,9 +375,14 @@ def codegen_from_template(client, export_file, template_file_path, package,
                       u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
             return
         dt = datetime.datetime.utcfromtimestamp(last_date/1000.0)
-        LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
+        LOG.info(u"{} is based on the organization export from {}.".format(cmd, dt))
         export_uri = "/configurations/exports/{}".format(last_id)
         export_data = client.get(export_uri)
+
+    # Get definitions for custom incident fields - used in multiple areas
+    all_fields = dict((field["name"], field)
+                      for field in export_data.get("fields")
+                      if field["type_id"] == INCIDENT_TYPE_ID and field.get("prefix") == "properties")
 
     all_destinations = dict((dest["programmatic_name"], dest)
                             for dest in export_data.get("message_destinations", []))
@@ -389,8 +426,18 @@ def codegen_from_template(client, export_file, template_file_path, package,
     else:
         workflow_names = []
 
+    # ensure empty lists as we may dynamically add to them
+    if not task_names:
+        task_names = []
+    if not script_names:
+        script_names = []
+    if not artifact_type_names:
+        artifact_type_names = []
+    if not field_names:
+        field_names = []
+
     if action_names:
-        # Check that 'actions' are available
+        # Check that 'actions' are available. actions are rules
         action_defs = export_data.get("actions")
         if not action_defs:
             LOG.error(u"ERROR: Rules are not available in this export.")
@@ -401,6 +448,9 @@ def codegen_from_template(client, export_file, template_file_path, package,
                    for action_def in action_defs
                    if action_def["name"] in action_names}
         all_action_fields = dict((field["uuid"], field)
+                                 for field in export_data.get("fields")
+                                 if field["type_id"] == ACTION_TYPE_ID)
+        all_action_fields_2 = dict((field["name"], field)
                                  for field in export_data.get("fields")
                                  if field["type_id"] == ACTION_TYPE_ID)
 
@@ -414,10 +464,13 @@ def codegen_from_template(client, export_file, template_file_path, package,
             # Get the activity-fields for this action (if any)
             action_field_uuids = [item.get("content")
                                   for item in action_def["view_items"]
-                                  if "content" in item]
+                                  if "content" in item and item.get("field_type")]
             fields = []
             for field_uuid in action_field_uuids:
                 field = copy.deepcopy(all_action_fields.get(field_uuid))
+                if field is None:
+                    # v29-style export where layout indexed by field name
+                    field = copy.deepcopy(all_action_fields_2.get(field_uuid))
                 clean(field, ACTION_FIELD_ATTRIBUTES)
                 for template in field.get("templates", []):
                     clean(template, TEMPLATE_ATTRIBUTES)
@@ -432,6 +485,23 @@ def codegen_from_template(client, export_file, template_file_path, package,
                 if wf_name not in workflow_names:
                     workflow_names.append(wf_name)
 
+            # Get the task(s) for this rule (if any)
+            for automation in action_def["automations"]:
+                if automation.get("tasks_to_create"):
+                    for task_name in automation["tasks_to_create"]:
+                        if task_name not in task_names:
+                            task_names.append(task_name)
+
+                elif automation.get("scripts_to_run"):
+                    script_name = automation["scripts_to_run"]
+                    if script_name not in script_names:
+                        script_names.append(script_name)
+
+                elif automation.get("field"):
+                    field_name = automation["field"]
+                    if field_name not in field_names and field_name in all_fields:
+                        field_names.append(field_name)
+
             # Get the message destination(s) for this rule (if any)
             dest_names = action_def["message_destinations"]
             for dest_name in dest_names:
@@ -441,7 +511,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                     message_destinations[dest_name] = dest
 
     all_functions = dict((function["name"], function)
-                         for function in export_data.get("functions"))
+                         for function in export_data.get("functions") or [])
     all_function_fields = dict((field["uuid"], field)
                                for field in export_data.get("fields")
                                if field["type_id"] == FUNCTION_TYPE_ID)
@@ -494,10 +564,6 @@ def codegen_from_template(client, export_file, template_file_path, package,
                 return
 
     if field_names:
-        # Get definitions for custom incident fields
-        all_fields = dict((field["name"], field)
-                          for field in export_data.get("fields")
-                          if field["type_id"] == INCIDENT_TYPE_ID and field.get("prefix") == "properties")
         for field_name in field_names:
             fielddef = all_fields.get(field_name)
             if fielddef:
@@ -533,7 +599,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
                 list_datatables(export_data.get("types", []))
                 return
 
-    # Automtic tasks determine the list of phases
+    # Automatic tasks determine the list of phases
     phase_names = set()
     if task_names:
         # Get task definitions
@@ -571,6 +637,24 @@ def codegen_from_template(client, export_file, template_file_path, package,
                 list_scripts(export_data.get("scripts", []))
                 return
 
+    if artifact_type_names:
+        # get custom artifact types
+        all_artifact_types = dict((artifact_type["programmatic_name"], artifact_type)
+                          for artifact_type in export_data.get("incident_artifact_types"))
+
+        for artifact_type_name in artifact_type_names:
+            for artifact_name in all_artifact_types:
+                artifact = all_artifact_types[artifact_name]
+                if artifact["programmatic_name"] == artifact_type_name:
+                    artifact_types[artifact["programmatic_name"]] = clean(copy.deepcopy(artifact), ARTIFACT_TYPE_ATTRIBUTES)
+
+        # confirm we got all the custom artifact types
+        for artifact_name in artifact_type_names:
+            if artifact_name not in artifact_types:
+                LOG.error(u"ERROR: Artifact Type '%s' not found in this export.", artifact_name)
+                list_artifact_types(export_data.get("incident_artifact_types", []))
+                return
+
     # Minify the export_data
     fields_list = []
     if len(incident_fields) == 0:
@@ -596,6 +680,7 @@ def codegen_from_template(client, export_file, template_file_path, package,
         "scripts": {"name": scripts.keys()},
         "types": {"type_name": datatables.keys()},
         "workflows": {"programmatic_name": workflows.keys()},
+        "incident_artifact_types": {"programmatic_name": artifact_types.keys()}
     }
     for key in export_data.keys():
         if key in keep_keys:
@@ -631,6 +716,11 @@ def codegen_from_template(client, export_file, template_file_path, package,
         "id": 0
     }]
 
+    # if an extract, write the file and return
+    if cmd == "extract":
+        do_extract(output_file, export_data, zip)
+        return
+
     # Prepare the dictionary of substitution values for jinja2
     # (includes all the configuration elements related to the functions)
     data = {
@@ -650,7 +740,8 @@ def codegen_from_template(client, export_file, template_file_path, package,
         "scripts": scripts,
         "workflows": workflows,
         "actions": actions,
-        "export_data": export_data
+        "export_data": export_data,
+        "incident_artifact_types": artifact_types
     }
     LOG.debug(u"Configuration data:\n%s", json.dumps(data, indent=2))
 
@@ -666,10 +757,44 @@ def codegen_from_template(client, export_file, template_file_path, package,
     src_dir = os.path.dirname(template_file_path)
     render_file_mapping(file_mapping, data, src_dir, output_dir)
 
+def do_extract(output_file, export_data, zip):
+    """
+    either create the export file in clear text or zip up
+    :param output_file:
+    :param export_data:
+    :param zip: True if zipping up file
+    :return: None
+    """
+    if sys.version_info.major >= 3:
+        res_data = json.dumps(export_data, ensure_ascii=False)
+    else:
+        res_data = unicode(json.dumps(export_data, ensure_ascii=False))
+
+    if zip:
+        # get the base name of the file to create so we know what to call our file inside the zip file
+        if not output_file.endswith(".zip"):
+            output_file = "".join((output_file, ".zip"))
+        print (u"Writing {}".format(output_file))
+
+        base = os.path.basename(output_file)
+        filename = os.path.splitext(base)
+        while '.' in filename[0]:
+            filename = os.path.splitext(filename[0])
+        # name internal to zip file
+        filename = "".join((filename[0], ".res"))
+
+        with ZipFile(output_file, 'w') as myZip:
+            myZip.writestr(filename, res_data)
+    else:
+        print (u"Writing {}".format(output_file))
+        with io.open(output_file, 'w', encoding="utf-8") as extract_fh:
+            extract_fh.write(res_data)
+
+    return
 
 def codegen_package(client, export_file, package,
                     message_destination_names, function_names, workflow_names, action_names,
-                    field_names, datatable_names, task_names, script_names,
+                    field_names, datatable_names, task_names, script_names, artifact_type_names,
                     output_dir):
     """Generate a an installable python package"""
     if not valid_identifier(package):
@@ -680,20 +805,206 @@ def codegen_package(client, export_file, package,
     try:
         os.makedirs(output_dir)
     except OSError as exc:
-        LOG.warn(u"%s", exc)
+        LOG.warning(u"%s", exc)
 
     template_file_path = pkg_resources.resource_filename("resilient_circuits", PACKAGE_TEMPLATE_PATH)
-    return codegen_from_template(client, export_file, template_file_path, package,
+    return codegen_from_template('codegen', client, export_file, template_file_path, package,
                                  message_destination_names, function_names, workflow_names, action_names,
-                                 field_names, datatable_names, task_names, script_names,
-                                 output_dir, None)
+                                 field_names, datatable_names, task_names, script_names, artifact_type_names,
+                                 output_dir, None, False)
 
 
-def codegen_functions(client, export_file, function_names, workflow_names, action_names, output_dir, output_file):
+def codegen_functions(client, export_file, function_names, workflow_names, action_names, artifact_type_names,
+                      output_dir, output_file):
     """Generate a python file that implements one or more functions"""
     message_destination_names = None
     template_file_path = pkg_resources.resource_filename("resilient_circuits", FUNCTION_TEMPLATE_PATH)
-    return codegen_from_template(client, export_file, template_file_path, None,
+    return codegen_from_template('codegen', client, export_file, template_file_path, None,
                                  message_destination_names, function_names, workflow_names, action_names,
-                                 None, None, None, None,
-                                 output_dir, output_file)
+                                 None, None, None, None, artifact_type_names,
+                                 output_dir, output_file, False)
+
+def extract_to_res(client, export_file,
+                     message_destination_names, function_names, workflow_names, action_names,
+                     field_names, datatable_names, task_names, script_names, artifact_types,
+                     output_file, zip):
+    """
+    extract portions of a .res file as directed by the parameters below and save to a specified file
+    :param client:
+    :param export_file: .res to use otherwise the most recent one produced will be used
+    :param message_destination_names:
+    :param function_names:
+    :param workflow_names:
+    :param action_names:
+    :param field_names:
+    :param datatable_names:
+    :param task_names:
+    :param script_names:
+    :param artifact_types:
+    :param output_file: file to produce or overwrite
+    :param zip: true if resulting file should be zipped
+    :return: None
+    """
+    return codegen_from_template('extract', client, export_file, None, None,
+                                 message_destination_names, function_names, workflow_names, action_names,
+                                 field_names, datatable_names, task_names, script_names, artifact_types,
+                                 None, output_file, zip)
+
+def get_customize_file_path(package):
+    """Get the location of current customize.py for this package"""
+    output_base = os.path.join(os.getcwd(), package)
+    customize_dir = os.path.join(output_base, package, "util")
+    customize_file = os.path.join(customize_dir, "customize.py")
+    return customize_file, output_base, customize_dir
+
+def get_codegen_reload_data(package):
+    """Read the default codegen_reload_data section from the given package"""
+
+    # Get the file path of the customize file for the package
+    customize_file, base_dir, customize_dir = get_customize_file_path(package)
+
+    # Check if customize.py exits.  We need to get the reload commands
+    # from the current customize.py and if it's not there then exit.
+    if not os.path.isfile(customize_file):
+        raise Exception(u"{} does not exist. Run resilient_circuits codegen without --reload option to create it.".format(customize_file))
+
+    data = None
+
+    # Dynamically load the customize module and call the codegen_reload_date routine.
+    # Different pacakges are used in Python 2 and Python 3.
+    if sys.version_info.major == 2:      # Python 2
+        try:
+            customize_module = imp.load_source("customize", customize_file)
+            data = customize_module.codegen_reload_data()
+        except Exception as e:
+            LOG.error(u"Error loading codegen_reload_data: %s", e)
+    else:                                # Python 3
+        try:
+            spec = importlib.util.spec_from_file_location("codegen_reload_data", customize_file)
+            customize_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(customize_module)
+            data = customize_module.codegen_reload_data()
+        except Exception as e:
+            LOG.error(u"Error loading codegen_reload_data for package %s", e)
+    return data or []
+
+
+def merge_codegen_params(reload_list, arg_list):
+    """Merge the codegen reload params list additional arguments list with no duplicates"""
+
+    if reload_list:
+        new_reload_list = reload_list
+    else:
+        new_reload_list = []
+
+    if arg_list:
+        new_arg_list = arg_list
+    else:
+        new_arg_list = []
+
+    # Combine the reload and new argument list without duplicates
+    combined_args_list = list(set(new_reload_list).union(set(new_arg_list)))
+
+    return combined_args_list
+
+
+
+def codegen_reload_package(client, args):
+    """Generate a package using previous codegen parameters and add any new ones from the commandline."""
+
+    # Get the previous params for codegen from the customize.py
+    # codegen_reload_data function.
+    codegen_params = get_codegen_reload_data(args.reload)
+
+    if codegen_params == None or codegen_params == []:
+        raise Exception(u"codegen_reload_data entry point returned empty list")
+
+    # Rename the old customize.py file to customize-yyyymmdd-hhmmss.bak
+    customize_file, output_base, customize_dir = get_customize_file_path(args.reload)
+
+    # Get time now.
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    old_customize_file = os.path.join(customize_dir, "customize-{}.bak".format(now))
+    LOG.info(u"Renaming customize.py to %s", old_customize_file)
+    os.rename(customize_file, old_customize_file)
+
+    try:
+        # If there are new commandline parameters, append them to the old commandline
+        # list for each param type.
+        message_destinations = merge_codegen_params(codegen_params.get("message_destinations", []), args.messagedestination)
+        functions            = merge_codegen_params(codegen_params.get("functions", []), args.function)
+        rules                = merge_codegen_params(codegen_params.get("actions", []), args.rule)
+        workflows            = merge_codegen_params(codegen_params.get("workflows", []), args.workflow)
+        incident_fields      = merge_codegen_params(codegen_params.get("incident_fields", []), args.field)
+        datatables           = merge_codegen_params(codegen_params.get("datatables", []), args.datatable)
+        automatic_tasks      = merge_codegen_params(codegen_params.get("automatic_tasks", []), args.task)
+        scripts              = merge_codegen_params(codegen_params.get("scripts", []), args.script)
+        artifact_types       = merge_codegen_params(codegen_params.get("incident_artifact_types", []), args.artifacttype)
+
+        # Print the codegen --reload command with all arguments.
+        print_codegen_reload_commandline(args.reload, args.exportfile,
+                                         message_destinations,
+                                         functions,
+                                         workflows,
+                                         rules,
+                                         incident_fields,
+                                         datatables,
+                                         automatic_tasks,
+                                         scripts,
+                                         artifact_types)
+
+        # Call codegen to recreate package with the new parameter list.
+        codegen_package(client,
+                    args.exportfile,
+                    args.reload,
+                    message_destinations,
+                    functions,
+                    workflows,
+                    rules,
+                    incident_fields,
+                    datatables,
+                    automatic_tasks,
+                    scripts,
+                    artifact_types,
+                    output_base)
+    except Exception as e:
+        LOG.error(u"Error running codegen --reload %s", e)
+    finally:
+        # If no customize.py was created an error occurred somewhere in codegen.
+        # Rename the saved off version back to customize.py
+        if not os.path.isfile(customize_file):
+            LOG.info(u"Renaming %s back to %s", old_customize_file, customize_file)
+            os.rename(old_customize_file, customize_file)
+
+def create_command(command, params, quotes):
+    """Create commandline substring for codegen --reload commandline """
+    result_command = command
+    if len(params) > 0:
+        for item in params:
+            if quotes:
+                result_command = result_command + u' "{}"'.format(item)
+            else:
+                result_command = result_command + u" {}".format(item)
+    else:
+        result_command = u""
+    return result_command
+
+def print_codegen_reload_commandline(package, export_file, message_destinations, functions, workflows,
+                                     rules, incident_fields, datatables, tasks, scripts, artifact_types):
+    """Print the resilient-circuits codegen --reload commandline for a given package"""
+
+    # Build the commandline string
+    commandline = u"resilient-circuits codegen --reload {}".format(package)
+    if export_file:
+        commandline = commandline + u" --export {}".format(export_file)
+    commandline = commandline + create_command(u" --messagedestination", message_destinations, False)
+    commandline = commandline + create_command(u" --rule", rules, True)
+    commandline = commandline + create_command(u" --workflow", workflows, False)
+    commandline = commandline + create_command(u" --function", functions, False)
+    commandline = commandline + create_command(u" --field", incident_fields, False)
+    commandline = commandline + create_command(u" --datatable", datatables, False)
+    commandline = commandline + create_command(u" --task", tasks, False)
+    commandline = commandline + create_command(u" --script", scripts, True)
+    commandline = commandline + create_command(u" --artifacttype", artifact_types, True)
+
+    print (commandline)

@@ -17,6 +17,9 @@ class FunctionComponent(ResilientComponent):
     def _{{function_name}}_function(self, event, *args, **kwargs):
         """Function: {{function_def.description.content}}"""
         try:
+            # Get the wf_instance_id of the workflow this Function was called in
+            wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
+
             # Get the function parameters:{%for p in function_def.view_items%}{%set pdef=function_params[p.content] %}
             {{pdef.name}} = {{paramvalue(pdef)}}  # {{paramcomment(pdef)}}{%endfor%}
 

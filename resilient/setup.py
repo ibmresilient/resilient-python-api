@@ -95,7 +95,7 @@ setup(
         'requests-toolbelt>=0.6.0',
         'requests-mock>=1.2.0',
         'six',
-        'cachetools'
+        'cachetools<3.0.0'
     ],
     extras_require={
         ':python_version < "3.2"': [
@@ -112,7 +112,7 @@ setup(
             'keyring==5.4'
         ]
     },
-    tests_require=["pytest", ],
+    tests_require=["pytest>=3.0.0, <4.1.0", ],
     cmdclass={"test": PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',

@@ -1,3 +1,47 @@
+2019-07-03: version 32.0.186
+
+*  Added more flexible 'execute_call_v2()' method in resilient-lib
+*  Fix for deprecated log warnings
+*  Other minor bug fixes
+
+
+2019-04-12: version 32.0.140
+
+*  Fix for exposed Resilient passwords in resilient-circuits log when run in DEBUG mode
+*  'codgen' creates setup.py files which will programmatically compute function component entry points
+*  Added WorkflowStatus class
+*  Running 'codegen', 'codegen --reload', and 'extract' now automatically creates export files in Resilient to run against. Manually export no longer needed
+*  'extract' will now extract all data associated with playbooks including Tasks, Scripts, and custom Artifact Types
+*  Support for activemq hosted externally (ISC)
+*  Improvements to 'resilient-lib'
+*  Other minor bug fixes/improvements
+
+
+2019-03-06: version 32.0.126
+
+Removed selftest from function template
+Improvements to resilient-lib
+
+
+2019-01-15: version 32.0
+
+Added `resilient-lib` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
+Added Sphinx documentation builder
+Fixed an issue with `resilient-circuits extract`
+
+
+2018-12-05: version 31.0
+
+Add 'resilient-circuits selftest' command to call selftest functions for every package and prints their return state
+Add 'resilient-circuits clone' Clone Resilient workflows
+Add 'resilient-circuits codegen --reload' command to reload existing package
+Add 'resilient-circuits extract' command to extract customization data into a single file
+Added support for specifying lists of packages to run 'config/customize/selftest' against
+Added 'rc-webserver' and 'rc-cts' to repo and PyPi
+Added codegen improvements
+Jinja template imporvements
+Bug Fixes
+
 
 2018-04-15: version 30.0
 

@@ -41,7 +41,7 @@ setup(
         'requests>=2.6.0',
         'circuits',
         'pytz',
-        'jinja2',
+        'jinja2>=2.10.0',
         'pysocks',
         'filelock>=2.0.5',
         'resilient>={}.{}'.format(major, minor)
