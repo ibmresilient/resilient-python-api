@@ -101,7 +101,7 @@ def validate_fields(field_list, kwargs):
     # This is needed to handle something like: validate_fields(('incident_id'), kwargs)
     # In this case field_list will be a string and not a tuple
     if isinstance(mandatory_fields, string_types):
-        mandatory_fields = tuple([mandatory_fields])
+        mandatory_fields = [mandatory_fields]
 
     if not isinstance(mandatory_fields, list) and not isinstance(mandatory_fields, tuple):
         raise ValueError("'field_list' must by of type list/tuple, not {0}".format(type(mandatory_fields)))
