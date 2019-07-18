@@ -194,11 +194,11 @@ def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task
         elif incident_id:
             metadata_url = "/incidents/{}/attachments/{}".format(incident_id, attachment_id)
         else:
-            raise ValueError("task_id or incident_id must be specified with attachment")
+            raise ValueError("If attachment_id is defined, you must specify task_id OR incident_id")
 
         return res_client.get(metadata_url)
 
-    raise ValueError("artifact or attachment or incident id must be specified")
+    raise ValueError("artifact_id AND incident_id, OR attachment_id AND (task_id OR incident_id) must be specified")
 
 
 def get_file_attachment_name(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
