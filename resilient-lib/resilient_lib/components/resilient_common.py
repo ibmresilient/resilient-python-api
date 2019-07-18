@@ -258,9 +258,25 @@ def str_to_bool(value):
 
 
 def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
-    """Writes data to a safely created temp file. If no tmp_file_name is
-    provided, a temp name will be given If no path_tmp_dir is provided a
-    temp directory is created with the prefix 'resilient-lib-tmp-'.
+    """Writes data to a file in a safely created temp directory. If no
+    `tmp_file_name` is provided, a temp name will be given. If no `path_tmp_dir`
+    is provided a temp directory is created with the prefix `resilient-lib-tmp-`.
+
+    When used within a Resilient Function, ensure you safely remove the created temp
+    directory in the `finally` block of the FunctionComponent code.
+
+    Example:
+        import os
+        import shutil
+        try:
+            path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
+
+        except Exception:
+            yield FunctionError()
+
+        finally:
+            if path_tmp_dir and os.path.isdir(path_tmp_dir):
+                shutil.rmtree(path_tmp_dir)
 
     :param data: bytes to be written to the file
     :type data: `bytes`

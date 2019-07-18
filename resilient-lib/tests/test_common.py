@@ -144,6 +144,12 @@ class TestFunctionMetrics(unittest.TestCase):
         data_to_write = bytearray(u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ", encoding="utf-8")
 
         path_tmp_file, path_tmp_dir = write_to_tmp_file(data_to_write)
+
+        # Test works as expected
         self.assertTrue(os.path.isdir(path_tmp_dir))
         self.assertTrue(os.path.isfile(path_tmp_file))
         self.assertTrue("resilient-lib-tmp-" in path_tmp_file)
+
+        # Test path does not exist
+        with self.assertRaisesRegex(IOError, "Path does not exist:"):
+            write_to_tmp_file(data_to_write, path_tmp_dir="xxxx")
