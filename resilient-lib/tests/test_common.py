@@ -39,7 +39,8 @@ class TestFunctionMetrics(unittest.TestCase):
         # validate_fields(fieldList, kwargs)
 
         inputs = {
-            "bool_input": True,
+            "bool_input_true": True,
+            "bool_input_false": False,
             "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
             "str_input": "some text",
             "num_input": 123,
@@ -53,7 +54,8 @@ class TestFunctionMetrics(unittest.TestCase):
         ]
 
         expected_output = {
-            "bool_input": True,
+            "bool_input_true": True,
+            "bool_input_false": False,
             "unicode_input": u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ",
             "str_input": "some text",
             "num_input": 123,
@@ -63,9 +65,9 @@ class TestFunctionMetrics(unittest.TestCase):
         }
 
         # Test its runs as expected
-        validate_fields(("bool_input", "unicode_input"), inputs)
+        validate_fields(("bool_input_true", "unicode_input"), inputs)
 
-        with self.assertRaisesRegex(ValueError, "'field_list' must be of type list/tuple, not <class 'dict'>"):
+        with self.assertRaisesRegex(ValueError, "'field_list' must be of type list/tuple"):
             validate_fields({}, inputs)
 
         # Test mandatory fields missing
@@ -80,8 +82,11 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertEquals(validate_fields([], inputs), expected_output)
 
         # Test getting single input from returned dict
-        self.assertEquals(validate_fields(("bool_input"), inputs).get("bool_input"), True)
-        self.assertEquals(validate_fields([], inputs).get("bool_input"), True)
+        self.assertEquals(validate_fields(("bool_input_true"), inputs).get("bool_input_true"), True)
+        self.assertEquals(validate_fields([], inputs).get("bool_input_true"), True)
+
+        # Test getting value defined as False
+        self.assertEquals(validate_fields(["bool_input_false"], inputs).get("bool_input_false"), False)
 
         # Test select + multi-select type fields
         self.assertEquals(validate_fields(["select_input"], inputs).get("select_input"), "select choice")

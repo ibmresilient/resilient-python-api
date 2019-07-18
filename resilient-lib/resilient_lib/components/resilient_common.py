@@ -97,6 +97,7 @@ def validate_fields(field_list, kwargs):
     mandatory_fields = field_list
     provided_fields = kwargs
     return_fields = {}
+    mandatory_err_msg = "'{0}' is mandatory and is not set. You must set this value to run this function"
 
     # This is needed to handle something like: validate_fields(('incident_id'), kwargs)
     # In this case field_list will be a string and not a tuple
@@ -118,8 +119,13 @@ def validate_fields(field_list, kwargs):
             placeholder_value = field.get("placeholder")
             field = field.get("name")
 
-        if not provided_fields.get(field):
-            raise ValueError("'{0}' is mandatory and is not set. You must set this value to run this function".format(field))
+        # If the field value is a defined empty str, raise an error
+        if isinstance(provided_fields.get(field), string_types):
+            if not provided_fields.get(field):
+                raise ValueError(mandatory_err_msg.format(field))
+
+        if provided_fields.get(field) is None:
+            raise ValueError(mandatory_err_msg.format(field))
 
         if placeholder_value and provided_fields.get(field) == placeholder_value:
             raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(field, placeholder_value))
