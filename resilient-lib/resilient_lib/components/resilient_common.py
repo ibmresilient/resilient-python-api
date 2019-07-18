@@ -89,9 +89,9 @@ def validate_fields(field_list, kwargs):
     value will be a list of dicts that have the 'name' attribute. This
     returns a list of the 'name' values for that item.
 
-    - field_list: [list/tuple] of the mandatory fields. Can be an empty list if no mandatory fields.
-    - kwargs: [dict] of all the fields to search.
-    - return: a Dictionary of all fields with Select/Multi-Select fields handled.
+    :param field_list: list/tuple of the mandatory fields. Can be an empty list if no mandatory fields.
+    :param kwargs: dict of all the fields to search.
+    :return: a Dictionary of all fields with Select/Multi-Select fields handled.
     """
 
     mandatory_fields = field_list
@@ -256,10 +256,14 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
     provided, a temp name will be given If no path_tmp_dir is provided a
     temp directory is created with the prefix 'resilient-lib-tmp-'.
 
-    - data: [Bytes] to be written to the file
-    - tmp_file_name: [String] name to be given to the file.
-    - path_tmp_dir: [String] path to an existing directory to use as the temp dir
-    - Return: a Tuple (path_tmp_file, path_tmp_dir)
+    :param data: bytes to be written to the file
+    :type data: `bytes`
+    :param tmp_file_name: name to be given to the file.
+    :type tmp_file_name: `str`
+    :param path_tmp_dir: path to an existing directory to use as the temp dir
+    :type path_tmp_dir: `str`
+    :return: a tuple (path_tmp_file, path_tmp_dir)
+    :rtype: tuple
     """
 
     # If no tmp_file_name provided use next tempfile candidate name
