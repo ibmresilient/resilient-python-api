@@ -65,6 +65,9 @@ class TestFunctionMetrics(unittest.TestCase):
         # Test its runs as expected
         validate_fields(("bool_input", "unicode_input"), inputs)
 
+        with self.assertRaisesRegex(ValueError, "'field_list' must be of type list/tuple, not <class 'dict'>"):
+            validate_fields({}, inputs)
+
         # Test mandatory fields missing
         with self.assertRaisesRegex(ValueError, "'cx' is mandatory and is not set. You must set this value to run this function"):
             validate_fields(("cx"), inputs)

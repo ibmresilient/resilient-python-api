@@ -104,10 +104,10 @@ def validate_fields(field_list, kwargs):
         mandatory_fields = [mandatory_fields]
 
     if not isinstance(mandatory_fields, list) and not isinstance(mandatory_fields, tuple):
-        raise ValueError("'field_list' must by of type list/tuple, not {0}".format(type(mandatory_fields)))
+        raise ValueError("'field_list' must be of type list/tuple, not {0}".format(type(mandatory_fields)))
 
     if not isinstance(provided_fields, dict):
-        raise ValueError("'kwargs' must by of type dict, not {0}".format(type(provided_fields)))
+        raise ValueError("'kwargs' must be of type dict, not {0}".format(type(provided_fields)))
 
     # Validate that mandatory fields exist + are not equal to their placeholder values
     for field in mandatory_fields:
