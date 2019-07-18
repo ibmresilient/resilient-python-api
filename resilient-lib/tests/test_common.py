@@ -134,10 +134,10 @@ class TestFunctionMetrics(unittest.TestCase):
 
     def test_get_file_attachment_metadata(self):
         with self.assertRaises(ValueError):
-            get_file_attachment_metadata(None, 123)
+            get_file_attachment_metadata(res_client=None, incident_id=123)
 
         with self.assertRaises(ValueError):
-            get_file_attachment_metadata(None, None, attachment_id=123)
+            get_file_attachment_metadata(res_client=None, incident_id=None, attachment_id=123)
 
     def test_write_to_tmp_file(self):
 
