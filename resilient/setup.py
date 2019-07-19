@@ -105,7 +105,7 @@ setup(
             'keyring'
         ],
         ':python_version < "3.5"': [
-            'keyring>=5.4'
+            'keyring>=5.4,<19.0.0'
         ]
     },
     tests_require=["pytest>=3.0.0, <4.1.0", ],
