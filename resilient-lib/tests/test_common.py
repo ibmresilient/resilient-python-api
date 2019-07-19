@@ -2,6 +2,7 @@
 
 import os
 import sys
+import shutil
 import unittest
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
@@ -11,10 +12,20 @@ from resilient_lib.components.resilient_common import str_to_bool, readable_date
 class TestFunctionMetrics(unittest.TestCase):
     """ Tests for the attachment_hash function"""
 
+    # List of temp directories to remove during tearDown
+    DIRS_TO_REMOVE = []
+
     def setUp(self):
         # assertRaisesRegexp renamed to assertRaisesRegex in PY3.2
         if sys.version_info < (3, 2):
             self.assertRaisesRegex = self.assertRaisesRegexp
+
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up: remove any temporary directories created during tests
+        for dirname in cls.DIRS_TO_REMOVE:
+            if os.path.isdir(dirname):
+                shutil.rmtree(dirname)
 
     def test_str_to_bool(self):
         self.assertTrue(str_to_bool('True'))
@@ -144,6 +155,8 @@ class TestFunctionMetrics(unittest.TestCase):
         data_to_write = bytearray(u" դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն ", encoding="utf-8")
 
         path_tmp_file, path_tmp_dir = write_to_tmp_file(data_to_write)
+
+        self.DIRS_TO_REMOVE.append(path_tmp_dir)
 
         # Test works as expected
         self.assertTrue(os.path.isdir(path_tmp_dir))
