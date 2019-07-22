@@ -702,7 +702,6 @@ class Actions(ResilientComponent):
         """Report an exception thrown during handling of an action event"""
         try:
             message = u""
-            print(etype is not None, traceback is not None)
             if etype and issubclass(etype, BaseFunctionError):
                 message = u"{}".format(str(value))
             else:
