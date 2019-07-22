@@ -11,6 +11,7 @@ import random
 import datetime
 import logging
 import traceback
+import six
 from circuits import Event, Timer
 
 LOG = logging.getLogger(__name__)
@@ -264,6 +265,30 @@ class FunctionResult(object):
         self.value = value
 
 
+def FunctionError(*args, **kwargs):
+    """
+    Way to pass an error message back to the client.
+    Usage in the function:
+    yield FunctionError("Message goes here")
+
+    if an exception happened prior to this, if will return FunctionException_,
+    otherwise it will return FunctionError_. Both of them are subclassing BaseFunctionError, which
+    makes it easier to handle Function Errors specifically.
+
+    :param: trace - boolean that shows whether the trace should be passed on
+    """
+    # can't just include it into params, because Python2.7 doesn't allow args to be first
+    # and doing it otherwise might break backwards compatibility
+    trace = kwargs.pop("trace", True)
+
+    # Just grab the stack trace and wrap in a FunctionError_.
+    exc = sys.exc_info()[0]
+    exc_trace = traceback.format_exc()
+    if not exc:
+        return FunctionError_(*args)
+    return FunctionException_(*args, include_trace=trace, trace=exc_trace)
+
+
 class BaseFunctionError(ValueError):
     """
     Provides an extra layer between FunctionError_/FunctionException_ that allows to check
@@ -272,54 +297,30 @@ class BaseFunctionError(ValueError):
     """
 
     def __init__(self, *args, **kwargs):
-        messages = kwargs.pop("messages", None)
-        trace = kwargs.pop("trace", False)
+        include_trace = kwargs.pop("include_trace", False)
+        trace = kwargs.pop("trace", None)
+
         super(BaseFunctionError, self).__init__(*args, **kwargs)
-        self.messages = messages
+        self.include_trace = include_trace
         self.trace = trace
 
+    def __str__(self):
+        message = ""
+        if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
+            if isinstance(self.args[0], six.string_types):
+                message += self.args[0]
+        if self.include_trace and self.trace is not None:
+            message += "\n"+self.trace
 
-def FunctionError(*args, **kwargs):
-    """A convenient error to be raised in a function call.
-    """
-    # Just grab the stack trace and wrap in a FunctionError_.
-    exc = sys.exc_info()
-    if not exc[0]:
-        return FunctionError_(*args)
-    return FunctionException_(*exc, messages=args, **kwargs)
-
+        return message
 
 class FunctionException_(BaseFunctionError):
     """Wraps an exception from a function call."""
-
-    def __init__(self, *args, **kwargs):
-        super(FunctionException_, self).__init__(*args, **kwargs)
-
-    def __str__(self):
-        """
-        If error messages are provided by user, add them to the str representation.
-        If trace is True, add trace to the str representation.
-        """
-        message = ""
-        if self.messages is not None:
-            message += "".join([str(msg)+"\n" for msg in self.messages])
-        if self.trace:
-            message += "".join(traceback.format_exception(*self.args))
-        return message
+    pass
 
 class FunctionError_(BaseFunctionError):
     """Wraps a simple "we failed" error from a function call."""
-    def __init__(self, *args, **kwargs):
-        super(FunctionError_, self).__init__(*args, **kwargs)
-
-    def __str__(self):
-        message = ""
-        if self.trace and isinstance(self.args, (tuple, list)) and len(self.args) > 0:
-            message += "".join([str(msg)+"\n" for msg in self.args])
-        else:
-            message += self.args[0]
-        return message
-
+    pass
 
 class StatusMessageEvent(Event):
     """Event that we use to send "action status" update back to resilient"""

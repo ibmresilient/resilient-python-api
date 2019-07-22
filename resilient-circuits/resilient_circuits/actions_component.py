@@ -704,10 +704,10 @@ class Actions(ResilientComponent):
             message = u""
             print(etype is not None, traceback is not None)
             if etype and issubclass(etype, BaseFunctionError):
-                message = str(value)
+                message = u"{}".format(str(value))
             else:
                 if etype:
-                    message = message + etype.__name__ + u": <" + u"{}".format(value) + u">"
+                    message = message + etype.__name__ + u": <{}>".format(value)
                 else:
                     message = u"Processing failed"
                 if traceback and isinstance(traceback, list):
