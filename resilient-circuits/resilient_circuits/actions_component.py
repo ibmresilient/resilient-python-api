@@ -747,7 +747,6 @@ class Actions(ResilientComponent):
                     LOG.debug("Test Action: No ack done.")
         except Exception as err:
             LOG.error("Exception handler threw exception! Response to action module may not have sent.")
-            LOG.error(str(err))
             LOG.error(traceback)
 
     @handler("Ack_failure")
