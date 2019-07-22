@@ -68,23 +68,6 @@ class TestAuthenticator(object):
         if OAuth2ClientCredentialsSession.__dict__.get("__it__", None) is not None:
             del OAuth2ClientCredentialsSession.__it__
 
-    def test_authenticator_is_singleton(self, monkeypatch):
-        monkeypatch.setattr(OAuth2ClientCredentialsSession, 'authenticate', lambda *_: True)
-        assert OAuth2ClientCredentialsSession("t", "s", "t") is OAuth2ClientCredentialsSession("t", "s", "t")
-        assert id(OAuth2ClientCredentialsSession("t", "s", "t")) == \
-               id(OAuth2ClientCredentialsSession("t", "s", "t"))
-
-    def test_multiple_authentications_are_singletons(self, monkeypatch):
-        monkeypatch.setattr(OAuth2ClientCredentialsSession, 'authenticate', lambda *_: True)
-        api1_1 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
-        api1_2 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
-
-        api2_1 = OAuth2ClientCredentialsSession("url:example2", "s", "t")
-        api2_2 = OAuth2ClientCredentialsSession("url:example2", "s", "t")
-        assert id(api1_1) == id(api1_2)
-        assert id(api2_1) == id(api2_2)
-        assert id(api1_1) != id(api2_1)
-
     def test_multiple_sessions_multiple_tokens(self, monkeypatch):
         monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api1"))
         api1 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
@@ -94,20 +77,7 @@ class TestAuthenticator(object):
         assert api1.access_token == "api1"
         assert api2.access_token == "api2"
 
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api3"))
-
-        api1_1 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
-        assert api1_1.access_token == "api1"
-        assert OAuth2ClientCredentialsSession("url:example2", "s", "t").access_token == "api2"
-
-    def test_singleton_doesnt_break_classes(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api1"))
-        api1_1 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
-        api1_2 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
-        assert isinstance(api1_1, OAuth2ClientCredentialsSession)
-        assert isinstance(api1_2, OAuth2ClientCredentialsSession)
-
-    def test_crates_session_with_passing_authentication(self, monkeypatch):
+    def test_creates_session_with_passing_authentication(self, monkeypatch):
         monkeypatch.setattr(requests, 'post', mock_token_request_factory())
         auth = OAuth2ClientCredentialsSession("test", "test", "test")
         assert getattr(auth, 'access_token', None) is not None
@@ -129,7 +99,8 @@ class TestAuthenticator(object):
             OAuth2ClientCredentialsSession("t", "s", None)
 
     def test_scope_gets_passed_when_given(self, monkeypatch):
-        def confirm_scope_data(*args, data=None, **kwargs):
+        def confirm_scope_data(*args, **kwargs):
+            data = kwargs.pop("data", None)  # instead of data in signature because of 2.7
             assert data is not None
             assert data['scope'] is not None
             return mock_token_request_factory()()

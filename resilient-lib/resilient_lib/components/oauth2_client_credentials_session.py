@@ -31,36 +31,6 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
     AUTHORIZATION_ERROR_CODES = [401, 403]
 
-    def __new__(cls, *args, **kwargs):
-        """
-        Creates a singleton per authorization url / API.
-        This means that the same class can be used to access multiple OAuth2 APIs, and each API's session
-        would be a separate singleton with their own managed tokens.
-
-        Guido Van Rossum's Singleton, modified to hold objects in a dictionary
-        with key being request URL, so that multiple CredentialSession could be created from the class.
-        https://www.python.org/download/releases/2.2/descrintro/#__new__
-        """
-        url = kwargs.get('url')
-
-        if not url and len(args) > 1:
-            url = args[0]
-        else:
-            raise ValueError("url is not provided")
-
-        # __it__ is a dictionary that stores session for each API
-        # the key is authorization API, the value is the session
-        if cls.__dict__.get("__it__", None) is None:
-            cls.__it__ = {}
-        dict_it = cls.__dict__.get("__it__", None)
-        # if there's an entry in the dictionary for given API return it
-        if dict_it.get(url, None) is not None:
-            return dict_it[url]
-        # create session and save it in the dictionary with url as key
-        it = requests.Session.__new__(cls)
-        dict_it[url] = it
-        return it
-
     def __init__(self, url=None, client_id=None, client_secret=None, scope=None, proxies=None):
         """
         Get OAuth2 tokens and save them to be used in session requests.
