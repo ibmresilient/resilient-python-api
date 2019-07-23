@@ -1,4 +1,4 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 from __future__ import print_function
 import pytest
 import doctest
@@ -37,6 +37,70 @@ class TestCo3:
         assert client
         user_info = client.connect(co3_args.email, co3_args.password)
         assert user_info
+
+    @pytest.mark.parametrize("resp", ([], None))
+    def test_extract_org_id_failure(self, co3_args, resp):
+        """Extract org id given org name"""
+        url = "https://{0}:{1}".format(co3_args.host, co3_args.port or 443)
+        client = resilient.SimpleClient(org_name=co3_args.org,
+                                        base_url=url,
+                                        verify=False,
+                                        proxies=co3_args.proxy)
+        try:
+            client._extract_org_id({"orgs": resp})
+            assert False
+        except Exception as e:
+            assert True
+
+    def test_org_error(self, co3_args):
+        """No org entered"""
+        url = "https://{0}:{1}".format(co3_args.host, co3_args.port or 443)
+        client = resilient.SimpleClient(org_name=co3_args.org,
+                                        base_url=url,
+                                        verify=False,
+                                        proxies=co3_args.proxy)
+        # Mismatch.
+        try:
+            client._extract_org_id({"orgs": [{"name": "Fake Org"}]})
+            assert False
+        except Exception as e:
+            assert True
+
+        # not enabled
+        try:
+            client._extract_org_id({"orgs": [{"name": client.org_name,
+                                              "enabled": False}]})
+            assert False
+        except Exception as e:
+            assert True
+
+        # Erase org_name input
+        client.org_name = None
+        try:
+            client._extract_org_id({"orgs": [{"name": "Fake Org"}]})
+            assert False
+        except Exception as e:
+            assert True
+
+    def test_api_key(self, co3_args):
+        """
+        Test using api key to get org
+        :return:
+        """
+        print(str(co3_args))
+        url = "https://{0}:{1}".format(co3_args.host, co3_args.port or 443)
+        client = resilient.SimpleClient(org_name=co3_args.org,
+                                        base_url=url,
+                                        verify=False,
+                                        proxies=co3_args.proxy)
+        if (co3_args.api_key_id is not None and co3_args.api_key_secret is not None):
+            try:
+                # Erase org_id
+                client.org_id = None
+                ret = client.set_api_key(co3_args.api_key_id, co3_args.api_key_secret)
+                assert client.org_id
+            except Exception as e:
+                assert False
 
 
 class TestCo3Patch:
@@ -243,6 +307,31 @@ class TestCo3Patch:
 
         os.remove(file_name)
 
+    def test_post_attachment_artifact(self, co3_args):
+        client = self._connect(co3_args)
+
+        inc = self._create_incident(client, {"name": "test for artifact attachment"})
+
+        file_name = "test-for-attachment_artifact.txt"
+        file_content = "this is test data"
+
+        # Create the file
+        temp_file = open(file_name, "w")
+        temp_file.write(file_content)
+        temp_file.close()
+        # Post file to Resilient
+        attachment_uri = "/incidents/{0}/artifacts/files".format(inc["id"])
+
+        response = client.post_artifact_file(attachment_uri,
+                                             artifact_type=16,
+                                             artifact_filepath=file_name,
+                                             description="Description",
+                                             value=file_name)
+
+        assert response
+
+        os.remove(file_name)
+
     def test_get_config_file(self, co3_args):
         config_file = resilient.get_config_file("~/.resilient/app.config")
 
@@ -296,4 +385,25 @@ class TestCo3Patch:
 
         assert proxy_dict == {'https': 'https://user:password@resilientproxy.com:4443/'}
 
+    def test_changing_description(self, co3_args):
+        client = self._connect(co3_args)
 
+        inc = self._create_incident(client, {"name": "Test Put and get_put"})
+        # use PUT to change description
+        inc["description"] = "Test Put method"
+        uri = "/incidents/{}".format(inc["id"])
+        inc = client.put(uri, inc)
+
+        # use get_put to change description
+
+        def change_description(json_data):
+            json_data["description"] = json_data.get("description") + ", test get_put method"
+
+        inc = client.get_put(uri, change_description)
+
+        # Test no change error
+
+        def no_change(json_data):
+            raise resilient.NoChange
+
+        inc = client.get_put(uri, no_change)

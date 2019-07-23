@@ -16,7 +16,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import filelock
-from circuits import Manager, BaseComponent, Component, Debugger
+from circuits import Manager, BaseComponent, Component, Debugger, Loader
 import resilient
 from resilient import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
@@ -204,7 +204,15 @@ class App(Component):
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
-        self.action_component = Actions(self.opts)
+        if self.opts.get("resilient", None) and self.opts["resilient"].get("actions_component", None):
+            # user specified actions_component to use
+            path, filename = os.path.split(self.opts["resilient"]["actions_component"])
+            LOG.info("User specified actions_component: {}, from {}".format(filename, path))
+            loader = Loader(init_kwargs={"opts": self.opts},
+                            paths=[path])
+            self.action_component = loader.load(filename)
+        else:
+            self.action_component = Actions(self.opts)
         self.action_component.register(self)
 
         # Register a `loader` to dynamically load

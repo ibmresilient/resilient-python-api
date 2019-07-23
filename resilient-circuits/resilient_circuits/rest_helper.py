@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Global accessor for the Resilient REST API"""
 
@@ -29,7 +29,8 @@ def get_resilient_client(opts):
                 opts.get("proxy_port"),
                 opts.get("proxy_user"),
                 opts.get("proxy_password"),
-                opts.get("email"))
+                opts.get("email"),
+                opts.get("api_key_id"))
     if new_opts != connection_opts:
         resilient_client = None
         connection_opts = new_opts
