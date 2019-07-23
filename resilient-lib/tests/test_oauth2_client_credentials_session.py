@@ -83,7 +83,7 @@ class TestAuthenticator(object):
         assert getattr(auth, 'access_token', None) is not None
 
     def test_fails_to_create_session_with_bad_authentication(self, monkeypatch):
-        monkeypatch.setattr(OAuth2ClientCredentialsSession, 'authenticate', lambda *_: False)
+        monkeypatch.setattr(requests, 'post', mock_token_request_factory(status_code=403))
         with pytest.raises(ValueError):
             OAuth2ClientCredentialsSession("test", "test", "test")
 

@@ -24,7 +24,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
     >>>
     >>> api1.post('https://example1.com/v4/me/messages', data={}) # use as a regular requests session object
     >>> api2.get('https://example2.com/v2/me/updates')
-    >>> # When writing an integration use RequestsCommon to get the proxies defined in options
+    >>> # When writing an integration, use RequestsCommon to get the proxies defined in in your app.config file.
     >>> rc = RequestsCommon(xxx)
     >>> api3 = OAuth2ClientCredentialsSession('https://example3.com/{}/test', proxies=rc.get_proxies())
     """
@@ -70,8 +70,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         self.proxies = proxies
         self.close()  # release the socket, since all the requests will be made in a new session
 
-        if not self.authenticate(url, client_id, client_secret, scope, proxies):
-            raise ValueError("Wrong credentials for OAuth2 authentication with {0}".format(url))
+        self.authenticate(url, client_id, client_secret, scope, proxies)
 
     def authenticate(self, url, client_id, client_secret, scope, proxies=None):
         """
@@ -124,8 +123,10 @@ class OAuth2ClientCredentialsSession(requests.Session):
         """
         Institutes a request for a new access token.
         """
-        if not self.authenticate(self.authorization_url, self.client_id,
-                                 self.client_secret, self.scope, self.proxies):
+        try:
+            self.authenticate(self.authorization_url, self.client_id,
+                                 self.client_secret, self.scope, self.proxies)
+        except ValueError:
             raise ValueError("Can't update the token, did the credentials for {0} change?"
                              .format(self.authorization_url))
         return True
