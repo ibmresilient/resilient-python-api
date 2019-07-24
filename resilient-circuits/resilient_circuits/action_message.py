@@ -305,13 +305,33 @@ class BaseFunctionError(ValueError):
         self.trace = trace
 
     def __str__(self):
-        message = ""
+        try:
+            message = unicode(self).encode('utf-8')
+        except NameError:
+            # not Python 2
+            message = self.__unicode__()
+        return message
+
+    def __unicode__(self):
+        """
+        Gets called by unicode in Python 2.
+        :return: unicode representation of the class
+        """
+        message = u""
         if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
             if isinstance(self.args[0], six.string_types):
-                message += self.args[0]
+                try:
+                    message += self.args[0]
+                except UnicodeDecodeError:
+                    # already unicode in Py2
+                    message = message + self.args[0].decode('utf-8')
         if self.include_trace and self.trace is not None:
-            message += "\n"+self.trace
-
+            message += u"\n"
+            try:
+                message += self.trace
+            except UnicodeDecodeError:
+                # already unicode in Py2
+                message = message + self.trace.decode('utf-8')
         return message
 
 class FunctionException_(BaseFunctionError):

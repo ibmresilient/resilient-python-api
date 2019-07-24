@@ -17,7 +17,6 @@ class TestRC:
         """Run doctest on all modules, even if you didn't --doctest-modules"""
         for item in resilient_circuits.__dict__.values():
             if isinstance(item, types.ModuleType):
-                print(os.path.dirname(item.__file__))
                 if 'resilient-circuits' in os.path.dirname(item.__file__):
                     doctest.testmod(item, verbose=True, raise_on_error=True)
 

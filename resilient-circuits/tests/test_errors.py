@@ -46,11 +46,52 @@ class TestErrors(object):
             err = FunctionError("message_included")
             message = str(err)
             assert "trace_included" in message
+
+    def test_unexplicit_unicode_message_in_error(self):
+        err = FunctionError("√message")
+        message = str(err)
+        assert "√message" in message
+
+    def test_explicit_unicode_message_in_error(self):
+        err = FunctionError(u"√message")
+        message = str(err)
+        assert "√message" in message
+
+    def test_unexplicit_unicode_message_in_trace(self):
+        try:
+            raise ValueError("√trace")
+        except ValueError:
+            err = FunctionError("message_here")
+            message = str(err)
+
+            assert "√trace" in message
+
+
+    def test_explicit_unicode_message_in_trace(self):
+        try:
+            raise ValueError(u"√trace -> weird Unicode symbol")
+        except ValueError:
+            err = FunctionError("message_here")
+            message = str(err)
+
+            assert message
+            assert "√trace" in message
+
+
     """
     --------------------------------
     Section testing new capabilities
     --------------------------------
     """
+    def test_unicode_in_message_in_trace(self):
+        try:
+            raise ValueError("√trace weird Unicode symbol")
+        except:
+            err = FunctionError("√message")
+            message = str(err)
+            assert "√trace" in message
+            assert "√message" in message
+
     def test_message_passed_in_exception_preserved_no_trace(self):
         try:
             raise ValueError("value_error")
