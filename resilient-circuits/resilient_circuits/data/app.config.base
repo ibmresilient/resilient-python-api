@@ -2,8 +2,13 @@
 # Basic service connection
 host=resilient
 port=443
+# Use either (email, password)
 email=api_user@example.com
 password=MyPassword
+# Or (api_key_id, api_key_secret)
+api_key_id=ApiKeyId
+api_key_secret=ApiKeySecret
+
 org=My Org
 
 # Actions Module connection
