@@ -702,12 +702,6 @@ class Actions(ResilientComponent):
         """Report an exception thrown during handling of an action event"""
         try:
             message = u""
-            print("------------ New Error ---------------")
-            print(etype)
-            print(etype.__class__)
-            print(value)
-            print(value.__class__)
-            print(traceback)
             if etype and issubclass(etype, BaseFunctionError):
                 try:
                     message += str(value)
