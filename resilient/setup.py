@@ -101,15 +101,11 @@ setup(
         ':python_version < "3.2"': [
             'configparser'
         ],
-        ':"Debian" in platform_version': [
-            'keyring<=9.1'
-            # There is no 'gcc' on Resilient appliance; later versions cause trouble
-        ],
-        ':python_version >= "2.7"': [
+        ':python_version >= "3.5"': [
             'keyring'
         ],
-        ':python_version == "2.6"': [
-            'keyring==5.4'
+        ':python_version < "3.5"': [
+            'keyring>=5.4,<19.0.0'
         ]
     },
     tests_require=["pytest>=3.0.0, <4.1.0", ],

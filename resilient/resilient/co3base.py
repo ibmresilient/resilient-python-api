@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Base client for Resilient REST API"""
 from __future__ import print_function
@@ -16,6 +16,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+from requests.auth import HTTPBasicAuth
 
 try:
     # Python 3
@@ -133,6 +134,37 @@ class BaseClient(object):
         self.session = requests.Session()
         self.session.mount(u'https://', TLSHttpAdapter())
 
+        # API key
+        self.api_key_id = None
+        self.api_key_secret = None
+        self.use_api_key = False
+        self.api_key_handle = None      # This is the principle ID for an api key. Also called handle
+
+    def set_api_key(self, api_key_id, api_key_secret, timeout=None):
+        """
+        Call this method instead of the connect method in order to use API key
+        Just like the connect method, this method calls the session endpoint
+        to get org_id information.
+        :param api_key_id:
+        :param api_key_secret:
+        :return:
+        """
+        self.api_key_id = api_key_id
+        self.api_key_secret = api_key_secret
+        self.use_api_key = True
+
+        response = self.session.get(u"{0}/rest/session".format(self.base_url),
+                                    auth=HTTPBasicAuth(self.api_key_id, self.api_key_secret),
+                                    proxies=self.proxies,
+                                    headers=self.make_headers(),
+                                    verify=self.verify,
+                                    timeout=timeout)
+        BasicHTTPException.raise_if_error(response)
+        session = json.loads(response.text)
+        self._extract_org_id(session)
+        self.api_key_handle = session.get("api_key_handle", None)
+        return session
+
     def connect(self, email, password, timeout=None):
         """Performs connection, which includes authentication.
 
@@ -151,17 +183,13 @@ class BaseClient(object):
         }
         return self._connect(timeout=timeout)
 
-    def _connect(self, timeout=None):
-        """Establish a session"""
-        response = self.session.post(u"{0}/rest/session".format(self.base_url),
-                                     data=json.dumps(self.authdata),
-                                     proxies=self.proxies,
-                                     headers=self.make_headers(),
-                                     verify=self.verify,
-                                     timeout=timeout)
-        BasicHTTPException.raise_if_error(response)
-        session = json.loads(response.text)
-        orgs = session['orgs']
+    def _extract_org_id(self, resp):
+        """
+        Extract org id from server resp
+        :param resp: server response from session endpoint
+        :return:
+        """
+        orgs = resp['orgs']
         selected_org = None
         if orgs is None or len(orgs) == 0:
             raise Exception("User is a member of no orgs")
@@ -188,10 +216,22 @@ class BaseClient(object):
                   "The organization does not allow access from your current IP address.\n" \
                   "The organization requires authentication with a different provider than you are currently using.\n" \
                   "Your IP address is {0}"
-            raise Exception(msg.format(session["session_ip"]))
+            raise Exception(msg.format(resp["session_ip"]))
 
         self.all_orgs = [org for org in orgs if org.get("enabled")]
         self.org_id = selected_org['id']
+
+    def _connect(self, timeout=None):
+        """Establish a session"""
+        response = self.session.post(u"{0}/rest/session".format(self.base_url),
+                                     data=json.dumps(self.authdata),
+                                     proxies=self.proxies,
+                                     headers=self.make_headers(),
+                                     verify=self.verify,
+                                     timeout=timeout)
+        BasicHTTPException.raise_if_error(response)
+        session = json.loads(response.text)
+        self._extract_org_id(session)
 
         # set the X-sess-id token, which is used to prevent CSRF attacks.
         self.headers['X-sess-id'] = session['csrf_token']
@@ -214,8 +254,17 @@ class BaseClient(object):
         """Execute a HTTP request.
            If unauthorized (likely due to a session timeout), retry.
         """
+        if self.use_api_key:
+            kwargs["auth"] = HTTPBasicAuth(self.api_key_id, self.api_key_secret)
+            #
+            #   Note this is a temporary walk around. Theoretically the server
+            #   shall ignore the session id if api key is used. But we don't have
+            #   time to do that yet. So we clear the session id here
+            #
+            self.session.cookies.clear()
+
         result = operation(url, **kwargs)
-        if result.status_code == 401:  # unauthorized, re-auth and try again
+        if result.status_code == 401 and not self.use_api_key:  # unauthorized, re-auth and try again
             self._connect()
             result = operation(url, **kwargs)
         return result
