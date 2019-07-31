@@ -58,3 +58,27 @@ Script output is logged to a file "app.log", which rotates if it grows large.
 On unix systems, the script output is also sent to syslog.
 You should periodically check the log for warnings and errors.
 
+### Usage:
+```
+resilient-circuits [-h] [-v]
+                          {run,list,test,service,config,codegen,extract,customize,selftest,clone,ext:package,ext:convert}
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         Print debug output
+
+subcommands:
+                        one of these options must be provided
+    run                 Run the Resilient Circuits application
+    list                List the installed Resilient Circuits components
+    test                An interactive client for testing Resilient Circuits
+                        messages
+    service             Manage Resilient Circuits as a service
+    config              Create or update a basic configuration file
+    codegen             Generate template code for Python components
+    extract             Extract data in order to publish a .res file
+    customize           Apply customizations to the Resilient platform
+    selftest            Calls selftest functions for every package and prints
+                        out their return states
+    clone               Clone Resilient objects
+```

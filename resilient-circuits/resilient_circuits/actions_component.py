@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Circuits component for Action Module subscription and message handling"""
 
@@ -491,12 +491,21 @@ class Actions(ResilientComponent):
 
         # Gather the stomp_host if specified or fallback to the resilient host if not
         stomp_host = self.opts["resilient"].get("stomp_host", None) or self.opts["host"]
+        #
+        #   key_id and key_secret are the preferrable one
+        #
+        if self.opts.get("api_key_id", None) is not None and self.opts.get("api_key_secret", None) is not None:
+            stomp_email = self.opts["api_key_id"]
+            stomp_password = self.opts["api_key_secret"]
+        else:
+            stomp_email = self.opts["email"]
+            stomp_password = self.opts["password"]
 
         # Set up a STOMP connection to the Resilient action services
         if not self.stomp_component:
             self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
-                                               username=self.opts["email"],
-                                               password=self.opts["password"],
+                                               username=stomp_email,
+                                               password=stomp_password,
                                                heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                            STOMP_SERVER_HEARTBEAT),
                                                connected_timeout=STOMP_TIMEOUT,
@@ -508,8 +517,8 @@ class Actions(ResilientComponent):
         else:
             # Component exists, just update it
             self.stomp_component.init(stomp_host, self.opts["stomp_port"],
-                                      username=self.opts["email"],
-                                      password=self.opts["password"],
+                                      username=stomp_email,
+                                      password=stomp_password,
                                       heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                   STOMP_SERVER_HEARTBEAT),
                                       connected_timeout=STOMP_TIMEOUT,
