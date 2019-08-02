@@ -21,7 +21,7 @@ import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessageBase, ActionMessage, \
-    FunctionMessage, StatusMessage, FunctionResult, BaseFunctionError
+    FunctionMessage, StatusMessage, FunctionResult
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 
@@ -710,22 +710,13 @@ class Actions(ResilientComponent):
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
         try:
-            message = u""
-            if etype and issubclass(etype, BaseFunctionError):
-                try:
-                    message += str(value)
-                except UnicodeDecodeError:
-                    message += unicode(value)
+            if etype:
+                message = etype.__name__ + u": <" + u"{}".format(value) + u">"
             else:
-                if etype:
-                    message = message + etype.__name__ + u": <{}>".format(value)
-                else:
-                    message = u"Processing failed"
-                if traceback and isinstance(traceback, list):
-                    message = message + "\n" + ("".join(traceback))
-
+                message = u"Processing failed"
+            if traceback and isinstance(traceback, list):
+                message = message + "\n" + ("".join(traceback))
             LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
-
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
                 for arg in fevent.args:
@@ -759,6 +750,8 @@ class Actions(ResilientComponent):
                     LOG.debug("Test Action: No ack done.")
         except Exception as err:
             LOG.error("Exception handler threw exception! Response to action module may not have sent.")
+            LOG.error(err)
+            LOG.error("Original exception traceback.")
             LOG.error(traceback)
 
     @handler("Ack_failure")
