@@ -8,7 +8,7 @@
         "__init__.py": "template_package/package/__init__.py.jinja2",
         "components": {
 {%for function_name in functions.keys()%}
-            "func_{{function_name|replace('fn_', '')}}.py@{{function_name}}": "template_package/package/components/function.py.jinja2",
+            "funct_{{function_name}}.py@{{function_name}}": "template_package/package/components/function.py.jinja2",
 {%endfor%}
             "__init__.py": "template_package/package/components/__init__.py.jinja2"
         },
