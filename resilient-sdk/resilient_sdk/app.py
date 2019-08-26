@@ -13,13 +13,6 @@ LOG = logging.getLogger("resilient_sdk_log")
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
-# Define subcommands and their help messages
-CMD_NAME_DOCGEN = "docgen"
-CMD_HELP_DOCGEN = "TODO: docgen help message"
-
-CMD_NAME_CODEGEN = "codegen"
-CMD_HELP_CODEGEN = "TODO: codegen help message"
-
 
 def main():
     """TODO Docsting"""
@@ -45,8 +38,8 @@ def main():
     )
 
     # Define all subcommands here
-    cmd_docgen = CmdDocgen(CMD_NAME_DOCGEN, CMD_HELP_DOCGEN, sub_parser)
-    cmd_codegen = CmdCodegen(CMD_NAME_CODEGEN, CMD_HELP_CODEGEN, sub_parser)
+    cmd_docgen = CmdDocgen(sub_parser)
+    cmd_codegen = CmdCodegen(sub_parser)
 
     # Parse the arguments
     args = parser.parse_args()
@@ -58,10 +51,10 @@ def main():
         LOG.debug("Logging set to DEBUG mode")
 
     # Handle what subcommand was called
-    if args.cmd == CMD_NAME_DOCGEN:
+    if args.cmd == cmd_docgen.cmd:
         cmd_docgen.execute_command(args)
 
-    elif args.cmd == CMD_NAME_CODEGEN:
+    elif args.cmd == cmd_codegen.cmd:
         cmd_codegen.execute_command(args)
 
 if __name__ == "__main__":

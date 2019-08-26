@@ -10,14 +10,22 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
+CMD_NAME = "codegen"
+CMD_HELP = "TODO: codegen help message"
+CMD_USAGE = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
+CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
+
 
 class CmdCodegen(BaseCmd):
     """TODO Docstring"""
 
+    def __init__(self, sub_parser):
+        super(CmdCodegen, self).__init__(CMD_NAME, CMD_HELP, sub_parser)
+
     def setup(self):
         # Define codegen usage and description
-        self.parser.usage = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
-        self.parser.description = "Generate boilerplate code to start developing an Extension"
+        self.parser.usage = CMD_USAGE
+        self.parser.description = CMD_DESCRIPTION
 
         # Add any positional or optional arguments here
         self.parser.add_argument("-p", "--package",
