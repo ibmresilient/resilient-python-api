@@ -51,10 +51,10 @@ def main():
         LOG.debug("Logging set to DEBUG mode")
 
     # Handle what subcommand was called
-    if args.cmd == cmd_docgen.cmd:
+    if args.cmd == cmd_docgen.CMD_NAME:
         cmd_docgen.execute_command(args)
 
-    elif args.cmd == cmd_codegen.cmd:
+    elif args.cmd == cmd_codegen.CMD_NAME:
         cmd_codegen.execute_command(args)
 
 if __name__ == "__main__":

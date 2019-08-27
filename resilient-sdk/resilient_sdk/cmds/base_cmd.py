@@ -6,10 +6,13 @@
 class BaseCmd(object):
     """TODO Docstring"""
 
-    def __init__(self, cmd_name, cmd_help, sub_parser):
-        self.cmd = cmd_name
-        self.parser = sub_parser.add_parser(cmd_name, help=cmd_help)
+    CMD_NAME = None
+    CMD_HELP = None
+    CMD_USAGE = None
+    CMD_DESCRIPTION = None
 
+    def __init__(self, cmd_name, cmd_help, sub_parser):
+        self.parser = sub_parser.add_parser(cmd_name, help=cmd_help)
         self.setup()
 
     def setup(self):
