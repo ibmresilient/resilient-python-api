@@ -11,8 +11,12 @@ class BaseCmd(object):
     CMD_USAGE = None
     CMD_DESCRIPTION = None
 
-    def __init__(self, cmd_name, cmd_help, sub_parser):
-        self.parser = sub_parser.add_parser(cmd_name, help=cmd_help)
+    def __init__(self, sub_parser):
+
+        assert self.CMD_NAME
+        assert self.CMD_HELP
+
+        self.parser = sub_parser.add_parser(self.CMD_NAME, help=self.CMD_HELP)
         self.setup()
 
     def setup(self):

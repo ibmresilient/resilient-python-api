@@ -19,9 +19,6 @@ class CmdCodegen(BaseCmd):
     CMD_USAGE = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
 
-    def __init__(self, sub_parser):
-        super(CmdCodegen, self).__init__(self.CMD_NAME, self.CMD_HELP, sub_parser)
-
     def setup(self):
         # Define codegen usage and description
         self.parser.usage = self.CMD_USAGE

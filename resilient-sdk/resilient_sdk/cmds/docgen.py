@@ -19,9 +19,6 @@ class CmdDocgen(BaseCmd):
     CMD_USAGE = "resilient-sdk docgen -p <path_to_package>"
     CMD_DESCRIPTION = "Generate documentation for an Extension"
 
-    def __init__(self, sub_parser):
-        super(CmdDocgen, self).__init__(self.CMD_NAME, self.CMD_HELP, sub_parser)
-
     def setup(self):
         # Define docgen usage and description
         self.parser.usage = self.CMD_USAGE
