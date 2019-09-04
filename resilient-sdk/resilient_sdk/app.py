@@ -43,7 +43,6 @@ def main():
 
     # Parse the arguments
     args = parser.parse_args()
-    LOG.info("args: %s", args)
 
     # If -v was specified, set the log level to DEBUG
     if args.verbose:
