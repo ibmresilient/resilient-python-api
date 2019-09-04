@@ -48,7 +48,7 @@ def safe_but_noisy_import(name):
 class ComponentLoader(Loader):
     """A component to automatically load from the componentsdir directory"""
 
-    def __init__(self, opts):
+    def __init__(self, opts, components_to_register=None):
         """Initialize the loader"""
         self.opts = opts
         # Path where components should be found
@@ -60,8 +60,13 @@ class ComponentLoader(Loader):
         self.pending_components = []
         self.finished = False
 
-        # Load all installed components
-        installed_components = self.discover_installed_components()
+        # Load all installed components or the list passed to the
+        # constructor, giving preference to the later.
+        if components_to_register:
+            installed_components = components_to_register
+        else:
+            installed_components = self.discover_installed_components()
+
         if installed_components:
             self._register_components(installed_components)
 
