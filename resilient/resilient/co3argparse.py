@@ -89,22 +89,27 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # Read configuration options.
         if config_file:
-            config_path = ensure_unicode(config_file)
-            config_path = os.path.expanduser(config_path)
-            if os.path.exists(config_path):
-                try:
-                    self.config = configparser.ConfigParser(interpolation=None)
-                    with open(config_path, 'r', encoding='utf-8') as f:
-                        first_byte = f.read(1)
-                        if first_byte != u'\ufeff':
-                            # Not a BOM, no need to skip first byte
-                            f.seek(0)
-                        self.config.read_file(f)
-                except Exception as exc:
-                    logger.warn(u"Couldn't read config file '%s': %s", config_path, exc)
-                    self.config = None
+            # If a ConfigParser instance is passed to the constructor,
+            # it gets assigned directly to self.config
+            if isinstance(config_file, configparser.ConfigParser):
+                self.config = config_file
             else:
-                logger.warn(u"Couldn't read config file '%s'", config_file)
+                config_path = ensure_unicode(config_file)
+                config_path = os.path.expanduser(config_path)
+                if os.path.exists(config_path):
+                    try:
+                        self.config = configparser.ConfigParser(interpolation=None)
+                        with open(config_path, 'r', encoding='utf-8') as f:
+                            first_byte = f.read(1)
+                            if first_byte != u'\ufeff':
+                                # Not a BOM, no need to skip first byte
+                                f.seek(0)
+                            self.config.read_file(f)
+                    except Exception as exc:
+                        logger.warn(u"Couldn't read config file '%s': %s", config_path, exc)
+                        self.config = None
+                else:
+                    logger.warn(u"Couldn't read config file '%s'", config_file)
 
         default_email = self.getopt("resilient", "email")
         default_password = self.getopt("resilient", "password")
