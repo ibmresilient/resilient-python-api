@@ -147,6 +147,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         with requests.Session() as s:
             resp = s.request(method, url, *args, headers=headers, **kwargs)
 
+        # If the error anything other than Authorization issue, the problem is in user's request
         if resp.status_code in self.AUTHORIZATION_ERROR_CODES:
             self.update_token()
             with requests.Session() as s:

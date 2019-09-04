@@ -96,7 +96,22 @@ parser = MarkdownParser(bold="*", underline="_") # override defaults
 converted = parser.convert(data)
 self.assertEqual(converted, markdown)
 ```
-
+* oauth2_client_credentials_session - has OAuth2ClientCredentialsSession class that 
+standardizes OAuth2 Client Credential flow's implementation. It subclasses `requests.Session` to
+provide a convenient interaction.
+```
+Usage example:
+>>> api1 = OAuth2ClientCredentialsSession('https://example1.com/<tenant_id>/oauth/v2/',\
+                    client_id='xxx', client_secret='xxx')
+>>> api2 = OAuth2ClientCredentialsSession('https://example2.com/<tenant_id>/oauth/v2/',\
+                    client_id='xxx', client_secret='xxx')
+>>>
+>>> api1.post('https://example1.com/v4/me/messages', data={}) # use as a regular requests session object
+>>> api2.get('https://example2.com/v2/me/updates')
+>>> # When writing an integration, use RequestsCommon to get the proxies defined in in your app.config file.
+>>> rc = RequestsCommon(xxx)
+>>> api3 = OAuth2ClientCredentialsSession('https://example3.com/{}/test', proxies=rc.get_proxies())
+```
 ## Installation
 
 Install this package as:
