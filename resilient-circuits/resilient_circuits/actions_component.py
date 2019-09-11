@@ -466,7 +466,7 @@ class Actions(ResilientComponent):
 
         # Gather the stomp_cafile for if specified or fallback to the resilient host. Used for TLS / SSL
         cafile = self.opts.get("stomp_cafile") or self.opts.cafile
-        if cafile.strip().lower() == "false":
+        if cafile is not None and cafile.strip().lower() == "false":
             # Explicitly disable TLS certificate validation, if you need to
             cafile = None
             LOG.warning(("Unverified STOMP TLS certificate (cafile=false)"))
