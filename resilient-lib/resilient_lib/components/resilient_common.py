@@ -234,17 +234,17 @@ def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, tas
     return name
 
 
-def write_file_attachment(res_client,file_name,datastream,incident_id, task_id=None,content_type=None):
+def write_file_attachment(res_client, file_name, datastream, incident_id, task_id=None, content_type=None):
     """
-    def write_file_attachment(res_client,file_name,base64content,incident_id, task_id=None,content_type=None):
     call the Resilient REST API to create the attachment on incident or task
+
     :param res_client: required for communication back to resilient
-    :param file_name: required
-    :param dataStream: required
+    :param file_name: required, name of the attachment
+    :param dataStream: required, stream of bytes
     :param incident_id: required
     :param task_id: optional
-    :param content_type: optional
-    :return: byte string of attachment
+    :param content_type: optional, MIME type of attachment
+    :return: new attachment
     """
 
     content_type = content_type \
@@ -253,13 +253,18 @@ def write_file_attachment(res_client,file_name,datastream,incident_id, task_id=N
 
     attachment = datastream.read()
 
+    """
+    Writing to temp path so that the REST API client can use this file path 
+    to read and POST the attachment
+    """
+
+
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         try:
-
             temp_file.write(attachment)
             temp_file.close()
 
-            # Create a new artifact
+            # Create a new attachment by calling resilient REST API
 
             if task_id:
                 attachment_uri = "/tasks/{}/attachments".format(task_id)
@@ -273,10 +278,10 @@ def write_file_attachment(res_client,file_name,datastream,incident_id, task_id=N
         finally:
             os.unlink(temp_file.name)
 
-        if isinstance(new_attachment, list):
-            new_attachment = new_attachment[0]
+    if isinstance(new_attachment, list):
+        new_attachment = new_attachment[0]
 
-        return new_attachment
+    return new_attachment
 
 
 def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%SZ'):
