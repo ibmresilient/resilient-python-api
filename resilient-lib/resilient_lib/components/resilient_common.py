@@ -244,7 +244,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     :param incident_id: required
     :param task_id: optional
     :param content_type: optional, MIME type of attachment
-    :return: new attachment
+    :return: new attachment -dictionary of attachment metadata
     """
 
     content_type = content_type \
