@@ -11,6 +11,7 @@ import random
 import datetime
 import logging
 import traceback
+import six
 from circuits import Event, Timer
 
 LOG = logging.getLogger(__name__)
@@ -264,34 +265,82 @@ class FunctionResult(object):
         self.value = value
 
 
-def FunctionError(*args):
-    """A convenient error to be raised in a function call."""
+def FunctionError(*args, **kwargs):
+    """
+    Way to pass an error message back to the client.
+    Usage in the function:
+    yield FunctionError("Message goes here")
+
+    if an exception happened prior to this, if will return FunctionException_,
+    otherwise it will return FunctionError_. Both of them are subclassing BaseFunctionError, which
+    makes it easier to handle Function Errors specifically.
+
+    :param: trace - boolean that shows whether the trace should be passed on
+    """
+    # can't just include it into params, because Python2.7 doesn't allow args to be first
+    # and doing it otherwise might break backwards compatibility
+    trace = kwargs.pop("trace", True)
+
     # Just grab the stack trace and wrap in a FunctionError_.
-    exc = sys.exc_info()
-    if not exc[0]:
+    exc = sys.exc_info()[0]
+    exc_trace = traceback.format_exc()
+    if not exc:
         return FunctionError_(*args)
-    return FunctionException_(*exc)
+    return FunctionException_(*args, include_trace=trace, trace=exc_trace)
 
 
-class FunctionException_(ValueError):
-    """Wraps an exception from a function call."""
+class BaseFunctionError(ValueError):
+    """
+    Provides an extra layer between FunctionError_/FunctionException_ that allows to check
+    more precisely if it's a resilient-circuits error, and not a ValueError, but doesn't require
+    to check for both separately.
+    """
+
     def __init__(self, *args, **kwargs):
-        super(FunctionException_, self).__init__(*args, **kwargs)
+        include_trace = kwargs.pop("include_trace", False)
+        trace = kwargs.pop("trace", None)
+
+        super(BaseFunctionError, self).__init__(*args, **kwargs)
+        self.include_trace = include_trace
+        self.trace = trace
 
     def __str__(self):
-        return "".join(traceback.format_exception(*self.args))
+        try:
+            message = unicode(self).encode('utf-8')
+        except NameError:
+            # not Python 2
+            message = self.__unicode__()
+        return message
 
-
-class FunctionError_(ValueError):
-    """Wraps a simple "we failed" error from a function call."""
-    def __init__(self, *args, **kwargs):
-        super(FunctionError_, self).__init__(*args, **kwargs)
-
-    def __str__(self):
+    def __unicode__(self):
+        """
+        Gets called by unicode in Python 2.
+        :return: unicode representation of the class
+        """
+        message = u""
         if isinstance(self.args, (tuple, list)) and len(self.args) > 0:
-            return self.args[0]
-        return ""
+            if isinstance(self.args[0], six.string_types):
+                try:
+                    message += self.args[0]
+                except UnicodeDecodeError:
+                    # already unicode in Py2
+                    message = message + self.args[0].decode('utf-8')
+        if self.include_trace and self.trace is not None:
+            message += u"\n"
+            try:
+                message += self.trace
+            except UnicodeDecodeError:
+                # already unicode in Py2
+                message = message + self.trace.decode('utf-8')
+        return message
 
+class FunctionException_(BaseFunctionError):
+    """Wraps an exception from a function call."""
+    pass
+
+class FunctionError_(BaseFunctionError):
+    """Wraps a simple "we failed" error from a function call."""
+    pass
 
 class StatusMessageEvent(Event):
     """Event that we use to send "action status" update back to resilient"""
