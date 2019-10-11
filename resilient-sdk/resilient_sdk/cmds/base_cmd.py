@@ -92,6 +92,6 @@ class BaseCmd(object):
 
         common_parser.add_argument("-o", "--output",
                                    type=ensure_unicode,
-                                   help="Output file name")
+                                   help="Path to output file")
 
         return [common_parser]
