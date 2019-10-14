@@ -8,9 +8,11 @@ import logging
 import keyword
 import re
 import os
+import copy
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -195,6 +197,9 @@ def get_from_export(export,
     :rtype: Dict
     """
 
+    # Create a deepcopy of the export, so we don't overwrite the original
+    export = copy.deepcopy(export)
+
     # Set paramaters to Lists if falsy
     message_destinations = message_destinations if message_destinations else []
     functions = functions if functions else []
@@ -207,7 +212,9 @@ def get_from_export(export,
     scripts = scripts if scripts else []
 
     # Dict to return
-    return_dict = {}
+    return_dict = {
+        "all_fields": []
+    }
 
     # Get Rules
     return_dict["rules"] = get_res_obj("actions", "name", "Rule", rules, export)
@@ -218,6 +225,7 @@ def get_from_export(export,
         view_items = r.get("view_items", [])
         activity_field_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.ACTIVITY_FIELD]
         r["activity_fields"] = get_res_obj("fields", "uuid", "Activity Field", activity_field_uuids, export)
+        return_dict["all_fields"].extend([u"actioninvocation/{0}".format(fld.get("name")) for fld in r.get("activity_fields")])
 
         # Get names of Workflows that are related to Rule
         for w in r.get("workflows", []):
@@ -254,6 +262,8 @@ def get_from_export(export,
         function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
         f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
 
+        return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
+
         # Get Function's Message Destination name
         message_destinations.append(f.get("destination_handle", ""))
 
@@ -269,6 +279,8 @@ def get_from_export(export,
     # Get Custom Fields
     return_dict["fields"] = get_res_obj("fields", "name", "Field", fields, export,
                                         condition=lambda o: True if o.get("prefix") == "properties" and o.get("type_id") == ResilientTypeIds.INCIDENT else False)
+
+    return_dict["all_fields"].extend([u"incident/{0}".format(fld.get("name")) for fld in return_dict.get("fields")])
 
     # Get Custom Artifact Types
     return_dict["artifact_types"] = get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifact_types, export)
@@ -288,3 +300,104 @@ def get_from_export(export,
     return_dict["scripts"] = get_res_obj("scripts", "export_key", "Script", scripts, export)
 
     return return_dict
+
+
+def minify_export(export,
+                  keys_to_keep=[],
+                  message_destinations=[],
+                  functions=[],
+                  workflows=[],
+                  rules=[],
+                  fields=[],
+                  artifact_types=[],
+                  datatables=[],
+                  tasks=[],
+                  phases=[],
+                  scripts=[]):
+    """
+    Return a 'minified' version of the export.
+    All parameters are a list of api_names of objects to include in the export.
+    Anything not mentioned in passed Lists are set to empty or None.
+
+    :param export: The result of calling get_latest_org_export()
+    :type export: Dict
+    :param message_destinations: List of Message Destination API Names
+    :param functions: List of Function API Names
+    :param workflows: List of Workflow API Names
+    :param rules: List of Rule Display Names
+    :param fields: List of Field export_keys e.g. ['incident/custom_field', 'actioninvocation/custom_activity_field', '__function/custom_fn_input']
+    :param artifact_types: List of Custom Artifact Type API Names
+    :param datatables: List of Data Table API Names
+    :param tasks: List of Custom Task API Names
+    :param tasks: List of Phases API Names
+    :param scripts: List of Script Display Names
+    :return: Return a Dictionary of Resilient Objects
+    :rtype: Dict
+    """
+    # Deep copy the export, so we don't overwrite anything
+    minified_export = copy.deepcopy(export)
+
+    # If no keys_to_keep are specified, use these defaults
+    if not keys_to_keep:
+        keys_to_keep = [
+            "export_date",
+            "export_format_version",
+            "id",
+            "server_version"
+        ]
+
+    # Setup the keys_to_minify dict
+    keys_to_minify = {
+        "message_destinations": {"programmatic_name": message_destinations},
+        "functions": {"name": functions},
+        "workflows": {"programmatic_name": workflows},
+        "actions": {"name": rules},
+        "fields": {"export_key": fields},
+        "incident_artifact_types": {"programmatic_name": artifact_types},
+        "types": {"type_name": datatables},
+        "automatic_tasks": {"programmatic_name": tasks},
+        "phases": {"name": phases},
+        "scripts": {"name": scripts}
+    }
+
+    for key in minified_export.keys():
+
+        # If we keep this one, skip
+        if key in keys_to_keep:
+            continue
+
+        # If we are to minify it
+        elif key in keys_to_minify.keys():
+
+            # Get the attribute_name to match on (normally 'name'/'programmatic_name'/'export_key')
+            attribute_name = list(keys_to_minify[key].keys())[0]
+
+            values = keys_to_minify[key][attribute_name]
+
+            for data in list(minified_export[key]):
+
+                if not data.get(attribute_name):
+                    LOG.warning("No %s in %s", attribute_name, key)
+
+                # If this Resilient Object is not in our minify list, remove it
+                if not data.get(attribute_name) in values:
+                    minified_export[key].remove(data)
+
+        elif isinstance(minified_export[key], list):
+            minified_export[key] = []
+
+        elif isinstance(minified_export[key], dict):
+            minified_export[key] = {}
+
+        else:
+            minified_export[key] = None
+
+    # Add default incident_type. Needed for every Import
+    minified_export["incident_types"] = [DEFAULT_INCIDENT_TYPE]
+
+    # If no Custom Incident Fields are in the export, add this default.
+    # An import needs at least 1 Incident Field
+    if "incident/" not in fields:
+        minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
+
+    return minified_export
