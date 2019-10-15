@@ -12,25 +12,25 @@ def codegen_reload_data():
     {# TODO: Rename these keys for consistancy #}
     return {
         "package": u"{{package_name}}",
-        "message_destinations": {% if message_destinations %}[{% for o in message_destinations %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "message_destinations": {% if message_destinations %}[{% for o in message_destinations %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "functions": {% if functions %}[{% for o in functions %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "functions": {% if functions %}[{% for o in functions %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "workflows": {% if workflows %}[{% for o in workflows %}u"{{o.programmatic_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "workflows": {% if workflows %}[{% for o in workflows %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "actions": {% if rules %}[{% for o in rules %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "actions": {% if rules %}[{% for o in rules %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
         "incident_fields": {% if fields %}[{% for o in fields %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "incident_artifact_types": {% if artifact_types %}[{% for o in artifact_types %}u"{{o.programmatic_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "incident_artifact_types": {% if artifact_types %}[{% for o in artifact_types %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "datatables": {% if datatables %}[{% for o in datatables %}u"{{o.export_key}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "datatables": {% if datatables %}[{% for o in datatables %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "phases": {% if phases %}[{% for o in phases %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "phases": {% if phases %}[{% for o in phases %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "automatic_tasks": {% if tasks %}[{% for o in tasks %}u"{{o.programmatic_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "automatic_tasks": {% if tasks %}[{% for o in tasks %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "scripts": {% if scripts %}[{% for o in scripts %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[]{% endif %}
+        "scripts": {% if scripts %}[{% for o in scripts %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[]{% endif %}
 
     }
 
@@ -42,19 +42,19 @@ def customization_data(client=None):
 
     Contents:
     {% if message_destinations %}    - Message Destinations:
-    {% for o in message_destinations %}        - {{o.name}}
+    {% for o in message_destinations %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if functions %}    - Functions:
-    {% for o in functions %}        - {{o.name}}
+    {% for o in functions %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if workflows %}    - Workflows:
-    {% for o in workflows %}        - {{o.programmatic_name}}
+    {% for o in workflows %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if rules %}    - Rules:
-    {% for o in rules %}        - {{o.name}}
+    {% for o in rules %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if fields %}    - Custom Incident Fields:
@@ -62,23 +62,23 @@ def customization_data(client=None):
     {% endfor %}
     {% endif %}
     {% if artifact_types %}    - Custom Artifact Types:
-    {% for o in artifact_types %}        - {{o.programmatic_name}}
+    {% for o in artifact_types %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if datatables %}    - Data Tables:
-    {% for o in datatables %}        - {{o.export_key}}
+    {% for o in datatables %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if phases %}    - Phases:
-    {% for o in phases %}        - {{o.name}}
+    {% for o in phases %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if tasks %}    - Tasks:
-    {% for o in tasks %}        - {{o.programmatic_name}}
+    {% for o in tasks %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if scripts %}    - Scripts:
-    {% for o in scripts %}        - {{o.name}}
+    {% for o in scripts %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     """

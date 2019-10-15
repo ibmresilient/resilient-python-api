@@ -9,10 +9,12 @@ import keyword
 import re
 import os
 import copy
+from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD
+from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -29,6 +31,23 @@ def get_resilient_client():
     config_parser = ArgumentParser(config_file=get_config_file())
     opts = config_parser.parse_known_args()[0]
     return get_client(opts)
+
+
+def setup_jinja_env(relative_path_to_templates):
+    """
+    Returns a Jinja2 Environment with Jinja templates found in resilient_sdk/<<relative_path_to_templates>>
+    """
+    jinja_env = Environment(
+        loader=PackageLoader("resilient_sdk", relative_path_to_templates),
+        trim_blocks=True,
+        lstrip_blocks=True,
+        keep_trailing_newline=True
+    )
+
+    # Add custom filters to our jinja_env
+    add_filters_to_jinja_env(jinja_env)
+
+    return jinja_env
 
 
 def is_valid_package_name(name):
@@ -163,7 +182,12 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
         for o in set(wanted_list):
             if o not in ex_obj:
                 raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, o, "\n\t".join(ex_obj.keys())))
-            return_list.append(ex_obj.get(o))
+
+            # Add x_api_name to each object, so we can easily reference. This avoids needing to know if
+            # obj attribute is 'name' or 'programmatic_name' etc.
+            obj = ex_obj.get(o)
+            obj["x_api_name"] = obj[obj_identifer]
+            return_list.append(obj)
 
     return return_list
 
