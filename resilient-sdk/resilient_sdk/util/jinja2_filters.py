@@ -6,6 +6,7 @@
 
 import sys
 import json
+import re
 from jinja2 import Undefined
 
 # Handle imports for PY 2
@@ -25,8 +26,18 @@ def _filter_base64(val):
     return b64encode(s).decode("utf-8")
 
 
+def _filter_camel(val):
+    """Return CamelCase
+       >>> _filter_camel("a#bc_def")
+       'ABcDef'
+    """
+    titlecase = val.title()
+    return re.sub(r"[\W^_]", "", titlecase)
+
+
 JINJA_FILTERS = {
-    "base64": _filter_base64
+    "base64": _filter_base64,
+    "camel": _filter_camel
 }
 
 
