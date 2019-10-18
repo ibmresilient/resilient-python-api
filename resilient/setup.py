@@ -9,6 +9,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from pkg_resources import get_distribution, DistributionNotFound
+from os import path
 
 try:
     # pip version 10 onward
@@ -66,6 +67,17 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
+this_directory = path.abspath(path.dirname(__file__))
+
+if sys.version_info[0] == 2:
+    import codecs
+
+    with codecs.open(path.join(this_directory, 'README.md'), 'r', encoding='utf8') as f:
+        long_description = f.read()
+else:
+    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
+
 setup(
     name='resilient',
     use_scm_version={"root": "../", "relative_to": __file__},
@@ -112,7 +124,8 @@ setup(
     cmdclass={"test": PyTest},
     author_email='support@resilientsystems.com',
     description='Resilient API',
-    long_description='Resilient API Modules for Python',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     include_package_data=True,
     platforms='any',

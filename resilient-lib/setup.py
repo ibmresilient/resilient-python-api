@@ -3,6 +3,20 @@
 
 from setuptools import setup, find_packages
 
+from os import path
+import sys
+
+this_directory = path.abspath(path.dirname(__file__))
+
+if sys.version_info[0] == 2:
+    import codecs
+
+    with codecs.open(path.join(this_directory, 'README.md'), 'r', encoding='utf8') as f:
+        long_description = f.read()
+else:
+    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
+
 setup(
     name='resilient_lib',
     use_scm_version={"root": "../", "relative_to": __file__},
@@ -12,7 +26,8 @@ setup(
     author='IBM Resilient',
     author_email='support@resilientsystems.com',
     description="library for resilient-circuits functions",
-    long_description="This package contains common library calls which facilitate the development of functions for IBM Resilient.",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     install_requires=[
         'bs4',
         'resilient_circuits>=30.0.0',

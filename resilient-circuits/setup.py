@@ -7,11 +7,23 @@
 from __future__ import print_function
 import os
 from setuptools import setup, find_packages
+import sys
+from os import path
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 requires_resilient_version = "29.0"
 major, minor = requires_resilient_version.split('.', 2)[:2]
+
+
+if sys.version_info[0] == 2:
+    import codecs
+
+    with codecs.open(path.join(here, 'README.md'), 'r', encoding='utf8') as f:
+        long_description = f.read()
+else:
+    with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
 
 setup(
     name='resilient_circuits',
@@ -49,7 +61,8 @@ setup(
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
-    long_description='Resilient Circuits Framework for Custom Integrations',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     include_package_data=True,
     platforms='any',
