@@ -2,7 +2,13 @@
 
 This package contains common library calls which facilitate the development of functions for IBM Resilient.
 
-Modules in this package include:
+## Revision History
+
+|Revision | Notes    |
+|---------|----------|
+| v34     | Added timeout to [integrations]. For previous versions, this value should be added manually |
+
+## Modules in this package include:
 
 * function_results - A class to standardize on the payload returned from functions. In addition to integration results returned, meta-data about the integration execution environment is returned (see `function_results.ResultPayload`).
 
@@ -53,14 +59,14 @@ json structure created:
       * readable_datetime - Convert epoch formatted data and time value into a string.
       * str\_to_bool - Convert string values into boolean.
 
-Prerequisites:
+## Prerequisites:
 
 ```
 resilient version 30 or later
 resilient-circuits version 30 or later
 ```
 
-Usage examples:
+## Usage examples:
 
 ```
 from resilient_lib import build_incident_url, build_resilient_url
@@ -113,7 +119,8 @@ Then edit the [integrations] section to define proxy settings which will be used
 ```
 [integrations]
 # These proxy settings will be used by all integrations. 
-# To override, add http_proxy= and https_proxy= to your specific integration section
+# To override, add any parameter to your specific integration section
 http_proxy=
 https_proxy=
+timeout=30
 ```

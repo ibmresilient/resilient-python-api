@@ -49,6 +49,30 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
 
+    def test_timeout(self):
+        integrations = { "integrations": { } }
+        rc = RequestsCommon(integrations, None)
+        self.assertIsEqual(rc.get_timeout(), 30)
+
+        integrations_timeout = { "integrations": { "timeout": "35" } }
+        rc = RequestsCommon(integrations_timeout, None)
+        self.assertIsEqual(rc.get_timeout(), 35)
+
+        # test timeout
+        integrations_twenty = { "integrations": { "timeout": "20" } }
+        rc = RequestsCommon(integrations_twenty, None)
+        url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "25")
+
+        with self.assertRaises(IntegrationError):
+            rc.execute_call_v2("get", url)
+
+        integrations_fourty = { "integrations": { "timeout": "40" } }
+        rc = RequestsCommon(integrations_fourty, None)
+        url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "35")
+        rc.execute_call_v2("get", url)
+
+
+
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 

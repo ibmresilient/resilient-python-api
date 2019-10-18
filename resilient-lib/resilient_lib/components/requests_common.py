@@ -10,6 +10,8 @@ from resilient_lib.util.lib_common import deprecated
 
 log = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT = 30
+
 
 class RequestsCommon:
     """
@@ -39,7 +41,19 @@ class RequestsCommon:
 
         return proxies
 
-    def execute_call_v2(self, method, url, timeout=30, proxies=None, callback=None, **kwargs):
+    def get_timeout(self):
+        """
+        get the default timeout value in the 'integrations' section
+        :return: timeout value
+        """
+        timeout = DEFAULT_TIMEOUT
+
+        if self.integration_options and self.integration_options.get("timeout"):
+            timeout = int(self.integration_options.get("timeout"))
+
+        return timeout
+
+    def execute_call_v2(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
         """Constructs and sends a request. Returns :class:`Response` object.
 
             From the requests.requests() function, inputs are mapped to this function
@@ -81,6 +95,9 @@ class RequestsCommon:
             # If proxies was not set check if they are set in the config
             if proxies is None:
                 proxies = self.get_proxies()
+
+            if timeout is None:
+                timeout = self.get_timeout()
 
             # Log the parameter inputs that are not None
             args_dict = locals()
