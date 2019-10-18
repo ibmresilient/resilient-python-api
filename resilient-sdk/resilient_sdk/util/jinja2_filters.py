@@ -28,11 +28,10 @@ def _filter_base64(val):
 
 def _filter_camel(val):
     """Return CamelCase
-       >>> _filter_camel("a#bc_def")
-       'ABcDef'
+       e.g.: "a#bc_def" would convert to "ABcDef"
     """
     titlecase = val.title()
-    return re.sub(r"[\W^_]", "", titlecase)
+    return re.sub(pattern=r"[\W^_]", repl="", string=titlecase)
 
 
 JINJA_FILTERS = {
