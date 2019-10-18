@@ -27,7 +27,6 @@ def get_resilient_client():
     Return a connection to Resilient Appliance using configurations
     from app.config file
     """
-    # TODO: add unit test
     config_parser = ArgumentParser(config_file=get_config_file())
     opts = config_parser.parse_known_args()[0]
     return get_client(opts)
@@ -62,7 +61,6 @@ def is_valid_package_name(name):
        >>> valid_identifier("_something")
        True
     """
-    # TODO: add unit test
 
     if keyword.iskeyword(name):
         return False
@@ -75,7 +73,6 @@ def has_permissions(permissions, path):
     """
     Raises an exception if the user does not have the given permissions to path
     """
-    # TODO: unit test, taken from docgen utils
 
     LOG.debug("checking if: %s has correct permissions", path)
 
@@ -93,7 +90,6 @@ def validate_file_paths(permissions, *args):
     """
     Check the given *args paths exist and has the given permissions, else raises an Exception
     """
-    # TODO: add unit test, taken from docgen utils
 
     # For each *args
     for path_to_file in args:
@@ -110,7 +106,6 @@ def validate_dir_paths(permissions, *args):
     """
     Check the given *args paths are Directories and have the given permissions, else raises an Exception
     """
-    # TODO: add unit test
 
     # For each *args
     for path_to_dir in args:
@@ -128,7 +123,6 @@ def get_latest_org_export(res_client):
     Generates a new Export on the Resilient Appliance.
     Returns the POST response
     """
-    # TODO: Add unit test
     LOG.debug("Generating new organization export")
     latest_export_uri = "/configurations/exports/"
     return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
@@ -150,7 +144,6 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    # TODO: add unit test
     return dict((o[identifer], o) for o in obj_list if condition(o))
 
 
@@ -173,7 +166,6 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :return: List of Resilient Objects
     :rtype: List
     """
-    # TODO: Add unit test
     return_list = []
 
     if wanted_list:
