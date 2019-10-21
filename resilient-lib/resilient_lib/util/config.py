@@ -9,8 +9,9 @@ def config_section_data():
     """
     config_data = u"""[integrations]
 # These proxy settings will be used by all integrations. 
-# To override, add http_proxy= and https_proxy= to your specific integration section
+# To override, add any parameter to your specific integration section
 http_proxy=
 https_proxy=
+timeout=30
 """
     return config_data

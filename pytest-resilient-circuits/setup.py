@@ -13,7 +13,7 @@ requires_resilient_version = "29.0"
 major, minor = requires_resilient_version.split('.', 2)[:2]
 
 requirements = [
-    'pytest>=3.0.0, <4.1.0',
+    'pytest >= 4.1.0',
     'resilient>={}.{}'.format(major, minor),
     'resilient-circuits>={}.{}'.format(major, minor),
     'ConfigParser'
