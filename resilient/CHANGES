@@ -5,10 +5,9 @@
 * New functions added to resilient-lib
     'get_file_attachment_metadata()'
     'write_to_tmp_file()'
-* Updated 'validate_fields()' function in resilient-lib, 
+* Updated 'validate_fields()' function in resilient-lib,
   adding the ability to validate fields in app.config
 * Other minor bug fixes.
-
 
 
 2019-07-03: version 32.0.186

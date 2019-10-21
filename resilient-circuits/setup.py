@@ -18,7 +18,7 @@ major, minor = requires_resilient_version.split('.', 2)[:2]
 
 
 def gather_changes():
-    filepath = '../CHANGES'  # The file from which we will pull the changes  
+    filepath = './CHANGES'  # The file from which we will pull the changes
     with io.open(filepath) as fp:
         lines = fp.readlines()  # Take in all the lines as a list
         first_section = []
@@ -34,7 +34,7 @@ def gather_changes():
 
 with io.open(path.join(here, 'README.md'), encoding='utf-8') as f:
     readme_text = f.read()
-    long_description = readme_text.replace('### Installation', "### Latest changelog gathered from CHANGES\n {}\n{}".format(gather_changes(), '### Installation'))
+    long_description = readme_text.replace('### Changelog', "### Recent Changes\n {}".format(gather_changes()))
 
 setup(
     name='resilient_circuits',
