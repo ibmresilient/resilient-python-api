@@ -64,13 +64,13 @@ def write_file(path, contents):
 def is_valid_package_name(name):
     """Test if 'name' is a valid identifier for a package or module
 
-       >>> valid_identifier("")
+       >>> is_valid_package_name("")
        False
-       >>> valid_identifier("get")
+       >>> is_valid_package_name("get")
        False
-       >>> valid_identifier("bang!")
+       >>> is_valid_package_name("bang!")
        False
-       >>> valid_identifier("_something")
+       >>> is_valid_package_name("_something")
        True
     """
 
