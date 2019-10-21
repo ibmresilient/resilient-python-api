@@ -12,6 +12,7 @@ is ran after the test has complete
 import pytest
 import os
 import shutil
+from resilient_sdk.util.helpers import write_file
 from tests.shared_mock_data import mock_paths
 
 
@@ -29,3 +30,38 @@ def mk_temp_dir():
     yield mk_temp_dir
 
     shutil.rmtree(mock_paths.TEST_TEMP_DIR)
+
+
+@pytest.fixture
+def mk_app_config():
+    """
+    Before: Writes the app_configs text to an app.config file in the TEST_TEMP_DIR
+    After: Nothing (mk_temp_dir will clean up)
+    Note: MUST be called AFTER mk_temp_dir
+    """
+    write_path = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
+    resilient_mock = "{0}.{1}".format(os.path.join(mock_paths.SHARED_MOCK_DATA_DIR, "resilient_api_mock"), "ResilientAPIMock")
+
+    app_configs = """
+[resilient]
+#api_key_id=xxx
+#api_key_secret=xxx
+
+host=192.168.56.1
+port=443
+org=Test Organization
+email=integrations@example.com
+password=PassWord_;)
+
+#componentsdir=~/.resilient/components
+logdir=~/.resilient/logs/
+logfile=app.log
+loglevel=DEBUG
+
+cafile=false
+
+resilient_mock={0}""".format(resilient_mock)
+
+    write_file(write_path, app_configs)
+
+    return write_path
