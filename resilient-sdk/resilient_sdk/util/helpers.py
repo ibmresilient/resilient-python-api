@@ -24,13 +24,21 @@ logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 LOG = logging.getLogger("resilient_sdk_log")
 
 
-def get_resilient_client():
+def get_resilient_client(path_config_file=None):
     """
-    Return a connection to Resilient Appliance using configurations
-    from app.config file
+    Return a SimpleClient for Resilient REST API using configurations
+    options from provided path_config_file or from ~/.resilient/app.config
+
+    :param path_config_file: Path to app.config file to use
+    :return: SimpleClient for Resilient REST API
+    :rtype: SimpleClient
     """
-    config_parser = ArgumentParser(config_file=get_config_file())
+    if not path_config_file:
+        path_config_file = get_config_file()
+
+    config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
+
     return get_client(opts)
 
 
