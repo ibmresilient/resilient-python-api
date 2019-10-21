@@ -6,14 +6,15 @@ import os
 import stat
 import pytest
 import jinja2
+from resilient import SimpleClient
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import helpers
 from tests.shared_mock_data import mock_data, mock_paths
 
 
-def test_get_resilient_client():
-    # TODO:
-    pass
+def test_get_resilient_client(mk_temp_dir, mk_app_config):
+    res_client = helpers.get_resilient_client(path_config_file=mk_app_config)
+    assert isinstance(res_client, SimpleClient)
 
 
 def test_setup_jinja_env():
