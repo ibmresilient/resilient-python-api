@@ -10,6 +10,7 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from pkg_resources import get_distribution, DistributionNotFound
 from os import path
+import io
 
 try:
     # pip version 10 onward
@@ -69,14 +70,8 @@ class PyTest(TestCommand):
 
 this_directory = path.abspath(path.dirname(__file__))
 
-if sys.version_info[0] == 2:
-    import codecs
-
-    with codecs.open(path.join(this_directory, 'README.md'), 'r', encoding='utf8') as f:
-        long_description = f.read()
-else:
-    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-        long_description = f.read()
+with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='resilient',

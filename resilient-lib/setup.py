@@ -4,18 +4,12 @@
 from setuptools import setup, find_packages
 
 from os import path
-import sys
+import io
 
 this_directory = path.abspath(path.dirname(__file__))
 
-if sys.version_info[0] == 2:
-    import codecs
-
-    with codecs.open(path.join(this_directory, 'README.md'), 'r', encoding='utf8') as f:
-        long_description = f.read()
-else:
-    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-        long_description = f.read()
+with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='resilient_lib',

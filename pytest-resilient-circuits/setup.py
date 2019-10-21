@@ -6,8 +6,8 @@
 
 import os
 from setuptools import setup
-import sys
 from os import path
+import io
 
 requires_resilient_version = "29.0"
 major, minor = requires_resilient_version.split('.', 2)[:2]
@@ -21,14 +21,8 @@ requirements = [
 
 this_directory = path.abspath(path.dirname(__file__))
 
-if sys.version_info[0] == 2:
-    import codecs
-
-    with codecs.open(path.join(this_directory, 'README.md'), 'r', encoding='utf8') as f:
-        long_description = f.read()
-else:
-    with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-        long_description = f.read()
+with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='pytest_resilient_circuits',

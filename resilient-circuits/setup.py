@@ -9,16 +9,17 @@ import os
 from setuptools import setup, find_packages
 import sys
 from os import path
-from io import open
+import io
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 requires_resilient_version = "29.0"
 major, minor = requires_resilient_version.split('.', 2)[:2]
 
+
 def gather_changes():
     filepath = '../CHANGES'  # The file from which we will pull the changes  
-    with open(filepath) as fp:
+    with io.open(filepath) as fp:
         lines = fp.readlines()  # Take in all the lines as a list
         first_section = []
         for num, line in enumerate(lines, start=1):
@@ -31,9 +32,9 @@ def gather_changes():
         return " \n ".join(first_section)
 
 
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-        readme_text = f.read()
-        long_description = readme_text.replace('### Installation', "### Latest changelog gathered from CHANGES\n {}\n{}".format(gather_changes(), '### Installation')) 
+with io.open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    readme_text = f.read()
+    long_description = readme_text.replace('### Installation', "### Latest changelog gathered from CHANGES\n {}\n{}".format(gather_changes(), '### Installation'))
 
 setup(
     name='resilient_circuits',
