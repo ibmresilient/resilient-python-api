@@ -8,6 +8,8 @@ import logging
 import keyword
 import re
 import os
+import sys
+import io
 import copy
 from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
@@ -47,6 +49,16 @@ def setup_jinja_env(relative_path_to_templates):
     add_filters_to_jinja_env(jinja_env)
 
     return jinja_env
+
+
+def write_file(path, contents):
+    """Writes the String contents to a file at path"""
+
+    if sys.version_info[0] < 3 and isinstance(contents, str):
+        contents = unicode(contents, "utf-8")
+
+    with io.open(path, mode="wt", encoding="utf-8") as the_file:
+        the_file.write(contents)
 
 
 def is_valid_package_name(name):

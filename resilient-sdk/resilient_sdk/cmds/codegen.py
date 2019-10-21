@@ -6,10 +6,9 @@
 
 import logging
 import os
-import io
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.helpers import get_resilient_client, setup_jinja_env, is_valid_package_name, validate_dir_paths, get_latest_org_export, get_from_export, minify_export
+from resilient_sdk.util.helpers import get_resilient_client, setup_jinja_env, is_valid_package_name, write_file, validate_dir_paths, get_latest_org_export, get_from_export, minify_export
 from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
@@ -101,8 +100,7 @@ class CmdCodegen(BaseCmd):
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
-                with io.open(target_file, mode="w", encoding="utf-8") as outfile:
-                    outfile.write(jinja_rendered_text)
+                write_file(target_file, jinja_rendered_text)
 
     @staticmethod
     def _gen_function(res_client, args):
