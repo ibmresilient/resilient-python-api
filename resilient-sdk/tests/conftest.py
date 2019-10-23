@@ -14,9 +14,10 @@ Note:
     -   Fixture must have BEFORE and AFTER docstring
 """
 
-import pytest
+import sys
 import os
 import shutil
+import pytest
 from resilient_sdk.util.helpers import write_file, get_resilient_client
 from tests.shared_mock_data import mock_paths
 
@@ -61,6 +62,10 @@ resilient_mock={0}""".format(resilient_mock)
     return write_path
 
 
+def _add_to_cmd_line_args(args_to_add):
+    sys.argv.extend(args_to_add)
+
+
 @pytest.fixture(scope="session")
 def fx_mock_res_client():
     """
@@ -81,7 +86,7 @@ def fx_mk_temp_dir():
     After: Removes the directory
     """
     _mk_temp_dir()
-    yield fx_mk_temp_dir
+    yield
     _rm_temp_dir()
 
 
@@ -93,3 +98,32 @@ def fx_mk_app_config():
     Note: MUST be called AFTER mk_temp_dir
     """
     return _mk_app_config()
+
+
+@pytest.fixture
+def fx_cmd_line_args_codegen_package():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = sys.argv
+
+    args_to_add = [
+        "codegen",
+        "-p", "fn_main_mock_integration",
+        "-m", "fn_main_mock_integration",
+        "-f", "mock_function_one",
+        "--rule", "Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination",
+        "--workflow", "mock_workflow_one", "mock_workflow_two",
+        "--field", "mock_field_number", "mock_field_number", "mock_field_text_area",
+        "--artifacttype", "mock_artifact_2", "mock_artifact_type_one",
+        "--datatable", "mock_data_table",
+        "--task", "mock_custom_task_one", "mock_cusom_task__________two",
+        "--script", "Mock Script One"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line

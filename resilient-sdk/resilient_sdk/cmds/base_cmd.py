@@ -7,7 +7,14 @@ from resilient import ensure_unicode
 
 
 class BaseCmd(object):
-    """TODO Docstring"""
+    """
+    Base Class for implementing a resilient-sdk command e.g. codegen
+    Sub classes must set/implement:
+        -   CMD_NAME
+        -   CMD_HELP
+        -   setup(self)
+        -   execute_comment(self, args)
+    """
 
     CMD_NAME = None
     CMD_HELP = None
@@ -37,8 +44,12 @@ class BaseCmd(object):
 
     @staticmethod
     def _get_common_parser():
-        """TODO: add doc string and unit test"""
+        """
+        Create a 'common parser' with all below arguments
 
+        :return: A single argparse.ArgumentParser in a List
+        :rtype: List
+        """
         common_parser = argparse.ArgumentParser(add_help=False)
 
         common_parser.add_argument("-f", "--function",
