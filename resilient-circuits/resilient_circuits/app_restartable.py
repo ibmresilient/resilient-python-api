@@ -46,7 +46,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
     def on_modified(self, event):
         """ For 'FileModifiedEvent' events, initiate reload of data from config file and restart components.  """
 
-        self.reload_config(event)
+        self.reload_config()
 
     def on_created(self, event):
         """ For 'FileCreatedEvent' events, initiate reload of data from config file and restart components.
@@ -56,9 +56,9 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
 
         """
 
-        self.reload_config(event)
+        self.reload_config()
 
-    def reload_config(self, event):
+    def reload_config(self):
         """ Reload data from config file and restart components. """
 
         if self.app.reloading:
