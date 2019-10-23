@@ -14,6 +14,10 @@ class BaseCmd(object):
         -   CMD_HELP
         -   setup(self)
         -   execute_comment(self, args)
+
+    On initialization, it sets self.parser, then calls the sub-classes' setup method.
+    This allows us to add custom command line args for each sub_command.
+    See codegen.py for an example.
     """
 
     CMD_NAME = None

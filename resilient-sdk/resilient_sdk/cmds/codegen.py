@@ -19,8 +19,7 @@ class CmdCodegen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "codegen"
-    # TODO: Add codegen help message
-    CMD_HELP = "TODO: codegen help message"
+    CMD_HELP = "Generate boilerplate code to start developing an Extension"
     CMD_USAGE = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
     CMD_USE_COMMON_PARSER_ARGS = True

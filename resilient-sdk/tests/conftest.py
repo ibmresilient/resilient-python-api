@@ -18,6 +18,7 @@ import sys
 import os
 import shutil
 import pytest
+import resilient_sdk.app as app
 from resilient_sdk.util.helpers import write_file, get_resilient_client
 from tests.shared_mock_data import mock_paths
 
@@ -127,3 +128,14 @@ def fx_cmd_line_args_codegen_package():
     yield
 
     sys.argv = original_cmd_line
+
+
+@pytest.fixture(scope="session")
+def fx_get_sub_parser():
+    """
+    Before: Return a main_parser setup with sub_parser added
+    After: Nothing
+    """
+    main_parser = app.get_main_app_parser()
+    sub_parser = app.get_main_app_sub_parser(main_parser)
+    return sub_parser

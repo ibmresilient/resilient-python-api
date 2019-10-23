@@ -2,21 +2,9 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
-import sys
+
 import pytest
-import resilient_sdk.app as app
 from resilient_sdk.cmds.base_cmd import BaseCmd
-
-
-@pytest.fixture
-def fx_get_sub_parser():
-    """
-    Before: Return a main_parser setup with sub_parser added
-    After: Nothing
-    """
-    main_parser = app.get_main_app_parser()
-    sub_parser = app.get_main_app_sub_parser(main_parser)
-    return sub_parser
 
 
 def test_no_CMD_NAME(fx_get_sub_parser):
