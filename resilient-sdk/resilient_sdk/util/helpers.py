@@ -47,10 +47,10 @@ def setup_jinja_env(relative_path_to_templates):
     Returns a Jinja2 Environment with Jinja templates found in resilient_sdk/<<relative_path_to_templates>>
     """
     jinja_env = Environment(
-        loader=PackageLoader("resilient_sdk", relative_path_to_templates),
-        trim_blocks=True,
-        lstrip_blocks=True,
-        keep_trailing_newline=True
+        loader=PackageLoader("resilient_sdk", relative_path_to_templates),  # Loads Jinja Templates in resilient_sdk/<<relative_path_to_templates>>
+        trim_blocks=True,  # First newline after a block is removed
+        lstrip_blocks=True,  # Leading spaces and tabs are stripped from the start of a line to a block
+        keep_trailing_newline=True  # Preserve the trailing newline when rendering templates
     )
 
     # Add custom filters to our jinja_env
