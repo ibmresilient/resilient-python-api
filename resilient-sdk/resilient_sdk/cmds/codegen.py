@@ -8,8 +8,12 @@ import logging
 import os
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.helpers import get_resilient_client, setup_jinja_env, is_valid_package_name, write_file, validate_dir_paths, get_latest_org_export, get_from_export, minify_export
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
+                                        is_valid_package_name, write_file,
+                                        validate_dir_paths, get_latest_org_export,
+                                        get_from_export, minify_export,
+                                        get_object_api_names)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -136,16 +140,16 @@ class CmdCodegen(BaseCmd):
 
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = minify_export(org_export,
-                                                  message_destinations=[m.get("x_api_name") for m in jinja_data.get("message_destinations")],
-                                                  functions=[f.get("x_api_name") for f in jinja_data.get("functions")],
-                                                  workflows=[w.get("x_api_name") for w in jinja_data.get("workflows")],
-                                                  rules=[r.get("x_api_name") for r in jinja_data.get("rules")],
+                                                  message_destinations=get_object_api_names("x_api_name", jinja_data.get("message_destinations")),
+                                                  functions=get_object_api_names("x_api_name", jinja_data.get("functions")),
+                                                  workflows=get_object_api_names("x_api_name", jinja_data.get("workflows")),
+                                                  rules=get_object_api_names("x_api_name", jinja_data.get("rules")),
                                                   fields=jinja_data.get("all_fields"),
-                                                  artifact_types=[a.get("x_api_name") for a in jinja_data.get("artifact_types")],
-                                                  datatables=[d.get("x_api_name") for d in jinja_data.get("datatables")],
-                                                  tasks=[t.get("x_api_name") for t in jinja_data.get("tasks")],
-                                                  phases=[p.get("x_api_name") for p in jinja_data.get("phases")],
-                                                  scripts=[s.get("x_api_name") for s in jinja_data.get("scripts")])
+                                                  artifact_types=get_object_api_names("x_api_name", jinja_data.get("artifact_types")),
+                                                  datatables=get_object_api_names("x_api_name", jinja_data.get("datatables")),
+                                                  tasks=get_object_api_names("x_api_name", jinja_data.get("tasks")),
+                                                  phases=get_object_api_names("x_api_name", jinja_data.get("phases")),
+                                                  scripts=get_object_api_names("x_api_name", jinja_data.get("scripts")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name

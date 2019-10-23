@@ -94,6 +94,17 @@ def test_get_obj_from_list(fx_mock_res_client):
     assert "mock_function_two" not in got_functions
 
 
+def test_get_object_api_names(fx_mock_res_client):
+    org_export = helpers.get_latest_org_export(fx_mock_res_client)
+    export_data = helpers.get_from_export(org_export,
+                                          functions=["mock_function_one", "mock_function_two"])
+
+    func_api_names = helpers.get_object_api_names("x_api_name", export_data.get("functions"))
+
+    for name in func_api_names:
+        assert name in ["mock_function_one", "mock_function_two"]
+
+
 def test_get_res_obj(fx_mock_res_client):
     org_export = helpers.get_latest_org_export(fx_mock_res_client)
 

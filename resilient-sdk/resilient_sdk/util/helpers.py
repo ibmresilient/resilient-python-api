@@ -148,6 +148,13 @@ def get_latest_org_export(res_client):
     return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
 
 
+def get_object_api_names(api_name, list_objs):
+    """
+    Return a list of object api_names from list_objs
+    """
+    return [o.get(api_name) for o in list_objs]
+
+
 def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     """
     Return a dict the name of the object as its Key
@@ -172,7 +179,7 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     Return a List of Resilient Objects that are in the 'wanted_list' and meet the 'condition'
 
     :param obj_name: Name of the Object list in the Export
-    :type identifer: str
+    :type obj_name: str
     :param obj_identifer: The attribute of the object we use to identify it e.g. "programmatic_name"
     :type obj_identifer: str
     :param obj_display_name: The Display Name we want to use for this object in our Logs
