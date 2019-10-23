@@ -83,8 +83,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
         default_test_actions = self._is_true(self.getopt("resilient",
                                                          "test_actions")) or False
-        default_resilient_mock = self.getopt("resilient",
-                                             "resilient_mock") or None
         default_test_host = self.getopt("resilient", "test_host") or None
         default_test_port = self.getopt("resilient", "test_port") or None
         default_log_responses = self.getopt("resilient",
@@ -128,12 +126,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           action="store_true",
                           default=default_test_actions,
                           help="Enable submitting test actions?")
-        self.add_argument("--resilient-mock",
-                          type=str,
-                          action="store",
-                          default=default_resilient_mock,
-                          help=("Mock class defintion. "
-                                "(lib/my_mock_file.MyMockClass)"))
         self.add_argument("--test-host",
                           type=str,
                           action="store",
