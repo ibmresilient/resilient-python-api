@@ -31,8 +31,11 @@ class FunctionComponent(ResilientComponent):
     def _{{name}}_function(self, event, *args, **kwargs):
         """Function: {{description.content}}"""
         try:
+
             # Get the wf_instance_id of the workflow this Function was called in
             wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
+
+            yield StatusMessage("Invoking '{{name}}' running in workflow '{0}'".format(wf_instance_id))
 
             # Get the function parameters:
             {% for fn_input in inputs %}
@@ -44,9 +47,11 @@ class FunctionComponent(ResilientComponent):
             log.info("{{fn_input.name}}: %s", {{fn_input.name}})
             {% endfor %}
 
-            # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE
-            #  yield StatusMessage("starting...")
-            #  yield StatusMessage("done...")
+            ##############################################
+            # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE #
+            ##############################################
+
+            yield StatusMessage("{{name}} running in workflow '{0}' has finished!".format(wf_instance_id))
 
             results = {
                 "value": "xyz"
