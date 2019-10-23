@@ -5,7 +5,7 @@
 import requests
 import requests_mock
 from resilient.resilient_rest_mock import ResilientMock, resilient_endpoint
-from tests.shared_mock_data import resilient_api_mock_data as mock_data
+from tests.helpers import read_mock_json
 
 
 class ResilientAPIMock(ResilientMock):
@@ -18,7 +18,7 @@ class ResilientAPIMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              cookies=requests.cookies.cookiejar_from_dict({'JSESSIONID': 'FakeSessionId'}),
-                                             json=mock_data.SESSION_DATA)
+                                             json=read_mock_json("session.JSON"))
 
     @resilient_endpoint("GET", "/orgs/[0-9]+$")
     def get_org(self, request):
@@ -27,4 +27,13 @@ class ResilientAPIMock(ResilientMock):
         """
         return requests_mock.create_response(request,
                                              status_code=200,
-                                             json=mock_data.ORG_DATA)
+                                             json=read_mock_json("orgs.JSON"))
+
+    @resilient_endpoint("POST", "/configurations/exports/")
+    def post_export(self, request):
+        """
+        Mock POST /configurations/exports/
+        """
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=read_mock_json("export.JSON"))
