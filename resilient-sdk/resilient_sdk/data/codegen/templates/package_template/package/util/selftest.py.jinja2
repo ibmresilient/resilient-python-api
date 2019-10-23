@@ -19,4 +19,7 @@ def selftest_function(opts):
     """
     app_configs = opts.get("{{package_name}}", {})
 
-    return {"state": "unimplemented"}
+    return {
+        "state": "unimplemented",
+        "reason": None
+    }
