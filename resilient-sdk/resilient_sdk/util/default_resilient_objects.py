@@ -4,6 +4,7 @@
 
 """
 A common place to store any default Resilient Objects.
+These objects are used during codegen when default 'placeholders' are needed
 """
 
 import uuid
