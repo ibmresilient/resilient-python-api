@@ -471,7 +471,17 @@ def minify_export(export,
 
 
 def load_py_module(path_python_file, module_name):
-    # TODO: docstring + unit test from docgen (partial)
+    """
+    Return the path_python_file as a Python Module.
+    We can then access it methods like:
+
+        > result = py_module.some_method_in_module()
+
+    :param path_python_file: Path to the file that contains the module
+    :param module_name: Is normally the file name without the .py
+    :return: The Python Module found
+    :rtype: module
+    """
     # Insert the parent dir of path_python_file to the start of our Python PATH at runtime
     path_parent_dir = os.path.dirname(path_python_file)
     sys.path.insert(0, path_parent_dir)
