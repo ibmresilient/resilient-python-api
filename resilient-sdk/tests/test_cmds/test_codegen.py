@@ -25,8 +25,30 @@ def test_render_jinja_mapping():
 
 
 def test_merge_codegen_params():
-    # TODO:
-    pass
+    old_params = {
+        "actions": ["rule 1", "rule 2"],
+        "scripts": ["script 1"],
+        "functions": []
+    }
+
+    class args(object):
+        function = ["new_fn_1", "new_fn_2"]
+        rule = ["rule 3"]
+        script = None
+
+    mapping_tuples = [
+        ("function", "functions"),
+        ("rule", "actions"),
+        ("script", "scripts")
+    ]
+
+    merged_args = CmdCodegen.merge_codegen_params(old_params, args, mapping_tuples)
+
+    assert len(merged_args.function) == 2
+    assert "new_fn_1" in merged_args.function
+    assert "new_fn_2" in merged_args.function
+    assert "rule 3" in merged_args.rule
+    assert "script 1" in merged_args.script
 
 
 def test_gen_function():
