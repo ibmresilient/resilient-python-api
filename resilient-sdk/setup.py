@@ -16,9 +16,12 @@ setup(
     setup_requires=[],
 
     # Runtime Dependencies
-    install_requires=[],
+    install_requires=[
+        "resilient>=34.0.0",
+        "jinja2>=2.10.0"
+    ],
 
-    # List of files to include
+    # List of files to include (other than .py files found by __init__.py)
     package_data={
         "": [
             "LICENSE",
