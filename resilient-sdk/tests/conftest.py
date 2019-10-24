@@ -14,6 +14,7 @@ Note:
     -   Fixture must have BEFORE and AFTER docstring
 """
 
+import copy
 import sys
 import os
 import shutil
@@ -108,7 +109,7 @@ def fx_cmd_line_args_codegen_package():
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
     After: Set the cmd line args back to its original value
     """
-    original_cmd_line = sys.argv
+    original_cmd_line = copy.deepcopy(sys.argv)
 
     args_to_add = [
         "codegen",
@@ -122,6 +123,26 @@ def fx_cmd_line_args_codegen_package():
         "--datatable", "mock_data_table",
         "--task", "mock_custom_task_one", "mock_cusom_task__________two",
         "--script", "Mock Script One"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
+def fx_cmd_line_args_docgen():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "docgen",
+        "-p", "fn_main_mock_integration",
     ]
 
     _add_to_cmd_line_args(args_to_add)
