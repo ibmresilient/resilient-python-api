@@ -183,18 +183,34 @@ def generate_default(install_list):
 
 
 def generate_or_update_config(args):
-    """ Create or update config file based on installed components """
-    usage_type = "CREATING" if args.create else "UPDATING"
+    """ Create or update config file based on installed components.
 
-    if not args.filename:
-        # Use default config file in ~/.resilient/app.config and create directory if missing
-        config_filename = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
-        resilient_dir = os.path.dirname(config_filename)
-        if not os.path.exists(resilient_dir):
-            LOG.info(u"Creating %s", resilient_dir)
-            os.makedirs(resilient_dir)
+    * Use the location specified in $APP_CONFIG_FILE, as config file if set.
+    * Otherwise if filename path specified in args exist in the current working use as config file.
+    * Otherwise if default config file name exists in current work directory use as config file.
+    * Otherwise use path in ~/.resilient/ directory.
+
+    """
+    default_filename = "app.config"
+    usage_type = "CREATING" if args.create else "UPDATING"
+    env_app_config_filename = os.environ.get("APP_CONFIG_FILE", None)
+
+    if not env_app_config_filename:
+        if not args.filename:
+            # If the default filename "app.config" exists in local directory use as config file name.
+            if os.path.exists(default_filename):
+                config_filename = default_filename
+            else:
+                # Use default config file in ~/.resilient/app.config and create directory if missing
+                config_filename = os.path.expanduser(os.path.join("~", ".resilient", default_filename))
+                resilient_dir = os.path.dirname(config_filename)
+                if not os.path.exists(resilient_dir):
+                    LOG.info(u"Creating %s", resilient_dir)
+                    os.makedirs(resilient_dir)
+        else:
+            config_filename = os.path.expandvars(os.path.expanduser(args.filename))
     else:
-        config_filename = os.path.expandvars(os.path.expanduser(args.filename))
+        config_filename = env_app_config_filename
     file_exists = os.path.exists(config_filename)
 
     if file_exists:
