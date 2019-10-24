@@ -11,12 +11,23 @@ import os
 import sys
 import io
 import copy
+import datetime
+import importlib
 from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
+
+if sys.version_info.major < 3:
+    # Handle PY 3 specific imports
+    pass
+else:
+    # Handle PY 2 specific imports
+
+    # reload(package) in PY2.7, importlib.reload(package) in PY3.6
+    reload = importlib.reload
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -67,6 +78,19 @@ def write_file(path, contents):
 
     with io.open(path, mode="wt", encoding="utf-8") as the_file:
         the_file.write(contents)
+
+
+def read_file(path):
+    """Returns all the lines of a file at path as a List"""
+    file_lines = []
+    with io.open(path, mode="rt", encoding="utf-8") as the_file:
+        file_lines = the_file.readlines()
+    return file_lines
+
+
+def rename_file(path_current_file, new_name):
+    """Renames the file at path_current_file with the new_name"""
+    os.rename(path_current_file, os.path.join(os.path.dirname(path_current_file), new_name))
 
 
 def is_valid_package_name(name):
@@ -444,3 +468,51 @@ def minify_export(export,
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
     return minified_export
+
+
+def load_py_module(path_python_file, module_name):
+    # TODO: docstring + unit test from docgen (partial)
+    # Insert the parent dir of path_python_file to the start of our Python PATH at runtime
+    path_parent_dir = os.path.dirname(path_python_file)
+    sys.path.insert(0, path_parent_dir)
+
+    # Import the module
+    py_module = importlib.import_module(module_name)
+
+    # Reload the module so we get the latest one
+    # If we do not reload, can get stale results if
+    # this method is called more then once
+    reload(py_module)
+
+    return py_module
+
+
+def rename_to_bak_file(path_current_file, path_default_file=None):
+    """Renames path_current_file with a postfixed timestamp.
+    If path_default_file is provided, path_current_file is only
+    renamed if the default and current file are different"""
+    if not os.path.isfile(path_current_file):
+        raise IOError("File to create backup of does not exist: {0}".format(path_current_file))
+
+    if path_default_file is not None and not os.path.isfile(path_default_file):
+        raise IOError("Default file to compare to does not exist at: {0}".format(path_default_file))
+
+    now = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    new_file_name = "{0}-{1}.bak".format(os.path.basename(path_current_file), now)
+
+    # If default file provided, compare to current file
+    if path_default_file is not None:
+        # Read the default file + the current file
+        default_file_contents = read_file(path_default_file)
+        current_file_contents = read_file(path_current_file)
+
+        # If different, rename
+        if default_file_contents != current_file_contents:
+            LOG.info("Creating a backup of: %s", path_current_file)
+            rename_file(path_current_file, new_file_name)
+
+    else:
+        LOG.info("Creating a backup of: %s", path_current_file)
+        rename_file(path_current_file, new_file_name)
+
+    return os.path.join(os.path.dirname(path_current_file), new_file_name)

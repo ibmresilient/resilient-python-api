@@ -4,6 +4,7 @@
 
 import os
 import stat
+import re
 import pytest
 import jinja2
 from resilient import SimpleClient
@@ -23,10 +24,23 @@ def test_setup_jinja_env():
     assert jinja_env.loader.package_path == mock_paths.TEST_TEMP_DIR
 
 
-def test_write_file(fx_mk_temp_dir):
+def test_read_write_file(fx_mk_temp_dir):
     temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
     helpers.write_file(temp_file, mock_data.mock_file_contents)
     assert os.path.isfile(temp_file)
+
+    file_lines = helpers.read_file(temp_file)
+    assert mock_data.mock_file_contents in file_lines
+
+
+def test_rename_file(fx_mk_temp_dir):
+    temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
+    helpers.write_file(temp_file, mock_data.mock_file_contents)
+
+    helpers.rename_file(temp_file, "new_file_name.txt")
+    path_renamed_file = os.path.join(mock_paths.TEST_TEMP_DIR, "new_file_name.txt")
+
+    assert os.path.isfile(path_renamed_file) is True
 
 
 def test_is_valid_package_name():
@@ -171,3 +185,24 @@ def test_minify_export_default_keys_to_keep(fx_mock_res_client):
     assert "export_format_version" in minifed_export
     assert "id" in minifed_export
     assert "server_version" in minifed_export
+
+
+def test_load_by_module():
+    path_python_file = os.path.join(mock_paths.SHARED_MOCK_DATA_DIR, "mock_data.py")
+    module_name = "mock_data"
+    mock_data_module = helpers.load_py_module(path_python_file, module_name)
+
+    assert mock_data_module.mock_loading_this_module == "yes you did!"
+
+
+def test_rename_to_bak_file(fx_mk_temp_dir):
+    temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
+    helpers.write_file(temp_file, mock_data.mock_file_contents)
+
+    helpers.rename_to_bak_file(temp_file)
+
+    files_in_dir = os.listdir(mock_paths.TEST_TEMP_DIR)
+    regex = re.compile(r'^mock_file\.txt-\d+-\d+-\d+\d+-\d+:\d+:\d+\.bak$')
+    matched_file_name = list(filter(regex.match, files_in_dir))[0]
+
+    assert regex.match(matched_file_name)
