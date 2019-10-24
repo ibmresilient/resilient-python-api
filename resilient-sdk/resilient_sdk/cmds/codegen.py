@@ -28,7 +28,9 @@ class CmdCodegen(BaseCmd):
 
     CMD_NAME = "codegen"
     CMD_HELP = "Generate boilerplate code to start developing an Extension"
-    CMD_USAGE = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
+    CMD_USAGE = """
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
     CMD_USE_COMMON_PARSER_ARGS = True
 

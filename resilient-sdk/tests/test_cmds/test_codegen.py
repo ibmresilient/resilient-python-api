@@ -14,7 +14,9 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     assert isinstance(cmd_codegen, base_cmd.BaseCmd)
     assert cmd_codegen.CMD_NAME == "codegen"
     assert cmd_codegen.CMD_HELP == "Generate boilerplate code to start developing an Extension"
-    assert cmd_codegen.CMD_USAGE == "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
+    assert cmd_codegen.CMD_USAGE == """
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     assert cmd_codegen.CMD_DESCRIPTION == "Generate boilerplate code to start developing an Extension"
     assert cmd_codegen.CMD_USE_COMMON_PARSER_ARGS is True
 
