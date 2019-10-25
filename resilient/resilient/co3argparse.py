@@ -121,6 +121,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_proxy_user = self.getopt("resilient", "proxy_user")
         default_proxy_password = self.getopt("resilient", "proxy_password")
         default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or 20)
+        default_resilient_mock = self.getopt("resilient", "resilient_mock")
 
         self.add_argument("--email",
                           default=default_email,
@@ -194,6 +195,10 @@ class ArgumentParser(argparse.ArgumentParser):
                           default=default_stomp_prefetch_limit,
                           type=int,
                           help="MAX number of Action Module messages to send before ACK is required")
+
+        self.add_argument("--resilient-mock",
+                          default=default_resilient_mock, 
+                          help="<path_to_mock_module>.NameOfMockClass")
 
     def parse_args(self, args=None, namespace=None):
         """
