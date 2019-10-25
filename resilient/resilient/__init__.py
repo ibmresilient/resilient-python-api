@@ -20,3 +20,10 @@ from .co3argparse import parse_parameters, ArgumentParser
 from .co3sslutil import match_hostname
 from .patch import Patch
 from .patch import PatchStatus
+
+from .definitions import (Definition,
+                          TypeDefinition,
+                          MessageDestinationDefinition,
+                          FunctionDefinition,
+                          ActionDefinition,
+                          ImportDefinition)
