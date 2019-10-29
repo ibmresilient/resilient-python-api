@@ -31,7 +31,8 @@ def _mk_temp_dir():
 
 
 def _rm_temp_dir():
-    shutil.rmtree(mock_paths.TEST_TEMP_DIR)
+    if os.path.exists(mock_paths.TEST_TEMP_DIR):
+        shutil.rmtree(mock_paths.TEST_TEMP_DIR)
 
 
 def _mk_app_config():

@@ -9,14 +9,19 @@ import os
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.package_file_helpers import load_customize_py_module
 from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
                                         is_valid_package_name, write_file,
                                         validate_dir_paths, get_latest_org_export,
                                         get_from_export, minify_export,
-                                        get_object_api_names)
+                                        get_object_api_names, validate_file_paths,
+                                        rename_file, rename_to_bak_file)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
+
+# Relative paths from with the package of files + directories used
+PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 
 
 class CmdCodegen(BaseCmd):
@@ -24,7 +29,9 @@ class CmdCodegen(BaseCmd):
 
     CMD_NAME = "codegen"
     CMD_HELP = "Generate boilerplate code to start developing an Extension"
-    CMD_USAGE = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
+    CMD_USAGE = """
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
     CMD_USE_COMMON_PARSER_ARGS = True
 
@@ -36,22 +43,26 @@ class CmdCodegen(BaseCmd):
         # Add any positional or optional arguments here
         self.parser.add_argument("-p", "--package",
                                  type=ensure_unicode,
-                                 help="Name of the package to generate")
+                                 help="Name of the package to generate or path to existing package")
 
         self.parser.add_argument("--reload",
                                  action="store_true",
                                  help="Reload customizations and create new customize.py")
 
     def execute_command(self, args):
-        LOG.info("Called codegen command")
-
+        LOG.debug("called: CmdCodegen.execute_command()")
         # Set command name in our SDKException class
         SDKException.command_ran = self.CMD_NAME
+
+        LOG.debug("Getting resilient_client")
 
         # Instansiate connection to the Resilient Appliance
         res_client = get_resilient_client()
 
         if args.reload:
+            if not args.package:
+                raise SDKException("'-p' must be specified when using '--reload'")
+
             self._reload_package(res_client, args)
 
         elif args.package:
@@ -104,6 +115,35 @@ class CmdCodegen(BaseCmd):
                 jinja_rendered_text = jinja_template.render(template_data)
 
                 write_file(target_file, jinja_rendered_text)
+
+    @staticmethod
+    def merge_codegen_params(old_params, args, mapping_tuples):
+        """
+        Merge any codegen params found in old_params and args.
+        Return updated args
+
+        :param old_params: List of Resilient Objects (normally result of calling customize_py.codegen_reload_data())
+        :type old_params: List
+        :param args: Namespace of all args passed from command line
+        :type args: argparse.Namespace
+        :param mapping_tuples: List of Tuples e.g. [("arg_name", "old_param_name")]
+        :type mapping_tuples: List
+        :return: The 'merged' args
+        :rtype: argparse.Namespace
+        """
+        for m in mapping_tuples:
+            all_obj_names_wanted = set()
+
+            arg_name = m[0]
+            old_param_name = m[1]
+
+            arg = getattr(args, arg_name)
+            if arg:
+                all_obj_names_wanted = set(arg)
+
+            setattr(args, arg_name, list(all_obj_names_wanted.union(set(old_params.get(old_param_name, [])))))
+
+        return args
 
     @staticmethod
     def _gen_function(res_client, args):
@@ -212,5 +252,58 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _reload_package(res_client, args):
-        # TODO: Implement 'resilient-sdk codegen --reload'
-        LOG.info("codegen _reload_package called")
+        LOG.debug("called: CmdCodegen._reload_package()")
+
+        old_params, path_customize_py_bak = [], ""
+
+        # Get + validate package and customize.py paths
+        path_package = os.path.abspath(args.package)
+        validate_dir_paths(os.R_OK, path_package)
+
+        path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
+        validate_file_paths(os.W_OK, path_customize_py)
+
+        # Load the customize.py module
+        customize_py_module = load_customize_py_module(path_customize_py)
+
+        try:
+            # Get the 'old_params' from customize.py
+            old_params = customize_py_module.codegen_reload_data()
+        except AttributeError:
+            raise SDKException(u"Corrupt customize.py. No reload method found in {0}".format(path_customize_py))
+
+        if not old_params:
+            raise SDKException(u"No reload params found in {0}".format(path_customize_py))
+
+        # Rename the old customize.py with .bak
+        path_customize_py_bak = rename_to_bak_file(path_customize_py)
+
+        try:
+            # Map command line arg name to dict key return by codegen_reload_data() in customize.py
+            mapping_tuples = [
+                ("messagedestination", "message_destinations"),
+                ("function", "functions"),
+                ("workflow", "workflows"),
+                ("rule", "actions"),
+                ("field", "incident_fields"),
+                ("artifacttype", "incident_artifact_types"),
+                ("datatable", "datatables"),
+                ("task", "automatic_tasks"),
+                ("script", "scripts")
+            ]
+
+            # Merge old_params with new params specified on command line
+            args = CmdCodegen.merge_codegen_params(old_params, args, mapping_tuples)
+
+            LOG.debug("Regenerating codegen '%s' package now", args.package)
+
+            # Regenerate the package
+            CmdCodegen._gen_package(res_client, args)
+
+        except Exception as err:
+            # If an error occurred, customize.py does not exist, rename the backup file to original
+            if not os.path.isfile(path_customize_py):
+                LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
+                rename_file(path_customize_py_bak, "customize.py")
+
+            LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)

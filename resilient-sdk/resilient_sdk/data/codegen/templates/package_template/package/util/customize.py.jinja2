@@ -2,14 +2,13 @@
 
 """Generate the Resilient customizations required for {{package_name}}"""
 
-from resilient_circuits.util import ImportDefinition
+from resilient import ImportDefinition
 
 
 def codegen_reload_data():
     """
     Parameters required reload codegen for the {{package_name}} package
     """
-    {# TODO: Rename these keys for consistancy #}
     return {
         "package": u"{{package_name}}",
         "message_destinations": {% if message_destinations %}[{% for o in message_destinations %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
@@ -25,8 +24,6 @@ def codegen_reload_data():
         "incident_artifact_types": {% if artifact_types %}[{% for o in artifact_types %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
         "datatables": {% if datatables %}[{% for o in datatables %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
-
-        "phases": {% if phases %}[{% for o in phases %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
         "automatic_tasks": {% if tasks %}[{% for o in tasks %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
