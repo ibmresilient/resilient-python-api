@@ -9,12 +9,13 @@ import os
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.package_file_helpers import load_customize_py_module
 from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
                                         is_valid_package_name, write_file,
                                         validate_dir_paths, get_latest_org_export,
                                         get_from_export, minify_export,
                                         get_object_api_names, validate_file_paths,
-                                        load_py_module, rename_file, rename_to_bak_file)
+                                        rename_file, rename_to_bak_file)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -140,7 +141,7 @@ class CmdCodegen(BaseCmd):
             if arg:
                 all_obj_names_wanted = set(arg)
 
-            setattr(args, arg_name, list(all_obj_names_wanted.union(set(old_params.get(old_param_name)))))
+            setattr(args, arg_name, list(all_obj_names_wanted.union(set(old_params.get(old_param_name, [])))))
 
         return args
 
@@ -262,12 +263,12 @@ class CmdCodegen(BaseCmd):
         path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
         validate_file_paths(os.W_OK, path_customize_py)
 
-        # Load customize module
-        customize_py = load_py_module(path_customize_py, "customize")
+        # Load the customize.py module
+        customize_py_module = load_customize_py_module(path_customize_py)
 
         try:
             # Get the 'old_params' from customize.py
-            old_params = customize_py.codegen_reload_data()
+            old_params = customize_py_module.codegen_reload_data()
         except AttributeError:
             raise SDKException(u"Corrupt customize.py. No reload method found in {0}".format(path_customize_py))
 
@@ -300,10 +301,9 @@ class CmdCodegen(BaseCmd):
             CmdCodegen._gen_package(res_client, args)
 
         except Exception as err:
-            LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
-
-        finally:
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
                 rename_file(path_customize_py_bak, "customize.py")
+
+            LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
