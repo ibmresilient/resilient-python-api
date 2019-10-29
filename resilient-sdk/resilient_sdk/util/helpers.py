@@ -340,9 +340,6 @@ def get_from_export(export,
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", "programmatic_name", "Message Destination", message_destinations, export)
 
-    for m in return_dict.get("message_destinations"):
-        LOG.info(m)
-
     # Get Custom Fields
     return_dict["fields"] = get_res_obj("fields", "name", "Field", fields, export,
                                         condition=lambda o: True if o.get("prefix") == "properties" and o.get("type_id") == ResilientTypeIds.INCIDENT else False)
