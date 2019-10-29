@@ -181,22 +181,22 @@ def generate_default(install_list):
         base_config = base_config_file.read()
         return "\n\n".join(([base_config, ] + additional_sections))
 
-
-def generate_or_update_config(args):
-    """ Create or update config file based on installed components.
+def get_config_file_name(filename=None):
+    """ Get the config file name.
 
     * Use the location specified in $APP_CONFIG_FILE, as config file if set.
     * Otherwise if filename path specified in args exist in the current working use as config file.
     * Otherwise if default config file name exists in current work directory use as config file.
     * Otherwise use path in ~/.resilient/ directory.
 
+    :param filename: A filename if passed in from command-line args.
+    :return: Config file name.
     """
     default_filename = "app.config"
-    usage_type = "CREATING" if args.create else "UPDATING"
     env_app_config_filename = os.environ.get("APP_CONFIG_FILE", None)
 
     if not env_app_config_filename:
-        if not args.filename:
+        if not filename:
             # If the default filename "app.config" exists in local directory use as config file name.
             if os.path.exists(default_filename):
                 config_filename = default_filename
@@ -208,9 +208,22 @@ def generate_or_update_config(args):
                     LOG.info(u"Creating %s", resilient_dir)
                     os.makedirs(resilient_dir)
         else:
-            config_filename = os.path.expandvars(os.path.expanduser(args.filename))
+            config_filename = os.path.expandvars(os.path.expanduser(filename))
     else:
         config_filename = env_app_config_filename
+
+    return config_filename
+
+
+def generate_or_update_config(args):
+    """ Create or update config file based on installed components.
+
+    :param args: Command-line args for Resilient circuits 'config' sub-command.
+    """
+    usage_type = "CREATING" if args.create else "UPDATING"
+    # Get the config file name.
+    config_filename = get_config_file_name(filename=args.filename)
+
     file_exists = os.path.exists(config_filename)
 
     if file_exists:
