@@ -9,10 +9,11 @@ import json
 import re
 from jinja2 import Undefined
 
-# Handle imports for PY 2
 if sys.version_info.major < 3:
+    # Handle PY 2 specific imports
     from base64 import encodestring as b64encode
 else:
+    # Handle PY 3 specific imports
     from base64 import encodebytes as b64encode
 
 

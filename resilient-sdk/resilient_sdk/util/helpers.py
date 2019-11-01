@@ -21,10 +21,10 @@ from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE, 
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 
 if sys.version_info.major < 3:
-    # Handle PY 3 specific imports
+    # Handle PY 2 specific imports
     pass
 else:
-    # Handle PY 2 specific imports
+    # Handle PY 3 specific imports
 
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
