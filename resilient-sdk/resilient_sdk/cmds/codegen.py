@@ -56,20 +56,17 @@ class CmdCodegen(BaseCmd):
 
         LOG.debug("Getting resilient_client")
 
-        # Instansiate connection to the Resilient Appliance
-        res_client = get_resilient_client()
-
         if args.reload:
             if not args.package:
                 raise SDKException("'-p' must be specified when using '--reload'")
 
-            self._reload_package(res_client, args)
+            self._reload_package(args)
 
         elif args.package:
-            self._gen_package(res_client, args)
+            self._gen_package(args)
 
         elif not args.package and args.function:
-            self._gen_function(res_client, args)
+            self._gen_function(args)
 
         else:
             self.parser.print_help()
@@ -146,12 +143,12 @@ class CmdCodegen(BaseCmd):
         return args
 
     @staticmethod
-    def _gen_function(res_client, args):
+    def _gen_function(args):
         # TODO: Handle just generating a FunctionComponent for the /components directory
         LOG.info("codegen _gen_function called")
 
     @staticmethod
-    def _gen_package(res_client, args):
+    def _gen_package(args):
         LOG.info("codegen _gen_package called")
 
         if not is_valid_package_name(args.package):
@@ -162,6 +159,9 @@ class CmdCodegen(BaseCmd):
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
+
+        # Instansiate connection to the Resilient Appliance
+        res_client = get_resilient_client()
 
         # TODO: handle being passed path to an actual export.res file
         org_export = get_latest_org_export(res_client)
@@ -251,7 +251,7 @@ class CmdCodegen(BaseCmd):
         CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
 
     @staticmethod
-    def _reload_package(res_client, args):
+    def _reload_package(args):
         LOG.debug("called: CmdCodegen._reload_package()")
 
         old_params, path_customize_py_bak = [], ""
@@ -298,7 +298,7 @@ class CmdCodegen(BaseCmd):
             LOG.debug("Regenerating codegen '%s' package now", args.package)
 
             # Regenerate the package
-            CmdCodegen._gen_package(res_client, args)
+            CmdCodegen._gen_package(args)
 
         except Exception as err:
             # If an error occurred, customize.py does not exist, rename the backup file to original
