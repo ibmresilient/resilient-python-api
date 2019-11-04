@@ -1,3 +1,5 @@
 include resilient_sdk/LICENSE
 
+# This will include any .jinja2 files found anywhere
+# under data/ directory when packaging
 recursive-include resilient_sdk/data/* *.jinja2
