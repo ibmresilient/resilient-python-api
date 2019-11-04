@@ -1,0 +1,3 @@
+include resilient_sdk/LICENSE
+
+recursive-include resilient_sdk/data/* *.jinja2
