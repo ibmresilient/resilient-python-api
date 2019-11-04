@@ -13,6 +13,9 @@ class SDKException(Exception):
     command_ran = ""
 
     def __init__(self, message):
+        if not SDKException.command_ran:
+            SDKException.command_ran = "<no subcommad provided>"
+
         self.message = "\n'resilient-sdk %s' FAILED\nERROR: %s" % (SDKException.command_ran, message)
 
         # Call the base class
