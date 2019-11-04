@@ -44,6 +44,8 @@ def get_resilient_client(path_config_file=None):
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
+    LOG.info("Connecting to Resilient Appliance...")
+
     if not path_config_file:
         path_config_file = get_config_file()
 
