@@ -4,9 +4,11 @@
 
 """ TODO: module docstring """
 
+import sys
 import logging
-import argparse
 from resilient_sdk.cmds import CmdDocgen, CmdCodegen
+from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 
 # Setup logging
 LOG = logging.getLogger("resilient_sdk_log")
@@ -22,10 +24,17 @@ def get_main_app_parser():
     :rtype: argparse.ArgumentParser
     """
     # Define main parser object
-    parser = argparse.ArgumentParser(
+    # We use SDKArgumentParser which overwrites the 'error' method
+    parser = SDKArgumentParser(
         prog="resilient-sdk",
         description="Python SDK for developing Resilient Extensions",
         epilog="For support, please visit ibm.biz/resilientcommunity")
+
+    parser.usage = """
+    $ resilient-sdk <subcommand> ...
+    $ resilient-sdk -v <subcommand> ...
+    $ resilient-sdk -h
+    """
 
     # Add --verbose argument
     parser.add_argument("-v", "--verbose",
@@ -71,8 +80,19 @@ def main():
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_codegen = CmdCodegen(sub_parser)
 
-    # Parse the arguments
-    args = parser.parse_args()
+    try:
+        # Parse the arguments
+        args = parser.parse_args()
+
+    except SDKException as err:
+        # Catch argparse "too few arguments" error
+        if "too few arguments" in err.message:
+            # Print help + exit
+            parser.print_help()
+            sys.exit()
+
+        LOG.error(err)
+        sys.exit()
 
     # If -v was specified, set the log level to DEBUG
     if args.verbose:
