@@ -51,21 +51,20 @@ class CmdCodegen(BaseCmd):
 
     def execute_command(self, args):
         LOG.debug("called: CmdCodegen.execute_command()")
-        # Set command name in our SDKException class
-        SDKException.command_ran = self.CMD_NAME
-
-        LOG.debug("Getting resilient_client")
 
         if args.reload:
             if not args.package:
                 raise SDKException("'-p' must be specified when using '--reload'")
 
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--reload")
             self._reload_package(args)
 
         elif args.package:
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--package | -p")
             self._gen_package(args)
 
         elif not args.package and args.function:
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--function | -f")
             self._gen_function(args)
 
         else:
