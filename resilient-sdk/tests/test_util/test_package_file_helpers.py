@@ -25,6 +25,15 @@ def test_get_dependency_from_install_requires_str():
     pass
 
 
+def test_load_customize_py_module():
+    # TODO
+    # using old resilient-circuits
+    # generate old customize.py using fn_mock_integration
+    # save that in mock data
+    # Read it in here and confirm we an call load_params function
+    pass
+
+
 def test_get_import_definition_from_customize_py():
     # TODO: taken from docgen
     pass
@@ -33,6 +42,7 @@ def test_get_import_definition_from_customize_py():
 def test_get_configs_from_config_py():
     # TODO: taken from docgen
     pass
+
 
 # TODO: use this anywhere in tests we compare lists (instead of using for loop)
 # self.assertTrue(all(elem in custom_incident_fields_details for elem in mock_data.mock_custom_incident_fields_details))

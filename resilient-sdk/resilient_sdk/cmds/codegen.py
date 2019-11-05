@@ -9,12 +9,13 @@ import os
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.package_file_helpers import load_customize_py_module
 from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
                                         is_valid_package_name, write_file,
                                         validate_dir_paths, get_latest_org_export,
                                         get_from_export, minify_export,
                                         get_object_api_names, validate_file_paths,
-                                        load_py_module, rename_file, rename_to_bak_file)
+                                        rename_file, rename_to_bak_file)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -28,7 +29,9 @@ class CmdCodegen(BaseCmd):
 
     CMD_NAME = "codegen"
     CMD_HELP = "Generate boilerplate code to start developing an Extension"
-    CMD_USAGE = "resilient-sdk codegen -p <name_of_package> -m <message_destination>"
+    CMD_USAGE = """
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
     CMD_USE_COMMON_PARSER_ARGS = True
 
@@ -48,25 +51,21 @@ class CmdCodegen(BaseCmd):
 
     def execute_command(self, args):
         LOG.debug("called: CmdCodegen.execute_command()")
-        # Set command name in our SDKException class
-        SDKException.command_ran = self.CMD_NAME
-
-        LOG.debug("Getting resilient_client")
-
-        # Instansiate connection to the Resilient Appliance
-        res_client = get_resilient_client()
 
         if args.reload:
             if not args.package:
                 raise SDKException("'-p' must be specified when using '--reload'")
 
-            self._reload_package(res_client, args)
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--reload")
+            self._reload_package(args)
 
         elif args.package:
-            self._gen_package(res_client, args)
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--package | -p")
+            self._gen_package(args)
 
         elif not args.package and args.function:
-            self._gen_function(res_client, args)
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--function | -f")
+            self._gen_function(args)
 
         else:
             self.parser.print_help()
@@ -138,17 +137,17 @@ class CmdCodegen(BaseCmd):
             if arg:
                 all_obj_names_wanted = set(arg)
 
-            setattr(args, arg_name, list(all_obj_names_wanted.union(set(old_params.get(old_param_name)))))
+            setattr(args, arg_name, list(all_obj_names_wanted.union(set(old_params.get(old_param_name, [])))))
 
         return args
 
     @staticmethod
-    def _gen_function(res_client, args):
+    def _gen_function(args):
         # TODO: Handle just generating a FunctionComponent for the /components directory
         LOG.info("codegen _gen_function called")
 
     @staticmethod
-    def _gen_package(res_client, args):
+    def _gen_package(args):
         LOG.info("codegen _gen_package called")
 
         if not is_valid_package_name(args.package):
@@ -159,6 +158,9 @@ class CmdCodegen(BaseCmd):
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
+
+        # Instansiate connection to the Resilient Appliance
+        res_client = get_resilient_client()
 
         # TODO: handle being passed path to an actual export.res file
         org_export = get_latest_org_export(res_client)
@@ -248,7 +250,7 @@ class CmdCodegen(BaseCmd):
         CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
 
     @staticmethod
-    def _reload_package(res_client, args):
+    def _reload_package(args):
         LOG.debug("called: CmdCodegen._reload_package()")
 
         old_params, path_customize_py_bak = [], ""
@@ -260,12 +262,16 @@ class CmdCodegen(BaseCmd):
         path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
         validate_file_paths(os.W_OK, path_customize_py)
 
-        # Load customize module
-        customize_py = load_py_module(path_customize_py, "customize")
+        # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
+        args.package = os.path.basename(path_package)
+        args.output = os.path.dirname(path_package)
+
+        # Load the customize.py module
+        customize_py_module = load_customize_py_module(path_customize_py)
 
         try:
             # Get the 'old_params' from customize.py
-            old_params = customize_py.codegen_reload_data()
+            old_params = customize_py_module.codegen_reload_data()
         except AttributeError:
             raise SDKException(u"Corrupt customize.py. No reload method found in {0}".format(path_customize_py))
 
@@ -295,11 +301,12 @@ class CmdCodegen(BaseCmd):
             LOG.debug("Regenerating codegen '%s' package now", args.package)
 
             # Regenerate the package
-            CmdCodegen._gen_package(res_client, args)
+            CmdCodegen._gen_package(args)
 
         except Exception as err:
             LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
 
+        # This is required in finally block as user may kill using keyboard interrupt
         finally:
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
