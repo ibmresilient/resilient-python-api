@@ -493,6 +493,9 @@ def load_py_module(path_python_file, module_name):
     # this method is called more then once
     reload(py_module)
 
+    # Remove the path from PYTHONPATH
+    sys.path.remove(path_parent_dir)
+
     return py_module
 
 

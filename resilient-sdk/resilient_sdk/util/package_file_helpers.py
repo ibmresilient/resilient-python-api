@@ -13,6 +13,7 @@ import os
 import io
 import json
 import base64
+from resilient import ImportDefinition
 from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.helpers import (load_py_module,
@@ -210,6 +211,7 @@ def load_customize_py_module(path_customize_py):
                 customize_py_module = load_py_module(path_customize_py, "customize")
 
             except Exception as err:
+                # TODO: move this rename to a finally block in case user uses keyboard interrupt...
                 # If an error trying to load the module again and customize.py does not exist
                 # rename the backup file to original
                 if not os.path.isfile(path_customize_py):
@@ -230,19 +232,7 @@ def load_customize_py_module(path_customize_py):
 def get_import_definition_from_customize_py(path_customize_py_file):
     """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
 
-    # TODO: replace this with heplers.load_py_module
-
-    # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
-    path_to_util_dir = os.path.dirname(path_customize_py_file)
-    sys.path.insert(0, path_to_util_dir)
-
-    # Import the customize module
-    customize_py = importlib.import_module("customize")
-
-    # Reload the module so we get the latest one
-    # If we do not reload, can get stale results if
-    # this method is called more then once
-    reload(customize_py)
+    customize_py = load_customize_py_module(path_customize_py_file)
 
     # Call customization_data() to get all ImportDefinitions that are "yielded"
     customize_py_import_definitions_generator = customize_py.customization_data()
@@ -250,13 +240,10 @@ def get_import_definition_from_customize_py(path_customize_py_file):
 
     # customization_data() returns a Generator object with all yield statements, so we loop them
     for definition in customize_py_import_definitions_generator:
-        customize_py_import_definitions.append(json.loads(base64.b64decode(definition.value)))
-
-        # TODO: handle if not ImportDefinition (without dependency on resilient-circuits!)
-        # if isinstance(definition, ImportDefinition):
-        #     customize_py_import_definitions.append(json.loads(base64.b64decode(definition.value)))
-        # else:
-        #     LOG.warning("WARNING: Unsupported data found in customize.py file. Expected an ImportDefinition. Got: '%s'", definition)
+        if isinstance(definition, ImportDefinition):
+            customize_py_import_definitions.append(json.loads(base64.b64decode(definition.value)))
+        else:
+            LOG.warning("WARNING: Unsupported data found in customize.py file. Expected an ImportDefinition. Got: '%s'", definition)
 
     # If no ImportDefinition found
     if not customize_py_import_definitions:
@@ -285,9 +272,6 @@ def get_import_definition_from_customize_py(path_customize_py_file):
         if incident_type_to_remove:
             incident_types.remove(incident_type_to_remove)
 
-    # Remove the path from PYTHONPATH
-    sys.path.remove(path_to_util_dir)
-
     return customize_py_import_definition
 
 
@@ -301,19 +285,9 @@ def get_configs_from_config_py(path_config_py_file):
 
     config_str, config_list = "", []
 
-    # TODO: replace this with heplers.load_py_module
-    # Insert the customize.py parent dir to the start of our Python PATH at runtime so we can import the customize module from within it
-    path_to_util_dir = os.path.dirname(path_config_py_file)
-    sys.path.insert(0, path_to_util_dir)
-
     try:
         # Import the config module
-        config_py = importlib.import_module("config")
-
-        # Reload the module so we get the latest one
-        # If we do not reload, can get stale results if
-        # this method is called more then once
-        reload(config_py)
+        config_py = load_py_module(path_config_py_file, "config")
 
         # Call config_section_data() to get the string containing the configs
         config_str = config_py.config_section_data()
@@ -344,9 +318,5 @@ def get_configs_from_config_py(path_config_py_file):
 
     except Exception as err:
         raise SDKException(u"Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
-
-    finally:
-        # Remove the path from PYTHONPATH
-        sys.path.remove(path_to_util_dir)
 
     return (config_str, config_list)
