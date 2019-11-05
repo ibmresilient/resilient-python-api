@@ -10,6 +10,7 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import helpers as sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_FIELD
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -107,5 +108,30 @@ class CmdDocgen(BaseCmd):
 
         # Parse the app.configs from the config.py file
         jinja_app_configs = package_helpers.get_configs_from_config_py(path_config_py_file)
+
+        # Get field names from ImportDefinition
+        field_names = []
+        for f in customize_py_import_definition.get("fields", []):
+            f_name = f.get("export_key", "")
+            
+            if "incident/" in f_name and f_name != DEFAULT_INCIDENT_FIELD.get("export_key", ""):
+                field_names.append(f_name.split("incident/")[1])
+
+        # Get data from ImportDefinition
+        import_def_data = sdk_helpers.get_from_export(customize_py_import_definition,
+                                                      message_destinations=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_definition.get("message_destinations")),
+                                                      functions=sdk_helpers.get_object_api_names("name", customize_py_import_definition.get("functions")),
+                                                      workflows=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_definition.get("workflows")),
+                                                      rules=sdk_helpers.get_object_api_names("name", customize_py_import_definition.get("actions")),
+                                                      fields=field_names,
+                                                      artifact_types=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_definition.get("incident_artifact_types")),
+                                                      datatables=sdk_helpers.get_object_api_names("type_name", customize_py_import_definition.get("types")),
+                                                      tasks=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_definition.get("automatic_tasks")),
+                                                      scripts=sdk_helpers.get_object_api_names("name", customize_py_import_definition.get("scripts")))
+
+        server_version = customize_py_import_definition.get("server_version", {})
+
+        package_name_underscore = setup_py_attributes.get("name", "")
+        package_name_dash = package_name_underscore.replace("_", "-")
 
         LOG.info("here")
