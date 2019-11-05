@@ -32,7 +32,7 @@ DEFAULT_INCIDENT_TYPE = {
 
 # Used during codegen
 DEFAULT_INCIDENT_FIELD = {
-    "export_key": "incident/internal_customizations_field",
+    "export_key": u"incident/internal_customizations_field",
     "id": 0,
     "input_type": "text",
     "internal": True,
