@@ -206,3 +206,8 @@ def test_rename_to_bak_file(fx_mk_temp_dir):
     matched_file_name = list(filter(regex.match, files_in_dir))[0]
 
     assert regex.match(matched_file_name)
+
+
+def test_generate_anchor():
+    anchor = helpers.generate_anchor("D מ ן נ ס עata Ta$%^ble Utils: Delete_Row")
+    assert anchor == "d-----ata-table-utils-deleterow"

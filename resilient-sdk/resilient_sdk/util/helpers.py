@@ -528,3 +528,25 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
         rename_file(path_current_file, new_file_name)
 
     return os.path.join(os.path.dirname(path_current_file), new_file_name)
+
+
+def generate_anchor(header):
+    """
+    Converts header to lowercase, removes all characters except a-z, 0-9, - and spaces,
+    then replaces all spaces with -
+
+    An anchor is used in Markdown Templates to link certain parts of the document.
+
+    :param header: Path to the file that contains the module
+    :type header: str
+    :return: header formatted as an anchor
+    :rtype: str
+    """
+    anchor = header.lower()
+
+    regex = re.compile(r"[^a-z0-9\-\s]")
+
+    anchor = re.sub(regex, "", anchor)
+    anchor = re.sub(r"[\s]", "-", anchor)
+
+    return anchor
