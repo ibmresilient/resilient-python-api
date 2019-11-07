@@ -148,6 +148,7 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _gen_package(args):
+        # TODO: add /data directory
         LOG.info("codegen _gen_package called")
 
         if not is_valid_package_name(args.package):
@@ -212,7 +213,9 @@ class CmdCodegen(BaseCmd):
             "README.md": ("README.md.jinja2", jinja_data),
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
-
+            "doc": {
+                "README.md": ("doc/README.md.jinja2", jinja_data)
+            },
             package_name: {
                 "__init__.py": ("package/__init__.py.jinja2", jinja_data),
                 "LICENSE": ("package/LICENSE.jinja2", jinja_data),
@@ -248,6 +251,16 @@ class CmdCodegen(BaseCmd):
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
         CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+
+        # if /doc exists and /doc/screenshots does not, make /doc/screenshots
+        path_doc_dir = os.path.join(output_base, "doc")
+        path_screenshots_dir = os.path.join(path_doc_dir, "screenshots")
+
+        if os.path.isdir(path_doc_dir) and not os.path.isdir(path_screenshots_dir):
+            LOG.info("Generating /doc/screenshots directory")
+            os.makedirs(path_screenshots_dir)
+
+        LOG.info("Codegen complete for %s", package_name)
 
     @staticmethod
     def _reload_package(args):
