@@ -68,7 +68,8 @@ setup(
         'pysocks',
         'filelock>=2.0.5',
         'setuptools>=41.0.0',
-        'resilient>={}.{}'.format(major, minor)
+        'watchdog',
+        'resilient>={}.{}'.format(major, minor),
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
