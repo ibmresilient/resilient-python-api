@@ -22,10 +22,10 @@
 {% for dt in datatables %}
 - [Data Table - {{ dt.name }}](#data-table---{{ dt.anchor }})
 {% endfor %}
-{% if custom_incident_fields %}
+{% if custom_fields %}
 - [Custom Fields](#custom-fields)
 {% endif %}
-{% if custom_incident_artifact_types %}
+{% if custom_artifact_types %}
 - [Custom Artifact Types](#custom-artifact-types)
 {% endif %}
 {% if rules %}
@@ -117,22 +117,22 @@ results = {
 ---
 {% endfor %}
 
-{% if custom_incident_fields %}
+{% if custom_fields %}
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-{% for f in custom_incident_fields %}
+{% for f in custom_fields %}
 | {{ f.label }} | `{{ f.api_name }}` | `{{ f.type }}` | `{{ f.prefix }}` | {{ f.placeholder }} | {{ f.tooltip }} |
 {% endfor %}
 
 ---
 {% endif %}
 
-{% if custom_incident_artifact_types %}
+{% if custom_artifact_types %}
 ## Custom Artifact Types
 | Display Name | API Access Name | Description |
 | ------------ | --------------- | ----------- |
-{% for a in custom_incident_artifact_types %}
+{% for a in custom_artifact_types %}
 | {{ a.display_name }} | `{{ a.api_name }}` | {{ a.description }} |
 {% endfor %}
 
