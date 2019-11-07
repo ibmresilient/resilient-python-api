@@ -68,7 +68,7 @@ setup(
         'pysocks',
         'filelock>=2.0.5',
         'setuptools>=41.0.0',
-        'watchdog',
+        'watchdog>=0.9.0',
         'resilient>={}.{}'.format(major, minor),
     ],
     author_email='support@resilientsystems.com',
