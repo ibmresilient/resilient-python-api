@@ -42,3 +42,38 @@ def test_only_install_user_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
     assert args.p == "fn_main_mock_integration"
     assert args.only_install_guide is False
     assert args.only_user_guide is True
+
+
+def test_get_fn_input_details():
+    # TODO: taken from old docgen
+    pass
+
+
+def test_get_function_details():
+    # TODO: taken from old docgen
+    pass
+
+
+def test_get_rule_details():
+    # TODO: taken from old docgen
+    pass
+
+
+def test_get_datatable_details():
+    # TODO: taken from old docgen
+    pass
+
+
+def test_get_custom_fields_details():
+    # TODO: taken from old docgen
+    pass
+
+
+def test_get_custom_artifact_details():
+    # TODO: taken from old docgen
+    pass
+
+
+def test_execute_command():
+    # TODO
+    pass
