@@ -148,7 +148,6 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _gen_package(args):
-        # TODO: add /data directory
         LOG.info("codegen _gen_package called")
 
         if not is_valid_package_name(args.package):
