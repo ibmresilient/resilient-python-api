@@ -213,6 +213,7 @@ class CmdCodegen(BaseCmd):
             "README.md": ("README.md.jinja2", jinja_data),
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
+            "data": {},
             "doc": {
                 "README.md": ("doc/README.md.jinja2", jinja_data)
             },
@@ -249,6 +250,14 @@ class CmdCodegen(BaseCmd):
 
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
+
+        for w in jinja_data.get("workflows"):
+
+            # Generate wf_xx.md file name
+            file_name = u"wf_{0}.md".format(w.get("programmatic_name"))
+
+            # Add workflow to data directory
+            package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
 
         CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
 

@@ -341,6 +341,22 @@ def get_from_export(export,
     # Get Workflows
     return_dict["workflows"] = get_res_obj("workflows", "programmatic_name", "Workflow", workflows, export)
 
+    # Get Functions in Workflow
+    for workflow in return_dict["workflows"]:
+        # This gets all the Functions in the Workflow's XML
+        wf_functions = get_workflow_functions(workflow)
+
+        # Add the Display Name and Name to each wf_function
+        for wf_fn in wf_functions:
+            for fn in return_dict["functions"]:
+                if wf_fn.get("uuid", "a") == fn.get("uuid", "b"):
+                    wf_fn["name"] = fn.get("name")
+                    wf_fn["display_name"] = fn.get("display_name")
+                    wf_fn["message_destination"] = fn.get("destination_handle", "")
+                    break
+
+        workflow["wf_functions"] = wf_functions
+
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", "programmatic_name", "Message Destination", message_destinations, export)
 
