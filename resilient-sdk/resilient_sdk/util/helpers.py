@@ -11,9 +11,11 @@ import os
 import sys
 import io
 import copy
+import json
 import datetime
 import importlib
 from jinja2 import Environment, PackageLoader
+import xml.etree.ElementTree as ET
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
 from resilient_sdk.util.sdk_exception import SDKException
@@ -504,7 +506,8 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
     If path_default_file is provided, path_current_file is only
     renamed if the default and current file are different"""
     if not os.path.isfile(path_current_file):
-        raise IOError("File to create backup of does not exist: {0}".format(path_current_file))
+        LOG.warning("Not creating backup. File to create backup of does not exist: {0}".format(path_current_file))
+        return path_current_file
 
     if path_default_file is not None and not os.path.isfile(path_default_file):
         raise IOError("Default file to compare to does not exist at: {0}".format(path_default_file))
@@ -550,3 +553,57 @@ def generate_anchor(header):
     anchor = re.sub(r"[\s]", "-", anchor)
 
     return anchor
+
+
+def get_workflow_functions(workflow, function_uuid=None):
+    """Parses the XML of the Workflow Object and returns
+    a List of all Functions found. If function_uuid is defined
+    returns all occurrences of that function.
+
+    A Workflow Function can have the attributes:
+    - uuid: String
+    - inputs: Dict
+    - post_processing_script: String
+    - pre_processing_script: String
+    - result_name: String"""
+
+    return_functions = []
+
+    # Workflow XML text
+    wf_xml = workflow.get("content", {}).get("xml", None)
+
+    if wf_xml is None:
+        raise SDKException("Could not load xml content from Workflow: {0}".format(workflow))
+
+    # Get the root element + endode in utf8 in order to handle Unicode
+    root = ET.fromstring(wf_xml.encode("utf8"))
+
+    # Get the prefix for each element's tag
+    tag_prefix = root.tag.replace("definitions", "")
+
+    xml_path = "./{0}process/{0}serviceTask/{0}extensionElements/*".format(tag_prefix)
+    the_function_elements = []
+
+    if function_uuid is not None:
+        xml_path = "{0}[@uuid='{1}']".format(xml_path, function_uuid)
+
+        # Get all elements at xml_path that have the uuid of the function
+        the_function_elements = root.findall(xml_path)
+
+    else:
+        the_extension_elements = root.findall(xml_path)
+        for extension_element in the_extension_elements:
+            if "function" in extension_element.tag:
+                the_function_elements.append(extension_element)
+
+    # Foreach element found, load it as a dictionary and append to return list
+    for fn_element in the_function_elements:
+        return_function = json.loads(fn_element.text)
+        return_function["uuid"] = fn_element.attrib.get("uuid", "")
+        return_function["result_name"] = return_function.get("result_name", None)
+        return_function["post_processing_script"] = return_function.get("post_processing_script", None)
+        return_function["pre_processing_script"] = return_function.get("pre_processing_script", None)
+
+        return_functions.append(return_function)
+
+    return return_functions

@@ -208,6 +208,17 @@ def test_rename_to_bak_file(fx_mk_temp_dir):
     assert regex.match(matched_file_name)
 
 
+def test_rename_to_bak_file_if_file_not_exist(fx_mk_temp_dir):
+    temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
+    path_to_backup = helpers.rename_to_bak_file(temp_file)
+    assert temp_file == path_to_backup
+
+
 def test_generate_anchor():
     anchor = helpers.generate_anchor("D מ ן נ ס עata Ta$%^ble Utils: Delete_Row")
     assert anchor == "d-----ata-table-utils-deleterow"
+
+
+def test_get_workflow_functions():
+    # TODO: taken from docgen
+    pass
