@@ -27,7 +27,7 @@ PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_DOC_DIR = "doc"
 PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
 PATH_INSTALL_GUIDE_README = "README.md"
-# PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_circuits", "data/template_package/README.md.jinja2")
+PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
 PATH_USER_GUIDE_README = os.path.join(PATH_DOC_DIR, "README.md")
 PATH_DEFAULT_USER_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/README.md.jinja2")
 
@@ -337,6 +337,7 @@ class CmdDocgen(BaseCmd):
         # Other variables for Jinja Templates
         package_name_underscore = setup_py_attributes.get("name", "")
         package_name_dash = package_name_underscore.replace("_", "-")
+        server_version = customize_py_import_def.get("server_version", {})
 
         if do_generate_user_guide:
 
@@ -363,6 +364,28 @@ class CmdDocgen(BaseCmd):
             sdk_helpers.write_file(path_user_guide_readme, rendered_user_guide_readme)
 
         if do_generate_install_guide:
-            pass
+            LOG.info("Rendering Install Guide")
 
-        LOG.info("here")
+            # Render the Install Guide Jinja2 Templeate with parameters
+            rendered_install_guide_readme = install_guide_readme_template.render({
+                "short_description": setup_py_attributes.get("description"),
+                "long_description": setup_py_attributes.get("long_description"),
+                "name_underscore": package_name_underscore,
+                "name_dash": package_name_dash,
+                "server_version": server_version.get("version"),
+                "res_circuits_dependency_str": res_circuits_dep_str,
+                "app_configs": jinja_app_configs[1],
+                "version": setup_py_attributes.get("version"),
+                "author": setup_py_attributes.get("author"),
+                "support_url": setup_py_attributes.get("url"),
+                "datatables": jinja_datatables,
+                "custom_incident_fields": jinja_custom_fields
+            })
+
+            # Create a backup if needed of install guide README
+            sdk_helpers.rename_to_bak_file(path_install_guide_readme, PATH_DEFAULT_INSTALL_GUIDE_README)
+
+            LOG.info("Writing Install Guide to: %s", path_install_guide_readme)
+
+            # Write the new Install Guide README
+            sdk_helpers.write_file(path_install_guide_readme, rendered_install_guide_readme)
