@@ -69,7 +69,7 @@ setup(
         'filelock>=2.0.5',
         'setuptools>=41.0.0',
         'watchdog>=0.9.0',
-        'resilient>={}.{}'.format(major, minor),
+        'resilient>={}.{}'.format(major, minor)
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
