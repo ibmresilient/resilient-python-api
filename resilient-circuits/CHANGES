@@ -1,3 +1,10 @@
+2019-10-07L version 34.0.194
+
+* Updated exception handling. Introduced BaseFunctionError class, ability to hide trace, and include messages.
+* Fix `cafile=false` throwing `AttributeError`
+* Fix a bug when Python component's `package_name == function_name`
+
+
 2019-08-02: version 33.0.189
 
 * Added support for API key and API key secret, now able to authenticate
@@ -5,7 +12,7 @@
 * New functions added to resilient-lib
     'get_file_attachment_metadata()'
     'write_to_tmp_file()'
-* Updated 'validate_fields()' function in resilient-lib, 
+* Updated 'validate_fields()' function in resilient-lib,
   adding the ability to validate fields in app.config
 * Other minor bug fixes.
 

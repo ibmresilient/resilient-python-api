@@ -2,6 +2,7 @@
 
 This package is a `py.test` plugin that provides fixtures to facilitate testing resilient-circuits applications.
 
+### Changelog
 
 ### Requirements
 
