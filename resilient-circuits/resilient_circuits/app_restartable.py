@@ -44,7 +44,23 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         cls.patterns = ["*" + os.path.basename(config_file), ]
 
     def on_modified(self, event):
-        """ reload data from config file and restart components """
+        """ For 'FileModifiedEvent' events, initiate reload of data from config file and restart components.  """
+
+        self.reload_config()
+
+    def on_created(self, event):
+        """ For 'FileCreatedEvent' events, initiate reload of data from config file and restart components.
+
+        Triggered by certain editors such as 'vi', which will recreate rather than modify the config file,
+        when updating.
+
+        """
+
+        self.reload_config()
+
+    def reload_config(self):
+        """ Reload data from config file and restart components. """
+
         if self.app.reloading:
             LOG.warning("Configuration file change ignored because reload already in progress")
             return
