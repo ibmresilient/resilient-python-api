@@ -43,13 +43,16 @@ class RequestsCommon:
 
     def get_timeout(self):
         """
-        get the default timeout value in the 'integrations' section
+        get the default timeout value in the 'integrations' section or the function's own section
         :return: timeout value
         """
         timeout = DEFAULT_TIMEOUT
 
         if self.integration_options and self.integration_options.get("timeout"):
             timeout = int(self.integration_options.get("timeout"))
+
+        if self.function_opts and self.function_opts.get("timeout"):
+            timeout = self.function_opts.get("timeout")
 
         return timeout
 
