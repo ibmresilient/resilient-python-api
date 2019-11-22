@@ -94,7 +94,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
         self.expires_in = self.oauth_token_data.get("expires_in", None)
         if self.expires_in is not None:
-            self.expiration_time = time.time() + self.expires_in
+            self.expiration_time = time.time() + int(self.expires_in)
         else:
             self.expiration_time = None
 
