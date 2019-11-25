@@ -104,3 +104,8 @@ def test_gen_package():
 def test_reload_package():
     # TODO:
     pass
+
+
+def test_execute_command():
+    # TODO
+    pass

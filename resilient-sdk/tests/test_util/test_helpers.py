@@ -115,8 +115,7 @@ def test_get_object_api_names(fx_mock_res_client):
 
     func_api_names = helpers.get_object_api_names("x_api_name", export_data.get("functions"))
 
-    for name in func_api_names:
-        assert name in ["mock_function_one", "mock_function_two"]
+    assert all(elem in ["mock_function_one", "mock_function_two"] for elem in func_api_names) is True
 
 
 def test_get_res_obj(fx_mock_res_client):
@@ -125,8 +124,7 @@ def test_get_res_obj(fx_mock_res_client):
     artifacts_wanted = ["mock_artifact_2", "mock_artifact_type_one"]
     artifacts = helpers.get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifacts_wanted, org_export)
 
-    for a in artifacts:
-        assert a.get("x_api_name") in artifacts_wanted
+    assert all(elem.get("x_api_name") in artifacts_wanted for elem in artifacts) is True
 
 
 def test_get_res_obj_exception(fx_mock_res_client):
@@ -146,8 +144,8 @@ def test_get_message_destination_from_export(fx_mock_res_client):
                                           message_destinations=["fn_main_mock_integration"])
 
     assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
-    for f in export_data.get("functions"):
-        assert f.get("name") in ("mock_function_one", "mock_function_two")
+
+    assert all(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is True
 
 
 def test_minify_export(fx_mock_res_client):

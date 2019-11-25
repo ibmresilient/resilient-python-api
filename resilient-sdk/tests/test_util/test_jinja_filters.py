@@ -31,5 +31,4 @@ def test_add_filters_to_jinja_env():
 
     add_filters_to_jinja_env(jinja_env)
 
-    for f in JINJA_FILTERS.keys():
-        assert f in jinja_env.filters
+    assert all(elem in jinja_env.filters for elem in JINJA_FILTERS.keys()) is True
