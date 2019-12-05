@@ -1,8 +1,6 @@
-import copy
 import json
 import logging
 import unittest
-import pytest
 import requests
 from parameterized import parameterized
 from resilient_lib import RequestsCommon, IntegrationError
@@ -50,15 +48,17 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("def", proxies['http'])
 
     def test_timeout(self):
+        # test default timeout
         integrations = { "integrations": { } }
         rc = RequestsCommon(integrations, None)
         self.assertEqual(rc.get_timeout(), 30)
 
+        # test global setting
         integrations_timeout = { "integrations": { "timeout": "35" } }
         rc = RequestsCommon(integrations_timeout, None)
         self.assertEqual(rc.get_timeout(), 35)
 
-        # test timeout
+        # test global timeout against a url which is expected to timeout earlier
         integrations_twenty = { "integrations": { "timeout": "20" } }
         rc = RequestsCommon(integrations_twenty, None)
         url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "25")
@@ -66,12 +66,14 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             rc.execute_call_v2("get", url)
 
+        # test global timeout against a url that will timeout before excepted value
         integrations_fourty = { "integrations": { "timeout": "40" } }
         rc = RequestsCommon(integrations_fourty, None)
         url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "35")
         rc.execute_call_v2("get", url)
 
     def test_timeout_section_value(self):
+        # test section override of a global setting
         integrations_fourty = { "integrations": { "timeout": 40 } }
         integration_section = { "timeout": 50 }
         rc = RequestsCommon(integrations_fourty, integration_section)
