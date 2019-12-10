@@ -49,28 +49,27 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
 
-    def test_timeout(self):
+    def test_timeout_overrides(self):
         integrations = { "integrations": { } }
         rc = RequestsCommon(integrations, None)
-        self.assertIsEqual(rc.get_timeout(), 30)
+        self.assertEqual(rc.get_timeout(), 30)
 
         integrations_timeout = { "integrations": { "timeout": "35" } }
         rc = RequestsCommon(integrations_timeout, None)
-        self.assertIsEqual(rc.get_timeout(), 35)
+        self.assertEqual(rc.get_timeout(), 35)
 
         # test timeout
-        integrations_twenty = { "integrations": { "timeout": "20" } }
+        integrations_twenty = { "integrations": { "timeout": "8" } }
         rc = RequestsCommon(integrations_twenty, None)
-        url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "25")
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
 
         with self.assertRaises(IntegrationError):
             rc.execute_call_v2("get", url)
 
-        integrations_fourty = { "integrations": { "timeout": "40" } }
+        integrations_fourty = { "integrations": { "timeout": "20" } }
         rc = RequestsCommon(integrations_fourty, None)
-        url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "35")
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
         rc.execute_call_v2("get", url)
-
 
 
     def test_resp_types(self):
