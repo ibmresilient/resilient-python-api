@@ -47,7 +47,8 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
 
-    def test_timeout(self):
+        
+    def test_timeout_overrides(self):
         # test default timeout
         integrations = { "integrations": { } }
         rc = RequestsCommon(integrations, None)
@@ -58,19 +59,20 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_timeout, None)
         self.assertEqual(rc.get_timeout(), 35)
 
-        # test global timeout against a url which is expected to timeout earlier
-        integrations_twenty = { "integrations": { "timeout": "20" } }
+        # test timeout
+        integrations_twenty = { "integrations": { "timeout": "8" } }
         rc = RequestsCommon(integrations_twenty, None)
-        url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "25")
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
 
         with self.assertRaises(IntegrationError):
             rc.execute_call_v2("get", url)
 
-        # test global timeout against a url that will timeout before excepted value
-        integrations_fourty = { "integrations": { "timeout": "40" } }
+
+        integrations_fourty = { "integrations": { "timeout": "20" } }
         rc = RequestsCommon(integrations_fourty, None)
-        url = "/".join(TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "35")
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
         rc.execute_call_v2("get", url)
+
 
     def test_timeout_section_value(self):
         # test section override of a global setting
@@ -78,6 +80,7 @@ class TestFunctionRequests(unittest.TestCase):
         integration_section = { "timeout": 50 }
         rc = RequestsCommon(integrations_fourty, integration_section)
         self.assertEqual(rc.get_timeout(), 50)
+
 
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
