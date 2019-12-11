@@ -9,6 +9,6 @@ except pkg_resources.DistributionNotFound:
 from .actions_component import ResilientComponent
 from .action_message import ActionMessageBase, ActionMessage, \
     FunctionMessage, FunctionResult, FunctionError, \
-    StatusMessage
+    StatusMessage, BaseFunctionError
 from .decorators import function, handler, required_field, required_action_field, defer, debounce
 from .actions_test_component import SubmitTestAction, SubmitTestFunction

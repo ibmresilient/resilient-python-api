@@ -1,12 +1,10 @@
-import copy
 import json
 import logging
 import unittest
-import pytest
 import requests
 from parameterized import parameterized
-from resilient_lib.components.requests_common import RequestsCommon, get_case_insensitive_key_value, is_payload_in_json
-from resilient_lib.components.integration_errors import IntegrationError
+from resilient_lib import RequestsCommon, IntegrationError
+from resilient_lib.components.requests_common import get_case_insensitive_key_value, is_payload_in_json
 
 
 class TestFunctionRequests(unittest.TestCase):
@@ -49,11 +47,14 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
 
+        
     def test_timeout_overrides(self):
+        # test default timeout
         integrations = { "integrations": { } }
         rc = RequestsCommon(integrations, None)
         self.assertEqual(rc.get_timeout(), 30)
 
+        # test global setting
         integrations_timeout = { "integrations": { "timeout": "35" } }
         rc = RequestsCommon(integrations_timeout, None)
         self.assertEqual(rc.get_timeout(), 35)
@@ -66,10 +67,19 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             rc.execute_call_v2("get", url)
 
+
         integrations_fourty = { "integrations": { "timeout": "20" } }
         rc = RequestsCommon(integrations_fourty, None)
         url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
         rc.execute_call_v2("get", url)
+
+
+    def test_timeout_section_value(self):
+        # test section override of a global setting
+        integrations_fourty = { "integrations": { "timeout": 40 } }
+        integration_section = { "timeout": 50 }
+        rc = RequestsCommon(integrations_fourty, integration_section)
+        self.assertEqual(rc.get_timeout(), 50)
 
 
     def test_resp_types(self):
