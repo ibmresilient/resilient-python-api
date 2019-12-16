@@ -78,7 +78,7 @@ class BaseCmd(object):
 
         common_parser.add_argument("--field",
                                    type=ensure_unicode,
-                                   help="Include customization data for incident field(s)",
+                                   help="Include customization data for custom incident field(s)",
                                    nargs="*")
 
         common_parser.add_argument("--datatable",
