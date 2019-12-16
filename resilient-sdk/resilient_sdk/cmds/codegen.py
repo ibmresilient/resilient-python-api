@@ -162,7 +162,7 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _gen_package(args):
-        LOG.info("codegen _gen_package called")
+        LOG.info("Generating codegen package...")
 
         if not is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
@@ -270,11 +270,10 @@ class CmdCodegen(BaseCmd):
         if skipped_files:
             LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
 
-        LOG.info("codegen complete for '%s'", package_name)
+        LOG.info("'codegen' complete for '%s'", package_name)
 
     @staticmethod
     def _reload_package(args):
-        LOG.debug("called: CmdCodegen._reload_package()")
 
         old_params, path_customize_py_bak = [], ""
 
@@ -288,6 +287,8 @@ class CmdCodegen(BaseCmd):
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
         args.package = os.path.basename(path_package)
         args.output = os.path.dirname(path_package)
+
+        LOG.info("'codegen --reload' started for '%s'", args.package)
 
         # Load the customize.py module
         customize_py_module = load_customize_py_module(path_customize_py)
@@ -325,6 +326,8 @@ class CmdCodegen(BaseCmd):
 
             # Regenerate the package
             CmdCodegen._gen_package(args)
+
+            LOG.info("'codegen --reload' complete for '%s'", args.package)
 
         except Exception as err:
             LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
