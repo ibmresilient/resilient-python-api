@@ -58,11 +58,11 @@ class CmdDocgen(BaseCmd):
 
         parser_group = self.parser.add_mutually_exclusive_group(required=False)
 
-        parser_group.add_argument("--only-user-guide",
+        parser_group.add_argument("--only-user-guide", "--uguide",
                                   help="Only generate the User Guide",
                                   action="store_true")
 
-        parser_group.add_argument("--only-install-guide",
+        parser_group.add_argument("--only-install-guide", "--iguide",
                                   help="Only generate the Install Guide",
                                   action="store_true")
 

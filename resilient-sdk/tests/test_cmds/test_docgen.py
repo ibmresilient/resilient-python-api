@@ -37,8 +37,28 @@ def test_only_install_guide_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
     assert args.only_user_guide is False
 
 
+def test_only_iguide_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
+    sys.argv.append("--iguide")
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    args = cmd_docgen.parser.parse_known_args()[0]
+
+    assert args.p == "fn_main_mock_integration"
+    assert args.only_install_guide is True
+    assert args.only_user_guide is False
+
+
 def test_only_install_user_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
     sys.argv.append("--only-user-guide")
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    args = cmd_docgen.parser.parse_known_args()[0]
+
+    assert args.p == "fn_main_mock_integration"
+    assert args.only_install_guide is False
+    assert args.only_user_guide is True
+
+
+def test_only_uguide_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
+    sys.argv.append("--uguide")
     cmd_docgen = CmdDocgen(fx_get_sub_parser)
     args = cmd_docgen.parser.parse_known_args()[0]
 
