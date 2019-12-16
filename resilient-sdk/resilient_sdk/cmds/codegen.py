@@ -74,12 +74,19 @@ class CmdCodegen(BaseCmd):
     def render_jinja_mapping(jinja_mapping_dict, jinja_env, target_dir):
         """
         Write all the Jinja Templates specified in jinja_mapping_dict that
-        are found in the jinja_env to the target_dir
+        are found in the jinja_env to the target_dir. Returns a Tuple of
+        newly generated files and files that were skipped
 
         :param jinja_mapping_dict: e.g. {"file_to_write.py": ("name_of_template.py.jinja2", jinja_data)}
         :param jinja_env: Jinja Environment
         :param target_dir: Path to write Templates to
+        :return: newly_generated_files, files_skipped: a Tuple of newly generated files and files skipped
+        :rtype: tuple
         """
+
+        newly_generated_files = []
+        files_skipped = []
+
         for (file_name, file_info) in jinja_mapping_dict.items():
 
             if isinstance(file_info, dict):
@@ -89,10 +96,13 @@ class CmdCodegen(BaseCmd):
 
                 try:
                     os.makedirs(path_sub_dir)
-                except OSError as err_msg:
-                    LOG.warn(err_msg)
+                # Skip this error, which is generally a 'File Exists' error
+                except OSError:
+                    pass
 
-                CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
+                new_files, skipped_files = CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
+                newly_generated_files += new_files
+                files_skipped += skipped_files
 
             else:
                 # Get path to Jinja2 template
@@ -104,13 +114,17 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
 
                 if os.path.exists(target_file):
-                    LOG.warning(u"File already exists. Not writing: %s", target_file)
+                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
+                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+
                 write_file(target_file, jinja_rendered_text)
+
+        return newly_generated_files, files_skipped
 
     @staticmethod
     def merge_codegen_params(old_params, args, mapping_tuples):
@@ -247,7 +261,16 @@ class CmdCodegen(BaseCmd):
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
-        CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+        newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+
+        # Log new and skipped files
+        if newly_generated_files:
+            LOG.debug("Newly Generated Files:\n\t> %s", "\n\t> ".join(newly_generated_files))
+
+        if skipped_files:
+            LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
+
+        LOG.info("codegen complete for '%s'", package_name)
 
     @staticmethod
     def _reload_package(args):
