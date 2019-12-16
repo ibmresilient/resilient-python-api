@@ -23,10 +23,10 @@ from resilient_sdk.util.helpers import (load_py_module,
                                         rename_file)
 
 if sys.version_info.major < 3:
-    # Handle PY 3 specific imports
+    # Handle PY 2 specific imports
     import ConfigParser as configparser
 else:
-    # Handle PY 2 specific imports
+    # Handle PY 3 specific imports
     import configparser
 
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
@@ -170,7 +170,7 @@ def load_customize_py_module(path_customize_py):
         > result = customize_py_module.codegen_reload_data()
 
     Raises an SDKException if we fail to load the module
-    
+
     :param path_customize_py: Path to the customize.py file that contains the module
     :return: The customize Python Module, if found
     :rtype: module
@@ -186,7 +186,7 @@ def load_customize_py_module(path_customize_py):
     try:
         customize_py_module = load_py_module(path_customize_py, "customize")
     except ImportError as err:
-        LOG.warning("WARNING: Failed to load customize.py\n%s", err.message)
+        LOG.warning("WARNING: Failed to load customize.py\n%s", err)
 
         new_lines, path_backup_customize_py = [], ""
         current_customize_py_lines = read_file(path_customize_py)
@@ -218,13 +218,13 @@ def load_customize_py_module(path_customize_py):
                     LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
                     rename_file(path_backup_customize_py, "customize.py")
 
-                raise SDKException(u"Failed to load customize.py module\n{0}".format(err.message))
+                raise SDKException(u"Failed to load customize.py module\n{0}".format(err))
 
         # Else we did not match resilient_circuits, file corrupt.
         # We only support one instance of "from resilient_circuits"
         # If different means developer modified customize.py manually
         else:
-            raise SDKException(u"Failed to load customize.py module. The file is corrupt\n{0}".format(err.message))
+            raise SDKException(u"Failed to load customize.py module. The file is corrupt\n{0}".format(err))
 
     return customize_py_module
 

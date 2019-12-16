@@ -42,3 +42,9 @@ DEFAULT_INCIDENT_FIELD = {
     "type_id": 0,
     "uuid": str(DEFAULT_INCIDENT_FIELD_UUID)
 }
+
+# Default field names we should ignore (mainly in docgen)
+IGNORED_INCIDENT_FIELDS = [
+    u"incident/internal_customizations_field",
+    u"incident/inc_training"
+]

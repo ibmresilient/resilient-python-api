@@ -522,7 +522,7 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
     If path_default_file is provided, path_current_file is only
     renamed if the default and current file are different"""
     if not os.path.isfile(path_current_file):
-        LOG.warning("Not creating backup. File to create backup of does not exist: {0}".format(path_current_file))
+        LOG.warning("No backup file created due to file missing: %s", path_current_file)
         return path_current_file
 
     if path_default_file is not None and not os.path.isfile(path_default_file):
@@ -563,9 +563,10 @@ def generate_anchor(header):
     """
     anchor = header.lower()
 
-    regex = re.compile(r"[^a-z0-9\-\s]")
+    regex = re.compile(r"[^a-z0-9\-\s_]")
 
     anchor = re.sub(regex, "", anchor)
+    anchor = re.sub("_", "-", anchor)
     anchor = re.sub(r"[\s]", "-", anchor)
 
     return anchor
@@ -623,3 +624,18 @@ def get_workflow_functions(workflow, function_uuid=None):
         return_functions.append(return_function)
 
     return return_functions
+
+
+def get_main_cmd():
+    """
+    Return the "main" command from the command line.
+
+    E.g. with command line: '$ resilient-sdk codegen -p abc'
+    this function will return 'codegen'
+    """
+    cmd_line = sys.argv
+
+    if len(cmd_line) > 1:
+        return cmd_line[1]
+
+    return None

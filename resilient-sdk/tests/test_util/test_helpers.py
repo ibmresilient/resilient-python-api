@@ -7,6 +7,7 @@ import stat
 import re
 import pytest
 import jinja2
+import sys
 from resilient import SimpleClient
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import helpers
@@ -214,9 +215,16 @@ def test_rename_to_bak_file_if_file_not_exist(fx_mk_temp_dir):
 
 def test_generate_anchor():
     anchor = helpers.generate_anchor("D מ ן נ ס עata Ta$%^ble Utils: Delete_Row")
-    assert anchor == "d-----ata-table-utils-deleterow"
+    assert anchor == "d-----ata-table-utils-delete-row"
 
 
 def test_get_workflow_functions():
     # TODO: taken from docgen
     pass
+
+
+def test_get_main_cmd(monkeypatch):
+    mock_args = ["resilient-sdk", "codegen", "-p", "fn_mock_package"]
+    monkeypatch.setattr(sys, "argv", mock_args)
+    main_cmd = helpers.get_main_cmd()
+    assert main_cmd == "codegen"

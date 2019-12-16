@@ -9,9 +9,10 @@ import os
 import pkg_resources
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
+from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import helpers as sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_FIELD
+from resilient_sdk.util.default_resilient_objects import IGNORED_INCIDENT_FIELDS
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -67,7 +68,8 @@ class CmdDocgen(BaseCmd):
 
     @staticmethod
     def _get_fn_input_details(function):
-        # TODO: doc string
+        """Return a List of all Function Inputs which are Dictionaries with
+        the attributes: api_name, name, type, required, placeholder and tooltip"""
 
         fn_inputs = []
 
@@ -94,7 +96,7 @@ class CmdDocgen(BaseCmd):
         return fn_inputs
 
     @classmethod
-    def _get_function_details(cls, functions, workflows, fields):
+    def _get_function_details(cls, functions, workflows):
         """Return a List of Functions which are Dictionaries with
         the attributes: name, anchor, description, uuid, inputs,
         workflows, pre_processing_script, post_processing_script"""
@@ -260,6 +262,9 @@ class CmdDocgen(BaseCmd):
     def execute_command(self, args):
         LOG.info("Called docgen with %s", args)
 
+        # Set docgen name for SDKException
+        SDKException.command_ran = self.CMD_NAME
+
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
@@ -311,7 +316,7 @@ class CmdDocgen(BaseCmd):
         for f in customize_py_import_def.get("fields", []):
             f_name = f.get("export_key", "")
 
-            if "incident/" in f_name and f_name != DEFAULT_INCIDENT_FIELD.get("export_key", ""):
+            if "incident/" in f_name and f_name not in IGNORED_INCIDENT_FIELDS:
                 field_names.append(f_name.split("incident/")[1])
 
         # Get data from ImportDefinition
@@ -328,7 +333,7 @@ class CmdDocgen(BaseCmd):
                                                       scripts=sdk_helpers.get_object_api_names("name", customize_py_import_def.get("scripts")))
 
         # Lists we use in Jinja Templates
-        jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []), import_def_data.get("fields", []))
+        jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []))
         jinja_rules = self._get_rule_details(import_def_data.get("rules", []))
         jinja_datatables = self._get_datatable_details(import_def_data.get("datatables", []))
         jinja_custom_fields = self._get_custom_fields_details(import_def_data.get("fields", []))
