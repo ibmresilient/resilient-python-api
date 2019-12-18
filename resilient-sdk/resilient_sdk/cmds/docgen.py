@@ -268,6 +268,8 @@ class CmdDocgen(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
+        LOG.debug("Path to project: %s", path_to_src)
+
         # Instansiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env("data/docgen/templates")
 
