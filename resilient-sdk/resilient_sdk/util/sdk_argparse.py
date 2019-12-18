@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
-from argparse import ArgumentParser, HelpFormatter, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, HelpFormatter
 from resilient_sdk.util.sdk_exception import SDKException
 
 
