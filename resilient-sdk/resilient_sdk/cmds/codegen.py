@@ -187,12 +187,12 @@ class CmdCodegen(BaseCmd):
 
         # Get data required for Jinja2 templates from export
         jinja_data = get_from_export(org_export,
-                                     message_destinations=args.msg_dest,
+                                     message_destinations=args.messagedestination,
                                      functions=args.function,
                                      workflows=args.workflow,
                                      rules=args.rule,
                                      fields=args.field,
-                                     artifact_types=args.artifact_type,
+                                     artifact_types=args.artifacttype,
                                      datatables=args.datatable,
                                      tasks=args.task,
                                      scripts=args.script)

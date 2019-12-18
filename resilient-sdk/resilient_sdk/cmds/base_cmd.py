@@ -62,7 +62,7 @@ class BaseCmd(object):
         """
         common_parser = argparse.ArgumentParser(add_help=False)
 
-        common_parser.add_argument("-a", "--artifact_type",
+        common_parser.add_argument("-a", "--artifacttype",
                                    type=ensure_unicode,
                                    help="API names of artifact types to include",
                                    nargs="*")
@@ -72,21 +72,21 @@ class BaseCmd(object):
                                    help="API names of datatables to include",
                                    nargs="*")
 
-        common_parser.add_argument("-e", "--export_file",
+        common_parser.add_argument("-e", "--exportfile",
                                    type=ensure_unicode,
                                    help="Path to a local (.res) export file")
 
-        common_parser.add_argument("-f", "--field",
+        common_parser.add_argument("-fd", "--field",
                                    type=ensure_unicode,
                                    help="API names of custom fields to include",
                                    nargs="*")
 
-        common_parser.add_argument("-fn", "--function",
+        common_parser.add_argument("-f", "--function",
                                    type=ensure_unicode,
                                    help="API names of functions to include",
                                    nargs="*")
 
-        common_parser.add_argument("-m", "--msg_dest",
+        common_parser.add_argument("-m", "--messagedestination",
                                    type=ensure_unicode,
                                    help="API names of message destinations to include",
                                    nargs="*")

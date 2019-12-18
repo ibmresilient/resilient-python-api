@@ -53,12 +53,12 @@ def test_get_common_parser(fx_cmd_line_args_codegen_package):
     args = common_parser[0].parse_known_args()[0]
 
     assert args.function == ["mock_function_one"]
-    assert args.msg_dest == ["fn_main_mock_integration"]
+    assert args.messagedestination == ["fn_main_mock_integration"]
     assert args.rule == ["Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination"]
     assert args.workflow == ["mock_workflow_one", "mock_workflow_two"]
     assert args.field == ["mock_field_number", "mock_field_number", "mock_field_text_area"]
-    assert args.artifact_type == ["mock_artifact_2", "mock_artifact_type_one"]
+    assert args.artifacttype == ["mock_artifact_2", "mock_artifact_type_one"]
     assert args.datatable == ["mock_data_table"]
     assert args.task == ["mock_custom_task_one", "mock_cusom_task__________two"]
     assert args.script == ["Mock Script One"]
-    assert args.export_file is None
+    assert args.exportfile is None
