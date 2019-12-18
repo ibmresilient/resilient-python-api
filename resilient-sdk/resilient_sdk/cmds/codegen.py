@@ -40,12 +40,18 @@ class CmdCodegen(BaseCmd):
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
 
+        self.parser._optionals.title = "options"
+
         # Add any positional or optional arguments here
         self.parser.add_argument("-p", "--package",
                                  type=ensure_unicode,
-                                 help="Name of the package to generate or path to existing package")
+                                 help="(required) Name of new or path to existing package")
 
-        self.parser.add_argument("--reload",
+        self.parser.add_argument("-o", "--output",
+                                 type=ensure_unicode,
+                                 help="Path to output directory. Uses current dir by default")
+
+        self.parser.add_argument("-re", "--reload",
                                  action="store_true",
                                  help="Reload customizations and create new customize.py")
 
@@ -181,12 +187,12 @@ class CmdCodegen(BaseCmd):
 
         # Get data required for Jinja2 templates from export
         jinja_data = get_from_export(org_export,
-                                     message_destinations=args.messagedestination,
+                                     message_destinations=args.msg_dest,
                                      functions=args.function,
                                      workflows=args.workflow,
                                      rules=args.rule,
                                      fields=args.field,
-                                     artifact_types=args.artifacttype,
+                                     artifact_types=args.artifact_type,
                                      datatables=args.datatable,
                                      tasks=args.task,
                                      scripts=args.script)

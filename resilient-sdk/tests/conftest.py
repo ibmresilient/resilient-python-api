@@ -114,11 +114,11 @@ def fx_cmd_line_args_codegen_package():
         "codegen",
         "-p", "fn_main_mock_integration",
         "-m", "fn_main_mock_integration",
-        "-f", "mock_function_one",
+        "-fn", "mock_function_one",
         "--rule", "Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination",
         "--workflow", "mock_workflow_one", "mock_workflow_two",
         "--field", "mock_field_number", "mock_field_number", "mock_field_text_area",
-        "--artifacttype", "mock_artifact_2", "mock_artifact_type_one",
+        "--artifact_type", "mock_artifact_2", "mock_artifact_type_one",
         "--datatable", "mock_data_table",
         "--task", "mock_custom_task_one", "mock_cusom_task__________two",
         "--script", "Mock Script One"
