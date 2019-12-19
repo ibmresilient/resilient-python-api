@@ -80,14 +80,8 @@ class CmdDocgen(BaseCmd):
             the_input["name"] = i.get("text")
             the_input["type"] = i.get("input_type")
             the_input["required"] = "Yes" if "always" in i.get("required", "") else "No"
-            the_input["placeholder"] = i.get("placeholder")
-            the_input["tooltip"] = i.get("tooltip")
-
-            if not the_input["placeholder"]:
-                the_input["placeholder"] = "-"
-
-            if not the_input["tooltip"]:
-                the_input["tooltip"] = "-"
+            the_input["placeholder"] = i.get("placeholder") if i.get("placeholder") else "-"
+            the_input["tooltip"] = i.get("tooltip") if i.get("tooltip") else "-"
 
             fn_inputs.append(the_input)
 
@@ -203,10 +197,7 @@ class CmdDocgen(BaseCmd):
                 the_col["name"] = col.get("text")
                 the_col["api_name"] = col.get("name")
                 the_col["type"] = col.get("input_type")
-                the_col["tooltip"] = col.get("tooltip")
-
-                if not the_col["tooltip"]:
-                    the_col["tooltip"] = "-"
+                the_col["tooltip"] = col.get("tooltip") if col.get("tooltip") else "-"
 
                 the_dt_columns.append(the_col)
 
@@ -229,14 +220,8 @@ class CmdDocgen(BaseCmd):
             the_field["label"] = field.get("text")
             the_field["type"] = field.get("input_type")
             the_field["prefix"] = field.get("prefix")
-            the_field["placeholder"] = field.get("placeholder")
-            the_field["tooltip"] = field.get("tooltip")
-
-            if not the_field["placeholder"]:
-                the_field["placeholder"] = "-"
-
-            if not the_field["tooltip"]:
-                the_field["tooltip"] = "-"
+            the_field["placeholder"] = field.get("placeholder") if field.get("placeholder") else "-"
+            the_field["tooltip"] = field.get("tooltip") if field.get("tooltip") else "-"
 
             return_list.append(the_field)
 
@@ -260,7 +245,7 @@ class CmdDocgen(BaseCmd):
         return return_list
 
     def execute_command(self, args):
-        LOG.info("Called docgen with %s", args)
+        LOG.debug("docgen called with %s", args)
 
         # Set docgen name for SDKException
         SDKException.command_ran = self.CMD_NAME

@@ -80,6 +80,19 @@ def test_get_fn_input_details():
     assert fn_input == mock_input
 
 
+def test_get_fn_input_details_defaults():
+    mock_function = {
+        "inputs": [
+            {"api_name": "", "placeholder": "", "tooltip": ""}
+        ]
+    }
+
+    fn_input = CmdDocgen._get_fn_input_details(mock_function)[0]
+    mock_input = {'api_name': None, 'name': None, 'type': None, 'required': u'No', 'placeholder': u'-', 'tooltip': u'-'}
+
+    assert fn_input == mock_input
+
+
 def test_get_function_details():
     import_definition = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
     import_def_data = sdk_helpers.get_from_export(import_definition,
@@ -129,6 +142,24 @@ def test_get_datatable_details():
     assert the_datatable == mock_datatable
 
 
+def test_get_datatable_details_defaults():
+    mock_datables = [
+        {
+            "display_name": "mock_name",
+            "name": "mock_name",
+            "api_name": "mock_name",
+            "fields": {
+                "col_one": {}
+            }
+        }
+    ]
+
+    the_datatable = CmdDocgen._get_datatable_details(mock_datables)[0]
+    mock_datatable = {'name': 'mock_name', 'anchor': 'mock-name', 'api_name': None, 'columns': [{'name': None, 'api_name': None, 'type': None, 'tooltip': '-'}]}
+
+    assert the_datatable == mock_datatable
+
+
 def test_get_custom_fields_details():
     import_definition = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
     import_def_data = sdk_helpers.get_from_export(import_definition, fields=["mock_field_number", "mock_field_text_area"])
@@ -143,6 +174,21 @@ def test_get_custom_fields_details():
 
     assert field_one == mock_field_one
     assert field_two == mock_field_two
+
+
+def test_get_custom_fields_details_defaults():
+    mock_fields = [
+        {
+            "api_name": "mock_field",
+            "placeholder": "",
+            "tooltip": ""
+        }
+    ]
+
+    field_details = CmdDocgen._get_custom_fields_details(mock_fields)[0]
+    mock_field = {'placeholder': '-', 'tooltip': '-', 'prefix': None, 'api_name': None, 'label': None, 'type': None}
+
+    assert field_details == mock_field
 
 
 def test_get_custom_artifact_details():
