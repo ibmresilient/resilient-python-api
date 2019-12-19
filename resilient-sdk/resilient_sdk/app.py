@@ -77,8 +77,8 @@ def main():
     sub_parser = get_main_app_sub_parser(parser)
 
     # Add any subcommands to main app parser here
-    cmd_docgen = CmdDocgen(sub_parser)
     cmd_codegen = CmdCodegen(sub_parser)
+    cmd_docgen = CmdDocgen(sub_parser)
 
     try:
         # Parse the arguments
