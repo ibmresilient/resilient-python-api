@@ -11,9 +11,11 @@ import os
 import sys
 import io
 import copy
+import json
 import datetime
 import importlib
 from jinja2 import Environment, PackageLoader
+import xml.etree.ElementTree as ET
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
 from resilient_sdk.util.sdk_exception import SDKException
@@ -339,6 +341,22 @@ def get_from_export(export,
     # Get Workflows
     return_dict["workflows"] = get_res_obj("workflows", "programmatic_name", "Workflow", workflows, export)
 
+    # Get Functions in Workflow
+    for workflow in return_dict["workflows"]:
+        # This gets all the Functions in the Workflow's XML
+        wf_functions = get_workflow_functions(workflow)
+
+        # Add the Display Name and Name to each wf_function
+        for wf_fn in wf_functions:
+            for fn in return_dict["functions"]:
+                if wf_fn.get("uuid", "a") == fn.get("uuid", "b"):
+                    wf_fn["name"] = fn.get("name")
+                    wf_fn["display_name"] = fn.get("display_name")
+                    wf_fn["message_destination"] = fn.get("destination_handle", "")
+                    break
+
+        workflow["wf_functions"] = wf_functions
+
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", "programmatic_name", "Message Destination", message_destinations, export)
 
@@ -493,6 +511,9 @@ def load_py_module(path_python_file, module_name):
     # this method is called more then once
     reload(py_module)
 
+    # Remove the path from PYTHONPATH
+    sys.path.remove(path_parent_dir)
+
     return py_module
 
 
@@ -501,7 +522,8 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
     If path_default_file is provided, path_current_file is only
     renamed if the default and current file are different"""
     if not os.path.isfile(path_current_file):
-        raise IOError("File to create backup of does not exist: {0}".format(path_current_file))
+        LOG.warning("No backup file created due to file missing: %s", path_current_file)
+        return path_current_file
 
     if path_default_file is not None and not os.path.isfile(path_default_file):
         raise IOError("Default file to compare to does not exist at: {0}".format(path_default_file))
@@ -525,3 +547,95 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
         rename_file(path_current_file, new_file_name)
 
     return os.path.join(os.path.dirname(path_current_file), new_file_name)
+
+
+def generate_anchor(header):
+    """
+    Converts header to lowercase, removes all characters except a-z, 0-9, - and spaces,
+    then replaces all spaces with -
+
+    An anchor is used in Markdown Templates to link certain parts of the document.
+
+    :param header: Path to the file that contains the module
+    :type header: str
+    :return: header formatted as an anchor
+    :rtype: str
+    """
+    anchor = header.lower()
+
+    regex = re.compile(r"[^a-z0-9\-\s_]")
+
+    anchor = re.sub(regex, "", anchor)
+    anchor = re.sub("_", "-", anchor)
+    anchor = re.sub(r"[\s]", "-", anchor)
+
+    return anchor
+
+
+def get_workflow_functions(workflow, function_uuid=None):
+    """Parses the XML of the Workflow Object and returns
+    a List of all Functions found. If function_uuid is defined
+    returns all occurrences of that function.
+
+    A Workflow Function can have the attributes:
+    - uuid: String
+    - inputs: Dict
+    - post_processing_script: String
+    - pre_processing_script: String
+    - result_name: String"""
+
+    return_functions = []
+
+    # Workflow XML text
+    wf_xml = workflow.get("content", {}).get("xml", None)
+
+    if wf_xml is None:
+        raise SDKException("Could not load xml content from Workflow: {0}".format(workflow))
+
+    # Get the root element + endode in utf8 in order to handle Unicode
+    root = ET.fromstring(wf_xml.encode("utf8"))
+
+    # Get the prefix for each element's tag
+    tag_prefix = root.tag.replace("definitions", "")
+
+    xml_path = "./{0}process/{0}serviceTask/{0}extensionElements/*".format(tag_prefix)
+    the_function_elements = []
+
+    if function_uuid is not None:
+        xml_path = "{0}[@uuid='{1}']".format(xml_path, function_uuid)
+
+        # Get all elements at xml_path that have the uuid of the function
+        the_function_elements = root.findall(xml_path)
+
+    else:
+        the_extension_elements = root.findall(xml_path)
+        for extension_element in the_extension_elements:
+            if "function" in extension_element.tag:
+                the_function_elements.append(extension_element)
+
+    # Foreach element found, load it as a dictionary and append to return list
+    for fn_element in the_function_elements:
+        return_function = json.loads(fn_element.text)
+        return_function["uuid"] = fn_element.attrib.get("uuid", "")
+        return_function["result_name"] = return_function.get("result_name", None)
+        return_function["post_processing_script"] = return_function.get("post_processing_script", None)
+        return_function["pre_processing_script"] = return_function.get("pre_processing_script", None)
+
+        return_functions.append(return_function)
+
+    return return_functions
+
+
+def get_main_cmd():
+    """
+    Return the "main" command from the command line.
+
+    E.g. with command line: '$ resilient-sdk codegen -p abc'
+    this function will return 'codegen'
+    """
+    cmd_line = sys.argv
+
+    if len(cmd_line) > 1:
+        return cmd_line[1]
+
+    return None

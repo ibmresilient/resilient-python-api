@@ -7,6 +7,7 @@
 import sys
 import logging
 from resilient_sdk.cmds import CmdDocgen, CmdCodegen
+from resilient_sdk.util import helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 
@@ -84,14 +85,29 @@ def main():
         # Parse the arguments
         args = parser.parse_args()
 
-    except SDKException as err:
-        # Catch argparse "too few arguments" error
-        if "too few arguments" in err.message:
-            # Print help + exit
+        if args.cmd is None:
             parser.print_help()
             sys.exit()
 
+    except SDKException as err:
+        # Get main_cmd (codegen, docgen etc.)
+        main_cmd = helpers.get_main_cmd()
+
         LOG.error(err)
+        LOG.info("\n-----------------\n")
+
+        # Print specifc usage for that cmd for these errors
+        if "too few arguments" in err.message or "no subcommad provided" in err.message:
+            if main_cmd == cmd_codegen.CMD_NAME:
+                cmd_codegen.parser.print_usage()
+
+            elif main_cmd == cmd_docgen.CMD_NAME:
+                cmd_docgen.parser.print_usage()
+
+            else:
+                parser.print_help()
+
+        # Exit
         sys.exit()
 
     # If -v was specified, set the log level to DEBUG

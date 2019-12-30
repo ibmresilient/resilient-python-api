@@ -7,6 +7,7 @@ import stat
 import re
 import pytest
 import jinja2
+import sys
 from resilient import SimpleClient
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import helpers
@@ -115,8 +116,7 @@ def test_get_object_api_names(fx_mock_res_client):
 
     func_api_names = helpers.get_object_api_names("x_api_name", export_data.get("functions"))
 
-    for name in func_api_names:
-        assert name in ["mock_function_one", "mock_function_two"]
+    assert all(elem in ["mock_function_one", "mock_function_two"] for elem in func_api_names) is True
 
 
 def test_get_res_obj(fx_mock_res_client):
@@ -125,8 +125,7 @@ def test_get_res_obj(fx_mock_res_client):
     artifacts_wanted = ["mock_artifact_2", "mock_artifact_type_one"]
     artifacts = helpers.get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifacts_wanted, org_export)
 
-    for a in artifacts:
-        assert a.get("x_api_name") in artifacts_wanted
+    assert all(elem.get("x_api_name") in artifacts_wanted for elem in artifacts) is True
 
 
 def test_get_res_obj_exception(fx_mock_res_client):
@@ -146,8 +145,8 @@ def test_get_message_destination_from_export(fx_mock_res_client):
                                           message_destinations=["fn_main_mock_integration"])
 
     assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
-    for f in export_data.get("functions"):
-        assert f.get("name") in ("mock_function_one", "mock_function_two")
+
+    assert all(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is True
 
 
 def test_minify_export(fx_mock_res_client):
@@ -206,3 +205,26 @@ def test_rename_to_bak_file(fx_mk_temp_dir):
     matched_file_name = list(filter(regex.match, files_in_dir))[0]
 
     assert regex.match(matched_file_name)
+
+
+def test_rename_to_bak_file_if_file_not_exist(fx_mk_temp_dir):
+    temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
+    path_to_backup = helpers.rename_to_bak_file(temp_file)
+    assert temp_file == path_to_backup
+
+
+def test_generate_anchor():
+    anchor = helpers.generate_anchor("D מ ן נ ס עata Ta$%^ble Utils: Delete_Row")
+    assert anchor == "d-----ata-table-utils-delete-row"
+
+
+def test_get_workflow_functions():
+    # TODO: taken from docgen
+    pass
+
+
+def test_get_main_cmd(monkeypatch):
+    mock_args = ["resilient-sdk", "codegen", "-p", "fn_mock_package"]
+    monkeypatch.setattr(sys, "argv", mock_args)
+    main_cmd = helpers.get_main_cmd()
+    assert main_cmd == "codegen"

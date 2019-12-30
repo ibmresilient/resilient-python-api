@@ -10,8 +10,8 @@ These objects are used during codegen when default 'placeholders' are needed
 import uuid
 import time
 
-DEFAULT_UUID_1 = uuid.UUID('bfeec2d4-3770-11e8-ad39-4a0004044aa0')
-DEFAULT_UUID_2 = uuid.UUID('bfeec2d4-3770-11e8-ad39-4a0004044aa1')
+DEFAULT_INCIDENT_TYPE_UUID = uuid.UUID('bfeec2d4-3770-11e8-ad39-4a0004044aa0')
+DEFAULT_INCIDENT_FIELD_UUID = uuid.UUID('bfeec2d4-3770-11e8-ad39-4a0004044aa1')
 
 DEFAULT_TIME = int(time.time() * 1000)
 
@@ -19,7 +19,7 @@ DEFAULT_TIME = int(time.time() * 1000)
 DEFAULT_INCIDENT_TYPE = {
     "update_date": DEFAULT_TIME,
     "create_date": DEFAULT_TIME,
-    "uuid": str(DEFAULT_UUID_1),
+    "uuid": str(DEFAULT_INCIDENT_TYPE_UUID),
     "description": "Customization Packages (internal)",
     "export_key": "Customization Packages (internal)",
     "name": "Customization Packages (internal)",
@@ -32,7 +32,7 @@ DEFAULT_INCIDENT_TYPE = {
 
 # Used during codegen
 DEFAULT_INCIDENT_FIELD = {
-    "export_key": "incident/internal_customizations_field",
+    "export_key": u"incident/internal_customizations_field",
     "id": 0,
     "input_type": "text",
     "internal": True,
@@ -40,5 +40,11 @@ DEFAULT_INCIDENT_FIELD = {
     "read_only": True,
     "text": "Customizations Field (internal)",
     "type_id": 0,
-    "uuid": str(DEFAULT_UUID_2)
+    "uuid": str(DEFAULT_INCIDENT_FIELD_UUID)
 }
+
+# Default field names we should ignore (mainly in docgen)
+IGNORED_INCIDENT_FIELDS = [
+    u"incident/internal_customizations_field",
+    u"incident/inc_training"
+]
