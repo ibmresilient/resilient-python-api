@@ -40,12 +40,18 @@ class CmdCodegen(BaseCmd):
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
 
+        self.parser._optionals.title = "options"
+
         # Add any positional or optional arguments here
         self.parser.add_argument("-p", "--package",
                                  type=ensure_unicode,
-                                 help="Name of the package to generate or path to existing package")
+                                 help="(required) Name of new or path to existing package")
 
-        self.parser.add_argument("--reload",
+        self.parser.add_argument("-o", "--output",
+                                 type=ensure_unicode,
+                                 help="Path to output directory. Uses current dir by default")
+
+        self.parser.add_argument("-re", "--reload",
                                  action="store_true",
                                  help="Reload customizations and create new customize.py")
 
@@ -74,12 +80,19 @@ class CmdCodegen(BaseCmd):
     def render_jinja_mapping(jinja_mapping_dict, jinja_env, target_dir):
         """
         Write all the Jinja Templates specified in jinja_mapping_dict that
-        are found in the jinja_env to the target_dir
+        are found in the jinja_env to the target_dir. Returns a Tuple of
+        newly generated files and files that were skipped
 
         :param jinja_mapping_dict: e.g. {"file_to_write.py": ("name_of_template.py.jinja2", jinja_data)}
         :param jinja_env: Jinja Environment
         :param target_dir: Path to write Templates to
+        :return: newly_generated_files, files_skipped: a Tuple of newly generated files and files skipped
+        :rtype: tuple
         """
+
+        newly_generated_files = []
+        files_skipped = []
+
         for (file_name, file_info) in jinja_mapping_dict.items():
 
             if isinstance(file_info, dict):
@@ -89,10 +102,13 @@ class CmdCodegen(BaseCmd):
 
                 try:
                     os.makedirs(path_sub_dir)
-                except OSError as err_msg:
-                    LOG.warn(err_msg)
+                # Skip this error, which is generally a 'File Exists' error
+                except OSError:
+                    pass
 
-                CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
+                new_files, skipped_files = CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
+                newly_generated_files += new_files
+                files_skipped += skipped_files
 
             else:
                 # Get path to Jinja2 template
@@ -104,13 +120,17 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
 
                 if os.path.exists(target_file):
-                    LOG.warning(u"File already exists. Not writing: %s", target_file)
+                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
+                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+
                 write_file(target_file, jinja_rendered_text)
+
+        return newly_generated_files, files_skipped
 
     @staticmethod
     def merge_codegen_params(old_params, args, mapping_tuples):
@@ -148,7 +168,7 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _gen_package(args):
-        LOG.info("codegen _gen_package called")
+        LOG.info("Generating codegen package...")
 
         if not is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
@@ -258,7 +278,14 @@ class CmdCodegen(BaseCmd):
             # Add workflow to data directory
             package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
 
-        CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+        newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+
+        # Log new and skipped files
+        if newly_generated_files:
+            LOG.debug("Newly Generated Files:\n\t> %s", "\n\t> ".join(newly_generated_files))
+
+        if skipped_files:
+            LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
 
         # if /doc exists and /doc/screenshots does not, make /doc/screenshots
         path_doc_dir = os.path.join(output_base, "doc")
@@ -268,11 +295,11 @@ class CmdCodegen(BaseCmd):
             LOG.info("Generating /doc/screenshots directory")
             os.makedirs(path_screenshots_dir)
 
-        LOG.info("Codegen complete for %s", package_name)
+        LOG.info("'codegen' complete for '%s'", package_name)
+
 
     @staticmethod
     def _reload_package(args):
-        LOG.debug("called: CmdCodegen._reload_package()")
 
         old_params, path_customize_py_bak = [], ""
 
@@ -286,6 +313,8 @@ class CmdCodegen(BaseCmd):
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
         args.package = os.path.basename(path_package)
         args.output = os.path.dirname(path_package)
+
+        LOG.info("'codegen --reload' started for '%s'", args.package)
 
         # Load the customize.py module
         customize_py_module = load_customize_py_module(path_customize_py)
@@ -323,6 +352,8 @@ class CmdCodegen(BaseCmd):
 
             # Regenerate the package
             CmdCodegen._gen_package(args)
+
+            LOG.info("'codegen --reload' complete for '%s'", args.package)
 
         except Exception as err:
             LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)

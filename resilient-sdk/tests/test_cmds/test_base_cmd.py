@@ -62,4 +62,3 @@ def test_get_common_parser(fx_cmd_line_args_codegen_package):
     assert args.task == ["mock_custom_task_one", "mock_cusom_task__________two"]
     assert args.script == ["Mock Script One"]
     assert args.exportfile is None
-    assert args.output is None

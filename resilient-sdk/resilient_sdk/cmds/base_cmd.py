@@ -4,6 +4,7 @@
 
 import argparse
 from resilient import ensure_unicode
+from resilient_sdk.util.sdk_argparse import SDKArgHelpFormatter
 
 
 class BaseCmd(object):
@@ -32,9 +33,14 @@ class BaseCmd(object):
         assert self.CMD_HELP
 
         if self.CMD_USE_COMMON_PARSER_ARGS:
-            self.parser = sub_parser.add_parser(self.CMD_NAME, help=self.CMD_HELP, parents=self._get_common_parser())
+            self.parser = sub_parser.add_parser(self.CMD_NAME,
+                                                help=self.CMD_HELP,
+                                                formatter_class=SDKArgHelpFormatter,
+                                                parents=self._get_common_parser())
         else:
-            self.parser = sub_parser.add_parser(self.CMD_NAME, help=self.CMD_HELP)
+            self.parser = sub_parser.add_parser(self.CMD_NAME,
+                                                help=self.CMD_HELP,
+                                                formatter_class=SDKArgHelpFormatter)
 
         self.setup()
 
@@ -56,57 +62,53 @@ class BaseCmd(object):
         """
         common_parser = argparse.ArgumentParser(add_help=False)
 
+        common_parser.add_argument("-a", "--artifacttype",
+                                   type=ensure_unicode,
+                                   help="API names of artifact types to include",
+                                   nargs="*")
+
+        common_parser.add_argument("-d", "--datatable",
+                                   type=ensure_unicode,
+                                   help="API names of datatables to include",
+                                   nargs="*")
+
+        common_parser.add_argument("-e", "--exportfile",
+                                   type=ensure_unicode,
+                                   help="Path to a local (.res) export file")
+
+        common_parser.add_argument("-fd", "--field",
+                                   type=ensure_unicode,
+                                   help="API names of custom fields to include",
+                                   nargs="*")
+
         common_parser.add_argument("-f", "--function",
                                    type=ensure_unicode,
-                                   help="Generate code for the specified function(s)",
+                                   help="API names of functions to include",
                                    nargs="*")
 
         common_parser.add_argument("-m", "--messagedestination",
                                    type=ensure_unicode,
-                                   help="Generate code for all functions that use the specified message destination(s)",
+                                   help="API names of message destinations to include",
                                    nargs="*")
 
-        common_parser.add_argument("--workflow",
+        common_parser.add_argument("-r", "--rule",
                                    type=ensure_unicode,
-                                   help="Include customization data for workflow(s)",
+                                   help="Display names of rules to include (surrounded by '')",
                                    nargs="*")
 
-        common_parser.add_argument("--rule",
+        common_parser.add_argument("-s", "--script",
                                    type=ensure_unicode,
-                                   help="Include customization data for rule(s)",
+                                   help="Display names of scripts to include (surrounded by '')",
                                    nargs="*")
 
-        common_parser.add_argument("--field",
+        common_parser.add_argument("-t", "--task",
                                    type=ensure_unicode,
-                                   help="Include customization data for incident field(s)",
+                                   help="API names of custom tasks to include",
                                    nargs="*")
 
-        common_parser.add_argument("--datatable",
+        common_parser.add_argument("-w", "--workflow",
                                    type=ensure_unicode,
-                                   help="Include customization data for datatable(s)",
+                                   help="API names of workflows to include",
                                    nargs="*")
-
-        common_parser.add_argument("--task",
-                                   type=ensure_unicode,
-                                   help="Include customization data for automatic task(s)",
-                                   nargs="*")
-
-        common_parser.add_argument("--script",
-                                   type=ensure_unicode,
-                                   help="Include customization data for script(s)",
-                                   nargs="*")
-
-        common_parser.add_argument("--artifacttype",
-                                   type=ensure_unicode,
-                                   help="Include customization data for artifact types(s)",
-                                   nargs="*")
-
-        common_parser.add_argument("--exportfile",
-                                   type=ensure_unicode,
-                                   help="Generate based on organization export file (.res)")
-
-        common_parser.add_argument("-o", "--output",
-                                   type=ensure_unicode,
-                                   help="Path to output file")
 
         return [common_parser]
