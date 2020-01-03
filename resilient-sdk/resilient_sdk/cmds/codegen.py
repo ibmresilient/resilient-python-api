@@ -33,7 +33,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
-    CMD_USE_COMMON_PARSER_ARGS = True
+    CMD_ADD_PARSERS = ["res_obj_parser", "io_parser"]
 
     def setup(self):
         # Define codegen usage and description
@@ -46,10 +46,6 @@ class CmdCodegen(BaseCmd):
         self.parser.add_argument("-p", "--package",
                                  type=ensure_unicode,
                                  help="(required) Name of new or path to existing package")
-
-        self.parser.add_argument("-o", "--output",
-                                 type=ensure_unicode,
-                                 help="Path to output directory. Uses current dir by default")
 
         self.parser.add_argument("-re", "--reload",
                                  action="store_true",

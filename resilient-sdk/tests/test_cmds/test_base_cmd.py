@@ -4,6 +4,7 @@
 
 
 import pytest
+from argparse import ArgumentParser
 from resilient_sdk.cmds.base_cmd import BaseCmd
 
 
@@ -34,7 +35,7 @@ def test_no_setup_method(fx_get_sub_parser):
         MockClass(fx_get_sub_parser)
 
 
-def test_get_common_parser(fx_cmd_line_args_codegen_package):
+def test_get_res_obj_parser(fx_cmd_line_args_codegen_package):
     class MockClass(BaseCmd):
         CMD_NAME = "mock"
         CMD_HELP = "mock"
@@ -45,12 +46,11 @@ def test_get_common_parser(fx_cmd_line_args_codegen_package):
         def execute_command(self):
             pass
 
-    common_parser = MockClass._get_common_parser()
+    res_obj_parser = MockClass._get_res_obj_parser()
 
-    assert isinstance(common_parser, list)
-    assert len(common_parser) == 1
+    assert isinstance(res_obj_parser, ArgumentParser)
 
-    args = common_parser[0].parse_known_args()[0]
+    args = res_obj_parser.parse_known_args()[0]
 
     assert args.function == ["mock_function_one"]
     assert args.messagedestination == ["fn_main_mock_integration"]
@@ -61,4 +61,18 @@ def test_get_common_parser(fx_cmd_line_args_codegen_package):
     assert args.datatable == ["mock_data_table"]
     assert args.task == ["mock_custom_task_one", "mock_cusom_task__________two"]
     assert args.script == ["Mock Script One"]
-    assert args.exportfile is None
+
+
+def test_parser_parents():
+    # TODO
+    pass
+
+
+def test_get_io_parser():
+    # TODO
+    pass
+
+
+def test_get_zip_parser():
+    # TODO
+    pass
