@@ -228,3 +228,8 @@ def test_get_main_cmd(monkeypatch):
     monkeypatch.setattr(sys, "argv", mock_args)
     main_cmd = helpers.get_main_cmd()
     assert main_cmd == "codegen"
+
+
+def test_get_timestamp():
+    now = helpers.get_timestamp()
+    assert re.match(r"\d\d\d\d-\d\d-\d\d-\d\d:\d\d:\d\d", now)

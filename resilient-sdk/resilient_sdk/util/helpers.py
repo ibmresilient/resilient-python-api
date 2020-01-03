@@ -77,6 +77,8 @@ def setup_jinja_env(relative_path_to_templates):
 def write_file(path, contents):
     """Writes the String contents to a file at path"""
 
+    LOG.debug("Writing %s", path)
+
     if sys.version_info[0] < 3 and isinstance(contents, str):
         contents = unicode(contents, "utf-8")
 
@@ -528,8 +530,7 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
     if path_default_file is not None and not os.path.isfile(path_default_file):
         raise IOError("Default file to compare to does not exist at: {0}".format(path_default_file))
 
-    now = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-    new_file_name = "{0}-{1}.bak".format(os.path.basename(path_current_file), now)
+    new_file_name = "{0}-{1}.bak".format(os.path.basename(path_current_file), get_timestamp())
 
     # If default file provided, compare to current file
     if path_default_file is not None:
@@ -639,3 +640,11 @@ def get_main_cmd():
         return cmd_line[1]
 
     return None
+
+
+def get_timestamp():
+    """
+    Returns a string of the current time
+    in the format YYYY-MM-DD-hh:mm:ss
+    """
+    return datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
