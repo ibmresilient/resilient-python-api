@@ -35,6 +35,26 @@ except:
 LOG = logging.getLogger(__name__)
 
 
+def get_resilient_circuits_version():
+    """
+    If resilient-circuits is installed, returns its version
+    Else will return None
+    """
+    try:
+        import resilient_circuits
+        res_circuits_version = resilient_circuits.__version__.split(".")
+        return {
+            "major": int(res_circuits_version[0]),
+            "minor": int(res_circuits_version[1]),
+            "patch": int(res_circuits_version[2])
+        }
+
+    except ImportError:
+        pass
+
+    return None
+
+
 def get_config_file(filename="app.config"):
     """
     Helper: get the location of the configuration file
