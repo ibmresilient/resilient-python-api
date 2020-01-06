@@ -9,6 +9,7 @@ import os
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.package_file_helpers import load_customize_py_module
 from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
                                         is_valid_package_name, write_file,
@@ -193,16 +194,16 @@ class CmdCodegen(BaseCmd):
 
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = minify_export(org_export,
-                                                  message_destinations=get_object_api_names("x_api_name", jinja_data.get("message_destinations")),
-                                                  functions=get_object_api_names("x_api_name", jinja_data.get("functions")),
-                                                  workflows=get_object_api_names("x_api_name", jinja_data.get("workflows")),
-                                                  rules=get_object_api_names("x_api_name", jinja_data.get("rules")),
+                                                  message_destinations=get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
+                                                  functions=get_object_api_names(ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
+                                                  workflows=get_object_api_names(ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
+                                                  rules=get_object_api_names(ResilientObjMap.RULES, jinja_data.get("rules")),
                                                   fields=jinja_data.get("all_fields"),
-                                                  artifact_types=get_object_api_names("x_api_name", jinja_data.get("artifact_types")),
-                                                  datatables=get_object_api_names("x_api_name", jinja_data.get("datatables")),
-                                                  tasks=get_object_api_names("x_api_name", jinja_data.get("tasks")),
-                                                  phases=get_object_api_names("x_api_name", jinja_data.get("phases")),
-                                                  scripts=get_object_api_names("x_api_name", jinja_data.get("scripts")))
+                                                  artifact_types=get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
+                                                  datatables=get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
+                                                  tasks=get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
+                                                  phases=get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
+                                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
@@ -267,7 +268,7 @@ class CmdCodegen(BaseCmd):
         for w in jinja_data.get("workflows"):
 
             # Generate wf_xx.md file name
-            file_name = u"wf_{0}.md".format(w.get("programmatic_name"))
+            file_name = u"wf_{0}.md".format(w.get(ResilientObjMap.WORKFLOWS))
 
             # Add workflow to data directory
             package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
@@ -290,7 +291,6 @@ class CmdCodegen(BaseCmd):
             os.makedirs(path_screenshots_dir)
 
         LOG.info("'codegen' complete for '%s'", package_name)
-
 
     @staticmethod
     def _reload_package(args):
@@ -326,7 +326,7 @@ class CmdCodegen(BaseCmd):
         path_customize_py_bak = rename_to_bak_file(path_customize_py)
 
         try:
-            # Map command line arg name to dict key return by codegen_reload_data() in customize.py
+            # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
             mapping_tuples = [
                 ("messagedestination", "message_destinations"),
                 ("function", "functions"),
