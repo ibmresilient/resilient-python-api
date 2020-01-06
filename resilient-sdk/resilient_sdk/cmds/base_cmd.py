@@ -26,7 +26,7 @@ class BaseCmd(object):
     CMD_USAGE = None
     CMD_DESCRIPTION = None
 
-    # Set this in sub-class. Its a list of stings of parser names that will be included:
+    # Set this in sub-class. Its a list of strings of parser names that will be included:
     # - "res_obj_parser"
     # - "io_parser"
     # - "zip_parser"
