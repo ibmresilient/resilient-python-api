@@ -2,7 +2,21 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
-from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
+from resilient_sdk.util.resilient_objects import ResilientObjMap, ResilientTypeIds, ResilientFieldTypes
+
+
+def test_resilient_obj_map():
+
+    assert ResilientObjMap.MESSAGE_DESTINATIONS == "programmatic_name"
+    assert ResilientObjMap.FUNCTIONS == "export_key"
+    assert ResilientObjMap.WORKFLOWS == "programmatic_name"
+    assert ResilientObjMap.RULES == "name"
+    assert ResilientObjMap.FIELDS == "name"
+    assert ResilientObjMap.INCIDENT_ARTIFACT_TYPES == "programmatic_name"
+    assert ResilientObjMap.DATATABLES == "type_name"
+    assert ResilientObjMap.TASKS == "programmatic_name"
+    assert ResilientObjMap.PHASES == "export_key"
+    assert ResilientObjMap.SCRIPTS == "export_key"
 
 
 def test_resilient_type_ids():
