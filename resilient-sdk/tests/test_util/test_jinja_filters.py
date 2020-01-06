@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 from jinja2 import Environment
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env, JINJA_FILTERS, _filter_base64, _filter_camel
