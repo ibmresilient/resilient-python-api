@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """
 A common place to store any default Resilient Objects.
@@ -48,3 +48,47 @@ IGNORED_INCIDENT_FIELDS = [
     u"incident/internal_customizations_field",
     u"incident/inc_training"
 ]
+
+
+class ResilientObjMap(object):
+    """
+    A single location to map Resilient Objects
+    access names in an export
+
+    E.g. some are 'programmatic_name' others are 'name'
+    """
+
+    MESSAGE_DESTINATIONS = "programmatic_name"
+    FUNCTIONS = "export_key"
+    WORKFLOWS = "programmatic_name"
+    RULES = "name"  # Also known as ACTIONS
+    FIELDS = "name"
+    INCIDENT_ARTIFACT_TYPES = "programmatic_name"
+    DATATABLES = "type_name"
+    TASKS = "programmatic_name"
+    PHASES = "export_key"
+    SCRIPTS = "export_key"
+
+
+class ResilientTypeIds(object):
+    """A single location for Resilient Object Type Ids"""
+
+    INCIDENT = 0
+    TASK = 1
+    NOTE = 2
+    MILESTONE = 3
+    ARTIFACT = 4
+    ATTACHMENT = 5
+    ACTION_INVOCATION = 6
+    ORG = 7
+    DATATABLE = 8
+    LAYOUT = 9
+    MESSAGE_DESTINATION = 10
+    FUNCTION = 11
+
+
+class ResilientFieldTypes(object):
+    """A single location for Resilient Field Types"""
+
+    ACTIVITY_FIELD = "actioninvocation"
+    FUNCTION_INPUT = "__function"

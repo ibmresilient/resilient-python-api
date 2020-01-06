@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
@@ -14,7 +14,7 @@ import io
 import json
 import base64
 from resilient import ImportDefinition
-from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
+from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.helpers import (load_py_module,
                                         read_file,

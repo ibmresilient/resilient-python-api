@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for the resilient-sdk"""
 
@@ -17,9 +17,8 @@ import importlib
 from jinja2 import Environment, PackageLoader
 import xml.etree.ElementTree as ET
 from resilient import ArgumentParser, get_config_file, get_client
-from resilient_sdk.util.resilient_types import ResilientTypeIds, ResilientFieldTypes
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.default_resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD
+from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 
 if sys.version_info.major < 3:
@@ -176,6 +175,26 @@ def get_latest_org_export(res_client):
     return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
 
 
+def read_local_exportfile(path_local_exportfile):
+    """
+    Read export from given path
+    Return res export as dict
+    """
+    # Get absolute path
+    path_local_exportfile = os.path.abspath(path_local_exportfile)
+
+    # Validate we can read it
+    validate_file_paths(os.R_OK, path_local_exportfile)
+
+    # Read the file
+    file_lines = read_file(path_local_exportfile)
+
+    if not file_lines:
+        raise SDKException("Failed to read {0}".format(path_local_exportfile))
+
+    return json.loads(file_lines[0])
+
+
 def get_object_api_names(api_name, list_objs):
     """
     Return a list of object api_names from list_objs
@@ -288,7 +307,7 @@ def get_from_export(export,
     }
 
     # Get Rules
-    return_dict["rules"] = get_res_obj("actions", "name", "Rule", rules, export)
+    return_dict["rules"] = get_res_obj("actions", ResilientObjMap.RULES, "Rule", rules, export)
 
     for r in return_dict.get("rules"):
 
@@ -323,9 +342,9 @@ def get_from_export(export,
     # Get Function names that use 'wanted' Message Destinations
     for f in export.get("functions", []):
         if f.get("destination_handle") in message_destinations:
-            functions.append(f.get("export_key"))
+            functions.append(f.get(ResilientObjMap.FUNCTIONS))
 
-    return_dict["functions"] = get_res_obj("functions", "export_key", "Function", functions, export)
+    return_dict["functions"] = get_res_obj("functions", ResilientObjMap.FUNCTIONS, "Function", functions, export)
 
     for f in return_dict.get("functions"):
         # Get Function Inputs
@@ -339,7 +358,7 @@ def get_from_export(export,
         message_destinations.append(f.get("destination_handle", ""))
 
     # Get Workflows
-    return_dict["workflows"] = get_res_obj("workflows", "programmatic_name", "Workflow", workflows, export)
+    return_dict["workflows"] = get_res_obj("workflows", ResilientObjMap.WORKFLOWS, "Workflow", workflows, export)
 
     # Get Functions in Workflow
     for workflow in return_dict["workflows"]:
@@ -358,30 +377,30 @@ def get_from_export(export,
         workflow["wf_functions"] = wf_functions
 
     # Get Message Destinations
-    return_dict["message_destinations"] = get_res_obj("message_destinations", "programmatic_name", "Message Destination", message_destinations, export)
+    return_dict["message_destinations"] = get_res_obj("message_destinations", ResilientObjMap.MESSAGE_DESTINATIONS, "Message Destination", message_destinations, export)
 
     # Get Custom Fields
-    return_dict["fields"] = get_res_obj("fields", "name", "Field", fields, export,
+    return_dict["fields"] = get_res_obj("fields", ResilientObjMap.FIELDS, "Field", fields, export,
                                         condition=lambda o: True if o.get("prefix") == "properties" and o.get("type_id") == ResilientTypeIds.INCIDENT else False)
 
     return_dict["all_fields"].extend([u"incident/{0}".format(fld.get("name")) for fld in return_dict.get("fields")])
 
     # Get Custom Artifact Types
-    return_dict["artifact_types"] = get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifact_types, export)
+    return_dict["artifact_types"] = get_res_obj("incident_artifact_types", ResilientObjMap.INCIDENT_ARTIFACT_TYPES, "Custom Artifact", artifact_types, export)
 
     # Get Data Tables
-    return_dict["datatables"] = get_res_obj("types", "type_name", "Datatable", datatables, export,
+    return_dict["datatables"] = get_res_obj("types", ResilientObjMap.DATATABLES, "Datatable", datatables, export,
                                             condition=lambda o: True if o.get("type_id") == ResilientTypeIds.DATATABLE else False)
 
     # Get Custom Tasks
-    return_dict["tasks"] = get_res_obj("automatic_tasks", "programmatic_name", "Custom Task", tasks, export)
+    return_dict["tasks"] = get_res_obj("automatic_tasks", ResilientObjMap.TASKS, "Custom Task", tasks, export)
 
     # Get related Phases for Tasks
     phase_ids = [t.get("phase_id") for t in return_dict.get("tasks")]
-    return_dict["phases"] = get_res_obj("phases", "export_key", "Phase", phase_ids, export)
+    return_dict["phases"] = get_res_obj("phases", ResilientObjMap.PHASES, "Phase", phase_ids, export)
 
     # Get Scripts
-    return_dict["scripts"] = get_res_obj("scripts", "export_key", "Script", scripts, export)
+    return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
     return return_dict
 
@@ -528,8 +547,7 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
     if path_default_file is not None and not os.path.isfile(path_default_file):
         raise IOError("Default file to compare to does not exist at: {0}".format(path_default_file))
 
-    now = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-    new_file_name = "{0}-{1}.bak".format(os.path.basename(path_current_file), now)
+    new_file_name = "{0}-{1}.bak".format(os.path.basename(path_current_file), get_timestamp())
 
     # If default file provided, compare to current file
     if path_default_file is not None:
@@ -639,3 +657,11 @@ def get_main_cmd():
         return cmd_line[1]
 
     return None
+
+
+def get_timestamp():
+    """
+    Returns a string of the current time
+    in the format YYYY-MM-DD-hh:mm:ss
+    """
+    return datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")

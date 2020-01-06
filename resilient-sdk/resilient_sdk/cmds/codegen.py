@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """ Implementation of `resilient-sdk codegen` """
 
@@ -9,13 +9,14 @@ import os
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.package_file_helpers import load_customize_py_module
 from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
                                         is_valid_package_name, write_file,
                                         validate_dir_paths, get_latest_org_export,
                                         get_from_export, minify_export,
                                         get_object_api_names, validate_file_paths,
-                                        rename_file, rename_to_bak_file)
+                                        rename_file, rename_to_bak_file, read_local_exportfile)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -33,23 +34,17 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
-    CMD_USE_COMMON_PARSER_ARGS = True
+    CMD_ADD_PARSERS = ["res_obj_parser", "io_parser"]
 
     def setup(self):
         # Define codegen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
 
-        self.parser._optionals.title = "options"
-
         # Add any positional or optional arguments here
         self.parser.add_argument("-p", "--package",
                                  type=ensure_unicode,
                                  help="(required) Name of new or path to existing package")
-
-        self.parser.add_argument("-o", "--output",
-                                 type=ensure_unicode,
-                                 help="Path to output directory. Uses current dir by default")
 
         self.parser.add_argument("-re", "--reload",
                                  action="store_true",
@@ -179,11 +174,17 @@ class CmdCodegen(BaseCmd):
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
 
-        # Instansiate connection to the Resilient Appliance
-        res_client = get_resilient_client()
+        # If --exportfile is specified, read org_export from that file
+        if args.exportfile:
+            LOG.info("Using local export file: %s", args.exportfile)
+            org_export = read_local_exportfile(args.exportfile)
 
-        # TODO: handle being passed path to an actual export.res file
-        org_export = get_latest_org_export(res_client)
+        else:
+            # Instantiate connection to the Resilient Appliance
+            res_client = get_resilient_client()
+
+            # Generate + get latest export from Resilient Server
+            org_export = get_latest_org_export(res_client)
 
         # Get data required for Jinja2 templates from export
         jinja_data = get_from_export(org_export,
@@ -199,16 +200,16 @@ class CmdCodegen(BaseCmd):
 
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = minify_export(org_export,
-                                                  message_destinations=get_object_api_names("x_api_name", jinja_data.get("message_destinations")),
-                                                  functions=get_object_api_names("x_api_name", jinja_data.get("functions")),
-                                                  workflows=get_object_api_names("x_api_name", jinja_data.get("workflows")),
-                                                  rules=get_object_api_names("x_api_name", jinja_data.get("rules")),
+                                                  message_destinations=get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
+                                                  functions=get_object_api_names(ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
+                                                  workflows=get_object_api_names(ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
+                                                  rules=get_object_api_names(ResilientObjMap.RULES, jinja_data.get("rules")),
                                                   fields=jinja_data.get("all_fields"),
-                                                  artifact_types=get_object_api_names("x_api_name", jinja_data.get("artifact_types")),
-                                                  datatables=get_object_api_names("x_api_name", jinja_data.get("datatables")),
-                                                  tasks=get_object_api_names("x_api_name", jinja_data.get("tasks")),
-                                                  phases=get_object_api_names("x_api_name", jinja_data.get("phases")),
-                                                  scripts=get_object_api_names("x_api_name", jinja_data.get("scripts")))
+                                                  artifact_types=get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
+                                                  datatables=get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
+                                                  tasks=get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
+                                                  phases=get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
+                                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
@@ -273,7 +274,7 @@ class CmdCodegen(BaseCmd):
         for w in jinja_data.get("workflows"):
 
             # Generate wf_xx.md file name
-            file_name = u"wf_{0}.md".format(w.get("programmatic_name"))
+            file_name = u"wf_{0}.md".format(w.get(ResilientObjMap.WORKFLOWS))
 
             # Add workflow to data directory
             package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
@@ -296,7 +297,6 @@ class CmdCodegen(BaseCmd):
             os.makedirs(path_screenshots_dir)
 
         LOG.info("'codegen' complete for '%s'", package_name)
-
 
     @staticmethod
     def _reload_package(args):
@@ -332,7 +332,7 @@ class CmdCodegen(BaseCmd):
         path_customize_py_bak = rename_to_bak_file(path_customize_py)
 
         try:
-            # Map command line arg name to dict key return by codegen_reload_data() in customize.py
+            # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
             mapping_tuples = [
                 ("messagedestination", "message_destinations"),
                 ("function", "functions"),

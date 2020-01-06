@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-""" TODO: implement docgen """
+""" Implemention of 'resilient-sdk docgen' """
 
 import logging
 import os
@@ -12,7 +12,7 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import helpers as sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util.default_resilient_objects import IGNORED_INCIDENT_FIELDS
+from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, ResilientObjMap
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -115,13 +115,13 @@ class CmdDocgen(BaseCmd):
             # Loop the Function's associated Workflows
             for fn_wf in the_function.get("workflows"):
 
-                fn_wf_name = fn_wf.get("programmatic_name")
+                fn_wf_name = fn_wf.get(ResilientObjMap.WORKFLOWS)
 
                 # Loop all Workflow Objects
                 for wf in workflows:
 
                     # Find a match
-                    if fn_wf_name == wf.get("programmatic_name"):
+                    if fn_wf_name == wf.get(ResilientObjMap.WORKFLOWS):
 
                         # Get List of Function details from Workflow XML
                         workflow_functions = sdk_helpers.get_workflow_functions(wf, the_function.get("uuid"))
@@ -301,23 +301,22 @@ class CmdDocgen(BaseCmd):
         # Get field names from ImportDefinition
         field_names = []
         for f in customize_py_import_def.get("fields", []):
-            f_name = f.get("export_key", "")
+            f_name = f.get(ResilientObjMap.FIELDS, "")
 
             if "incident/" in f_name and f_name not in IGNORED_INCIDENT_FIELDS:
                 field_names.append(f_name.split("incident/")[1])
 
         # Get data from ImportDefinition
-        # TODO: use default mapping for objects (as we relate), their names in import and their api_names
         import_def_data = sdk_helpers.get_from_export(customize_py_import_def,
-                                                      message_destinations=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_def.get("message_destinations")),
-                                                      functions=sdk_helpers.get_object_api_names("name", customize_py_import_def.get("functions")),
-                                                      workflows=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_def.get("workflows")),
-                                                      rules=sdk_helpers.get_object_api_names("name", customize_py_import_def.get("actions")),
+                                                      message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, customize_py_import_def.get("message_destinations")),
+                                                      functions=sdk_helpers.get_object_api_names(ResilientObjMap.FUNCTIONS, customize_py_import_def.get("functions")),
+                                                      workflows=sdk_helpers.get_object_api_names(ResilientObjMap.WORKFLOWS, customize_py_import_def.get("workflows")),
+                                                      rules=sdk_helpers.get_object_api_names(ResilientObjMap.RULES, customize_py_import_def.get("actions")),
                                                       fields=field_names,
-                                                      artifact_types=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_def.get("incident_artifact_types")),
-                                                      datatables=sdk_helpers.get_object_api_names("type_name", customize_py_import_def.get("types")),
-                                                      tasks=sdk_helpers.get_object_api_names("programmatic_name", customize_py_import_def.get("automatic_tasks")),
-                                                      scripts=sdk_helpers.get_object_api_names("name", customize_py_import_def.get("scripts")))
+                                                      artifact_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, customize_py_import_def.get("incident_artifact_types")),
+                                                      datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, customize_py_import_def.get("types")),
+                                                      tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, customize_py_import_def.get("automatic_tasks")),
+                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, customize_py_import_def.get("scripts")))
 
         # Lists we use in Jinja Templates
         jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []))

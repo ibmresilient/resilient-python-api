@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import os
 import stat
@@ -89,6 +89,12 @@ def test_validate_dir_paths(fx_mk_temp_dir):
     exists_dir = mock_paths.TEST_TEMP_DIR
 
     helpers.validate_dir_paths(None, exists_dir)
+
+
+def test_read_local_exportfile():
+    export_data = helpers.read_local_exportfile(mock_paths.MOCK_EXPORT_RES)
+    assert isinstance(export_data, dict)
+    assert "functions" in export_data
 
 
 def test_get_obj_from_list(fx_mock_res_client):
@@ -228,3 +234,8 @@ def test_get_main_cmd(monkeypatch):
     monkeypatch.setattr(sys, "argv", mock_args)
     main_cmd = helpers.get_main_cmd()
     assert main_cmd == "codegen"
+
+
+def test_get_timestamp():
+    now = helpers.get_timestamp()
+    assert re.match(r"\d\d\d\d-\d\d-\d\d-\d\d:\d\d:\d\d", now)
