@@ -180,7 +180,7 @@ class CmdCodegen(BaseCmd):
             org_export = read_local_exportfile(args.exportfile)
 
         else:
-            # Instansiate connection to the Resilient Appliance
+            # Instantiate connection to the Resilient Appliance
             res_client = get_resilient_client()
 
             # Generate + get latest export from Resilient Server

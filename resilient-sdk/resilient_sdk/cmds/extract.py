@@ -57,7 +57,7 @@ class CmdExtract(BaseCmd):
             org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
         else:
-            # Instansiate connection to the Resilient Appliance
+            # Instantiate connection to the Resilient Appliance
             res_client = sdk_helpers.get_resilient_client()
 
             # Generate + get latest export from Resilient Server
