@@ -91,6 +91,12 @@ def test_validate_dir_paths(fx_mk_temp_dir):
     helpers.validate_dir_paths(None, exists_dir)
 
 
+def test_read_local_exportfile():
+    export_data = helpers.read_local_exportfile(mock_paths.MOCK_EXPORT_RES)
+    assert isinstance(export_data, dict)
+    assert "functions" in export_data
+
+
 def test_get_obj_from_list(fx_mock_res_client):
     org_export = helpers.get_latest_org_export(fx_mock_res_client)
     export_data = helpers.get_from_export(org_export,

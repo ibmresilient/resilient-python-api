@@ -16,7 +16,7 @@ from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
                                         validate_dir_paths, get_latest_org_export,
                                         get_from_export, minify_export,
                                         get_object_api_names, validate_file_paths,
-                                        rename_file, rename_to_bak_file)
+                                        rename_file, rename_to_bak_file, read_local_exportfile)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -174,11 +174,17 @@ class CmdCodegen(BaseCmd):
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
 
-        # Instansiate connection to the Resilient Appliance
-        res_client = get_resilient_client()
+        # If --exportfile is specified, read org_export from that file
+        if args.exportfile:
+            LOG.info("Using local export file: %s", args.exportfile)
+            org_export = read_local_exportfile(args.exportfile)
 
-        # TODO: handle being passed path to an actual export.res file
-        org_export = get_latest_org_export(res_client)
+        else:
+            # Instansiate connection to the Resilient Appliance
+            res_client = get_resilient_client()
+
+            # Generate + get latest export from Resilient Server
+            org_export = get_latest_org_export(res_client)
 
         # Get data required for Jinja2 templates from export
         jinja_data = get_from_export(org_export,

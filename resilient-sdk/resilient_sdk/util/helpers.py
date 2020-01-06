@@ -175,6 +175,26 @@ def get_latest_org_export(res_client):
     return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
 
 
+def read_local_exportfile(path_local_exportfile):
+    """
+    Read export from given path
+    Return res export as dict
+    """
+    # Get absolute path
+    path_local_exportfile = os.path.abspath(path_local_exportfile)
+
+    # Validate we can read it
+    validate_file_paths(os.R_OK, path_local_exportfile)
+
+    # Read the file
+    file_lines = read_file(path_local_exportfile)
+
+    if not file_lines:
+        raise SDKException("Failed to read {0}".format(path_local_exportfile))
+
+    return json.loads(file_lines[0])
+
+
 def get_object_api_names(api_name, list_objs):
     """
     Return a list of object api_names from list_objs

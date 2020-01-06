@@ -51,11 +51,16 @@ class CmdExtract(BaseCmd):
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
 
-        # Instansiate connection to the Resilient Appliance
-        res_client = sdk_helpers.get_resilient_client()
+        # If --exportfile is specified, read org_export from that file
+        if args.exportfile:
+            org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
-        # TODO: handle being passed path to an actual export.res file
-        org_export = sdk_helpers.get_latest_org_export(res_client)
+        else:
+            # Instansiate connection to the Resilient Appliance
+            res_client = sdk_helpers.get_resilient_client()
+
+            # Generate + get latest export from Resilient Server
+            org_export = sdk_helpers.get_latest_org_export(res_client)
 
         LOG.info("Extracting data from export...")
 
