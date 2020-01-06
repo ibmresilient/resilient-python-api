@@ -53,6 +53,7 @@ class CmdExtract(BaseCmd):
 
         # If --exportfile is specified, read org_export from that file
         if args.exportfile:
+            LOG.info("Using local export file: %s", args.exportfile)
             org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
         else:
