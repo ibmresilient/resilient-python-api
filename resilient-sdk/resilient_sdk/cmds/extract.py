@@ -11,6 +11,7 @@ import logging
 import shutil
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import helpers as sdk_helpers
 
 # Get the same logger object that is used in app.py
@@ -73,16 +74,16 @@ class CmdExtract(BaseCmd):
 
         # Get 'minified' version of the export. This is used in to create export.res
         min_extract_data = sdk_helpers.minify_export(org_export,
-                                                     message_destinations=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("message_destinations")),
-                                                     functions=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("functions")),
-                                                     workflows=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("workflows")),
-                                                     rules=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("rules")),
+                                                     message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, extract_data.get("message_destinations")),
+                                                     functions=sdk_helpers.get_object_api_names(ResilientObjMap.FUNCTIONS, extract_data.get("functions")),
+                                                     workflows=sdk_helpers.get_object_api_names(ResilientObjMap.WORKFLOWS, extract_data.get("workflows")),
+                                                     rules=sdk_helpers.get_object_api_names(ResilientObjMap.RULES, extract_data.get("rules")),
                                                      fields=extract_data.get("all_fields"),
-                                                     artifact_types=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("artifact_types")),
-                                                     datatables=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("datatables")),
-                                                     tasks=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("tasks")),
-                                                     phases=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("phases")),
-                                                     scripts=sdk_helpers.get_object_api_names("x_api_name", extract_data.get("scripts")))
+                                                     artifact_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, extract_data.get("artifact_types")),
+                                                     datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, extract_data.get("datatables")),
+                                                     tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, extract_data.get("tasks")),
+                                                     phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, extract_data.get("phases")),
+                                                     scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")))
 
         LOG.info("Generating .res file...")
 
