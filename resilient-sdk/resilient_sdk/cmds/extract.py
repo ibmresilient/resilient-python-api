@@ -18,12 +18,20 @@ LOG = logging.getLogger("resilient_sdk_log")
 
 
 class CmdExtract(BaseCmd):
-    """TODO"""
+    """
+    resilient-sdk extract allows you to 'extract' Resilient Objects
+    from a Resilient Export
+
+    It will create a Resilient Export file (.res) of the specified Resilient Objects
+
+    If passed the --zip parameter, it will create a .zip containing the .res file
+    """
 
     CMD_NAME = "extract"
     CMD_HELP = "Extract data in order to publish a .res file"
     CMD_USAGE = """
-    $ resilient-sdk extract TODO"""
+    $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk extract --script 'custom_script' --zip"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res file"
     CMD_ADD_PARSERS = ["res_obj_parser", "io_parser", "zip_parser"]
 
