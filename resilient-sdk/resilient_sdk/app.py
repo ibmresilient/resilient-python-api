@@ -6,7 +6,7 @@
 
 import sys
 import logging
-from resilient_sdk.cmds import CmdDocgen, CmdCodegen
+from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdExtract
 from resilient_sdk.util import helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
@@ -80,6 +80,7 @@ def main():
     # Add any subcommands to main app parser here
     cmd_codegen = CmdCodegen(sub_parser)
     cmd_docgen = CmdDocgen(sub_parser)
+    cmd_extract = CmdExtract(sub_parser)
 
     try:
         # Parse the arguments
@@ -104,6 +105,9 @@ def main():
             elif main_cmd == cmd_docgen.CMD_NAME:
                 cmd_docgen.parser.print_usage()
 
+            elif main_cmd == cmd_extract.CMD_NAME:
+                cmd_extract.parser.print_usage()
+
             else:
                 parser.print_help()
 
@@ -121,6 +125,9 @@ def main():
 
     elif args.cmd == cmd_codegen.CMD_NAME:
         cmd_codegen.execute_command(args)
+
+    elif args.cmd == cmd_extract.CMD_NAME:
+        cmd_extract.execute_command(args)
 
 
 if __name__ == "__main__":
