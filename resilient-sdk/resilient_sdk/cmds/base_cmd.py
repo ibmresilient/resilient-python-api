@@ -53,6 +53,9 @@ class BaseCmd(object):
                                             formatter_class=SDKArgHelpFormatter,
                                             parents=parser_parents)
 
+        # Rename "optionals" to "options"
+        self.parser._optionals.title = "options"
+
         self.setup()
 
     def setup(self):

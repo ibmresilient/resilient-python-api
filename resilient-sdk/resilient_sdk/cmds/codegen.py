@@ -40,8 +40,6 @@ class CmdCodegen(BaseCmd):
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
 
-        self.parser._optionals.title = "options"
-
         # Add any positional or optional arguments here
         self.parser.add_argument("-p", "--package",
                                  type=ensure_unicode,
