@@ -97,3 +97,64 @@ unicode_entry = ઘ ઙ ચ છ જ ઝ ઞ
     assert password["placeholder"] == "GJ^&*(';lkjhgfd567&*()_)"
     assert unicode_entry["section_name"] == "other_section"
     assert unicode_entry["placeholder"] == u"ઘ ઙ ચ છ જ ઝ ઞ"
+
+
+def test_get_icon():
+    pass
+    # TODO: add better mock data to test these
+    # path_extension_logo = os.path.join(path_fn_mock_integration, "icons", "extension_logo.png")
+    # path_company_logo = os.path.join(path_fn_mock_integration, "icons", "company_logo.png")
+
+    # path_to_corrupt_jpg_icon = os.path.join(path_fn_mock_integration, "icons", "mock_corrupt_icon.jpg")
+    # path_to_corrupt_png_icon = os.path.join(path_fn_mock_integration, "icons", "mock_corrupt_icon.png")
+
+    # # Test getting extension_logo
+    # extension_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_extension_logo, 200, 72, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+    # self.assertEqual(extension_logo_as_base64, mock_icon_extension_logo)
+
+    # # Test getting default extension_logo
+    # extension_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), "", 200, 72, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+    # self.assertEqual(extension_logo_as_base64, mock_icon_extension_logo)
+
+    # # Test getting company_logo
+    # company_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), path_company_logo, 100, 100, PATH_DEFAULT_ICON_COMPANY_LOGO)
+    # self.assertEqual(company_logo_as_base64, mock_icon_company_logo)
+
+    # # Test getting default company_logo
+    # company_logo_as_base64 = self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), "", 100, 100, PATH_DEFAULT_ICON_COMPANY_LOGO)
+    # self.assertEqual(company_logo_as_base64, mock_icon_company_logo)
+
+    # # Test invalid paths
+    # with self.assertRaisesRegex(OSError, "Could not find valid icon file. Looked at two locations:"):
+    #     self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO), "", 200, 72, "")
+
+    # # Test not .png
+    # with self.assertRaisesRegex(ExtException, ".jpg is not a supported icon file type. Icon file must be .png"):
+    #     self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_to_corrupt_jpg_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+
+    # # Test corrupt .png
+    # with self.assertRaisesRegex(ExtException, "Icon file corrupt"):
+    #     self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_to_corrupt_png_icon, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+
+    # # Test invalid resolution
+    # with self.assertRaisesRegex(ExtException, "Resolution must be 10x10"):
+    #     self.ext_create_class.__get_icon__(os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO), path_extension_logo, 10, 10, PATH_DEFAULT_ICON_EXTENSION_LOGO)
+
+
+def test_add_tag():
+    mock_list_objs = [
+        {"key1": "obj1"},
+        {"key2": "obj2"},
+    ]
+
+    tagged_objs = package_helpers.add_tag("mock_tag", mock_list_objs)
+    tags = tagged_objs[0].get("tags")[0]
+    assert tags["tag_handle"] is "mock_tag"
+    assert tags["value"] is None
+
+
+def test_add_tag_to_import_definition():
+    # TODO: add better mock data to test these
+    tag_name = "mock_tag_name"
+    import_def = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
+    tagged_import_def = package_helpers.add_tag_to_import_definition(tag_name, package_helpers.SUPPORTED_RES_OBJ_NAMES, import_def)

@@ -53,6 +53,30 @@ def test_is_valid_package_name():
     assert sdk_helpers.is_valid_package_name("fn-ځ ڂ ڃ ڄ څ-integration") is False
 
 
+def test_is_valid_version_syntax():
+    assert sdk_helpers.is_valid_version_syntax("1.0") is False
+    assert sdk_helpers.is_valid_version_syntax("0") is False
+    assert sdk_helpers.is_valid_version_syntax("1.0.0") is True
+    assert sdk_helpers.is_valid_version_syntax("abc") is False
+
+
+def test_is_valid_url():
+    assert sdk_helpers.is_valid_url("www.example.com") is True
+    assert sdk_helpers.is_valid_url("example.com") is True
+    assert sdk_helpers.is_valid_url("http://www.example.com") is True
+    assert sdk_helpers.is_valid_url("https://example.com") is True
+
+    assert sdk_helpers.is_valid_url(None) is False
+    assert sdk_helpers.is_valid_url("not a url") is False
+    assert sdk_helpers.is_valid_url("https://www. example.com") is False
+
+
+def test_generate_uuid_from_string():
+    the_string, the_uuid = "fn_test_package", "7627eab9-8500-cf1d-380d-14a2c4364acf"
+    the_generated_uuid = sdk_helpers.generate_uuid_from_string(the_string)
+    assert the_generated_uuid == the_uuid
+
+
 def test_has_permissions(fx_mk_temp_dir):
     temp_permissions_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_permissions.txt")
     sdk_helpers.write_file(temp_permissions_file, mock_data.mock_file_contents)

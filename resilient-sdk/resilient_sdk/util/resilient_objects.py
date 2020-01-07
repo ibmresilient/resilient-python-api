@@ -3,8 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """
-A common place to store any default Resilient Objects.
-These objects are used during codegen when default 'placeholders' are needed
+A common place to store any reference to Resilient CONSTANT Objects or Types
 """
 
 import uuid
