@@ -4,8 +4,8 @@
 
 import sys
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import helpers as sdk_helpers
-from tests.shared_mock_data import mock_data, mock_paths
+from resilient_sdk.util import sdk_helpers
+from tests.shared_mock_data import mock_paths
 from resilient_sdk.cmds import base_cmd, CmdDocgen
 
 

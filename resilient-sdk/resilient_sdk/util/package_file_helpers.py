@@ -16,11 +16,7 @@ import base64
 from resilient import ImportDefinition
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.helpers import (load_py_module,
-                                        read_file,
-                                        rename_to_bak_file,
-                                        write_file,
-                                        rename_file)
+from resilient_sdk.util import sdk_helpers
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -101,7 +97,7 @@ def parse_setup_py(path, attribute_names):
     """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value"""
 
     # Read the setup.py file into a List
-    setup_py_lines = read_file(path)
+    setup_py_lines = sdk_helpers.read_file(path)
 
     # Raise an error if nothing found in the file
     if not setup_py_lines:
@@ -184,12 +180,12 @@ def load_customize_py_module(path_customize_py):
     # So if it does, we try replace the line of code in customize.py
     # that starts with "from resilient_circuits" with "from resilient import ImportDefinition".
     try:
-        customize_py_module = load_py_module(path_customize_py, "customize")
+        customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
     except ImportError as err:
         LOG.warning("WARNING: Failed to load customize.py\n%s", err)
 
         new_lines, path_backup_customize_py = [], ""
-        current_customize_py_lines = read_file(path_customize_py)
+        current_customize_py_lines = sdk_helpers.read_file(path_customize_py)
 
         # Loop lines
         for i, line in enumerate(current_customize_py_lines):
@@ -201,14 +197,14 @@ def load_customize_py_module(path_customize_py):
         if new_lines:
 
             # Create backup!
-            path_backup_customize_py = rename_to_bak_file(path_customize_py)
+            path_backup_customize_py = sdk_helpers.rename_to_bak_file(path_customize_py)
 
             try:
                 # Write the new customize.py
-                write_file(path_customize_py, u"".join(new_lines))
+                sdk_helpers.write_file(path_customize_py, u"".join(new_lines))
 
                 # Try loading again customize module
-                customize_py_module = load_py_module(path_customize_py, "customize")
+                customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
 
             except Exception as err:
                 # TODO: move this rename to a finally block in case user uses keyboard interrupt...
@@ -216,7 +212,7 @@ def load_customize_py_module(path_customize_py):
                 # rename the backup file to original
                 if not os.path.isfile(path_customize_py):
                     LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                    rename_file(path_backup_customize_py, "customize.py")
+                    sdk_helpers.rename_file(path_backup_customize_py, "customize.py")
 
                 raise SDKException(u"Failed to load customize.py module\n{0}".format(err))
 
@@ -287,7 +283,7 @@ def get_configs_from_config_py(path_config_py_file):
 
     try:
         # Import the config module
-        config_py = load_py_module(path_config_py_file, "config")
+        config_py = sdk_helpers.load_py_module(path_config_py_file, "config")
 
         # Call config_section_data() to get the string containing the configs
         config_str = config_py.config_section_data()

@@ -7,7 +7,7 @@
 import sys
 import logging
 from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdExtract
-from resilient_sdk.util import helpers
+from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 
@@ -92,7 +92,7 @@ def main():
 
     except SDKException as err:
         # Get main_cmd (codegen, docgen etc.)
-        main_cmd = helpers.get_main_cmd()
+        main_cmd = sdk_helpers.get_main_cmd()
 
         LOG.error(err)
         LOG.info("\n-----------------\n")

@@ -4,7 +4,7 @@
 
 import os
 from resilient_sdk.cmds import base_cmd, CmdCodegen
-from resilient_sdk.util import helpers
+from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
 
 
@@ -48,7 +48,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         "functions": [{"x_api_name": "fn_mock_function_1"}, {"x_api_name": "fn_mock_function_2"}]
     }
 
-    jinja_env = helpers.setup_jinja_env("data/codegen/templates/package_template")
+    jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
 
     jinja_mapping_dict = {
         "setup.py": ("setup.py.jinja2", {}),
@@ -78,7 +78,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert "config.py" in files_in_util
     assert "customize.py" in files_in_util
 
-    customize_py = helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util", "customize.py"))
+    customize_py = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util", "customize.py"))
     assert '        "functions": [u"fn_mock_function_1", u"fn_mock_function_2"],\n' in customize_py
 
 

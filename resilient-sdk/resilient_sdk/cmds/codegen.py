@@ -11,12 +11,7 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.package_file_helpers import load_customize_py_module
-from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
-                                        is_valid_package_name, write_file,
-                                        validate_dir_paths, get_latest_org_export,
-                                        get_from_export, minify_export,
-                                        get_object_api_names, validate_file_paths,
-                                        rename_file, rename_to_bak_file, read_local_exportfile)
+from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -123,7 +118,7 @@ class CmdCodegen(BaseCmd):
 
                 newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
 
-                write_file(target_file, jinja_rendered_text)
+                sdk_helpers.write_file(target_file, jinja_rendered_text)
 
         return newly_generated_files, files_skipped
 
@@ -165,7 +160,7 @@ class CmdCodegen(BaseCmd):
     def _gen_package(args):
         LOG.info("Generating codegen package...")
 
-        if not is_valid_package_name(args.package):
+        if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
         package_name = args.package
@@ -177,45 +172,45 @@ class CmdCodegen(BaseCmd):
         # If --exportfile is specified, read org_export from that file
         if args.exportfile:
             LOG.info("Using local export file: %s", args.exportfile)
-            org_export = read_local_exportfile(args.exportfile)
+            org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
         else:
             # Instantiate connection to the Resilient Appliance
-            res_client = get_resilient_client()
+            res_client = sdk_helpers.get_resilient_client()
 
             # Generate + get latest export from Resilient Server
-            org_export = get_latest_org_export(res_client)
+            org_export = sdk_helpers.get_latest_org_export(res_client)
 
         # Get data required for Jinja2 templates from export
-        jinja_data = get_from_export(org_export,
-                                     message_destinations=args.messagedestination,
-                                     functions=args.function,
-                                     workflows=args.workflow,
-                                     rules=args.rule,
-                                     fields=args.field,
-                                     artifact_types=args.artifacttype,
-                                     datatables=args.datatable,
-                                     tasks=args.task,
-                                     scripts=args.script)
+        jinja_data = sdk_helpers.get_from_export(org_export,
+                                                 message_destinations=args.messagedestination,
+                                                 functions=args.function,
+                                                 workflows=args.workflow,
+                                                 rules=args.rule,
+                                                 fields=args.field,
+                                                 artifact_types=args.artifacttype,
+                                                 datatables=args.datatable,
+                                                 tasks=args.task,
+                                                 scripts=args.script)
 
         # Get 'minified' version of the export. This is used in customize.py
-        jinja_data["export_data"] = minify_export(org_export,
-                                                  message_destinations=get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
-                                                  functions=get_object_api_names(ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
-                                                  workflows=get_object_api_names(ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
-                                                  rules=get_object_api_names(ResilientObjMap.RULES, jinja_data.get("rules")),
-                                                  fields=jinja_data.get("all_fields"),
-                                                  artifact_types=get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
-                                                  datatables=get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
-                                                  tasks=get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
-                                                  phases=get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
-                                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+        jinja_data["export_data"] = sdk_helpers.minify_export(org_export,
+                                                              message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
+                                                              functions=sdk_helpers.get_object_api_names(ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
+                                                              workflows=sdk_helpers.get_object_api_names(ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
+                                                              rules=sdk_helpers.get_object_api_names(ResilientObjMap.RULES, jinja_data.get("rules")),
+                                                              fields=jinja_data.get("all_fields"),
+                                                              artifact_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
+                                                              datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
+                                                              tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
+                                                              phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
+                                                              scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
 
         # Validate we have write permissions
-        validate_dir_paths(os.W_OK, output_base)
+        sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
         # Join package_name to output base
         output_base = os.path.join(output_base, package_name)
@@ -225,7 +220,7 @@ class CmdCodegen(BaseCmd):
             os.makedirs(output_base)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
-        jinja_env = setup_jinja_env("data/codegen/templates/package_template")
+        jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
 
         # This dict maps our package file structure to  Jinja2 templates
         package_mapping_dict = {
@@ -305,10 +300,10 @@ class CmdCodegen(BaseCmd):
 
         # Get + validate package and customize.py paths
         path_package = os.path.abspath(args.package)
-        validate_dir_paths(os.R_OK, path_package)
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
         path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
-        validate_file_paths(os.W_OK, path_customize_py)
+        sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
 
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
         args.package = os.path.basename(path_package)
@@ -363,4 +358,4 @@ class CmdCodegen(BaseCmd):
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                rename_file(path_customize_py_bak, "customize.py")
+                sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
