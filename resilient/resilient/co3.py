@@ -32,6 +32,8 @@ except:
     # Python 2
     import urlparse
 
+
+DEFAULT_CONFIG_FILENAME = "app.config"
 LOG = logging.getLogger(__name__)
 
 
@@ -55,23 +57,41 @@ def get_resilient_circuits_version():
     return None
 
 
-def get_config_file(filename="app.config"):
+def get_config_file(filename=None, generate_filename=False):
     """
     Helper: get the location of the configuration file
     * Use the location specified in $APP_CONFIG_FILE, if set
-    * Otherwise use path in the current working directory, if exists
+    * Otherwise if filename path specified in args exist in the current working use as config file.
+    * Otherwise if default config file name exists in current work directory use as config file.
     * Otherwise use path in ~/.resilient/ directory
 
-    :param filename: the filename, defaults to 'app.config'
+    :param filename: The filename to use for the app config file.
+    :param generate_filename: Boolean is used for config filename generation.
     """
     # The config file location should usually be set in the environment
     # First check environment, then cwd, then ~/.resilient/app.config
     env_app_config_file = os.environ.get("APP_CONFIG_FILE", None)
+
     if not env_app_config_file:
-        if os.path.exists(filename):
-            config_file = filename
+        if generate_filename and filename:
+            # If generating the config file and filename passed in, use it as the config file name.
+            config_file = os.path.expandvars(os.path.expanduser(filename))
         else:
-            config_file = os.path.expanduser(os.path.join("~", ".resilient", filename))
+            if not filename:
+                # If file not specified use default value.
+                filename = DEFAULT_CONFIG_FILENAME
+            # If the filename exists in local directory use as config file name.
+            if os.path.exists(filename):
+                config_file = filename
+            else:
+                # Use default config file in ~/.resilient/app.config.
+                config_file = os.path.expanduser(os.path.join("~", ".resilient", filename))
+                if generate_filename:
+                    # If generating the config file location, create the '~/.resilient' directory if missing.
+                    resilient_dir = os.path.dirname(config_file)
+                    if not os.path.exists(resilient_dir):
+                        LOG.info(u"Creating %s", resilient_dir)
+                        os.makedirs(resilient_dir)
     else:
         config_file = env_app_config_file
     return config_file
