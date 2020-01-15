@@ -10,8 +10,14 @@ import base64
 from distutils.util import strtobool
 import pkg_resources
 import resilient
-from resilient import SimpleHTTPException
 from resilient_circuits.app import AppArgumentParser
+from resilient import (SimpleHTTPException,
+                       Definition,
+                       TypeDefinition,
+                       MessageDestinationDefinition,
+                       FunctionDefinition,
+                       ActionDefinition,
+                       ImportDefinition)
 
 try:
     from builtins import input
@@ -57,36 +63,6 @@ def get_function_definition(package, function_name):
                     return func
 
 
-class Definition(object):
-    """A definition that can be loaded by this helper."""
-
-    def __init__(self, value):
-        self.value = value
-
-
-class TypeDefinition(Definition):
-    """Definition of a type with fields"""
-    pass
-
-
-class MessageDestinationDefinition(Definition):
-    """Definition of a message destination"""
-    pass
-
-
-class FunctionDefinition(Definition):
-    """Definition of a function"""
-    pass
-
-
-class ActionDefinition(Definition):
-    """Definition of a custom action (rule)"""
-    pass
-
-
-class ImportDefinition(Definition):
-    """Definition of a set of importable customizations"""
-    pass
 
 
 def setdefault(dictionary, defaults):

@@ -13,9 +13,9 @@ from six import string_types
 
 if sys.version_info.major == 2:
     from io import open
-    from resilient import ensure_unicode, get_proxy_dict
+    from resilient import ensure_unicode, get_proxy_dict, get_resilient_circuits_version
 else:
-    from resilient.co3 import ensure_unicode, get_proxy_dict
+    from resilient.co3 import ensure_unicode, get_proxy_dict, get_resilient_circuits_version
 
 try:
     # For all python < 3.2
@@ -121,6 +121,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_proxy_user = self.getopt("resilient", "proxy_user")
         default_proxy_password = self.getopt("resilient", "proxy_password")
         default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or 20)
+        default_resilient_mock = self.getopt("resilient", "resilient_mock")
 
         self.add_argument("--email",
                           default=default_email,
@@ -194,6 +195,17 @@ class ArgumentParser(argparse.ArgumentParser):
                           default=default_stomp_prefetch_limit,
                           type=int,
                           help="MAX number of Action Module messages to send before ACK is required")
+
+        v_resc = get_resilient_circuits_version()
+
+        # Having --resilient-mock here allows us to run unit tests for resilient-circuits and resilient-sdk
+        # This argument will be added if:
+        # - resilient-circuits is not installed
+        # - resilient-circuits is installed and is > 34
+        if not v_resc or (v_resc and v_resc.get("major") > 34):
+            self.add_argument("--resilient-mock",
+                            default=default_resilient_mock, 
+                            help="<path_to_mock_module>.NameOfMockClass")
 
     def parse_args(self, args=None, namespace=None):
         """

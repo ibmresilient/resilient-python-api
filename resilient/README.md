@@ -2,6 +2,8 @@
 
 This package is a Python client module for the Resilient REST API.
 
+### Changelog
+
 ### Installation  
 Instructions for building and installing this package can be found in the 
 [repository README](https://github.com/ibmresilient/resilient-python-api/blob/master/README.md).
