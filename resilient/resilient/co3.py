@@ -32,6 +32,8 @@ except:
     # Python 2
     import urlparse
 
+
+DEFAULT_CONFIG_FILENAME = "app.config"
 LOG = logging.getLogger(__name__)
 
 
@@ -48,7 +50,6 @@ def get_config_file(filename=None, generate_filename=False):
     """
     # The config file location should usually be set in the environment
     # First check environment, then cwd, then ~/.resilient/app.config
-    default_filename = "app.config"
     env_app_config_file = os.environ.get("APP_CONFIG_FILE", None)
 
     if not env_app_config_file:
@@ -58,7 +59,7 @@ def get_config_file(filename=None, generate_filename=False):
         else:
             if not filename:
                 # If file not specified use default value.
-                filename = default_filename
+                filename = DEFAULT_CONFIG_FILENAME
             # If the filename exists in local directory use as config file name.
             if os.path.exists(filename):
                 config_file = filename
