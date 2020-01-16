@@ -1,3 +1,4 @@
+#!/bin/bash -l
 # This script will create a git tag adding the jenkins build number.
 # If the latest tag 
 latestTag=$(git tag --list | tail -n 1)
