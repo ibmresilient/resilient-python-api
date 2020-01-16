@@ -6,7 +6,20 @@ import time
 import types
 import os
 import resilient
+from mock import patch
+from shutil import rmtree
 
+DEFAULT_CONFIG_FILENAME = "app.config"
+DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join("~", ".resilient", DEFAULT_CONFIG_FILENAME))
+
+def mock_os_path_exists(path):
+    return True
+
+def mock_os_path_not_exists(path):
+    return False
+
+def mock_makedirs(dir):
+    pass
 
 class TestCo3:
     """Basic API tests"""
@@ -407,3 +420,55 @@ class TestCo3Patch:
             raise resilient.NoChange
 
         inc = client.get_put(uri, no_change)
+
+class TestGetConfig(object):
+
+    @pytest.fixture(scope='session')
+    def tmp_config_file(self, tmpdir_factory):
+        tmp_config_dir = tmpdir_factory.mktemp(".resilient")
+        tmp_config_file = os.path.expanduser(os.path.join(tmp_config_dir, DEFAULT_CONFIG_FILENAME))
+        yield tmp_config_file
+        rmtree(str(tmp_config_dir))
+
+    def test_with_env_variable(self, monkeypatch, tmp_config_file):
+        """
+        Test with environment variable $APP_CONFIG_FILE.
+        """
+        monkeypatch.setenv("APP_CONFIG_FILE", str(tmp_config_file))
+        result = resilient.get_config_file()
+        assert result == tmp_config_file
+
+    @patch('resilient.co3.os.path.exists', side_effect=mock_os_path_exists)
+    def test_with_filename_exists_local(self, mock_os_path_exists):
+        """
+        Test with filename specified and not exists in home path.
+        """
+        test_file_name = "test_file"
+        result = resilient.get_config_file(filename=test_file_name)
+        assert result == test_file_name
+
+    @patch('resilient.co3.os.path.exists', side_effect=mock_os_path_not_exists)
+    def test_with_filename_not_exists_local(self, mock_os_path_not_exists):
+        """
+        Test with filename specified and exists in home path.
+        """
+        test_file_name = "test_file"
+        test_file_abs = os.path.expanduser(os.path.join("~", ".resilient", test_file_name))
+        result = resilient.get_config_file(filename=test_file_name)
+        assert result == test_file_abs
+
+    @patch('resilient.co3.os.path.exists', side_effect=mock_os_path_exists)
+    def test_with_app_config_exists_local(self, mock_os_path_exists):
+        """
+        Test with default config specified and exists in home path.
+        """
+        result = resilient.get_config_file()
+        assert result == DEFAULT_CONFIG_FILENAME
+
+    @patch('resilient.co3.os.path.exists', side_effect=mock_os_path_not_exists)
+    def test_with_app_config_not_exists_local(self, mock_os_path_not_exists):
+        """
+        Test with default config specified and not exists in home path.
+        """
+        result = resilient.get_config_file()
+        assert result == DEFAULT_CONFIG_FILE
