@@ -33,7 +33,9 @@ class CmdExtPackage(BaseCmd):
     CMD_NAME = "ext:package"
     CMD_HELP = "Package an Integration into a Resilient Extension"
     CMD_USAGE = """
-    $ resilient-sdk ext:package TODO....
+    $ resilient-sdk ext:package -p <path_to_directory>
+    $ resilient-sdk ext:package -p <path_to_directory> --display_name "My Custom Extension"
+    $ resilient-sdk ext:package -p <path_to_directory> --keep-build-dir --display_name "My Custom Extension"
     """
     CMD_DESCRIPTION = "Package an Integration into a Resilient Extension"
 
@@ -59,16 +61,20 @@ class CmdExtPackage(BaseCmd):
 
     def execute_command(self, args):
         """
-        TODO: update this docstdring
         Function that creates The Extension.zip file from the give source path and returns
         the path to the new Extension.zip
-        - path_to_src [String]: must include a setup.py, customize.py and config.py file.
-        - custom_display_name [String]: will give the Extension that display name. Default: name from setup.py file
-        - keep_build_dir [Boolean]: if True, dist/build/ will not be remove. Default: False
-        - The code will be packaged into a Built Distribution (.tar.gz) in the /dist directory
-        - The Extension.zip will also be produced in the /dist directory
+
+        :param args: Arguments from command line:
+
+            -  **args.package**: path to directory that must include a setup.py, customize.py and config.py file.
+            -  **args.cmd**: `ext:package` in this case
+            -  **args.display_name**: will give the Extension that display name. Default: name from setup.py file
+            -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
+        :type args: argparse Namespace
+
+        :return: Path to new extension.zip
+        :rtype: str
         """
-        
         # Set name for SDKException
         SDKException.command_ran = self.CMD_NAME
 

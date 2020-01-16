@@ -201,53 +201,41 @@ def load_customize_py_module(path_customize_py):
     LINE_TO_REPLACE = u"from resilient_circuits"
     REPLACE_TEXT = u"from resilient import ImportDefinition\n"
 
-    # Try to load the customize.py module.
-    # Some customize.py files (older) have a dependency on resilient_circuits.
-    # In this case, the import will fail.
-    # So if it does, we try replace the line of code in customize.py
-    # that starts with "from resilient_circuits" with "from resilient import ImportDefinition".
-    try:
-        customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
-    except ImportError as err:
-        LOG.warning("WARNING: Failed to load customize.py\n%s", err)
+    new_lines, path_backup_customize_py = [], ""
+    current_customize_py_lines = sdk_helpers.read_file(path_customize_py)
 
-        new_lines, path_backup_customize_py = [], ""
-        current_customize_py_lines = sdk_helpers.read_file(path_customize_py)
+    # Check if customize.py has dependencies on resilient-circuits
+    for i, line in enumerate(current_customize_py_lines):
+        if line.startswith(LINE_TO_REPLACE):
+            new_lines = current_customize_py_lines[:i] + [REPLACE_TEXT] + current_customize_py_lines[i + 1:]
+            break
 
-        # Loop lines
-        for i, line in enumerate(current_customize_py_lines):
-            if line.startswith(LINE_TO_REPLACE):
-                new_lines = current_customize_py_lines[:i] + [REPLACE_TEXT] + current_customize_py_lines[i + 1:]
-                break
+    # if it does, new_lines will be defined
+    if new_lines:
 
-        # if new_lines means we have replaced some old lines
-        if new_lines:
+        # Create backup!
+        path_backup_customize_py = sdk_helpers.rename_to_bak_file(path_customize_py)
 
-            # Create backup!
-            path_backup_customize_py = sdk_helpers.rename_to_bak_file(path_customize_py)
+        try:
+            # Write the new customize.py (with resilient-circuits replaced with resilient)
+            sdk_helpers.write_file(path_customize_py, u"".join(new_lines))
 
-            try:
-                # Write the new customize.py
-                sdk_helpers.write_file(path_customize_py, u"".join(new_lines))
+            customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
 
-                # Try loading again customize module
-                customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
+        except Exception as err:
+            # If an error trying to load the module again and customize.py does not exist
+            # rename the backup file to original
+            if not os.path.isfile(path_customize_py):
+                LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
+                sdk_helpers.rename_file(path_backup_customize_py, "customize.py")
 
-            except Exception as err:
-                # TODO: move this rename to a finally block in case user uses keyboard interrupt...
-                # If an error trying to load the module again and customize.py does not exist
-                # rename the backup file to original
-                if not os.path.isfile(path_customize_py):
-                    LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                    sdk_helpers.rename_file(path_backup_customize_py, "customize.py")
+            raise SDKException(u"Failed to load customize.py module\n{0}".format(err))
 
-                raise SDKException(u"Failed to load customize.py module\n{0}".format(err))
-
-        # Else we did not match resilient_circuits, file corrupt.
-        # We only support one instance of "from resilient_circuits"
-        # If different means developer modified customize.py manually
-        else:
-            raise SDKException(u"Failed to load customize.py module. The file is corrupt\n{0}".format(err))
+    else:
+        try:
+            customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
+        except Exception as err:
+            raise SDKException(u"Failed to load customize.py module\n{0}".format(err))
 
     return customize_py_module
 
@@ -579,7 +567,7 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         # Write the executable.json file
         sdk_helpers.write_file(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
 
-        # NOTE: Dockerfile creation commented out for this release
+        # TODO: Add back in creation of Dockerfile
         '''
         # Load Dockerfile template
         docker_file_template = cls.jinja_env.get_template(JINJA_TEMPLATE_DOCKERFILE)

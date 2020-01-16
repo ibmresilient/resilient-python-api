@@ -158,6 +158,8 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _gen_package(args):
+        # TODO: update this to create icons dir
+
         LOG.info("Generating codegen package...")
 
         if not sdk_helpers.is_valid_package_name(args.package):

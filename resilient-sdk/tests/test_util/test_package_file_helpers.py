@@ -60,6 +60,17 @@ def test_load_customize_py_module(fx_mk_temp_dir):
     assert package_name == "fn_main_mock_integration"
 
 
+def test_load_customize_py_module_with_resilient_circuits_dep(fx_mk_temp_dir):
+    path_customize_py = os.path.join(mock_paths.TEST_TEMP_DIR, "customize.py")
+    shutil.copy(mock_paths.MOCK_OLD_CUSTOMIZE_PY, path_customize_py)
+
+    loaded_customize_py = package_helpers.load_customize_py_module(path_customize_py)
+    codegen_params = loaded_customize_py.codegen_reload_data()
+    package_name = codegen_params.get("package")
+
+    assert package_name == "fn_service_now"
+
+
 def test_get_import_definition_from_customize_py():
     import_def = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
     functions = import_def.get("functions")
