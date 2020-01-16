@@ -6,7 +6,7 @@ libVersion=$(echo $latestTag | cut -d "." -f 1,2)
 
 echo Creating tag...
 
-if [[$latestTag =~ "dev" ]]
+if [[ $latestTag =~ "dev" ]]
 then
 	git tag -a $libVersion.$BUILD_NUMBER.dev -m "$libVersion dev Build $BUILD_NUMBER"
 else
