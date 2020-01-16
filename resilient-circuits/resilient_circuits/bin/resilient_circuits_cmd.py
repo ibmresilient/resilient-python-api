@@ -16,7 +16,7 @@ import resilient
 import datetime
 import time
 import uuid
-from resilient import ensure_unicode
+from resilient import ensure_unicode, get_config_file
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline, extract_to_res
 from resilient_circuits.util.resilient_customize import customize_resilient
@@ -181,20 +181,15 @@ def generate_default(install_list):
         base_config = base_config_file.read()
         return "\n\n".join(([base_config, ] + additional_sections))
 
-
 def generate_or_update_config(args):
-    """ Create or update config file based on installed components """
-    usage_type = "CREATING" if args.create else "UPDATING"
+    """ Create or update config file based on installed components.
 
-    if not args.filename:
-        # Use default config file in ~/.resilient/app.config and create directory if missing
-        config_filename = os.path.expanduser(os.path.join("~", ".resilient", "app.config"))
-        resilient_dir = os.path.dirname(config_filename)
-        if not os.path.exists(resilient_dir):
-            LOG.info(u"Creating %s", resilient_dir)
-            os.makedirs(resilient_dir)
-    else:
-        config_filename = os.path.expandvars(os.path.expanduser(args.filename))
+    :param args: Command-line args for Resilient circuits 'config' sub-command.
+    """
+    usage_type = "CREATING" if args.create else "UPDATING"
+    # Get the config file name.
+    config_filename = get_config_file(filename=args.filename, generate_filename=True)
+
     file_exists = os.path.exists(config_filename)
 
     if file_exists:
