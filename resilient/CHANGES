@@ -1,3 +1,9 @@
+2020-01-16 version 35.0dev.195
+
+* Moved ImportDefinition from `resilient-circuits`
+* Added --resilient-mock parameter
+
+
 2019-08-02: version 33.0.189
 
 * Added support for API key and API key secret, now able to authenticate

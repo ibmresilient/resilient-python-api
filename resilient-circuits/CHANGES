@@ -1,4 +1,12 @@
-2019-10-07L version 34.0.194
+2020-01-16 version 35.0dev.195
+
+* Moved ImportDefinition to `resilient` package
+* Fixed handling of `$APP_CONFIG_FILE` in different contexts
+* Changed `resilient` dependency to version >=35
+* Fixed `resilient-circuits run -r`
+* Fixed dependency issue for `watchdog`
+
+2019-10-07 version 34.0.194
 
 * Updated exception handling. Introduced BaseFunctionError class, ability to hide trace, and include messages.
 * Fix `cafile=false` throwing `AttributeError`

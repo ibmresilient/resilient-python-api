@@ -1,3 +1,9 @@
+2020-01-16 version 35.0dev.195
+
+* Added OAuth2 Client Credentials workflow handler
+* Added support for timeout argument in integrations config section
+
+
 2019-10-07L version 34.0.194
 
 * Add functionality to resilient_lib to upload attachment
