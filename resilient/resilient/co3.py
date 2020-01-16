@@ -81,7 +81,7 @@ def get_config_file(filename=None, generate_filename=False):
                 # If file not specified use default value.
                 filename = DEFAULT_CONFIG_FILENAME
             # If the filename exists in local directory use as config file name.
-            if os.path.exists(filename):
+            if not generate_filename and os.path.exists(filename):
                 config_file = filename
             else:
                 # Use default config file in ~/.resilient/app.config.
