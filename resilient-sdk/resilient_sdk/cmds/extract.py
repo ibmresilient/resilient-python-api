@@ -100,7 +100,7 @@ class CmdExtract(BaseCmd):
             res_data = unicode(json.dumps(min_extract_data, ensure_ascii=False))
 
         # Generate path to file
-        file_name = "export_{0}".format(sdk_helpers.get_timestamp())
+        file_name = "export-{0}".format(sdk_helpers.get_timestamp(org_export.get("export_date", 0) / 1000.0))
         path_file_to_write = os.path.join(output_base, "{0}.res".format(file_name))
 
         # Write the file

@@ -236,6 +236,11 @@ def test_get_main_cmd(monkeypatch):
     assert main_cmd == "codegen"
 
 
-def test_get_timestamp():
+def test_get_timestamp_default():
     now = helpers.get_timestamp()
     assert re.match(r"\d\d\d\d-\d\d-\d\d-\d\d:\d\d:\d\d", now)
+
+
+def test_get_timestamp_from_timestamp():
+    ts = helpers.get_timestamp(1579258053.728)
+    assert ts == "2020-01-17-10:47:33"

@@ -659,9 +659,23 @@ def get_main_cmd():
     return None
 
 
-def get_timestamp():
+def get_timestamp(timestamp=None):
     """
     Returns a string of the current time
     in the format YYYY-MM-DD-hh:mm:ss
+
+    If `timestamp` is defined, it will return that timestamp in 
+    the format YYYY-MM-DD-hh:mm:ss
+
+    :param timestamp: Dictionary whose keys are file names
+    :type timestamp: float
+
+    :return: Timestamp string
+    :rtype: str
     """
-    return datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    TIME_FORMAT = "%Y-%m-%d-%H:%M:%S"
+
+    if timestamp:
+        return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
+
+    return datetime.datetime.now().strftime(TIME_FORMAT)
