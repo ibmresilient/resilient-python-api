@@ -1,10 +1,11 @@
-2020-01-16 version 35.0dev.195
+2020-01-16 version 35.0.195dev
 
 * Moved ImportDefinition to `resilient` package
-* Fixed handling of `$APP_CONFIG_FILE` in different contexts
+* Fixed handling of `APP_CONFIG_FILE` in different contexts
 * Changed `resilient` dependency to version >=35
 * Fixed `resilient-circuits run -r`
 * Fixed dependency issue for `watchdog`
+
 
 2019-10-07 version 34.0.194
 
