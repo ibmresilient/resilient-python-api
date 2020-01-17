@@ -134,6 +134,16 @@ def test_get_res_obj(fx_mock_res_client):
     assert all(elem.get("x_api_name") in artifacts_wanted for elem in artifacts) is True
 
 
+def test_get_res_obj_dict_in_wanted_list(fx_mock_res_client):
+    org_export = helpers.get_latest_org_export(fx_mock_res_client)
+
+    wfs_wanted = [{"identifier": "name", "value": u"mock workflow  ล ฦ ว ศ ษ ส ห ฬ อ two"}]
+    wfs = helpers.get_res_obj("workflows", "programmatic_name", "Workflow", wfs_wanted, org_export)
+
+    assert len(wfs) == 1
+    assert wfs[0].get("programmatic_name") == "mock_workflow_two"
+
+
 def test_get_res_obj_exception(fx_mock_res_client):
     org_export = helpers.get_latest_org_export(fx_mock_res_client)
 
