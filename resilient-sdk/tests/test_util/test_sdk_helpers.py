@@ -65,6 +65,7 @@ def test_is_valid_url():
     assert sdk_helpers.is_valid_url("example.com") is True
     assert sdk_helpers.is_valid_url("http://www.example.com") is True
     assert sdk_helpers.is_valid_url("https://example.com") is True
+    assert sdk_helpers.is_valid_url("https://www.example.com:8080") is True
 
     assert sdk_helpers.is_valid_url(None) is False
     assert sdk_helpers.is_valid_url("not a url") is False

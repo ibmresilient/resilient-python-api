@@ -134,7 +134,7 @@ def is_valid_version_syntax(version):
 def is_valid_url(url):
     """
     Returns True if url is valid, else False. Accepted url examples are:
-        "http://www.example.com", "https://www.example.com", "www.example.com", "example.com"
+        "http://www.example.com:8000", "https://www.example.com", "www.example.com", "example.com"
     """
 
     if not url:
@@ -143,7 +143,8 @@ def is_valid_url(url):
     regex = re.compile(
         r'^(https?://)?'  # optional http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?)'  # domain/hostname
-        r'(?:/?|[/?]\S+)$',  # .com etc.
+        r'(?:/?|[/?]\S+)'  # .com etc.
+        r'(?::\d{1,5})?$',  # port number
         re.IGNORECASE)
 
     return regex.search(url) is not None
