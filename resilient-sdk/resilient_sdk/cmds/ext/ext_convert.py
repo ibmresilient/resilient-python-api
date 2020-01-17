@@ -28,7 +28,7 @@ class CmdExtConvert(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk ext:convert -p <path_to_old_built_distribution>
     $ resilient-sdk ext:convert -p <path_to_old_built_distribution> --display_name "My Custom Extension" """
-    CMD_DESCRIPTION = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient Extension"
+    CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
         # Define codegen usage and description
