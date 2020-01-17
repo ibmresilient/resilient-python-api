@@ -68,7 +68,7 @@ class CmdExtConvert(BaseCmd):
             if tar_file_name[1] == file_name:
                 return member.name
 
-        raise SDKException("Invalid built distribution. Could not find {0}".format(file_name))
+        raise SDKException(u"Invalid built distribution. Could not find {0}".format(file_name))
 
     @staticmethod
     def extract_file_from_tar(filename_to_extract, tar_file, output_dir):
