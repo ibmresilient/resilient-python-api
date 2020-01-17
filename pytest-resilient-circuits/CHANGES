@@ -1,4 +1,4 @@
-2019-10-07L version 34.0.194
+2019-10-07: version 34.0.194
 
 * Fixed the namespace issue causing the plugin to be unusable with latest pytest.
 
