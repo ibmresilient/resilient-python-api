@@ -91,8 +91,6 @@ class CmdExtract(BaseCmd):
                                                      phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, extract_data.get("phases")),
                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")))
 
-        LOG.info("Generating .res file...")
-
         # Convert dict to JSON string
         if sys.version_info.major >= 3:
             res_data = json.dumps(min_extract_data, ensure_ascii=False)
@@ -103,13 +101,15 @@ class CmdExtract(BaseCmd):
         file_name = "export-{0}".format(sdk_helpers.get_timestamp(org_export.get("export_date", 0) / 1000.0))
         path_file_to_write = os.path.join(output_base, "{0}.res".format(file_name))
 
+        LOG.info("Generating %s.res", file_name)
+
         # Write the file
         sdk_helpers.write_file(path_file_to_write, res_data)
 
         # If we should create .zip archive
         if args.zip:
 
-            LOG.debug("Generating .zip...")
+            LOG.info("Generating %s.zip", file_name)
 
             # Get path to .zip
             path_dir_to_zip = os.path.join(output_base, file_name)
