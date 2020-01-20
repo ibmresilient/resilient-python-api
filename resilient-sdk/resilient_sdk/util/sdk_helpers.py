@@ -14,8 +14,10 @@ import copy
 import json
 import datetime
 import importlib
-from jinja2 import Environment, PackageLoader
+import hashlib
+import uuid
 import xml.etree.ElementTree as ET
+from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
@@ -114,6 +116,56 @@ def is_valid_package_name(name):
     if name in dir(__builtins__):
         return False
     return re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) is not None
+
+
+def is_valid_version_syntax(version):
+    """
+    Returns True if version is valid, else False. Accepted version examples are:
+        "1.0.0" "1.1.0" "123.0.123"
+    """
+    if not version:
+        return False
+
+    regex = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+$')
+
+    return regex.match(version) is not None
+
+
+def is_valid_url(url):
+    """
+    Returns True if url is valid, else False. Accepted url examples are:
+        "http://www.example.com:8000", "https://www.example.com", "www.example.com", "example.com"
+    """
+
+    if not url:
+        return False
+
+    regex = re.compile(
+        r'^(https?://)?'  # optional http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?)'  # domain/hostname
+        r'(?:/?|[/?]\S+)'  # .com etc.
+        r'(?::\d{1,5})?$',  # port number
+        re.IGNORECASE)
+
+    return regex.search(url) is not None
+
+
+def generate_uuid_from_string(the_string):
+    """
+    Returns String representation of the UUID of a hex md5 hash of the given string
+    """
+
+    # Instansiate new md5_hash
+    md5_hash = hashlib.md5()
+
+    # Pass the_string to the md5_hash as bytes
+    md5_hash.update(the_string.encode("utf-8"))
+
+    # Generate the hex md5 hash of all the read bytes
+    the_md5_hex_str = md5_hash.hexdigest()
+
+    # Return a String repersenation of the uuid of the md5 hash
+    return str(uuid.UUID(the_md5_hex_str))
 
 
 def has_permissions(permissions, path):

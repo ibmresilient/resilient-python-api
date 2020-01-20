@@ -12,7 +12,7 @@ import shutil
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util import helpers as sdk_helpers
+from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
