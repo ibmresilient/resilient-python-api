@@ -40,8 +40,8 @@ class CmdDocgen(BaseCmd):
     CMD_HELP = "Generate documentation for an Extension"
     CMD_USAGE = """
     $ resilient-sdk docgen -p <path_to_package>
-    $ resilient-sdk docgen -p <path_to_package> --only-user-guide
-    $ resilient-sdk docgen -p <path_to_package> --only-install-guide"""
+    $ resilient-sdk docgen -p <path_to_package> --user-guide
+    $ resilient-sdk docgen -p <path_to_package> --install-guide"""
     CMD_DESCRIPTION = "Generate documentation for an Extension"
 
     def setup(self):
@@ -58,11 +58,11 @@ class CmdDocgen(BaseCmd):
 
         parser_group = self.parser.add_mutually_exclusive_group(required=False)
 
-        parser_group.add_argument("--only-user-guide", "--uguide",
+        parser_group.add_argument("--user-guide", "--uguide",
                                   help="Only generate the User Guide",
                                   action="store_true")
 
-        parser_group.add_argument("--only-install-guide", "--iguide",
+        parser_group.add_argument("--install-guide", "--iguide",
                                   help="Only generate the Install Guide",
                                   action="store_true")
 
@@ -283,8 +283,8 @@ class CmdDocgen(BaseCmd):
             os.makedirs(path_screenshots_dir)
 
         # Set generate guide flags. Will generate both by default
-        do_generate_user_guide = False if args.only_install_guide else True
-        do_generate_install_guide = False if args.only_user_guide else True
+        do_generate_user_guide = False if args.install_guide else True
+        do_generate_install_guide = False if args.user_guide else True
 
         # Parse the setup.py file
         setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)

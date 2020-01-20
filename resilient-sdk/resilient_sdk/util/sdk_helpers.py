@@ -642,7 +642,7 @@ def generate_anchor(header):
 
     An anchor is used in Markdown Templates to link certain parts of the document.
 
-    :param header: Path to the file that contains the module
+    :param header: String to create anchor from
     :type header: str
     :return: header formatted as an anchor
     :rtype: str
