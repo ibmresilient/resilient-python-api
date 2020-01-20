@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+# This script is used to update the names of the packages before uploading them to test.pypi.org,
+# because currently, there's no access to the original packages
+declare -a PackageArray=("resilient" "resilient-lib" "resilient-circuits" "pytest-resilient-circuits")
+
 latestTag=$(git tag --list | tail -n 1)
 libVersion=$(echo $latestTag | cut -d "." -f 1,2)
 
@@ -8,15 +13,9 @@ else
 	nextVersion=$(echo "$libVersion.$BUILD_NUMBER.dev")
 fi
 
-
-sed -i "s/name='resilient',/name='test_resilient',/g" resilient/setup.py
-sed -i "s/use_scm_version={\"root\": \"\.\.\/\", \"relative_to\": __file__},/version=\"$nextVersion\",/g" resilient/setup.py
-
-sed -i "s/name='resilient_lib',/name='test_resilient_lib',/g" resilient-lib/setup.py
-sed -i "s/use_scm_version={\"root\": \"\.\.\/\", \"relative_to\": __file__},/version=\"$nextVersion\",/g" resilient-lib/setup.py
-
-sed -i "s/name='resilient_circuits',/name='test_resilient_circuits',/g" resilient-circuits/setup.py
-sed -i "s/use_scm_version={\"root\": \"\.\.\/\", \"relative_to\": __file__},/version=\"$nextVersion\",/g" resilient-circuits/setup.py
-
-sed -i "s/name='pytest_resilient_circuits',/name='test_pytest_resilient_circuits',/g" pytest-resilient-circuits/setup.py
-sed -i "s/use_scm_version={\"root\": \"\.\.\/\", \"relative_to\": __file__},/version=\"$nextVersion\",/g" pytest-resilient-circuits/setup.py
+for pkg in "${PackageArray[@]}"; do
+	# translate the name of the directory to package name by replacing all '-' with '_'
+	pkgName=$(echo $pkg | tr - _)
+	sed -i "s/name='$pkgName',/name='test_$pkgName',/g" $pkg/setup.py
+	sed -i "s/use_scm_version={\"root\": \"\.\.\/\", \"relative_to\": __file__},/version=\"$nextVersion\",/g" $pkg/setup.py
+done

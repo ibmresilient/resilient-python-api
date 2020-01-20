@@ -1,4 +1,4 @@
-2020-01-16: version 35.0.195dev
+2020-01-16: version 35.0.195
 
 * Moved ImportDefinition to `resilient` package
 * Fixed handling of `APP_CONFIG_FILE` in different contexts
