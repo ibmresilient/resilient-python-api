@@ -2,7 +2,7 @@
 # If the latest tag 
 latestTag=$(git tag --list | tail -n 1)
 libVersion=$(echo $latestTag | cut -d "." -f 1,2)
-echo "Currently latest tag $latestTag"
+echo "Latest tag: $latestTag"
 
 if [[ $latestTag =~ "dev" ]]
 then
