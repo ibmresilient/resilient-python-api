@@ -326,7 +326,7 @@ class CmdCodegen(BaseCmd):
             raise SDKException(u"No reload params found in {0}".format(path_customize_py))
 
         # Rename the old customize.py with .bak
-        path_customize_py_bak = rename_to_bak_file(path_customize_py)
+        path_customize_py_bak = sdk_helpers.rename_to_bak_file(path_customize_py)
 
         try:
             # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
