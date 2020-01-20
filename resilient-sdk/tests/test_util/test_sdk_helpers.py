@@ -124,8 +124,7 @@ def test_read_local_exportfile():
 
 def test_get_obj_from_list(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
-    export_data = sdk_helpers.get_from_export(org_export,
-                                          functions=["mock_function_one", "mock_function_two"])
+    export_data = sdk_helpers.get_from_export(org_export, functions=["mock_function_one", "mock_function_two"])
 
     all_functions = export_data.get("functions")
     got_functions = sdk_helpers.get_obj_from_list("export_key", all_functions)
@@ -157,6 +156,16 @@ def test_get_res_obj(fx_mock_res_client):
     artifacts = sdk_helpers.get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifacts_wanted, org_export)
 
     assert all(elem.get("x_api_name") in artifacts_wanted for elem in artifacts) is True
+
+
+def test_get_res_obj_dict_in_wanted_list(fx_mock_res_client):
+    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+
+    wfs_wanted = [{"identifier": "name", "value": u"mock workflow  ล ฦ ว ศ ษ ส ห ฬ อ two"}]
+    wfs = sdk_helpers.get_res_obj("workflows", "programmatic_name", "Workflow", wfs_wanted, org_export)
+
+    assert len(wfs) == 1
+    assert wfs[0].get("programmatic_name") == "mock_workflow_two"
 
 
 def test_get_res_obj_exception(fx_mock_res_client):
@@ -264,3 +273,8 @@ def test_get_main_cmd(monkeypatch):
 def test_get_timestamp():
     now = sdk_helpers.get_timestamp()
     assert re.match(r"\d\d\d\d-\d\d-\d\d-\d\d:\d\d:\d\d", now)
+
+
+def test_get_timestamp_from_timestamp():
+    ts = sdk_helpers.get_timestamp(1579258053.728)
+    assert ts == "2020-01-17-10:47:33"

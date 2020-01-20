@@ -2,7 +2,15 @@
 
 """Generate the Resilient customizations required for {{package_name}}"""
 
-from resilient import ImportDefinition
+# This here to support Apps running on resilient-circuits <= v34
+try:
+    import resilient_circuits
+    if int(resilient_circuits.__version__.split(".")[0]) <= 34:
+        raise ImportError
+    ImportDefinition = resilient_circuits.util.ImportDefinition
+
+except ImportError:
+    from resilient import ImportDefinition
 
 
 def codegen_reload_data():
@@ -32,7 +40,7 @@ def codegen_reload_data():
     }
 
 
-def customization_data():
+def customization_data(client=None):
     """
     Returns a Generator of ImportDefinitions (Customizations).
     Install them using `resilient-circuits customize`

@@ -294,6 +294,21 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     """
     return_list = []
 
+    # This loops wanted_list
+    # If an entry is dict format, it will have value and identifier attributes
+    # We use those to get the 'programmatic_name' or 'api_name'
+    # Example: For message_destinations referenced in actions, they are referenced by display name
+    # This allows us to get their 'programmatic_name'
+    for index, obj in enumerate(wanted_list):
+        if isinstance(obj, dict):
+            temp_obj_identifier = obj.get("identifier", "")
+            obj_value = obj.get("value", "")
+            full_obj = get_obj_from_list(temp_obj_identifier,
+                                         export[obj_name],
+                                         lambda wanted_obj, i=temp_obj_identifier, v=obj_value: True if wanted_obj.get(i) == v else False)
+
+            wanted_list[index] = full_obj.get(obj_value).get(obj_identifer)
+
     if wanted_list:
         ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
 
@@ -374,8 +389,9 @@ def get_from_export(export,
             workflows.append(w)
 
         # Get names of Message Destinations that are related to Rule
+        # Message Destinations in Rules are identified by their Display Name
         for m in r.get("message_destinations", []):
-            message_destinations.append(m)
+            message_destinations.append({"identifier": "name", "value": m})
 
         # Get names of Tasks/Scripts/Fields that are related to Rule
         automations = r.get("automations", [])
@@ -711,9 +727,23 @@ def get_main_cmd():
     return None
 
 
-def get_timestamp():
+def get_timestamp(timestamp=None):
     """
     Returns a string of the current time
     in the format YYYY-MM-DD-hh:mm:ss
+
+    If `timestamp` is defined, it will return that timestamp in 
+    the format YYYY-MM-DD-hh:mm:ss
+
+    :param timestamp: Dictionary whose keys are file names
+    :type timestamp: float
+
+    :return: Timestamp string
+    :rtype: str
     """
-    return datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    TIME_FORMAT = "%Y-%m-%d-%H:%M:%S"
+
+    if timestamp:
+        return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
+
+    return datetime.datetime.now().strftime(TIME_FORMAT)
