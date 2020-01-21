@@ -9,6 +9,7 @@ import sys
 import json
 import logging
 import shutil
+from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
@@ -32,7 +33,8 @@ class CmdExtract(BaseCmd):
     CMD_HELP = "Extract data in order to publish a .res file"
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
-    $ resilient-sdk extract --script 'custom_script' --zip"""
+    $ resilient-sdk extract --script 'custom_script' --zip
+    $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res file"
     CMD_ADD_PARSERS = ["res_obj_parser", "io_parser", "zip_parser"]
 
@@ -40,6 +42,12 @@ class CmdExtract(BaseCmd):
         # Define docgen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
+
+        # Add any optional arguments here
+        self.parser.add_argument("-n", "--name",
+                                 type=ensure_unicode,
+                                 help="Name to prepend to generated file",
+                                 nargs="?")
 
     def execute_command(self, args):
         LOG.info("Starting 'extract'...")
@@ -99,6 +107,11 @@ class CmdExtract(BaseCmd):
 
         # Generate path to file
         file_name = "export-{0}".format(sdk_helpers.get_timestamp(org_export.get("export_date", 0) / 1000.0))
+
+        # If custom name supplied, prepend it
+        if args.name:
+            file_name = "{0}-{1}".format(args.name, file_name)
+
         path_file_to_write = os.path.join(output_base, "{0}.res".format(file_name))
 
         LOG.info("Generating %s.res", file_name)

@@ -741,7 +741,7 @@ def get_timestamp(timestamp=None):
     :return: Timestamp string
     :rtype: str
     """
-    TIME_FORMAT = "%Y-%m-%d-%H:%M:%S"
+    TIME_FORMAT = "%Y%m%d%H%M%S"
 
     if timestamp:
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)

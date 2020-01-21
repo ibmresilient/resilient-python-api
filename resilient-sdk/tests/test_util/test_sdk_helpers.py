@@ -241,7 +241,7 @@ def test_rename_to_bak_file(fx_mk_temp_dir):
     sdk_helpers.rename_to_bak_file(temp_file)
 
     files_in_dir = os.listdir(mock_paths.TEST_TEMP_DIR)
-    regex = re.compile(r'^mock_file\.txt-\d+-\d+-\d+\d+-\d+:\d+:\d+\.bak$')
+    regex = re.compile(r'^mock_file\.txt-\d+\d+\d+\d+\d+\d+\d+\.bak$')
     matched_file_name = list(filter(regex.match, files_in_dir))[0]
 
     assert regex.match(matched_file_name)
@@ -272,9 +272,9 @@ def test_get_main_cmd(monkeypatch):
 
 def test_get_timestamp():
     now = sdk_helpers.get_timestamp()
-    assert re.match(r"\d\d\d\d-\d\d-\d\d-\d\d:\d\d:\d\d", now)
+    assert re.match(r"\d\d\d\d\d\d\d\d\d\d\d\d\d\d", now)
 
 
 def test_get_timestamp_from_timestamp():
     ts = sdk_helpers.get_timestamp(1579258053.728)
-    assert ts == "2020-01-17-10:47:33"
+    assert ts == "20200117104733"
