@@ -4,4 +4,5 @@
 
 from resilient_sdk.cmds.docgen import CmdDocgen
 from resilient_sdk.cmds.codegen import CmdCodegen
+from resilient_sdk.cmds.clone import CmdClone
 from resilient_sdk.cmds.extract import CmdExtract
