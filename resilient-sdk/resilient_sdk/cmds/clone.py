@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """ TODO: implement clone """
 
 import logging
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.helpers import (get_resilient_client, get_latest_org_export,
-                                        get_from_export, minify_export,
+from resilient_sdk.util.helpers import (get_resilient_client, get_latest_org_export, 
+                                        minify_export,get_from_export,
                                         get_object_api_names)
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
@@ -51,7 +51,7 @@ class CmdClone(BaseCmd):
             2.3: Prepare a new Object from the source action object replacing the names were needed.
         3: Prepare our configuration upload object with the newly cloned action objects
         4: Submit a configuration import through the API
-        5: Confirm the change has been accepted
+        5: Confirm the change has been acceepted
 
         :param args: The command line args passed with the clone command such as workflows or functions to be cloned
         :type args: [type]
@@ -77,23 +77,113 @@ class CmdClone(BaseCmd):
                 new_export_data[dict_key] = []
         # If any of the supported args are provided
         if any([args.function, args.workflow, args.rule, args.messagedestination]):
-        
-            if args.function:
-                self._clone_function(args, new_export_data, org_export)
-
-            if args.rule:
-                self._clone_rule(args, new_export_data, org_export)
-
-            if args.workflow:
-                self._clone_workflow(args, new_export_data, org_export)
-
-            if args.messagedestination:
-                self._clone_message_destination(
+            if args.prefix:
+                self._clone_multiple_action_objects(
                     args, new_export_data, org_export)
 
+            else:
+
+                if args.function:
+                    self._clone_function(args, new_export_data, org_export)
+
+                if args.rule:
+                    self._clone_rule(args, new_export_data, org_export)
+
+                if args.workflow:
+                    self._clone_workflow(args, new_export_data, org_export)
+
+                if args.messagedestination:
+                    self._clone_message_destination(
+                        args, new_export_data, org_export)
+
+            self.upload_cloned_objects(new_export_data, res_client)
 
         else:
             self.parser.print_help()
+
+    @staticmethod
+    def upload_cloned_objects(new_export_data, res_client):
+        # Import our newly cloned object with a configuration change
+        try:
+            result = res_client.post(IMPORT_URL, new_export_data)
+        except Exception as e:
+            LOG.error(result.text)
+            LOG.error(new_export_data)
+        if result["status"] == "PENDING":
+            confirm_configuration_import(result, result['id'], res_client)
+        else:
+            raise Exception(
+                "Could not import because the server did not return an import ID")
+
+    def _clone_multiple_action_objects(self, args, new_export_data, org_export):
+        LOG.info("Prefix provided, copying multiple Action Objects")
+        # Get data required from the export
+        jinja_data = get_from_export(org_export,
+                                     message_destinations=args.messagedestination,
+                                     functions=args.function,
+                                     workflows=args.workflow,
+                                     rules=args.rule,
+                                     fields=args.field,
+                                     artifact_types=args.artifacttype,
+                                     datatables=args.datatable,
+                                     tasks=args.task,
+                                     scripts=args.script)
+        # Get 'minified' version of the export. This is used in customize.py
+        minified = minify_export(org_export,
+                                 message_destinations=get_object_api_names(
+                                     ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
+                                 functions=get_object_api_names(
+                                     ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
+                                 workflows=get_object_api_names(
+                                     ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
+                                 rules=get_object_api_names(
+                                     ResilientObjMap.RULES, jinja_data.get("rules")),
+                                 fields=jinja_data.get("all_fields"),
+                                 artifact_types=get_object_api_names(
+                                     ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
+                                 datatables=get_object_api_names(
+                                     ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
+                                 tasks=get_object_api_names(
+                                     ResilientObjMap.TASKS, jinja_data.get("tasks")),
+                                 phases=get_object_api_names(
+                                     ResilientObjMap.PHASES, jinja_data.get("phases")),
+                                 scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+        # For every thing in the export
+        for object_type, action_objects in minified.items():
+            # If the type is not fields and the value of the type is a list
+            if object_type != "all_fields" and isinstance(action_objects, list):
+                # Iterate over each object in the action_objects list
+                for obj in action_objects:
+                    # If the obj is not a dict, it is not an action object
+                    if isinstance(obj, dict):
+                        old_api_name = obj.get('export_key')
+                        new_api_name = "{}_{}".format(
+                            args.prefix, old_api_name)
+                        # If the object we are dealing with was one of the requested objects
+                        # TODO: Improve spacetime complexity and make generic for all supported types
+                        if self.action_obj_was_specified(args, obj):
+                            # Handle functions
+                            if obj.get('display_name', False):
+                                new_function = replace_function_object_attrs(
+                                    obj, new_api_name)
+
+                                LOG.info(new_function)
+                                new_export_data['functions'].append(
+                                    new_function)
+                                # LOG.info(new_export_data)
+                            # Handle workflows
+                            elif obj.get('content', {}).get('xml', False):
+                                new_export_data['workflows'].append(replace_workflow_object_attrs(
+                                    obj, old_api_name, new_api_name, obj['name']))
+                            # Handle Message Destination. Of the supported Action Object types; only Message Destination and Workflow use programmatic_name
+                            elif obj.get('programmatic_name', False):
+                                new_export_data['message_destinations'].append(replace_md_object_attrs(
+                                    obj, new_api_name))
+    
+    @staticmethod
+    def action_obj_was_specified(args, obj):
+        
+        return obj.get(ResilientObjMap.MESSAGE_DESTINATIONS, "") in args.messagedestination
 
     @staticmethod
     def _clone_message_destination(args, new_export_data, org_export):
@@ -130,7 +220,9 @@ class CmdClone(BaseCmd):
 
         # Get the workflow defintion objects
         workflow_defs = org_export.get("workflows")
-
+        # Validate both the original source workflow exists and the new workflow api name does not conflict with an existing workflow
+        original_workflow = CmdClone.validate_provided_object_names("Workflow", new_workflow_api_name,
+                                                                    original_workflow_api_name, workflow_defs)
         new_workflow = original_workflow.copy()
         # Gather the old workflow name before we modify the object
         old_workflow_name = new_workflow["name"]
@@ -141,7 +233,25 @@ class CmdClone(BaseCmd):
         new_export_data["workflows"] = [new_workflow]
         return new_workflow_api_name, original_workflow_api_name
 
- 
+    @staticmethod
+    def validate_provided_object_names(obj_type_name, new_workflow_api_name, original_workflow_api_name, workflow_defs):
+
+        # Perform a duplication check with the provided new_workflow_api_name
+        duplicate_check = find_workflow_by_programmatic_name(
+            workflow_defs, new_workflow_api_name)
+
+        if duplicate_check is not None:
+            raise SDKException("{} with the api name {} already exists".format(
+                obj_type_name, new_workflow_api_name))
+        # Gather the original Action Object to be returned
+        original_workflow = find_workflow_by_programmatic_name(
+            workflow_defs, original_workflow_api_name)
+        # Validate the provided workflow_api_name gathered an object
+        if original_workflow is None:
+            raise SDKException("Could not find original {} {}".format(
+                obj_type_name, original_workflow_api_name))
+        # Return the object
+        return original_workflow
 
     @staticmethod
     def _clone_rule(args, new_export_data, org_export):
