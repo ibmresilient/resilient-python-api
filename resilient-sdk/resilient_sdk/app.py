@@ -106,7 +106,7 @@ def main():
         LOG.info("\n-----------------\n")
 
         # Print specifc usage for that cmd for these errors
-        if "too few arguments" in err.message or "no subcommad provided" in err.message:
+        if "too few arguments" in err.message or "no subcommand provided" in err.message:
             if main_cmd == cmd_codegen.CMD_NAME:
                 cmd_codegen.parser.print_usage()
 

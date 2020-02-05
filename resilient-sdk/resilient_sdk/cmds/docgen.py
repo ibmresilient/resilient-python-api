@@ -52,7 +52,7 @@ class CmdDocgen(BaseCmd):
         # Add any positional or optional arguments here
         self.parser.add_argument("-p",
                                  type=ensure_unicode,
-                                 help="Path to the directory containing the setup.py file",
+                                 help="Path to the package containing the setup.py file",
                                  nargs="?",
                                  default=os.getcwd())
 
