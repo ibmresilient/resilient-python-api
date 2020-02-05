@@ -119,6 +119,8 @@ class CmdExtract(BaseCmd):
         # Write the file
         sdk_helpers.write_file(path_file_to_write, res_data)
 
+        LOG.debug('Wrote: %s', path_file_to_write)
+
         # If we should create .zip archive
         if args.zip:
 
@@ -130,10 +132,15 @@ class CmdExtract(BaseCmd):
             # Create directory
             os.makedirs(path_dir_to_zip)
 
-            # Move the written export file into new dir
-            shutil.move(path_file_to_write, path_dir_to_zip)
+            # Copy the written export file into new dir
+            shutil.copy(path_file_to_write, path_dir_to_zip)
 
             # zip the dir
             shutil.make_archive(base_name=file_name, format="zip", root_dir=path_dir_to_zip)
+
+            LOG.debug('Wrote: %s.zip', path_dir_to_zip)
+
+            # Remove directory
+            shutil.rmtree(path_dir_to_zip)
 
         LOG.info("'extract' complete")
