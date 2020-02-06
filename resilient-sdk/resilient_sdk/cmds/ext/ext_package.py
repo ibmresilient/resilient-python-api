@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-""" Implementation of `resilient-sdk ext:package` """
+""" Implementation of `resilient-sdk app:package` """
 
 import logging
 import os
@@ -30,14 +30,14 @@ PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
 class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
 
-    CMD_NAME = "ext:package"
-    CMD_HELP = "Package an Integration into a Resilient Extension"
+    CMD_NAME = "app:package"
+    CMD_HELP = "Package an Integration into a Resilient App"
     CMD_USAGE = """
-    $ resilient-sdk ext:package -p <path_to_directory>
-    $ resilient-sdk ext:package -p <path_to_directory> --display_name "My Custom Extension"
-    $ resilient-sdk ext:package -p <path_to_directory> --keep-build-dir --display_name "My Custom Extension"
+    $ resilient-sdk app:package -p <path_to_directory>
+    $ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom App"
+    $ resilient-sdk app:package -p <path_to_directory> --keep-build-dir --display_name "My Custom App"
     """
-    CMD_DESCRIPTION = "Package an Integration into a Resilient Extension"
+    CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
         # Define codegen usage and description
@@ -56,23 +56,23 @@ class CmdExtPackage(BaseCmd):
                                  action="store_true")
 
         self.parser.add_argument("--display-name",
-                                 help="The Display Name to give the Extension",
+                                 help="The Display Name to give the App",
                                  nargs="?")
 
     def execute_command(self, args):
         """
-        Function that creates The Extension.zip file from the give source path and returns
-        the path to the new Extension.zip
+        Function that creates The App.zip file from the give source path and returns
+        the path to the new App.zip
 
         :param args: Arguments from command line:
 
             -  **args.package**: path to directory that must include a setup.py, customize.py and config.py file.
-            -  **args.cmd**: `ext:package` in this case
-            -  **args.display_name**: will give the Extension that display name. Default: name from setup.py file
+            -  **args.cmd**: `app:package` in this case
+            -  **args.display_name**: will give the App that display name. Default: name from setup.py file
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
         :type args: argparse Namespace
 
-        :return: Path to new extension.zip
+        :return: Path to new app.zip
         :rtype: str
         """
         # Set name for SDKException
@@ -86,7 +86,7 @@ class CmdExtPackage(BaseCmd):
         # Ensure the src directory exists and we have WRITE access
         sdk_helpers.validate_dir_paths(os.W_OK, path_to_src)
 
-        # Generate paths to files required to create extension
+        # Generate paths to files required to create app
         path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
         path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
         path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CONFIG_PY)
@@ -101,7 +101,7 @@ class CmdExtPackage(BaseCmd):
 
         LOG.info("Built Distribution (.tar.gz) created at: %s", path_output_dir)
 
-        # Create the extension
+        # Create the app
         path_the_extension_zip = create_extension(
             path_setup_py_file=path_setup_py_file,
             path_customize_py_file=path_customize_py_file,
@@ -113,6 +113,6 @@ class CmdExtPackage(BaseCmd):
             path_company_logo=path_company_logo
         )
 
-        LOG.info("Extension created at: %s", path_the_extension_zip)
+        LOG.info("App created at: %s", path_the_extension_zip)
 
         return path_the_extension_zip

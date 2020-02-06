@@ -47,7 +47,7 @@ PREFIX_EXTENSION_ZIP = "ext-"
 
 JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
 
-PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/extension_logo.png")
+PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
@@ -345,7 +345,7 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
     # Use default_path_to_icon if path_to_icon does not exist
     if not path_icon_to_use or not os.path.isfile(path_icon_to_use):
-        LOG.warning("WARNING: Default Extension Icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
+        LOG.warning("WARNING: Default Icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
         path_icon_to_use = default_path_to_icon
 
     else:
@@ -476,24 +476,24 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                      path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
     """
     TODO: update this docstring to new standard format
-    Function that creates The Extension.zip file from the given setup.py, customize.py and config.py files
-    and copies it to the output_dir. Returns the path to the Extension.zip
+    Function that creates The App.zip file from the given setup.py, customize.py and config.py files
+    and copies it to the output_dir. Returns the path to the App.zip
     - path_setup_py_file [String]: abs path to the setup.py file
     - path_customize_py_file [String]: abs path to the customize.py file
     - path_config_py_file [String]: abs path to the config.py file
-    - output_dir [String]: abs path to the directory the Extension.zip should be produced
+    - output_dir [String]: abs path to the directory the App.zip should be produced
     - path_built_distribution [String]: abs path to a tar.gz Built Distribution
         - if provided uses that .tar.gz
         - else looks for it in the output_dir. E.g: output_dir/package_name.tar.gz
-    - path_extension_logo [String]: abs path to the extension_logo.png. Has to be 200x72 and a .png file
+    - path_extension_logo [String]: abs path to the app_logo.png. Has to be 200x72 and a .png file
         - if not provided uses default icon
-    - path_company_logo [String]: abs path to the extension_logo.png. Has to be 100x100 and a .png file
+    - path_company_logo [String]: abs path to the company_logo.png. Has to be 100x100 and a .png file
         - if not provided uses default icon
-    - custom_display_name [String]: will give the Extension that display name. Default: name from setup.py file
+    - custom_display_name [String]: will give the App that display name. Default: name from setup.py file
     - keep_build_dir [Boolean]: if True, build/ will not be remove. Default: False
     """
 
-    LOG.info("Creating Extension")
+    LOG.info("Creating App")
 
     # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py
     sdk_helpers.validate_dir_paths(os.W_OK, output_dir)
@@ -506,11 +506,11 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
 
     # Validate the name attribute. Raise exception if invalid
     if not sdk_helpers.is_valid_package_name(setup_py_attributes.get("name")):
-        raise SDKException("'{0}' is not a valid Extension name. The name attribute must be defined and can only include 'a-z and _'.\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("name"), path_setup_py_file))
+        raise SDKException("'{0}' is not a valid App name. The name attribute must be defined and can only include 'a-z and _'.\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("name"), path_setup_py_file))
 
     # Validate the version attribute. Raise exception if invalid
     if not sdk_helpers.is_valid_version_syntax(setup_py_attributes.get("version")):
-        raise SDKException("'{0}' is not a valid Extension version syntax. The version attribute must be defined. Example: version=\"1.0.0\".\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("version"), path_setup_py_file))
+        raise SDKException("'{0}' is not a valid App version syntax. The version attribute must be defined. Example: version=\"1.0.0\".\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("version"), path_setup_py_file))
 
     # Validate the url supplied in the setup.py file, set to an empty string if not valid
     if not sdk_helpers.is_valid_url(setup_py_attributes.get("url")):
@@ -672,7 +672,7 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         if not keep_build_dir:
             shutil.rmtree(path_build)
 
-    LOG.info("Extension %s created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
+    LOG.info("App %s created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
 
     # Return the path to the extension zip
     return path_the_extension_zip

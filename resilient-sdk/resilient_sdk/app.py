@@ -34,7 +34,7 @@ def get_main_app_parser():
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
         prog="resilient-sdk",
-        description="Python SDK for developing Resilient Extensions",
+        description="Python SDK for developing Resilient Apps",
         epilog="For support, please visit ibm.biz/resilientcommunity")
 
     parser.usage = """

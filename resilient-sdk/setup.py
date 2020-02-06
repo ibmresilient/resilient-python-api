@@ -32,7 +32,7 @@ setup(
     # PyPI metadata
     author="IBM Resilient",
     author_email="support@resilientsystems.com",
-    description="Python SDK for developing Extensions for the IBM Resilient Platform",
+    description="Python SDK for developing Apps for the IBM Resilient Platform",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "http://ibm.biz/resilientcommunity",
