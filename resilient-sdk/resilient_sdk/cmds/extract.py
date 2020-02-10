@@ -35,7 +35,7 @@ class CmdExtract(BaseCmd):
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk extract --script 'custom_script' --zip
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
-    CMD_DESCRIPTION = "Extract data in order to publish a .res file"
+    CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
     CMD_ADD_PARSERS = ["res_obj_parser", "io_parser", "zip_parser"]
 
     def setup(self):
@@ -136,7 +136,10 @@ class CmdExtract(BaseCmd):
             shutil.copy(path_file_to_write, path_dir_to_zip)
 
             # zip the dir
-            shutil.make_archive(base_name=file_name, format="zip", root_dir=path_dir_to_zip)
+            the_zip = shutil.make_archive(base_name=file_name, format="zip", root_dir=path_dir_to_zip)
+
+            # Move the zip into the output base
+            shutil.move(the_zip, output_base)
 
             LOG.debug('Wrote: %s.zip', path_dir_to_zip)
 
