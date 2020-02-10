@@ -6,11 +6,12 @@
 
 import logging
 import os
+import shutil
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util.package_file_helpers import load_customize_py_module
+from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
@@ -99,6 +100,11 @@ class CmdCodegen(BaseCmd):
                 new_files, skipped_files = CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
                 newly_generated_files += new_files
                 files_skipped += skipped_files
+
+            elif isinstance(file_info, str) and os.path.isfile(file_info):
+                # It is just a path to a file, copy it to the target_file
+                target_file = os.path.join(target_dir, file_name)
+                shutil.copy(file_info, target_file)
 
             else:
                 # Get path to Jinja2 template
@@ -231,6 +237,10 @@ class CmdCodegen(BaseCmd):
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
             "data": {},
+            "icons": {
+                "company_logo.png": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
+                "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
+            },
             "doc": {
                 "README.md": ("doc/README.md.jinja2", jinja_data)
             },
@@ -314,7 +324,7 @@ class CmdCodegen(BaseCmd):
         LOG.info("'codegen --reload' started for '%s'", args.package)
 
         # Load the customize.py module
-        customize_py_module = load_customize_py_module(path_customize_py)
+        customize_py_module = package_helpers.load_customize_py_module(path_customize_py)
 
         try:
             # Get the 'old_params' from customize.py
