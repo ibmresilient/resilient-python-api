@@ -138,8 +138,9 @@ class CmdExtract(BaseCmd):
             # zip the dir
             the_zip = shutil.make_archive(base_name=file_name, format="zip", root_dir=path_dir_to_zip)
 
-            # Move the zip into the output base
-            shutil.move(the_zip, output_base)
+            if output_base != os.path.dirname(the_zip):
+                # Move the zip into the output base
+                shutil.move(the_zip, output_base)
 
             LOG.debug('Wrote: %s.zip', path_dir_to_zip)
 
