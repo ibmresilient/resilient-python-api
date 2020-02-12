@@ -23,7 +23,7 @@ BASE_NAME_DIST_DIR = "dist"
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 
-PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "extension_logo.png")
+PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
 PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
 
 

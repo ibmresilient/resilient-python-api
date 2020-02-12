@@ -38,14 +38,9 @@ LOG = logging.getLogger("resilient_sdk_log")
 BASE_NAME_BUILD = "build"
 BASE_NAME_EXTENSION_JSON = "extension.json"
 BASE_NAME_EXPORT_RES = "export.res"
-BASE_NAME_EXECUTABLES = "executables"
 BASE_NAME_EXECUTABLE_JSON = "executable.json"
-BASE_NAME_EXECUTABLE_DOCKERFILE = "Dockerfile"
 
-PREFIX_EXECUTABLE_ZIP = "exe-"
-PREFIX_EXTENSION_ZIP = "ext-"
-
-JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
+PREFIX_EXTENSION_ZIP = "app-"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
@@ -536,18 +531,14 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     path_build = os.path.join(output_dir, BASE_NAME_BUILD)
     path_extension_json = os.path.join(path_build, BASE_NAME_EXTENSION_JSON)
     path_export_res = os.path.join(path_build, BASE_NAME_EXPORT_RES)
-    path_executables = os.path.join(path_build, BASE_NAME_EXECUTABLES)
-    path_executable_zip = os.path.join(path_executables, "{0}{1}".format(PREFIX_EXECUTABLE_ZIP, extension_name))
-    path_executable_json = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_JSON)
-    path_executable_dockerfile = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_DOCKERFILE)
 
     try:
         # If there is an old build directory, remove it first
         if os.path.exists(path_build):
             shutil.rmtree(path_build)
 
-        # Create the directories for the path "/build/executables/exe-<package-name>/"
-        os.makedirs(path_executable_zip)
+        # Create the directories for the path "/build/"
+        os.makedirs(path_build)
 
         # If no path_built_distribution is given, use the default: "<output_dir>/<package-name>.tar.gz"
         if not path_built_distribution:
@@ -556,38 +547,8 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         # Validate the built distribution exists and we have READ access
         sdk_helpers.validate_file_paths(os.R_OK, path_built_distribution)
 
-        # Copy the built distribution to the executable_zip dir and  enforce rename to .tar.gz
-        shutil.copy(path_built_distribution, os.path.join(path_executable_zip, "{0}.tar.gz".format(extension_name)))
-
-        # Generate the contents for the executable.json file
-        the_executable_json_file_contents = {
-            "name": extension_name
-        }
-
-        # Write the executable.json file
-        sdk_helpers.write_file(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
-
-        # TODO: Add back in creation of Dockerfile
-        '''
-        # Load Dockerfile template
-        docker_file_template = cls.jinja_env.get_template(JINJA_TEMPLATE_DOCKERFILE)
-
-        # Render Dockerfile template with required variables
-        the_dockerfile_contents = docker_file_template.render({
-            "extension_name": extension_name,
-            "installed_package_name": setup_py_attributes.get("name").replace("_", "-"),
-            "app_configs": app_configs[1]
-        })
-
-        # Write the Dockerfile
-        cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
-        '''
-
-        # zip the executable_zip dir
-        shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)
-
-        # Remove the executable_zip dir
-        shutil.rmtree(path_executable_zip)
+        # Copy the built distribution to the build dir and enforce rename to .tar.gz
+        shutil.copy(path_built_distribution, os.path.join(path_build, "{0}.tar.gz".format(extension_name)))
 
         # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
         extension_logo = get_icon(
@@ -642,9 +603,16 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
             },
             "uuid": sdk_helpers.generate_uuid_from_string("{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))),
             "version": setup_py_attributes.get("version"),
-            # TODO: discuss with Sasquatch. Can add the app_config_str here, but will not install
-            # TODO: get 'Unrecognized field "app_config_str"' error
-            # "app_config_str": app_configs[0]
+            "current_installation": {
+                "executables": [
+                    {
+                        "name": setup_py_attributes.get("name"),
+                        "image": "resilient/{0}".format(setup_py_attributes.get("name")),
+                        "config_string": app_configs[0],
+                        "permission_handles": []
+                    }
+                ]
+            }
         }
 
         # Write the executable.json file
@@ -668,11 +636,11 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         raise SDKException(err)
 
     finally:
-        # Remove the executable_zip dir. Keep it if user passes --keep-build-dir
+        # Remove the build dir. Keep it if user passes --keep-build-dir
         if not keep_build_dir:
             shutil.rmtree(path_build)
 
-    LOG.info("App %s created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
+    LOG.info("App %s.zip created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
 
     # Return the path to the extension zip
     return path_the_extension_zip
