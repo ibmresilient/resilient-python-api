@@ -19,6 +19,7 @@ LOG = logging.getLogger("resilient_sdk_log")
 
 # Relative paths from with the package of files + directories used
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_SETUP_PY = "setup.py"
 
 
 class CmdCodegen(BaseCmd):
@@ -163,8 +164,7 @@ class CmdCodegen(BaseCmd):
         LOG.info("codegen _gen_function called")
 
     @staticmethod
-    def _gen_package(args):
-        # TODO: update this to create icons dir
+    def _gen_package(args, setup_py_attributes={}):
 
         LOG.info("Generating codegen package...")
 
@@ -217,6 +217,9 @@ class CmdCodegen(BaseCmd):
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
 
+        # Add version
+        jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
@@ -236,6 +239,8 @@ class CmdCodegen(BaseCmd):
             "README.md": ("README.md.jinja2", jinja_data),
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
+            "Dockerfile": ("Dockerfile.jinja2", jinja_data),
+            "entrypoint.sh": ("entrypoint.sh.jinja2", jinja_data),
             "data": {},
             "icons": {
                 "company_logo.png": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
@@ -310,12 +315,15 @@ class CmdCodegen(BaseCmd):
 
         old_params, path_customize_py_bak = [], ""
 
-        # Get + validate package and customize.py paths
+        # Get + validate package, customize.py and setup.py paths
         path_package = os.path.abspath(args.package)
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
         path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
         sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
+
+        path_setup_py_file = os.path.join(path_package, PATH_SETUP_PY)
+        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
         args.package = os.path.basename(path_package)
@@ -355,10 +363,13 @@ class CmdCodegen(BaseCmd):
             # Merge old_params with new params specified on command line
             args = CmdCodegen.merge_codegen_params(old_params, args, mapping_tuples)
 
+            # Parse the setup.py file
+            setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
             LOG.debug("Regenerating codegen '%s' package now", args.package)
 
             # Regenerate the package
-            CmdCodegen._gen_package(args)
+            CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
             LOG.info("'codegen --reload' complete for '%s'", args.package)
 

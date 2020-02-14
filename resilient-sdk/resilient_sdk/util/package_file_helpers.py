@@ -36,9 +36,9 @@ LOG = logging.getLogger("resilient_sdk_log")
 
 # Constants
 BASE_NAME_BUILD = "build"
+# TODO: this is app.json
 BASE_NAME_EXTENSION_JSON = "extension.json"
 BASE_NAME_EXPORT_RES = "export.res"
-BASE_NAME_EXECUTABLE_JSON = "executable.json"
 
 PREFIX_EXTENSION_ZIP = "app-"
 
@@ -527,6 +527,9 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     # Generate the name for the extension
     extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
 
+    # Generate the uuid
+    uuid = sdk_helpers.generate_uuid_from_string(setup_py_attributes.get("name"))
+
     # Generate paths to the directories and files we will use in the build directory
     path_build = os.path.join(output_dir, BASE_NAME_BUILD)
     path_extension_json = os.path.join(path_build, BASE_NAME_EXTENSION_JSON)
@@ -599,17 +602,18 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                 "prefix": tag_name,
                 "name": tag_name,
                 "display_name": tag_name,
-                "uuid": sdk_helpers.generate_uuid_from_string(tag_name)
+                "uuid": uuid
             },
-            "uuid": sdk_helpers.generate_uuid_from_string("{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))),
+            "uuid": uuid,
             "version": setup_py_attributes.get("version"),
             "current_installation": {
                 "executables": [
                     {
                         "name": setup_py_attributes.get("name"),
-                        "image": "resilient/{0}".format(setup_py_attributes.get("name")),
+                        "image": "resilient/{0}:{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version")),
                         "config_string": app_configs[0],
-                        "permission_handles": []
+                        "permission_handles": [],
+                        "uuid": uuid
                     }
                 ]
             }
