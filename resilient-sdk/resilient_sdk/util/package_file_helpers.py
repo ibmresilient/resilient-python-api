@@ -36,18 +36,13 @@ LOG = logging.getLogger("resilient_sdk_log")
 
 # Constants
 BASE_NAME_BUILD = "build"
+# TODO: this is app.json
 BASE_NAME_EXTENSION_JSON = "extension.json"
 BASE_NAME_EXPORT_RES = "export.res"
-BASE_NAME_EXECUTABLES = "executables"
-BASE_NAME_EXECUTABLE_JSON = "executable.json"
-BASE_NAME_EXECUTABLE_DOCKERFILE = "Dockerfile"
 
-PREFIX_EXECUTABLE_ZIP = "exe-"
-PREFIX_EXTENSION_ZIP = "ext-"
+PREFIX_EXTENSION_ZIP = "app-"
 
-JINJA_TEMPLATE_DOCKERFILE = "docker_file_template.jinja2"
-
-PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/extension_logo.png")
+PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
@@ -345,7 +340,7 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
     # Use default_path_to_icon if path_to_icon does not exist
     if not path_icon_to_use or not os.path.isfile(path_icon_to_use):
-        LOG.warning("WARNING: Default Extension Icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
+        LOG.warning("WARNING: Default Icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
         path_icon_to_use = default_path_to_icon
 
     else:
@@ -476,24 +471,24 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                      path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
     """
     TODO: update this docstring to new standard format
-    Function that creates The Extension.zip file from the given setup.py, customize.py and config.py files
-    and copies it to the output_dir. Returns the path to the Extension.zip
+    Function that creates The App.zip file from the given setup.py, customize.py and config.py files
+    and copies it to the output_dir. Returns the path to the App.zip
     - path_setup_py_file [String]: abs path to the setup.py file
     - path_customize_py_file [String]: abs path to the customize.py file
     - path_config_py_file [String]: abs path to the config.py file
-    - output_dir [String]: abs path to the directory the Extension.zip should be produced
+    - output_dir [String]: abs path to the directory the App.zip should be produced
     - path_built_distribution [String]: abs path to a tar.gz Built Distribution
         - if provided uses that .tar.gz
         - else looks for it in the output_dir. E.g: output_dir/package_name.tar.gz
-    - path_extension_logo [String]: abs path to the extension_logo.png. Has to be 200x72 and a .png file
+    - path_extension_logo [String]: abs path to the app_logo.png. Has to be 200x72 and a .png file
         - if not provided uses default icon
-    - path_company_logo [String]: abs path to the extension_logo.png. Has to be 100x100 and a .png file
+    - path_company_logo [String]: abs path to the company_logo.png. Has to be 100x100 and a .png file
         - if not provided uses default icon
-    - custom_display_name [String]: will give the Extension that display name. Default: name from setup.py file
+    - custom_display_name [String]: will give the App that display name. Default: name from setup.py file
     - keep_build_dir [Boolean]: if True, build/ will not be remove. Default: False
     """
 
-    LOG.info("Creating Extension")
+    LOG.info("Creating App")
 
     # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py
     sdk_helpers.validate_dir_paths(os.W_OK, output_dir)
@@ -506,11 +501,11 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
 
     # Validate the name attribute. Raise exception if invalid
     if not sdk_helpers.is_valid_package_name(setup_py_attributes.get("name")):
-        raise SDKException("'{0}' is not a valid Extension name. The name attribute must be defined and can only include 'a-z and _'.\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("name"), path_setup_py_file))
+        raise SDKException("'{0}' is not a valid App name. The name attribute must be defined and can only include 'a-z and _'.\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("name"), path_setup_py_file))
 
     # Validate the version attribute. Raise exception if invalid
     if not sdk_helpers.is_valid_version_syntax(setup_py_attributes.get("version")):
-        raise SDKException("'{0}' is not a valid Extension version syntax. The version attribute must be defined. Example: version=\"1.0.0\".\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("version"), path_setup_py_file))
+        raise SDKException("'{0}' is not a valid App version syntax. The version attribute must be defined. Example: version=\"1.0.0\".\nUpdate this value in the setup.py file located at: {1}".format(setup_py_attributes.get("version"), path_setup_py_file))
 
     # Validate the url supplied in the setup.py file, set to an empty string if not valid
     if not sdk_helpers.is_valid_url(setup_py_attributes.get("url")):
@@ -532,22 +527,21 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     # Generate the name for the extension
     extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
 
+    # Generate the uuid
+    uuid = sdk_helpers.generate_uuid_from_string(setup_py_attributes.get("name"))
+
     # Generate paths to the directories and files we will use in the build directory
     path_build = os.path.join(output_dir, BASE_NAME_BUILD)
     path_extension_json = os.path.join(path_build, BASE_NAME_EXTENSION_JSON)
     path_export_res = os.path.join(path_build, BASE_NAME_EXPORT_RES)
-    path_executables = os.path.join(path_build, BASE_NAME_EXECUTABLES)
-    path_executable_zip = os.path.join(path_executables, "{0}{1}".format(PREFIX_EXECUTABLE_ZIP, extension_name))
-    path_executable_json = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_JSON)
-    path_executable_dockerfile = os.path.join(path_executable_zip, BASE_NAME_EXECUTABLE_DOCKERFILE)
 
     try:
         # If there is an old build directory, remove it first
         if os.path.exists(path_build):
             shutil.rmtree(path_build)
 
-        # Create the directories for the path "/build/executables/exe-<package-name>/"
-        os.makedirs(path_executable_zip)
+        # Create the directories for the path "/build/"
+        os.makedirs(path_build)
 
         # If no path_built_distribution is given, use the default: "<output_dir>/<package-name>.tar.gz"
         if not path_built_distribution:
@@ -556,38 +550,8 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         # Validate the built distribution exists and we have READ access
         sdk_helpers.validate_file_paths(os.R_OK, path_built_distribution)
 
-        # Copy the built distribution to the executable_zip dir and  enforce rename to .tar.gz
-        shutil.copy(path_built_distribution, os.path.join(path_executable_zip, "{0}.tar.gz".format(extension_name)))
-
-        # Generate the contents for the executable.json file
-        the_executable_json_file_contents = {
-            "name": extension_name
-        }
-
-        # Write the executable.json file
-        sdk_helpers.write_file(path_executable_json, json.dumps(the_executable_json_file_contents, sort_keys=True))
-
-        # TODO: Add back in creation of Dockerfile
-        '''
-        # Load Dockerfile template
-        docker_file_template = cls.jinja_env.get_template(JINJA_TEMPLATE_DOCKERFILE)
-
-        # Render Dockerfile template with required variables
-        the_dockerfile_contents = docker_file_template.render({
-            "extension_name": extension_name,
-            "installed_package_name": setup_py_attributes.get("name").replace("_", "-"),
-            "app_configs": app_configs[1]
-        })
-
-        # Write the Dockerfile
-        cls.__write_file__(path_executable_dockerfile, the_dockerfile_contents)
-        '''
-
-        # zip the executable_zip dir
-        shutil.make_archive(base_name=path_executable_zip, format="zip", root_dir=path_executable_zip)
-
-        # Remove the executable_zip dir
-        shutil.rmtree(path_executable_zip)
+        # Copy the built distribution to the build dir and enforce rename to .tar.gz
+        shutil.copy(path_built_distribution, os.path.join(path_build, "{0}.tar.gz".format(extension_name)))
 
         # Get the extension_logo (icon) and company_logo (author.icon) as base64 encoded strings
         extension_logo = get_icon(
@@ -638,13 +602,21 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                 "prefix": tag_name,
                 "name": tag_name,
                 "display_name": tag_name,
-                "uuid": sdk_helpers.generate_uuid_from_string(tag_name)
+                "uuid": uuid
             },
-            "uuid": sdk_helpers.generate_uuid_from_string("{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))),
+            "uuid": uuid,
             "version": setup_py_attributes.get("version"),
-            # TODO: discuss with Sasquatch. Can add the app_config_str here, but will not install
-            # TODO: get 'Unrecognized field "app_config_str"' error
-            # "app_config_str": app_configs[0]
+            "current_installation": {
+                "executables": [
+                    {
+                        "name": setup_py_attributes.get("name"),
+                        "image": "resilient/{0}:{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version")),
+                        "config_string": app_configs[0],
+                        "permission_handles": [],
+                        "uuid": uuid
+                    }
+                ]
+            }
         }
 
         # Write the executable.json file
@@ -668,11 +640,11 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         raise SDKException(err)
 
     finally:
-        # Remove the executable_zip dir. Keep it if user passes --keep-build-dir
+        # Remove the build dir. Keep it if user passes --keep-build-dir
         if not keep_build_dir:
             shutil.rmtree(path_build)
 
-    LOG.info("Extension %s created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
+    LOG.info("App %s.zip created", "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
 
     # Return the path to the extension zip
     return path_the_extension_zip

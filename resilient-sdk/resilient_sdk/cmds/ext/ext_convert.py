@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-""" Implementation of `resilient-sdk ext:convert` """
+""" Implementation of `resilient-sdk app:convert` """
 
 import logging
 import os
@@ -23,11 +23,11 @@ LOG = logging.getLogger("resilient_sdk_log")
 class CmdExtConvert(BaseCmd):
     """TODO Docstring"""
 
-    CMD_NAME = "ext:convert"
-    CMD_HELP = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient Extension"
+    CMD_NAME = "app:convert"
+    CMD_HELP = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient App"
     CMD_USAGE = """
-    $ resilient-sdk ext:convert -p <path_to_old_built_distribution>
-    $ resilient-sdk ext:convert -p <path_to_old_built_distribution> --display_name "My Custom Extension" """
+    $ resilient-sdk app:convert -p <path_to_old_built_distribution>
+    $ resilient-sdk app:convert -p <path_to_old_built_distribution> --display_name "My Custom App" """
     CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
@@ -42,7 +42,7 @@ class CmdExtConvert(BaseCmd):
                                  required=True)
 
         self.parser.add_argument("--display-name",
-                                 help="The Display Name to give the Extension",
+                                 help="The Display Name to give the App",
                                  nargs="?")
 
     @staticmethod
@@ -126,21 +126,21 @@ class CmdExtConvert(BaseCmd):
 
     def execute_command(self, args):
         """
-        Function that converts an (old) Integration into a Resilient Extension.
+        Function that converts an (old) Integration into a Resilient App.
         Validates then converts the given built_distribution (either .tar.gz or .zip).
-        Returns the path to the new Extension.zip.
-        The Extension.zip will be produced in the same directory as path_built_distribution.
+        Returns the path to the new App.zip.
+        The App.zip will be produced in the same directory as path_built_distribution.
 
         :param args: Arguments from command line:
 
             -  **args.package**: path to the built distribution
                 - If a .tar.gz: must include a setup.py, customize.py and config.py file.
                 - If a .zip: must include a valid .tar.gz.
-            -   **args.cmd**: `ext:convert` in this case
-            -   **args.display_name**: will give the Extension that display name. Default: name from setup.py file
+            -   **args.cmd**: `app:convert` in this case
+            -   **args.display_name**: will give the App that display name. Default: name from setup.py file
         :type args: argparse Namespace
 
-        :return: Path to new Extension.zip
+        :return: Path to new App.zip
         :rtype: str
         """
 
@@ -150,11 +150,11 @@ class CmdExtConvert(BaseCmd):
         # Get absolute path_built_distribution
         path_built_distribution = os.path.abspath(args.package)
 
-        LOG.info("Converting extension from: %s", path_built_distribution)
+        LOG.info("Converting app from: %s", path_built_distribution)
 
         path_tmp_built_distribution, path_extracted_tar = None, None
 
-        # Dict of the required files we need to try extract in order to create an Extension
+        # Dict of the required files we need to try extract in order to create an App
         extracted_required_files = {
             "setup.py": None,
             "customize.py": None,
@@ -185,7 +185,7 @@ class CmdExtConvert(BaseCmd):
             # Handle if it is a .tar.gz file
             if tarfile.is_tarfile(path_tmp_built_distribution):
 
-                LOG.info("A .tar.gz file was provided. Will now attempt to convert it to a Resilient Extension.")
+                LOG.info("A .tar.gz file was provided. Will now attempt to convert it to a Resilient App.")
 
                 # Extract the required files to the tmp dir and return a dict of their paths
                 extracted_required_files = self.get_required_files_from_tar_file(
@@ -198,7 +198,7 @@ class CmdExtConvert(BaseCmd):
             # Handle if is a .zip file
             elif zipfile.is_zipfile(path_tmp_built_distribution):
 
-                LOG.info("A .zip file was provided. Will now attempt to convert it to a Resilient Extension.")
+                LOG.info("A .zip file was provided. Will now attempt to convert it to a Resilient App.")
 
                 with zipfile.ZipFile(file=path_tmp_built_distribution, mode="r") as zip_file:
 
@@ -279,7 +279,7 @@ class CmdExtConvert(BaseCmd):
                         else:
                             LOG.debug("\t\t- Is not a valid .tar.gz built distribution\n\t\t- Skipping...")
 
-            # If we could not get all the required files to create an Extension, raise an error
+            # If we could not get all the required files to create an App, raise an error
             if not all(extracted_required_files.values()):
                 raise SDKException("Could not extract required files from given Built Distribution\nRequired Files: {0}\nDistribution: {1}".format(
                     ", ".join(extracted_required_files.keys()), path_built_distribution))
@@ -300,7 +300,7 @@ class CmdExtConvert(BaseCmd):
             # Get the path to the final extension.zip
             path_the_extension_zip = os.path.join(os.path.dirname(path_built_distribution), os.path.basename(path_tmp_the_extension_zip))
 
-            LOG.info("Extension created at: %s", path_the_extension_zip)
+            LOG.info("App created at: %s", path_the_extension_zip)
 
             return path_the_extension_zip
 
