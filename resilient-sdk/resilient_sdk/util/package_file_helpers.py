@@ -36,8 +36,7 @@ LOG = logging.getLogger("resilient_sdk_log")
 
 # Constants
 BASE_NAME_BUILD = "build"
-# TODO: this is app.json
-BASE_NAME_EXTENSION_JSON = "extension.json"
+BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
 
 PREFIX_EXTENSION_ZIP = "app-"
