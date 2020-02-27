@@ -77,7 +77,7 @@
 {% if app_configs %}
 * Import the **configurations** into your app.config file:
   ```
-  $ resilient-circuits config -u
+  $ resilient-circuits config -u -l {{ name_dash }}
   ```
 {% endif %}
 * Import the {{ name_underscore }} **customizations** into the Resilient platform:
