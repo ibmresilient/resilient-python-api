@@ -37,12 +37,12 @@ class CmdDocgen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "docgen"
-    CMD_HELP = "Generate documentation for an App"
+    CMD_HELP = "Generate documentation for an app"
     CMD_USAGE = """
     $ resilient-sdk docgen -p <path_to_package>
     $ resilient-sdk docgen -p <path_to_package> --user-guide
     $ resilient-sdk docgen -p <path_to_package> --install-guide"""
-    CMD_DESCRIPTION = "Generate documentation for an App"
+    CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
         # Define docgen usage and description

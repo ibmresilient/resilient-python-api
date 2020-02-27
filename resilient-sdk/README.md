@@ -35,13 +35,13 @@ $ pip install resilient-sdk
 ## Usage
 
 ### `codegen`:
-Generate boilerplate code to start developing an App
+Generate boilerplate code to start developing an app
 ```
 $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
 
 ### `docgen`:
-Generate documentation for an App
+Generate documentation for an app
 ```
 $ resilient-sdk docgen -p <path_to_package>
 ```
@@ -55,7 +55,7 @@ $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ### `app:package`:
 Package an integration into a Resilient app
 ```
-$ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom App"
+$ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom app"
 ```
 
 ### `app:convert`:

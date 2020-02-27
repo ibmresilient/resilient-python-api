@@ -26,7 +26,7 @@ class CmdCodegen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "codegen"
-    CMD_HELP = "Generate boilerplate code to start developing an App"
+    CMD_HELP = "Generate boilerplate code to start developing an app"
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
