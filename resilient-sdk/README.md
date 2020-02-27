@@ -18,11 +18,9 @@
 
 ## Overview
 
-The IBM Resilient Python SDK provides the tools and infrastructure
-you need to develop Resilient Apps that are on the [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
+The IBM Resilient Python SDK provides the tools and infrastructure you need to develop Resilient Apps, which you can then post on [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
 
-For more information, visit the
-[IBM Resilient Python SDK setup guide](https://<link_to_setup_guide>).
+For more information, refer to the [Resilient SOAR Platform App Developer's Guide](https://<TODO>).
 
 
 ## Installation
@@ -36,33 +34,32 @@ $ pip install resilient-sdk
 
 ## Usage
 
-### codegen
+### `codegen`:
 Generate boilerplate code to start developing an App
 ```
 $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
 
-### docgen
+### `docgen`:
 Generate documentation for an App
 ```
 $ resilient-sdk docgen -p <path_to_package>
 ```
 
-### extract
+### `extract`:
 Extract data in order to publish a .res file
 ```
 $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
 
-### app:package
-Package an Integration into a Resilient App
+### `app:package`:
+Package an integration into a Resilient app
 ```
 $ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom App"
 ```
 
-### app:convert
-Convert an old (built) Integration that can be in .tar.gz or .zip format into
-a Resilient App
+### `app:convert`:
+Convert a previously built integration in a .tar.gz or .zip format into a Resilient app:
 ```
 $ resilient-sdk app:convert -p <path_to_old_built_distribution>
 ```
@@ -70,12 +67,12 @@ $ resilient-sdk app:convert -p <path_to_old_built_distribution>
 
 ## Supported Python Versions
 
-We currently support Python 2.7+ and Python 3.6+
+Python 2.7+ and Python 3.6+
 
 
 ## Documentation
 
-* [Setup Guide](https://<link_to_setup_guide>)
+* [Setup Guide](https://<TODO>)
 
 
 ## License and Terms

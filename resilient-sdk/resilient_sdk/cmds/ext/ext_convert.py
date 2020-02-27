@@ -24,7 +24,7 @@ class CmdExtConvert(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "app:convert"
-    CMD_HELP = "Convert an old (built) Integration that can be in .tar.gz or .zip format into a Resilient App"
+    CMD_HELP = "Convert a previously built integration in a .tar.gz or .zip format into a Resilient app"
     CMD_USAGE = """
     $ resilient-sdk app:convert -p <path_to_old_built_distribution>
     $ resilient-sdk app:convert -p <path_to_old_built_distribution> --display_name "My Custom App" """

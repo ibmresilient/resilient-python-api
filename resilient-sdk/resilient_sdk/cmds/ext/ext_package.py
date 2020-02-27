@@ -31,7 +31,7 @@ class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "app:package"
-    CMD_HELP = "Package an Integration into a Resilient App"
+    CMD_HELP = "Package an integration into a Resilient app"
     CMD_USAGE = """
     $ resilient-sdk app:package -p <path_to_directory>
     $ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom App"
