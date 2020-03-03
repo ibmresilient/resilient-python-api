@@ -50,7 +50,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     }
 
     jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
-    # # This dict maps our package file structure to  Jinja2 templates
+
     jinja_mapping_dict = {
         "MANIFEST.in": ("MANIFEST.in.jinja2", mock_jinja_data),
         "README.md": ("README.md.jinja2", mock_jinja_data),
