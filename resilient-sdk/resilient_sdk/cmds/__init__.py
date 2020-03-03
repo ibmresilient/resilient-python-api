@@ -7,4 +7,3 @@ from resilient_sdk.cmds.codegen import CmdCodegen
 from resilient_sdk.cmds.extract import CmdExtract
 
 from resilient_sdk.cmds.ext.ext_package import CmdExtPackage
-from resilient_sdk.cmds.ext.ext_convert import CmdExtConvert
