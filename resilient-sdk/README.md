@@ -55,15 +55,8 @@ $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ### `app:package`:
 Package an integration into a Resilient app
 ```
-$ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom app"
+$ resilient-sdk app:package -p <path_to_directory> --display-name "My Custom app"
 ```
-
-### `app:convert`:
-Convert a previously built integration in a .tar.gz or .zip format into a Resilient app:
-```
-$ resilient-sdk app:convert -p <path_to_old_built_distribution>
-```
-
 
 ## Supported Python Versions
 
