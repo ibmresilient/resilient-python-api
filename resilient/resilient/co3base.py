@@ -269,7 +269,7 @@ class BaseClient(object):
             result = operation(url, **kwargs)
         return result
 
-    def get(self, uri, co3_context_token=None, timeout=None):
+    def get(self, uri, headers=None, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -289,13 +289,13 @@ class BaseClient(object):
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
-    def get_content(self, uri, co3_context_token=None, timeout=None):
+    def get_content(self, uri, headers=None, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -315,13 +315,13 @@ class BaseClient(object):
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         BasicHTTPException.raise_if_error(response)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None):
+    def post(self, uri, payload, headers=None, co3_context_token=None, timeout=None):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -345,14 +345,14 @@ class BaseClient(object):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
     def post_attachment(self, uri, filepath,
-                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+                        filename=None, mimetype=None, data=None, headers=None, co3_context_token=None, timeout=None):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
@@ -371,19 +371,20 @@ class BaseClient(object):
             filename = ensure_unicode(filename)
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
+        if headers is None:
+            headers = {}
         with open(filepath, 'rb') as filehandle:
             attachment_name = filename or os.path.basename(filepath)
             multipart_data = {'file': (attachment_name, filehandle, mime_type)}
             multipart_data.update(data or {})
             encoder = MultipartEncoder(fields=multipart_data)
-            headers = self.make_headers(co3_context_token,
-                                        additional_headers={'content-type': encoder.content_type})
+            headers['content-type'] = encoder.content_type
             response = self._execute_request(self.session.post,
                                              url,
                                              data=encoder,
                                              proxies=self.proxies,
                                              cookies=self.cookies,
-                                             headers=headers,
+                                             headers=self.make_headers(co3_context_token, headers),
                                              verify=self.verify,
                                              timeout=timeout)
             BasicHTTPException.raise_if_error(response)
@@ -420,7 +421,7 @@ class BaseClient(object):
                                     co3_context_token=co3_context_token,
                                     timeout=timeout)
 
-    def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
+    def _get_put(self, uri, apply_func, headers=None, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
         (for situations where the put might return a 409/conflict status code)
         """
@@ -429,7 +430,7 @@ class BaseClient(object):
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         BasicHTTPException.raise_if_error(response)
@@ -444,7 +445,7 @@ class BaseClient(object):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         if response.status_code == 200:
@@ -454,7 +455,7 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         return None
 
-    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
+    def get_put(self, uri, apply_func, headers=None, co3_context_token=None, timeout=None):
         """Performs a get, calls apply_func on the returned value, then calls self.put.
         If the put call returns a 409 error, then retry.
 
@@ -471,12 +472,12 @@ class BaseClient(object):
           Exception if the get or put returns an unexpected status code.
         """
         while True:
-            obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout)
+            obj = self._get_put(uri, apply_func, headers=headers, co3_context_token=co3_context_token, timeout=timeout)
             if obj:
                 return obj
         return None
 
-    def put(self, uri, payload, co3_context_token=None, timeout=None):
+    def put(self, uri, payload, headers=None, co3_context_token=None, timeout=None):
         """
         Puts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -500,13 +501,13 @@ class BaseClient(object):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
-    def delete(self, uri, co3_context_token=None, timeout=None):
+    def delete(self, uri, headers=None, co3_context_token=None, timeout=None):
         """Deletes the specified URI.
 
         Args:
@@ -523,7 +524,7 @@ class BaseClient(object):
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         if response.status_code == 204:

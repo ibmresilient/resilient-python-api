@@ -215,7 +215,7 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None):
+    def get(self, uri, headers=None, co3_context_token=None, timeout=None):
         """Gets the specified URI.
 
         Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
@@ -237,11 +237,11 @@ class SimpleClient(co3base.BaseClient):
         return response
 
     @cachedmethod(_get_cache, key=_keyfunc)
-    def cached_get(self, uri, co3_context_token=None, timeout=None):
+    def cached_get(self, uri, headers=None, co3_context_token=None, timeout=None):
         """ Same as :meth:`get()`, but checks cache first """
-        return self.get(uri, co3_context_token, timeout)
+        return self.get(uri, headers, co3_context_token, timeout)
 
-    def get_const(self, co3_context_token=None, timeout=None):
+    def get_const(self, headers=None, co3_context_token=None, timeout=None):
         """
         Get the ConstREST endpoint.
         Endpoint for retrieving various constant information for this server.   This information is
@@ -259,13 +259,13 @@ class SimpleClient(co3base.BaseClient):
                                          url,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def get_content(self, uri, co3_context_token=None, timeout=None):
+    def get_content(self, uri, headers=None, co3_context_token=None, timeout=None):
         """Gets the specified URI.
 
         Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
@@ -281,12 +281,12 @@ class SimpleClient(co3base.BaseClient):
         # Call get_content from BaseClient. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get_content(uri, co3_context_token, timeout)
+            response = super(SimpleClient, self).get_content(uri, headers, co3_context_token, timeout)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None):
+    def post(self, uri, payload, headers=None, co3_context_token=None, timeout=None):
         """Posts to the specified URI.
 
         Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
@@ -303,27 +303,29 @@ class SimpleClient(co3base.BaseClient):
         # Call post of BaseClient. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout)
+            response = super(SimpleClient, self).post(uri, payload, headers, co3_context_token, timeout)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
-    def _patch(self, uri, patch, co3_context_token=None, timeout=None):
+    def _patch(self, uri, patch, headers=None, co3_context_token=None, timeout=None):
         """Internal method used to call the underlying server patch endpoint"""
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         if isinstance(patch, dict):
             payload_json = json.dumps(patch)
         else:
             payload_json = json.dumps(patch.to_dict())
+        
+        if headers is None:
+            headers = {}
 
-        hdrs = {"handle_format": "names"}
+        headers["handle_format"] = "names"
         response = self._execute_request(self.session.patch,
                                          url,
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token,
-                                                                   additional_headers=hdrs),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
 
@@ -393,7 +395,7 @@ class SimpleClient(co3base.BaseClient):
         # Got a conflict and no callback specified.  Just raise an exception.
         raise PatchConflictException(response, patch_status)
 
-    def patch(self, uri, patch, co3_context_token=None, timeout=None, overwrite_conflict=False):
+    def patch(self, uri, patch, headers=None, co3_context_token=None, timeout=None, overwrite_conflict=False):
         """
         PATCH request to the specified URI.
 
@@ -418,9 +420,9 @@ class SimpleClient(co3base.BaseClient):
             # Raise an exception on conflict.
             callback = SimpleClient._patch_raise_callback
 
-        return self.patch_with_callback(uri, patch, callback, co3_context_token, timeout)
+        return self.patch_with_callback(uri, patch, callback, headers, co3_context_token, timeout)
 
-    def patch_with_callback(self, uri, patch, callback, co3_context_token=None, timeout=None):
+    def patch_with_callback(self, uri, patch, callback, headers=None, co3_context_token=None, timeout=None):
         """
         PATCH request to the specified URI.  If the patch application fails because of field conflicts,
         the specified callback is invoked, allowing the caller to adjust the patch as necessary.
@@ -434,15 +436,15 @@ class SimpleClient(co3base.BaseClient):
         :param timeout: optional timeout (seconds)
         :return: The response object.
         """
-        response = self._patch(uri, patch, co3_context_token, timeout)
+        response = self._patch(uri, patch, headers, co3_context_token, timeout)
 
         while self._handle_patch_response(response, patch, callback):
-            response = self._patch(uri, patch, co3_context_token, timeout)
+            response = self._patch(uri, patch, headers, co3_context_token, timeout)
 
         return response
 
     def post_attachment(self, uri, filepath,
-                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+                        filename=None, mimetype=None, data=None, headers=None, co3_context_token=None, timeout=None):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
@@ -460,12 +462,12 @@ class SimpleClient(co3base.BaseClient):
         response = None
         try:
             response = super(SimpleClient, self).post_attachment(uri, filepath, filename, mimetype, data,
-                                                                 co3_context_token, timeout)
+                                                                 headers, co3_context_token, timeout)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
-    def search(self, payload, co3_context_token=None, timeout=None):
+    def search(self, payload, headers=None, co3_context_token=None, timeout=None):
         """
         Posts to the SearchExREST endpoint.
         Endpoint for performing full text searches through incidents and incident child objects
@@ -485,13 +487,13 @@ class SimpleClient(co3base.BaseClient):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, headers),
                                          verify=self.verify,
                                          timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
+    def get_put(self, uri, apply_func, headers=None, co3_context_token=None, timeout=None):
         """Safely performs an update operation by a GET, calls your `apply_func` callback, then PUT
         with the updated value.  If the put call returns a 409 error, these steps are retried.
 
@@ -511,12 +513,12 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient get_put. Convert exception if there is any
         res = None
         try:
-            res = super(SimpleClient, self).get_put(uri, apply_func, co3_context_token, timeout)
+            res = super(SimpleClient, self).get_put(uri, apply_func, headers, co3_context_token, timeout)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return res
 
-    def put(self, uri, payload, co3_context_token=None, timeout=None):
+    def put(self, uri, payload, headers=None, co3_context_token=None, timeout=None):
         """Directly performs an update operation by PUT to the specified URI.
 
         Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
@@ -533,12 +535,12 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient put. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).put(uri, payload, co3_context_token, timeout)
+            response = super(SimpleClient, self).put(uri, payload, headers, co3_context_token, timeout)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
-    def delete(self, uri, co3_context_token=None, timeout=None):
+    def delete(self, uri, headers=None, co3_context_token=None, timeout=None):
         """Deletes the specified URI.
 
         Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
@@ -553,7 +555,7 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient delete. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).delete(uri, co3_context_token, timeout)
+            response = super(SimpleClient, self).delete(uri, headers, co3_context_token, timeout)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
