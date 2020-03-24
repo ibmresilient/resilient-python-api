@@ -257,10 +257,10 @@ class CmdDocgen(BaseCmd):
         path_to_src = os.path.abspath(args.p)
 
         # Get basename of path_to_src (version information is stripped from the basename).
-
         path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
 
         LOG.debug("Path to project: %s", path_to_src)
+        LOG.debug("Project basename: %s", path_to_src_basename)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env("data/docgen/templates")
