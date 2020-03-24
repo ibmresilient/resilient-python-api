@@ -253,6 +253,9 @@ class CmdDocgen(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
+        # Get basename of path_to_src (version information is stripped from the basename).
+        path_to_src_basename = os.path.basename(path_to_src).split('-')[0]
+
         LOG.debug("Path to project: %s", path_to_src)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
@@ -264,8 +267,8 @@ class CmdDocgen(BaseCmd):
 
         # Generate paths to required directories + files
         path_setup_py_file = os.path.join(path_to_src, PATH_SETUP_PY)
-        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CONFIG_PY)
+        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
         path_install_guide_readme = os.path.join(path_to_src, PATH_INSTALL_GUIDE_README)
         path_doc_dir = os.path.join(path_to_src, PATH_DOC_DIR)
         path_screenshots_dir = os.path.join(path_to_src, PATH_SCREENSHOTS)
