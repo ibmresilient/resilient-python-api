@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 import pkg_resources
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -32,6 +33,8 @@ PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_s
 PATH_USER_GUIDE_README = os.path.join(PATH_DOC_DIR, "README.md")
 PATH_DEFAULT_USER_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/README.md.jinja2")
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdDocgen(BaseCmd):
     """TODO Docstring"""
@@ -254,7 +257,8 @@ class CmdDocgen(BaseCmd):
         path_to_src = os.path.abspath(args.p)
 
         # Get basename of path_to_src (version information is stripped from the basename).
-        path_to_src_basename = os.path.basename(path_to_src).split('-')[0]
+
+        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
 
         LOG.debug("Path to project: %s", path_to_src)
 
