@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 from setuptools import sandbox as use_setuptools
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -26,6 +27,8 @@ PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
 PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
@@ -35,7 +38,7 @@ class CmdExtPackage(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk app:package -p <path_to_directory>
     $ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom App"
-    $ resilient-sdk app:package -p <path_to_directory> --keep-build-dir --display_name "My Custom App"
+    $ resilient-sdk app:package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
 
@@ -81,15 +84,19 @@ class CmdExtPackage(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.package)
 
+        # Get basename of path_to_src (version information is stripped from the basename).
+        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
+
         LOG.debug("Path to project: %s", path_to_src)
+        LOG.debug("Project basename: %s", path_to_src_basename)
 
         # Ensure the src directory exists and we have WRITE access
         sdk_helpers.validate_dir_paths(os.W_OK, path_to_src)
 
         # Generate paths to files required to create app
         path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
-        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CONFIG_PY)
+        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
         path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
         path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
         path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)

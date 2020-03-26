@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 import pkg_resources
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -32,6 +33,8 @@ PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_s
 PATH_USER_GUIDE_README = os.path.join(PATH_DOC_DIR, "README.md")
 PATH_DEFAULT_USER_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/README.md.jinja2")
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdDocgen(BaseCmd):
     """TODO Docstring"""
@@ -253,7 +256,11 @@ class CmdDocgen(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
+        # Get basename of path_to_src (version information is stripped from the basename).
+        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
+
         LOG.debug("Path to project: %s", path_to_src)
+        LOG.debug("Project basename: %s", path_to_src_basename)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env("data/docgen/templates")
@@ -264,8 +271,8 @@ class CmdDocgen(BaseCmd):
 
         # Generate paths to required directories + files
         path_setup_py_file = os.path.join(path_to_src, PATH_SETUP_PY)
-        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CONFIG_PY)
+        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
         path_install_guide_readme = os.path.join(path_to_src, PATH_INSTALL_GUIDE_README)
         path_doc_dir = os.path.join(path_to_src, PATH_DOC_DIR)
         path_screenshots_dir = os.path.join(path_to_src, PATH_SCREENSHOTS)
