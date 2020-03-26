@@ -61,9 +61,8 @@ SUPPORTED_RES_OBJ_NAMES = (
 
 # Set of base permissions needed to communicate with the resilient platform.
 BASE_PERMISSIONS = [
-    "create_workflow", "edit_workflow", "read_function",
-    "edit_function", "create_function", "read_all_action_invocations",
-    "edit_data", "edit_script", "create_script"
+    "edit_data", "read_function", "read_incident",
+    "read_incident_action_invocations"
 ]
 
 def _is_setup_attribute(line):
