@@ -59,6 +59,11 @@ SUPPORTED_RES_OBJ_NAMES = (
     "types", "workflows", "workspaces"
 )
 
+# Set of base permissions needed to communicate with the resilient platform.
+BASE_PERMISSIONS = [
+    "edit_data", "read_function", "read_incident",
+    "read_incident_action_invocations"
+]
 
 def _is_setup_attribute(line):
     """Use RegEx to check if the given file line starts with (for example) 'long_description='.
@@ -611,7 +616,7 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                         "name": setup_py_attributes.get("name"),
                         "image": "resilient/{0}:{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version")),
                         "config_string": app_configs[0],
-                        "permission_handles": [],
+                        "permission_handles": BASE_PERMISSIONS,
                         "uuid": uuid
                     }
                 ]

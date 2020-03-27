@@ -7,6 +7,7 @@
 import logging
 import os
 import shutil
+import re
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
@@ -21,6 +22,8 @@ LOG = logging.getLogger("resilient_sdk_log")
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_SETUP_PY = "setup.py"
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdCodegen(BaseCmd):
     """TODO Docstring"""
@@ -317,9 +320,11 @@ class CmdCodegen(BaseCmd):
 
         # Get + validate package, customize.py and setup.py paths
         path_package = os.path.abspath(args.package)
+        # Get basename of path_to_src (version information is stripped from the basename).
+        path_package_basename = re.split(VERSION_REGEX, os.path.basename(path_package), 1)[0]
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
+        path_customize_py = os.path.join(path_package, path_package_basename, PATH_CUSTOMIZE_PY)
         sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
 
         path_setup_py_file = os.path.join(path_package, PATH_SETUP_PY)

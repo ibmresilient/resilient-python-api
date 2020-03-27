@@ -37,7 +37,7 @@ class CmdExtPackage(BaseCmd):
     CMD_HELP = "Package an integration into a Resilient app"
     CMD_USAGE = """
     $ resilient-sdk app:package -p <path_to_directory>
-    $ resilient-sdk app:package -p <path_to_directory> --display_name "My Custom App"
+    $ resilient-sdk app:package -p <path_to_directory> --display-name "My Custom App"
     $ resilient-sdk app:package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
