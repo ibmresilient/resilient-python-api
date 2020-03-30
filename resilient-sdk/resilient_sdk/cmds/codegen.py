@@ -174,7 +174,10 @@ class CmdCodegen(BaseCmd):
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
-        package_name = args.package
+        # Strip off version information, if present in package base folder, to get the package name.
+        package_name = re.split(VERSION_REGEX, args.package, 1)[0]
+        # Get base version if we are running against a package base folder with version.
+        base_version = ''.join(re.split(package_name, args.package))
 
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
@@ -226,8 +229,8 @@ class CmdCodegen(BaseCmd):
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
-        # Join package_name to output base
-        output_base = os.path.join(output_base, package_name)
+        # Join package_name to output base (add base version if running against a folder which includes a version).
+        output_base = os.path.join(output_base, package_name+base_version)
 
         # If the output_base directory does not exist, create it
         if not os.path.exists(output_base):

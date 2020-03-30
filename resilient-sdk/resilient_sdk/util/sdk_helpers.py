@@ -37,6 +37,8 @@ logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 def get_resilient_client(path_config_file=None):
     """
@@ -110,6 +112,9 @@ def is_valid_package_name(name):
        >>> is_valid_package_name("_something")
        True
     """
+
+    # Strip off version information, if present in package base folder, to get the package name.
+    name = re.split(VERSION_REGEX, name, 1)[0]
 
     if keyword.iskeyword(name):
         return False
