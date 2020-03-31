@@ -20,6 +20,8 @@ LOG = logging.getLogger("resilient_sdk_log")
 # Constants
 BASE_NAME_SETUP_PY = "setup.py"
 BASE_NAME_DIST_DIR = "dist"
+BASE_NAME_DOCKER_FILE = "Dockerfile"
+BASE_NAME_ENTRY_POINT = "entrypoint.sh"
 
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
@@ -95,6 +97,8 @@ class CmdExtPackage(BaseCmd):
 
         # Generate paths to files required to create app
         path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
+        path_docker_file = os.path.join(path_to_src, BASE_NAME_DOCKER_FILE)
+        path_entry_point = os.path.join(path_to_src, BASE_NAME_ENTRY_POINT)
         path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
         path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
         path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
@@ -107,6 +111,10 @@ class CmdExtPackage(BaseCmd):
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
 
         LOG.info("Built Distribution (.tar.gz) created at: %s", path_output_dir)
+
+        # Check that files 'Dockerfile' and 'entrypoint.sh' files exist in the integration package
+        # before attempting to create the app.
+        sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
 
         # Create the app
         path_the_extension_zip = create_extension(
