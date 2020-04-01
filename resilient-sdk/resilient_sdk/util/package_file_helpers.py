@@ -59,10 +59,9 @@ SUPPORTED_RES_OBJ_NAMES = (
     "types", "workflows", "workspaces"
 )
 
-# Set of base permissions needed to communicate with the resilient platform.
+# Base set of api key permissions needed by an app to communicate with the resilient platform.
 BASE_PERMISSIONS = [
-    "edit_data", "read_function", "read_incident",
-    "read_incident_action_invocations"
+    "edit_data", "read_function"
 ]
 
 def _is_setup_attribute(line):
@@ -337,7 +336,6 @@ def get_apikey_permissions(path):
     :param path: Location to file with api keys one per line.
     :return apikey_permissions: Return list of api keys.
     """
-    apikey_permissions =  []
 
     # Read the apikey_permissions.txt file into a List
     setup_py_lines = sdk_helpers.read_file(path)
@@ -345,16 +343,17 @@ def get_apikey_permissions(path):
     try:
         # Read the apikey_permissions.txt file into a List
         apikey_permissions_lines = sdk_helpers.read_file(path)
-        # Raise an error if nothing found in the file
-        if not apikey_permissions_lines:
-            raise SDKException(u"No content found in provided apikey_permissions.txt file: {0}".format(path))
 
     except Exception as err:
         raise SDKException(u"Failed to parse configs from apikey_permissions.txt file\nThe apikey_permissions.txt file may "
                            u"be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
 
+    # Raise an error if nothing found in the file
+    if not apikey_permissions_lines:
+        raise SDKException(u"No content found in provided apikey_permissions.txt file: {0}".format(path))
+
     # Get permissions. Ignore comments where 1st non-whitespace character is a '#'.
-    apikey_permissions = [p.rstrip().lstrip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
+    apikey_permissions = [p.strip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
 
     # Do basic check on api keys to see if they are in correct format.
     for p in apikey_permissions:
