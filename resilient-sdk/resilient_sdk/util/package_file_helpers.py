@@ -354,7 +354,7 @@ def get_apikey_permissions(path):
                            u"be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
 
     # Get permissions. Ignore comments where 1st non-whitespace character is a '#'.
-    apikey_permissions = [p.rstrip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
+    apikey_permissions = [p.rstrip().lstrip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
 
     # Do basic check on api keys to see if they are in correct format.
     for p in apikey_permissions:
