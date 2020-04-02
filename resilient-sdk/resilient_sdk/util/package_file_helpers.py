@@ -337,9 +337,6 @@ def get_apikey_permissions(path):
     :return apikey_permissions: Return list of api keys.
     """
 
-    # Read the apikey_permissions.txt file into a List
-    setup_py_lines = sdk_helpers.read_file(path)
-
     try:
         # Read the apikey_permissions.txt file into a List
         apikey_permissions_lines = sdk_helpers.read_file(path)
