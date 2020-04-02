@@ -52,10 +52,10 @@ Extract data in order to publish a .res file
 $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
 
-### `app:package:`
+### `package:`
 Package an integration into a Resilient app
 ```
-$ resilient-sdk app:package -p <path_to_directory> --display-name "My Custom app"
+$ resilient-sdk package -p <path_to_directory> --display-name "My Custom app"
 ```
 
 ## Supported Python Versions

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-""" Implementation of `resilient-sdk app:package` """
+""" Implementation of `resilient-sdk package` """
 
 import logging
 import os
@@ -33,12 +33,12 @@ VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
 
-    CMD_NAME = "app:package"
+    CMD_NAME = "package"
     CMD_HELP = "Package an integration into a Resilient app"
     CMD_USAGE = """
-    $ resilient-sdk app:package -p <path_to_directory>
-    $ resilient-sdk app:package -p <path_to_directory> --display-name "My Custom App"
-    $ resilient-sdk app:package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
+    $ resilient-sdk package -p <path_to_directory>
+    $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"
+    $ resilient-sdk package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
 
@@ -70,7 +70,7 @@ class CmdExtPackage(BaseCmd):
         :param args: Arguments from command line:
 
             -  **args.package**: path to directory that must include a setup.py, customize.py and config.py file.
-            -  **args.cmd**: `app:package` in this case
+            -  **args.cmd**: `package` in this case
             -  **args.display_name**: will give the App that display name. Default: name from setup.py file
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
         :type args: argparse Namespace
