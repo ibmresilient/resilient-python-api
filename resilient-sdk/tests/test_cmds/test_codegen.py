@@ -58,6 +58,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         "tox.ini": ("tox.ini.jinja2", mock_jinja_data),
         "Dockerfile": ("Dockerfile.jinja2", mock_jinja_data),
         "entrypoint.sh": ("entrypoint.sh.jinja2", mock_jinja_data),
+        "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", mock_jinja_data),
         "data": {},
         "icons": {
             "company_logo.png": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
@@ -85,7 +86,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR)
 
     files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
-    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']
+    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']
 
     files_in_icons_dir = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "icons")))
     assert files_in_icons_dir == ['app_logo.png', 'company_logo.png']
