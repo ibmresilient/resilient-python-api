@@ -247,6 +247,7 @@ class CmdCodegen(BaseCmd):
             "tox.ini": ("tox.ini.jinja2", jinja_data),
             "Dockerfile": ("Dockerfile.jinja2", jinja_data),
             "entrypoint.sh": ("entrypoint.sh.jinja2", jinja_data),
+            "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", jinja_data),
             "data": {},
             "icons": {
                 "company_logo.png": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,

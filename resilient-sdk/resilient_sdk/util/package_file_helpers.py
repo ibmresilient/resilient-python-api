@@ -59,10 +59,9 @@ SUPPORTED_RES_OBJ_NAMES = (
     "types", "workflows", "workspaces"
 )
 
-# Set of base permissions needed to communicate with the resilient platform.
+# Base set of api key permissions needed by an app to communicate with the resilient platform.
 BASE_PERMISSIONS = [
-    "edit_data", "read_function", "read_incident",
-    "read_incident_action_invocations"
+    "edit_data", "read_function"
 ]
 
 def _is_setup_attribute(line):
@@ -331,6 +330,38 @@ def get_configs_from_config_py(path_config_py_file):
 
     return (config_str, config_list)
 
+def get_apikey_permissions(path):
+    """Returns a list of api keys to allow an integration to run.
+
+    :param path: Location to file with api keys one per line.
+    :return apikey_permissions: Return list of api keys.
+    """
+
+    try:
+        # Read the apikey_permissions.txt file into a List
+        apikey_permissions_lines = sdk_helpers.read_file(path)
+
+    except Exception as err:
+        raise SDKException(u"Failed to parse configs from apikey_permissions.txt file\nThe apikey_permissions.txt file may "
+                           u"be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
+
+    # Raise an error if nothing found in the file
+    if not apikey_permissions_lines:
+        raise SDKException(u"No content found in provided apikey_permissions.txt file: {0}".format(path))
+
+    # Get permissions. Ignore comments where 1st non-whitespace character is a '#'.
+    apikey_permissions = [p.strip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
+
+    # Do basic check on api keys to see if they are in correct format.
+    for p in apikey_permissions:
+        if not re.match("[_a-zA-Z]*$", p):
+            raise SDKException(u"Value '{0}' in file '{1}' is not a valid api key value.".format(p, path))
+
+    # Ensure that the permissions includes at minimum the set of base permissions.
+    if not all(p in apikey_permissions for p in BASE_PERMISSIONS):
+        raise SDKException(u"'The file '{0}' is missing one of the base api key permissions.".format(path))
+
+    return apikey_permissions
 
 def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_path_to_icon):
     """
@@ -471,8 +502,9 @@ def add_tag_to_import_definition(tag_name, supported_res_obj_names, import_defin
     return import_definition
 
 
-def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_file, output_dir,
-                     path_built_distribution=None, path_extension_logo=None, path_company_logo=None, custom_display_name=None, keep_build_dir=False):
+def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_file, path_apikey_permissions_file,
+                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None,
+                     custom_display_name=None, keep_build_dir=False):
     """
     TODO: update this docstring to new standard format
     Function that creates The App.zip file from the given setup.py, customize.py and config.py files
@@ -480,6 +512,7 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     - path_setup_py_file [String]: abs path to the setup.py file
     - path_customize_py_file [String]: abs path to the customize.py file
     - path_config_py_file [String]: abs path to the config.py file
+    - path_apikey_permissions_file [String]: abs path to the apikey_permissions.txt file
     - output_dir [String]: abs path to the directory the App.zip should be produced
     - path_built_distribution [String]: abs path to a tar.gz Built Distribution
         - if provided uses that .tar.gz
@@ -494,9 +527,10 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
 
     LOG.info("Creating App")
 
-    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py
+    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py, customize.py and
+    # apikey_permissions.txt files.
     sdk_helpers.validate_dir_paths(os.W_OK, output_dir)
-    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file)
+    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_apikey_permissions_file)
 
     # Parse the setup.py file
     setup_py_attributes = parse_setup_py(path_setup_py_file, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
@@ -527,6 +561,9 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
 
     # Parse the app.configs from the config.py file
     app_configs = get_configs_from_config_py(path_config_py_file)
+
+    # Parse the api key permissions from the apikey_permissions.txt file
+    apikey_permissions = get_apikey_permissions(path_apikey_permissions_file)
 
     # Generate the name for the extension
     extension_name = "{0}-{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version"))
@@ -616,7 +653,7 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                         "name": setup_py_attributes.get("name"),
                         "image": "resilient/{0}:{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version")),
                         "config_string": app_configs[0],
-                        "permission_handles": BASE_PERMISSIONS,
+                        "permission_handles": apikey_permissions,
                         "uuid": uuid
                     }
                 ]
