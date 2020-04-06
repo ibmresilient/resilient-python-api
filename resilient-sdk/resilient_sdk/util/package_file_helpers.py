@@ -61,7 +61,7 @@ SUPPORTED_RES_OBJ_NAMES = (
 
 # Base set of api key permissions needed by an app to communicate with the resilient platform.
 BASE_PERMISSIONS = [
-    "edit_data", "read_function"
+    "read_data", "read_function"
 ]
 
 def _is_setup_attribute(line):
