@@ -47,7 +47,7 @@ PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk"
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "author", "name", "version",
     "description", "long_description", "url",
-    "install_requires"
+    "install_requires", "entry_points"
 )
 
 # Tuple of all Resilient Object Names we support when packaging/converting to ext
@@ -61,8 +61,22 @@ SUPPORTED_RES_OBJ_NAMES = (
 
 # Base set of api key permissions needed by an app to communicate with the resilient platform.
 BASE_PERMISSIONS = [
-    "edit_data", "read_function"
+    "read_data", "read_function"
 ]
+# List of supported entry points.
+SUPPORTED_EP = [
+    "resilient.circuits.customize",
+    "resilient.circuits.apphost.configsection",
+    "resilient.circuits.configsection"
+]
+# Minimum server version for import if no customize.py defined.
+IMPORT_MIN_SERVER_VERSION = {
+    'major': 36,
+    'minor': 2,
+    'build_number': 0000,
+    'version': "36.2.0000"
+}
+
 
 def _is_setup_attribute(line):
     """Use RegEx to check if the given file line starts with (for example) 'long_description='.
@@ -148,7 +162,25 @@ def parse_setup_py(path, attribute_names):
 
     # Foreach attribute_name, get its value and add to return_dict
     for attribute_name in attribute_names:
-        return_dict[attribute_name] = _parse_setup_attribute(path, setup_py_lines, attribute_name)
+        if attribute_name == "entry_points":
+            entry_point_paths = {}
+            # Get the path of the top level for the package.
+            path_package = os.path.dirname(path)
+            parsed_attribute_name = _parse_setup_attribute(path, setup_py_lines, attribute_name)
+            # Capture the path of the config.py or customize.py modules if they are defined.
+            # Match until ':' in the pattern as follows:
+            #       "resilient.circuits.customize": ["customize = fn_func.util.customize:customization_data"]
+            #       "resilient.circuits.apphost.configsection":
+            #                       ["gen_config = fn_func.util.config:apphost_config_section_data"]
+            #       "resilient.circuits.configsection": ["gen_config = fn_func.util.config:config_section_data"]
+            for ep in SUPPORTED_EP:
+                section = re.match(r'.*"{}".*?\s+=\s+(.*?):.*'.format(ep), parsed_attribute_name)
+                if section:
+                    entry_point_paths.update({ep: os.path.join(path_package, section.group(1)
+                                                               .replace(".", os.path.sep))+".py"})
+            return_dict[attribute_name] = entry_point_paths
+        else:
+            return_dict[attribute_name] = _parse_setup_attribute(path, setup_py_lines, attribute_name)
 
     return return_dict
 
@@ -295,35 +327,51 @@ def get_configs_from_config_py(path_config_py_file):
     config_str, config_list = "", []
 
     try:
+        # Get the module name from the config file path.
+        config_module = os.path.basename(path_config_py_file)[:-3]
         # Import the config module
-        config_py = sdk_helpers.load_py_module(path_config_py_file, "config")
+        config_py = sdk_helpers.load_py_module(path_config_py_file, config_module)
 
         # Call config_section_data() to get the string containing the configs
         config_str = config_py.config_section_data()
+        # Call apphost_config_section_data available to get app host config settings
+        try:
+            apphost_config_str = config_py.apphost_config_section_data()
+        except AttributeError:
+            # An app host config may not exist set string to empty string.
+            apphost_config_str = ''
 
-        # Instansiate a new configparser
-        config_parser = configparser.ConfigParser()
+        # Iterate over config and apphost conf files and parse settings.
+        for cfg_str in [config_str, apphost_config_str]:
+            if not cfg_str:
+                # Skip for empty string.
+                continue
+            # Instansiate a new configparser
+            config_parser = configparser.ConfigParser()
 
-        # Read and parse the configs from the config_str
-        if sys.version_info < (3, 2):
-            # config_parser.readfp() was deprecated and replaced with read_file in PY3.2
-            config_parser.readfp(io.StringIO(config_str))
+            # Read and parse the configs from the config_str or apphost_config_str
+            if sys.version_info < (3, 2):
+                # config_parser.readfp() was deprecated and replaced with read_file in PY3.2
+                config_parser.readfp(io.StringIO(cfg_str))
 
-        else:
-            config_parser.read_file(io.StringIO(config_str))
+            else:
+                config_parser.read_file(io.StringIO(cfg_str))
 
-        # Get the configs from each section
-        for section_name in config_parser.sections():
+            # Get the configs from each section
+            for section_name in config_parser.sections():
 
-            parsed_configs = config_parser.items(section_name)
+                parsed_configs = config_parser.items(section_name)
 
-            for config in parsed_configs:
-                config_list.append({
-                    "name": config[0],
-                    "placeholder": config[1],
-                    "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper()),
-                    "section_name": section_name
-                })
+                for config in parsed_configs:
+                    config_list.append({
+                        "name": config[0],
+                        "placeholder": config[1],
+                        "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper()),
+                        "section_name": section_name
+                    })
+
+    except ModuleNotFoundError as err:
+        raise SDKException(u"Failed to load module '{0}' got error '{1}'".format(config_module, err.__repr__()))
 
     except Exception as err:
         raise SDKException(u"Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
@@ -526,11 +574,14 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     """
 
     LOG.info("Creating App")
+    # Booleans to indicate customize.py
+    has_customize = True
+    has_config = True
 
-    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py, customize.py and
+    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py and
     # apikey_permissions.txt files.
     sdk_helpers.validate_dir_paths(os.W_OK, output_dir)
-    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_apikey_permissions_file)
+    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
     # Parse the setup.py file
     setup_py_attributes = parse_setup_py(path_setup_py_file, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
@@ -550,17 +601,64 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         LOG.warning("WARNING: '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
         setup_py_attributes["url"] = ""
 
-    # Get ImportDefinition from customize.py
-    customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
-
     # Get the tag name
     tag_name = setup_py_attributes.get("name")
+
+    # Check that we can READ customize.py at default location.
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_customize_py_file)
+    except SDKException:
+        LOG.info("Customize file not found at default location '%s', checking 'setup.py'.", path_customize_py_file)
+        # If customize.py not found in default location attempt to locate using setup.py.
+        # Note: For some packages this file may not exist.
+        # Check that entry point was detected in setup.py of package.
+        if SUPPORTED_EP[0] in setup_py_attributes["entry_points"]:
+            path_customize_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[0]]
+        else:
+            # For certain packages or threat-feeds this file may not exist.
+            has_customize = False
+            # Warn user if customize.py not found.
+            LOG.warning("WARNING: Customize file 'customize.py' not defined in 'setup.py'. Ignoring and continuing.")
+
+    # Check that we can READ config.py at default location.
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_config_py_file)
+    except SDKException:
+        LOG.info("Config file not found at default location '%s', checking 'setup.py'.", path_config_py_file)
+        # If config.py not found in default location attempt to locate using setup.py.
+        # Note: For some packages this file may not exist.
+        # Check that entry point 'resilient.circuits.apphost.configsection' (SUPPORTED_EP[1]) was defined in setup.py
+        # of the package, else check 'resilient.circuits.configsection' (SUPPORTED_EP[2]) was detected in
+        # setup.py of the package.
+        if SUPPORTED_EP[1] in setup_py_attributes["entry_points"]:
+            path_config_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[1]]
+        elif SUPPORTED_EP[2] in setup_py_attributes["entry_points"]:
+            path_config_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[2]]
+        else:
+            # For certain packages or threat-feeds this file may not exist.
+            has_config = False
+            # Warn user if 'config.py' not found.
+            LOG.warning("WARNING: Config file 'config.py' not defined in 'setup.py'. Ignoring and continuing.")
+
+    # Get ImportDefinition from customize.py
+    if has_customize:
+        customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
+    else:
+        # No 'customize.py' file found generate import definition with just mimimum server version.
+        customize_py_import_definition = {
+            'server_version':
+                IMPORT_MIN_SERVER_VERSION
+        }
 
     # Add the tag to the import defintion
     customize_py_import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, customize_py_import_definition)
 
     # Parse the app.configs from the config.py file
-    app_configs = get_configs_from_config_py(path_config_py_file)
+    if has_config:
+        app_configs = get_configs_from_config_py(path_config_py_file)
+    else:
+        # No 'config.py' file found generate an empty definition.
+        app_configs = ("", [])
 
     # Parse the api key permissions from the apikey_permissions.txt file
     apikey_permissions = get_apikey_permissions(path_apikey_permissions_file)
@@ -633,10 +731,10 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                 "format": "html"
             },
             "minimum_resilient_version": {
-                "major": customize_py_import_definition.get("server_version").get("major"),
-                "minor": customize_py_import_definition.get("server_version").get("minor"),
-                "build_number": customize_py_import_definition.get("server_version").get("build_number"),
-                "version": customize_py_import_definition.get("server_version").get("version")
+                "major": customize_py_import_definition.get("server_version").get("major", None),
+                "minor": customize_py_import_definition.get("server_version").get("minor", None),
+                "build_number": customize_py_import_definition.get("server_version").get("build_number", None),
+                "version": customize_py_import_definition.get("server_version").get("version", None)
             },
             "name": setup_py_attributes.get("name"),
             "tag": {
