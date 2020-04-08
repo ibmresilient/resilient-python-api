@@ -327,7 +327,8 @@ def get_configs_from_config_py(path_config_py_file):
     config_str, config_list = "", []
 
     try:
-        # Get the module name from the config file path.
+        # Get the module name from the config file path by getting basename and stripping '.py'
+        # from the rhs of the resulting string.
         config_module = os.path.basename(path_config_py_file)[:-3]
         # Import the config module
         config_py = sdk_helpers.load_py_module(path_config_py_file, config_module)
@@ -549,8 +550,50 @@ def add_tag_to_import_definition(tag_name, supported_res_obj_names, import_defin
 
     return import_definition
 
+def get_configuration_py_file_path(file_type, setup_py_attributes):
+    """  Get the location of configuration file config.py or customize.py for a package.
 
-def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_file, path_apikey_permissions_file,
+    If file_type == "customize.py" check that entry point 'resilient.circuits.apphost.customize' (SUPPORTED_EP[0])
+    is defined in setup.py of the package.
+    If file_type == "config.py" check that entry point 'resilient.circuits.apphost.configsection' (SUPPORTED_EP[1]) is
+    defined in setup.py of the package, else check 'resilient.circuits.configsection' (SUPPORTED_EP[2]) was detected in
+    setup.py of the package.
+
+    Note: For some packages neither of these files may exist not exist.
+
+    :param file_type: File whose location is required should be customize.py or config.py.
+    :param setup_py_attributes: Parsed setup.py content.
+    :return path_customize_py_file The config.py location for the package.
+    """
+    path_py_file = None
+    if file_type == "customize.py":
+        if SUPPORTED_EP[0] in setup_py_attributes["entry_points"]:
+            path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[0]]
+    elif file_type == "config.py":
+        if SUPPORTED_EP[1] in setup_py_attributes["entry_points"]:
+            path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[1]]
+        elif SUPPORTED_EP[2] in setup_py_attributes["entry_points"]:
+            path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[2]]
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, path_py_file)
+        except SDKException:
+            # If configuration defined in setup.py but does not exist raise an error.
+            LOG.info("Configuration File '%s' not found at location '%s'.", file_type, path_py_file)
+            if not sdk_helpers.validate_file_paths(os.R_OK, path_py_file):
+                raise SDKException("Configuration File '{0}' not found at location '{1}'."
+                                   .format(file_type, path_py_file))
+    else:
+        raise SDKException("Unknown option '{}'.".format(file_type))
+
+    if not path_py_file:
+        # For certain packages or threat-feeds these files may not exist.
+        # Warn user if file not found.
+        LOG.warning("WARNING: Configuration File '%s' not defined in 'setup.py'. Ignoring and continuing.", file_type)
+
+    return path_py_file
+
+
+def create_extension(path_setup_py_file, path_apikey_permissions_file,
                      output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None,
                      custom_display_name=None, keep_build_dir=False):
     """
@@ -558,8 +601,6 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     Function that creates The App.zip file from the given setup.py, customize.py and config.py files
     and copies it to the output_dir. Returns the path to the App.zip
     - path_setup_py_file [String]: abs path to the setup.py file
-    - path_customize_py_file [String]: abs path to the customize.py file
-    - path_config_py_file [String]: abs path to the config.py file
     - path_apikey_permissions_file [String]: abs path to the apikey_permissions.txt file
     - output_dir [String]: abs path to the directory the App.zip should be produced
     - path_built_distribution [String]: abs path to a tar.gz Built Distribution
@@ -574,9 +615,10 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     """
 
     LOG.info("Creating App")
-    # Booleans to indicate customize.py
-    has_customize = True
-    has_config = True
+    # Variables to hold path of files customize.py and config.py.
+    # Set initially default to 'None', actual paths will be calculated later.
+    path_customize_py_file = None
+    path_config_py_file = None
 
     # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and apikey_permissions.txt
     # files.
@@ -604,44 +646,14 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     # Get the tag name
     tag_name = setup_py_attributes.get("name")
 
-    # Check that we can READ customize.py at default location.
-    try:
-        sdk_helpers.validate_file_paths(os.R_OK, path_customize_py_file)
-    except SDKException:
-        LOG.info("Customize file not found at default location '%s', checking 'setup.py'.", path_customize_py_file)
-        # If customize.py not found in default location attempt to locate using setup.py.
-        # Note: For some packages this file may not exist.
-        # Check that entry point was detected in setup.py of package.
-        if SUPPORTED_EP[0] in setup_py_attributes["entry_points"]:
-            path_customize_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[0]]
-        else:
-            # For certain packages or threat-feeds this file may not exist.
-            has_customize = False
-            # Warn user if customize.py not found.
-            LOG.warning("WARNING: Customize file 'customize.py' not defined in 'setup.py'. Ignoring and continuing.")
-
-    # Check that we can READ config.py at default location.
-    try:
-        sdk_helpers.validate_file_paths(os.R_OK, path_config_py_file)
-    except SDKException:
-        LOG.info("Config file not found at default location '%s', checking 'setup.py'.", path_config_py_file)
-        # If config.py not found in default location attempt to locate using setup.py.
-        # Note: For some packages this file may not exist.
-        # Check that entry point 'resilient.circuits.apphost.configsection' (SUPPORTED_EP[1]) was defined in setup.py
-        # of the package, else check 'resilient.circuits.configsection' (SUPPORTED_EP[2]) was detected in
-        # setup.py of the package.
-        if SUPPORTED_EP[1] in setup_py_attributes["entry_points"]:
-            path_config_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[1]]
-        elif SUPPORTED_EP[2] in setup_py_attributes["entry_points"]:
-            path_config_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[2]]
-        else:
-            # For certain packages or threat-feeds this file may not exist.
-            has_config = False
-            # Warn user if 'config.py' not found.
-            LOG.warning("WARNING: Config file 'config.py' not defined in 'setup.py'. Ignoring and continuing.")
+    # Get the customize.py file location.
+    path_customize_py_file = get_configuration_py_file_path("customize.py", setup_py_attributes)
+  
+    # Get the config.py file location.
+    path_config_py_file = get_configuration_py_file_path("config.py", setup_py_attributes)
 
     # Get ImportDefinition from customize.py
-    if has_customize:
+    if path_customize_py_file:
         customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
         # No 'customize.py' file found generate import definition with just mimimum server version.
@@ -654,7 +666,7 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     customize_py_import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, customize_py_import_definition)
 
     # Parse the app.configs from the config.py file
-    if has_config:
+    if path_config_py_file:
         app_configs = get_configs_from_config_py(path_config_py_file)
     else:
         # No 'config.py' file found generate an empty definition.
