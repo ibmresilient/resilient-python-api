@@ -47,9 +47,9 @@ def test_rename_file(fx_mk_temp_dir):
 def test_is_valid_package_name():
     assert sdk_helpers.is_valid_package_name("fn_mock_integration") is True
     assert sdk_helpers.is_valid_package_name("fnmockintegration") is True
+    assert sdk_helpers.is_valid_package_name("fn-mock-integration") is True
     assert sdk_helpers.is_valid_package_name("get") is False
     assert sdk_helpers.is_valid_package_name("$%&(#)@*$") is False
-    assert sdk_helpers.is_valid_package_name("fn-mock-integration") is False
     assert sdk_helpers.is_valid_package_name("fn-ځ ڂ ڃ ڄ څ-integration") is False
 
 
