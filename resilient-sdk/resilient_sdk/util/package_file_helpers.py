@@ -578,10 +578,10 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     has_customize = True
     has_config = True
 
-    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and customize.py and
-    # apikey_permissions.txt files.
+    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and apikey_permissions.txt
+    # files.
     sdk_helpers.validate_dir_paths(os.W_OK, output_dir)
-    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_apikey_permissions_file)
 
     # Parse the setup.py file
     setup_py_attributes = parse_setup_py(path_setup_py_file, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
