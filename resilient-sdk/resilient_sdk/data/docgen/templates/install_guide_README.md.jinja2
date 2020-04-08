@@ -54,9 +54,13 @@
 * Resilient platform >= `v{{ server_version }}`
 * An Integration Server running `{{ res_circuits_dependency_str }}`
   * To set up an Integration Server see: [ibm.biz/res-int-server-guide](https://ibm.biz/res-int-server-guide)
-  * If using API Keys, minimum required are:
-    * API Key 1
-    * API Key 2
+  * If using API Keys, minimum required permissions are:
+    * Prior to v36
+      * Org Data: Edit (edit_data)
+      * Function: Read (read_function)
+    * AppHost (v36.2) Containers
+      * Org Data: Read (read_data)
+      * Function: Read (read_function)
 ---
 
 ## Installation
