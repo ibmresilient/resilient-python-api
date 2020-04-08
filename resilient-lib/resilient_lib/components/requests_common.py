@@ -104,7 +104,7 @@ class RequestsCommon:
 
             # Log the parameter inputs that are not None
             args_dict = locals()
-            args = args_dict.keys()
+            args = list(args_dict.keys())
             for k in args:
                 if k != "self" and k != "kwargs" and args_dict[k] is not None:
                     log.debug("  {}: {}".format(k, args_dict[k]))
