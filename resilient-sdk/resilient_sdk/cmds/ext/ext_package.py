@@ -101,8 +101,6 @@ class CmdExtPackage(BaseCmd):
         path_docker_file = os.path.join(path_to_src, BASE_NAME_DOCKER_FILE)
         path_entry_point = os.path.join(path_to_src, BASE_NAME_ENTRY_POINT)
         path_apikey_permissions_file = os.path.join(path_to_src, BASE_NAME_APIKEY_PERMS_FILE)
-        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
         path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
         path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
         path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)
@@ -121,8 +119,6 @@ class CmdExtPackage(BaseCmd):
         # Create the app
         path_the_extension_zip = create_extension(
             path_setup_py_file=path_setup_py_file,
-            path_customize_py_file=path_customize_py_file,
-            path_config_py_file=path_config_py_file,
             path_apikey_permissions_file=path_apikey_permissions_file,
             output_dir=path_output_dir,
             custom_display_name=args.display_name,

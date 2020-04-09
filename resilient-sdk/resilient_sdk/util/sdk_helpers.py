@@ -3,7 +3,6 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for the resilient-sdk"""
-
 import logging
 import keyword
 import re
@@ -16,6 +15,7 @@ import datetime
 import importlib
 import hashlib
 import uuid
+
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
@@ -111,6 +111,8 @@ def is_valid_package_name(name):
        False
        >>> is_valid_package_name("_something")
        True
+       >>> is_valid_package_name("-something")
+       True
     """
 
     # Strip off version information, if present in package base folder, to get the package name.
@@ -120,7 +122,7 @@ def is_valid_package_name(name):
         return False
     if name in dir(__builtins__):
         return False
-    return re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) is not None
+    return re.match(r"[(_|\-)A-Za-z][(_|\-)a-zA-Z0-9]*$", name) is not None
 
 
 def is_valid_version_syntax(version):
