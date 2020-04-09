@@ -168,8 +168,8 @@ def parse_setup_py(path, attribute_names):
             # Get the path of the top level for the package.
             path_package = os.path.dirname(path)
             parsed_attribute_name = _parse_setup_attribute(path, setup_py_lines, attribute_name)
-            # Capture the path of the config.py or customize.py modules if they are defined.
-            # Match until ':' in the pattern as follows:
+            # Capture the path of the config or customize modules if they are defined in setup.py.
+            # Match until 2nd ':' in the pattern as follows:
             #       "resilient.circuits.customize": ["customize = fn_func.util.customize:customization_data"]
             #       "resilient.circuits.apphost.configsection":
             #                       ["gen_config = fn_func.util.config:apphost_config_section_data"]
@@ -320,8 +320,8 @@ def get_import_definition_from_customize_py(path_customize_py_file):
 def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
     Raises Exception if it fails to parse configs
-    - config_str: is the full string found in the config.py file
-    - apphost_config_str: is the full string found in the app host config.py file
+    - config_str: is the full string found in the config file
+    - apphost_config_str: is the full string found in the app host config file
     - config_list: is a list of dict objects that contain each un-commented config
         - Each dict object has the attributes: name, placeholder, env_name, section_name
     """
@@ -377,7 +377,8 @@ def get_configs_from_config_py(path_config_py_file):
         raise SDKException(u"Failed to load module '{0}' got error '{1}'".format(config_module, err.__repr__()))
 
     except Exception as err:
-        raise SDKException(u"Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
+        raise SDKException(u"Failed to parse configs from the config file\nThe config file may be corrupt. Visit "
+                           u"the App Exchange to contact the developer\nReason: {0}".format(err))
 
     return (config_str, config_list)
 
@@ -553,26 +554,26 @@ def add_tag_to_import_definition(tag_name, supported_res_obj_names, import_defin
     return import_definition
 
 def get_configuration_py_file_path(file_type, setup_py_attributes):
-    """  Get the location of configuration file config.py or customize.py for a package.
+    """  Get the location of configuration file config or customize for a package.
 
-    If file_type == "customize.py" check that entry point 'resilient.circuits.apphost.customize' (SUPPORTED_EP[0])
+    If file_type == "customize" check that entry point 'resilient.circuits.apphost.customize' (SUPPORTED_EP[0])
     is defined in setup.py of the package.
-    If file_type == "config.py" check that entry point 'resilient.circuits.apphost.configsection' (SUPPORTED_EP[1]) is
+    If file_type == "config" check that entry point 'resilient.circuits.apphost.configsection' (SUPPORTED_EP[1]) is
     defined in setup.py of the package, else check 'resilient.circuits.configsection' (SUPPORTED_EP[2]) was detected in
     setup.py of the package.
 
     Note: For some packages neither of these files may exist not exist.
 
-    :param file_type: File whose location is required should be customize.py or config.py.
+    :param file_type: File whose location is required should be 'customize' or 'config'.
     :param setup_py_attributes: Parsed setup.py content.
-    :return path_customize_py_file The config.py location for the package.
+    :return path_py_file: The customize or config file location for the package.
     """
     path_py_file = None
 
-    if file_type == "customize.py":
+    if file_type == "customize":
         if SUPPORTED_EP[0] in setup_py_attributes["entry_points"]:
             path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[0]]
-    elif file_type == "config.py":
+    elif file_type == "config":
         for ep in SUPPORTED_EP[1:]:
             if ep in setup_py_attributes["entry_points"]:
                 path_py_file = setup_py_attributes["entry_points"][ep]
@@ -593,7 +594,8 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
     else:
         # For certain packages or threat-feeds these files may not exist.
         # Warn user if file not found.
-        LOG.warning("WARNING: Configuration File '%s' not defined in 'setup.py'. Ignoring and continuing.", file_type)
+        LOG.warning("WARNING: Configuration File of type '%s' not defined in 'setup.py'. Ignoring and continuing.",
+                    file_type)
 
     return path_py_file
 
@@ -602,7 +604,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                      custom_display_name=None, keep_build_dir=False):
     """
     TODO: update this docstring to new standard format
-    Function that creates The App.zip file from the given setup.py, customize.py and config.py files
+    Function that creates The App.zip file from the given setup.py, customize and config files
     and copies it to the output_dir. Returns the path to the App.zip
     - path_setup_py_file [String]: abs path to the setup.py file
     - path_apikey_permissions_file [String]: abs path to the apikey_permissions.txt file
@@ -619,7 +621,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     """
 
     LOG.info("Creating App")
-    # Variables to hold path of files customize.py and config.py.
+    # Variables to hold path of files for customize and config as defined in setup.py.
     # Set initially default to 'None', actual paths will be calculated later.
     path_customize_py_file = None
     path_config_py_file = None
@@ -650,13 +652,13 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     # Get the tag name
     tag_name = setup_py_attributes.get("name")
 
-    # Get the customize.py file location.
-    path_customize_py_file = get_configuration_py_file_path("customize.py", setup_py_attributes)
+    # Get the customize file location.
+    path_customize_py_file = get_configuration_py_file_path("customize", setup_py_attributes)
   
-    # Get the config.py file location.
-    path_config_py_file = get_configuration_py_file_path("config.py", setup_py_attributes)
+    # Get the config file location.
+    path_config_py_file = get_configuration_py_file_path("config", setup_py_attributes)
 
-    # Get ImportDefinition from customize.py
+    # Get ImportDefinition from the discovered customize file.
     if path_customize_py_file:
         customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
@@ -669,11 +671,11 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     # Add the tag to the import defintion
     customize_py_import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, customize_py_import_definition)
 
-    # Parse the app.configs from the config.py file
+    # Parse the app.configs from the discovered config file
     if path_config_py_file:
         app_configs = get_configs_from_config_py(path_config_py_file)
     else:
-        # No 'config.py' file found generate an empty definition.
+        # No config file file found generate an empty definition.
         app_configs = ("", [])
 
     # Parse the api key permissions from the apikey_permissions.txt file
