@@ -15,7 +15,7 @@ def test_get_main_app_parser():
     parser = app.get_main_app_parser()
 
     assert isinstance(parser, argparse.ArgumentParser)
-    assert parser.description == "Python SDK for developing Resilient Extensions"
+    assert parser.description == "Python SDK for developing Resilient Apps"
     assert parser.epilog == "For support, please visit ibm.biz/resilientcommunity"
 
     args = parser.parse_known_args()[0]

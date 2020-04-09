@@ -9,10 +9,11 @@ import sys
 import json
 import logging
 import shutil
+from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util import helpers as sdk_helpers
+from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -32,14 +33,21 @@ class CmdExtract(BaseCmd):
     CMD_HELP = "Extract data in order to publish a .res file"
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
-    $ resilient-sdk extract --script 'custom_script' --zip"""
-    CMD_DESCRIPTION = "Extract data in order to publish a .res file"
+    $ resilient-sdk extract --script 'custom_script' --zip
+    $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
+    CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
     CMD_ADD_PARSERS = ["res_obj_parser", "io_parser", "zip_parser"]
 
     def setup(self):
         # Define docgen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
+
+        # Add any optional arguments here
+        self.parser.add_argument("-n", "--name",
+                                 type=ensure_unicode,
+                                 help="Name to prepend to generated file",
+                                 nargs="?")
 
     def execute_command(self, args):
         LOG.info("Starting 'extract'...")
@@ -99,12 +107,19 @@ class CmdExtract(BaseCmd):
 
         # Generate path to file
         file_name = "export-{0}".format(sdk_helpers.get_timestamp(org_export.get("export_date", 0) / 1000.0))
+
+        # If custom name supplied, prepend it
+        if args.name:
+            file_name = "{0}-{1}".format(args.name, file_name)
+
         path_file_to_write = os.path.join(output_base, "{0}.res".format(file_name))
 
         LOG.info("Generating %s.res", file_name)
 
         # Write the file
         sdk_helpers.write_file(path_file_to_write, res_data)
+
+        LOG.debug('Wrote: %s', path_file_to_write)
 
         # If we should create .zip archive
         if args.zip:
@@ -117,10 +132,19 @@ class CmdExtract(BaseCmd):
             # Create directory
             os.makedirs(path_dir_to_zip)
 
-            # Move the written export file into new dir
-            shutil.move(path_file_to_write, path_dir_to_zip)
+            # Copy the written export file into new dir
+            shutil.copy(path_file_to_write, path_dir_to_zip)
 
             # zip the dir
-            shutil.make_archive(base_name=file_name, format="zip", root_dir=path_dir_to_zip)
+            the_zip = shutil.make_archive(base_name=file_name, format="zip", root_dir=path_dir_to_zip)
+
+            if output_base != os.path.dirname(the_zip):
+                # Move the zip into the output base
+                shutil.move(the_zip, output_base)
+
+            LOG.debug('Wrote: %s.zip', path_dir_to_zip)
+
+            # Remove directory
+            shutil.rmtree(path_dir_to_zip)
 
         LOG.info("'extract' complete")

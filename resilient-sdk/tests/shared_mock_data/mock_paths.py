@@ -17,5 +17,6 @@ MOCK_SETUP_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup.py")
 MOCK_SETUP_PY_LINES = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup_py_lines.py")
 MOCK_CONFIG_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "config.py")
 MOCK_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize.py")
+MOCK_OLD_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize_old.py")
 
 MOCK_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.res")

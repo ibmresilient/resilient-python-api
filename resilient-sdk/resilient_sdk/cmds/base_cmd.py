@@ -103,12 +103,12 @@ class BaseCmd(object):
 
         res_obj_parser.add_argument("-r", "--rule",
                                     type=ensure_unicode,
-                                    help="Display names of rules to include (surrounded by '')",
+                                    help="Display names of rules to include (surrounded by \"\")",
                                     nargs="*")
 
         res_obj_parser.add_argument("-s", "--script",
                                     type=ensure_unicode,
-                                    help="Display names of scripts to include (surrounded by '')",
+                                    help="Display names of scripts to include (surrounded by \"\")",
                                     nargs="*")
 
         res_obj_parser.add_argument("-t", "--task",

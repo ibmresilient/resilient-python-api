@@ -4,7 +4,8 @@
 
 import os
 from resilient_sdk.cmds import base_cmd, CmdCodegen
-from resilient_sdk.util import helpers
+from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import package_file_helpers as package_helpers
 from tests.shared_mock_data import mock_paths
 
 
@@ -13,11 +14,11 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
 
     assert isinstance(cmd_codegen, base_cmd.BaseCmd)
     assert cmd_codegen.CMD_NAME == "codegen"
-    assert cmd_codegen.CMD_HELP == "Generate boilerplate code to start developing an Extension"
+    assert cmd_codegen.CMD_HELP == "Generate boilerplate code to start developing an app"
     assert cmd_codegen.CMD_USAGE == """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
-    assert cmd_codegen.CMD_DESCRIPTION == "Generate boilerplate code to start developing an Extension"
+    assert cmd_codegen.CMD_DESCRIPTION == "Generate boilerplate code to start developing an app"
     assert cmd_codegen.CMD_ADD_PARSERS == ["res_obj_parser", "io_parser"]
 
     args = cmd_codegen.parser.parse_known_args()[0]
@@ -48,37 +49,58 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         "functions": [{"x_api_name": "fn_mock_function_1"}, {"x_api_name": "fn_mock_function_2"}]
     }
 
-    jinja_env = helpers.setup_jinja_env("data/codegen/templates/package_template")
+    jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
 
     jinja_mapping_dict = {
-        "setup.py": ("setup.py.jinja2", {}),
-        "tox.ini": ("tox.ini.jinja2", {}),
+        "MANIFEST.in": ("MANIFEST.in.jinja2", mock_jinja_data),
+        "README.md": ("README.md.jinja2", mock_jinja_data),
+        "setup.py": ("setup.py.jinja2", mock_jinja_data),
+        "tox.ini": ("tox.ini.jinja2", mock_jinja_data),
+        "Dockerfile": ("Dockerfile.jinja2", mock_jinja_data),
+        "entrypoint.sh": ("entrypoint.sh.jinja2", mock_jinja_data),
+        "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", mock_jinja_data),
+        "data": {},
+        "icons": {
+            "company_logo.png": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
+            "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
+        },
+        "doc": {
+            "README.md": ("doc/README.md.jinja2", mock_jinja_data)
+        },
         "test_package": {
-            "__init__.py": ("package/__init__.py.jinja2", {}),
+            "__init__.py": ("package/__init__.py.jinja2", mock_jinja_data),
+            "LICENSE": ("package/LICENSE.jinja2", mock_jinja_data),
+
+            "components": {
+                "__init__.py": ("package/components/__init__.py.jinja2", mock_jinja_data),
+            },
             "util": {
-                "config.py": ("package/util/config.py.jinja2", {}),
-                "customize.py": ("package/util/customize.py.jinja2", mock_jinja_data)
+                "__init__.py": ("package/util/__init__.py.jinja2", mock_jinja_data),
+                "config.py": ("package/util/config.py.jinja2", mock_jinja_data),
+                "customize.py": ("package/util/customize.py.jinja2", mock_jinja_data),
+                "selftest.py": ("package/util/selftest.py.jinja2", mock_jinja_data),
             }
         }
     }
 
     CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR)
 
-    files_in_dir = os.listdir(mock_paths.TEST_TEMP_DIR)
+    files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
+    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']
 
-    assert "setup.py" in files_in_dir
-    assert "tox.ini" in files_in_dir
-    assert "test_package" in files_in_dir
+    files_in_icons_dir = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "icons")))
+    assert files_in_icons_dir == ['app_logo.png', 'company_logo.png']
 
-    files_in_test_package = os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package"))
-    assert "__init__.py" in files_in_test_package
-    assert "util" in files_in_test_package
+    files_in_test_package = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package")))
+    assert files_in_test_package == ['LICENSE', '__init__.py', 'components', 'util']
 
-    files_in_util = os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util"))
-    assert "config.py" in files_in_util
-    assert "customize.py" in files_in_util
+    files_in_util = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util")))
+    assert files_in_util == ['__init__.py', 'config.py', 'customize.py', 'selftest.py']
+    
+    files_in_components = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "components")))
+    assert files_in_components == ['__init__.py']
 
-    customize_py = helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util", "customize.py"))
+    customize_py = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util", "customize.py"))
     assert '        "functions": [u"fn_mock_function_1", u"fn_mock_function_2"],\n' in customize_py
 
 

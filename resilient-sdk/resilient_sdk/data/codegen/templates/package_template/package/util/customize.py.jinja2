@@ -5,7 +5,7 @@
 # This here to support Apps running on resilient-circuits <= v34
 try:
     import resilient_circuits
-    if int(resilient_circuits.__version__.split(".")[0]) <= 34:
+    if int(resilient_circuits.__version__.split(".")[0]) >= 34:
         raise ImportError
     ImportDefinition = resilient_circuits.util.ImportDefinition
 

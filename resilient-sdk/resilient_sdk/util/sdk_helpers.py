@@ -14,8 +14,10 @@ import copy
 import json
 import datetime
 import importlib
-from jinja2 import Environment, PackageLoader
+import hashlib
+import uuid
 import xml.etree.ElementTree as ET
+from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
@@ -35,6 +37,8 @@ logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 def get_resilient_client(path_config_file=None):
     """
@@ -109,11 +113,64 @@ def is_valid_package_name(name):
        True
     """
 
+    # Strip off version information, if present in package base folder, to get the package name.
+    name = re.split(VERSION_REGEX, name, 1)[0]
+
     if keyword.iskeyword(name):
         return False
     if name in dir(__builtins__):
         return False
     return re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) is not None
+
+
+def is_valid_version_syntax(version):
+    """
+    Returns True if version is valid, else False. Accepted version examples are:
+        "1.0.0" "1.1.0" "123.0.123"
+    """
+    if not version:
+        return False
+
+    regex = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+$')
+
+    return regex.match(version) is not None
+
+
+def is_valid_url(url):
+    """
+    Returns True if url is valid, else False. Accepted url examples are:
+        "http://www.example.com:8000", "https://www.example.com", "www.example.com", "example.com"
+    """
+
+    if not url:
+        return False
+
+    regex = re.compile(
+        r'^(https?://)?'  # optional http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?)'  # domain/hostname
+        r'(?:/?|[/?]\S+)'  # .com etc.
+        r'(?::\d{1,5})?$',  # port number
+        re.IGNORECASE)
+
+    return regex.search(url) is not None
+
+
+def generate_uuid_from_string(the_string):
+    """
+    Returns String representation of the UUID of a hex md5 hash of the given string
+    """
+
+    # Instansiate new md5_hash
+    md5_hash = hashlib.md5()
+
+    # Pass the_string to the md5_hash as bytes
+    md5_hash.update(the_string.encode("utf-8"))
+
+    # Generate the hex md5 hash of all the read bytes
+    the_md5_hex_str = md5_hash.hexdigest()
+
+    # Return a String repersenation of the uuid of the md5 hash
+    return str(uuid.UUID(the_md5_hex_str))
 
 
 def has_permissions(permissions, path):
@@ -242,6 +299,21 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     """
     return_list = []
 
+    # This loops wanted_list
+    # If an entry is dict format, it will have value and identifier attributes
+    # We use those to get the 'programmatic_name' or 'api_name'
+    # Example: For message_destinations referenced in actions, they are referenced by display name
+    # This allows us to get their 'programmatic_name'
+    for index, obj in enumerate(wanted_list):
+        if isinstance(obj, dict):
+            temp_obj_identifier = obj.get("identifier", "")
+            obj_value = obj.get("value", "")
+            full_obj = get_obj_from_list(temp_obj_identifier,
+                                         export[obj_name],
+                                         lambda wanted_obj, i=temp_obj_identifier, v=obj_value: True if wanted_obj.get(i) == v else False)
+
+            wanted_list[index] = full_obj.get(obj_value).get(obj_identifer)
+
     if wanted_list:
         ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
 
@@ -322,8 +394,9 @@ def get_from_export(export,
             workflows.append(w)
 
         # Get names of Message Destinations that are related to Rule
+        # Message Destinations in Rules are identified by their Display Name
         for m in r.get("message_destinations", []):
-            message_destinations.append(m)
+            message_destinations.append({"identifier": "name", "value": m})
 
         # Get names of Tasks/Scripts/Fields that are related to Rule
         automations = r.get("automations", [])
@@ -574,7 +647,7 @@ def generate_anchor(header):
 
     An anchor is used in Markdown Templates to link certain parts of the document.
 
-    :param header: Path to the file that contains the module
+    :param header: String to create anchor from
     :type header: str
     :return: header formatted as an anchor
     :rtype: str
@@ -673,7 +746,7 @@ def get_timestamp(timestamp=None):
     :return: Timestamp string
     :rtype: str
     """
-    TIME_FORMAT = "%Y-%m-%d-%H:%M:%S"
+    TIME_FORMAT = "%Y%m%d%H%M%S"
 
     if timestamp:
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)

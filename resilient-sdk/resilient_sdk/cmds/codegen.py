@@ -6,34 +6,34 @@
 
 import logging
 import os
+import shutil
+import re
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util.package_file_helpers import load_customize_py_module
-from resilient_sdk.util.helpers import (get_resilient_client, setup_jinja_env,
-                                        is_valid_package_name, write_file,
-                                        validate_dir_paths, get_latest_org_export,
-                                        get_from_export, minify_export,
-                                        get_object_api_names, validate_file_paths,
-                                        rename_file, rename_to_bak_file, read_local_exportfile)
+from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
 # Relative paths from with the package of files + directories used
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_SETUP_PY = "setup.py"
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdCodegen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "codegen"
-    CMD_HELP = "Generate boilerplate code to start developing an Extension"
+    CMD_HELP = "Generate boilerplate code to start developing an app"
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
-    CMD_DESCRIPTION = "Generate boilerplate code to start developing an Extension"
+    CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["res_obj_parser", "io_parser"]
 
     def setup(self):
@@ -105,6 +105,11 @@ class CmdCodegen(BaseCmd):
                 newly_generated_files += new_files
                 files_skipped += skipped_files
 
+            elif isinstance(file_info, str) and os.path.isfile(file_info):
+                # It is just a path to a file, copy it to the target_file
+                target_file = os.path.join(target_dir, file_name)
+                shutil.copy(file_info, target_file)
+
             else:
                 # Get path to Jinja2 template
                 path_template = file_info[0]
@@ -123,7 +128,7 @@ class CmdCodegen(BaseCmd):
 
                 newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
 
-                write_file(target_file, jinja_rendered_text)
+                sdk_helpers.write_file(target_file, jinja_rendered_text)
 
         return newly_generated_files, files_skipped
 
@@ -162,13 +167,17 @@ class CmdCodegen(BaseCmd):
         LOG.info("codegen _gen_function called")
 
     @staticmethod
-    def _gen_package(args):
+    def _gen_package(args, setup_py_attributes={}):
+
         LOG.info("Generating codegen package...")
 
-        if not is_valid_package_name(args.package):
+        if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
-        package_name = args.package
+        # Strip off version information, if present in package base folder, to get the package name.
+        package_name = re.split(VERSION_REGEX, args.package, 1)[0]
+        # Get base version if we are running against a package base folder with version.
+        base_version = ''.join(re.split(package_name, args.package))
 
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
@@ -177,55 +186,58 @@ class CmdCodegen(BaseCmd):
         # If --exportfile is specified, read org_export from that file
         if args.exportfile:
             LOG.info("Using local export file: %s", args.exportfile)
-            org_export = read_local_exportfile(args.exportfile)
+            org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
         else:
             # Instantiate connection to the Resilient Appliance
-            res_client = get_resilient_client()
+            res_client = sdk_helpers.get_resilient_client()
 
             # Generate + get latest export from Resilient Server
-            org_export = get_latest_org_export(res_client)
+            org_export = sdk_helpers.get_latest_org_export(res_client)
 
         # Get data required for Jinja2 templates from export
-        jinja_data = get_from_export(org_export,
-                                     message_destinations=args.messagedestination,
-                                     functions=args.function,
-                                     workflows=args.workflow,
-                                     rules=args.rule,
-                                     fields=args.field,
-                                     artifact_types=args.artifacttype,
-                                     datatables=args.datatable,
-                                     tasks=args.task,
-                                     scripts=args.script)
+        jinja_data = sdk_helpers.get_from_export(org_export,
+                                                 message_destinations=args.messagedestination,
+                                                 functions=args.function,
+                                                 workflows=args.workflow,
+                                                 rules=args.rule,
+                                                 fields=args.field,
+                                                 artifact_types=args.artifacttype,
+                                                 datatables=args.datatable,
+                                                 tasks=args.task,
+                                                 scripts=args.script)
 
         # Get 'minified' version of the export. This is used in customize.py
-        jinja_data["export_data"] = minify_export(org_export,
-                                                  message_destinations=get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
-                                                  functions=get_object_api_names(ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
-                                                  workflows=get_object_api_names(ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
-                                                  rules=get_object_api_names(ResilientObjMap.RULES, jinja_data.get("rules")),
-                                                  fields=jinja_data.get("all_fields"),
-                                                  artifact_types=get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
-                                                  datatables=get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
-                                                  tasks=get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
-                                                  phases=get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
-                                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+        jinja_data["export_data"] = sdk_helpers.minify_export(org_export,
+                                                              message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
+                                                              functions=sdk_helpers.get_object_api_names(ResilientObjMap.FUNCTIONS, jinja_data.get("functions")),
+                                                              workflows=sdk_helpers.get_object_api_names(ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
+                                                              rules=sdk_helpers.get_object_api_names(ResilientObjMap.RULES, jinja_data.get("rules")),
+                                                              fields=jinja_data.get("all_fields"),
+                                                              artifact_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, jinja_data.get("artifact_types")),
+                                                              datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
+                                                              tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
+                                                              phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
+                                                              scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
 
-        # Validate we have write permissions
-        validate_dir_paths(os.W_OK, output_base)
+        # Add version
+        jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
 
-        # Join package_name to output base
-        output_base = os.path.join(output_base, package_name)
+        # Validate we have write permissions
+        sdk_helpers.validate_dir_paths(os.W_OK, output_base)
+
+        # Join package_name to output base (add base version if running against a folder which includes a version).
+        output_base = os.path.join(output_base, package_name+base_version)
 
         # If the output_base directory does not exist, create it
         if not os.path.exists(output_base):
             os.makedirs(output_base)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
-        jinja_env = setup_jinja_env("data/codegen/templates/package_template")
+        jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
 
         # This dict maps our package file structure to  Jinja2 templates
         package_mapping_dict = {
@@ -233,7 +245,14 @@ class CmdCodegen(BaseCmd):
             "README.md": ("README.md.jinja2", jinja_data),
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
+            "Dockerfile": ("Dockerfile.jinja2", jinja_data),
+            "entrypoint.sh": ("entrypoint.sh.jinja2", jinja_data),
+            "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", jinja_data),
             "data": {},
+            "icons": {
+                "company_logo.png": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
+                "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
+            },
             "doc": {
                 "README.md": ("doc/README.md.jinja2", jinja_data)
             },
@@ -303,12 +322,17 @@ class CmdCodegen(BaseCmd):
 
         old_params, path_customize_py_bak = [], ""
 
-        # Get + validate package and customize.py paths
+        # Get + validate package, customize.py and setup.py paths
         path_package = os.path.abspath(args.package)
-        validate_dir_paths(os.R_OK, path_package)
+        # Get basename of path_to_src (version information is stripped from the basename).
+        path_package_basename = re.split(VERSION_REGEX, os.path.basename(path_package), 1)[0]
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        path_customize_py = os.path.join(path_package, os.path.basename(path_package), PATH_CUSTOMIZE_PY)
-        validate_file_paths(os.W_OK, path_customize_py)
+        path_customize_py = os.path.join(path_package, path_package_basename, PATH_CUSTOMIZE_PY)
+        sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
+
+        path_setup_py_file = os.path.join(path_package, PATH_SETUP_PY)
+        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
         args.package = os.path.basename(path_package)
@@ -317,7 +341,7 @@ class CmdCodegen(BaseCmd):
         LOG.info("'codegen --reload' started for '%s'", args.package)
 
         # Load the customize.py module
-        customize_py_module = load_customize_py_module(path_customize_py)
+        customize_py_module = package_helpers.load_customize_py_module(path_customize_py)
 
         try:
             # Get the 'old_params' from customize.py
@@ -329,7 +353,7 @@ class CmdCodegen(BaseCmd):
             raise SDKException(u"No reload params found in {0}".format(path_customize_py))
 
         # Rename the old customize.py with .bak
-        path_customize_py_bak = rename_to_bak_file(path_customize_py)
+        path_customize_py_bak = sdk_helpers.rename_to_bak_file(path_customize_py)
 
         try:
             # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
@@ -348,10 +372,13 @@ class CmdCodegen(BaseCmd):
             # Merge old_params with new params specified on command line
             args = CmdCodegen.merge_codegen_params(old_params, args, mapping_tuples)
 
+            # Parse the setup.py file
+            setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
             LOG.debug("Regenerating codegen '%s' package now", args.package)
 
             # Regenerate the package
-            CmdCodegen._gen_package(args)
+            CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
             LOG.info("'codegen --reload' complete for '%s'", args.package)
 
@@ -363,4 +390,4 @@ class CmdCodegen(BaseCmd):
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                rename_file(path_customize_py_bak, "customize.py")
+                sdk_helpers.rename_file(path_customize_py_bak, "customize.py")

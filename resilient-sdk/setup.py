@@ -17,8 +17,9 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=35.0.0",
-        "jinja2>=2.10.0"
+        "resilient>=35.0.0.dev",
+        "jinja2>=2.10.0",
+        "setuptools>=44.0.0"
     ],
 
     include_package_data=True,
@@ -31,7 +32,7 @@ setup(
     # PyPI metadata
     author="IBM Resilient",
     author_email="support@resilientsystems.com",
-    description="Python SDK for developing Extensions for the IBM Resilient Platform",
+    description="Python SDK for developing Apps for the IBM Resilient Platform",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "http://ibm.biz/resilientcommunity",

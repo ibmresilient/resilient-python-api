@@ -20,7 +20,7 @@ import os
 import shutil
 import pytest
 import resilient_sdk.app as app
-from resilient_sdk.util.helpers import write_file, get_resilient_client
+from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
 
 
@@ -60,7 +60,7 @@ cafile=false
 
 resilient_mock={0}""".format(resilient_mock)
 
-    write_file(write_path, app_configs)
+    sdk_helpers.write_file(write_path, app_configs)
 
     return write_path
 
@@ -78,7 +78,7 @@ def fx_mock_res_client():
     _mk_temp_dir()
     app_config = _mk_app_config()
 
-    yield get_resilient_client(path_config_file=app_config)
+    yield sdk_helpers.get_resilient_client(path_config_file=app_config)
     _rm_temp_dir()
 
 

@@ -6,11 +6,12 @@
 
 import logging
 import os
+import re
 import pkg_resources
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import helpers as sdk_helpers
+from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, ResilientObjMap
 
@@ -32,17 +33,19 @@ PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_s
 PATH_USER_GUIDE_README = os.path.join(PATH_DOC_DIR, "README.md")
 PATH_DEFAULT_USER_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/README.md.jinja2")
 
+# Regex for splitting version number at end of name from package basename.
+VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdDocgen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "docgen"
-    CMD_HELP = "Generate documentation for an Extension"
+    CMD_HELP = "Generate documentation for an app"
     CMD_USAGE = """
     $ resilient-sdk docgen -p <path_to_package>
-    $ resilient-sdk docgen -p <path_to_package> --only-user-guide
-    $ resilient-sdk docgen -p <path_to_package> --only-install-guide"""
-    CMD_DESCRIPTION = "Generate documentation for an Extension"
+    $ resilient-sdk docgen -p <path_to_package> --user-guide
+    $ resilient-sdk docgen -p <path_to_package> --install-guide"""
+    CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
         # Define docgen usage and description
@@ -52,17 +55,17 @@ class CmdDocgen(BaseCmd):
         # Add any positional or optional arguments here
         self.parser.add_argument("-p",
                                  type=ensure_unicode,
-                                 help="Path to the directory containing the setup.py file",
+                                 help="Path to the package containing the setup.py file",
                                  nargs="?",
                                  default=os.getcwd())
 
         parser_group = self.parser.add_mutually_exclusive_group(required=False)
 
-        parser_group.add_argument("--only-user-guide", "--uguide",
+        parser_group.add_argument("--user-guide", "--uguide",
                                   help="Only generate the User Guide",
                                   action="store_true")
 
-        parser_group.add_argument("--only-install-guide", "--iguide",
+        parser_group.add_argument("--install-guide", "--iguide",
                                   help="Only generate the Install Guide",
                                   action="store_true")
 
@@ -253,7 +256,11 @@ class CmdDocgen(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
+        # Get basename of path_to_src (version information is stripped from the basename).
+        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
+
         LOG.debug("Path to project: %s", path_to_src)
+        LOG.debug("Project basename: %s", path_to_src_basename)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env("data/docgen/templates")
@@ -264,8 +271,8 @@ class CmdDocgen(BaseCmd):
 
         # Generate paths to required directories + files
         path_setup_py_file = os.path.join(path_to_src, PATH_SETUP_PY)
-        path_customize_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, os.path.basename(path_to_src), PATH_CONFIG_PY)
+        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
         path_install_guide_readme = os.path.join(path_to_src, PATH_INSTALL_GUIDE_README)
         path_doc_dir = os.path.join(path_to_src, PATH_DOC_DIR)
         path_screenshots_dir = os.path.join(path_to_src, PATH_SCREENSHOTS)
@@ -283,8 +290,8 @@ class CmdDocgen(BaseCmd):
             os.makedirs(path_screenshots_dir)
 
         # Set generate guide flags. Will generate both by default
-        do_generate_user_guide = False if args.only_install_guide else True
-        do_generate_install_guide = False if args.only_user_guide else True
+        do_generate_user_guide = False if args.install_guide else True
+        do_generate_install_guide = False if args.user_guide else True
 
         # Parse the setup.py file
         setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)

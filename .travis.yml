@@ -18,9 +18,9 @@ matrix:
   - python: 2.7
     env:
       - TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
-  - python: 3.4
+  - python: 3.6
     env:
-      - TOXENV=py34 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      - TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
 
 install:
   - pip install --upgrade pip
@@ -33,6 +33,7 @@ before_script:
   # nothing
 
 script:
+  - tox -c ./resilient-sdk
   - buildnum=$(git tag --list | tail -n 1 | sed s/[a-z]//g)
   - ./buildall.sh $buildnum
 
