@@ -320,6 +320,7 @@ def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
     Raises Exception if it fails to parse configs
     - config_str: is the full string found in the config.py file
+    - apphost_config_str: is the full string found in the app host config.py file
     - config_list: is a list of dict objects that contain each un-commented config
         - Each dict object has the attributes: name, placeholder, env_name, section_name
     """
@@ -566,32 +567,34 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
     :return path_customize_py_file The config.py location for the package.
     """
     path_py_file = None
+
     if file_type == "customize.py":
         if SUPPORTED_EP[0] in setup_py_attributes["entry_points"]:
             path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[0]]
     elif file_type == "config.py":
-        if SUPPORTED_EP[1] in setup_py_attributes["entry_points"]:
-            path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[1]]
-        elif SUPPORTED_EP[2] in setup_py_attributes["entry_points"]:
-            path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[2]]
-        try:
-            sdk_helpers.validate_file_paths(os.R_OK, path_py_file)
-        except SDKException:
-            # If configuration defined in setup.py but does not exist raise an error.
-            LOG.info("Configuration File '%s' not found at location '%s'.", file_type, path_py_file)
-            if not sdk_helpers.validate_file_paths(os.R_OK, path_py_file):
-                raise SDKException("Configuration File '{0}' not found at location '{1}'."
-                                   .format(file_type, path_py_file))
+        for ep in SUPPORTED_EP[1:]:
+            if ep in setup_py_attributes["entry_points"]:
+                path_py_file = setup_py_attributes["entry_points"][ep]
+                break
     else:
         raise SDKException("Unknown option '{}'.".format(file_type))
 
-    if not path_py_file:
+    if path_py_file:
+        # If configuration file defined in setup.py but does not exist raise an error.
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, path_py_file)
+        except SDKException:
+            LOG.info("Configuration File '%s' defined as an entry point in 'setup.py' not found at location '%s'.",
+                     file_type, path_py_file)
+            if not sdk_helpers.validate_file_paths(os.R_OK, path_py_file):
+                raise SDKException("Configuration File '{0}' defined as an entry point in 'setup.py' not found at "
+                                   "location '{1}'.".format(file_type, path_py_file))
+    else:
         # For certain packages or threat-feeds these files may not exist.
         # Warn user if file not found.
         LOG.warning("WARNING: Configuration File '%s' not defined in 'setup.py'. Ignoring and continuing.", file_type)
 
     return path_py_file
-
 
 def create_extension(path_setup_py_file, path_apikey_permissions_file,
                      output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None,
