@@ -78,6 +78,8 @@ IMPORT_MIN_SERVER_VERSION = {
     'version': "36.2.0000"
 }
 
+# The default app container repository name.
+REPOSITORY_NAME = "ibmresilient"
 
 def _is_setup_attribute(line):
     """Use RegEx to check if the given file line starts with (for example) 'long_description='.
@@ -601,7 +603,7 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
 
 def create_extension(path_setup_py_file, path_apikey_permissions_file,
                      output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None,
-                     custom_display_name=None, keep_build_dir=False):
+                     custom_display_name=None, repository_name=None, keep_build_dir=False):
     """
     TODO: update this docstring to new standard format
     Function that creates The App.zip file from the given setup.py, customize and config files
@@ -617,6 +619,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     - path_company_logo [String]: abs path to the company_logo.png. Has to be 100x100 and a .png file
         - if not provided uses default icon
     - custom_display_name [String]: will give the App that display name. Default: name from setup.py file
+    - repository_name [String]: will over-ride the container repository name for the App. Default: 'ibmresilient'
     - keep_build_dir [Boolean]: if True, build/ will not be remove. Default: False
     """
 
@@ -686,6 +689,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
     # Generate the uuid
     uuid = sdk_helpers.generate_uuid_from_string(setup_py_attributes.get("name"))
+
+    # Set the container repository name to default if value not passed in as argument.
+    if not repository_name:
+        repository_name = REPOSITORY_NAME
 
     # Generate paths to the directories and files we will use in the build directory
     path_build = os.path.join(output_dir, BASE_NAME_BUILD)
@@ -767,7 +774,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "executables": [
                     {
                         "name": setup_py_attributes.get("name"),
-                        "image": "resilient/{0}:{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version")),
+                        "image": "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"),
+                                                      setup_py_attributes.get("version")),
                         "config_string": app_configs[0],
                         "permission_handles": apikey_permissions,
                         "uuid": uuid
