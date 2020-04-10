@@ -342,13 +342,17 @@ def get_configs_from_config_py(path_config_py_file):
             apphost_config_str = config_py.apphost_config_section_data()
         except AttributeError:
             # An app host config may not exist set string to empty string.
-            apphost_config_str = ''
+            apphost_config_str = u''
 
         # Iterate over config and apphost conf files and parse settings.
-        for cfg_str in [config_str, apphost_config_str]:
+        concat_cfg_str = u''
+        for cfg_str in [apphost_config_str, config_str]:
             if not cfg_str:
                 # Skip for empty string.
                 continue
+
+            # concatenate the config sections
+            concat_cfg_str += cfg_str + u'\n'
             # Instansiate a new configparser
             config_parser = configparser.ConfigParser()
 
@@ -380,7 +384,7 @@ def get_configs_from_config_py(path_config_py_file):
         raise SDKException(u"Failed to parse configs from the config file\nThe config file may be corrupt. Visit "
                            u"the App Exchange to contact the developer\nReason: {0}".format(err))
 
-    return (config_str, config_list)
+    return (concat_cfg_str, config_list)
 
 def get_apikey_permissions(path):
     """Returns a list of api keys to allow an integration to run.
