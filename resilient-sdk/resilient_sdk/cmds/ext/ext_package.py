@@ -41,7 +41,7 @@ class CmdExtPackage(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk package -p <path_to_directory>
     $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"
-    $ resilient-sdk package -p <path_to_directory> --repository_name "ibmresilient_dev"
+    $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient"
     $ resilient-sdk package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
@@ -63,11 +63,12 @@ class CmdExtPackage(BaseCmd):
                                  action="store_true")
 
         self.parser.add_argument("--display-name",
-                                 help="The Display Name to give the app",
+                                 help="The display name to give the app",
                                  nargs="?")
 
-        self.parser.add_argument("--repository_name",
+        self.parser.add_argument("--repository-name",
                                  help="The name of the repository which contains the app container",
+                                 default="resilient",
                                  nargs="?")
 
     def execute_command(self, args):
