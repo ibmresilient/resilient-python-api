@@ -341,18 +341,14 @@ def get_configs_from_config_py(path_config_py_file):
         try:
             apphost_config_str = config_py.apphost_config_section_data()
         except AttributeError:
-            # An app host config may not exist set string to empty string.
-            apphost_config_str = u''
+            # An app host config may not exist
+            apphost_config_str = None
 
-        # Iterate over config and apphost conf files and parse settings.
-        concat_cfg_str = u''
-        for cfg_str in [apphost_config_str, config_str]:
-            if not cfg_str:
-                # Skip for empty string.
-                continue
-
-            # concatenate the config sections
-            concat_cfg_str += cfg_str + u'\n'
+        # concatenate the config sections
+        clean_cfg_list = list(filter(None, [apphost_config_str, config_str]))
+        concat_cfg_str = '\n'.join(clean_cfg_list)
+        # Iterate over config sections and parse settings.
+        for cfg_str in clean_cfg_list:
             # Instansiate a new configparser
             config_parser = configparser.ConfigParser()
 
@@ -360,13 +356,11 @@ def get_configs_from_config_py(path_config_py_file):
             if sys.version_info < (3, 2):
                 # config_parser.readfp() was deprecated and replaced with read_file in PY3.2
                 config_parser.readfp(StringIO(cfg_str))
-
             else:
                 config_parser.read_file(StringIO(cfg_str))
 
             # Get the configs from each section
             for section_name in config_parser.sections():
-
                 parsed_configs = config_parser.items(section_name)
 
                 for config in parsed_configs:
