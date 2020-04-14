@@ -4,37 +4,40 @@
 * Fix `cafile=false` throwing `AttributeError`
 * Fix a bug when Python component's `package_name == function_name`
 
+2020-04-15: version 36.2
+
+* Deprecated 'codegen' and 'extract' command-line arguments. See resilient-sdk for moved functionality.
+
 
 2019-08-02: version 33.0.189
 
 * Added support for API key and API key secret, now able to authenticate
-  using API keys instead of email/password
-* New functions added to resilient-lib
+  using API keys instead of email/password.
+* New functions added to resilient-lib:
     'get_file_attachment_metadata()'
     'write_to_tmp_file()'
 * Updated 'validate_fields()' function in resilient-lib,
-  adding the ability to validate fields in app.config
+  adding the ability to validate fields in app.config.
 * Other minor bug fixes.
-
 
 
 2019-07-03: version 32.0.186
 
-*  Added more flexible 'execute_call_v2()' method in resilient-lib
-*  Fix for deprecated log warnings
-*  Other minor bug fixes
+*  Added more flexible 'execute_call_v2()' method in resilient-lib.
+*  Fix for deprecated log warnings.
+*  Other minor bug fixes.
 
 
 2019-04-12: version 32.0.140
 
-*  Fix for exposed Resilient passwords in resilient-circuits log when run in DEBUG mode
-*  'codegen' creates setup.py files which will programmatically compute function component entry points
-*  Added WorkflowStatus class
-*  Running 'codegen', 'codegen --reload', and 'extract' now automatically creates export files in Resilient to run against. Manually export no longer needed
-*  'extract' will now extract all data associated with playbooks including Tasks, Scripts, and custom Artifact Types
-*  Support for activemq hosted externally (ISC)
-*  Improvements to 'resilient-lib'
-*  Other minor bug fixes/improvements
+*  Fix for exposed Resilient passwords in resilient-circuits log when run in DEBUG mode.
+*  'codegen' creates setup.py files which will programmatically compute function component entry points.
+*  Added WorkflowStatus class.
+*  Running 'codegen', 'codegen --reload', and 'extract' now automatically creates export files in Resilient to run against. Manually export no longer needed.
+*  'extract' will now extract all data associated with playbooks including Tasks, Scripts, and custom Artifact Types.
+*  Support for activemq hosted externally (ISC).
+*  Improvements to 'resilient-lib'.
+*  Other minor bug fixes/improvements.
 
 
 2019-03-06: version 32.0.126
