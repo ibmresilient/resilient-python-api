@@ -81,7 +81,7 @@ class CmdExtPackage(BaseCmd):
             -  **args.package**: path to directory that must include a setup.py, customize.py and config.py file.
             -  **args.cmd**: `package` in this case
             -  **args.display_name**: will give the App that display name. Default: name from setup.py file
-            -  **args.repository-name**: if defined, it will replace the default image repository name in app.json for
+            -  **args.repository_name**: if defined, it will replace the default image repository name in app.json for
                                          container access.
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
         :type args: argparse Namespace
