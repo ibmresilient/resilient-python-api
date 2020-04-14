@@ -68,7 +68,7 @@ class CmdExtPackage(BaseCmd):
 
         self.parser.add_argument("--repository-name",
                                  help="Name of the repository which contains the app container",
-                                 default="resilient",
+                                 default="ibmresilient",
                                  nargs="?")
 
     def execute_command(self, args):
