@@ -1,2 +1,2 @@
 include resilient/LICENSE
-include resilient/CHANGES
+include ./CHANGES
