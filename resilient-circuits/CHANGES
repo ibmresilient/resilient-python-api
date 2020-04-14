@@ -1,12 +1,13 @@
+2020-04-15: version 36.2
+
+* Deprecated 'codegen' and 'extract' command-line arguments. See resilient-sdk for moved functionality.
+
+
 2019-10-07L version 34.0.194
 
 * Updated exception handling. Introduced BaseFunctionError class, ability to hide trace, and include messages.
 * Fix `cafile=false` throwing `AttributeError`
 * Fix a bug when Python component's `package_name == function_name`
-
-2020-04-15: version 36.2
-
-* Deprecated 'codegen' and 'extract' command-line arguments. See resilient-sdk for moved functionality.
 
 
 2019-08-02: version 33.0.189
