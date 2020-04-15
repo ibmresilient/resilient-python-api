@@ -41,6 +41,7 @@ class CmdExtPackage(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk package -p <path_to_directory>
     $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"
+    $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient"
     $ resilient-sdk package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
@@ -62,7 +63,12 @@ class CmdExtPackage(BaseCmd):
                                  action="store_true")
 
         self.parser.add_argument("--display-name",
-                                 help="The Display Name to give the App",
+                                 help="Display name to give the app",
+                                 nargs="?")
+
+        self.parser.add_argument("--repository-name",
+                                 help="Name of the repository which contains the app container",
+                                 default="ibmresilient",
                                  nargs="?")
 
     def execute_command(self, args):
@@ -75,6 +81,8 @@ class CmdExtPackage(BaseCmd):
             -  **args.package**: path to directory that must include a setup.py, customize.py and config.py file.
             -  **args.cmd**: `package` in this case
             -  **args.display_name**: will give the App that display name. Default: name from setup.py file
+            -  **args.repository_name**: if defined, it will replace the default image repository name in app.json for
+                                         container access.
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
         :type args: argparse Namespace
 
@@ -122,6 +130,7 @@ class CmdExtPackage(BaseCmd):
             path_apikey_permissions_file=path_apikey_permissions_file,
             output_dir=path_output_dir,
             custom_display_name=args.display_name,
+            repository_name=args.repository_name,
             keep_build_dir=args.keep_build_dir,
             path_extension_logo=path_extension_logo,
             path_company_logo=path_company_logo
