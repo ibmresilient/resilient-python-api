@@ -186,7 +186,13 @@ class App(Component):
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file: %s", self.config_file)
         LOG.info("Resilient server: %s", self.opts.get("host"))
-        LOG.info("Resilient user: %s", self.opts.get("email"))
+        if self.opts.get("email", None):
+            LOG.info("Resilient user: %s", self.opts.get("email"))
+        if self.opts.get("api_key_id", None):
+            LOG.info("Resilient api key id: %s", self.opts.get("api_key_id"))
+        if self.opts.get("api_key_id", None) and self.opts.get("email", None):
+            LOG.warning("The user and api key configuration settings are both enabled. Credentials will default to the "
+                        "api key settings.")
         LOG.info("Resilient org: %s", self.opts.get("org"))
         LOG.info("Logging Level: %s", self.opts.get("loglevel"))
         if self.opts.get("test_actions", False):
