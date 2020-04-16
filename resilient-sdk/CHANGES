@@ -1,9 +1,9 @@
 2020-04: ver. 36.2
 
 * Package created. Using 36 as original version
-* Added support in for API key permissions inapp.json using permissions file.
-* Added support in for new apphost config section.
-* Customization and config properties files extracted from setup.py.
+* Added support for API key permissions in app.json using permissions file.
+* Added support for new apphost config section.
+* Customization and config properties files now extracted from setup.py.
 * Rename 'app:package' command to 'package'.
 * Bug fixes.
 
