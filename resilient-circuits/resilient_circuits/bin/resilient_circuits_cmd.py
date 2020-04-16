@@ -487,6 +487,7 @@ def main():
     # create base parser for extract and codgen
     common_parser = argparse.ArgumentParser(add_help=False)
 
+    """
     # Options for 'codegen'
     common_parser.add_argument("-f", "--function",
                                 type=ensure_unicode,
@@ -530,7 +531,7 @@ def main():
     common_parser.add_argument("-o", "--output",
                                 type=ensure_unicode,
                                 help="Output file name")
-
+    """
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Print debug output", action="store_true")
@@ -552,9 +553,10 @@ def main():
     config_parser = subparsers.add_parser("config",
                                           help="Create or update a basic configuration file")
     codegen_parser = subparsers.add_parser("codegen", parents=[common_parser],
-                                           help="Generate template code for Python components")
+                                           help="Deprecated for resilient-circuits, functionality moved to the resilient-sdk tool",
+                                           )
     extractfile_parser = subparsers.add_parser("extract", parents=[common_parser],
-                                                help="Extract data in order to publish a .res file")
+                                                help="Deprecated for resilient-circuits, functionality moved to the resilient-sdk tool")
     customize_parser = subparsers.add_parser("customize",
                                              help="Apply customizations to the Resilient platform")
     selftest_parser = subparsers.add_parser("selftest",
@@ -627,6 +629,7 @@ def main():
                                 default="")
     service_parser.add_argument("service_args", help="Args to pass to service manager", nargs=argparse.REMAINDER)
 
+    """
     # Options for codegen
     codegen_parser.add_argument("-p", "--package",
                                 type=ensure_unicode,
@@ -639,6 +642,7 @@ def main():
     extractfile_parser.add_argument("--zip",
                                     action='store_true',
                                     help="zip of the resulting file")
+    """
     # Options for 'customize'
     customize_parser.add_argument("-y",
                                   dest="yflag",
@@ -677,6 +681,9 @@ def main():
     elif args.cmd == "service":
         manage_service(unknown_args + args.service_args, args.res_circuits_args)
     elif args.cmd in ("codegen", "extract"):
+        LOG.warning("DEPRECATED: The '%s' command has been deprecated for resilient-circuits. "
+                    "This functionality has been moved to the resilient-sdk tool.", args.cmd)
+        """
         if args.cmd == "codegen" and args.package is None and args.function is None and args.reload is None:
             codegen_parser.print_usage()
         elif args.cmd == "extract" and args.output is None:
@@ -684,6 +691,7 @@ def main():
         else:
             logging.basicConfig(format='%(message)s', level=logging.INFO)
             generate_code(args)
+        """
     elif args.cmd == "customize":
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
