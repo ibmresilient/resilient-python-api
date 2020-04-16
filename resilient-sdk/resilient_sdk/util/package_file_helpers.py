@@ -128,8 +128,14 @@ def _parse_setup_attribute(path_to_setup_py, setup_py_lines, attribute_name):
     if not the_attribute_found:
         LOG.warning("WARNING: '%s' is not a defined attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
 
-    # Create single string and trim (" , ' )
-    the_attribute_value = " ".join(the_attribute_value)
+    if "description" in attribute_name:
+        # For 'description' or 'long_description' strip '"' from rhs and lhs of value and convert
+        # to a string.
+        the_attribute_value = ''.join([av.strip('"') for av in the_attribute_value])
+    else:
+        # Convert value to a string.
+        the_attribute_value = " ".join(the_attribute_value)
+    # Trim (" , ' ) characters from end of value.
     the_attribute_value = the_attribute_value.strip("\",'.")
 
     return the_attribute_value
@@ -165,11 +171,11 @@ def parse_setup_py(path, attribute_names):
 
     # Foreach attribute_name, get its value and add to return_dict
     for attribute_name in attribute_names:
+        parsed_attribute_name = _parse_setup_attribute(path, setup_py_lines, attribute_name)
         if attribute_name == "entry_points":
             entry_point_paths = {}
             # Get the path of the top level for the package.
             path_package = os.path.dirname(path)
-            parsed_attribute_name = _parse_setup_attribute(path, setup_py_lines, attribute_name)
             # Capture the path of the config or customize modules if they are defined in setup.py.
             # Match until 2nd ':' in the pattern as follows:
             #       "resilient.circuits.customize": ["customize = fn_func.util.customize:customization_data"]
@@ -183,7 +189,7 @@ def parse_setup_py(path, attribute_names):
                                                                .replace(".", os.path.sep))+".py"})
             return_dict[attribute_name] = entry_point_paths
         else:
-            return_dict[attribute_name] = _parse_setup_attribute(path, setup_py_lines, attribute_name)
+            return_dict[attribute_name] = parsed_attribute_name
 
     return return_dict
 
