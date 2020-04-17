@@ -155,33 +155,18 @@ def parse_setup_py(path, attribute_names):
 
     return return_dict
 
-def get_dependency_from_install_requires_str(install_requires_str, dependency_name):
+def get_dependency_from_install_requires_list(install_requires, dependency_name):
     """Returns the String of the dependency_name specified in the setup.py file by
-    using the install_requires_str parsed from the setup.py file with utils.parse_setup_py()
+    using the install_requires_list parsed from the setup.py file with utils.parse_setup_py()
     to return the name and version of dependency_name
 
-    - install_requires_str: String  "['resilient_circuits>=31.0.0', 'resilient_lib']"
+    - install_requires: List  "['resilient_circuits>=31.0.0', 'resilient_lib']"
     - dependency_name: String "resilient_circuits"
-    - Return: 'resilient_circuits>=31.0.0' """
-
-    # Remove first + last character if they are [ or ]
-    if install_requires_str[0] == "[":
-        install_requires_str = install_requires_str[1:]
-
-    if install_requires_str[-1] == "]":
-        install_requires_str = install_requires_str[:-1]
-
-    # Remove start + trailing whitespace
-    install_requires_str = install_requires_str.strip()
-
-    # Convert str to list on comma
-    dependencies = install_requires_str.split(",")
-
-    # Remove start + trailing whitespace, ' or " for each dependency
-    dependencies = [d.strip(" '\"") for d in dependencies]
+    - Return: 'resilient_circuits>=31.0.0'
+    """
 
     # Get the dependency if it includes dependency_name
-    dependency = next((d for d in dependencies if dependency_name in d), None)
+    dependency = next((d for d in install_requires if dependency_name in d), None)
 
     return dependency
 
