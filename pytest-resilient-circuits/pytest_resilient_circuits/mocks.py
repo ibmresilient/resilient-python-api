@@ -30,7 +30,7 @@ class BasicResilientMock(ResilientMock):
 
     @resilient_endpoint("GET", "/rest/session")
     def session_get(self, request):
-        return self.session_get(request)
+        return self.session_data(request)
 
     def session_data(self, request):
         """ Callback for POST to /rest/session """
