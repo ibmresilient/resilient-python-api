@@ -113,7 +113,11 @@ def parse_setup_py(path, attribute_names):
     :return return_dict: Dict of properties from setup.py.
     """
     return_dict = {}
-
+    # Define "True" = bool(True) as value for eval built_ins if using python 2.
+    if sys.version_info.major < 3:
+        built_ins = {"True": bool(True)}
+    else:
+        built_ins = {}
     # Define a dummy setup function to get the dictionary of parameters returned from evaled setup.py callable.
     def setup(*args, **kwargs):
         return kwargs
@@ -130,7 +134,7 @@ def parse_setup_py(path, attribute_names):
 
     # Run eval on callable content to retrieve attributes.
     try:
-        result = eval(setup_callable, {'__builtins__':{}}, {"setup": setup})
+        result = eval(setup_callable, {'__builtins__':built_ins}, {"setup": setup})
     except Exception as err:
         raise SDKException(u"Failed to eval setup callable {0}".format(err))
 
