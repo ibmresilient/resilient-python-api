@@ -85,7 +85,6 @@ def get_setup_callable(content):
     Any embedded function will have the entire line commented out.
 
     :param content: Content of setup.py as a list of lines.
-    :param attribute_names: List of attribute names to extract from setup.py.
     :return: Return callable section of section from setup.py as a string.
     """
     regex = re.compile(r'[a-zA-Z0-9_]+\(.*\)')
@@ -115,7 +114,10 @@ def parse_setup_py(path, attribute_names):
     return_dict = {}
     # Define "True" = bool(True) as value for eval built_ins if using python 2.
     if sys.version_info.major < 3:
-        built_ins = {"True": bool(True)}
+        built_ins = {
+            "True": bool(True),
+            "False": bool(False)
+        }
     else:
         built_ins = {}
     # Define a dummy setup function to get the dictionary of parameters returned from evaled setup.py callable.
