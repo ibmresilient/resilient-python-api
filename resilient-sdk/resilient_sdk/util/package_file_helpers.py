@@ -129,7 +129,10 @@ def parse_setup_py(path, attribute_names):
     setup_callable = get_setup_callable(setup_content)
 
     # Run eval on callable content to retrieve attributes.
-    result = eval(setup_callable, {'__builtins__':{}}, {"setup": setup})
+    try:
+        result = eval(setup_callable, {'__builtins__':{}}, {"setup": setup})
+    except Exception as err:
+        raise SDKException(u"Failed to eval setup callable {0}".format(err))
 
     # Foreach attribute_name, get/calculate its value and add to return_dict
     for attribute_name in attribute_names:
@@ -155,7 +158,7 @@ def parse_setup_py(path, attribute_names):
 
     return return_dict
 
-def get_dependency_from_install_requires_list(install_requires, dependency_name):
+def get_dependency_from_install_requires(install_requires, dependency_name):
     """Returns the String of the dependency_name specified in the setup.py file by
     using the install_requires_list parsed from the setup.py file with utils.parse_setup_py()
     to return the name and version of dependency_name
