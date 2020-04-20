@@ -25,8 +25,8 @@ def test_parse_setup_py():
 
     assert setup_attributes.get("name") == "fn_main_mock_integration"
     assert setup_attributes.get("version") == "1.2.3"
-    assert setup_attributes.get("author") == u"John છ જ ઝ ઞ ટ ઠ Smith"
-    assert setup_attributes.get("long_description") == u"""Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium. Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent. Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec. Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus, pretium a sollicitudin convallis erat eros, tristique eu aliquam."""
+    assert setup_attributes.get("author") == "John છ જ ઝ ઞ ટ ઠ Smith"
+    assert setup_attributes.get("long_description") == """Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium. Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent. Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec. Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus, pretium a sollicitudin convallis erat eros, tristique eu aliquam."""
 
 
 def test_get_dependency_from_install_requires():
