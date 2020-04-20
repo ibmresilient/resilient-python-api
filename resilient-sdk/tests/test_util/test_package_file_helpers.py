@@ -4,32 +4,20 @@
 
 import os
 import shutil
+import io
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
 
-
-def test_is_setup_attribute():
-    assert package_helpers._is_setup_attribute("long_description='abc123'") is True
-    assert package_helpers._is_setup_attribute("'abc123'") is False
-    assert package_helpers._is_setup_attribute("#long_description='abc123'") is True
-    assert package_helpers._is_setup_attribute("#long_description='abcઘ ઙ ચ છ જ ઝ ઞ123'") is True
-
-
-def test_parse_setup_attribute():
-    setup_py_lines = sdk_helpers.read_file(mock_paths.MOCK_SETUP_PY_LINES)
-    setup_py_lines = [file_line.strip() for file_line in setup_py_lines]
-
-    name = package_helpers._parse_setup_attribute(mock_paths.MOCK_SETUP_PY_LINES, setup_py_lines, "name")
-    version = package_helpers._parse_setup_attribute(mock_paths.MOCK_SETUP_PY_LINES, setup_py_lines, "version")
-    author = package_helpers._parse_setup_attribute(mock_paths.MOCK_SETUP_PY_LINES, setup_py_lines, "author")
-    long_description = package_helpers._parse_setup_attribute(mock_paths.MOCK_SETUP_PY_LINES, setup_py_lines, "long_description")
-
-    assert name == "fn_main_mock_integration"
-    assert version == "1.2.3"
-    assert author == u"John છ જ ઝ ઞ ટ ઠ Smith"
-    assert long_description == u"""Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium. Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent. Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec. Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus, pretium a sollicitudin convallis erat eros, tristique eu aliquam"""
-
+def test_get_setup_callable():
+    # Test callable section returned correctly.
+    # Read the mock setup.py content.
+    setup_content = sdk_helpers.read_file(mock_paths.MOCK_SETUP_PY)
+    setup_callable = package_helpers.get_setup_callable(setup_content)
+    # Read the mocked callable from processed setup.py
+    with io.open(mock_paths.MOCK_SETUP_CALLABLE, mode="rt", encoding="utf-8") as the_file:
+        mock_setup_callable = the_file.read()
+    assert mock_setup_callable == setup_callable
 
 def test_parse_setup_py():
     attributes_wanted = ["name", "version", "author", "long_description"]
@@ -38,13 +26,13 @@ def test_parse_setup_py():
     assert setup_attributes.get("name") == "fn_main_mock_integration"
     assert setup_attributes.get("version") == "1.2.3"
     assert setup_attributes.get("author") == u"John છ જ ઝ ઞ ટ ઠ Smith"
-    assert setup_attributes.get("long_description") == u"""Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium. Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent. Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec. Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus, pretium a sollicitudin convallis erat eros, tristique eu aliquam"""
+    assert setup_attributes.get("long_description") == u"""Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium. Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent. Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec. Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus, pretium a sollicitudin convallis erat eros, tristique eu aliquam."""
 
 
-def test_get_dependency_from_install_requires_str():
+def test_get_dependency_from_install_requires():
     setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, ["install_requires"])
     install_requires_str = setup_attributes.get("install_requires")
-    res_circuits_dep_str = package_helpers.get_dependency_from_install_requires_str(install_requires_str, "resilient_circuits")
+    res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(install_requires_str, "resilient_circuits")
 
     assert res_circuits_dep_str == "resilient_circuits>=30.0.0"
 
