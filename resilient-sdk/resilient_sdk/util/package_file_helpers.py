@@ -10,7 +10,6 @@ import re
 import sys
 import importlib
 import os
-import io
 import json
 import base64
 import shutil
@@ -81,140 +80,102 @@ IMPORT_MIN_SERVER_VERSION = {
 # The default app container repository name.
 REPOSITORY_NAME = "ibmresilient"
 
-def _is_setup_attribute(line):
-    """Use RegEx to check if the given file line starts with (for example) 'long_description='.
-    Will also handle if the attribute has been commented out: '# long_description='.
-    Returns True if something like 'long_description=' is at the start of the line, else False"""
+def get_setup_callable(content):
+    """ Parse the setup.py file, returning just the callable setup() section.
+    Any embedded function will have the entire line commented out.
 
-    any_attribute_regex = re.compile(r'^#?\s*[a-z_]+=')
+    :param content: Content of setup.py as a list of lines.
+    :return: Return callable section of section from setup.py as a string.
+    """
+    regex = re.compile(r'[a-zA-Z0-9_]+\(.*\)')
+    sanitized_content = []
 
-    if re.match(pattern=any_attribute_regex, string=line) is not None:
-        return True
+    start = False
+    for line in content:
+        if ('setup(' in line.replace(' ', '')):
+            start = True
 
-    return False
+        if start:
+            # comment out lines with embedded functions
+            if regex.search(line):
+                sanitized_content.append(u'#'+line)
+            else:
+                sanitized_content.append(line)
 
-
-def _parse_setup_attribute(path_to_setup_py, setup_py_lines, attribute_name):
-    """Returns the attribute value from setup.py given the attribute name"""
-
-    # Generate the regex to find the attribute line
-    the_attribute_regex = re.compile("^{0}=".format(attribute_name))
-
-    # Store the contents of the attribute
-    the_attribute_found, the_attribute_value = False, []
-
-    # Loop the setup_py lines
-    for i in range(len(setup_py_lines)):
-        the_attribute_line = setup_py_lines[i]
-
-        # Check if this line contains the attribute_name
-        if re.match(pattern=the_attribute_regex, string=the_attribute_line):
-
-            # If found, flip flag + append the line to the_attribute_value
-            the_attribute_found = True
-            the_attribute_value.append(re.split(pattern=the_attribute_regex, string=the_attribute_line)[1])
-
-            # Check preceding lines to see if this attribute value is multiline string
-            for preceding_line in setup_py_lines[i + 1:]:
-                if _is_setup_attribute(preceding_line):
-                    break
-
-                # Append the line if it is not a new attribute
-                the_attribute_value.append(preceding_line)
-
-            break
-
-    # If we could not find an attribute with attribute_name, log a warning
-    if not the_attribute_found:
-        LOG.warning("WARNING: '%s' is not a defined attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
-
-    # Create single string and trim (" , ' )
-    the_attribute_value = " ".join(the_attribute_value)
-    the_attribute_value = the_attribute_value.strip("\",'.")
-
-    return the_attribute_value
-
+    return '\n'.join(sanitized_content)
 
 def parse_setup_py(path, attribute_names):
-    """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value"""
+    """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value
 
-    # Read the setup.py file into a List
-    setup_py_lines = sdk_helpers.read_file(path)
+    :param path: Path to setup.py for a package.
+    :param attribute_names: List of attribute names to extract from setup.py.
+    :return return_dict: Dict of properties from setup.py.
+    """
+    return_dict = {}
+    # Define "True" = bool(True) as value for eval built_ins if using python 2.
+    if sys.version_info.major < 3:
+        built_ins = {
+            "True": bool(True),
+            "False": bool(False)
+        }
+    else:
+        built_ins = {}
+    # Define a dummy setup function to get the dictionary of parameters returned from evaled setup.py callable.
+    def setup(*args, **kwargs):
+        return kwargs
 
-    # Raise an error if nothing found in the file
-    if not setup_py_lines:
+    # Read the setup.py content.
+    setup_content = sdk_helpers.read_file(path)
+
+    # Raise an error if nothing found in the file.
+    if not setup_content:
         raise SDKException(u"No content found in provided setup.py file: {0}".format(path))
 
-    setup_regex_pattern = r"setup\("
-    setup_defined, index_of_setup, return_dict = False, None, dict()
+    # Get the callable section from contents of setup.py.
+    setup_callable = get_setup_callable(setup_content)
 
-    for i in range(len(setup_py_lines)):
+    # Run eval on callable content to retrieve attributes.
+    try:
+        result = eval(setup_callable, {'__builtins__':built_ins}, {"setup": setup})
+    except Exception as err:
+        raise SDKException(u"Failed to eval setup callable {0}".format(err))
 
-        if re.match(pattern=setup_regex_pattern, string=setup_py_lines[i]) is not None:
-            setup_defined = True
-            index_of_setup = i
-            break
-
-    # Raise an error if we can't find 'setup()' in the file
-    if not setup_defined:
-        raise SDKException(u"Could not find 'setup()' defined in provided setup.py file: {0}".format(path))
-
-    # Get sublist containing lines from 'setup(' to EOF + trim whitespaces
-    setup_py_lines = setup_py_lines[index_of_setup:]
-    setup_py_lines = [file_line.strip() for file_line in setup_py_lines]
-
-    # Foreach attribute_name, get its value and add to return_dict
+    # Foreach attribute_name, get/calculate its value and add to return_dict
     for attribute_name in attribute_names:
         if attribute_name == "entry_points":
             entry_point_paths = {}
             # Get the path of the top level for the package.
             path_package = os.path.dirname(path)
-            parsed_attribute_name = _parse_setup_attribute(path, setup_py_lines, attribute_name)
-            # Capture the path of the config or customize modules if they are defined in setup.py.
-            # Match until 2nd ':' in the pattern as follows:
-            #       "resilient.circuits.customize": ["customize = fn_func.util.customize:customization_data"]
-            #       "resilient.circuits.apphost.configsection":
-            #                       ["gen_config = fn_func.util.config:apphost_config_section_data"]
-            #       "resilient.circuits.configsection": ["gen_config = fn_func.util.config:config_section_data"]
             for ep in SUPPORTED_EP:
-                section = re.match(r'.*"{}".*?\s+=\s+(.*?):.*'.format(ep), parsed_attribute_name)
-                if section:
-                    entry_point_paths.update({ep: os.path.join(path_package, section.group(1)
-                                                               .replace(".", os.path.sep))+".py"})
+                if result['entry_points'].get(ep):
+                    # Extract the relative dotted module reference from entry point values of following types:
+                    #      ["customize = fn_func.util.customize:customization_data"]
+                    #      ["gen_config = fn_func.util.config:apphost_config_section_data"]
+                    #      ["gen_config = fn_func.util.config:config_section_data"]
+                    # e.g. Extract ["customize = fn_func.util.customize:customization_data"] -> fn_func.util.customize
+                    parsed_ep = ''.join(result['entry_points'].get(ep)).split('=')[1].split(':')[0].strip()
+                    # Convert a dotted module reference to an actual python module path:
+                    # e.g. Convert fn_func.util.customize -> /path_to_package/fn_func/fn_func/util/customize.py
+                    entry_point_paths.update({ep: os.path.join(path_package, parsed_ep
+                                                                       .replace(".", os.path.sep)) + ".py"})
             return_dict[attribute_name] = entry_point_paths
         else:
-            return_dict[attribute_name] = _parse_setup_attribute(path, setup_py_lines, attribute_name)
+            return_dict[attribute_name] = result.get(attribute_name)
 
     return return_dict
 
-
-def get_dependency_from_install_requires_str(install_requires_str, dependency_name):
+def get_dependency_from_install_requires(install_requires, dependency_name):
     """Returns the String of the dependency_name specified in the setup.py file by
-    using the install_requires_str parsed from the setup.py file with utils.parse_setup_py()
+    using the install_requires_list parsed from the setup.py file with utils.parse_setup_py()
     to return the name and version of dependency_name
 
-    - install_requires_str: String  "['resilient_circuits>=31.0.0', 'resilient_lib']"
+    - install_requires: List  "['resilient_circuits>=31.0.0', 'resilient_lib']"
     - dependency_name: String "resilient_circuits"
-    - Return: 'resilient_circuits>=31.0.0' """
-
-    # Remove first + last character if they are [ or ]
-    if install_requires_str[0] == "[":
-        install_requires_str = install_requires_str[1:]
-
-    if install_requires_str[-1] == "]":
-        install_requires_str = install_requires_str[:-1]
-
-    # Remove start + trailing whitespace
-    install_requires_str = install_requires_str.strip()
-
-    # Convert str to list on comma
-    dependencies = install_requires_str.split(",")
-
-    # Remove start + trailing whitespace, ' or " for each dependency
-    dependencies = [d.strip(" '\"") for d in dependencies]
+    - Return: 'resilient_circuits>=31.0.0'
+    """
 
     # Get the dependency if it includes dependency_name
-    dependency = next((d for d in dependencies if dependency_name in d), None)
+    dependency = next((d for d in install_requires if dependency_name in d), None)
 
     return dependency
 
