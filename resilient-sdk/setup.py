@@ -34,16 +34,14 @@ with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name="resilient_sdk",
-    version="1.0.0",
+    use_scm_version={"root": "../", "relative_to": __file__},
+    setup_requires=['setuptools_scm'],
     license="MIT",
     packages=find_packages(),
 
-    # Installation Dependencies
-    setup_requires=[],
-
     # Runtime Dependencies
     install_requires=[
-        "resilient>=35.0.0.dev",
+        "resilient>=36.2.0.dev",
         "jinja2>=2.10.0",
         "setuptools>=44.0.0"
     ],
