@@ -13,7 +13,7 @@ import io
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-requires_resilient_version = "36.2"
+requires_resilient_version = "36.2.dev"
 major, minor = requires_resilient_version.split('.', 2)[:2]
 
 
