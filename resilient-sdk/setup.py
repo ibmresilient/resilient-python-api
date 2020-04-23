@@ -39,9 +39,6 @@ setup(
     license="MIT",
     packages=find_packages(),
 
-    # Installation Dependencies
-    setup_requires=[],
-
     # Runtime Dependencies
     install_requires=[
         "resilient>=36.2.0.dev",
