@@ -297,7 +297,7 @@ class CmdDocgen(BaseCmd):
         setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
 
         # Get the resilient_circuits dependency string from setup.py file
-        res_circuits_dep_str = package_helpers.get_dependency_from_install_requires_list(setup_py_attributes.get("install_requires"), "resilient_circuits")
+        res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient_circuits")
 
         # Get ImportDefinition from customize.py
         customize_py_import_def = package_helpers.get_import_definition_from_customize_py(path_customize_py_file)
