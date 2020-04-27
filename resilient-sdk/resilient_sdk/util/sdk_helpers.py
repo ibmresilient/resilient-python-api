@@ -454,9 +454,9 @@ def get_from_export(export,
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", ResilientObjMap.MESSAGE_DESTINATIONS, "Message Destination", message_destinations, export)
 
-    # Get Custom Fields
+    # Get Incident Fields (Custom and Internal)
     return_dict["fields"] = get_res_obj("fields", ResilientObjMap.FIELDS, "Field", fields, export,
-                                        condition=lambda o: True if o.get("prefix") == "properties" and o.get("type_id") == ResilientTypeIds.INCIDENT else False)
+                                        condition=lambda o: True if o.get("type_id") == ResilientTypeIds.INCIDENT else False)
 
     return_dict["all_fields"].extend([u"incident/{0}".format(fld.get("name")) for fld in return_dict.get("fields")])
 

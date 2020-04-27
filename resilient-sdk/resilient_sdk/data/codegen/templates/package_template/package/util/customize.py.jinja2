@@ -62,7 +62,7 @@ def customization_data(client=None):
     {% for o in rules %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
-    {% if fields %}    - Custom Incident Fields:
+    {% if fields %}    - Incident Fields:
     {% for o in fields %}        - {{o.name}}
     {% endfor %}
     {% endif %}
