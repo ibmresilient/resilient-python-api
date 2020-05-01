@@ -193,7 +193,7 @@ def load_customize_py_module(path_customize_py):
     :rtype: module
     """
     LINE_TO_REPLACE = u"from resilient_circuits"
-    REPLACE_TEXT = u"from resilient import ImportDefinition\n"
+    REPLACE_TEXT = u"from resilient import ImportDefinition"
 
     new_lines, path_backup_customize_py = [], ""
     current_customize_py_lines = sdk_helpers.read_file(path_customize_py)
@@ -201,7 +201,8 @@ def load_customize_py_module(path_customize_py):
     # Check if customize.py has dependencies on resilient-circuits
     for i, line in enumerate(current_customize_py_lines):
         if line.startswith(LINE_TO_REPLACE):
-            new_lines = current_customize_py_lines[:i] + [REPLACE_TEXT] + current_customize_py_lines[i + 1:]
+            LOG.warning("WARNING: References to resilient-circuits are deprecated. Replace '%s', with '%s' in %s",
+                        line.strip(), REPLACE_TEXT, path_customize_py)
             break
 
     # if it does, new_lines will be defined
@@ -388,11 +389,8 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
     # Use default_path_to_icon if path_to_icon does not exist
     if not path_icon_to_use or not os.path.isfile(path_icon_to_use):
-        LOG.warning("WARNING: Default Icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
+        LOG.warning("WARNING: Default icon will be used\nProvided custom icon path for %s is invalid: %s\nNOTE: %s should be placed in the /icons directory", icon_name, path_icon_to_use, icon_name)
         path_icon_to_use = default_path_to_icon
-
-    else:
-        LOG.info("INFO: Using custom %s icon: %s", icon_name, path_icon_to_use)
 
     # Validate path_icon_to_use and ensure we have READ permissions
     try:

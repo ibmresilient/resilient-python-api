@@ -113,12 +113,12 @@ class CmdExtPackage(BaseCmd):
         path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
         path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)
 
-        LOG.info("Creating Built Distribution in /dist directory")
+        LOG.info("Built Distribution starting\n")
 
         # Create the built distribution
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
 
-        LOG.info("Built Distribution (.tar.gz) created at: %s", path_output_dir)
+        LOG.info("\nBuilt Distribution finished. See: %s", path_output_dir)
 
         # Check that files 'Dockerfile' and 'entrypoint.sh' files exist in the integration package
         # before attempting to create the app.
