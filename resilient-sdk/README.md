@@ -2,6 +2,8 @@
 
 ![IBM Security](./assets/IBM_Security_lockup_pos_RGB.png)
 
+### Changelog
+<!-- Changelog will go here -->
 
 # IBM Resilient Python SDK
 

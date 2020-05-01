@@ -6,18 +6,42 @@
 
 from setuptools import setup, find_packages
 
+from os import path
+import io
+
+this_directory = path.abspath(path.dirname(__file__))
+
+
+def gather_changes():
+    filepath = './CHANGES'  # The file from which we will pull the changes
+    with io.open(filepath) as fp:
+        lines = fp.readlines()  # Take in all the lines as a list
+        first_section = []
+        for num, line in enumerate(lines, start=1):
+            if "ver." in lines[num] and num != 0:
+                # Get all the lines from the start of the list until num-1.
+                # This, along with the if statement above will ensure we only capture the most recent change.
+                first_section = lines[:num-1]
+                break
+        # Return the section with a newline at the end
+        return " \n ".join(first_section)
+
+
+with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    readme_text = f.read()
+    long_description = readme_text.replace('### Changelog', "### Recent Changes\n {}".format(gather_changes()))
+
+
 setup(
     name="resilient_sdk",
-    version="1.0.0",
+    use_scm_version={"root": "../", "relative_to": __file__},
+    setup_requires=['setuptools_scm'],
     license="MIT",
     packages=find_packages(),
 
-    # Installation Dependencies
-    setup_requires=[],
-
     # Runtime Dependencies
     install_requires=[
-        "resilient>=35.0.0.dev",
+        "resilient>=36.2.0.dev",
         "jinja2>=2.10.0",
         "setuptools>=44.0.0"
     ],
@@ -33,6 +57,7 @@ setup(
     author="IBM Resilient",
     author_email="support@resilientsystems.com",
     description="Python SDK for developing Apps for the IBM Resilient Platform",
+    long_description=long_description,
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "http://ibm.biz/resilientcommunity",

@@ -3,7 +3,6 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for the resilient-sdk"""
-
 import logging
 import keyword
 import re
@@ -16,6 +15,7 @@ import datetime
 import importlib
 import hashlib
 import uuid
+
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_config_file, get_client
@@ -111,6 +111,8 @@ def is_valid_package_name(name):
        False
        >>> is_valid_package_name("_something")
        True
+       >>> is_valid_package_name("-something")
+       True
     """
 
     # Strip off version information, if present in package base folder, to get the package name.
@@ -120,7 +122,7 @@ def is_valid_package_name(name):
         return False
     if name in dir(__builtins__):
         return False
-    return re.match("[_A-Za-z][_a-zA-Z0-9]*$", name) is not None
+    return re.match(r"[(_|\-)A-Za-z][(_|\-)a-zA-Z0-9]*$", name) is not None
 
 
 def is_valid_version_syntax(version):
@@ -452,9 +454,9 @@ def get_from_export(export,
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", ResilientObjMap.MESSAGE_DESTINATIONS, "Message Destination", message_destinations, export)
 
-    # Get Custom Fields
+    # Get Incident Fields (Custom and Internal)
     return_dict["fields"] = get_res_obj("fields", ResilientObjMap.FIELDS, "Field", fields, export,
-                                        condition=lambda o: True if o.get("prefix") == "properties" and o.get("type_id") == ResilientTypeIds.INCIDENT else False)
+                                        condition=lambda o: True if o.get("type_id") == ResilientTypeIds.INCIDENT else False)
 
     return_dict["all_fields"].extend([u"incident/{0}".format(fld.get("name")) for fld in return_dict.get("fields")])
 

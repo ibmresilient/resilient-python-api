@@ -26,8 +26,15 @@ class BasicResilientMock(ResilientMock):
 
     @resilient_endpoint("POST", "/rest/session")
     def session_post(self, request):
-        """ Callback for POST to /rest/session """
-        LOG.debug("session_post")
+        return self._session_data("session_post", request)
+
+    @resilient_endpoint("GET", "/rest/session")
+    def session_get(self, request):
+        return self._session_data("session_get", request)
+
+    def _session_data(self, session_type, request):
+        """ Callback for POST/GET to /rest/session """
+        LOG.debug(session_type)
         session_data = {
             "saml_alias": None,
             "csrf_token": "79945884c2e6f2339cbffbbaba01f17b",

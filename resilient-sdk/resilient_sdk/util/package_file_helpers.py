@@ -10,7 +10,6 @@ import re
 import sys
 import importlib
 import os
-import io
 import json
 import base64
 import shutil
@@ -24,10 +23,11 @@ from resilient_sdk.util import sdk_helpers
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
     import ConfigParser as configparser
+    from StringIO import StringIO
 else:
     # Handle PY 3 specific imports
     import configparser
-
+    from io import StringIO
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
 
@@ -47,7 +47,7 @@ PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk"
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "author", "name", "version",
     "description", "long_description", "url",
-    "install_requires"
+    "install_requires", "entry_points"
 )
 
 # Tuple of all Resilient Object Names we support when packaging/converting to ext
@@ -63,123 +63,119 @@ SUPPORTED_RES_OBJ_NAMES = (
 BASE_PERMISSIONS = [
     "read_data", "read_function"
 ]
+# List of supported entry points.
+SUPPORTED_EP = [
+    "resilient.circuits.customize",
+    "resilient.circuits.apphost.configsection",
+    "resilient.circuits.configsection"
+]
+# Minimum server version for import if no customize.py defined.
+IMPORT_MIN_SERVER_VERSION = {
+    'major': 36,
+    'minor': 2,
+    'build_number': 0000,
+    'version': "36.2.0000"
+}
 
-def _is_setup_attribute(line):
-    """Use RegEx to check if the given file line starts with (for example) 'long_description='.
-    Will also handle if the attribute has been commented out: '# long_description='.
-    Returns True if something like 'long_description=' is at the start of the line, else False"""
+# The default app container repository name.
+REPOSITORY_NAME = "ibmresilient"
 
-    any_attribute_regex = re.compile(r'^#?\s*[a-z_]+=')
+def get_setup_callable(content):
+    """ Parse the setup.py file, returning just the callable setup() section.
+    Any embedded function will have the entire line commented out.
 
-    if re.match(pattern=any_attribute_regex, string=line) is not None:
-        return True
+    :param content: Content of setup.py as a list of lines.
+    :return: Return callable section of section from setup.py as a string.
+    """
+    regex = re.compile(r'[a-zA-Z0-9_]+\(.*\)')
+    sanitized_content = []
 
-    return False
+    start = False
+    for line in content:
+        if ('setup(' in line.replace(' ', '')):
+            start = True
 
+        if start:
+            # comment out lines with embedded functions
+            if regex.search(line):
+                sanitized_content.append(u'#'+line)
+            else:
+                sanitized_content.append(line)
 
-def _parse_setup_attribute(path_to_setup_py, setup_py_lines, attribute_name):
-    """Returns the attribute value from setup.py given the attribute name"""
-
-    # Generate the regex to find the attribute line
-    the_attribute_regex = re.compile("^{0}=".format(attribute_name))
-
-    # Store the contents of the attribute
-    the_attribute_found, the_attribute_value = False, []
-
-    # Loop the setup_py lines
-    for i in range(len(setup_py_lines)):
-        the_attribute_line = setup_py_lines[i]
-
-        # Check if this line contains the attribute_name
-        if re.match(pattern=the_attribute_regex, string=the_attribute_line):
-
-            # If found, flip flag + append the line to the_attribute_value
-            the_attribute_found = True
-            the_attribute_value.append(re.split(pattern=the_attribute_regex, string=the_attribute_line)[1])
-
-            # Check preceding lines to see if this attribute value is multiline string
-            for preceding_line in setup_py_lines[i + 1:]:
-                if _is_setup_attribute(preceding_line):
-                    break
-
-                # Append the line if it is not a new attribute
-                the_attribute_value.append(preceding_line)
-
-            break
-
-    # If we could not find an attribute with attribute_name, log a warning
-    if not the_attribute_found:
-        LOG.warning("WARNING: '%s' is not a defined attribute name in the provided setup.py file: %s", attribute_name, path_to_setup_py)
-
-    # Create single string and trim (" , ' )
-    the_attribute_value = " ".join(the_attribute_value)
-    the_attribute_value = the_attribute_value.strip("\",'.")
-
-    return the_attribute_value
-
+    return '\n'.join(sanitized_content)
 
 def parse_setup_py(path, attribute_names):
-    """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value"""
+    """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value
 
-    # Read the setup.py file into a List
-    setup_py_lines = sdk_helpers.read_file(path)
+    :param path: Path to setup.py for a package.
+    :param attribute_names: List of attribute names to extract from setup.py.
+    :return return_dict: Dict of properties from setup.py.
+    """
+    return_dict = {}
+    # Define "True" = bool(True) as value for eval built_ins if using python 2.
+    if sys.version_info.major < 3:
+        built_ins = {
+            "True": bool(True),
+            "False": bool(False)
+        }
+    else:
+        built_ins = {}
+    # Define a dummy setup function to get the dictionary of parameters returned from evaled setup.py callable.
+    def setup(*args, **kwargs):
+        return kwargs
 
-    # Raise an error if nothing found in the file
-    if not setup_py_lines:
+    # Read the setup.py content.
+    setup_content = sdk_helpers.read_file(path)
+
+    # Raise an error if nothing found in the file.
+    if not setup_content:
         raise SDKException(u"No content found in provided setup.py file: {0}".format(path))
 
-    setup_regex_pattern = r"setup\("
-    setup_defined, index_of_setup, return_dict = False, None, dict()
+    # Get the callable section from contents of setup.py.
+    setup_callable = get_setup_callable(setup_content)
 
-    for i in range(len(setup_py_lines)):
+    # Run eval on callable content to retrieve attributes.
+    try:
+        result = eval(setup_callable, {'__builtins__':built_ins}, {"setup": setup})
+    except Exception as err:
+        raise SDKException(u"Failed to eval setup callable {0}".format(err))
 
-        if re.match(pattern=setup_regex_pattern, string=setup_py_lines[i]) is not None:
-            setup_defined = True
-            index_of_setup = i
-            break
-
-    # Raise an error if we can't find 'setup()' in the file
-    if not setup_defined:
-        raise SDKException(u"Could not find 'setup()' defined in provided setup.py file: {0}".format(path))
-
-    # Get sublist containing lines from 'setup(' to EOF + trim whitespaces
-    setup_py_lines = setup_py_lines[index_of_setup:]
-    setup_py_lines = [file_line.strip() for file_line in setup_py_lines]
-
-    # Foreach attribute_name, get its value and add to return_dict
+    # Foreach attribute_name, get/calculate its value and add to return_dict
     for attribute_name in attribute_names:
-        return_dict[attribute_name] = _parse_setup_attribute(path, setup_py_lines, attribute_name)
+        if attribute_name == "entry_points":
+            entry_point_paths = {}
+            # Get the path of the top level for the package.
+            path_package = os.path.dirname(path)
+            for ep in SUPPORTED_EP:
+                if result['entry_points'].get(ep):
+                    # Extract the relative dotted module reference from entry point values of following types:
+                    #      ["customize = fn_func.util.customize:customization_data"]
+                    #      ["gen_config = fn_func.util.config:apphost_config_section_data"]
+                    #      ["gen_config = fn_func.util.config:config_section_data"]
+                    # e.g. Extract ["customize = fn_func.util.customize:customization_data"] -> fn_func.util.customize
+                    parsed_ep = ''.join(result['entry_points'].get(ep)).split('=')[1].split(':')[0].strip()
+                    # Convert a dotted module reference to an actual python module path:
+                    # e.g. Convert fn_func.util.customize -> /path_to_package/fn_func/fn_func/util/customize.py
+                    entry_point_paths.update({ep: os.path.join(path_package, parsed_ep
+                                                                       .replace(".", os.path.sep)) + ".py"})
+            return_dict[attribute_name] = entry_point_paths
+        else:
+            return_dict[attribute_name] = result.get(attribute_name)
 
     return return_dict
 
-
-def get_dependency_from_install_requires_str(install_requires_str, dependency_name):
+def get_dependency_from_install_requires(install_requires, dependency_name):
     """Returns the String of the dependency_name specified in the setup.py file by
-    using the install_requires_str parsed from the setup.py file with utils.parse_setup_py()
+    using the install_requires_list parsed from the setup.py file with utils.parse_setup_py()
     to return the name and version of dependency_name
 
-    - install_requires_str: String  "['resilient_circuits>=31.0.0', 'resilient_lib']"
+    - install_requires: List  "['resilient_circuits>=31.0.0', 'resilient_lib']"
     - dependency_name: String "resilient_circuits"
-    - Return: 'resilient_circuits>=31.0.0' """
-
-    # Remove first + last character if they are [ or ]
-    if install_requires_str[0] == "[":
-        install_requires_str = install_requires_str[1:]
-
-    if install_requires_str[-1] == "]":
-        install_requires_str = install_requires_str[:-1]
-
-    # Remove start + trailing whitespace
-    install_requires_str = install_requires_str.strip()
-
-    # Convert str to list on comma
-    dependencies = install_requires_str.split(",")
-
-    # Remove start + trailing whitespace, ' or " for each dependency
-    dependencies = [d.strip(" '\"") for d in dependencies]
+    - Return: 'resilient_circuits>=31.0.0'
+    """
 
     # Get the dependency if it includes dependency_name
-    dependency = next((d for d in dependencies if dependency_name in d), None)
+    dependency = next((d for d in install_requires if dependency_name in d), None)
 
     return dependency
 
@@ -287,7 +283,8 @@ def get_import_definition_from_customize_py(path_customize_py_file):
 def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
     Raises Exception if it fails to parse configs
-    - config_str: is the full string found in the config.py file
+    - config_str: is the full string found in the config file
+    - apphost_config_str: is the full string found in the app host config file
     - config_list: is a list of dict objects that contain each un-commented config
         - Each dict object has the attributes: name, placeholder, env_name, section_name
     """
@@ -295,40 +292,56 @@ def get_configs_from_config_py(path_config_py_file):
     config_str, config_list = "", []
 
     try:
+        # Get the module name from the config file path by getting basename and stripping '.py'
+        # from the rhs of the resulting string.
+        config_module = os.path.basename(path_config_py_file)[:-3]
         # Import the config module
-        config_py = sdk_helpers.load_py_module(path_config_py_file, "config")
+        config_py = sdk_helpers.load_py_module(path_config_py_file, config_module)
 
         # Call config_section_data() to get the string containing the configs
         config_str = config_py.config_section_data()
+        # Call apphost_config_section_data available to get app host config settings
+        try:
+            apphost_config_str = config_py.apphost_config_section_data()
+        except AttributeError:
+            # An app host config may not exist
+            apphost_config_str = None
 
-        # Instansiate a new configparser
-        config_parser = configparser.ConfigParser()
+        # concatenate the config sections
+        clean_cfg_list = list(filter(None, [apphost_config_str, config_str]))
+        concat_cfg_str = '\n'.join(clean_cfg_list)
+        # Iterate over config sections and parse settings.
+        for cfg_str in clean_cfg_list:
+            # Instansiate a new configparser
+            config_parser = configparser.ConfigParser()
 
-        # Read and parse the configs from the config_str
-        if sys.version_info < (3, 2):
-            # config_parser.readfp() was deprecated and replaced with read_file in PY3.2
-            config_parser.readfp(io.StringIO(config_str))
+            # Read and parse the configs from the config_str or apphost_config_str
+            if sys.version_info < (3, 2):
+                # config_parser.readfp() was deprecated and replaced with read_file in PY3.2
+                config_parser.readfp(StringIO(cfg_str))
+            else:
+                config_parser.read_file(StringIO(cfg_str))
 
-        else:
-            config_parser.read_file(io.StringIO(config_str))
+            # Get the configs from each section
+            for section_name in config_parser.sections():
+                parsed_configs = config_parser.items(section_name)
 
-        # Get the configs from each section
-        for section_name in config_parser.sections():
+                for config in parsed_configs:
+                    config_list.append({
+                        "name": config[0],
+                        "placeholder": config[1],
+                        "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper()),
+                        "section_name": section_name
+                    })
 
-            parsed_configs = config_parser.items(section_name)
-
-            for config in parsed_configs:
-                config_list.append({
-                    "name": config[0],
-                    "placeholder": config[1],
-                    "env_name": "{0}_{1}".format(section_name.upper(), config[0].upper()),
-                    "section_name": section_name
-                })
+    except ImportError as err:
+        raise SDKException(u"Failed to load module '{0}' got error '{1}'".format(config_module, err.__repr__()))
 
     except Exception as err:
-        raise SDKException(u"Failed to parse configs from config.py file\nThe config.py file may be corrupt. Visit the App Exchange to contact the developer\nReason: {0}".format(err))
+        raise SDKException(u"Failed to parse configs from the config file\nThe config file may be corrupt. Visit "
+                           u"the App Exchange to contact the developer\nReason: {0}".format(err))
 
-    return (config_str, config_list)
+    return (concat_cfg_str, config_list)
 
 def get_apikey_permissions(path):
     """Returns a list of api keys to allow an integration to run.
@@ -501,17 +514,60 @@ def add_tag_to_import_definition(tag_name, supported_res_obj_names, import_defin
 
     return import_definition
 
+def get_configuration_py_file_path(file_type, setup_py_attributes):
+    """  Get the location of configuration file config or customize for a package.
 
-def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_file, path_apikey_permissions_file,
+    If file_type == "customize" check that entry point 'resilient.circuits.apphost.customize' (SUPPORTED_EP[0])
+    is defined in setup.py of the package.
+    If file_type == "config" check that entry point 'resilient.circuits.apphost.configsection' (SUPPORTED_EP[1]) is
+    defined in setup.py of the package, else check 'resilient.circuits.configsection' (SUPPORTED_EP[2]) was detected in
+    setup.py of the package.
+
+    Note: For some packages neither of these files may exist not exist.
+
+    :param file_type: File whose location is required should be 'customize' or 'config'.
+    :param setup_py_attributes: Parsed setup.py content.
+    :return path_py_file: The customize or config file location for the package.
+    """
+    path_py_file = None
+
+    if file_type == "customize":
+        if SUPPORTED_EP[0] in setup_py_attributes["entry_points"]:
+            path_py_file = setup_py_attributes["entry_points"][SUPPORTED_EP[0]]
+    elif file_type == "config":
+        for ep in SUPPORTED_EP[1:]:
+            if ep in setup_py_attributes["entry_points"]:
+                path_py_file = setup_py_attributes["entry_points"][ep]
+                break
+    else:
+        raise SDKException("Unknown option '{}'.".format(file_type))
+
+    if path_py_file:
+        # If configuration file defined in setup.py but does not exist raise an error.
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, path_py_file)
+        except SDKException:
+            LOG.info("Configuration File '%s' defined as an entry point in 'setup.py' not found at location '%s'.",
+                     file_type, path_py_file)
+            if not sdk_helpers.validate_file_paths(os.R_OK, path_py_file):
+                raise SDKException("Configuration File '{0}' defined as an entry point in 'setup.py' not found at "
+                                   "location '{1}'.".format(file_type, path_py_file))
+    else:
+        # For certain packages or threat-feeds these files may not exist.
+        # Warn user if file not found.
+        LOG.warning("WARNING: Configuration File of type '%s' not defined in 'setup.py'. Ignoring and continuing.",
+                    file_type)
+
+    return path_py_file
+
+def create_extension(path_setup_py_file, path_apikey_permissions_file,
                      output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None,
-                     custom_display_name=None, keep_build_dir=False):
+                     custom_display_name=None, repository_name=None, keep_build_dir=False):
     """
     TODO: update this docstring to new standard format
-    Function that creates The App.zip file from the given setup.py, customize.py and config.py files
+    Function that creates The App.zip file from the given setup.py, customize and config files
     and copies it to the output_dir. Returns the path to the App.zip
     - path_setup_py_file [String]: abs path to the setup.py file
-    - path_customize_py_file [String]: abs path to the customize.py file
-    - path_config_py_file [String]: abs path to the config.py file
     - path_apikey_permissions_file [String]: abs path to the apikey_permissions.txt file
     - output_dir [String]: abs path to the directory the App.zip should be produced
     - path_built_distribution [String]: abs path to a tar.gz Built Distribution
@@ -522,15 +578,20 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
     - path_company_logo [String]: abs path to the company_logo.png. Has to be 100x100 and a .png file
         - if not provided uses default icon
     - custom_display_name [String]: will give the App that display name. Default: name from setup.py file
+    - repository_name [String]: will over-ride the container repository name for the App. Default: 'ibmresilient'
     - keep_build_dir [Boolean]: if True, build/ will not be remove. Default: False
     """
 
     LOG.info("Creating App")
+    # Variables to hold path of files for customize and config as defined in setup.py.
+    # Set initially default to 'None', actual paths will be calculated later.
+    path_customize_py_file = None
+    path_config_py_file = None
 
-    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py, customize.py and
-    # apikey_permissions.txt files.
+    # Ensure the output_dir exists, we have WRITE access and ensure we can READ setup.py and apikey_permissions.txt
+    # files.
     sdk_helpers.validate_dir_paths(os.W_OK, output_dir)
-    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_apikey_permissions_file)
+    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_apikey_permissions_file)
 
     # Parse the setup.py file
     setup_py_attributes = parse_setup_py(path_setup_py_file, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
@@ -550,17 +611,34 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
         LOG.warning("WARNING: '%s' is not a valid url. Ignoring.", setup_py_attributes.get("url"))
         setup_py_attributes["url"] = ""
 
-    # Get ImportDefinition from customize.py
-    customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
-
     # Get the tag name
     tag_name = setup_py_attributes.get("name")
+
+    # Get the customize file location.
+    path_customize_py_file = get_configuration_py_file_path("customize", setup_py_attributes)
+  
+    # Get the config file location.
+    path_config_py_file = get_configuration_py_file_path("config", setup_py_attributes)
+
+    # Get ImportDefinition from the discovered customize file.
+    if path_customize_py_file:
+        customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
+    else:
+        # No 'customize.py' file found generate import definition with just mimimum server version.
+        customize_py_import_definition = {
+            'server_version':
+                IMPORT_MIN_SERVER_VERSION
+        }
 
     # Add the tag to the import defintion
     customize_py_import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, customize_py_import_definition)
 
-    # Parse the app.configs from the config.py file
-    app_configs = get_configs_from_config_py(path_config_py_file)
+    # Parse the app.configs from the discovered config file
+    if path_config_py_file:
+        app_configs = get_configs_from_config_py(path_config_py_file)
+    else:
+        # No config file file found generate an empty definition.
+        app_configs = ("", [])
 
     # Parse the api key permissions from the apikey_permissions.txt file
     apikey_permissions = get_apikey_permissions(path_apikey_permissions_file)
@@ -570,6 +648,10 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
 
     # Generate the uuid
     uuid = sdk_helpers.generate_uuid_from_string(setup_py_attributes.get("name"))
+
+    # Set the container repository name to default if value not passed in as argument.
+    if not repository_name:
+        repository_name = REPOSITORY_NAME
 
     # Generate paths to the directories and files we will use in the build directory
     path_build = os.path.join(output_dir, BASE_NAME_BUILD)
@@ -633,10 +715,10 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                 "format": "html"
             },
             "minimum_resilient_version": {
-                "major": customize_py_import_definition.get("server_version").get("major"),
-                "minor": customize_py_import_definition.get("server_version").get("minor"),
-                "build_number": customize_py_import_definition.get("server_version").get("build_number"),
-                "version": customize_py_import_definition.get("server_version").get("version")
+                "major": customize_py_import_definition.get("server_version").get("major", None),
+                "minor": customize_py_import_definition.get("server_version").get("minor", None),
+                "build_number": customize_py_import_definition.get("server_version").get("build_number", None),
+                "version": customize_py_import_definition.get("server_version").get("version", None)
             },
             "name": setup_py_attributes.get("name"),
             "tag": {
@@ -651,7 +733,8 @@ def create_extension(path_setup_py_file, path_customize_py_file, path_config_py_
                 "executables": [
                     {
                         "name": setup_py_attributes.get("name"),
-                        "image": "resilient/{0}:{1}".format(setup_py_attributes.get("name"), setup_py_attributes.get("version")),
+                        "image": "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"),
+                                                      setup_py_attributes.get("version")),
                         "config_string": app_configs[0],
                         "permission_handles": apikey_permissions,
                         "uuid": uuid

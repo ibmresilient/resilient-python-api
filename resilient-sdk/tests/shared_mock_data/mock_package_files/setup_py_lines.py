@@ -5,11 +5,11 @@ author="John છ જ ઝ ઞ ટ ઠ Smith",
 author_email="john_smith@example.com",
 url="www.example.com",
 description="Lorem ipsum dolor sit amet, tortor volutpat scelerisque ઘ ઙ ચ છ જ ઝ ઞ facilisis vivamus eget pretium.",
-long_description="""Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium.
-Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent.
-Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec.
-Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus,
-pretium a sollicitudin convallis erat eros, tristique eu aliquam.""",
+long_description='''"Lorem ipsum dolor sit amet, tortor volutpat scelerisque facilisis vivamus eget pretium. "
+"Vestibulum turpis. Sed donec, nisl dolor ut elementum, turpis nulla elementum, pellentesque at nostra in et eget praesent. "
+"Nulla numquam volutpat sit, class quisque ultricies mollit nec, ullamcorper urna, amet eu magnis a sit nec. "
+"Ut urna massa non, purus donec mauris libero quisque quis, ઘ ઙ ચ છ જ ઝ ઞ libero purus eget donec at lacus, "
+"pretium a sollicitudin convallis erat eros, tristique eu aliquam."''',
 install_requires=[
     "resilient_circuits>=30.0.0"
 ],

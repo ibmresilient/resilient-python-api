@@ -13,9 +13,6 @@ import io
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-requires_resilient_version = "29.0"
-major, minor = requires_resilient_version.split('.', 2)[:2]
-
 
 def gather_changes():
     filepath = './CHANGES'  # The file from which we will pull the changes
@@ -68,7 +65,8 @@ setup(
         'pysocks',
         'filelock>=2.0.5',
         'setuptools>=41.0.0',
-        'resilient>={}.{}'.format(major, minor)
+        'watchdog>=0.9.0',
+        'resilient>=36.2.0.dev'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
