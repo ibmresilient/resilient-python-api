@@ -8,7 +8,7 @@ import logging
 import uuid
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.helpers import (get_resilient_client, get_latest_org_export,
+from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
                                         minify_export, get_from_export,
                                         get_object_api_names)
 from resilient_sdk.util.resilient_objects import ResilientObjMap
@@ -336,7 +336,7 @@ def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_
 
     # Now do the workflow specific ones and return
     obj_to_modify.update({
-        ResilientObjMap.WORKFLOWS: original_obj_api_name,
+        ResilientObjMap.WORKFLOWS: new_obj_api_name,
         "content": {
             "xml": obj_to_modify["content"]["xml"].replace(
                 original_obj_api_name,
