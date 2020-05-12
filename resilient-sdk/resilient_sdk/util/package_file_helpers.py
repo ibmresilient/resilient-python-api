@@ -14,8 +14,8 @@ import json
 import base64
 import shutil
 import struct
-import pkg_resources
 import tempfile
+import pkg_resources
 from resilient import ImportDefinition
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
 from resilient_sdk.util.sdk_exception import SDKException
@@ -196,7 +196,7 @@ def load_customize_py_module(path_customize_py):
     LINE_TO_REPLACE = u"from resilient_circuits"
     REPLACE_TEXT = u"from resilient import ImportDefinition"
 
-    new_lines, path_backup_customize_py = [], ""
+    new_lines = []
     current_customize_py_lines = sdk_helpers.read_file(path_customize_py)
 
     # Check if customize.py has dependencies on resilient-circuits
@@ -214,7 +214,7 @@ def load_customize_py_module(path_customize_py):
         # file as a temporary file with deprecated resilient-circuits import altered then attempt to load
         # the module from the temporary location.
         temp_customize = u"".join(new_lines)
-        
+
         if sys.version_info.major == 3:
             temp_file_obj = tempfile.NamedTemporaryFile('w', suffix=".py", delete=False, encoding="utf8")
         else:
@@ -228,7 +228,7 @@ def load_customize_py_module(path_customize_py):
                 temp_file.flush()
                 module_name = os.path.basename(temp_file.name)[:-3]
                 # Attempt to import the module from the temporary file location.
-                customize_py_module = sdk_helpers.load_py_module(temp_file.name,  module_name)
+                customize_py_module = sdk_helpers.load_py_module(temp_file.name, module_name)
 
         except IOError as ioerr:
            raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
