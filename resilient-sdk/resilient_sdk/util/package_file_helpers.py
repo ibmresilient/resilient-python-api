@@ -181,7 +181,7 @@ def get_dependency_from_install_requires(install_requires, dependency_name):
     return dependency
 
 
-def load_customize_py_module(path_customize_py):
+def load_customize_py_module(path_customize_py, warn=True):
     """
     Return the path_customize_file as a Python Module.
     We can then access it methods like:
@@ -190,6 +190,7 @@ def load_customize_py_module(path_customize_py):
     Raises an SDKException if we fail to load the module
 
     :param path_customize_py: Path to the customize.py file that contains the module
+    :param warn: Boolean to indicate warning should happen, for codegen usage warning not required.
     :return: The customize Python Module, if found
     :rtype: module
     """
@@ -203,9 +204,10 @@ def load_customize_py_module(path_customize_py):
     for i, line in enumerate(current_customize_py_lines):
         if line.startswith(LINE_TO_REPLACE):
             new_lines = current_customize_py_lines[:i] + [REPLACE_TEXT] + current_customize_py_lines[i + 1:]
-            LOG.warning("WARNING: Import References to resilient-circuits are deprecated in v35.0.195. For newer "
-                        "versions of resilient-circuits, replace '%s', with '%s' in %s", line.strip(), REPLACE_TEXT,
-                        path_customize_py)
+            if warn:
+                LOG.warning("WARNING: Import References to resilient-circuits are deprecated in v35.0.195. For newer "
+                            "versions of resilient-circuits, replace '%s', with '%s' in %s", line.strip(), REPLACE_TEXT,
+                            path_customize_py)
             break
 
 
