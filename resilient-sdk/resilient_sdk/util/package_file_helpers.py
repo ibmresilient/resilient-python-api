@@ -15,6 +15,7 @@ import base64
 import shutil
 import struct
 import pkg_resources
+import tempfile
 from resilient import ImportDefinition
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
 from resilient_sdk.util.sdk_exception import SDKException
@@ -201,30 +202,40 @@ def load_customize_py_module(path_customize_py):
     # Check if customize.py has dependencies on resilient-circuits
     for i, line in enumerate(current_customize_py_lines):
         if line.startswith(LINE_TO_REPLACE):
-            LOG.warning("WARNING: References to resilient-circuits are deprecated. Replace '%s', with '%s' in %s",
-                        line.strip(), REPLACE_TEXT, path_customize_py)
+            new_lines = current_customize_py_lines[:i] + [REPLACE_TEXT] + current_customize_py_lines[i + 1:]
+            LOG.warning("WARNING: Import References to resilient-circuits are deprecated in v35.0.195. For newer "
+                        "versions of resilient-circuits, replace '%s', with '%s' in %s", line.strip(), REPLACE_TEXT,
+                        path_customize_py)
             break
 
-    # if it does, new_lines will be defined
-    if new_lines:
 
-        # Create backup!
-        path_backup_customize_py = sdk_helpers.rename_to_bak_file(path_customize_py)
+    if new_lines:
+        # The customize.py has a reference to a deprecated resilient-circuits import. Save the customize.py
+        # file as a temporary file with deprecated resilient-circuits import altered then attempt to load
+        # the module from the temporary location.
+        temp_customize = u"".join(new_lines)
+        
+        if sys.version_info.major == 3:
+            temp_file_obj = tempfile.NamedTemporaryFile('w', suffix=".py", delete=False, encoding="utf8")
+        else:
+            temp_customize = temp_customize.encode('utf-8')
+            temp_file_obj = tempfile.NamedTemporaryFile('w+b', suffix=".py", delete=False)
 
         try:
-            # Write the new customize.py (with resilient-circuits replaced with resilient)
-            sdk_helpers.write_file(path_customize_py, u"".join(new_lines))
+            # Write the new temporary customize.py (with resilient-circuits replaced with resilient)
+            with temp_file_obj as temp_file:
+                temp_file.write(temp_customize)
+                temp_file.flush()
+                module_name = os.path.basename(temp_file.name)[:-3]
+                # Attempt to import the module from the temporary file location.
+                customize_py_module = sdk_helpers.load_py_module(temp_file.name,  module_name)
 
-            customize_py_module = sdk_helpers.load_py_module(path_customize_py, "customize")
+        except IOError as ioerr:
+           raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
 
         except Exception as err:
-            # If an error trying to load the module again and customize.py does not exist
-            # rename the backup file to original
-            if not os.path.isfile(path_customize_py):
-                LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                sdk_helpers.rename_file(path_backup_customize_py, "customize.py")
-
-            raise SDKException(u"Failed to load customize.py module\n{0}".format(err))
+            # An an unexpected error trying to load the module temporary customize module.
+            raise SDKException(u"Got an error attempting to load temporary customize.py module\n{0}".format(err))
 
     else:
         try:
