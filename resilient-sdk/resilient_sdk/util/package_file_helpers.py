@@ -216,10 +216,10 @@ def load_customize_py_module(path_customize_py):
         temp_customize = u"".join(new_lines)
 
         if sys.version_info.major == 3:
-            temp_file_obj = tempfile.NamedTemporaryFile('w', suffix=".py", delete=False, encoding="utf8")
+            temp_file_obj = tempfile.NamedTemporaryFile('w', suffix=".py", encoding="utf8")
         else:
             temp_customize = temp_customize.encode('utf-8')
-            temp_file_obj = tempfile.NamedTemporaryFile('w+b', suffix=".py", delete=False)
+            temp_file_obj = tempfile.NamedTemporaryFile('w+b', suffix=".py")
 
         try:
             # Write the new temporary customize.py (with resilient-circuits replaced with resilient)
