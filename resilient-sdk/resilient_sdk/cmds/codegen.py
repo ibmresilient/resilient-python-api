@@ -108,7 +108,13 @@ class CmdCodegen(BaseCmd):
             elif isinstance(file_info, str) and os.path.isfile(file_info):
                 # It is just a path to a file, copy it to the target_file
                 target_file = os.path.join(target_dir, file_name)
-                shutil.copy(file_info, target_file)
+                if os.path.exists(target_file):
+                    # If file already exists skip copy.
+                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
+                    continue
+                else:
+                    newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+                    shutil.copy(file_info, target_file)
 
             else:
                 # Get path to Jinja2 template
