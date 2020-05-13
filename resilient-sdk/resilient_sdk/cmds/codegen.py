@@ -347,7 +347,7 @@ class CmdCodegen(BaseCmd):
         LOG.info("'codegen --reload' started for '%s'", args.package)
 
         # Load the customize.py module
-        customize_py_module = package_helpers.load_customize_py_module(path_customize_py)
+        customize_py_module = package_helpers.load_customize_py_module(path_customize_py, warn=False)
 
         try:
             # Get the 'old_params' from customize.py
