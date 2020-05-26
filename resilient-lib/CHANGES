@@ -1,4 +1,8 @@
-2020-04: version 36.2
+2020-05: version 37
+
+* execute_call_v2 might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
+
+2020-04: version 36.2.dev
 
 * execute_call_v2 might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
 

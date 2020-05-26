@@ -1,4 +1,8 @@
-2020-04-15: version 36.2
+2020-04-15: version 37
+
+* Deprecated 'codegen' and 'extract' command-line arguments. See resilient-sdk for moved functionality.
+
+2020-04-15: version 36.2.dev
 
 * Deprecated 'codegen' and 'extract' command-line arguments. See resilient-sdk for moved functionality.
 
