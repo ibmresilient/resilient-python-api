@@ -4,6 +4,8 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
+from os import path
+import io
 
 class PyTest(TestCommand):
     user_options = [('pytestargs=', 'a', "Resilient Environment Arguments")]
@@ -21,6 +23,11 @@ class PyTest(TestCommand):
         errno = pytest.main(self.test_args)
         sys.exit(errno)
 
+this_directory = path.abspath(path.dirname(__file__))
+with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    readme_text = f.read()
+    long_description = readme_text
+
 setup(
     name='rc-webserver',
     use_scm_version={"root": "../", "relative_to": __file__},
@@ -36,7 +43,8 @@ setup(
     cmdclass = {"test" : PyTest},
     author_email='support@resilientsystems.com',
     description="Resilient Circuits Web Server Component",
-    long_description="Resilient Circuits Web Server Component",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     include_package_data=True,
     platforms='any',

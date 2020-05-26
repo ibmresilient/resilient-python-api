@@ -1,0 +1,88 @@
+# -*- coding: utf-8 -*-
+
+"""Generate the Resilient customizations required for {{package_name}}"""
+
+try:
+    from resilient import ImportDefinition
+except ImportError:
+    # Support Apps running on resilient-circuits < v35.0.195
+    from resilient_circuits.util import ImportDefinition
+
+
+def codegen_reload_data():
+    """
+    Parameters required reload codegen for the {{package_name}} package
+    """
+    return {
+        "package": u"{{package_name}}",
+        "message_destinations": {% if message_destinations %}[{% for o in message_destinations %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "functions": {% if functions %}[{% for o in functions %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "workflows": {% if workflows %}[{% for o in workflows %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "actions": {% if rules %}[{% for o in rules %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "incident_fields": {% if fields %}[{% for o in fields %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "incident_artifact_types": {% if artifact_types %}[{% for o in artifact_types %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "datatables": {% if datatables %}[{% for o in datatables %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "automatic_tasks": {% if tasks %}[{% for o in tasks %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
+        "scripts": {% if scripts %}[{% for o in scripts %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[]{% endif %}
+
+    }
+
+
+def customization_data(client=None):
+    """
+    Returns a Generator of ImportDefinitions (Customizations).
+    Install them using `resilient-circuits customize`
+
+    Contents:
+    {% if message_destinations %}    - Message Destinations:
+    {% for o in message_destinations %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if functions %}    - Functions:
+    {% for o in functions %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if workflows %}    - Workflows:
+    {% for o in workflows %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if rules %}    - Rules:
+    {% for o in rules %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if fields %}    - Incident Fields:
+    {% for o in fields %}        - {{o.name}}
+    {% endfor %}
+    {% endif %}
+    {% if artifact_types %}    - Custom Artifact Types:
+    {% for o in artifact_types %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if datatables %}    - Data Tables:
+    {% for o in datatables %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if phases %}    - Phases:
+    {% for o in phases %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if tasks %}    - Tasks:
+    {% for o in tasks %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if scripts %}    - Scripts:
+    {% for o in scripts %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    """
+
+    yield ImportDefinition(u"""
+{{export_data|base64}}""")

@@ -76,8 +76,6 @@ subcommands:
                         messages
     service             Manage Resilient Circuits as a service
     config              Create or update a basic configuration file
-    codegen             Generate template code for Python components
-    extract             Extract data in order to publish a .res file
     customize           Apply customizations to the Resilient platform
     selftest            Calls selftest functions for every package and prints
                         out their return states
