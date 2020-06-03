@@ -7,7 +7,6 @@
 import sys
 import logging
 from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdClone, CmdExtract
-from resilient_sdk.util import helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser

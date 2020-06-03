@@ -9,8 +9,8 @@ import uuid
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
-                                        minify_export, get_from_export,
-                                        get_object_api_names)
+                                            minify_export, get_from_export,
+                                            get_object_api_names)
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
 
@@ -52,7 +52,7 @@ class CmdClone(BaseCmd):
             2.3: Prepare a new Object from the source action object replacing the names were needed.
         3: Prepare our configuration upload object with the newly cloned action objects
         4: Submit a configuration import through the API
-        5: Confirm the change has been acceepted
+        5: Confirm the change has been accepted
 
         :param args: The command line args passed with the clone command such as workflows or functions to be cloned
         :type args: [type]
@@ -67,6 +67,7 @@ class CmdClone(BaseCmd):
         res_client = get_resilient_client()
 
         org_export = get_latest_org_export(res_client)
+
 
         # Copy the export data so we don't modify the existing object
         new_export_data = org_export.copy()
@@ -85,13 +86,16 @@ class CmdClone(BaseCmd):
             else:
 
                 if args.function:
-                    new_export_data['functions'] = self._clone_function(args, org_export)
+                    new_export_data['functions'] = self._clone_function(
+                        args, org_export)
 
                 if args.rule:
-                    new_export_data["actions"] = self._clone_rule(args, org_export)
+                    new_export_data["actions"] = self._clone_rule(
+                        args, org_export)
 
                 if args.workflow:
-                    new_export_data["workflows"] = self._clone_workflow(args, org_export)
+                    new_export_data["workflows"] = self._clone_workflow(
+                        args, org_export)
 
                 if args.messagedestination:
                     new_export_data["message_destinations"] = self._clone_message_destination(
@@ -159,7 +163,6 @@ class CmdClone(BaseCmd):
                     new_api_name = "{}_{}".format(
                         args.prefix, old_api_name)
                     # If the object we are dealing with was one of the requested objects
-                    # TODO: Improve spacetime complexity and make generic for all supported types
                     if self.action_obj_was_specified(args, obj):
                         # Handle functions and datatables
                         if obj.get('display_name', False):
@@ -179,11 +182,12 @@ class CmdClone(BaseCmd):
                         else:
                             new_export_data[object_type].append(replace_rule_object_attrs(
                                 obj, new_api_name))
- 
+
     @staticmethod
     def action_obj_was_specified(args, obj):
 
-        supported_types = ['function', 'workflow', 'messagedestination', 'rule', 'datatable']
+        supported_types = ['function', 'workflow',
+                           'messagedestination', 'rule', 'datatable']
         specified_objs = []
         for type_name in supported_types:
             # Use getattr to get each arg on the Namespace Object
@@ -330,6 +334,20 @@ def replace_common_object_attrs(obj_to_modify, new_obj_api_name):
 
 
 def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_api_name, old_workflow_name):
+    """replace_workflow_object_attrs replace/overwrite the unique attributes of the workflow object so that 
+    the provided object can be cloned with a new name and not cause a conflict on upload.
+
+    :param obj_to_modify: The object whose attributes will be modified, in this case a workflow
+    :type obj_to_modify: dict
+    :param original_obj_api_name: the name of the workflow to clone
+    :type original_obj_api_name: str
+    :param new_obj_api_name: the new cloned workflow name
+    :type new_obj_api_name: str
+    :param old_workflow_name: workflows have api names and also a name in the content object 
+    :type old_workflow_name: str
+    :return: the modified object
+    :rtype: dict
+    """
     # Replace all the attributes which are common to most objects
     obj_to_modify = replace_common_object_attrs(
         obj_to_modify, new_obj_api_name)
@@ -349,6 +367,16 @@ def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_
 
 
 def replace_function_object_attrs(obj_to_modify, new_obj_api_name):
+    """replace_function_object_attrs replace/overwrite the unique attributes of the workflow object so that
+    the provided object can be cloned with a new name and not cause a conflict on upload.
+
+    :param obj_to_modify: the object to be modified, in this case a function
+    :type obj_to_modify: dict
+    :param new_obj_api_name: the name of the function to modify
+    :type new_obj_api_name: str
+    :return: the modified object
+    :rtype: dict
+    """
     # Replace all the attributes which are common to most objects
     obj_to_modify = replace_common_object_attrs(
         obj_to_modify, new_obj_api_name)
@@ -366,6 +394,16 @@ def replace_function_object_attrs(obj_to_modify, new_obj_api_name):
 
 
 def replace_rule_object_attrs(obj_to_modify, new_obj_api_name):
+    """replace_rule_object_attrs replace/overwrite the unique attributes of the rule object so that
+    the provided object can be cloned with a new name and not cause a conflict on upload.
+
+    :param obj_to_modify: the object to be modified, in this case a function
+    :type obj_to_modify: dict
+    :param new_obj_api_name: the name of the function to modify
+    :type new_obj_api_name: str
+    :return: the modified object
+    :rtype: dict
+    """
     # Replace all the attributes which are common to most objects
     obj_to_modify = replace_common_object_attrs(
         obj_to_modify, new_obj_api_name)
@@ -374,6 +412,16 @@ def replace_rule_object_attrs(obj_to_modify, new_obj_api_name):
 
 
 def replace_md_object_attrs(obj_to_modify, new_obj_api_name):
+    """replace_md_object_attrs replace/overwrite the unique attributes of the message destination object so that
+    the provided object can be cloned with a new name and not cause a conflict on upload.
+
+    :param obj_to_modify: the object to be modified, in this case a function
+    :type obj_to_modify: dict
+    :param new_obj_api_name: the name of the function to modify 
+    :type new_obj_api_name: str
+    :return: the modified object
+    :rtype: dict
+    """
     # Replace all the attributes which are common to most objects
     obj_to_modify = replace_common_object_attrs(
         obj_to_modify, new_obj_api_name)
