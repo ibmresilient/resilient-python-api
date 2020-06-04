@@ -124,7 +124,7 @@ def get_client(opts):
         verify = False
 
     proxy = None
-    if opts.get("proxy_host"):
+    if opts.proxy_host:
         proxy = get_proxy_dict(opts)
 
     # Create SimpleClient for a REST connection to the Resilient services
