@@ -4,7 +4,7 @@
 
 import uuid
 from argparse import Namespace
-
+import copy
 from resilient_sdk.cmds import base_cmd, CmdClone
 from resilient_sdk.cmds.clone import replace_common_object_attrs, replace_workflow_object_attrs, replace_rule_object_attrs, replace_md_object_attrs, replace_function_object_attrs
 from resilient_sdk.util.resilient_objects import ResilientObjMap
@@ -47,7 +47,7 @@ def test_clone_function(fx_get_sub_parser):
         Namespace(function=[old_name, new_name]), TEST_EXPORT)
 
     original_obj = CmdClone.validate_provided_object_names("Function", new_name,
-                                                           old_name, TEST_EXPORT.get("functions").copy())
+                                                           old_name, copy.copy(TEST_EXPORT.get("functions")))
 
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.FUNCTIONS] == new_name, "Expected the returned export to contain the new function name"
@@ -74,8 +74,7 @@ def test_clone_workflow(fx_get_sub_parser):
         Namespace(workflow=[old_name, new_name]), TEST_EXPORT)
 
     original_obj = CmdClone.validate_provided_object_names("Workflow", new_name,
-                                                           old_name, TEST_EXPORT.get("workflows").copy())
-
+                                                           old_name, copy.copy(TEST_EXPORT.get("workflows")))
     print(export_data[0])
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
@@ -103,7 +102,7 @@ def test_clone_rule(fx_get_sub_parser):
         Namespace(rule=[old_name, new_name]), TEST_EXPORT)
 
     original_obj = CmdClone.validate_provided_object_names("Rule", new_name,
-                                                           old_name, TEST_EXPORT.get("actions").copy())
+                                                           old_name, copy.copy(TEST_EXPORT.get("actions")))
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.RULES] == new_name, "Expected the returned export to contain the new function name"
     # Ensure the Object specific primary key is not duplicated
@@ -129,7 +128,7 @@ def test_clone_md(fx_get_sub_parser):
         Namespace(messagedestination=[old_name, new_name]), TEST_EXPORT)
 
     original_obj = CmdClone.validate_provided_object_names("Message Destination", new_name,
-                                                           old_name, TEST_EXPORT.get("message_destinations").copy())
+                                                           old_name, copy.copy(TEST_EXPORT.get("message_destinations")))
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.MESSAGE_DESTINATIONS] == new_name, "Expected the returned export to contain the new function name"
     # Ensure the Object specific primary key is not duplicated
@@ -148,10 +147,10 @@ def test_replace_function_object_attrs():
     :rtype: dict
     """
     # Get the first workflow from the list
-    obj_to_modify = TEST_EXPORT.get("functions")[0].copy()
+    obj_to_modify = copy.copy(TEST_EXPORT.get("functions")[0])
 
     old_function_name = obj_to_modify[ResilientObjMap.FUNCTIONS]
-    new_obj = obj_to_modify.copy()
+    new_obj = copy.copy(obj_to_modify)
     new_obj = replace_function_object_attrs(obj_to_modify, "test_new_function")
 
     assert new_obj[ResilientObjMap.FUNCTIONS] != old_function_name
@@ -161,10 +160,10 @@ def test_replace_workflow_object_attrs():
     """test_replace_workflow_object_attrs test to verify the functionality of replacing a workflows unique attributes
     """
     # Get the first workflow from the list
-    obj_to_modify = TEST_EXPORT.get("workflows")[0].copy()
+    obj_to_modify = copy.copy(TEST_EXPORT.get("workflows")[0])
 
     old_workflow_name = obj_to_modify[ResilientObjMap.WORKFLOWS]
-    new_obj = obj_to_modify.copy()
+    new_obj = copy.copy(obj_to_modify)
     new_obj = replace_workflow_object_attrs(
         obj_to_modify, obj_to_modify[ResilientObjMap.WORKFLOWS], "test_new_workflow", obj_to_modify['name'])
 
@@ -175,10 +174,10 @@ def test_replace_rule_object_attrs():
     """test_replace_rule_object_attrs test to verify the functionality of replacing a rules unique attributes
     """
     # Get the first rule from the list
-    obj_to_modify = TEST_EXPORT.get("actions")[0].copy()
+    obj_to_modify = copy.copy(TEST_EXPORT.get("actions")[0])
 
     old_rule_name = obj_to_modify[ResilientObjMap.RULES]
-    new_obj = obj_to_modify.copy()
+    new_obj = copy.copy(obj_to_modify)
     new_obj = replace_rule_object_attrs(obj_to_modify, "test_new_rule")
 
     assert new_obj[ResilientObjMap.RULES] != old_rule_name
@@ -188,10 +187,10 @@ def test_replace_md_object_attrs():
     """test_replace_md_object_attrs test to verify the functionality of replacing a message destinations unique attributes
     """
     # Get the first rule from the list
-    obj_to_modify = TEST_EXPORT.get("message_destinations")[0].copy()
+    obj_to_modify = copy.copy(TEST_EXPORT.get("message_destinations")[0])
 
     old_md_name = obj_to_modify[ResilientObjMap.MESSAGE_DESTINATIONS]
-    new_obj = obj_to_modify.copy()
+    new_obj = copy.copy(obj_to_modify)
     new_obj = replace_md_object_attrs(obj_to_modify, "fn_msg_dst")
 
     assert new_obj[ResilientObjMap.RULES] != old_md_name

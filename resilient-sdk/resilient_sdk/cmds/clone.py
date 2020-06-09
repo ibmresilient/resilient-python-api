@@ -203,7 +203,7 @@ class CmdClone(BaseCmd):
         original_md_api_name, new_md_api_name = args.messagedestination
         # Get the md defintion objects
         destinations_def = org_export.get(
-            "message_destinations").copy()
+            "message_destinations")
         LOG.info(destinations_def)
         # Validate both the original source md exists and the new md api name does not conflict with an existing md
         original_md = CmdClone.validate_provided_object_names("Message Destination", new_md_api_name,
