@@ -421,6 +421,20 @@ class TestCo3Patch:
 
         inc = client.get_put(uri, no_change)
 
+    @patch('resilient.SimpleClient.connect')
+    @patch('resilient.SimpleClient.get')
+    def test_get_client(self, mock_get, mock_connect, co3_args):
+        mock_connect.return_value = {"orgs": [{"id": 204}]}
+        mock_get.return_value = {"actions_framework_enabled": True}
+
+        co3_args.proxy_host = "proxy_host"
+        co3_args.proxy_port = 1443
+
+        rest_client = resilient.get_client(co3_args)
+        assert rest_client.proxies
+        assert rest_client.proxies['https'] == "https://proxy_host:1443"
+
+
 class TestGetConfig(object):
 
     @pytest.fixture(scope='session')
