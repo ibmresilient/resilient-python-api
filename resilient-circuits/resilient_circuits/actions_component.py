@@ -333,10 +333,10 @@ class Actions(ResilientComponent):
             self.action_defs = dict((int(action["id"]),
                                      action) for action in list_action_defs)
 
-            defn = self.action_defs.get(action_id, "_unnamed_")
+            defn = self.action_defs.get(action_id, {"name": "_unnamed_"})
 
         if defn:
-            return defn["name"]
+            return defn.get("name", "_unnamed_")
 
     @handler("Connected")
     def on_stomp_connected(self):
