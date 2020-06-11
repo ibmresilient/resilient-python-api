@@ -6,6 +6,7 @@ import time
 import types
 import os
 import resilient
+from argparse import ArgumentParser
 from mock import patch
 from shutil import rmtree
 
@@ -423,16 +424,92 @@ class TestCo3Patch:
 
     @patch('resilient.SimpleClient.connect')
     @patch('resilient.SimpleClient.get')
-    def test_get_client(self, mock_get, mock_connect, co3_args):
+    def test_get_client_dict(self, mock_get, mock_connect, co3_args):
         mock_connect.return_value = {"orgs": [{"id": 204}]}
         mock_get.return_value = {"actions_framework_enabled": True}
 
-        co3_args.proxy_host = "proxy_host"
-        co3_args.proxy_port = 1443
+        args = {
+            'host': 'resilient_host',
+            'email': 'a@example.com',
+            'password': 'password',
+            'org': 'org',
+        }
 
-        rest_client = resilient.get_client(co3_args)
+        rest_client = resilient.get_client(args)
+        assert not rest_client.proxies
+
+        #
+        args['proxy_host'] = 'proxy_host'
+        args['proxy_port'] = 1443
+
+        rest_client = resilient.get_client(args)
         assert rest_client.proxies
         assert rest_client.proxies['https'] == "https://proxy_host:1443"
+
+        #
+        args['proxy_user'] = 'proxy_user'
+        args['proxy_password'] = 'proxy_password'
+
+        rest_client = resilient.get_client(args)
+        assert rest_client.proxies
+        assert rest_client.proxies['https'] == "https://proxy_user:proxy_password@proxy_host:1443/"
+
+    @patch('resilient.SimpleClient.connect')
+    @patch('resilient.SimpleClient.get')
+    def test_get_client_namespace(self, mock_get, mock_connect, co3_args):
+        mock_connect.return_value = {"orgs": [{"id": 204}]}
+        mock_get.return_value = {"actions_framework_enabled": True}
+
+        parser = ArgumentParser()
+        parser.add_argument('--proxy_host')
+        parser.add_argument('--proxy_port')
+        parser.add_argument('--proxy_user')
+        parser.add_argument('--proxy_password')
+        parser.add_argument('--email')
+        parser.add_argument('--password')
+        parser.add_argument('--host')
+        parser.add_argument('--org')
+
+        #
+        args = parser.parse_args([
+            '--email', 'a@example.com',
+            '--password', 'password',
+            '--host', 'resilient_host',
+            '--org', 'org'
+        ])
+
+        rest_client = resilient.get_client(args)
+        assert not rest_client.proxies
+
+        #
+        args = parser.parse_args([
+            '--email', 'a@example.com',
+            '--password', 'password',
+            '--host', 'resilient_host',
+            '--org', 'org',
+            '--proxy_host', 'proxy_host',
+            '--proxy_port', '1443'
+        ])
+
+        rest_client = resilient.get_client(args)
+        assert rest_client.proxies
+        assert rest_client.proxies['https'] == "https://proxy_host:1443"
+
+        #
+        args = parser.parse_args([
+            '--proxy_host', 'proxy_host',
+            '--proxy_port', '1443',
+            '--proxy_user', 'proxy_user',
+            '--proxy_password', 'proxy_password',
+            '--email', 'a@example.com',
+            '--password', 'password',
+            '--host', 'resilient_host',
+            '--org', 'org'
+        ])
+
+        rest_client = resilient.get_client(args)
+        assert rest_client.proxies
+        assert rest_client.proxies['https'] == "https://proxy_user:proxy_password@proxy_host:1443/"
 
 
 class TestGetConfig(object):
