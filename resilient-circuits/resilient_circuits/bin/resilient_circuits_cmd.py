@@ -375,26 +375,18 @@ def find_workflow_by_programmatic_name(workflows, pname):
 def clone(args):
     parser = AppArgumentParser(config_file=resilient.get_config_file())
     (opts, extra) = parser.parse_known_args()
+    latest_export_uri = "/configurations/exports/"
+
     client = resilient.get_client(opts)
 
-    export_uri = "/configurations/exports/history"
-    export_list = client.get(export_uri)["histories"]
-    last_date = 0
-    last_id = 0
-    for export in export_list:
-        if export["options"]["actions"] and export["options"]["phases_and_tasks"]:
-            if export["date"] > last_date:
-                last_date = export["date"]
-                last_id = export["id"]
-    if last_date == 0:
-        LOG.error(u"ERROR: No suitable export is available.  "
-                  u"Create an export for code generation. (Administrator Settings -> Organization -> Export).")
-        return
+    # Generate + get latest export from Resilient Server
+    export_data = client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
+
+    # Get the export date.
+    last_date = export_data["export_date"]
 
     dt = datetime.datetime.utcfromtimestamp(last_date / 1000.0)
-    LOG.info(u"Codegen is based on the organization export from {}.".format(dt))
-    export_uri = "/configurations/exports/{}".format(last_id)
-    export_data = client.get(export_uri)  # Get latest export
+    LOG.info(u"Clone is based on the organization export from {}.".format(dt))
 
     new_export_data = export_data.copy()
     whitelist_dict_keys = ["incident_types", "fields"]  # Mandatory keys
