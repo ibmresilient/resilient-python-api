@@ -245,13 +245,13 @@ def read_local_exportfile(path_local_exportfile):
     # Validate we can read it
     validate_file_paths(os.R_OK, path_local_exportfile)
 
-    # Read the file
-    file_lines = read_file(path_local_exportfile)
+    # Read the export file content.
+    export_content = ''.join(read_file(path_local_exportfile))
 
-    if not file_lines:
+    if not export_content:
         raise SDKException("Failed to read {0}".format(path_local_exportfile))
 
-    return json.loads(file_lines[0])
+    return json.loads(export_content)
 
 
 def get_object_api_names(api_name, list_objs):
