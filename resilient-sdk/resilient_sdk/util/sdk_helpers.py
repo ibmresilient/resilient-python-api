@@ -15,9 +15,10 @@ import datetime
 import importlib
 import hashlib
 import uuid
-
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
+from zipfile import ZipFile, is_zipfile
+
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
@@ -39,6 +40,8 @@ LOG = logging.getLogger("resilient_sdk_log")
 
 # Regex for splitting version number at end of name from package basename.
 VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
+# Resilient export file suffix.
+RES_EXPORT_SUFFIX = ".res"
 
 def get_resilient_client(path_config_file=None):
     """
@@ -93,6 +96,25 @@ def read_file(path):
     with io.open(path, mode="rt", encoding="utf-8") as the_file:
         file_lines = the_file.readlines()
     return file_lines
+
+def read_zip_file(path, pattern):
+    """Returns unzipped contents of file whose name matches a pattern
+    in zip file at path.
+
+    :param path: Path to zip file.
+    :param pattern: File pattern to match in the zip file.
+    :return: file_content: Return unzipped file content.
+    """
+    file_content = None
+    with ZipFile((path), 'r') as zobj:
+        for file_name in zobj.namelist():
+            if pattern.lower() in file_name.lower():
+                # Extract the file.
+                f = zobj.open(file_name)
+                # Read file and convert content from bytes to string.
+                file_content = f.read().decode('utf8', 'ignore')
+
+    return file_content
 
 
 def rename_file(path_current_file, new_name):
@@ -246,7 +268,12 @@ def read_local_exportfile(path_local_exportfile):
     validate_file_paths(os.R_OK, path_local_exportfile)
 
     # Read the export file content.
-    export_content = ''.join(read_file(path_local_exportfile))
+    if is_zipfile(path_local_exportfile):
+        # File is a zip file get unzipped content.
+        export_content = read_zip_file(path_local_exportfile, RES_EXPORT_SUFFIX)
+    else:
+        # File is a assumed to be a text file read the export file content.
+        export_content = ''.join(read_file(path_local_exportfile))
 
     if not export_content:
         raise SDKException("Failed to read {0}".format(path_local_exportfile))
