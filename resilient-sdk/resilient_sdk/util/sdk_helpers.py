@@ -17,7 +17,7 @@ import hashlib
 import uuid
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
-from zipfile import ZipFile, is_zipfile
+from zipfile import ZipFile, is_zipfile, BadZipfile
 
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
@@ -106,13 +106,26 @@ def read_zip_file(path, pattern):
     :return: file_content: Return unzipped file content.
     """
     file_content = None
-    with ZipFile((path), 'r') as zobj:
-        for file_name in zobj.namelist():
-            if pattern.lower() in file_name.lower():
+    try:
+        with ZipFile((path), 'r') as zobj:
+            # Get all file names matching 'pattern'.
+            file_matches = [f for f in zobj.namelist() if pattern.lower() in f.lower()]
+            if len(file_matches) > 1:
+                raise SDKException("More than one file matching pattern {0} found in zip file: {1}"
+                                   .format(pattern, path))
+            else:
+                file_name = file_matches.pop()
                 # Extract the file.
                 f = zobj.open(file_name)
                 # Read file and convert content from bytes to string.
                 file_content = f.read().decode('utf8', 'ignore')
+
+    except BadZipfile:
+        raise SDKException("Bad zip file {0}.".format(path))
+
+    except Exception as err:
+        # An an unexpected error trying to read a zipfile.
+        raise SDKException("Got an error '{0}' attempting to read zip file {1}".format(err, path))
 
     return file_content
 
