@@ -110,18 +110,24 @@ def read_zip_file(path, pattern):
         with ZipFile((path), 'r') as zobj:
             # Get all file names matching 'pattern'.
             file_matches = [f for f in zobj.namelist() if pattern.lower() in f.lower()]
-            if len(file_matches) > 1:
-                raise SDKException("More than one file matching pattern {0} found in zip file: {1}"
-                                   .format(pattern, path))
+            if len(file_matches):
+                if len(file_matches) > 1:
+                    raise SDKException("More than one file matching pattern {0} found in zip file: {1}"
+                                       .format(pattern, path))
+                else:
+                    file_name = file_matches.pop()
+                    # Extract the file.
+                    f = zobj.open(file_name)
+                    # Read file and convert content from bytes to string.
+                    file_content = f.read().decode('utf8', 'ignore')
             else:
-                file_name = file_matches.pop()
-                # Extract the file.
-                f = zobj.open(file_name)
-                # Read file and convert content from bytes to string.
-                file_content = f.read().decode('utf8', 'ignore')
-
+                raise SDKException("A file matching pattern {0} was not found in zip file: {1}"
+                                   .format(pattern, path))
     except BadZipfile:
         raise SDKException("Bad zip file {0}.".format(path))
+
+    except SDKException as err:
+        raise err
 
     except Exception as err:
         # An an unexpected error trying to read a zipfile.
