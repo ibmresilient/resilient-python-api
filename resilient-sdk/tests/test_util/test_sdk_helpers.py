@@ -33,7 +33,6 @@ def test_read_write_file(fx_mk_temp_dir):
     file_lines = sdk_helpers.read_file(temp_file)
     assert mock_data.mock_file_contents in file_lines
 
-
 def test_rename_file(fx_mk_temp_dir):
     temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
     sdk_helpers.write_file(temp_file, mock_data.mock_file_contents)
@@ -43,6 +42,9 @@ def test_rename_file(fx_mk_temp_dir):
 
     assert os.path.isfile(path_renamed_file) is True
 
+def test_read_zip_file():
+    file_lines = sdk_helpers.read_zip_file(mock_paths.MOCK_ZIP, "mock_file.txt")
+    assert mock_data.mock_file_contents in file_lines
 
 def test_is_valid_package_name():
     assert sdk_helpers.is_valid_package_name("fn_mock_integration") is True
@@ -121,6 +123,10 @@ def test_read_local_exportfile():
     assert isinstance(export_data, dict)
     assert "functions" in export_data
 
+def test_read_local_exportfile_resz():
+    export_data = sdk_helpers.read_local_exportfile(mock_paths.MOCK_EXPORT_RESZ)
+    assert isinstance(export_data, dict)
+    assert "functions" in export_data
 
 def test_get_obj_from_list(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)

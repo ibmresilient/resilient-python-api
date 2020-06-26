@@ -135,7 +135,7 @@ class BaseCmd(object):
 
         io_parser.add_argument("-e", "--exportfile",
                                type=ensure_unicode,
-                               help="Path to a local (.res) export file")
+                               help="Path to a local (.res or .resz) export file")
 
         io_parser.add_argument("-o", "--output",
                                type=ensure_unicode,
