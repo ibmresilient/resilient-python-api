@@ -110,28 +110,35 @@ def list_installed(args):
     if not components:
         LOG.info(u"No resilient-circuits components are installed")
         return
+
+    ep_list = {}
     LOG.info(u"The following packages and components are installed:")
     for dist, component_list in components.items():
         if args.verbose:
             clist = "\n\t".join([str(ep) for ep in component_list if ep in component_entry_points])
             if clist == "":
-                LOG.info(u"%s (%s):\n\t(Package does not define any components)",
-                         dist.as_requirement(),
-                         dist.egg_info)
+                ep = u"{} ({}):\n\t(Package does not define any components)".format(
+                    dist.as_requirement(),
+                    dist.egg_info)
             else:
-                LOG.info(u"%s (%s):\n\t%s",
-                         dist.as_requirement(),
-                         dist.egg_info,
-                         clist)
+                ep = u"{} ({}):\n\t{}".format(
+                    dist.as_requirement(),
+                    dist.egg_info,
+                    clist)
         else:
             clist = "\n\t".join([ep.name for ep in component_list if ep in component_entry_points])
             if clist == "":
-                LOG.info(u"%s:\n\t(Package does not define any components)",
-                         dist.as_requirement())
+                ep = u"{}:\n\t(Package does not define any components)".format(
+                    dist.as_requirement())
             else:
-                LOG.info(u"%s:\n\t%s",
-                         dist.as_requirement(),
-                         clist)
+                ep = u"{}:\n\t{}".format(
+                    dist.as_requirement(),
+                    clist)
+
+        ep_list[str(dist.as_requirement())] = ep
+
+    for ep_item in sorted(ep_list.keys()):
+        LOG.info(ep_list[ep_item])
 
 
 def generate_default(install_list):
