@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+
 """Circuits Web component for handling paths at the Web root"""
 
 import logging
@@ -14,8 +17,8 @@ class WebRoot(Controller):
         if not event.value:
             # only need to do this if we haven't overridden elsewhere
             return "<HTML><BODY>Not Found</BODY></HTML>"
-        else:
-            return
+
+        return
 
     @expose("robots.txt")
     def _robots(self):
@@ -32,6 +35,6 @@ class WebRoot(Controller):
         """
         if not event.value:
             # only need to do this if we haven't overridden elsewhere
-            return self.redirect("//resilientsystems.com/favicon.ico", code=302)
-        else:
-            return
+            return self.redirect("//www.ibm.com/favicon.ico", code=302)
+
+        return
