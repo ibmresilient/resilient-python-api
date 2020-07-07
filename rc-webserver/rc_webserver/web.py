@@ -5,13 +5,15 @@
 
 import json
 import logging
-from inspect import getfullargspec
+import sys
 from functools import update_wrapper
-try:
-    from json import JSONDecodeError
-except ImportError:
-    # Python 2
+if sys.version_info.major < 3:
     JSONDecodeError = ValueError
+    from inspect import getargspec
+else:
+    from json import JSONDecodeError
+    from inspect import getfullargspec
+
 
 from circuits.core import handler
 from circuits.web.wrappers import Response
@@ -126,9 +128,14 @@ def exposeWeb(*channels, **config):
                 if hasattr(self, "session"):
                     del self.session
 
-        #(args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations)
-        wrapper.args, wrapper.varargs, wrapper.varkw, wrapper.defaults, _, _, _ = \
-            getfullargspec(f)
+        if sys.version_info.major < 3:
+            wrapper.args, wrapper.varargs, wrapper.varkw, wrapper.defaults = \
+                getargspec(f)
+        else:
+            #python 3 (args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations)
+            wrapper.args, wrapper.varargs, wrapper.varkw, wrapper.defaults, _, _, _ = \
+                getfullargspec(f)
+
         if wrapper.args and wrapper.args[0] == "self":
             del wrapper.args[0]
 
