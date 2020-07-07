@@ -87,18 +87,18 @@ def ensure_unicode(input_value):
 
 def get_proxy_dict(opts):
     """ Creates a dictionary with proxy config to be sent to the SimpleClient """
-    scheme = urlparse.urlparse(opts.proxy_host).scheme
+    scheme = urlparse.urlparse(opts['proxy_host']).scheme
     if not scheme:
         scheme = 'https'
-        proxy_host = opts.proxy_host
+        proxy_host = opts['proxy_host']
     else:
-        proxy_host = opts.proxy_host[len(scheme + "://"):]
+        proxy_host = opts['proxy_host'][len(scheme + "://"):]
 
-    if opts.proxy_user and opts.proxy_password:
-        proxy = {'https': '{0}://{1}:{2}@{3}:{4}/'.format(scheme, opts.proxy_user, opts.proxy_password,
-                                                          proxy_host, opts.proxy_port)}
+    if opts.get('proxy_user') and opts.get('proxy_password'):
+        proxy = {'https': '{0}://{1}:{2}@{3}:{4}/'.format(scheme, opts['proxy_user'], opts['proxy_password'],
+                                                          proxy_host, opts['proxy_port'])}
     else:
-        proxy = {'https': '{0}://{1}:{2}'.format(scheme, proxy_host, opts.proxy_port)}
+        proxy = {'https': '{0}://{1}:{2}'.format(scheme, proxy_host, opts['proxy_port'])}
 
     return proxy
 

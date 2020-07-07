@@ -127,7 +127,7 @@ class ResilientComponent(BaseComponent):
                 func_names = getattr(func, "names", [])
                 if self._functions is None:
                     LOG.warning("Functions are not available in this Resilient platform!  "
-                             "Cannot run '{}'".format(", ".join(func_names)))
+                                "Cannot run '{}'".format(", ".join(func_names)))
                 else:
                     for func_name in func_names:
                         try:
@@ -288,7 +288,7 @@ class Actions(ResilientComponent):
             # Let user submit test actions from the command line for testing
             LOG.info("Action Tests enabled. Run 'resilient-circuits test' for the interactive action test tool.")
             test_options = {}
-            if opts.get("test_port", None) != None:
+            if opts.get("test_port", None):
                 test_options["port"] = int(opts["test_port"])
             if self.opts.get("test_host"):
                 test_options["host"] = opts["test_host"]
@@ -323,22 +323,20 @@ class Actions(ResilientComponent):
             # Unnamed action, probably triggered from a v28 workflow
             LOG.info("Action: _unnamed_")
             return "_unnamed_"
-        try:
+
+        if self.action_defs.get(action_id):
             defn = self.action_defs[action_id]
-        except KeyError:
+        else:
             LOG.warning("Action %s is unknown.", action_id)
             # Refresh the list of action definitions
             list_action_defs = self.rest_client().get("/actions")["entities"]
             self.action_defs = dict((int(action["id"]),
                                      action) for action in list_action_defs)
-            try:
-                defn = self.action_defs[action_id]
-            except KeyError:
-                LOG.exception("Action %s is not defined.", action_id)
-                raise
+
+            defn = self.action_defs.get(action_id, {"name": "_unnamed_"})
 
         if defn:
-            return defn["name"]
+            return defn.get("name", "_unnamed_")
 
     @handler("Connected")
     def on_stomp_connected(self):
@@ -455,7 +453,7 @@ class Actions(ResilientComponent):
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
             LOG.warning(("Resilient action module not enabled."
-                      "No stomp connection attempted."))
+                        "No stomp connection attempted."))
             return
 
         self.resilient_mock = self.opts["resilient_mock"] or False
@@ -572,7 +570,7 @@ class Actions(ResilientComponent):
                 if func_name not in self._functions:
                     # Unknown function.  Log it and continue.
                     LOG.warning("'%s.%s' function '%s' is not defined!",
-                             type(component).__module__, type(component).__name__, func_name)
+                                type(component).__module__, type(component).__name__, func_name)
                     continue
                 queue_id = self._functions[func_name]["destination_handle"]
                 queue_name = self._destinations[queue_id]["programmatic_name"]

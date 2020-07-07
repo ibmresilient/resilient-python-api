@@ -218,10 +218,10 @@ def load_customize_py_module(path_customize_py, warn=True):
         temp_customize = u"".join(new_lines)
 
         if sys.version_info.major == 3:
-            temp_file_obj = tempfile.NamedTemporaryFile('w', suffix=".py", encoding="utf8")
+            temp_file_obj = tempfile.NamedTemporaryFile('w', suffix=".py", encoding="utf8", delete=False)
         else:
             temp_customize = temp_customize.encode('utf-8')
-            temp_file_obj = tempfile.NamedTemporaryFile('w+b', suffix=".py")
+            temp_file_obj = tempfile.NamedTemporaryFile('w+b', suffix=".py", delete=False)
 
         try:
             # Write the new temporary customize.py (with resilient-circuits replaced with resilient)
@@ -229,8 +229,9 @@ def load_customize_py_module(path_customize_py, warn=True):
                 temp_file.write(temp_customize)
                 temp_file.flush()
                 module_name = os.path.basename(temp_file.name)[:-3]
-                # Attempt to import the module from the temporary file location.
-                customize_py_module = sdk_helpers.load_py_module(temp_file.name, module_name)
+
+            # Attempt to import the module from the temporary file location.
+            customize_py_module = sdk_helpers.load_py_module(temp_file.name, module_name)
 
         except IOError as ioerr:
            raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
@@ -238,6 +239,9 @@ def load_customize_py_module(path_customize_py, warn=True):
         except Exception as err:
             # An an unexpected error trying to load the module temporary customize module.
             raise SDKException(u"Got an error attempting to load temporary customize.py module\n{0}".format(err))
+
+        finally:
+            os.unlink(temp_file.name)
 
     else:
         try:
