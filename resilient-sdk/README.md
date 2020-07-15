@@ -65,7 +65,7 @@ Python 2.7+ and Python 3.6+
 
 ## Documentation
 
-* [Setup Guide](https://developer.ibm.com/security/resilient/start/)
+* [Setup Guide](https://developer.ibm.com/security/resilient/sdk/)
 
 
 ## License and Terms
