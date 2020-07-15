@@ -1,0 +1,21 @@
+{
+  "type": "incident",
+  "id": 27,
+  "uuid": "5265438b-a4b4-4b1c-bbe1-57f1c8668755",
+  "name": "ssl_expired.cert",
+  "content_type": "application/octet-stream",
+  "created": 1593103132825,
+  "creator_id": 3,
+  "size": 2021,
+  "actions": [
+  ],
+  "task_id": null,
+  "task_name": null,
+  "task_custom": null,
+  "task_members": null,
+  "task_at_id": null,
+  "vers": 12,
+  "inc_id": 2099,
+  "inc_name": "phish1",
+  "inc_owner": 3
+}

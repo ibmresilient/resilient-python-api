@@ -238,3 +238,10 @@ class BasicResilientMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json='"abcdef"')
+
+    @resilient_endpoint("POST", "/incidents/[0-9]+/attachments$")
+    def attachment_contents_get(self, request):
+        """ Callback for POST to attachment """
+        LOG.debug("attachment_post")
+        data = test_data("200_JSON_POST__attachment.json")
+        return requests_mock.create_response(request, status_code=200, json=data)
