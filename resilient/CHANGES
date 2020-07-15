@@ -1,3 +1,7 @@
+2020-07-15: version 37.2
+
+* Bug fix for proxy in python 3.
+
 2020-01-16: version 35.0.195
 
 * Moved ImportDefinition from `resilient-circuits`

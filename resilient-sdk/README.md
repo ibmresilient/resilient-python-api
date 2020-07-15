@@ -1,5 +1,3 @@
-[![Build Status](https://travis.ibm.com/Resilient/resilient-python-api.svg?token=ga58Yr4soAPHbQj4XsUF&branch=master)](https://travis.ibm.com/Resilient/resilient-python-api)
-
 ![IBM Security](./assets/IBM_Security_lockup_pos_RGB.png)
 
 ### Changelog
@@ -22,7 +20,7 @@
 
 The IBM Resilient Python SDK provides the tools and infrastructure you need to develop Resilient Apps, which you can then post on [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
 
-For more information, refer to the [Resilient SOAR Platform App Developer's Guide](https://<TODO>).
+For more information, refer to the [Resilient SOAR Platform App Developer's Guide](https://www.ibm.com/support/knowledgecenter/SSBRUQ_37.0.0/doc/app_dev/app_intro.html).
 
 
 ## Installation
@@ -67,7 +65,7 @@ Python 2.7+ and Python 3.6+
 
 ## Documentation
 
-* [Setup Guide](https://<TODO>)
+* [Setup Guide](https://developer.ibm.com/security/resilient/sdk/)
 
 
 ## License and Terms
