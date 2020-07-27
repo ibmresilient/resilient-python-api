@@ -45,7 +45,9 @@ class StompClient(BaseComponent):
              proxy_port=None,
              proxy_user=None,
              proxy_password=None,
-             channel=channel):
+             channel=channel,
+             stomp_max_retry_attempts=1,
+             stomp_startup_max_retry_attempts=1):
         """ Initialize StompClient.  Called after __init__ """
         self.channel = channel
         if proxy_host:
@@ -68,8 +70,11 @@ class StompClient(BaseComponent):
         else:
             uri = "tcp://%s:%s" % (host, port)
 
-        # Configure failover options so it only tries to connect once
-        self._stomp_server = "failover:(%s)?maxReconnectAttempts=1,startupMaxReconnectAttempts=1" % uri
+        # Configure failover options so it only tries based on settings
+        # TODO add pattern params from app.config
+        self._stomp_server = "failover:({1}})?maxReconnectAttempts={2},startupMaxReconnectAttempts={3}"\
+                        .format(uri, stomp_max_retry_attempts, stomp_startup_max_retry_attempts)
+        LOG.debug("Stomp uri: {}".format(self._stomp_server))
 
         self._stomp_config = StompConfig(uri=self._stomp_server, sslContext=ssl_context,
                                          version=version,

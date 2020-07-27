@@ -13,7 +13,11 @@ api_key_secret=ApiKeySecret
 org=My Org
 
 # Actions Module connection
+# Use stomp_url when configuring an environment for CP4S
+#stomp_host=
 #stomp_port=65001
+#stomp_timeout=120
+#stomp_max_retries=3
 
 # Directory containing additional components to load
 # componentsdir=components

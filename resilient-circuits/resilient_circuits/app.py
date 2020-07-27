@@ -55,6 +55,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_LOG_LEVEL = 'INFO'
     DEFAULT_LOG_FILE = 'app.log'
     DEFAULT_NO_PROMPT_PASS = "False"
+    DEFAULT_STOMP_TIMEOUT = 60
+    DEFAULT_STOMP_MAX_RETRIES = 3
 
     def __init__(self, config_file=None):
 
@@ -77,6 +79,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         # For some environments the STOMP TLS certificate will be different from the REST API cert
         default_stomp_cafile = self.getopt("resilient", "stomp_cafile") or None
 
+        default_stomp_url = self.getopt("resilient", "stomp_host") or self.getopt("resilient", "host")
+        default_stomp_timeout = self.getopt("resilient", "stomp_timeout") or self.DEFAULT_STOMP_TIMEOUT
+        default_stomp_max_retries = self.getopt("resilient", "stomp_max_retries") or self.DEFAULT_STOMP_MAX_RETRIES
+
         default_no_prompt_password = self.getopt("resilient",
                                                  "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
         default_no_prompt_password = self._is_true(default_no_prompt_password)
@@ -89,6 +95,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                                             "log_http_responses") or ""
         logging.getLogger().removeHandler(temp_handler)
 
+        self.add_argument("--stomp-host",
+                          type=str,
+                          default=default_stomp_url,
+                          help="Resilient server STOMP host url")
         self.add_argument("--stomp-port",
                           type=int,
                           default=default_stomp_port,
@@ -98,6 +108,16 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           action="store",
                           default=default_stomp_cafile,
                           help="Resilient server STOMP TLS certificate")
+        self.add_argument("--stomp-timeout",
+                          type=int,
+                          action="store",
+                          default=default_stomp_timeout,
+                          help="Resilient server STOMP timeout for connections")
+        self.add_argument("--stomp-max_retries",
+                          type=int,
+                          action="store",
+                          default=default_stomp_max_retries,
+                          help="Resilient server STOMP max retries before failing")
         self.add_argument("--componentsdir",
                           type=str,
                           default=default_components_dir,
