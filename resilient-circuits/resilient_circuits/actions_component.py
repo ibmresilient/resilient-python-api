@@ -32,8 +32,6 @@ STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
 STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 MAX_RETRY_COUNT = 3                 # Retry failed deliveries this many times
-STOMP_MAX_RECONNECT_ATTEMPTS = 1
-STOMP_STARTUP_MAX_RECONNECT_ATTEMPTS = 1
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
 IDLE_TIMER_INTERVAL = 600
@@ -278,9 +276,9 @@ class Actions(ResilientComponent):
         self.logging_directory = None
         self.subscribe_headers = None
         self._configure_opts(opts)
-        self.max_retry_count = int(opts.get("stomp_max_retries", MAX_RETRY_COUNT))
+        self.max_retry_count = int(opts['resilient'].get("stomp_max_retries", MAX_RETRY_COUNT))
 
-        timer_internal = int(opts.get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
+        timer_internal = int(opts['resilient'].get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
 
         _retry_timer = Timer(timer_internal, Event.create("retry_failed_deliveries"), persist=True)
         _retry_timer.register(self)
@@ -493,7 +491,7 @@ class Actions(ResilientComponent):
             ca_certs = cafile
 
         # Gather the stomp_host if specified or fallback to the resilient host if not
-        stomp_host = self.opts.get("stomp_host", None) or self.opts["host"]
+        stomp_host = self.opts["resilient"].get("stomp_host", None) or self.opts["host"]
         #
         #   key_id and key_secret are the preferrable one
         #
@@ -506,8 +504,8 @@ class Actions(ResilientComponent):
 
         # Set up a STOMP connection to the Resilient action services
         stomp_timeout = int(self.opts.get("stomp_timeout", STOMP_TIMEOUT))
-        stomp_max_retry_attempts = int(self.opts.get("stomp_max_retry_attempts", STOMP_MAX_RECONNECT_ATTEMPTS))
-        stomp_startup_max_retry_attempts = int(self.opts.get("stomp_startup_max_retry_attempts", STOMP_STARTUP_MAX_RECONNECT_ATTEMPTS))
+        # build out all the extra parameters for the stomp connections
+        stomp_params = self.opts['resilient'].get('stomp_params')
         if not self.stomp_component:
             self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
                                                username=stomp_email,
@@ -516,10 +514,9 @@ class Actions(ResilientComponent):
                                                            STOMP_SERVER_HEARTBEAT),
                                                connected_timeout=stomp_timeout,
                                                connect_timeout=stomp_timeout,
-                                               stomp_max_retry_attempts=stomp_max_retry_attempts,
-                                               stomp_startup_max_retry_attempts=stomp_startup_max_retry_attempts,
                                                ssl_context=context,
                                                ca_certs=ca_certs,  # For old ssl version
+                                               stomp_params=stomp_params,
                                                **self._proxy_args)
             self.stomp_component.register(self)
         else:
@@ -533,6 +530,7 @@ class Actions(ResilientComponent):
                                       connect_timeout=stomp_timeout,
                                       ssl_context=context,
                                       ca_certs=ca_certs,  # For old ssl version
+                                      stomp_params=stomp_params,
                                       **self._proxy_args)
 
         # Other special options
