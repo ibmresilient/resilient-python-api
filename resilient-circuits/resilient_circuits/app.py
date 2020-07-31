@@ -95,6 +95,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_test_port = self.getopt("resilient", "test_port") or None
         default_log_responses = self.getopt("resilient",
                                             "log_http_responses") or ""
+        default_resource_prefix = self.getopt("resilient", "resource_prefix") or None
+
         logging.getLogger().removeHandler(temp_handler)
 
         self.add_argument("--stomp-host",
@@ -125,6 +127,11 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           action="store",
                           default=os.environ.get('RESILIENT_MAX_CONNECTION_RETRIES', default_max_connection_retries),
                           help="Resilient max retries when connecting to Resilient or 0 for unlimited")
+        self.add_argument("--cp4s-resource-prefix",
+                          type=str,
+                          action="store",
+                          default=os.environ.get('RESOURCE_PREFIX', default_resource_prefix),
+                          help="Cloud Pak for Security resource path for host and STOMP URLs")
         self.add_argument("--componentsdir",
                           type=str,
                           default=default_components_dir,

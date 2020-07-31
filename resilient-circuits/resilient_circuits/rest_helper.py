@@ -73,6 +73,7 @@ def get_resilient_client(opts):
                 opts.get("org"),
                 opts.get("host"),
                 opts.get("port"),
+                opts.get("resource_prefix"),
                 opts.get("proxy_host"),
                 opts.get("proxy_port"),
                 opts.get("proxy_user"),
