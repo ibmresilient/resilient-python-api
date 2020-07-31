@@ -24,8 +24,8 @@ ACK_AUTO = StompSpec.ACK_AUTO
 ACK_CLIENT = StompSpec.ACK_CLIENT
 ACK_MODES = (ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
 
-DEF_MAX_RECONNECT_ATTEMPTS = 3
-DEF_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
+DEFAULT_MAX_RECONNECT_ATTEMPTS = 3
+DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
 
 LOG = logging.getLogger(__name__)
 
@@ -79,9 +79,9 @@ class StompClient(BaseComponent):
         connection_params = {item[0].strip():item[1].strip() for item in items} if items else {}
 
         if "maxReconnectAttempts" not in connection_params:
-            connection_params['maxReconnectAttempts'] = DEF_MAX_RECONNECT_ATTEMPTS
+            connection_params['maxReconnectAttempts'] = DEFAULT_MAX_RECONNECT_ATTEMPTS
         if "startupMaxReconnectAttempts" not in connection_params:
-            connection_params['startupMaxReconnectAttempts'] = DEF_STARTUP_MAX_RECONNECT_ATTEMPTS
+            connection_params['startupMaxReconnectAttempts'] = DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS
 
         self._stomp_server = "failover:({0})?{1}".format(uri, ",".join(["{}={}".format(k, v) for k, v in connection_params.items()]))
         LOG.debug("Stomp uri: {}".format(self._stomp_server))

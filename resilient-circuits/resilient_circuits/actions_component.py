@@ -29,9 +29,7 @@ LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
-STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
-MAX_RETRY_COUNT = 3                 # Retry failed deliveries this many times
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
 IDLE_TIMER_INTERVAL = 600
@@ -276,7 +274,7 @@ class Actions(ResilientComponent):
         self.logging_directory = None
         self.subscribe_headers = None
         self._configure_opts(opts)
-        self.max_retry_count = int(opts['resilient'].get("stomp_max_retries", MAX_RETRY_COUNT))
+        self.max_retry_count = int(opts.get("stomp_max_retries")) # default from app.py:DEFAULT_STOMP_MAX_RETRIES
 
         timer_internal = int(opts['resilient'].get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
 
@@ -503,7 +501,7 @@ class Actions(ResilientComponent):
             stomp_password = self.opts["password"]
 
         # Set up a STOMP connection to the Resilient action services
-        stomp_timeout = int(self.opts.get("stomp_timeout", STOMP_TIMEOUT))
+        stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
         # build out all the extra parameters for the stomp connections
         stomp_params = self.opts['resilient'].get('stomp_params')
         if not self.stomp_component:
