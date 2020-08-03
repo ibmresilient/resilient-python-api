@@ -125,7 +125,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         self.add_argument("--max-connection-retries",
                           type=int,
                           action="store",
-                          default=os.environ.get('RESILIENT_MAX_CONNECTION_RETRIES', default_max_connection_retries),
+                          default=os.environ.get('RESILIENT_MAX_CONNECTION_RETRIES') or 0 if os.environ.get("APP_HOST_CONTAINER") else default_max_connection_retries,
                           help="Resilient max retries when connecting to Resilient or 0 for unlimited")
         self.add_argument("--cp4s-resource-prefix",
                           type=str,
