@@ -23,6 +23,9 @@ org=My Org
 #  ex: stomp_parameter=startupMaxReconnectAttempts=3
 #stomp_params=param1=value1[,param2=value2]
 
+# CloudPak support for both host and stomp_host
+#resource_prefix=/api/respond
+
 # Directory containing additional components to load
 # componentsdir=components
 # Existing directory to write logs to, or set with $APP_LOG_DIR
