@@ -13,7 +13,18 @@ api_key_secret=ApiKeySecret
 org=My Org
 
 # Actions Module connection
+# Use stomp_url when configuring an environment for CP4S
+#stomp_host=
 #stomp_port=65001
+#stomp_timeout=120
+#stomp_max_retries=3
+# optional parameters for stomp connections.
+#  refer to link for valid parameters: https://activemq.apache.org/failover-transport-reference.html
+#  ex: stomp_parameter=startupMaxReconnectAttempts=3
+#stomp_params=param1=value1[,param2=value2]
+
+# CloudPak support for both host and stomp_host
+#resource_prefix=/api/respond
 
 # Directory containing additional components to load
 # componentsdir=components

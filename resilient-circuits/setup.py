@@ -66,7 +66,7 @@ setup(
         'filelock>=2.0.5',
         'setuptools>=41.0.0',
         'watchdog>=0.9.0',
-        'resilient>=36.2.0.dev'
+        'resilient>37.2'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
