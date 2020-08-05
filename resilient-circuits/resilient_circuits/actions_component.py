@@ -30,6 +30,7 @@ LOG = logging.getLogger(__name__)
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
+SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
 IDLE_TIMER_INTERVAL = 600
@@ -275,6 +276,7 @@ class Actions(ResilientComponent):
         self.subscribe_headers = None
         self._configure_opts(opts)
         self.max_retry_count = int(opts.get("stomp_max_retries")) # default from app.py:DEFAULT_STOMP_MAX_RETRIES
+        self.stomp_timeout = int(opts.get("stomp_timeout", SUBSCRIBE_TO_QUEUES_TIMEOUT))
 
         timer_internal = int(opts['resilient'].get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
 
@@ -600,7 +602,7 @@ class Actions(ResilientComponent):
         if not self.stomp_component:
             return
         if not self.stomp_component.connected:
-            yield self.wait("Connected", timeout=30)
+            yield self.wait("Connected", timeout=self.stomp_timeout)
             if not self.stomp_component.connected:
                 LOG.error("Can't subscribe to queues with STOMP disconnected, trying reconnect")
                 self.fire(Event.create("reconnect"))
