@@ -29,9 +29,7 @@ LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
-STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
-MAX_RETRY_COUNT = 3                 # Retry failed deliveries this many times
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
 IDLE_TIMER_INTERVAL = 600
@@ -276,8 +274,11 @@ class Actions(ResilientComponent):
         self.logging_directory = None
         self.subscribe_headers = None
         self._configure_opts(opts)
+        self.max_retry_count = int(opts.get("stomp_max_retries")) # default from app.py:DEFAULT_STOMP_MAX_RETRIES
 
-        _retry_timer = Timer(RETRY_TIMER_INTERVAL, Event.create("retry_failed_deliveries"), persist=True)
+        timer_internal = int(opts['resilient'].get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
+
+        _retry_timer = Timer(timer_internal, Event.create("retry_failed_deliveries"), persist=True)
         _retry_timer.register(self)
 
         # Make a worker thread-pool that will run functions
@@ -500,16 +501,20 @@ class Actions(ResilientComponent):
             stomp_password = self.opts["password"]
 
         # Set up a STOMP connection to the Resilient action services
+        stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
+        # build out all the extra parameters for the stomp connections
+        stomp_params = self.opts['resilient'].get('stomp_params')
         if not self.stomp_component:
             self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
                                                username=stomp_email,
                                                password=stomp_password,
                                                heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                            STOMP_SERVER_HEARTBEAT),
-                                               connected_timeout=STOMP_TIMEOUT,
-                                               connect_timeout=STOMP_TIMEOUT,
+                                               connected_timeout=stomp_timeout,
+                                               connect_timeout=stomp_timeout,
                                                ssl_context=context,
                                                ca_certs=ca_certs,  # For old ssl version
+                                               stomp_params=stomp_params,
                                                **self._proxy_args)
             self.stomp_component.register(self)
         else:
@@ -519,10 +524,11 @@ class Actions(ResilientComponent):
                                       password=stomp_password,
                                       heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                   STOMP_SERVER_HEARTBEAT),
-                                      connected_timeout=STOMP_TIMEOUT,
-                                      connect_timeout=STOMP_TIMEOUT,
+                                      connected_timeout=stomp_timeout,
+                                      connect_timeout=stomp_timeout,
                                       ssl_context=context,
                                       ca_certs=ca_certs,  # For old ssl version
+                                      stomp_params=stomp_params,
                                       **self._proxy_args)
 
         # Other special options
@@ -765,7 +771,7 @@ class Actions(ResilientComponent):
         message_id = event.parent.message_id
         failure = self._stomp_ack_delivery_failures.get(message_id)
         if failure:
-            if failure["retry_count"] > MAX_RETRY_COUNT:
+            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of STOMP ACK for message %s",
                           failure["retry_count"], message_id)
                 self._stomp_ack_delivery_failures.pop(message_id)
@@ -796,7 +802,7 @@ class Actions(ResilientComponent):
 
         failure = self._resilient_ack_delivery_failures.get(message_id)
         if failure:
-            if failure["retry_count"] > MAX_RETRY_COUNT:
+            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of Resilient ACK for message %s",
                           failure["retry_count"], message_id)
                 self._resilient_ack_delivery_failures.pop(message_id)

@@ -24,6 +24,9 @@ ACK_AUTO = StompSpec.ACK_AUTO
 ACK_CLIENT = StompSpec.ACK_CLIENT
 ACK_MODES = (ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
 
+DEFAULT_MAX_RECONNECT_ATTEMPTS = 3
+DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
+
 LOG = logging.getLogger(__name__)
 
 
@@ -45,7 +48,8 @@ class StompClient(BaseComponent):
              proxy_port=None,
              proxy_user=None,
              proxy_password=None,
-             channel=channel):
+             channel=channel,
+             stomp_params=None):
         """ Initialize StompClient.  Called after __init__ """
         self.channel = channel
         if proxy_host:
@@ -68,8 +72,19 @@ class StompClient(BaseComponent):
         else:
             uri = "tcp://%s:%s" % (host, port)
 
-        # Configure failover options so it only tries to connect once
-        self._stomp_server = "failover:(%s)?maxReconnectAttempts=1,startupMaxReconnectAttempts=1" % uri
+        # Configure failover options so it only tries based on settings
+        # build any parameters passed
+        # every connection has at least these two: maxReconnectAttempts, startupMaxReconnectAttempts
+        items = [item.split("=", 2) for item in stomp_params.split(",")] if stomp_params else None
+        connection_params = {item[0].strip():item[1].strip() for item in items} if items else {}
+
+        if "maxReconnectAttempts" not in connection_params:
+            connection_params['maxReconnectAttempts'] = DEFAULT_MAX_RECONNECT_ATTEMPTS
+        if "startupMaxReconnectAttempts" not in connection_params:
+            connection_params['startupMaxReconnectAttempts'] = DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS
+
+        self._stomp_server = "failover:({0})?{1}".format(uri, ",".join(["{}={}".format(k, v) for k, v in connection_params.items()]))
+        LOG.debug("Stomp uri: {}".format(self._stomp_server))
 
         self._stomp_config = StompConfig(uri=self._stomp_server, sslContext=ssl_context,
                                          version=version,
