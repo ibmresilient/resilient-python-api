@@ -159,7 +159,7 @@ class CmdCodegen(BaseCmd):
             arg_name = m[0]
             old_param_name = m[1]
 
-            arg = getattr(args, arg_name)
+            arg = getattr(args, arg_name, None)
             if arg:
                 all_obj_names_wanted = set(arg)
 

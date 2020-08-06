@@ -39,6 +39,11 @@ LOG = logging.getLogger("resilient_sdk_log")
 BASE_NAME_BUILD = "build"
 BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
+BASE_NAME_SETUP_PY = "setup.py"
+BASE_NAME_DIST_DIR = "dist"
+BASE_NAME_DOCKER_FILE = "Dockerfile"
+BASE_NAME_ENTRY_POINT = "entrypoint.sh"
+BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 
 PREFIX_EXTENSION_ZIP = "app-"
 

@@ -13,7 +13,8 @@ from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 from resilient_sdk.cmds import (CmdDocgen,
                                 CmdCodegen,
                                 CmdExtract,
-                                CmdExtPackage)
+                                CmdExtPackage,
+                                CmdDev)
 
 
 # Setup logging
@@ -87,6 +88,7 @@ def main():
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
     cmd_ext_package = CmdExtPackage(sub_parser)
+    cmd_dev = CmdDev(sub_parser)
 
     try:
         # Parse the arguments
@@ -117,6 +119,9 @@ def main():
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
 
+            elif main_cmd == cmd_dev.CMD_NAME:
+                cmd_dev.parser.print_usage()
+
             else:
                 parser.print_help()
 
@@ -140,6 +145,9 @@ def main():
 
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
+
+    elif args.cmd == cmd_dev.CMD_NAME:
+        cmd_dev.execute_command(args)
 
 
 if __name__ == "__main__":
