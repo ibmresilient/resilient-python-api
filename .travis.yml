@@ -24,7 +24,7 @@ matrix:
 
 install:
   - pip install --upgrade pip
-  - pip install --upgrade setuptools
+  - pip install --upgrade 'setuptools<50.0'
   - pip install --upgrade setuptools_scm
   - pip install tox
   - pip install sphinx
