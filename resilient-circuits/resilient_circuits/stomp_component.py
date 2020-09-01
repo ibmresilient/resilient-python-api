@@ -5,6 +5,7 @@
 
 import logging
 import ssl
+import sys
 import time
 import traceback
 from circuits import BaseComponent, Timer
@@ -12,7 +13,7 @@ from circuits.core.handlers import handler
 from stompest.config import StompConfig
 from stompest.protocol import StompSpec, StompSession
 from stompest.sync import Stomp
-from stompest.error import StompConnectionError, StompError
+from stompest.error import StompConnectionError, StompError, StompProtocolError
 from stompest.sync.client import LOG_CATEGORY
 from resilient_circuits.stomp_events import *
 from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
@@ -197,6 +198,13 @@ class StompClient(BaseComponent):
             LOG.debug(traceback.format_exc())
             self.fire(ConnectionFailed(self._stomp_server))
             event.success = False
+        # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
+        #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
+        #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
+        except StompProtocolError as err:
+            LOG.debug(traceback.format_exc())
+            self.fire(ConnectionFailed(self._stomp_server))
+            sys.exit(1) # this will exit resilient-circuits
         return "fail"
 
     @handler("ServerHeartbeat")
