@@ -24,6 +24,7 @@ from resilient_circuits.action_message import ActionMessageBase, ActionMessage, 
     FunctionMessage, StatusMessage, FunctionResult, BaseFunctionError
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
+from resilient_circuits import helpers
 
 LOG = logging.getLogger(__name__)
 
@@ -83,58 +84,72 @@ class ResilientComponent(BaseComponent):
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()
         assert isinstance(opts, dict)
+
         self.opts = opts
-        self._get_fields()
-        # Check that decorated requirements are met
-        callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
-        for name, func in callables:
-            if name == "__class__":
-                name = func.__name__
-            # Do all the custom fields exist?
-            fields = getattr(func, "required_fields", {})
-            for (field_name, input_type) in fields.items():
-                try:
-                    fielddef = self._fields[field_name]
-                except KeyError:
-                    errmsg = ("Field '{0}' (required by '{1}') is not "
-                              "defined in this Resilient platform.")
-                    raise Exception(errmsg.format(field_name, name))
-                if input_type is not None:
-                    if fielddef["input_type"] != input_type:
-                        errmsg = ("Field '{0}' (required by '{1}') "
-                                  "must be type '{2}'.")
-                        raise Exception(errmsg.format(field_name,
-                                                      name, input_type))
-            # Do all the action fields exist?
-            fields = getattr(func, "required_action_fields", {})
-            for (field_name, input_type) in fields.items():
-                try:
-                    fielddef = self._action_fields[field_name]
-                except KeyError:
-                    errmsg = ("Action field '{0}' (required by '{1}') "
-                              "is not defined in this Resilient platform.")
-                    raise Exception(errmsg.format(field_name, name))
-                if input_type is not None:
-                    if fielddef["input_type"] != input_type:
-                        errmsg = ("Action field '{0}' (required by "
-                                  "'{1}') must be type '{2}'.")
-                        raise Exception(errmsg.format(field_name,
-                                                      name, input_type))
+        self._fields = {}
+        self._action_fields = {}
+        self._destinations = {}
+        self._functions = {}
+        self._function_fields = {}
+        self.fn_name = helpers.get_fn_name(dir(self))
 
-            # Do all the custom functions exist?
-            if getattr(func, "function", False):
-                func_names = getattr(func, "names", [])
-                if self._functions is None:
-                    LOG.warning("Functions are not available in this Resilient platform!  "
-                                "Cannot run '{}'".format(", ".join(func_names)))
-                else:
-                    for func_name in func_names:
-                        try:
-                            funcdef = self._functions[func_name]
-                        except KeyError:
-                            LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(func_name))
+        # No need to continue unless getting field/function
+        if self.fn_name:
 
-    def _get_fields(self):
+            # Get fields, message destinations and functions
+            self._get_fields(fn_name=self.fn_name)
+
+            # Check that decorated requirements are met
+            callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
+            for name, func in callables:
+                if name == "__class__":
+                    name = func.__name__
+                # Do all the custom fields exist?
+                fields = getattr(func, "required_fields", {})
+                for (field_name, input_type) in fields.items():
+                    try:
+                        fielddef = self._fields[field_name]
+                    except KeyError:
+                        errmsg = ("Field '{0}' (required by '{1}') is not "
+                                "defined in this Resilient platform.")
+                        raise Exception(errmsg.format(field_name, name))
+                    if input_type is not None:
+                        if fielddef["input_type"] != input_type:
+                            errmsg = ("Field '{0}' (required by '{1}') "
+                                    "must be type '{2}'.")
+                            raise Exception(errmsg.format(field_name,
+                                                        name, input_type))
+                # Do all the action fields exist?
+                fields = getattr(func, "required_action_fields", {})
+                for (field_name, input_type) in fields.items():
+                    try:
+                        fielddef = self._action_fields[field_name]
+                    except KeyError:
+                        errmsg = ("Action field '{0}' (required by '{1}') "
+                                "is not defined in this Resilient platform.")
+                        raise Exception(errmsg.format(field_name, name))
+                    if input_type is not None:
+                        if fielddef["input_type"] != input_type:
+                            errmsg = ("Action field '{0}' (required by "
+                                    "'{1}') must be type '{2}'.")
+                            raise Exception(errmsg.format(field_name,
+                                                        name, input_type))
+
+                # Do all the custom functions exist?
+                if getattr(func, "function", False):
+                    func_names = getattr(func, "names", [])
+                    if self._functions is None:
+                        LOG.warning("Functions are not available in this Resilient platform!  "
+                                    "Cannot run '{}'".format(", ".join(func_names)))
+                    else:
+                        for func_name in func_names:
+                            try:
+                                funcdef = self._functions[func_name]
+                            except KeyError:
+                                LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(func_name))
+
+
+    def _get_fields(self, fn_name=None):
         """Get Incident and Action fields"""
         client = self.rest_client()
         self._fields = dict((field["name"], field)
@@ -143,16 +158,16 @@ class ResilientComponent(BaseComponent):
                                    for field in client.cached_get("/types/actioninvocation/fields"))
         self._destinations = dict((dest["id"], dest)
                                   for dest in client.cached_get("/message_destinations")["entities"])
-        try:
-            self._functions = {}
-            for func in client.cached_get("/functions")["entities"]:
-                self._functions[func["name"]] = client.cached_get("/functions/{}".format(func["name"]))
-            self._function_fields = dict((field["name"], field)
-                                         for field in client.cached_get("/types/__function/fields"))
-        except resilient.SimpleHTTPException:
-            # functions are not available, pre-v30 server
-            self._functions = None
-            self._function_fields = None
+
+        if fn_name:
+            try:
+                self._functions[fn_name] = client.cached_get("/functions/{0}".format(fn_name))
+                self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
+
+            except resilient.SimpleHTTPException:
+                # functions are not available, pre-v30 server
+                self._functions = None
+                self._function_fields = None
 
     def rest_client(self):
         """Return a connected instance of the :class:`resilient.SimpleClient`
@@ -572,16 +587,16 @@ class Actions(ResilientComponent):
                 queue_name = channel.split(".", 1)[1]
                 LOG.info("'%s.%s' actions registered to '%s'",
                          type(component).__module__, type(component).__name__, queue_name)
-            elif str(channel).startswith("functions.") and self._functions:
+            elif str(channel).startswith("functions.") and component._functions:
                 # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
                 func_name = channel.split(".", 1)[1]
-                if func_name not in self._functions:
+                if func_name not in component._functions:
                     # Unknown function.  Log it and continue.
                     LOG.warning("'%s.%s' function '%s' is not defined!",
                                 type(component).__module__, type(component).__name__, func_name)
                     continue
-                queue_id = self._functions[func_name]["destination_handle"]
-                queue_name = self._destinations[queue_id]["programmatic_name"]
+                queue_id = component._functions[func_name]["destination_handle"]
+                queue_name = component._destinations[queue_id]["programmatic_name"]
                 LOG.info("'%s.%s' function '%s' registered to '%s'",
                          type(component).__module__, type(component).__name__, func_name, queue_name)
             else:
