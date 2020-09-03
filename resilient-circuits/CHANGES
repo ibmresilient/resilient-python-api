@@ -1,3 +1,7 @@
+2020-08-05: version 38.0
+
+* Exposed timeouts and tuning parameters to API and STOMP timeouts
+
 2020-07-15: version 37.2
 
 * Sorted output for 'list' command.

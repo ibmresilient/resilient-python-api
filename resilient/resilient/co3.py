@@ -129,6 +129,7 @@ def get_client(opts):
 
     # Create SimpleClient for a REST connection to the Resilient services
     url = "https://{0}:{1}".format(opts.get("host", ""), opts.get("port", 443))
+    url = urlparse.urljoin(url, opts.get("resource_prefix", ""))
     simple_client_args = {"org_name": opts.get("org"),
                           "proxies": proxy,
                           "base_url": url,
