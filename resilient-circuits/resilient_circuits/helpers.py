@@ -7,6 +7,7 @@ import logging
 import re
 
 LOG = logging.getLogger("__name__")
+FN_NAME_REGEX = re.compile(r'(?<=^\_)\w+(?=\_function$)')
 
 
 def get_fn_name(names):
@@ -23,21 +24,38 @@ def get_fn_name(names):
     None
 
     :param names: a list of strings to search
-    :type names: List
+    :type names: list
     :return: fn_name: name of the function if found
-    :rtype: Str
+    :rtype: str
     """
     assert isinstance(names, list)
 
-    regex = re.compile(r'(?<=^\_)\w+(?=\_function$)')
     fn_name = None
 
     for n in names:
-        if regex.search(n):
-            fn_name = regex.findall(n)
+        if FN_NAME_REGEX.search(n):
+            fn_name = FN_NAME_REGEX.findall(n)
             break
 
     if isinstance(fn_name, list) and len(fn_name) == 1:
         return fn_name[0]
 
     return fn_name
+
+
+def check_exists(key, dict_to_check):
+    """Returns the value of the key in dict_to_check if found,
+    else returns False. If dict_to_check is None, returns False
+
+    :param key: the key to look for in dict_to_check
+    :type key: str
+    :param dict_to_check: the key to look for in dict_to_check
+    :type dict_to_check: dict
+    :return: value of key in dict_to_check else False
+    """
+    if dict_to_check is None:
+        return False
+
+    assert isinstance(dict_to_check, dict)
+
+    return dict_to_check.get(key, False)

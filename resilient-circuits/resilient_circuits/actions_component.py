@@ -93,12 +93,16 @@ class ResilientComponent(BaseComponent):
         self._function_fields = {}
         self.fn_name = helpers.get_fn_name(dir(self))
 
-        # No need to continue unless getting field/function
+        # Get fields, message destinations and functions
+        self._get_fields(fn_name=self.fn_name)
+
+        # If this component is a function, self.fn_name will be defined
         if self.fn_name:
 
-            # Get fields, message destinations and functions
-            self._get_fields(fn_name=self.fn_name)
+            if not helpers.check_exists(self.fn_name, self._functions):
+                LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(self.fn_name))
 
+        else:
             # Check that decorated requirements are met
             callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
             for name, func in callables:
@@ -134,19 +138,6 @@ class ResilientComponent(BaseComponent):
                                     "'{1}') must be type '{2}'.")
                             raise Exception(errmsg.format(field_name,
                                                         name, input_type))
-
-                # Do all the custom functions exist?
-                if getattr(func, "function", False):
-                    func_names = getattr(func, "names", [])
-                    if self._functions is None:
-                        LOG.warning("Functions are not available in this Resilient platform!  "
-                                    "Cannot run '{}'".format(", ".join(func_names)))
-                    else:
-                        for func_name in func_names:
-                            try:
-                                funcdef = self._functions[func_name]
-                            except KeyError:
-                                LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(func_name))
 
 
     def _get_fields(self, fn_name=None):
