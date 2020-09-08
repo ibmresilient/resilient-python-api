@@ -120,7 +120,7 @@ setup(
         'requests-mock>=1.2.0',
         'six',
         'cachetools<3.0.0',
-        'setuptools>=41.0.0,<50.0',
+        'setuptools>=41.0.0,<50.0,>50.0'
     ],
     extras_require={
         ':python_version < "3.2"': [
