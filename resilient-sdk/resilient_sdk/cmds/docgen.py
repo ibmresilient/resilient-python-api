@@ -6,7 +6,6 @@
 
 import logging
 import os
-import re
 import pkg_resources
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -33,8 +32,6 @@ PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_s
 PATH_USER_GUIDE_README = os.path.join(PATH_DOC_DIR, "README.md")
 PATH_DEFAULT_USER_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/README.md.jinja2")
 
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdDocgen(BaseCmd):
     """TODO Docstring"""
@@ -256,11 +253,7 @@ class CmdDocgen(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
-        # Get basename of path_to_src (version information is stripped from the basename).
-        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
-
         LOG.debug("Path to project: %s", path_to_src)
-        LOG.debug("Project basename: %s", path_to_src_basename)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env("data/docgen/templates")
@@ -269,10 +262,24 @@ class CmdDocgen(BaseCmd):
         user_guide_readme_template = jinja_env.get_template(USER_GUIDE_TEMPLATE_NAME)
         install_guide_readme_template = jinja_env.get_template(INSTALL_GUIDE_TEMPLATE_NAME)
 
-        # Generate paths to required directories + files
+        # Generate path to setup.py file
         path_setup_py_file = os.path.join(path_to_src, PATH_SETUP_PY)
-        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
+
+        try:
+            # Ensure we have read permissions for setup.py
+            sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+        except SDKException as err:
+            err.message += "\nEnsure you are in the directory of the package you want to run docgen for"
+            raise err
+
+        # Parse the setup.py file
+        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+        package_name = setup_py_attributes.get("name", "")
+
+        # Generate paths to other required directories + files
+        path_customize_py_file = os.path.join(path_to_src, package_name, PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, package_name, PATH_CONFIG_PY)
         path_install_guide_readme = os.path.join(path_to_src, PATH_INSTALL_GUIDE_README)
         path_doc_dir = os.path.join(path_to_src, PATH_DOC_DIR)
         path_screenshots_dir = os.path.join(path_to_src, PATH_SCREENSHOTS)
@@ -292,9 +299,6 @@ class CmdDocgen(BaseCmd):
         # Set generate guide flags. Will generate both by default
         do_generate_user_guide = False if args.install_guide else True
         do_generate_install_guide = False if args.user_guide else True
-
-        # Parse the setup.py file
-        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
 
         # Get the resilient_circuits dependency string from setup.py file
         res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient_circuits")
@@ -333,8 +337,7 @@ class CmdDocgen(BaseCmd):
         jinja_custom_artifact_types = self._get_custom_artifact_details(import_def_data.get("artifact_types", []))
 
         # Other variables for Jinja Templates
-        package_name_underscore = setup_py_attributes.get("name", "")
-        package_name_dash = package_name_underscore.replace("_", "-")
+        package_name_dash = package_name.replace("_", "-")
         server_version = customize_py_import_def.get("server_version", {})
 
         if do_generate_user_guide:
@@ -343,14 +346,14 @@ class CmdDocgen(BaseCmd):
 
             # Render the User Guide Jinja2 Templeate with parameters
             rendered_user_guide_readme = user_guide_readme_template.render({
-                "name": package_name_underscore,
+                "name": package_name,
                 "version": setup_py_attributes.get("version"),
                 "functions": jinja_functions,
                 "rules": jinja_rules,
                 "datatables": jinja_datatables,
                 "custom_fields": jinja_custom_fields,
                 "custom_artifact_types": jinja_custom_artifact_types,
-                "name_underscore": package_name_underscore
+                "name_underscore": package_name
             })
 
             # Create a backup if needed of user guide README
@@ -368,7 +371,7 @@ class CmdDocgen(BaseCmd):
             rendered_install_guide_readme = install_guide_readme_template.render({
                 "short_description": setup_py_attributes.get("description"),
                 "long_description": setup_py_attributes.get("long_description"),
-                "name_underscore": package_name_underscore,
+                "name_underscore": package_name,
                 "name_dash": package_name_dash,
                 "server_version": server_version.get("version"),
                 "res_circuits_dependency_str": res_circuits_dep_str,
