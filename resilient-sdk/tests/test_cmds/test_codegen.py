@@ -65,7 +65,9 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
             "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
         },
         "doc": {
-            "README.md": ("doc/README.md.jinja2", mock_jinja_data)
+            "screenshots": {
+                "main.png": package_helpers.PATH_DEFAULT_SCREENSHOT
+            }
         },
         "test_package": {
             "__init__.py": ("package/__init__.py.jinja2", mock_jinja_data),

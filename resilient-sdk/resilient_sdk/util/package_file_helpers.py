@@ -44,6 +44,8 @@ PREFIX_EXTENSION_ZIP = "app-"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
+PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
+
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "author", "name", "version",
