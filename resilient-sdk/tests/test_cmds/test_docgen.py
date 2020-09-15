@@ -16,55 +16,11 @@ def test_cmd_docgen_setup(fx_get_sub_parser, fx_cmd_line_args_docgen):
     assert cmd_docgen.CMD_NAME == "docgen"
     assert cmd_docgen.CMD_HELP == "Generate documentation for an app"
     assert cmd_docgen.CMD_USAGE == """
-    $ resilient-sdk docgen -p <path_to_package>
-    $ resilient-sdk docgen -p <path_to_package> --user-guide
-    $ resilient-sdk docgen -p <path_to_package> --install-guide"""
+    $ resilient-sdk docgen -p <path_to_package>"""
     assert cmd_docgen.CMD_DESCRIPTION == "Generate documentation for an app"
 
     args = cmd_docgen.parser.parse_known_args()[0]
     assert args.p == "fn_main_mock_integration"
-    assert args.install_guide is False
-    assert args.user_guide is False
-
-
-def test_only_install_guide_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
-    sys.argv.append("--install-guide")
-    cmd_docgen = CmdDocgen(fx_get_sub_parser)
-    args = cmd_docgen.parser.parse_known_args()[0]
-
-    assert args.p == "fn_main_mock_integration"
-    assert args.install_guide is True
-    assert args.user_guide is False
-
-
-def test_only_iguide_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
-    sys.argv.append("--iguide")
-    cmd_docgen = CmdDocgen(fx_get_sub_parser)
-    args = cmd_docgen.parser.parse_known_args()[0]
-
-    assert args.p == "fn_main_mock_integration"
-    assert args.install_guide is True
-    assert args.user_guide is False
-
-
-def test_only_install_user_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
-    sys.argv.append("--user-guide")
-    cmd_docgen = CmdDocgen(fx_get_sub_parser)
-    args = cmd_docgen.parser.parse_known_args()[0]
-
-    assert args.p == "fn_main_mock_integration"
-    assert args.install_guide is False
-    assert args.user_guide is True
-
-
-def test_only_uguide_arg(fx_get_sub_parser, fx_cmd_line_args_docgen):
-    sys.argv.append("--uguide")
-    cmd_docgen = CmdDocgen(fx_get_sub_parser)
-    args = cmd_docgen.parser.parse_known_args()[0]
-
-    assert args.p == "fn_main_mock_integration"
-    assert args.install_guide is False
-    assert args.user_guide is True
 
 
 def test_get_fn_input_details():
@@ -110,6 +66,21 @@ def test_get_function_details():
     assert the_function.get("post_processing_script") is None
 
 
+def test_get_script_details():
+    import_definition = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
+    import_def_data = sdk_helpers.get_from_export(import_definition, scripts=["Mock Script One"])
+    scripts = import_def_data.get("scripts")
+    script_details = CmdDocgen._get_script_details(scripts)
+    the_script = script_details[0]
+
+    assert the_script.get("name") == "Mock Script One"
+    assert the_script.get("simple_name") == "mock-script-one"
+    assert the_script.get("anchor") == "mock-script-one"
+    assert the_script.get("description") == "a sample Artifact script"
+    assert the_script.get("object_type") == "artifact"
+    assert the_script.get("script_text") == """log.info("Print this message")"""
+
+
 def test_get_rule_details():
     import_definition = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
     import_def_data = sdk_helpers.get_from_export(import_definition, rules=["Mock: Auto Rule"])
@@ -117,7 +88,7 @@ def test_get_rule_details():
     rule_details = CmdDocgen._get_rule_details(import_def_data.get("rules"))
     the_rule = rule_details[0]
 
-    mock_rule = {'name': u'Mock: Auto Rule', 'object_type': u'incident', 'workflow_triggered': u'mock_workflow_one'}
+    mock_rule = {'name': u'Mock: Auto Rule', 'object_type': u'incident', 'workflow_triggered': u'mock_workflow_one', 'simple_name': u'mock-auto-rule'}
 
     assert the_rule == mock_rule
 
@@ -131,8 +102,9 @@ def test_get_datatable_details():
 
     mock_datatable = {
         'name': u'Mock: Data Table  ล ฦ ว ศ ษ ส ห ฬ อ',
-        'anchor': u'mock-data-table----------',
+        'anchor': u'mock-data-table--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ',
         'api_name': u'mock_data_table',
+        'simple_name': u'mock-data-table----------',
         'columns': [
             {'name': u'mock col one', 'api_name': u'mock_col_one', 'type': u'text', 'tooltip': u'a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ'},
             {'name': u'mock  ล ฦ ว ศ ษ ส ห ฬ อ col two', 'api_name': u'mok_col_two', 'type': u'number', 'tooltip': u'tooltip  ล ฦ ว ศ ษ ส ห ฬ อ'}
@@ -155,7 +127,7 @@ def test_get_datatable_details_defaults():
     ]
 
     the_datatable = CmdDocgen._get_datatable_details(mock_datables)[0]
-    mock_datatable = {'name': 'mock_name', 'anchor': 'mock-name', 'api_name': None, 'columns': [{'name': None, 'api_name': None, 'type': None, 'tooltip': '-'}]}
+    mock_datatable = {'name': 'mock_name', 'anchor': 'mock_name', 'api_name': None, 'simple_name': 'mock-name', 'columns': [{'name': None, 'api_name': None, 'type': None, 'tooltip': '-'}]}
 
     assert the_datatable == mock_datatable
 
