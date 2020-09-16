@@ -2,15 +2,11 @@
 
 """Generate the Resilient customizations required for {{package_name}}"""
 
-# This here to support Apps running on resilient-circuits <= v34
 try:
-    import resilient_circuits
-    if int(resilient_circuits.__version__.split(".")[0]) >= 34:
-        raise ImportError
-    ImportDefinition = resilient_circuits.util.ImportDefinition
-
-except ImportError:
     from resilient import ImportDefinition
+except ImportError:
+    # Support Apps running on resilient-circuits < v35.0.195
+    from resilient_circuits.util import ImportDefinition
 
 
 def codegen_reload_data():

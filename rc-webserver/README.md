@@ -8,6 +8,12 @@ To have your Python method called with requests at `/path/endpoint`,
 * Set `self.channel="path"`,
 * Use the `rc_webserver.web.@exposeWeb` decorator on a method, e.g. `@exposeWeb("endpoint")`.
 
+## Changelog
+
+2020-07-15: version 37.2
+
+* Updated for python 3.
+
 ## Environment
 
 This package requires that it is installed on a RHEL platform and that the resilient-circuits application is running.

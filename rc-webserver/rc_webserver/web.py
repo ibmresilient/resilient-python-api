@@ -1,14 +1,19 @@
+# -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+
 """Our decorator for web service methods"""
 
 import json
 import logging
-from inspect import getargspec
+import sys
 from functools import update_wrapper
-try:
-    from json import JSONDecodeError
-except ImportError:
-    # Python 2
+if sys.version_info.major < 3:
     JSONDecodeError = ValueError
+    from inspect import getargspec
+else:
+    from json import JSONDecodeError
+    from inspect import getfullargspec
+
 
 from circuits.core import handler
 from circuits.web.wrappers import Response
@@ -92,11 +97,13 @@ def exposeWeb(*channels, **config):
                     result = f(self, *args, **kwargs)
                 else:
                     result = f(self, event, *args, **kwargs)
+
                 if (isinstance(result, httperror)
-                    or isinstance(result, Response)
-                    or isinstance(result, six.string_types)):
+                        or isinstance(result, Response)
+                        or isinstance(result, six.string_types)):
                     return result
-                elif result is None:
+
+                if result is None:
                     self.response.status = 204
                     return ""
                 else:
@@ -111,7 +118,8 @@ def exposeWeb(*channels, **config):
                 return httperror(self.request, self.response, code=e.code, description=e.description)
             except Exception as e:
                 LOG.exception(e)
-                return httperror(self.request, self.response, code=500, description=e.message)
+                msg = getattr(e, 'message', repr(e))
+                return httperror(self.request, self.response, code=500, description=msg)
             finally:
                 if hasattr(self, "request"):
                     del self.request
@@ -120,8 +128,14 @@ def exposeWeb(*channels, **config):
                 if hasattr(self, "session"):
                     del self.session
 
-        wrapper.args, wrapper.varargs, wrapper.varkw, wrapper.defaults = \
-            getargspec(f)
+        if sys.version_info.major < 3:
+            wrapper.args, wrapper.varargs, wrapper.varkw, wrapper.defaults = \
+                getargspec(f)
+        else:
+            #python 3 (args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations)
+            wrapper.args, wrapper.varargs, wrapper.varkw, wrapper.defaults, _, _, _ = \
+                getfullargspec(f)
+
         if wrapper.args and wrapper.args[0] == "self":
             del wrapper.args[0]
 

@@ -58,6 +58,7 @@ setup(
     author_email="support@resilientsystems.com",
     description="Python SDK for developing Apps for the IBM Resilient Platform",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "http://ibm.biz/resilientcommunity",

@@ -108,6 +108,12 @@ class CmdCodegen(BaseCmd):
             elif isinstance(file_info, str) and os.path.isfile(file_info):
                 # It is just a path to a file, copy it to the target_file
                 target_file = os.path.join(target_dir, file_name)
+                if os.path.exists(target_file):
+                    # If file already exists skip copy.
+                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
+                    continue
+
+                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
                 shutil.copy(file_info, target_file)
 
             else:
@@ -347,7 +353,7 @@ class CmdCodegen(BaseCmd):
         LOG.info("'codegen --reload' started for '%s'", args.package)
 
         # Load the customize.py module
-        customize_py_module = package_helpers.load_customize_py_module(path_customize_py)
+        customize_py_module = package_helpers.load_customize_py_module(path_customize_py, warn=False)
 
         try:
             # Get the 'old_params' from customize.py
