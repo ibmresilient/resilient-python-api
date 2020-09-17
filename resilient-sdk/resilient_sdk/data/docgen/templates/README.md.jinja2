@@ -104,10 +104,12 @@
 ---
 
 ### App Configuration
+The following table describes the settings you need to configure in the app.config file. If using App Host, see the Resilient System Administrator Guide. If using the integration server, see the Integration Server Guide.
+
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
 {% for app_config in app_configs %}
-| **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here* |
+| **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* |
 {% endfor %}
 
 ---
