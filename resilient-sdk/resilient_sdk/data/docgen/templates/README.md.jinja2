@@ -21,7 +21,7 @@
 - [Installation](#installation)
   - [Requirements](#requirements)
   - [Install](#install)
-  - [App Configs](#app-configs)
+  - [App Configuration](#app-configuration)
 {% if datatables or custom_incident_fields %}
   - [Custom Layouts](#custom-layouts)
 {% endif %}
@@ -88,21 +88,22 @@
   * To setup up an App Host see:  [ibm.biz/res-int-app-host-setup](https://ibm.biz/res-int-app-host-setup) TODO: setup this link
 * An Integration Server running `{{ res_circuits_dependency_str }}` (if using an Integration Server)
   * To set up an Integration Server see: [ibm.biz/res-int-server-guide](https://ibm.biz/res-int-server-guide)
-* If using API Keys, minimum required permissions are:
-  | Name | Permissions |
-  | ---- | ----------- |
-  | Org Data | Read, Edit |
-  | Function | Read |
+  * If using API Keys, minimum required permissions are:
+    | Name | Permissions |
+    | ---- | ----------- |
+    | Org Data | Read, Edit |
+    | Function | Read |
+* Proxy supported: Yes/No
 
 ---
 
-### Install & Uninstall
+### Install
 * To install or uninstall an App using the App Host see [ibm.biz/res-int-install-app](https://ibm.biz/res-int-install-app) TODO: setup this link
 * To install or uninstall an Integration using the Integration Server see [ibm.biz/res-int-install-integration](https://ibm.biz/res-int-install-integration) TODO: setup this link
 
 ---
 
-### App Configs
+### App Configuration
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
 {% for app_config in app_configs %}
