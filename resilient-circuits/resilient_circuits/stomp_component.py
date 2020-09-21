@@ -204,7 +204,6 @@ class StompClient(BaseComponent):
         except StompProtocolError as err:
             LOG.error(traceback.format_exc())
             LOG.error("Exiting due to unrecoverable error")
-            self.fire(ConnectionFailed(self._stomp_server))
             sys.exit(1) # this will exit resilient-circuits
         return "fail"
 
@@ -283,6 +282,13 @@ class StompClient(BaseComponent):
             event.success = False
             LOG.debug(traceback.format_exc())
             self.fire(OnStompError(None, err))
+        # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
+        #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
+        #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
+        except StompProtocolError as err:
+            LOG.error(traceback.format_exc())
+            LOG.error("Exiting due to unrecoverable error")
+            sys.exit(1) # this will exit resilient-circuits
 
     @handler("Unsubscribe")
     def _unsubscribe(self, event, destination):
