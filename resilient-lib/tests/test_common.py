@@ -57,6 +57,7 @@ class TestFunctionMetrics(unittest.TestCase):
             "num_input": 123,
             "select_input": {"id": 111, "name": "select choice"},
             "multi_select_input": [{"id": 111, "name": "select choice one"}, {"id": 111, "name": "select choice two"}],
+            "text_with_value_string": {"content": "mock text", "format": "text"},
             "empty_input": ''
         }
 
@@ -72,6 +73,7 @@ class TestFunctionMetrics(unittest.TestCase):
             "num_input": 123,
             "select_input": "select choice",
             "multi_select_input": ["select choice one", "select choice two"],
+            "text_with_value_string": "mock text",
             "empty_input": ''
         }
 
@@ -102,6 +104,9 @@ class TestFunctionMetrics(unittest.TestCase):
         # Test select + multi-select type fields
         self.assertEquals(validate_fields(["select_input"], inputs).get("select_input"), "select choice")
         self.assertEquals(validate_fields([], inputs).get("multi_select_input"), ["select choice one", "select choice two"])
+
+        # Test 'Text with value string Input' type
+        self.assertEquals(validate_fields(["text_with_value_string"], inputs).get("text_with_value_string"), "mock text")
 
         # Test placeholder
         with self.assertRaisesRegex(ValueError, "'str_input' is mandatory and still has its placeholder value of 'some text'. You must set this value correctly to run this function"):
