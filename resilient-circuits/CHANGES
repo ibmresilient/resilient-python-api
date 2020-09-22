@@ -1,6 +1,6 @@
 2020-09: version 39.0
 
-* resilient-circuits now only gets the customizations for the functions that are pip installed and/or are in the components directory
+* resilient-circuits now only loads the functions that are pip installed and/or are in the components directory
 
 2020-08-05: version 38.0
 
