@@ -85,10 +85,10 @@
 -->
 * Resilient platform >= `v{{ server_version }}`
 * App Host >= `v1.2.132` (if using App Host)
-  * To setup up an App Host see:  [ibm.biz/res-int-app-host-setup](https://ibm.biz/res-int-app-host-setup) TODO: setup this link
+  * To setup up an App Host see:  [ibm.biz/res-app-host-setup](https://ibm.biz/res-app-host-setup)
 * An Integration Server running `{{ res_circuits_dependency_str }}` (if using an Integration Server)
   * To set up an Integration Server see: [ibm.biz/res-int-server-guide](https://ibm.biz/res-int-server-guide)
-  * If using API Keys, minimum required permissions are:
+  * If using an API key account, minimum required permissions are:
     | Name | Permissions |
     | ---- | ----------- |
     | Org Data | Read, Edit |
@@ -98,9 +98,9 @@
 ---
 
 ### Install
-* To install or uninstall an App using the App Host see [ibm.biz/res-int-install-app](https://ibm.biz/res-int-install-app) TODO: setup this link
-* To install or uninstall an Integration using the Integration Server see [ibm.biz/res-int-install-integration](https://ibm.biz/res-int-install-integration) TODO: setup this link
+* To install or uninstall an App using the App Host see [ibm.biz/res-install-app](https://ibm.biz/res-install-app)
 
+* To install or uninstall an Integration using the Integration Server see the [ibm.biz/res-install-int](https://ibm.biz/res-install-int)
 ---
 
 ### App Configuration
@@ -258,11 +258,13 @@ results = {
 {% endif %}
 
 ## Troubleshooting & Support
-Please see our troubleshooting guide at [ibm.biz/res-int-troubleshooting](https://ibm.biz/res-int-troubleshooting) TODO: setup this link
+If using the app with an App Host, see the Resilient System Administrator Guide and the App Host Deployment Guide for troubleshooting procedures. You can find these guides on the [IBM Knowledge Center](https://www.ibm.com/support/knowledgecenter/SSBRUQ), where you can select which version of the Resilient platform you are using.
+
+If using the app with an integration server, see the [Integration Server Guide](https://ibm.biz/res-int-server-guide)
 
 ### For Support
 {% if supported_app %}
-This is an IBM Supported App. Please search {{ support_url }} and if you can't find help open a case
+This is an IBM Supported app. Please search https://ibm.com/mysupport for assistance.
 {% else %}
-This is a IBM Community Provided App. Please search the Community {{ support_url }} and ask for any help
+This is a IBM Community Provided App. Please search the Community https://ibm.biz/resilientcommunity for assistance.
 {% endif %}
