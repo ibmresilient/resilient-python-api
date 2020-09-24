@@ -311,10 +311,10 @@ class CmdDocgen(BaseCmd):
         # Get field names from ImportDefinition
         field_names = []
         for f in customize_py_import_def.get("fields", []):
-            f_name = f.get(ResilientObjMap.FIELDS, "")
+            f_export_key = f.get("export_key")
 
-            if "incident/" in f_name and f_name not in IGNORED_INCIDENT_FIELDS:
-                field_names.append(f_name.split("incident/")[1])
+            if "incident/" in f_export_key and f_export_key not in IGNORED_INCIDENT_FIELDS:
+                field_names.append(f.get(ResilientObjMap.FIELDS, ""))
 
         # Get data from ImportDefinition
         import_def_data = sdk_helpers.get_from_export(customize_py_import_def,
