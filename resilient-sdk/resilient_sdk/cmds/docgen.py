@@ -21,15 +21,6 @@ LOG = logging.getLogger("resilient_sdk_log")
 # JINJA Constants
 README_TEMPLATE_NAME = "README.md.jinja2"
 
-# Relative paths from with the package of files + directories used
-PATH_SETUP_PY = "setup.py"
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
-PATH_CONFIG_PY = os.path.join("util", "config.py")
-PATH_DOC_DIR = "doc"
-PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
-PATH_README = "README.md"
-PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
-
 
 class CmdDocgen(BaseCmd):
     """TODO Docstring"""
@@ -271,7 +262,7 @@ class CmdDocgen(BaseCmd):
         readme_template = jinja_env.get_template(README_TEMPLATE_NAME)
 
         # Generate path to setup.py file
-        path_setup_py_file = os.path.join(path_to_src, PATH_SETUP_PY)
+        path_setup_py_file = os.path.join(path_to_src, package_helpers.PATH_SETUP_PY)
 
         try:
             # Ensure we have read permissions for setup.py
@@ -286,10 +277,10 @@ class CmdDocgen(BaseCmd):
         package_name = setup_py_attributes.get("name", "")
 
         # Generate paths to other required directories + files
-        path_customize_py_file = os.path.join(path_to_src, package_name, PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, package_name, PATH_CONFIG_PY)
-        path_readme = os.path.join(path_to_src, PATH_README)
-        path_screenshots_dir = os.path.join(path_to_src, PATH_SCREENSHOTS)
+        path_customize_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CONFIG_PY)
+        path_readme = os.path.join(path_to_src, package_helpers.PATH_README)
+        path_screenshots_dir = os.path.join(path_to_src, package_helpers.PATH_SCREENSHOTS)
 
         # Ensure we have read permissions for each required file and the file exists
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_config_py_file)
@@ -365,7 +356,7 @@ class CmdDocgen(BaseCmd):
         })
 
         # Create a backup if needed of README
-        sdk_helpers.rename_to_bak_file(path_readme, PATH_DEFAULT_README)
+        sdk_helpers.rename_to_bak_file(path_readme, package_helpers.PATH_DEFAULT_README)
 
         LOG.info("Writing README to: %s", path_readme)
 
