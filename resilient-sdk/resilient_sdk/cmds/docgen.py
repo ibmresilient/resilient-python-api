@@ -23,7 +23,13 @@ README_TEMPLATE_NAME = "README.md.jinja2"
 
 
 class CmdDocgen(BaseCmd):
-    """TODO Docstring"""
+    """
+    Create a README.md for the specified app. Reads all details from
+    the ImportDefinition in the customize.py file. Creates a backup of
+    of the README.md if one exists already. The README.md is
+    really an 'inventory' of what the app contains and details for
+    the app configs
+    """
 
     CMD_NAME = "docgen"
     CMD_HELP = "Generate documentation for an app"
