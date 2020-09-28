@@ -290,7 +290,7 @@ class Actions(ResilientComponent):
         _retry_timer.register(self)
 
         # Make a worker thread-pool that will run functions
-        self._functionworker = FunctionWorker(process=False, channel="functionworker")
+        self._functionworker = FunctionWorker(process=False, channel="functionworker", workers=opts.get("num_workers"))
         self._functionworker.register(self.root)
 
         if opts.get("test_actions", False):
