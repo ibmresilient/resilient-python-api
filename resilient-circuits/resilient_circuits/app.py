@@ -50,6 +50,7 @@ class RedactingFilter(logging.Filter):
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
     """Helper to parse command line arguments."""
+    DEFAULT_APP_SECTION = "resilient"
     DEFAULT_STOMP_PORT = 65001
     DEFAULT_COMPONENTS_DIR = ''
     DEFAULT_LOG_LEVEL = 'INFO'
@@ -58,6 +59,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_STOMP_TIMEOUT = 60
     DEFAULT_STOMP_MAX_RETRIES = 3
     DEFAULT_MAX_CONNECTION_RETRIES = 1
+    DEFAULT_NUM_WORKERS = 20
 
     def __init__(self, config_file=None):
 
@@ -69,33 +71,34 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         config_file = config_file or resilient.get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
 
-        default_components_dir = self.getopt("resilient", "componentsdir") or self.DEFAULT_COMPONENTS_DIR
-        default_noload = self.getopt("resilient", "noload") or ""
-        default_log_dir = self.getopt("resilient", "logdir") or APP_LOG_DIR
-        default_log_level = self.getopt("resilient", "loglevel") or self.DEFAULT_LOG_LEVEL
-        default_log_file = self.getopt("resilient", "logfile") or self.DEFAULT_LOG_FILE
+        default_components_dir = self.getopt(self.DEFAULT_APP_SECTION, "componentsdir") or self.DEFAULT_COMPONENTS_DIR
+        default_noload = self.getopt(self.DEFAULT_APP_SECTION, "noload") or ""
+        default_log_dir = self.getopt(self.DEFAULT_APP_SECTION, "logdir") or APP_LOG_DIR
+        default_log_level = self.getopt(self.DEFAULT_APP_SECTION, "loglevel") or self.DEFAULT_LOG_LEVEL
+        default_log_file = self.getopt(self.DEFAULT_APP_SECTION, "logfile") or self.DEFAULT_LOG_FILE
 
         # STOMP port is usually 65001
-        default_stomp_port = self.getopt("resilient", "stomp_port") or self.DEFAULT_STOMP_PORT
+        default_stomp_port = self.getopt(self.DEFAULT_APP_SECTION, "stomp_port") or self.DEFAULT_STOMP_PORT
         # For some environments the STOMP TLS certificate will be different from the REST API cert
-        default_stomp_cafile = self.getopt("resilient", "stomp_cafile") or None
+        default_stomp_cafile = self.getopt(self.DEFAULT_APP_SECTION, "stomp_cafile") or None
 
-        default_stomp_url = self.getopt("resilient", "stomp_host") or self.getopt("resilient", "host")
-        default_stomp_timeout = self.getopt("resilient", "stomp_timeout") or self.DEFAULT_STOMP_TIMEOUT
-        default_stomp_max_retries = self.getopt("resilient", "stomp_max_retries") or self.DEFAULT_STOMP_MAX_RETRIES
-        default_max_connection_retries = self.getopt("resilient", "max_connection_retries") or self.DEFAULT_MAX_CONNECTION_RETRIES
+        default_stomp_url = self.getopt(self.DEFAULT_APP_SECTION, "stomp_host") or self.getopt(self.DEFAULT_APP_SECTION, "host")
+        default_stomp_timeout = self.getopt(self.DEFAULT_APP_SECTION, "stomp_timeout") or self.DEFAULT_STOMP_TIMEOUT
+        default_stomp_max_retries = self.getopt(self.DEFAULT_APP_SECTION, "stomp_max_retries") or self.DEFAULT_STOMP_MAX_RETRIES
+        default_max_connection_retries = self.getopt(self.DEFAULT_APP_SECTION, "max_connection_retries") or self.DEFAULT_MAX_CONNECTION_RETRIES
 
-        default_no_prompt_password = self.getopt("resilient",
+        default_no_prompt_password = self.getopt(self.DEFAULT_APP_SECTION,
                                                  "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
         default_no_prompt_password = self._is_true(default_no_prompt_password)
 
-        default_test_actions = self._is_true(self.getopt("resilient",
+        default_test_actions = self._is_true(self.getopt(self.DEFAULT_APP_SECTION,
                                                          "test_actions")) or False
-        default_test_host = self.getopt("resilient", "test_host") or None
-        default_test_port = self.getopt("resilient", "test_port") or None
-        default_log_responses = self.getopt("resilient",
+        default_test_host = self.getopt(self.DEFAULT_APP_SECTION, "test_host") or None
+        default_test_port = self.getopt(self.DEFAULT_APP_SECTION, "test_port") or None
+        default_log_responses = self.getopt(self.DEFAULT_APP_SECTION,
                                             "log_http_responses") or ""
-        default_resource_prefix = self.getopt("resilient", "resource_prefix") or None
+        default_resource_prefix = self.getopt(self.DEFAULT_APP_SECTION, "resource_prefix") or None
+        default_num_workers = self.getopt(self.DEFAULT_APP_SECTION, "num_workers") or self.DEFAULT_NUM_WORKERS
 
         logging.getLogger().removeHandler(temp_handler)
 
@@ -177,6 +180,11 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           default=default_log_responses,
                           help=("Log all responses from Resilient "
                                 "REST API to this directory"))
+        self.add_argument("--num-workers",
+                          type=int,
+                          default=default_num_workers,
+                          help=("Number of FunctionWorkers to use. "
+                                "Number of Functions that can run in parallel"))
 
     def parse_args(self, args=None, namespace=None):
         """Parse commandline arguments and construct an opts dictionary"""
