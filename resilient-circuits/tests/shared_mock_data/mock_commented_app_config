@@ -42,7 +42,7 @@ logfile=app.log
 loglevel=INFO
 
 # The number of Functions to run in parallel
-#num_workers=10
+#num_workers=5
 
 # If your Resilient server uses a self-signed TLS certificate, or some
 # other certificate that is not automatically trusted by your machine,

@@ -22,6 +22,8 @@ from resilient import parse_parameters
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
 import resilient_circuits.keyring_arguments as keyring_arguments
+from resilient_circuits.validate_configs import VALIDATE_DICT
+from resilient_circuits.helpers import validate_configs
 from six import string_types
 import re
 
@@ -59,7 +61,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_STOMP_TIMEOUT = 60
     DEFAULT_STOMP_MAX_RETRIES = 3
     DEFAULT_MAX_CONNECTION_RETRIES = 1
-    DEFAULT_NUM_WORKERS = 20
+    DEFAULT_NUM_WORKERS = 10
 
     def __init__(self, config_file=None):
 
@@ -195,6 +197,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 opts.update({section: items})
 
             parse_parameters(opts)
+
+        validate_configs(opts, VALIDATE_DICT)
+
         return opts
 
     @staticmethod

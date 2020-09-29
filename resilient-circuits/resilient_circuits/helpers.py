@@ -5,6 +5,7 @@
 """Common Helper Functions for resilient-circuits"""
 import logging
 import re
+from six import string_types
 
 LOG = logging.getLogger("__name__")
 FN_NAME_REGEX = re.compile(r'(?<=^\_)\w+(?=\_function$)')
@@ -59,3 +60,54 @@ def check_exists(key, dict_to_check):
     assert isinstance(dict_to_check, dict)
 
     return dict_to_check.get(key, False)
+
+
+def validate_configs(configs, validate_dict):
+    """
+    Checks if the configs are valid and raise a ValueError if they are not.
+    Check if the config is required, has a value and meets its 'condition'
+
+    :param configs: normally the configs in app.config
+    :type configs: dict
+    :param validate_dict: the key is the config and the value is a dict with the following params:
+        - **required**: a boolean if the config is required
+        - **placeholder_value**: the default value of the config that is not valid
+        - **valid_condition**: a function to check if the value of the config is valid e.g. within a certain range
+        - **invalid_msg**: displayed when valid_condition fails
+    :type validate_dict: dict
+    :return: nothing
+    """
+    if not isinstance(configs, dict):
+        raise ValueError("'configs' must be of type dict, not {0}".format(type(configs)))
+
+    if not isinstance(validate_dict, dict):
+        raise ValueError("'validate_dict' must be of type dict, not {0}".format(type(validate_dict)))
+
+    for config_name, config_validations in validate_dict.items():
+
+        required = config_validations.get("required")
+        placeholder_value = config_validations.get("placeholder_value")
+        valid_condition = config_validations.get("valid_condition", lambda c: True)
+        invalid_msg = config_validations.get("invalid_msg", "'{0}' did not pass it's validate condition".format(config_name))
+
+        # get the config value from configs
+        config = configs.get(config_name)
+
+        # if its required
+        if required:
+
+            # if not in configs
+            if not config:
+                raise ValueError("'{0}' is mandatory and is not set in the config file.".format(config_name))
+
+            # if defined as empty string
+            if isinstance(config, string_types) and not config:
+                raise ValueError("'{0}' is mandatory and is empty in the config file.".format(config_name))
+
+        # if still equals placeholder value
+        if placeholder_value and config == placeholder_value:
+            raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}' in the config file.".format(config, placeholder_value))
+
+        # if meets its valid_condition
+        if not valid_condition(config):
+            raise ValueError(invalid_msg)
