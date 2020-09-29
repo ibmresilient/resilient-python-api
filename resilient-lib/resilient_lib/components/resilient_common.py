@@ -136,8 +136,12 @@ def validate_fields(field_list, kwargs):
     for field_name, field_value in provided_fields.items():
 
         # Handle if Select Function Input type
-        if isinstance(field_value, dict):
+        if isinstance(field_value, dict) and field_value.get("name"):
             field_value = field_value.get("name")
+
+        # Handle if 'Text with value string Input' type
+        elif isinstance(field_value, dict) and field_value.get("content"):
+            field_value = field_value.get("content")
 
         # Handle if Multi-Select Function Input type
         elif isinstance(field_value, list):

@@ -12,19 +12,23 @@ api_key_secret=ApiKeySecret
 
 org=My Org
 
+# Number of attempts to retry when connecting to Resilient. 0 = unlimited retries
+#max_connection_retries=10
+
+# CP4S
 # Actions Module connection
 # Use stomp_url when configuring an environment for CP4S
-#stomp_host=
-#stomp_port=65001
+#stomp_host=<CP4S stomp URL>
+#stomp_port=443
+#resource_prefix=/api/respond
+
 #stomp_timeout=120
 #stomp_max_retries=3
-# optional parameters for stomp connections.
-#  refer to link for valid parameters: https://activemq.apache.org/failover-transport-reference.html
-#  ex: stomp_parameter=startupMaxReconnectAttempts=3
-#stomp_params=param1=value1[,param2=value2]
 
-# CloudPak support for both host and stomp_host
-#resource_prefix=/api/respond
+# Optional parameters for stomp connections.....
+# Please refer to IBM Support for additional settings to those outlined below
+# format......     stomp_params=<param1=value1>,<,param2=value2>
+#stomp_params=startupMaxReconnectAttempts=3,maxReconnectAttempts=10,initialReconnectDelay=20
 
 # Directory containing additional components to load
 # componentsdir=components

@@ -64,9 +64,8 @@ setup(
         'jinja2>=2.10.0',
         'pysocks',
         'filelock>=2.0.5',
-        'setuptools>=41.0.0',
         'watchdog>=0.9.0',
-        'resilient>37.2'
+        'resilient>=38.0.dev'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
