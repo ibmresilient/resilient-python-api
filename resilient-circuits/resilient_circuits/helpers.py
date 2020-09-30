@@ -5,7 +5,6 @@
 """Common Helper Functions for resilient-circuits"""
 import logging
 import re
-from six import string_types
 
 LOG = logging.getLogger("__name__")
 FN_NAME_REGEX = re.compile(r'(?<=^\_)\w+(?=\_function$)')
@@ -96,17 +95,13 @@ def validate_configs(configs, validate_dict):
         # if its required
         if required:
 
-            # if not in configs
+            # if not in configs or empty string
             if not config:
                 raise ValueError("'{0}' is mandatory and is not set in the config file.".format(config_name))
 
-            # if defined as empty string
-            if isinstance(config, string_types) and not config:
-                raise ValueError("'{0}' is mandatory and is empty in the config file.".format(config_name))
-
         # if still equals placeholder value
         if placeholder_value and config == placeholder_value:
-            raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}' in the config file.".format(config, placeholder_value))
+            raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}' in the config file.".format(config_name, placeholder_value))
 
         # if meets its valid_condition
         if not valid_condition(config):
