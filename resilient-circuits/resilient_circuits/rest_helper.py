@@ -35,8 +35,6 @@ def retry(func):
         MAX_DELAY = 300             # delay wait will not exceed 5 minutes
         MAX_RETRIES = int(opts.get(MAX_CONNECTION_RETRIES, 1)) # default is current behavior
 
-        LOG.info("Max connection retries: %s", MAX_RETRIES if MAX_RETRIES > 0 else "unlimited")
-
         restart_delay = 0           # number of seconds to wait
         retry_count = 0             # count the number of times through our loop
 
@@ -58,7 +56,10 @@ def retry(func):
                     if restart_delay < MAX_DELAY:
                         restart_delay += INCR_RESTART_DELAY
 
-            LOG.info("Retry %s waiting %s secs for Resilient connection", retry_count, restart_delay)
+            LOG.info("Retry %s:%s waiting %s secs for Resilient connection",
+                     retry_count,
+                     MAX_RETRIES if MAX_RETRIES > 0 else "unlimited",
+                     restart_delay)
             time.sleep(restart_delay)
 
     return wrapper
