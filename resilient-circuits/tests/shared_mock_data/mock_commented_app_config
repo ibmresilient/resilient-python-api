@@ -1,3 +1,8 @@
+###################################
+## A second mock app_config so   ##
+## settings can be commented out ##
+###################################
+
 [resilient]
 # Basic service connection
 host=resilient
@@ -36,8 +41,8 @@ logdir=/tmp
 logfile=app.log
 loglevel=INFO
 
-# The number of Functions to run in parallel within the range: 1 >= num_workers <= 50
-num_workers=10
+# The number of Functions to run in parallel
+#num_workers=5
 
 # If your Resilient server uses a self-signed TLS certificate, or some
 # other certificate that is not automatically trusted by your machine,
