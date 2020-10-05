@@ -4,6 +4,7 @@
 
 """ TODO: module docstring """
 
+import os
 import sys
 import logging
 from resilient_sdk.util import sdk_helpers
@@ -77,6 +78,9 @@ def main():
     Main entry point for resilient-sdk
     """
 
+    # See if RES_SDK_DEV environment var is set
+    sdk_dev = sdk_helpers.str_to_bool(os.getenv("RES_SDK_DEV"))
+
     # Get main parser object
     parser = get_main_app_parser()
 
@@ -88,7 +92,10 @@ def main():
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
     cmd_ext_package = CmdExtPackage(sub_parser)
-    cmd_dev = CmdDev(sub_parser)
+
+    if sdk_dev:
+        # Add 'dev' command if environment var set
+        cmd_dev = CmdDev(sub_parser)
 
     try:
         # Parse the arguments
