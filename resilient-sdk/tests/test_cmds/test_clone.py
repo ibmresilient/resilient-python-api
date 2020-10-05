@@ -75,7 +75,6 @@ def test_clone_workflow(fx_get_sub_parser):
 
     original_obj = CmdClone.validate_provided_object_names("Workflow", new_name,
                                                            old_name, copy.copy(TEST_EXPORT.get("workflows")))
-    print(export_data[0])
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
     # Ensure the Object specific primary key is not duplicated

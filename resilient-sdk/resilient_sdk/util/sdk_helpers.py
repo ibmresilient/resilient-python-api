@@ -42,6 +42,9 @@ LOG = logging.getLogger("resilient_sdk_log")
 VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 # Resilient export file suffix.
 RES_EXPORT_SUFFIX = ".res"
+# Endpoint url for importing a configuration
+IMPORT_URL = "/configurations/imports"
+
 
 def get_resilient_client(path_config_file=None):
     """
@@ -274,6 +277,42 @@ def get_latest_org_export(res_client):
     latest_export_uri = "/configurations/exports/"
     return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
 
+
+def add_configuration_import(new_export_data, res_client):
+    """
+    Makes a REST request to add a configuration import. 
+
+    After the request is made, the configuration import is set at a pending state and needs to be confirmed.
+    If the configuration state is not reported as pending, raise an SDK Exception.
+    """
+    try:
+        result = res_client.post(IMPORT_URL, new_export_data)
+    except Exception as upload_exception:
+        LOG.error(new_export_data)
+
+    if result["status"] == "PENDING":
+        confirm_configuration_import(result, result['id'], res_client)
+    else:
+        raise SDKException(
+            "Could not import because the server did not return an import ID")
+
+
+def confirm_configuration_import(result, import_id, res_client):
+    """
+    Makes a REST request to confirm a pending configuration import as accepted.
+
+    Takes 3 params 
+    The result of a configuration import request
+    The ID of the configuration import request
+    A res_client to perform the request
+    """
+    try:
+        result["status"] = "ACCEPTED"      # Have to confirm changes
+        uri = "{}/{}".format(IMPORT_URL, import_id)
+        res_client.put(uri, result, timeout=5)
+        LOG.info("Imported configuration changes successfully")
+    except Exception as import_exception:
+        raise SDKException(repr(import_exception))
 
 def read_local_exportfile(path_local_exportfile):
     """
@@ -800,3 +839,5 @@ def get_timestamp(timestamp=None):
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
 
     return datetime.datetime.now().strftime(TIME_FORMAT)
+
+

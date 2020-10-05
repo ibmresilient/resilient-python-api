@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-""" TODO: implement clone """
+""" Implementation of `resilient-sdk clone` """
 
 import logging
 import uuid
@@ -10,7 +10,7 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
                                             minify_export, get_from_export,
-                                            get_object_api_names)
+                                            get_object_api_names, add_configuration_import)
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
 
@@ -18,11 +18,14 @@ from resilient_sdk.util.sdk_exception import SDKException
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
-IMPORT_URL = "/configurations/imports"
 
 
 class CmdClone(BaseCmd):
-    """TODO Docstring"""
+    """
+    resilient-sdk clone allows you to 'clone' Resilient Objects
+    from a Resilient Export
+    It will modify the unique identifier of the specified Resilient Objects
+    and make an configuration import request to complete the cloning process"""
 
     CMD_NAME = "clone"
     CMD_HELP = "Duplicate an existing Action related object (Workflow, Function) with a new api name"
@@ -39,25 +42,25 @@ class CmdClone(BaseCmd):
         self.parser.description = self.CMD_DESCRIPTION
 
         # Add any positional or optional arguments here
-        self.parser.add_argument("-p", "--prefix",
+        self.parser.add_argument("-pre", "--prefix",
                                  type=ensure_unicode,
-                                 help="The prefix to be placed at the start of cloned  Action Objects. Used when cloning more than 1 of each Action Object Type.")
+                                 help="The prefix to be placed at the start of cloned Action Objects. Used when cloning more than 1 of each Action Object Type.")
 
     def execute_command(self, args):
-        """execute_command When the clone command is executed, we want to perform these actions:
+        """ 
+        When the clone command is executed, we want to perform these actions:
         1: Setup a client to Resilient and get the latest export file.
         2: For each specified action type (Function, Workflow, Rule):
             2.1: Ensure the user provided both the source and new action name
             2.2: Check that the provided source action type exists and the new action name is unique.
             2.3: Prepare a new Object from the source action object replacing the names were needed.
-        3: Prepare our configuration upload object with the newly cloned action objects
+        3: Prepare our configuration import object for upload with the newly cloned action objects
         4: Submit a configuration import through the API
         5: Confirm the change has been accepted
 
-        :param args: The command line args passed with the clone command such as workflows or functions to be cloned
+        :param args: The command line args passed with the clone command of Resilient Objects to be cloned
         :type args: [type]
-        :raises Exception: [description]
-        :raises Exception: [description]
+        :raises SDKException: [description]
         :return: [description]
         :rtype: [type]
         """
@@ -101,24 +104,11 @@ class CmdClone(BaseCmd):
                     new_export_data["message_destinations"] = self._clone_message_destination(
                         args, org_export)
 
-            self.upload_cloned_objects(new_export_data, res_client)
+            add_configuration_import(new_export_data, res_client)
 
         else:
             self.parser.print_help()
 
-    @staticmethod
-    def upload_cloned_objects(new_export_data, res_client):
-        # Import our newly cloned object with a configuration change
-        try:
-            result = res_client.post(IMPORT_URL, new_export_data)
-        except Exception as upload_exception:
-            LOG.error(new_export_data)
-
-        if result["status"] == "PENDING":
-            confirm_configuration_import(result, result['id'], res_client)
-        else:
-            raise SDKException(
-                "Could not import because the server did not return an import ID")
 
     def _clone_multiple_action_objects(self, args, new_export_data, org_export):
         LOG.info("Prefix provided, copying multiple Action Objects")
@@ -196,6 +186,22 @@ class CmdClone(BaseCmd):
         return obj.get(ResilientObjMap.RULES, "") in specified_objs or obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs or obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs or obj.get(ResilientObjMap.DATATABLES, "") in specified_objs
 
     @staticmethod
+    def _clone_action_object(input_args, org_export, obj_name, replace_fn):
+        if len(input_args) != 2:
+            raise SDKException(
+                "Received less than 2 object names. Only specify the original action object name and a new object name")
+
+        original_obj_api_name, new_obj_api_name = input_args
+
+        obj_defs = org_export.get("{}s".format(obj_name.lower()))
+        original_obj = CmdClone.validate_provided_object_names(obj_name, new_obj_api_name,
+                                                    original_obj_api_name, obj_defs)
+
+        cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
+
+        return [cloned_object]
+    
+    @staticmethod
     def _clone_message_destination(args, org_export):
         if len(args.messagedestination) != 2:
             raise SDKException(
@@ -217,7 +223,7 @@ class CmdClone(BaseCmd):
     @staticmethod
     def _clone_workflow(args, org_export):
         if len(args.workflow) != 2:
-            raise Exception(
+            raise SDKException(
                 "Only specify the original workflow api name and a new workflow api name")
         original_workflow_api_name, new_workflow_api_name = args.workflow
 
@@ -258,7 +264,7 @@ class CmdClone(BaseCmd):
     @staticmethod
     def _clone_rule(args, org_export):
         if len(args.rule) != 2:
-            raise Exception(
+            raise SDKException(
                 "Only specify the original rule name and a new rule name")
         original_rule_api_name, new_rule_api_name = args.rule
         rule_defs = org_export.get("actions")
@@ -274,7 +280,7 @@ class CmdClone(BaseCmd):
     @staticmethod
     def _clone_function(args, org_export):
         if len(args.function) != 2 and not args.prefix:
-            raise Exception(
+            raise SDKException(
                 "Only specify the original function api name and a new function api name")
         original_function_api_name, new_function_api_name = args.function
         function_defs = org_export.get("functions")
@@ -287,15 +293,6 @@ class CmdClone(BaseCmd):
         # Add the cloned workflow to the new export object
         return [new_function]
 
-
-def confirm_configuration_import(result, import_id, res_client):
-    try:
-        result["status"] = "ACCEPTED"      # Have to confirm changes
-        uri = "/configurations/imports/{}".format(import_id)
-        res_client.put(uri, result, timeout=5)
-        LOG.info("Imported configuration changes successfully")
-    except Exception as import_exception:
-        raise SDKException(repr(import_exception))
 
 
 def find_res_obj_by_identifier(objects_list, identifier_value):
