@@ -18,6 +18,8 @@ from resilient_sdk.util.sdk_exception import SDKException
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
+MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
+
 
 
 class CmdClone(BaseCmd):
@@ -75,9 +77,8 @@ class CmdClone(BaseCmd):
         # Copy the export data so we don't modify the existing object
         new_export_data = org_export.copy()
 
-        whitelist_dict_keys = ["incident_types", "fields"]  # Mandatory keys
         for dict_key in new_export_data:
-            if dict_key not in whitelist_dict_keys and isinstance(new_export_data[dict_key], list):
+            if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
                 # clear the new export data, the stuff we clear isn't necessary for cloning
                 new_export_data[dict_key] = []
         # If any of the supported args are provided
@@ -89,20 +90,20 @@ class CmdClone(BaseCmd):
             else:
 
                 if args.function:
-                    new_export_data['functions'] = self._clone_function(
-                        args, org_export)
+                    new_export_data['functions'] = self._clone_action_object(
+                        args.function, org_export, 'Function', 'functions', replace_function_object_attrs)
 
                 if args.rule:
-                    new_export_data["actions"] = self._clone_rule(
-                        args, org_export)
+                    new_export_data["actions"] = self._clone_action_object(
+                        args.rule, org_export, 'Rule', 'actions', replace_rule_object_attrs)
 
                 if args.workflow:
                     new_export_data["workflows"] = self._clone_workflow(
                         args, org_export)
 
                 if args.messagedestination:
-                    new_export_data["message_destinations"] = self._clone_message_destination(
-                        args, org_export)
+                    new_export_data["message_destinations"] = self._clone_action_object(
+                        args.messagedestination, org_export, 'Message Destination', 'message_destinations', replace_md_object_attrs)
 
             add_configuration_import(new_export_data, res_client)
 
@@ -175,25 +176,37 @@ class CmdClone(BaseCmd):
 
     @staticmethod
     def action_obj_was_specified(args, obj):
+        """
+        Function used to perform a check that the provided obj was specified
 
-        supported_types = ['function', 'workflow',
-                           'messagedestination', 'rule', 'datatable']
+        Iterates over the supported types, for each add the specified objs to a list
+        Finally perform a check that the given identifier key is found in the object
+        """
+        # TODO: Message destination is not supported due to an issue where if its specified with a function all functions are copyed
+        supported_types = ['function', 'workflow', 'rule', 'datatable']
+
         specified_objs = []
         for type_name in supported_types:
             # Use getattr to get each arg on the Namespace Object
             if getattr(args, type_name):
                 specified_objs.extend(getattr(args, type_name))
+
+        specified_objs = set(specified_objs)
+
+        # Functions contain a reference to the message destination, for this case check and handle functions first
+        if obj.get('destination_handle', False):
+            return obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs
         return obj.get(ResilientObjMap.RULES, "") in specified_objs or obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs or obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs or obj.get(ResilientObjMap.DATATABLES, "") in specified_objs
 
     @staticmethod
-    def _clone_action_object(input_args, org_export, obj_name, replace_fn):
+    def _clone_action_object(input_args, org_export, obj_name, obj_key, replace_fn):
         if len(input_args) != 2:
             raise SDKException(
                 "Received less than 2 object names. Only specify the original action object name and a new object name")
 
         original_obj_api_name, new_obj_api_name = input_args
 
-        obj_defs = org_export.get("{}s".format(obj_name.lower()))
+        obj_defs = org_export.get(obj_key)
         original_obj = CmdClone.validate_provided_object_names(obj_name, new_obj_api_name,
                                                     original_obj_api_name, obj_defs)
 
