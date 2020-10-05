@@ -6,13 +6,14 @@
 import logging
 import ssl
 import time
+import sys
 import traceback
 from circuits import BaseComponent, Timer
 from circuits.core.handlers import handler
 from stompest.config import StompConfig
 from stompest.protocol import StompSpec, StompSession
 from stompest.sync import Stomp
-from stompest.error import StompConnectionError, StompError
+from stompest.error import StompConnectionError, StompError, StompProtocolError
 from stompest.sync.client import LOG_CATEGORY
 from resilient_circuits.stomp_events import *
 from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
@@ -23,6 +24,9 @@ ACK_CLIENT_INDIVIDUAL = StompSpec.ACK_CLIENT_INDIVIDUAL
 ACK_AUTO = StompSpec.ACK_AUTO
 ACK_CLIENT = StompSpec.ACK_CLIENT
 ACK_MODES = (ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
+
+DEFAULT_MAX_RECONNECT_ATTEMPTS = 3
+DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
 
 LOG = logging.getLogger(__name__)
 
@@ -45,7 +49,8 @@ class StompClient(BaseComponent):
              proxy_port=None,
              proxy_user=None,
              proxy_password=None,
-             channel=channel):
+             channel=channel,
+             stomp_params=None):
         """ Initialize StompClient.  Called after __init__ """
         self.channel = channel
         if proxy_host:
@@ -68,8 +73,19 @@ class StompClient(BaseComponent):
         else:
             uri = "tcp://%s:%s" % (host, port)
 
-        # Configure failover options so it only tries to connect once
-        self._stomp_server = "failover:(%s)?maxReconnectAttempts=1,startupMaxReconnectAttempts=1" % uri
+        # Configure failover options so it only tries based on settings
+        # build any parameters passed
+        # every connection has at least these two: maxReconnectAttempts, startupMaxReconnectAttempts
+        items = [item.split("=", 2) for item in stomp_params.split(",")] if stomp_params else None
+        connection_params = {item[0].strip():item[1].strip() for item in items} if items else {}
+
+        if "maxReconnectAttempts" not in connection_params:
+            connection_params['maxReconnectAttempts'] = DEFAULT_MAX_RECONNECT_ATTEMPTS
+        if "startupMaxReconnectAttempts" not in connection_params:
+            connection_params['startupMaxReconnectAttempts'] = DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS
+
+        self._stomp_server = "failover:({0})?{1}".format(uri, ",".join(["{}={}".format(k, v) for k, v in connection_params.items()]))
+        LOG.debug("Stomp uri: {}".format(self._stomp_server))
 
         self._stomp_config = StompConfig(uri=self._stomp_server, sslContext=ssl_context,
                                          version=version,
@@ -182,6 +198,13 @@ class StompClient(BaseComponent):
             LOG.debug(traceback.format_exc())
             self.fire(ConnectionFailed(self._stomp_server))
             event.success = False
+        # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
+        #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
+        #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
+        except StompProtocolError as err:
+            LOG.error(traceback.format_exc())
+            LOG.error("Exiting due to unrecoverable error")
+            sys.exit(1) # this will exit resilient-circuits
         return "fail"
 
     @handler("ServerHeartbeat")
@@ -259,6 +282,13 @@ class StompClient(BaseComponent):
             event.success = False
             LOG.debug(traceback.format_exc())
             self.fire(OnStompError(None, err))
+        # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
+        #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
+        #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
+        except StompProtocolError as err:
+            LOG.error(traceback.format_exc())
+            LOG.error("Exiting due to unrecoverable error")
+            sys.exit(1) # this will exit resilient-circuits
 
     @handler("Unsubscribe")
     def _unsubscribe(self, event, destination):

@@ -12,8 +12,23 @@ api_key_secret=ApiKeySecret
 
 org=My Org
 
+# Number of attempts to retry when connecting to Resilient. 0 = unlimited retries
+#max_connection_retries=10
+
+# CP4S
 # Actions Module connection
-#stomp_port=65001
+# Use stomp_url when configuring an environment for CP4S
+#stomp_host=<CP4S stomp URL>
+#stomp_port=443
+#resource_prefix=/api/respond
+
+#stomp_timeout=120
+#stomp_max_retries=3
+
+# Optional parameters for stomp connections.....
+# Please refer to IBM Support for additional settings to those outlined below
+# format......     stomp_params=<param1=value1>,<,param2=value2>
+#stomp_params=startupMaxReconnectAttempts=3,maxReconnectAttempts=10,initialReconnectDelay=20
 
 # Directory containing additional components to load
 # componentsdir=components
@@ -21,6 +36,9 @@ org=My Org
 logdir=/tmp
 logfile=app.log
 loglevel=INFO
+
+# The number of Functions to run in parallel within the range: 1 >= num_workers <= 50
+num_workers=10
 
 # If your Resilient server uses a self-signed TLS certificate, or some
 # other certificate that is not automatically trusted by your machine,

@@ -1,0 +1,4 @@
+include README.md
+include pt_integration_a/util/*
+include pt_integration_a/LICENSE
+include doc/*

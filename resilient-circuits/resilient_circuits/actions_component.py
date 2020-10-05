@@ -24,14 +24,14 @@ from resilient_circuits.action_message import ActionMessageBase, ActionMessage, 
     FunctionMessage, StatusMessage, FunctionResult, BaseFunctionError
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
+from resilient_circuits import helpers
 
 LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
-STOMP_TIMEOUT = 120                 # 2-minute socket timeout
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
-MAX_RETRY_COUNT = 3                 # Retry failed deliveries this many times
+SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
 IDLE_TIMER_INTERVAL = 600
@@ -84,58 +84,63 @@ class ResilientComponent(BaseComponent):
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()
         assert isinstance(opts, dict)
+
         self.opts = opts
-        self._get_fields()
-        # Check that decorated requirements are met
-        callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
-        for name, func in callables:
-            if name == "__class__":
-                name = func.__name__
-            # Do all the custom fields exist?
-            fields = getattr(func, "required_fields", {})
-            for (field_name, input_type) in fields.items():
-                try:
-                    fielddef = self._fields[field_name]
-                except KeyError:
-                    errmsg = ("Field '{0}' (required by '{1}') is not "
-                              "defined in this Resilient platform.")
-                    raise Exception(errmsg.format(field_name, name))
-                if input_type is not None:
-                    if fielddef["input_type"] != input_type:
-                        errmsg = ("Field '{0}' (required by '{1}') "
-                                  "must be type '{2}'.")
-                        raise Exception(errmsg.format(field_name,
-                                                      name, input_type))
-            # Do all the action fields exist?
-            fields = getattr(func, "required_action_fields", {})
-            for (field_name, input_type) in fields.items():
-                try:
-                    fielddef = self._action_fields[field_name]
-                except KeyError:
-                    errmsg = ("Action field '{0}' (required by '{1}') "
-                              "is not defined in this Resilient platform.")
-                    raise Exception(errmsg.format(field_name, name))
-                if input_type is not None:
-                    if fielddef["input_type"] != input_type:
-                        errmsg = ("Action field '{0}' (required by "
-                                  "'{1}') must be type '{2}'.")
-                        raise Exception(errmsg.format(field_name,
-                                                      name, input_type))
+        self._fields = {}
+        self._action_fields = {}
+        self._destinations = {}
+        self._functions = {}
+        self._function_fields = {}
+        self.fn_name = helpers.get_fn_name(dir(self))
 
-            # Do all the custom functions exist?
-            if getattr(func, "function", False):
-                func_names = getattr(func, "names", [])
-                if self._functions is None:
-                    LOG.warning("Functions are not available in this Resilient platform!  "
-                                "Cannot run '{}'".format(", ".join(func_names)))
-                else:
-                    for func_name in func_names:
-                        try:
-                            funcdef = self._functions[func_name]
-                        except KeyError:
-                            LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(func_name))
+        # Get fields, message destinations and functions
+        self._get_fields(fn_name=self.fn_name)
 
-    def _get_fields(self):
+        # If this component is a function, self.fn_name will be defined
+        if self.fn_name:
+
+            if not helpers.check_exists(self.fn_name, self._functions):
+                LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(self.fn_name))
+
+        else:
+            # Check that decorated requirements are met
+            callables = ((x, getattr(self, x)) for x in dir(self) if isinstance(getattr(self, x), Callable))
+            for name, func in callables:
+                if name == "__class__":
+                    name = func.__name__
+                # Do all the custom fields exist?
+                fields = getattr(func, "required_fields", {})
+                for (field_name, input_type) in fields.items():
+                    try:
+                        fielddef = self._fields[field_name]
+                    except KeyError:
+                        errmsg = ("Field '{0}' (required by '{1}') is not "
+                                "defined in this Resilient platform.")
+                        raise Exception(errmsg.format(field_name, name))
+                    if input_type is not None:
+                        if fielddef["input_type"] != input_type:
+                            errmsg = ("Field '{0}' (required by '{1}') "
+                                    "must be type '{2}'.")
+                            raise Exception(errmsg.format(field_name,
+                                                        name, input_type))
+                # Do all the action fields exist?
+                fields = getattr(func, "required_action_fields", {})
+                for (field_name, input_type) in fields.items():
+                    try:
+                        fielddef = self._action_fields[field_name]
+                    except KeyError:
+                        errmsg = ("Action field '{0}' (required by '{1}') "
+                                "is not defined in this Resilient platform.")
+                        raise Exception(errmsg.format(field_name, name))
+                    if input_type is not None:
+                        if fielddef["input_type"] != input_type:
+                            errmsg = ("Action field '{0}' (required by "
+                                    "'{1}') must be type '{2}'.")
+                            raise Exception(errmsg.format(field_name,
+                                                        name, input_type))
+
+
+    def _get_fields(self, fn_name=None):
         """Get Incident and Action fields"""
         client = self.rest_client()
         self._fields = dict((field["name"], field)
@@ -144,16 +149,16 @@ class ResilientComponent(BaseComponent):
                                    for field in client.cached_get("/types/actioninvocation/fields"))
         self._destinations = dict((dest["id"], dest)
                                   for dest in client.cached_get("/message_destinations")["entities"])
-        try:
-            self._functions = {}
-            for func in client.cached_get("/functions")["entities"]:
-                self._functions[func["name"]] = client.cached_get("/functions/{}".format(func["name"]))
-            self._function_fields = dict((field["name"], field)
-                                         for field in client.cached_get("/types/__function/fields"))
-        except resilient.SimpleHTTPException:
-            # functions are not available, pre-v30 server
-            self._functions = None
-            self._function_fields = None
+
+        if fn_name:
+            try:
+                self._functions[fn_name] = client.cached_get("/functions/{0}".format(fn_name))
+                self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
+
+            except resilient.SimpleHTTPException:
+                # functions are not available, pre-v30 server
+                self._functions = None
+                self._function_fields = None
 
     def rest_client(self):
         """Return a connected instance of the :class:`resilient.SimpleClient`
@@ -276,12 +281,16 @@ class Actions(ResilientComponent):
         self.logging_directory = None
         self.subscribe_headers = None
         self._configure_opts(opts)
+        self.max_retry_count = int(opts.get("stomp_max_retries")) # default from app.py:DEFAULT_STOMP_MAX_RETRIES
+        self.stomp_timeout = int(opts.get("stomp_timeout", SUBSCRIBE_TO_QUEUES_TIMEOUT))
 
-        _retry_timer = Timer(RETRY_TIMER_INTERVAL, Event.create("retry_failed_deliveries"), persist=True)
+        timer_internal = int(opts['resilient'].get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
+
+        _retry_timer = Timer(timer_internal, Event.create("retry_failed_deliveries"), persist=True)
         _retry_timer.register(self)
 
         # Make a worker thread-pool that will run functions
-        self._functionworker = FunctionWorker(process=False, channel="functionworker")
+        self._functionworker = FunctionWorker(process=False, channel="functionworker", workers=opts.get("num_workers"))
         self._functionworker.register(self.root)
 
         if opts.get("test_actions", False):
@@ -500,16 +509,20 @@ class Actions(ResilientComponent):
             stomp_password = self.opts["password"]
 
         # Set up a STOMP connection to the Resilient action services
+        stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
+        # build out all the extra parameters for the stomp connections
+        stomp_params = self.opts['resilient'].get('stomp_params')
         if not self.stomp_component:
             self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
                                                username=stomp_email,
                                                password=stomp_password,
                                                heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                            STOMP_SERVER_HEARTBEAT),
-                                               connected_timeout=STOMP_TIMEOUT,
-                                               connect_timeout=STOMP_TIMEOUT,
+                                               connected_timeout=stomp_timeout,
+                                               connect_timeout=stomp_timeout,
                                                ssl_context=context,
                                                ca_certs=ca_certs,  # For old ssl version
+                                               stomp_params=stomp_params,
                                                **self._proxy_args)
             self.stomp_component.register(self)
         else:
@@ -519,10 +532,11 @@ class Actions(ResilientComponent):
                                       password=stomp_password,
                                       heartbeats=(STOMP_CLIENT_HEARTBEAT,
                                                   STOMP_SERVER_HEARTBEAT),
-                                      connected_timeout=STOMP_TIMEOUT,
-                                      connect_timeout=STOMP_TIMEOUT,
+                                      connected_timeout=stomp_timeout,
+                                      connect_timeout=stomp_timeout,
                                       ssl_context=context,
                                       ca_certs=ca_certs,  # For old ssl version
+                                      stomp_params=stomp_params,
                                       **self._proxy_args)
 
         # Other special options
@@ -564,16 +578,16 @@ class Actions(ResilientComponent):
                 queue_name = channel.split(".", 1)[1]
                 LOG.info("'%s.%s' actions registered to '%s'",
                          type(component).__module__, type(component).__name__, queue_name)
-            elif str(channel).startswith("functions.") and self._functions:
+            elif str(channel).startswith("functions.") and component._functions:
                 # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
                 func_name = channel.split(".", 1)[1]
-                if func_name not in self._functions:
+                if func_name not in component._functions:
                     # Unknown function.  Log it and continue.
                     LOG.warning("'%s.%s' function '%s' is not defined!",
                                 type(component).__module__, type(component).__name__, func_name)
                     continue
-                queue_id = self._functions[func_name]["destination_handle"]
-                queue_name = self._destinations[queue_id]["programmatic_name"]
+                queue_id = component._functions[func_name]["destination_handle"]
+                queue_name = component._destinations[queue_id]["programmatic_name"]
                 LOG.info("'%s.%s' function '%s' registered to '%s'",
                          type(component).__module__, type(component).__name__, func_name, queue_name)
             else:
@@ -594,7 +608,7 @@ class Actions(ResilientComponent):
         if not self.stomp_component:
             return
         if not self.stomp_component.connected:
-            yield self.wait("Connected", timeout=30)
+            yield self.wait("Connected", timeout=self.stomp_timeout)
             if not self.stomp_component.connected:
                 LOG.error("Can't subscribe to queues with STOMP disconnected, trying reconnect")
                 self.fire(Event.create("reconnect"))
@@ -765,7 +779,7 @@ class Actions(ResilientComponent):
         message_id = event.parent.message_id
         failure = self._stomp_ack_delivery_failures.get(message_id)
         if failure:
-            if failure["retry_count"] > MAX_RETRY_COUNT:
+            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of STOMP ACK for message %s",
                           failure["retry_count"], message_id)
                 self._stomp_ack_delivery_failures.pop(message_id)
@@ -796,7 +810,7 @@ class Actions(ResilientComponent):
 
         failure = self._resilient_ack_delivery_failures.get(message_id)
         if failure:
-            if failure["retry_count"] > MAX_RETRY_COUNT:
+            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of Resilient ACK for message %s",
                           failure["retry_count"], message_id)
                 self._resilient_ack_delivery_failures.pop(message_id)
