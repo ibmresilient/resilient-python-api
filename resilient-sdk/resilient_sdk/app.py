@@ -126,6 +126,9 @@ def main():
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
 
+            elif main_cmd == cmd_dev.CMD_NAME:
+                cmd_dev.parser.print_usage()
+
             else:
                 parser.print_help()
 
