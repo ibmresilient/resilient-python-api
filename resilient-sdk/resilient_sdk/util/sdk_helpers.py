@@ -426,7 +426,8 @@ def get_from_export(export,
                     artifact_types=[],
                     datatables=[],
                     tasks=[],
-                    scripts=[]):
+                    scripts=[],
+                    get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
     The parameters are Lists of the Objects you want
@@ -468,73 +469,80 @@ def get_from_export(export,
     # Get Rules
     return_dict["rules"] = get_res_obj("actions", ResilientObjMap.RULES, "Rule", rules, export)
 
-    for r in return_dict.get("rules"):
-
-        # Get Activity Fields for Rules
-        view_items = r.get("view_items", [])
-        activity_field_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.ACTIVITY_FIELD]
-        r["activity_fields"] = get_res_obj("fields", "uuid", "Activity Field", activity_field_uuids, export)
-        return_dict["all_fields"].extend([u"actioninvocation/{0}".format(fld.get("name")) for fld in r.get("activity_fields")])
-
-        # Get names of Workflows that are related to Rule
-        for w in r.get("workflows", []):
-            workflows.append(w)
-
-        # Get names of Message Destinations that are related to Rule
-        # Message Destinations in Rules are identified by their Display Name
-        for m in r.get("message_destinations", []):
-            message_destinations.append({"identifier": "name", "value": m})
-
-        # Get names of Tasks/Scripts/Fields that are related to Rule
-        automations = r.get("automations", [])
-        for a in automations:
-            if a.get("tasks_to_create"):
-                for t in a["tasks_to_create"]:
-                    tasks.append(t)
-
-            elif a.get("scripts_to_run"):
-                scripts.append(a.get("scripts_to_run"))
-
-            elif a.get("field"):
-                fields.append(a.get("field"))
-
     # Get Functions
-    # Get Function names that use 'wanted' Message Destinations
-    for f in export.get("functions", []):
-        if f.get("destination_handle") in message_destinations:
-            functions.append(f.get(ResilientObjMap.FUNCTIONS))
-
     return_dict["functions"] = get_res_obj("functions", ResilientObjMap.FUNCTIONS, "Function", functions, export)
-
-    for f in return_dict.get("functions"):
-        # Get Function Inputs
-        view_items = f.get("view_items", [])
-        function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
-        f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
-
-        return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
-
-        # Get Function's Message Destination name
-        message_destinations.append(f.get("destination_handle", ""))
 
     # Get Workflows
     return_dict["workflows"] = get_res_obj("workflows", ResilientObjMap.WORKFLOWS, "Workflow", workflows, export)
 
-    # Get Functions in Workflow
-    for workflow in return_dict["workflows"]:
-        # This gets all the Functions in the Workflow's XML
-        wf_functions = get_workflow_functions(workflow)
+    # By default, for each of the above resilient objects attempt to locate resilient objects which are related
+    # For rules -- attempt to locate related workflows and message_destinations
+    # For workflows -- attempt to locate related functions
+    # For functions -- attempt to locate related message destinations
+    if get_related_objects:
+        for r in return_dict.get("rules"):
 
-        # Add the Display Name and Name to each wf_function
-        for wf_fn in wf_functions:
-            for fn in return_dict["functions"]:
-                if wf_fn.get("uuid", "a") == fn.get("uuid", "b"):
-                    wf_fn["name"] = fn.get("name")
-                    wf_fn["display_name"] = fn.get("display_name")
-                    wf_fn["message_destination"] = fn.get("destination_handle", "")
-                    break
+            # Get Activity Fields for Rules
+            view_items = r.get("view_items", [])
+            activity_field_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.ACTIVITY_FIELD]
+            r["activity_fields"] = get_res_obj("fields", "uuid", "Activity Field", activity_field_uuids, export)
+            return_dict["all_fields"].extend([u"actioninvocation/{0}".format(fld.get("name")) for fld in r.get("activity_fields")])
 
-        workflow["wf_functions"] = wf_functions
+            # Get names of Workflows that are related to Rule
+            for w in r.get("workflows", []):
+                workflows.append(w)
+
+            # Get names of Message Destinations that are related to Rule
+            # Message Destinations in Rules are identified by their Display Name
+            for m in r.get("message_destinations", []):
+                message_destinations.append({"identifier": "name", "value": m})
+
+            # Get names of Tasks/Scripts/Fields that are related to Rule
+            automations = r.get("automations", [])
+            for a in automations:
+                if a.get("tasks_to_create"):
+                    for t in a["tasks_to_create"]:
+                        tasks.append(t)
+
+                elif a.get("scripts_to_run"):
+                    scripts.append(a.get("scripts_to_run"))
+
+                elif a.get("field"):
+                    fields.append(a.get("field"))
+
+        # Get Function names that use 'wanted' Message Destinations
+        for f in export.get("functions", []):
+            if f.get("destination_handle") in message_destinations:
+                functions.append(f.get(ResilientObjMap.FUNCTIONS))
+
+        for f in return_dict.get("functions"):
+            # Get Function Inputs
+            view_items = f.get("view_items", [])
+            function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
+            f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
+
+            return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
+
+            # Get Function's Message Destination name
+            message_destinations.append(f.get("destination_handle", ""))
+
+        
+
+        # Get Functions in Workflow
+        for workflow in return_dict["workflows"]:
+            # This gets all the Functions in the Workflow's XML
+            wf_functions = get_workflow_functions(workflow)
+
+            # Add the Display Name and Name to each wf_function
+            for wf_fn in wf_functions:
+                for fn in return_dict["functions"]:
+                    if wf_fn.get("uuid", "a") == fn.get("uuid", "b"):
+                        wf_fn["name"] = fn.get("name")
+                        wf_fn["display_name"] = fn.get("display_name")
+                        wf_fn["message_destination"] = fn.get("destination_handle", "")
+                        break
+
+            workflow["wf_functions"] = wf_functions
 
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", ResilientObjMap.MESSAGE_DESTINATIONS, "Message Destination", message_destinations, export)
