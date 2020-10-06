@@ -29,7 +29,11 @@ class CmdDev(BaseCmd):
     CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
-        # Define codegen usage and description
+
+        # Set SDKException command_ran
+        SDKException.command_ran = self.CMD_NAME
+
+        # Define dev usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
 

@@ -126,7 +126,7 @@ def main():
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
 
-            elif main_cmd == cmd_dev.CMD_NAME:
+            elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
                 cmd_dev.parser.print_usage()
 
             else:
@@ -153,7 +153,7 @@ def main():
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
 
-    elif args.cmd == cmd_dev.CMD_NAME:
+    elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)
 
 
