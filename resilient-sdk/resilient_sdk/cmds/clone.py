@@ -47,6 +47,9 @@ class CmdClone(BaseCmd):
         self.parser.add_argument("-pre", "--prefix",
                                  type=ensure_unicode,
                                  help="The prefix to be placed at the start of cloned Action Objects. Used when cloning more than 1 of each Action Object Type.")
+        self.parser.add_argument("-type", "--changetype",
+                                type=ensure_unicode,
+                                help="The new type of the clone action object. Used when cloning a workflow to have the newly cloned workflow at a different object type.")
 
     def execute_command(self, args):
         """ 
@@ -251,6 +254,11 @@ class CmdClone(BaseCmd):
         # Update workflow specific items and any common obj attributes
         new_workflow = replace_workflow_object_attrs(
             new_workflow, original_workflow_api_name, new_workflow_api_name, old_workflow_name)
+
+        # If type was provided, change the workflows type 
+        # TODO: Only supported on workflow cloning, in future review which objects benefit most from type changing
+        if args.changetype:
+            new_workflow['object_type'] = args.changetype
         # Add the cloned workflow to the new export object
         return [new_workflow]
 

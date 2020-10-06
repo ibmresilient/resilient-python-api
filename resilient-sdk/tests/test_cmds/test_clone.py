@@ -17,6 +17,7 @@ TEST_OBJ = {
 }
 
 TEST_EXPORT = read_mock_json("export.JSON")
+MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
 
 
 def test_cmd_docgen_setup(fx_get_sub_parser):
@@ -71,7 +72,7 @@ def test_clone_workflow(fx_get_sub_parser):
     cmd_clone = CmdClone(fx_get_sub_parser)
 
     export_data = cmd_clone._clone_workflow(
-        Namespace(workflow=[old_name, new_name]), TEST_EXPORT)
+        Namespace(workflow=[old_name, new_name], changetype=""), TEST_EXPORT)
 
     original_obj = CmdClone.validate_provided_object_names("Workflow", new_name,
                                                            old_name, copy.copy(TEST_EXPORT.get("workflows")))
@@ -212,3 +213,48 @@ def test_replace_common_object_attrs():
 
 def test_action_obj_was_specified():
     pass
+
+def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange):
+
+    cmd_clone = CmdClone(fx_get_sub_parser)
+
+    args = cmd_clone.parser.parse_known_args()[0]
+    assert args.changetype == "task"
+
+    export_data = cmd_clone._clone_workflow(args, TEST_EXPORT)
+    
+    old_name, new_name = args.workflow
+    original_obj = CmdClone.validate_provided_object_names("Workflow", new_name,
+                                                           old_name, copy.copy(TEST_EXPORT.get("workflows")))
+    assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
+    assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
+    # Ensure the Object specific primary key is not duplicated
+    assert export_data[0][ResilientObjMap.WORKFLOWS] != original_obj[
+        ResilientObjMap.WORKFLOWS], "Expected that the export_key was updated"
+
+    assert export_data[0]['object_type'] == 'task', "Expected the new workflows object_type to be set to task"
+    assert export_data[0]['object_type'] != original_obj['object_type'], "Expected the cloned workflow to have a different object type to before"
+
+def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+
+    cmd_clone = CmdClone(fx_get_sub_parser)
+
+    args = cmd_clone.parser.parse_known_args()[0]
+    assert args.prefix == "v2"
+    # Copy the export data so we don't modify the existing object
+    new_export_data = TEST_EXPORT.copy()
+
+    for dict_key in new_export_data:
+        if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
+            # clear the new export data, the stuff we clear isn't necessary for cloning
+            new_export_data[dict_key] = []
+    cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
+    
+    # A mapping table of the org_export items and their unique identifiers
+    tested_types = {'actions': ResilientObjMap.RULES, 'functions': ResilientObjMap.FUNCTIONS, 'workflows':ResilientObjMap.WORKFLOWS}
+    # for each tested type, get the type name in the export and its identifier    
+    for obj_type, identifier in tested_types.items():
+        # for each action onject of type obj_type
+        for obj in new_export_data[obj_type]:
+            # Ensure the provided prefix is found on the objects unique identifier
+            assert "v2" in obj[identifier], "Expected the object's identifer to contain the prefix"
