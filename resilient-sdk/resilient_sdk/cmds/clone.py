@@ -126,7 +126,8 @@ class CmdClone(BaseCmd):
                                      artifact_types=args.artifacttype,
                                      datatables=args.datatable,
                                      tasks=args.task,
-                                     scripts=args.script)
+                                     scripts=args.script,
+                                     get_related_objects=False)
         # Get 'minified' version of the export. This is used in customize.py
         minified = minify_export(org_export,
                                  message_destinations=get_object_api_names(
@@ -186,7 +187,7 @@ class CmdClone(BaseCmd):
         Finally perform a check that the given identifier key is found in the object
         """
         # TODO: Message destination is not supported due to an issue where if its specified with a function all functions are copyed
-        supported_types = ['function', 'workflow', 'rule', 'datatable']
+        supported_types = ['function', 'workflow', 'rule', 'datatable', 'messagedestination']
 
         specified_objs = []
         for type_name in supported_types:
