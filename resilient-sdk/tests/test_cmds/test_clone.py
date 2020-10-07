@@ -18,18 +18,20 @@ TEST_OBJ = {
 
 TEST_EXPORT = read_mock_json("export.JSON")
 MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
+# Map from export object keys to each objects unique identifier
+EXPORT_TYPE_MAP = {'actions': ResilientObjMap.RULES, 'functions': ResilientObjMap.FUNCTIONS, 'workflows':ResilientObjMap.WORKFLOWS}
 
 
-def test_cmd_docgen_setup(fx_get_sub_parser):
-    cmd_docgen = CmdClone(fx_get_sub_parser)
+def test_cmd_clone_setup(fx_get_sub_parser):
+    cmd_clone = CmdClone(fx_get_sub_parser)
 
-    assert isinstance(cmd_docgen, base_cmd.BaseCmd)
-    assert cmd_docgen.CMD_NAME == "clone"
-    assert cmd_docgen.CMD_HELP == "Duplicate an existing Action related object (Workflow, Function) with a new api name"
-    assert cmd_docgen.CMD_USAGE == """
+    assert isinstance(cmd_clone, base_cmd.BaseCmd)
+    assert cmd_clone.CMD_NAME == "clone"
+    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Workflow, Function) with a new api name"
+    assert cmd_clone.CMD_USAGE == """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>"""
-    assert cmd_docgen.CMD_DESCRIPTION == "Duplicate an existing Action related object (Workflow, Function) with a new api name"
+    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Workflow, Function) with a new api name"
 
 
 def test_clone_function(fx_get_sub_parser):
@@ -211,8 +213,23 @@ def test_replace_common_object_attrs():
     assert new_object['export_key'] != original_export_key, "Expected export_key to be updated"
 
 
-def test_action_obj_was_specified():
-    pass
+def test_action_obj_was_specified_not_present(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    cmd_clone = CmdClone(fx_get_sub_parser)
+
+    args = cmd_clone.parser.parse_known_args()[0]
+
+    for functions in TEST_EXPORT.get('functions'):
+
+        if functions['name'] not in args.function:
+            assert not CmdClone.action_obj_was_specified(args, functions)
+
+def test_action_obj_was_specified_success(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    cmd_clone = CmdClone(fx_get_sub_parser)
+
+    args = cmd_clone.parser.parse_known_args()[0]
+    function = TEST_EXPORT.get('functions')[0]
+    assert function['name'] == 'mock_function_one'
+    assert CmdClone.action_obj_was_specified(args, function)
 
 def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange):
 
@@ -251,10 +268,30 @@ def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
     cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
     
     # A mapping table of the org_export items and their unique identifiers
-    tested_types = {'actions': ResilientObjMap.RULES, 'functions': ResilientObjMap.FUNCTIONS, 'workflows':ResilientObjMap.WORKFLOWS}
     # for each tested type, get the type name in the export and its identifier    
-    for obj_type, identifier in tested_types.items():
+    for obj_type, identifier in EXPORT_TYPE_MAP.items():
         # for each action onject of type obj_type
         for obj in new_export_data[obj_type]:
             # Ensure the provided prefix is found on the objects unique identifier
             assert "v2" in obj[identifier], "Expected the object's identifer to contain the prefix"
+
+def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    cmd_clone = CmdClone(fx_get_sub_parser)
+
+    args = cmd_clone.parser.parse_known_args()[0]
+    assert len(args.workflow)==2
+    assert ["mock_workflow_two", "mock_workflow_one"] == args.workflow
+    assert args.prefix == "v2"
+    # Copy the export data so we don't modify the existing object
+    new_export_data = TEST_EXPORT.copy()
+
+    for dict_key in new_export_data:
+        if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
+            # clear the new export data, the stuff we clear isn't necessary for cloning
+            new_export_data[dict_key] = []
+    cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
+
+    assert len(new_export_data['functions']) == len(args.function)
+    assert len(new_export_data['workflows']) == len(args.workflow)
+    assert len(new_export_data['actions']) == len(args.rule)
+
