@@ -85,13 +85,16 @@ class CmdClone(BaseCmd):
                 # clear the new export data, the stuff we clear isn't necessary for cloning
                 new_export_data[dict_key] = []
         # If any of the supported args are provided
-        if any([args.function, args.workflow, args.rule, args.messagedestination]):
+        if any([args.function, args.workflow, args.rule, args.messagedestination, args.script]):
             if args.prefix:
                 self._clone_multiple_action_objects(
                     args, new_export_data, org_export)
 
             else:
 
+                if args.script: 
+                    new_export_data['scripts'] = self._clone_action_object(
+                        args.script, org_export, 'Script', 'scripts', replace_function_object_attrs)
                 if args.function:
                     new_export_data['functions'] = self._clone_action_object(
                         args.function, org_export, 'Function', 'functions', replace_function_object_attrs)
@@ -187,7 +190,7 @@ class CmdClone(BaseCmd):
         Finally perform a check that the given identifier key is found in the object
         """
         # TODO: Message destination is not supported due to an issue where if its specified with a function all functions are copyed
-        supported_types = ['function', 'workflow', 'rule', 'datatable', 'messagedestination']
+        supported_types = ['function', 'workflow', 'rule', 'datatable', 'messagedestination', 'script']
 
         specified_objs = []
         for type_name in supported_types:
@@ -402,7 +405,7 @@ def replace_function_object_attrs(obj_to_modify, new_obj_api_name):
 
     # # Now do the workflow specific ones and return
     obj_to_modify.update({
-        "display_name": new_obj_api_name,
+        # "display_name": new_obj_api_name,
         ResilientObjMap.FUNCTIONS: new_obj_api_name
     })
     if obj_to_modify.get(ResilientObjMap.DATATABLES, False):
