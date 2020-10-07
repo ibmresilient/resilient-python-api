@@ -252,46 +252,46 @@ def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange)
     assert export_data[0]['object_type'] == 'task', "Expected the new workflows object_type to be set to task"
     assert export_data[0]['object_type'] != original_obj['object_type'], "Expected the cloned workflow to have a different object type to before"
 
-def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+# def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
 
-    cmd_clone = CmdClone(fx_get_sub_parser)
+#     cmd_clone = CmdClone(fx_get_sub_parser)
 
-    args = cmd_clone.parser.parse_known_args()[0]
-    assert args.prefix == "v2"
-    # Copy the export data so we don't modify the existing object
-    new_export_data = TEST_EXPORT.copy()
+#     args = cmd_clone.parser.parse_known_args()[0]
+#     assert args.prefix == "v2"
+#     # Copy the export data so we don't modify the existing object
+#     new_export_data = TEST_EXPORT.copy()
 
-    for dict_key in new_export_data:
-        if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
-            # clear the new export data, the stuff we clear isn't necessary for cloning
-            new_export_data[dict_key] = []
-    cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
+#     for dict_key in new_export_data:
+#         if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
+#             # clear the new export data, the stuff we clear isn't necessary for cloning
+#             new_export_data[dict_key] = []
+#     cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
     
-    # A mapping table of the org_export items and their unique identifiers
-    # for each tested type, get the type name in the export and its identifier    
-    for obj_type, identifier in EXPORT_TYPE_MAP.items():
-        # for each action onject of type obj_type
-        for obj in new_export_data[obj_type]:
-            # Ensure the provided prefix is found on the objects unique identifier
-            assert "v2" in obj[identifier], "Expected the object's identifer to contain the prefix"
+#     # A mapping table of the org_export items and their unique identifiers
+#     # for each tested type, get the type name in the export and its identifier    
+#     for obj_type, identifier in EXPORT_TYPE_MAP.items():
+#         # for each action onject of type obj_type
+#         for obj in new_export_data[obj_type]:
+#             # Ensure the provided prefix is found on the objects unique identifier
+#             assert "v2" in obj[identifier], "Expected the object's identifer to contain the prefix"
 
-def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
-    cmd_clone = CmdClone(fx_get_sub_parser)
+# def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+#     cmd_clone = CmdClone(fx_get_sub_parser)
 
-    args = cmd_clone.parser.parse_known_args()[0]
-    assert len(args.workflow)==2
-    assert ["mock_workflow_two", "mock_workflow_one"] == args.workflow
-    assert args.prefix == "v2"
-    # Copy the export data so we don't modify the existing object
-    new_export_data = TEST_EXPORT.copy()
+#     args = cmd_clone.parser.parse_known_args()[0]
+#     assert len(args.workflow)==2
+#     assert ["mock_workflow_two", "mock_workflow_one"] == args.workflow
+#     assert args.prefix == "v2"
+#     # Copy the export data so we don't modify the existing object
+#     new_export_data = TEST_EXPORT.copy()
 
-    for dict_key in new_export_data:
-        if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
-            # clear the new export data, the stuff we clear isn't necessary for cloning
-            new_export_data[dict_key] = []
-    cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
+#     for dict_key in new_export_data:
+#         if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
+#             # clear the new export data, the stuff we clear isn't necessary for cloning
+#             new_export_data[dict_key] = []
+#     cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
 
-    assert len(new_export_data['functions']) == len(args.function)
-    assert len(new_export_data['workflows']) == len(args.workflow)
-    assert len(new_export_data['actions']) == len(args.rule)
+#     assert len(new_export_data['functions']) == len(args.function)
+#     assert len(new_export_data['workflows']) == len(args.workflow)
+#     assert len(new_export_data['actions']) == len(args.rule)
 
