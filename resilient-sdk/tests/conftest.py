@@ -186,6 +186,7 @@ def fx_cmd_line_args_clone_prefix():
     args_to_add = [
         "clone",
         "-w", "mock_workflow_two", "mock_workflow_one",
+        "-m", "fn_main_mock_integration",
         "-f", "mock_function_one",
         "--rule", "Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination",
         "-pre", "v2"
