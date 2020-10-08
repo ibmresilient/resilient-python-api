@@ -221,24 +221,6 @@ class CmdClone(BaseCmd):
 
         return [cloned_object]
     
-    @staticmethod
-    def _clone_message_destination(args, org_export):
-        if len(args.messagedestination) != 2:
-            raise SDKException(
-                "Only specify the original message_destination name and a new message_destination name")
-        original_md_api_name, new_md_api_name = args.messagedestination
-        # Get the md defintion objects
-        destinations_def = org_export.get(
-            "message_destinations")
-        LOG.info(destinations_def)
-        # Validate both the original source md exists and the new md api name does not conflict with an existing md
-        original_md = CmdClone.validate_provided_object_names("Message Destination", new_md_api_name,
-                                                              original_md_api_name, destinations_def)
-        # Update md specific items and any common obj attributes
-        new_message_destination = replace_md_object_attrs(
-            original_md.copy(), new_md_api_name)
-
-        return [new_message_destination]
 
     @staticmethod
     def _clone_workflow(args, org_export):
@@ -286,37 +268,6 @@ class CmdClone(BaseCmd):
         # Return the object
         return original_workflow
 
-    @staticmethod
-    def _clone_rule(args, org_export):
-        if len(args.rule) != 2:
-            raise SDKException(
-                "Only specify the original rule name and a new rule name")
-        original_rule_api_name, new_rule_api_name = args.rule
-        rule_defs = org_export.get("actions")
-        # Validate both the original source rule exists and the new rule api name does not conflict with an existing rule
-        original_rule = CmdClone.validate_provided_object_names("Rule", new_rule_api_name,
-                                                                original_rule_api_name, rule_defs)
-        # Update workflow specific items and any common obj attributes
-        new_rule = replace_rule_object_attrs(
-            original_rule.copy(), new_rule_api_name)
-        # Return the new rule in list form
-        return [new_rule]
-
-    @staticmethod
-    def _clone_function(args, org_export):
-        if len(args.function) != 2 and not args.prefix:
-            raise SDKException(
-                "Only specify the original function api name and a new function api name")
-        original_function_api_name, new_function_api_name = args.function
-        function_defs = org_export.get("functions")
-        # Validate both the original source function exists and the new function api name does not conflict with an existing function
-        original_function = CmdClone.validate_provided_object_names("Function", new_function_api_name,
-                                                                    original_function_api_name, function_defs)
-        # Update workflow specific items and any common obj attributes
-        new_function = replace_function_object_attrs(
-            original_function.copy(), new_function_api_name)
-        # Add the cloned workflow to the new export object
-        return [new_function]
 
 
 
