@@ -35,11 +35,14 @@ def test_cmd_clone_setup(fx_get_sub_parser):
 
     assert isinstance(cmd_clone, base_cmd.BaseCmd)
     assert cmd_clone.CMD_NAME == "clone"
-    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Workflow, Function) with a new api name"
+    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
     assert cmd_clone.CMD_USAGE == """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
-    $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>"""
-    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Workflow, Function) with a new api name"
+    $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
+    $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
+    $ resilient-sdk clone -r "<rule_to_be_cloned>" "<new_function_name>
+    $ resilient-sdk clone -r "<rule_to_be_cloned>" "<new_function_name> -f <function_to_be_cloned> <new_function_name> -p version2"""
+    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
 
 
 def test_clone_workflow(fx_get_sub_parser):

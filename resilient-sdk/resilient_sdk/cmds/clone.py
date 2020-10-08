@@ -30,11 +30,14 @@ class CmdClone(BaseCmd):
     and make an configuration import request to complete the cloning process"""
 
     CMD_NAME = "clone"
-    CMD_HELP = "Duplicate an existing Action related object (Workflow, Function) with a new api name"
+    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
     CMD_USAGE = """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
-    $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>"""
-    CMD_DESCRIPTION = "Duplicate an existing Action related object (Workflow, Function) with a new api name"
+    $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
+    $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
+    $ resilient-sdk clone -r "<rule_to_be_cloned>" "<new_function_name>
+    $ resilient-sdk clone -r "<rule_to_be_cloned>" "<new_function_name> -f <function_to_be_cloned> <new_function_name> -p version2"""
+    CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
     CMD_USE_COMMON_PARSER_ARGS = True
     CMD_ADD_PARSERS = ["res_obj_parser"]
 
@@ -267,8 +270,6 @@ class CmdClone(BaseCmd):
                 obj_type_name, original_workflow_api_name))
         # Return the object
         return original_workflow
-
-
 
 
 def find_res_obj_by_identifier(objects_list, identifier_value):
