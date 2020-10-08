@@ -8,8 +8,10 @@ import copy
 from resilient_sdk.cmds import base_cmd, CmdClone
 from resilient_sdk.cmds.clone import replace_common_object_attrs, replace_workflow_object_attrs, replace_rule_object_attrs, replace_md_object_attrs, replace_function_object_attrs
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from ..helpers import read_mock_json
+from resilient_sdk.util.sdk_exception import SDKException
 
+from ..helpers import read_mock_json
+import pytest
 TEST_OBJ = {
     "uuid": uuid.uuid4(),
     "export_key": "TEST_OBJ",
@@ -20,9 +22,15 @@ TEST_EXPORT = read_mock_json("export.JSON")
 MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
 # Map from export object keys to each objects unique identifier
 EXPORT_TYPE_MAP = {'actions': ResilientObjMap.RULES, 'functions': ResilientObjMap.FUNCTIONS, 'workflows':ResilientObjMap.WORKFLOWS}
-
+TEST_CLONE_FAILURE_DATA = [(("bad_function", "new_func"), "Function", 'functions', replace_function_object_attrs),
+                    (("bad_rule", "new_rule"), "Rule", 'actions', replace_rule_object_attrs),
+                    (("bad_md", "new_md"), "Message Destination", 'message_destinations', replace_md_object_attrs),
+                    (("bad_script", "new_script"), "Script", 'scripts', replace_function_object_attrs)]
 
 def test_cmd_clone_setup(fx_get_sub_parser):
+    """
+    Test to verify the cli information from the clone command
+    """
     cmd_clone = CmdClone(fx_get_sub_parser)
 
     assert isinstance(cmd_clone, base_cmd.BaseCmd)
@@ -214,6 +222,10 @@ def test_replace_common_object_attrs():
 
 
 def test_action_obj_was_specified_not_present(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    """
+    Test to verify that if an action object is not specified in the args
+    that action_obj_was_specified() returns False as expected
+    """
     cmd_clone = CmdClone(fx_get_sub_parser)
 
     args = cmd_clone.parser.parse_known_args()[0]
@@ -224,6 +236,10 @@ def test_action_obj_was_specified_not_present(fx_get_sub_parser, fx_cmd_line_arg
             assert not CmdClone.action_obj_was_specified(args, functions)
 
 def test_action_obj_was_specified_success(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    """
+    Test to verify that if an action object is specified in the args
+    that action_obj_was_specified() returns True as expected
+    """
     cmd_clone = CmdClone(fx_get_sub_parser)
 
     args = cmd_clone.parser.parse_known_args()[0]
@@ -232,6 +248,10 @@ def test_action_obj_was_specified_success(fx_get_sub_parser, fx_cmd_line_args_cl
     assert CmdClone.action_obj_was_specified(args, function)
 
 def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange):
+    """
+    Test to verify when specifying the --changetype arg when cloning a workflow
+    that the newly cloned workflow has its type changed as expected
+    """
 
     cmd_clone = CmdClone(fx_get_sub_parser)
 
@@ -253,6 +273,10 @@ def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange)
     assert export_data[0]['object_type'] != original_obj['object_type'], "Expected the cloned workflow to have a different object type to before"
 
 def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    """
+    Test when calling 'clone' and specifying a prefix
+    the prefix is found on all the cloned objects
+    """
 
     cmd_clone = CmdClone(fx_get_sub_parser)
 
@@ -287,6 +311,10 @@ def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
             assert "v2" in obj[identifier], "Expected the object's identifer to contain the prefix"
 
 def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    """
+    Test when calling 'clone'  with multiple objects and specifying a prefix
+    the resultant export object contains the appropiate number of cloned objects
+    """
     cmd_clone = CmdClone(fx_get_sub_parser)
 
     args = cmd_clone.parser.parse_known_args()[0]
@@ -316,3 +344,55 @@ def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
     assert len(new_export_data['workflows']) == len(args.workflow)
     assert len(new_export_data['actions']) == len(args.rule)
 
+
+def test_clone_workflow_failure(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
+    """
+    Test when calling 'clone' command and providing a non existant source workflow
+    that an exception is raised as expected and has the correct message
+    """
+
+    old_name = "non_existant_workflow"
+    new_name = "new_mocked_workflow"
+    # Get sub_parser object, its dest is cmd
+    cmd_clone = CmdClone(fx_get_sub_parser)
+    expected_error = "Could not find original Workflow {}".format(old_name)
+    with pytest.raises(SDKException) as excinfo:
+        export_data = cmd_clone._clone_workflow(
+            Namespace(workflow=[old_name, new_name], changetype=""), TEST_EXPORT)
+
+        original_obj = CmdClone.validate_provided_object_names("Workflow", new_name,
+                                                            old_name, copy.copy(TEST_EXPORT.get("workflows")))
+    # Gather the message from the execution info, throwing away the other args
+    exception_message, = excinfo.value.args
+    assert exception_message == expected_error
+
+@pytest.mark.parametrize("input_args, obj_type, obj_name, replace_fn", 
+                    TEST_CLONE_FAILURE_DATA, ids=['Function', 'Rule', 'Message Destination', 'Scripts'])
+def test_clone_action_obj_failure(fx_get_sub_parser, input_args, obj_type, obj_name, replace_fn):
+    """
+    Parametrized tests to confirm for each scenario if a non-existant action object is provided
+    an appropriate exception is raised with the expected message 
+    """
+    # Get sub_parser object, its dest is cmd
+    cmd_clone = CmdClone(fx_get_sub_parser)
+    expected_error = "Could not find original {} {}".format(obj_type, input_args[0])
+    with pytest.raises(SDKException) as excinfo:
+        export_data = cmd_clone._clone_action_object(
+            input_args, TEST_EXPORT, obj_type, obj_name, replace_fn)
+    # Gather the message from the execution info, throwing away the other args
+    exception_message, = excinfo.value.args
+    assert exception_message == expected_error
+
+def test_clone_action_obj_too_many_args(fx_get_sub_parser):
+    """
+    Test scenario when more than 2 args are provided and no prefix is specified for cloning an exception is raised
+    """
+    # Get sub_parser object, its dest is cmd
+    cmd_clone = CmdClone(fx_get_sub_parser)
+    expected_error = "Received less than 2 object names. Only specify the original action object name and a new object name"
+    with pytest.raises(SDKException) as excinfo:
+        export_data = cmd_clone._clone_action_object(
+            ("thing1","thing2","thing3"), TEST_EXPORT, 'Fuction', 'functions', replace_function_object_attrs)
+    # Gather the message from the execution info, throwing away the other args
+    exception_message, = excinfo.value.args
+    assert exception_message == expected_error
