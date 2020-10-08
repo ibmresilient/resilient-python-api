@@ -58,7 +58,7 @@ class CmdClone(BaseCmd):
         """ 
         When the clone command is executed, we want to perform these actions:
         1: Setup a client to Resilient and get the latest export file.
-        2: For each specified action type (Function, Workflow, Rule):
+        2: For each specified action type:
             2.1: Ensure the user provided both the source and new action name
             2.2: Check that the provided source action type exists and the new action name is unique.
             2.3: Prepare a new Object from the source action object replacing the names were needed.
