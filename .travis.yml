@@ -24,7 +24,7 @@ matrix:
 
 install:
   - pip install --upgrade pip
-  - pip install --upgrade setuptools
+  - pip install --upgrade 'setuptools<50.0'
   - pip install --upgrade setuptools_scm
   - pip install tox
   - pip install sphinx
@@ -33,6 +33,7 @@ before_script:
   # nothing
 
 script:
+  - tox -c ./resilient-circuits
   - tox -c ./resilient-sdk
   - buildnum=$(git tag --list | tail -n 1 | sed s/[a-z]//g)
   - ./buildall.sh $buildnum

@@ -18,7 +18,7 @@ class TestGetConfigGenerate(object):
     @pytest.fixture(scope='session')
     def tmp_config_file(self, tmpdir_factory):
         tmp_config_dir = tmpdir_factory.mktemp(".resilient")
-        tmp_config_file = os.path.expanduser(os.path.join(tmp_config_dir, DEFAULT_CONFIG_FILENAME))
+        tmp_config_file = os.path.expanduser(os.path.join(str(tmp_config_dir), DEFAULT_CONFIG_FILENAME))
         yield tmp_config_file
         rmtree(str(tmp_config_dir))
 
