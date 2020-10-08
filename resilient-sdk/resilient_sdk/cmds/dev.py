@@ -13,7 +13,6 @@ from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.cmds.codegen import CmdCodegen
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
@@ -110,34 +109,19 @@ class CmdDev(BaseCmd):
 
         # Rename the old customize.py with .bak
         path_customize_py_bak = sdk_helpers.rename_to_bak_file(path_customize_py)
+
         try:
 
-            # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
-            mapping_tuples = [
-                ("messagedestination", "message_destinations"),
-                ("function", "functions"),
-                ("workflow", "workflows"),
-                ("rule", "actions"),
-                ("field", "incident_fields"),
-                ("artifacttype", "incident_artifact_types"),
-                ("datatable", "datatables"),
-                ("task", "automatic_tasks"),
-                ("script", "scripts")
-            ]
-
-            # Merge old_params with new params specified on command line
-            args = CmdCodegen.merge_codegen_params(old_params, args, mapping_tuples)
-
             jinja_data = sdk_helpers.get_from_export(customize_py_import_definition,
-                                                     message_destinations=args.messagedestination,
-                                                     functions=args.function,
-                                                     workflows=args.workflow,
-                                                     rules=args.rule,
-                                                     fields=args.field,
-                                                     artifact_types=args.artifacttype,
-                                                     datatables=args.datatable,
-                                                     tasks=args.task,
-                                                     scripts=args.script)
+                                                     message_destinations=old_params.get("message_destinations"),
+                                                     functions=old_params.get("functions"),
+                                                     workflows=old_params.get("workflows"),
+                                                     rules=old_params.get("rules"),
+                                                     fields=old_params.get("incident_fields"),
+                                                     artifact_types=old_params.get("incident_artifact_types"),
+                                                     datatables=old_params.get("datatables"),
+                                                     tasks=old_params.get("automatic_tasks"),
+                                                     scripts=old_params.get("scripts"))
 
             jinja_data["export_data"] = sdk_helpers.minify_export(customize_py_import_definition,
                                                                   message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
@@ -178,4 +162,3 @@ class CmdDev(BaseCmd):
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
                 sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
-
