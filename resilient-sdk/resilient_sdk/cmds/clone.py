@@ -40,23 +40,59 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
-    CMD_ADD_PARSERS = ["res_obj_parser"]
 
     def setup(self):
         # Define codegen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
 
-        # Add any positional or optional arguments here
+        # Arguments for action objects which support cloning
+        self.parser.add_argument("-d", "--datatable",
+                                 type=ensure_unicode,
+                                 help="API names of datatables to include",
+                                 nargs="*")
+
+        self.parser.add_argument("-f", "--function",
+                                 type=ensure_unicode,
+                                 help="API names of functions to include",
+                                 nargs="*")
+
+        self.parser.add_argument("-m", "--messagedestination",
+                                 type=ensure_unicode,
+                                 help="API names of message destinations to include",
+                                 nargs="*")
+
+        self.parser.add_argument("-r", "--rule",
+                                 type=ensure_unicode,
+                                 help="Display names of rules to include (surrounded by \"\")",
+                                 nargs="*")
+
+        self.parser.add_argument("-s", "--script",
+                                 type=ensure_unicode,
+                                 help="Display names of scripts to include (surrounded by \"\")",
+                                 nargs="*")
+
+        self.parser.add_argument("-w", "--workflow",
+                                 type=ensure_unicode,
+                                 help="API names of workflows to include",
+                                 nargs="*")
+
+        # Additional arguments for different cloning operations
+        # Prefix is used to specify multiple objects of the same type will be cloned and
+        # the prefix is a string attached to the start of the existing action object name
+        # the prefix + the existing object name becomes the cloned objects name
         self.parser.add_argument("-pre", "--prefix",
                                  type=ensure_unicode,
                                  help="The prefix to be placed at the start of cloned Action Objects. Used when cloning more than 1 of each Action Object Type.")
+        # Scripts and Workflows support changing the type with the optional --changetype argument
+        # this argument is used to change a Incident workflow to a task one or a artifact script
+        # to an incident script.
         self.parser.add_argument("-type", "--changetype",
-                                type=ensure_unicode,
-                                help="The new type of the clone action object. Used when cloning a workflow to have the newly cloned workflow at a different object type.")
+                                 type=ensure_unicode,
+                                 help="The new type of the clone action object. Used when cloning a workflow or script to have the newly cloned workflow at a different object type.")
 
     def execute_command(self, args):
-        """ 
+        """
         When the clone command is executed, we want to perform these actions:
         1: Setup a client to Resilient and get the latest export file.
         2: For each specified action type:
@@ -129,10 +165,7 @@ class CmdClone(BaseCmd):
                                      functions=args.function,
                                      workflows=args.workflow,
                                      rules=args.rule,
-                                     fields=args.field,
-                                     artifact_types=args.artifacttype,
                                      datatables=args.datatable,
-                                     tasks=args.task,
                                      scripts=args.script,
                                      get_related_objects=False)
         # Get 'minified' version of the export. This is used in customize.py
