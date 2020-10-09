@@ -23,3 +23,6 @@ MOCK_OLD_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize_old.py")
 MOCK_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.res")
 MOCK_ZIP = os.path.join(SHARED_MOCK_DATA_DIR, "mock.zip")
 MOCK_EXPORT_RESZ = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.resz")
+
+MOCK_INT_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_integrations")
+MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration")
