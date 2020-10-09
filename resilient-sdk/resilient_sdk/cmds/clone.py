@@ -37,6 +37,7 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
+    $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
     CMD_ADD_PARSERS = ["res_obj_parser"]
@@ -97,7 +98,7 @@ class CmdClone(BaseCmd):
 
                 if args.script: 
                     new_export_data['scripts'] = self._clone_action_object(
-                        args.script, org_export, 'Script', 'scripts', replace_function_object_attrs)
+                        args.script, org_export, 'Script', 'scripts', replace_function_object_attrs, args.changetype)
                 if args.function:
                     new_export_data['functions'] = self._clone_action_object(
                         args.function, org_export, 'Function', 'functions', replace_function_object_attrs)
@@ -210,7 +211,7 @@ class CmdClone(BaseCmd):
         return obj.get(ResilientObjMap.RULES, "") in specified_objs or obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs or obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs or obj.get(ResilientObjMap.DATATABLES, "") in specified_objs
 
     @staticmethod
-    def _clone_action_object(input_args, org_export, obj_name, obj_key, replace_fn):
+    def _clone_action_object(input_args, org_export, obj_name, obj_key, replace_fn, new_object_type=None):
         if len(input_args) != 2:
             raise SDKException(
                 "Received less than 2 object names. Only specify the original action object name and a new object name")
@@ -222,6 +223,9 @@ class CmdClone(BaseCmd):
                                                     original_obj_api_name, obj_defs)
 
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
+
+        if new_object_type:
+                cloned_object['object_type'] = new_object_type
 
         return [cloned_object]
     
