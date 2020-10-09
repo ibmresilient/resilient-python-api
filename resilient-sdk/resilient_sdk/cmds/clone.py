@@ -35,10 +35,10 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
-    $ resilient-sdk clone -r "<rule_to_be_cloned>" "<new_function_name>
-    $ resilient-sdk clone -r "<rule_to_be_cloned>" "<new_function_name> -f <function_to_be_cloned> <new_function_name> -p version2"""
+    $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
+    $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
+    $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
-    CMD_USE_COMMON_PARSER_ARGS = True
     CMD_ADD_PARSERS = ["res_obj_parser"]
 
     def setup(self):
@@ -183,6 +183,7 @@ class CmdClone(BaseCmd):
                         else:
                             new_export_data[object_type].append(replace_rule_object_attrs(
                                 obj, new_api_name))
+
 
     @staticmethod
     def action_obj_was_specified(args, obj):
