@@ -177,8 +177,6 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("Generating codegen package...")
 
-        newly_generated_directories = []
-
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
@@ -262,7 +260,9 @@ class CmdCodegen(BaseCmd):
                 "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
             },
             "doc": {
-                "README.md": ("doc/README.md.jinja2", jinja_data)
+                "screenshots": {
+                    "main.png": package_helpers.PATH_DEFAULT_SCREENSHOT
+                }
             },
             package_name: {
                 "__init__.py": ("package/__init__.py.jinja2", jinja_data),
@@ -314,18 +314,6 @@ class CmdCodegen(BaseCmd):
 
         if skipped_files:
             LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
-
-        # if /doc exists and /doc/screenshots does not, make /doc/screenshots
-        path_doc_dir = os.path.join(output_base, "doc")
-        path_screenshots_dir = os.path.join(path_doc_dir, "screenshots")
-
-        if os.path.isdir(path_doc_dir) and not os.path.isdir(path_screenshots_dir):
-            os.makedirs(path_screenshots_dir)
-            newly_generated_directories.append(os.path.join("doc", "screenshots"))
-
-        # Log new directories
-        if newly_generated_directories:
-            LOG.debug("Newly generated directories:\n\t> %s", "\n\t> ".join(newly_generated_directories))
 
         LOG.info("'codegen' complete for '%s'", package_name)
 
