@@ -833,3 +833,13 @@ def get_timestamp(timestamp=None):
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
 
     return datetime.datetime.now().strftime(TIME_FORMAT)
+
+
+def str_to_bool(value):
+    """
+    Represents value as boolean.
+    :param value:
+    :rtype: bool
+    """
+    value = str(value).lower()
+    return value in ('1', 'true', 'yes')
