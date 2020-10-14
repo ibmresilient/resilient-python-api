@@ -104,6 +104,21 @@ def fx_mk_app_config():
 
 
 @pytest.fixture
+def fx_copy_fn_main_mock_integration():
+    """
+    Before: Creates temp dir and copies fn_main_mock_integration to it
+    Returns a tuple (mock_integration_name, path_fn_main_mock_integration)
+    After: Removes the temp directory
+    """
+    _mk_temp_dir()
+    mock_integration_name = "fn_main_mock_integration"
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_integration_name)
+    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
+    yield (mock_integration_name, path_fn_main_mock_integration)
+    _rm_temp_dir()
+
+
+@pytest.fixture
 def fx_cmd_line_args_codegen_package():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
@@ -123,6 +138,26 @@ def fx_cmd_line_args_codegen_package():
         "--datatable", "mock_data_table",
         "--task", "mock_custom_task_one", "mock_cusom_task__________two",
         "--script", "Mock Script One"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
+def fx_cmd_line_args_package():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "package",
+        "-p", "fn_main_mock_integration"
     ]
 
     _add_to_cmd_line_args(args_to_add)
