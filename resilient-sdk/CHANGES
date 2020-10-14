@@ -3,6 +3,7 @@
 * package command replaces tags on Resilient objects in export.res instead of extending them
 * Added environmental variable RES_SDK_DEV
 * Added '--set-version' argument to dev command
+* Added 'display_name' attribute to setup.py file
 
 2020-07: ver. 37.2
 
