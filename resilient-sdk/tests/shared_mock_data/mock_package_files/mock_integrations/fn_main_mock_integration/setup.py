@@ -22,6 +22,7 @@ def snake_to_camel(word):
 
 setup(
     name="fn_main_mock_integration",
+    display_name="Main Mock Integration",
     version="1.0.0",
     license="<<insert here>>",
     author="<<your name here>>",
