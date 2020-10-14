@@ -343,6 +343,7 @@ class CmdDocgen(BaseCmd):
         rendered_readme = readme_template.render({
             "name_underscore": package_name,
             "name_dash": package_name_dash,
+            "display_name": setup_py_attributes.get("display_name", package_name),
             "short_description": setup_py_attributes.get("description"),
             "long_description": setup_py_attributes.get("long_description"),
             "version": setup_py_attributes.get("version"),
