@@ -6,8 +6,7 @@
 
 import logging
 import os
-import re
-import pkg_resources
+import shutil
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
@@ -19,32 +18,22 @@ from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, Resili
 LOG = logging.getLogger("resilient_sdk_log")
 
 # JINJA Constants
-USER_GUIDE_TEMPLATE_NAME = "user_guide_README.md.jinja2"
-INSTALL_GUIDE_TEMPLATE_NAME = "install_guide_README.md.jinja2"
+README_TEMPLATE_NAME = "README.md.jinja2"
 
-# Relative paths from with the package of files + directories used
-PATH_SETUP_PY = "setup.py"
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
-PATH_CONFIG_PY = os.path.join("util", "config.py")
-PATH_DOC_DIR = "doc"
-PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
-PATH_INSTALL_GUIDE_README = "README.md"
-PATH_DEFAULT_INSTALL_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
-PATH_USER_GUIDE_README = os.path.join(PATH_DOC_DIR, "README.md")
-PATH_DEFAULT_USER_GUIDE_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/README.md.jinja2")
-
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdDocgen(BaseCmd):
-    """TODO Docstring"""
+    """
+    Create a README.md for the specified app. Reads all details from
+    the ImportDefinition in the customize.py file. Creates a backup of
+    of the README.md if one exists already. The README.md is
+    really an 'inventory' of what the app contains and details for
+    the app configs
+    """
 
     CMD_NAME = "docgen"
     CMD_HELP = "Generate documentation for an app"
     CMD_USAGE = """
-    $ resilient-sdk docgen -p <path_to_package>
-    $ resilient-sdk docgen -p <path_to_package> --user-guide
-    $ resilient-sdk docgen -p <path_to_package> --install-guide"""
+    $ resilient-sdk docgen -p <path_to_package>"""
     CMD_DESCRIPTION = CMD_HELP
 
     def setup(self):
@@ -58,16 +47,6 @@ class CmdDocgen(BaseCmd):
                                  help="Path to the package containing the setup.py file",
                                  nargs="?",
                                  default=os.getcwd())
-
-        parser_group = self.parser.add_mutually_exclusive_group(required=False)
-
-        parser_group.add_argument("--user-guide", "--uguide",
-                                  help="Only generate the User Guide",
-                                  action="store_true")
-
-        parser_group.add_argument("--install-guide", "--iguide",
-                                  help="Only generate the Install Guide",
-                                  action="store_true")
 
     @staticmethod
     def _get_fn_input_details(function):
@@ -95,7 +74,7 @@ class CmdDocgen(BaseCmd):
     @classmethod
     def _get_function_details(cls, functions, workflows):
         """Return a List of Functions which are Dictionaries with
-        the attributes: name, anchor, description, uuid, inputs,
+        the attributes: name, simple_name, anchor, description, uuid, inputs,
         workflows, pre_processing_script, post_processing_script"""
 
         return_list = []
@@ -104,6 +83,7 @@ class CmdDocgen(BaseCmd):
             the_function = {}
 
             the_function["name"] = fn.get("display_name")
+            the_function["simple_name"] = sdk_helpers.simplify_string(the_function.get("name"))
             the_function["anchor"] = sdk_helpers.generate_anchor(the_function.get("name"))
             the_function["description"] = fn.get("description")["content"]
             the_function["uuid"] = fn.get("uuid")
@@ -156,9 +136,29 @@ class CmdDocgen(BaseCmd):
         return return_list
 
     @staticmethod
+    def _get_script_details(scripts):
+        """Return a List of all Scripts which are Dictionaries with
+        the attributes: name, simple_name, description, object_type, script_text"""
+
+        return_list = []
+
+        for s in scripts:
+            the_script = {}
+
+            the_script["name"] = s.get("name")
+            the_script["simple_name"] = sdk_helpers.simplify_string(the_script.get("name"))
+            the_script["anchor"] = sdk_helpers.generate_anchor(the_script.get("name"))
+            the_script["description"] = s.get("description")
+            the_script["object_type"] = s.get("object_type")
+            the_script["script_text"] = s.get("script_text")
+            return_list.append(the_script)
+
+        return return_list
+
+    @staticmethod
     def _get_rule_details(rules):
         """Return a List of all Rules which are Dictionaries with
-        the attributes: name, object_type and workflow_triggered"""
+        the attributes: name, simple_name, object_type and workflow_triggered"""
 
         return_list = []
 
@@ -166,6 +166,7 @@ class CmdDocgen(BaseCmd):
             the_rule = {}
 
             the_rule["name"] = rule.get("name")
+            the_rule["simple_name"] = sdk_helpers.simplify_string(the_rule.get("name"))
             the_rule["object_type"] = rule.get("object_type", "")
 
             rule_workflows = rule.get("workflows", [])
@@ -188,6 +189,7 @@ class CmdDocgen(BaseCmd):
             the_dt = {}
 
             the_dt["name"] = datatable.get("display_name")
+            the_dt["simple_name"] = sdk_helpers.simplify_string(the_dt.get("name"))
             the_dt["anchor"] = sdk_helpers.generate_anchor(the_dt.get("name"))
             the_dt["api_name"] = datatable.get("type_name")
 
@@ -256,45 +258,42 @@ class CmdDocgen(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.p)
 
-        # Get basename of path_to_src (version information is stripped from the basename).
-        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
-
         LOG.debug("Path to project: %s", path_to_src)
-        LOG.debug("Project basename: %s", path_to_src_basename)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env("data/docgen/templates")
 
         # Load the Jinja2 Templates
-        user_guide_readme_template = jinja_env.get_template(USER_GUIDE_TEMPLATE_NAME)
-        install_guide_readme_template = jinja_env.get_template(INSTALL_GUIDE_TEMPLATE_NAME)
+        readme_template = jinja_env.get_template(README_TEMPLATE_NAME)
 
-        # Generate paths to required directories + files
-        path_setup_py_file = os.path.join(path_to_src, PATH_SETUP_PY)
-        path_customize_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CUSTOMIZE_PY)
-        path_config_py_file = os.path.join(path_to_src, path_to_src_basename, PATH_CONFIG_PY)
-        path_install_guide_readme = os.path.join(path_to_src, PATH_INSTALL_GUIDE_README)
-        path_doc_dir = os.path.join(path_to_src, PATH_DOC_DIR)
-        path_screenshots_dir = os.path.join(path_to_src, PATH_SCREENSHOTS)
-        path_user_guide_readme = os.path.join(path_to_src, PATH_USER_GUIDE_README)
+        # Generate path to setup.py file
+        path_setup_py_file = os.path.join(path_to_src, package_helpers.PATH_SETUP_PY)
+
+        try:
+            # Ensure we have read permissions for setup.py
+            sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+        except SDKException as err:
+            err.message += "\nEnsure you are in the directory of the package you want to run docgen for"
+            raise err
+
+        # Parse the setup.py file
+        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+        package_name = setup_py_attributes.get("name", "")
+
+        # Generate paths to other required directories + files
+        path_customize_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CUSTOMIZE_PY)
+        path_config_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CONFIG_PY)
+        path_readme = os.path.join(path_to_src, package_helpers.PATH_README)
+        path_screenshots_dir = os.path.join(path_to_src, package_helpers.PATH_SCREENSHOTS)
 
         # Ensure we have read permissions for each required file and the file exists
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_config_py_file)
 
-        # Check doc directory exists, if not, create it
-        if not os.path.isdir(path_doc_dir):
-            os.makedirs(path_doc_dir)
-
-        # Check doc/screenshots directory exists, if not, create it
+        # Check doc/screenshots directory exists, if not, create it + copy default screenshot
         if not os.path.isdir(path_screenshots_dir):
             os.makedirs(path_screenshots_dir)
-
-        # Set generate guide flags. Will generate both by default
-        do_generate_user_guide = False if args.install_guide else True
-        do_generate_install_guide = False if args.user_guide else True
-
-        # Parse the setup.py file
-        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+            shutil.copy(package_helpers.PATH_DEFAULT_SCREENSHOT, path_screenshots_dir)
 
         # Get the resilient_circuits dependency string from setup.py file
         res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient_circuits")
@@ -308,10 +307,10 @@ class CmdDocgen(BaseCmd):
         # Get field names from ImportDefinition
         field_names = []
         for f in customize_py_import_def.get("fields", []):
-            f_name = f.get(ResilientObjMap.FIELDS, "")
+            f_export_key = f.get("export_key")
 
-            if "incident/" in f_name and f_name not in IGNORED_INCIDENT_FIELDS:
-                field_names.append(f_name.split("incident/")[1])
+            if "incident/" in f_export_key and f_export_key not in IGNORED_INCIDENT_FIELDS:
+                field_names.append(f.get(ResilientObjMap.FIELDS, ""))
 
         # Get data from ImportDefinition
         import_def_data = sdk_helpers.get_from_export(customize_py_import_def,
@@ -327,63 +326,44 @@ class CmdDocgen(BaseCmd):
 
         # Lists we use in Jinja Templates
         jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []))
+        jinja_scripts = self._get_script_details(import_def_data.get("scripts", []))
         jinja_rules = self._get_rule_details(import_def_data.get("rules", []))
         jinja_datatables = self._get_datatable_details(import_def_data.get("datatables", []))
         jinja_custom_fields = self._get_custom_fields_details(import_def_data.get("fields", []))
         jinja_custom_artifact_types = self._get_custom_artifact_details(import_def_data.get("artifact_types", []))
 
         # Other variables for Jinja Templates
-        package_name_underscore = setup_py_attributes.get("name", "")
-        package_name_dash = package_name_underscore.replace("_", "-")
+        package_name_dash = package_name.replace("_", "-")
         server_version = customize_py_import_def.get("server_version", {})
+        supported_app = sdk_helpers.does_url_contain(setup_py_attributes.get("url", ""), "ibm.com/mysupport")
 
-        if do_generate_user_guide:
+        LOG.info("Rendering README for %s", package_name_dash)
 
-            LOG.info("Rendering User Guide for %s", package_name_dash)
+        # Render the README Jinja2 Templeate with parameters
+        rendered_readme = readme_template.render({
+            "name_underscore": package_name,
+            "name_dash": package_name_dash,
+            "short_description": setup_py_attributes.get("description"),
+            "long_description": setup_py_attributes.get("long_description"),
+            "version": setup_py_attributes.get("version"),
+            "server_version": server_version.get("version"),
+            "res_circuits_dependency_str": res_circuits_dep_str,
+            "author": setup_py_attributes.get("author"),
+            "support_url": setup_py_attributes.get("url"),
+            "supported_app": supported_app,
+            "app_configs": jinja_app_configs[1],
+            "functions": jinja_functions,
+            "scripts": jinja_scripts,
+            "rules": jinja_rules,
+            "datatables": jinja_datatables,
+            "custom_fields": jinja_custom_fields,
+            "custom_artifact_types": jinja_custom_artifact_types
+        })
 
-            # Render the User Guide Jinja2 Templeate with parameters
-            rendered_user_guide_readme = user_guide_readme_template.render({
-                "name": package_name_underscore,
-                "version": setup_py_attributes.get("version"),
-                "functions": jinja_functions,
-                "rules": jinja_rules,
-                "datatables": jinja_datatables,
-                "custom_fields": jinja_custom_fields,
-                "custom_artifact_types": jinja_custom_artifact_types,
-                "name_underscore": package_name_underscore
-            })
+        # Create a backup if needed of README
+        sdk_helpers.rename_to_bak_file(path_readme, package_helpers.PATH_DEFAULT_README)
 
-            # Create a backup if needed of user guide README
-            sdk_helpers.rename_to_bak_file(path_user_guide_readme, PATH_DEFAULT_USER_GUIDE_README)
+        LOG.info("Writing README to: %s", path_readme)
 
-            LOG.info("Writing User Guide to: %s", path_user_guide_readme)
-
-            # Write the new User Guide README
-            sdk_helpers.write_file(path_user_guide_readme, rendered_user_guide_readme)
-
-        if do_generate_install_guide:
-            LOG.info("Rendering Install Guide")
-
-            # Render the Install Guide Jinja2 Templeate with parameters
-            rendered_install_guide_readme = install_guide_readme_template.render({
-                "short_description": setup_py_attributes.get("description"),
-                "long_description": setup_py_attributes.get("long_description"),
-                "name_underscore": package_name_underscore,
-                "name_dash": package_name_dash,
-                "server_version": server_version.get("version"),
-                "res_circuits_dependency_str": res_circuits_dep_str,
-                "app_configs": jinja_app_configs[1],
-                "version": setup_py_attributes.get("version"),
-                "author": setup_py_attributes.get("author"),
-                "support_url": setup_py_attributes.get("url"),
-                "datatables": jinja_datatables,
-                "custom_incident_fields": jinja_custom_fields
-            })
-
-            # Create a backup if needed of install guide README
-            sdk_helpers.rename_to_bak_file(path_install_guide_readme, PATH_DEFAULT_INSTALL_GUIDE_README)
-
-            LOG.info("Writing Install Guide to: %s", path_install_guide_readme)
-
-            # Write the new Install Guide README
-            sdk_helpers.write_file(path_install_guide_readme, rendered_install_guide_readme)
+        # Write the new README
+        sdk_helpers.write_file(path_readme, rendered_readme)

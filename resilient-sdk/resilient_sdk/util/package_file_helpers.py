@@ -44,6 +44,15 @@ PREFIX_EXTENSION_ZIP = "app-"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
+PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
+
+PATH_SETUP_PY = "setup.py"
+PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CONFIG_PY = os.path.join("util", "config.py")
+PATH_DOC_DIR = "doc"
+PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
+PATH_README = "README.md"
+PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "author", "name", "version",
