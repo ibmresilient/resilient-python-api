@@ -10,11 +10,12 @@ import mimetypes
 import base64
 from bs4 import BeautifulSoup
 from six import string_types
+from cachetools import cached, TTLCache
+
 try:
     from HTMLParser import HTMLParser as htmlparser
 except:
     from html.parser import HTMLParser as htmlparser
-
 
 INCIDENT_FRAGMENT = '#incidents'
 PAYLOAD_VERSION = "1.0"
@@ -130,7 +131,9 @@ def validate_fields(field_list, kwargs):
             raise ValueError(mandatory_err_msg.format(field))
 
         if placeholder_value and provided_fields.get(field) == placeholder_value:
-            raise ValueError("'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(field, placeholder_value))
+            raise ValueError(
+                "'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(
+                    field, placeholder_value))
 
     # Loop provided fields and get their value
     for field_name, field_value in provided_fields.items():
@@ -262,7 +265,6 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     to read and POST the attachment
     """
 
-
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         try:
             temp_file.write(attachment)
@@ -276,9 +278,9 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
                 attachment_uri = "/incidents/{}/attachments".format(incident_id)
 
             new_attachment = res_client.post_attachment(attachment_uri,
-                                                    temp_file.name,
-                                                    filename=file_name,
-                                                    mimetype=content_type)
+                                                        temp_file.name,
+                                                        filename=file_name,
+                                                        mimetype=content_type)
         finally:
             os.unlink(temp_file.name)
 
@@ -363,3 +365,125 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
         temp_file.write(data)
 
     return (path_tmp_file, path_tmp_dir)
+
+
+def get_incident(res_client, incident_id):
+    """
+    call the Resilient REST API to get the incident data
+    :param res_client: required for communication back to resilient
+    :param incident_id: required
+    :return: dict
+    """
+    data_uri = "/incidents/{}".format(incident_id)
+    return res_client.get(data_uri)
+
+
+def patch_incident(res_client, incident_id, body):
+    """
+    call the Resilient REST API to patch incident
+    :param res_client: required for communication back to resilient
+    :param incident_id: required
+    :return: dict
+    """
+    data_uri = "/incidents/{}".format(incident_id)
+    return res_client.patch(data_uri, body)
+
+
+@cached(cache=TTLCache(maxsize=10, ttl=600))
+def get_field_type(res_client, field_name):
+    """
+    call the Resilient REST API to get input_type
+    this call is cached for multiple calls
+    :param res_client: required for communication back to resilient
+    :param field_name: required
+    :return: dict
+    """
+    uri = "/types/incident"
+    response = res_client.get(uri)
+    field_type = response.get("fields").get(field_name).get("input_type")
+    return field_type
+
+
+@cached(cache=TTLCache(maxsize=10, ttl=600))
+def get_fields_required_to_close(res_client):
+    """
+    call the Resilient REST API to get list of fields required to close an incident
+    this call is cached for multiple calls
+    :param res_client: required for communication back to resilient
+    :param field_name: required
+    :return: dict
+    """
+    uri = "/types/incident"
+    response = res_client.get(uri)
+    fields_required = []
+    # for field in response:
+    #     if "required" in field and field["required"] == "close":
+    #         fields_required.append(field["name"])
+    return fields_required
+
+
+def close_incident(res_client, incident_id, kwargs):
+    if not incident_id:
+        raise ValueError("incident id must be specified")
+
+    # API call TypeRest for "required": "close" compare 2 lists
+    # get /orgs/{org_id}/types/{type}/fields
+    required_fields = get_fields_required_to_close(res_client)
+    for field in required_fields:
+        if field not in kwargs:
+            raise ValueError("'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
+
+
+    # build changes_list to be used it in patch API call
+    changes_list = []
+
+    # 1. Get fields for patch API
+
+    # dict of field_name:new_value pairs
+    provided_fields = kwargs
+
+    """get incident version to be used it in patch API call get version and old_value"""
+    incident = get_incident(res_client, incident_id)
+    incident_version = incident.get("vers")
+
+    # custom mandatory field/s (resolution_id, resolution_summary & other)
+    custom_mandatory_field = {}
+    """ 
+    loop for each field_name:new_value pair from provided_fields to build an dict (custom_mandatory_field) and append it
+    to the changes_list of dicts changes_list.append(custom_mandatory_field), check for empty
+    
+    custom_mandatory_field is to match the schema:
+    {
+      "field": {
+        "name": field_name
+      },
+      "old_value": {
+        get_field_type(res_client, field_name): incident.get(field_name)
+      },   TODO: populate from API get incident call {}
+      "new_value": {
+        get_field_type(res_client, field_name): new_value    TODO: call the Resilient REST API to get the input_type for provided_field str
+      }
+    }
+    """
+
+    # known mandatory field (plan_status)
+    """check if that field exists in changes_list if not append it to the list"""
+    known_mandatory_field = {
+        "field": "plan_status",
+        "old_value": {"text": "A"},
+        "new_value": {"text": "C"}
+    }
+
+    # 2. Build the body of the patch API cal
+    body = {}
+    """build the body of the API call
+    body = {
+        "changes": changes_list,
+        "version": incident_version
+    }    
+    """
+
+    # 3. call the Resilient REST API to patch the incident data (close incident)
+    response = patch_incident(res_client, incident_id, body)
+
+    return "OK"
