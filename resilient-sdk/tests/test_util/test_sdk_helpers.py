@@ -182,17 +182,23 @@ def test_get_res_obj_exception(fx_mock_res_client):
     with pytest.raises(SDKException, match=r"Mock Display Name: 'fn_does_not_exist' not found in this export"):
         sdk_helpers.get_res_obj("functions", "export_key", "Mock Display Name", functions_wanted, org_export)
 
-
-def test_get_message_destination_from_export(fx_mock_res_client):
+@pytest.mark.parametrize("get_related_param",
+                         [(True), (False)])
+def test_get_message_destination_from_export(fx_mock_res_client, get_related_param):
     # TODO: Add test for all resilient objects...
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
     export_data = sdk_helpers.get_from_export(org_export,
-                                              message_destinations=["fn_main_mock_integration"])
+                                              message_destinations=["fn_main_mock_integration"],
+                                              get_related_objects=get_related_param)
 
     assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
-
-    assert all(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is True
+    if get_related_param:
+        assert all(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is True
+    else:
+        # Assert the functions list is empty as no functions were specified
+        # and getting related objects is not enabled
+        assert not export_data.get("functions")
 
 
 def test_minify_export(fx_mock_res_client):
