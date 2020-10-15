@@ -139,7 +139,7 @@ class CmdDev(BaseCmd):
             jinja_data["package_name"] = package_name
 
             # Add version
-            jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
+            jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
             # Instansiate Jinja2 Environment with path to Jinja2 templates
             jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util")

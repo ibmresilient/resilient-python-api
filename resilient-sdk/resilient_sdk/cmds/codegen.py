@@ -232,7 +232,7 @@ class CmdCodegen(BaseCmd):
         jinja_data["package_name"] = package_name
 
         # Add version
-        jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
+        jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
