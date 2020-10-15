@@ -6,6 +6,7 @@
 
 import logging
 import uuid
+import time
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
@@ -107,7 +108,9 @@ class CmdClone(BaseCmd):
         :type args: argparse.ArgumentParser.Namespace
         :raises SDKException: An SDKException detailing what failed in the operation
         """
+        SDKException.command_ran = "clone"
         LOG.info("Called clone with %s", args)
+        start = time.perf_counter()
 
         # Instansiate connection to the Resilient Appliance
         res_client = get_resilient_client()
@@ -153,6 +156,9 @@ class CmdClone(BaseCmd):
         else:
             self.parser.print_help()
 
+        end = time.perf_counter()
+        LOG.info("SDK 'Clone' command finished in {} seconds".format(end - start))
+
     def _clone_multiple_action_objects(self, args, new_export_data, org_export):
         LOG.info("Prefix provided, copying multiple Action Objects")
         # Get data required from the export
@@ -177,6 +183,9 @@ class CmdClone(BaseCmd):
                                  datatables=get_object_api_names(
                                      ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+
+        # for action_object in SUPPORTED_ACTION_OBJECTS:
+        #     for obj in minified.get(action_object, []):                    
         # For every thing in the export
         for object_type, action_objects in minified.items():
             # If the type is not fields and the value of the type is a list
@@ -261,8 +270,6 @@ class CmdClone(BaseCmd):
                 "Only specify the original workflow api name and a new workflow api name")
         original_workflow_api_name, new_workflow_api_name = args.workflow
 
-        # Get the workflow defintion objects
-        workflow_defs = org_export.get("workflows")
         # Validate both the original source workflow exists and the new workflow api name does not conflict with an existing workflow
         original_workflow = CmdClone.validate_provided_object_names(obj_type="workflows",
                                                                     obj_identifier=ResilientObjMap.WORKFLOWS, 
@@ -273,6 +280,7 @@ class CmdClone(BaseCmd):
         new_workflow = original_workflow.copy()
         # Gather the old workflow name before we modify the object
         old_workflow_name = new_workflow["name"]
+
         # Update workflow specific items and any common obj attributes
         new_workflow = CmdClone.replace_workflow_object_attrs(
             new_workflow, original_workflow_api_name, new_workflow_api_name, old_workflow_name)
@@ -287,50 +295,25 @@ class CmdClone(BaseCmd):
     @staticmethod
     def validate_provided_object_names(obj_type, obj_identifier, obj_type_name, new_workflow_api_name, original_workflow_api_name, export):
 
-        # Perform a duplication check with the provided new_workflow_api_name
+        # Perform a duplication check with the provided new name
         try:
-            duplicate_check = get_res_obj(obj_type, obj_identifier, obj_type_name, [new_workflow_api_name], export)
+            # Try to get a res obj with the new name
+            get_res_obj(obj_type, obj_identifier, obj_type_name, [new_workflow_api_name], export, include_api_name=False)
         except SDKException:
+            # get_res_obj raises an exception if the object is not found
+            # normally this is good but for this unique use case
+            # we expect that the object will not be found and so catch and release the raised SDKException
             pass
         else:
-            raise SDKException("{} with the api name {} already exists".format(
+            # if get_res_obj does not raise an exception it means an object with that identifier exists
+            # and in this case we raise an SDKException as the new name provided for cloning needs to be unique
+            raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name {} already exists".format(
                 obj_type_name, new_workflow_api_name))
 
-        # duplicate_check = CmdClone.find_res_obj_by_identifier(
-        #     workflow_defs, new_workflow_api_name)
-
-        # if duplicate_check is not None:
-            
         # Gather the original Action Object to be returned
-        original_workflow = get_res_obj(obj_type, obj_identifier, obj_type_name, [original_workflow_api_name], export)[0]
-        # Validate the provided workflow_api_name gathered an object
-        if original_workflow is None:
-            raise SDKException("Could not find original {} {}".format(
-                obj_type_name, original_workflow_api_name))
+        original_workflow = get_res_obj(obj_type, obj_identifier, obj_type_name, [original_workflow_api_name], export, include_api_name=False)[0]
         # Return the object
         return original_workflow
-
-    @staticmethod
-    def old_validate_provided_object_names(obj_type_name, new_workflow_api_name, original_workflow_api_name, workflow_defs):
-
-        # Perform a duplication check with the provided new_workflow_api_name
-        # get_res_obj(obj_name, , obj_type_name, [new_workflow_api_name], export=self.org_export)
-        duplicate_check = CmdClone.find_res_obj_by_identifier(
-            workflow_defs, new_workflow_api_name)
-
-        if duplicate_check is not None:
-            raise SDKException("{} with the api name {} already exists".format(
-                obj_type_name, new_workflow_api_name))
-        # Gather the original Action Object to be returned
-        original_workflow = CmdClone.find_res_obj_by_identifier(
-            workflow_defs, original_workflow_api_name)
-        # Validate the provided workflow_api_name gathered an object
-        if original_workflow is None:
-            raise SDKException("Could not find original {} {}".format(
-                obj_type_name, original_workflow_api_name))
-        # Return the object
-        return original_workflow
-
 
     @staticmethod
     def replace_common_object_attrs(obj_to_modify, new_obj_api_name):
@@ -376,15 +359,12 @@ class CmdClone(BaseCmd):
         obj_to_modify = CmdClone.replace_common_object_attrs(
             obj_to_modify, new_obj_api_name)
 
+        
         # Now do the workflow specific ones and return
         obj_to_modify.update({
             ResilientObjMap.WORKFLOWS: new_obj_api_name,
             "content": {
-                "xml": obj_to_modify["content"]["xml"].replace(
-                    original_obj_api_name,
-                    new_obj_api_name).replace(
-                        old_workflow_name,
-                        new_obj_api_name),
+                "xml": workflow_xml,
                 "workflow_id": new_obj_api_name
             }})
         return obj_to_modify

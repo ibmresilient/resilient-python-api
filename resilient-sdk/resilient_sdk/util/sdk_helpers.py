@@ -288,7 +288,8 @@ def add_configuration_import(new_export_data, res_client):
     try:
         result = res_client.post(IMPORT_URL, new_export_data)
     except Exception as upload_exception:
-        LOG.error(new_export_data)
+        LOG.debug(new_export_data)
+        raise SDKException(upload_exception)
 
     if result["status"] == "PENDING":
         confirm_configuration_import(result, result['id'], res_client)
@@ -365,7 +366,7 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     return dict((o[identifer], o) for o in obj_list if condition(o))
 
 
-def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True):
+def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
     """
     Return a List of Resilient Objects that are in the 'wanted_list' and meet the 'condition'
 
@@ -381,6 +382,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :type export: Dict
     :param condition: A lambda function to evaluate each object
     :type condition: function
+    :param export: Whether or not to return the objects API name as a field.
+    :type export: bool
     :return: List of Resilient Objects
     :rtype: List
     """
@@ -411,7 +414,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
             # Add x_api_name to each object, so we can easily reference. This avoids needing to know if
             # obj attribute is 'name' or 'programmatic_name' etc.
             obj = ex_obj.get(o)
-            obj["x_api_name"] = obj[obj_identifer]
+            if include_api_name:
+                obj["x_api_name"] = obj[obj_identifer]
             return_list.append(obj)
 
     return return_list
