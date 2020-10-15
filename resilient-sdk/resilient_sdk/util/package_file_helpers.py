@@ -33,7 +33,7 @@ else:
     reload = importlib.reload
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Constants
 BASE_NAME_BUILD = "build"
