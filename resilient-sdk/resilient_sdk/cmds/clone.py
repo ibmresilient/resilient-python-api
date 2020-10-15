@@ -359,7 +359,10 @@ class CmdClone(BaseCmd):
         obj_to_modify = CmdClone.replace_common_object_attrs(
             obj_to_modify, new_obj_api_name)
 
-        
+        workflow_xml = obj_to_modify.get("content").get("xml")
+
+        workflow_xml = workflow_xml.replace('id="{}"'.format(original_obj_api_name), 'id="{}"'.format(new_obj_api_name))
+        workflow_xml = workflow_xml.replace('name="{}"'.format(old_workflow_name), 'name="{}"'.format(new_obj_api_name))
         # Now do the workflow specific ones and return
         obj_to_modify.update({
             ResilientObjMap.WORKFLOWS: new_obj_api_name,
