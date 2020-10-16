@@ -33,10 +33,12 @@ else:
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
 
+LOGGER_NAME = "resilient_sdk_log"
+
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(LOGGER_NAME)
 
 # Regex for splitting version number at end of name from package basename.
 VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
@@ -833,3 +835,13 @@ def get_timestamp(timestamp=None):
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
 
     return datetime.datetime.now().strftime(TIME_FORMAT)
+
+
+def str_to_bool(value):
+    """
+    Represents value as boolean.
+    :param value:
+    :rtype: bool
+    """
+    value = str(value).lower()
+    return value in ('1', 'true', 'yes')

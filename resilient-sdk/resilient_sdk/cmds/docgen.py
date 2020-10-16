@@ -15,7 +15,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, ResilientObjMap
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # JINJA Constants
 README_TEMPLATE_NAME = "README.md.jinja2"

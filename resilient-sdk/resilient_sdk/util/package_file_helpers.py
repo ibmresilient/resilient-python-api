@@ -33,12 +33,17 @@ else:
     reload = importlib.reload
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Constants
 BASE_NAME_BUILD = "build"
 BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
+BASE_NAME_SETUP_PY = "setup.py"
+BASE_NAME_DIST_DIR = "dist"
+BASE_NAME_DOCKER_FILE = "Dockerfile"
+BASE_NAME_ENTRY_POINT = "entrypoint.sh"
+BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 
 PREFIX_EXTENSION_ZIP = "app-"
 
@@ -53,6 +58,8 @@ PATH_DOC_DIR = "doc"
 PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
 PATH_README = "README.md"
 PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
+
+MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "author", "name", "version",
