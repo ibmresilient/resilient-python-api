@@ -34,11 +34,10 @@ def test_set_version_bad_version(fx_get_sub_parser, fx_cmd_line_args_dev_set_bad
         CmdDev._set_version(args)
 
 
-def test_set_version(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_dev_set_version):
+def test_set_version(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_dev_set_version):
 
-    mock_integration_name = "fn_main_mock_integration"
-    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_integration_name)
-    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
     sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration

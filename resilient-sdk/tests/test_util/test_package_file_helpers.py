@@ -4,10 +4,13 @@
 
 import os
 import shutil
+import json
 import io
+from setuptools import sandbox as use_setuptools
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
+
 
 def test_get_setup_callable():
     # Test callable section returned correctly.
@@ -18,6 +21,7 @@ def test_get_setup_callable():
     with io.open(mock_paths.MOCK_SETUP_CALLABLE, mode="rt", encoding="utf-8") as the_file:
         mock_setup_callable = the_file.read()
     assert mock_setup_callable == setup_callable
+
 
 def test_parse_setup_py():
     attributes_wanted = ["name", "version", "author", "long_description"]
@@ -157,3 +161,19 @@ def test_add_tag_to_import_definition():
     tag_name = "mock_tag_name"
     import_def = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)
     tagged_import_def = package_helpers.add_tag_to_import_definition(tag_name, package_helpers.SUPPORTED_RES_OBJ_NAMES, import_def)
+
+
+def test_create_extension_display_name(fx_copy_fn_main_mock_integration):
+
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    path_setup_py_file = os.path.join(path_fn_main_mock_integration, package_helpers.PATH_SETUP_PY)
+    path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
+    output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
+
+    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+    path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir)
+    app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
+
+    assert app_json.get("display_name") == "Main Mock Integration"

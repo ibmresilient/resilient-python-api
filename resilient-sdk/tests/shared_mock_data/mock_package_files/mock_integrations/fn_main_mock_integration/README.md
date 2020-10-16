@@ -12,7 +12,7 @@
   ![screenshot: screenshot_1](./doc/screenshots/screenshot_1.png)
 -->
 
-# Main Mock Integration Functions for IBM Resilient
+# {{ display_name }}
 
 - [Release Notes](#release-notes)
 - [Overview](#overview)

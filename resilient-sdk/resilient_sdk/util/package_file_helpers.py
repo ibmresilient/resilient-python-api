@@ -62,7 +62,7 @@ PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/cod
 MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
-    "author", "name", "version",
+    "author", "name", "display_name", "version",
     "description", "long_description", "url",
     "install_requires", "entry_points"
 )
@@ -712,6 +712,12 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
             height_accepted=100,
             default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
+        # Get the display name
+        # Use --display-name if passed
+        # If not use 'display_name' attribute in setup.py
+        # If not set use the 'name' attribute in setup.py
+        display_name = custom_display_name or setup_py_attributes.get("display_name") or setup_py_attributes.get("name")
+
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
             "author": {
@@ -726,7 +732,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "content": setup_py_attributes.get("description"),
                 "format": "text"
             },
-            "display_name": custom_display_name if custom_display_name is not None else setup_py_attributes.get("name"),
+            "display_name": display_name,
             "icon": {
                 "data": extension_logo,
                 "media_type": "image/png"
