@@ -41,7 +41,7 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=36.2.0.dev",
+        "resilient>=36.2.0",
         "jinja2>=2.10.0",
         "setuptools>=44.0.0"
     ],

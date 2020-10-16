@@ -15,7 +15,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 
 class CmdDev(BaseCmd):
@@ -139,7 +139,7 @@ class CmdDev(BaseCmd):
             jinja_data["package_name"] = package_name
 
             # Add version
-            jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
+            jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
             # Instansiate Jinja2 Environment with path to Jinja2 templates
             jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util")

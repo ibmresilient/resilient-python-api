@@ -19,7 +19,7 @@ from resilient_sdk.cmds import (CmdDocgen,
 
 
 # Setup logging
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
