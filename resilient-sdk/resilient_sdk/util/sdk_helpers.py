@@ -200,6 +200,17 @@ def is_valid_url(url):
     return regex.search(url) is not None
 
 
+def does_url_contain(url, qry):
+    """
+    Checks if url is a valid url, if it isn't returns False.
+    Checks if qry is in url. Returns True if it is
+    """
+    if not is_valid_url(url):
+        return False
+
+    return qry in url
+
+
 def generate_uuid_from_string(the_string):
     """
     Returns String representation of the UUID of a hex md5 hash of the given string
@@ -692,8 +703,9 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
 
 def generate_anchor(header):
     """
-    Converts header to lowercase, removes all characters except a-z, 0-9, - and spaces,
-    then replaces all spaces with -
+    Converts header to lowercase, removes all characters except a-z, 0-9, -,
+    unicode charaters that are used in words and spaces then replaces
+    all spaces with -
 
     An anchor is used in Markdown Templates to link certain parts of the document.
 
@@ -704,13 +716,34 @@ def generate_anchor(header):
     """
     anchor = header.lower()
 
-    regex = re.compile(r"[^a-z0-9\-\s_]")
+    regex = re.compile(r"[^\w\-\s]", re.U)
 
     anchor = re.sub(regex, "", anchor)
-    anchor = re.sub("_", "-", anchor)
     anchor = re.sub(r"[\s]", "-", anchor)
 
     return anchor
+
+
+def simplify_string(the_string):
+    """
+    Simplifies the_string by converting it to lowercases and
+    removing all characters except a-z, 0-9, - and spaces then
+    replaces all spaces with -
+
+    :param the_string: String to simplify
+    :type the_string: str
+    :return: the_string formatted
+    :rtype: str
+    """
+    the_string = the_string.lower()
+
+    regex = re.compile(r"[^a-z0-9\-\s_]")
+
+    the_string = re.sub(regex, "", the_string)
+    the_string = re.sub("_", "-", the_string)
+    the_string = re.sub(r"[\s]", "-", the_string)
+
+    return the_string
 
 
 def get_workflow_functions(workflow, function_uuid=None):

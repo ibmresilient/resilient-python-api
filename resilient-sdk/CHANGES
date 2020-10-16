@@ -1,5 +1,6 @@
 2020-10: ver. 39.0
 * Added Resilient Platform version to customize.py template
+* package command replaces tags on Resilient objects in export.res instead of extending them
 * Added environmental variable RES_SDK_DEV
 * Added '--set-version' argument to dev command
 

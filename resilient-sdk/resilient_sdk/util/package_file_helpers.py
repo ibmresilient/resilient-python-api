@@ -49,6 +49,15 @@ PREFIX_EXTENSION_ZIP = "app-"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
+PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
+
+PATH_SETUP_PY = "setup.py"
+PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CONFIG_PY = os.path.join("util", "config.py")
+PATH_DOC_DIR = "doc"
+PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
+PATH_README = "README.md"
+PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
 
 MIN_SETUP_PY_VERSION = "1.0.0"
 
@@ -463,10 +472,15 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
 def add_tag(tag_name, list_of_objs):
     """
-    TODO: update this docsting to correct standard
-    Returns list_of_objs with tag_name added to each object
-    """
+    Returns list_of_objs with tag_name added to each object.
+    Replaces any tags that were there originally to address bug INT-3077
 
+    :param tag_name: The name of the tag to add
+    :param list_of_objs: A list of all the objects you want to add the tag too
+    :raise: SDKException: if list_of_objs is corrupt
+    :return: list_of_objs with tag_name added to each object
+    :rtype: list of dicts
+    """
     # Create tag_to_add
     tag_to_add = {
         "tag_handle": tag_name,
@@ -488,23 +502,8 @@ def add_tag(tag_name, list_of_objs):
             LOG.error("Error adding tag.\n'list_of_objs': %s\n'obj': %s", list_of_objs, obj)
             raise SDKException(err_msg.format(tag_name, "obj", "Dictionary", type(obj)))
 
-        # Try get current_tags
-        current_tags = obj.get("tags")
-
-        # If None, create new empty List
-        if current_tags is None:
-            current_tags = []
-
-        # If current_tags is not a list, error
-        if not isinstance(current_tags, list):
-            LOG.error("Error adding tag.\n'current_tags': %s", current_tags)
-            raise SDKException(err_msg.format(tag_name, "current_tags", "List", type(current_tags)))
-
-        # Append our tag_to_add to current_tags
-        current_tags.append(tag_to_add)
-
-        # Set the obj's 'tags' value to current_tags
-        obj["tags"] = current_tags
+        # Set the obj's 'tags' value to tag_to_add
+        obj["tags"] = [tag_to_add]
 
     # Return the updated list_of_objs
     return list_of_objs
