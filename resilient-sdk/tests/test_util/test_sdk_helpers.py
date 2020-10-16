@@ -294,3 +294,13 @@ def test_get_timestamp():
 def test_get_timestamp_from_timestamp():
     ts = sdk_helpers.get_timestamp(1579258053.728)
     assert ts == "20200117104733"
+
+
+def test_str_to_bool():
+    assert sdk_helpers.str_to_bool('True') is True
+    assert sdk_helpers.str_to_bool('true') is True
+    assert sdk_helpers.str_to_bool('YES') is True
+    assert sdk_helpers.str_to_bool('truex') is False
+    assert sdk_helpers.str_to_bool(1) is True
+    assert sdk_helpers.str_to_bool(0) is False
+    assert sdk_helpers.str_to_bool('0') is False

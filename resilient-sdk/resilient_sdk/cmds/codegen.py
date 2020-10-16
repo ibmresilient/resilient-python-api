@@ -16,7 +16,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Relative paths from with the package of files + directories used
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
@@ -159,7 +159,7 @@ class CmdCodegen(BaseCmd):
             arg_name = m[0]
             old_param_name = m[1]
 
-            arg = getattr(args, arg_name)
+            arg = getattr(args, arg_name, None)
             if arg:
                 all_obj_names_wanted = set(arg)
 
@@ -230,7 +230,7 @@ class CmdCodegen(BaseCmd):
         jinja_data["package_name"] = package_name
 
         # Add version
-        jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
+        jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)

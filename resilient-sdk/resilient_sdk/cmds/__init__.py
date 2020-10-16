@@ -5,5 +5,6 @@
 from resilient_sdk.cmds.docgen import CmdDocgen
 from resilient_sdk.cmds.codegen import CmdCodegen
 from resilient_sdk.cmds.extract import CmdExtract
+from resilient_sdk.cmds.dev import CmdDev
 
 from resilient_sdk.cmds.ext.ext_package import CmdExtPackage

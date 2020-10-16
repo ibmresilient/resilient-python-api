@@ -46,7 +46,8 @@ def test_cmd_codegen_args_parser(fx_get_sub_parser, fx_cmd_line_args_codegen_pac
 def test_render_jinja_mapping(fx_mk_temp_dir):
 
     mock_jinja_data = {
-        "functions": [{"x_api_name": "fn_mock_function_1"}, {"x_api_name": "fn_mock_function_2"}]
+        "functions": [{"x_api_name": "fn_mock_function_1"}, {"x_api_name": "fn_mock_function_2"}],
+        "export_data": {"server_version": {"version": "35.0.0"}}
     }
 
     jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
