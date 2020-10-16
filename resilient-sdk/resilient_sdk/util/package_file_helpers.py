@@ -716,13 +716,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # Use --display-name if passed
         # If not use 'display_name' attribute in setup.py
         # If not set use the 'name' attribute in setup.py
-        display_name = custom_display_name
-
-        if not display_name:
-            display_name = setup_py_attributes.get("display_name")
-
-        if not display_name:
-            display_name = setup_py_attributes.get("name")
+        display_name = custom_display_name or setup_py_attributes.get("display_name") or setup_py_attributes.get("name")
 
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
