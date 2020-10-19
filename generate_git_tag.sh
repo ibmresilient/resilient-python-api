@@ -22,4 +22,7 @@ else
 	git tag -a $libVersion.$BUILD_NUMBER -m "$libVersion Build $BUILD_NUMBER"
 fi
 
-
+if [ $TRAVIS ]
+then
+	TRAVIS_TAG=$libVersion.$BUILD_NUMBER
+fi
