@@ -4,6 +4,11 @@ latestTag=$(git tag --list | tail -n 1)
 libVersion=$(echo $latestTag | cut -d "." -f 1,2)
 echo "Latest tag: $latestTag"
 
+if [ $TRAVIS ]
+then
+	BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
+fi
+
 if [[ $latestTag =~ "dev" ]]
 then
 	echo "Creating dev tag $libVersion.$BUILD_NUMBER.dev"

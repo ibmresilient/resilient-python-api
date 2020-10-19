@@ -40,6 +40,7 @@ matrix:
       install: ./travis-scripts/install_artifactory_deps.sh
       script:
         - echo "Deploying to Artifactory"
+        - ./generate_git_tag.sh
         - build_num=$(git tag --list | tail -n 1 | sed s/[a-z]//g)
         - ./travis-scripts/deploy_artifactory.sh $build_num
 
