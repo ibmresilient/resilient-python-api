@@ -2,7 +2,7 @@
 
 readonly package_names=(
     "resilient"
-    "resililent-circuits"
+    "resilient-circuits"
     "resilient-sdk"
 )
 
@@ -11,8 +11,8 @@ readonly version_number=$1
 echo "version_number: $version_number"
 
 # Get this directory
-readonly this_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "this_dir: $this_dir"
+readonly repo_dir="$( cd "$( dirname "../${BASH_SOURCE[0]}" )" && pwd )"
+echo "repo_dir: $repo_dir"
 
 if [ ! -z "$version_number" ]; then
     # Write the version as environment variable.
@@ -23,7 +23,7 @@ fi
 
 for p in "${package_names[@]}"; do
     # Get directory of package
-    dir=$(echo $this_dir/$p)
+    dir=$(echo $repo_dir/$p)
     echo "Building directory $dir"
 
     # Remove any old dist files.
@@ -32,12 +32,12 @@ for p in "${package_names[@]}"; do
     # Build the source distribution.
     (cd $dir && python setup.py sdist --formats=gztar)
 
-    # Copy source distribution to $this_dir
+    # Copy source distribution to $repo_dir
     sdist_path=$(ls $dir/dist/*.tar.gz)
     echo "Path to sdist: $sdist_path"
-    cp $sdist_path $this_dir
+    cp $sdist_path $repo_dir
 done
 
 echo "Built source distributions:"
-cd $this_dir
+cd $repo_dir
 ls -l *.tar.gz
