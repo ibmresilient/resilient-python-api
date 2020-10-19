@@ -2,6 +2,12 @@
 
 ARTIFACTORY_REPO_LINK=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local
 
+# Get latest version number
+latest_tag=$(git tag --list | tail -n 1)
+lib_version=$(echo $latest_tag | cut -d "." -f 1,2)
+version_number=$lib_version.$TRAVIS_BUILD_NUMBER
+echo "version_number: $version_number"
+
 # Array to hold paths of packages to copy to Artifactory
 paths_to_copy_to_artifactory=()
 
@@ -11,15 +17,6 @@ readonly package_names=(
     "resilient-sdk"
     "resilient-lib"
 )
-
-# Get the version number from the command line.
-readonly version_number=$1
-echo "version_number: $version_number"
-
-# Split version number into array
-IFS="."
-read -ra version_array <<< "$version_number"
-IFS=' '
 
 # Get the repo directory
 readonly repo_dir=$TRAVIS_BUILD_DIR
@@ -55,7 +52,7 @@ cd $repo_dir
 # Loop paths_to_copy_to_artifactory and copy to Artifactory using curl
 for p in "${paths_to_copy_to_artifactory[@]}"; do
     package_name=$(basename $p)
-    artifactory_path=resilient-python-api/${version_array[0]}/$version_number/$package_name
+    artifactory_path=resilient-python-api/$lib_version/$version_number/$package_name
     echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
     curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY_SHANE}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
 done
