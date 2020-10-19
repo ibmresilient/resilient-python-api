@@ -5,7 +5,7 @@ os: linux
 stages:
   - run tests
   - name: deploy to artifactory
-    # if: branch = master OR branch =~ ^release\/.+
+    if: branch = master OR branch =~ ^release\/.+
 
 env:
   global:
