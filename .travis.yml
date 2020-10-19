@@ -26,8 +26,8 @@ matrix:
       script:
         - tox -c ./resilient-circuits
         - tox -c ./resilient-sdk
-    
-   - stage: run tests
+
+    - stage: run tests
       name: Python 3.6 Tests
       python: 3.6
       env:
