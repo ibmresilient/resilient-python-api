@@ -11,7 +11,7 @@ readonly version_number=$1
 echo "version_number: $version_number"
 
 # Get the repo directory
-readonly repo_dir=$TRAVIS_BUILD_DIR/resilient-python-api
+readonly repo_dir=$TRAVIS_BUILD_DIR
 echo "repo_dir: $repo_dir"
 
 if [ ! -z "$version_number" ]; then
