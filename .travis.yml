@@ -40,38 +40,4 @@ matrix:
       install: ./travis-scripts/install_artifactory_deps.sh
       script:
         - echo "Deploying to Artifactory"
-        - ./generate_git_tag.sh
-        - ./travis-scripts/deploy_artifactory.sh $TRAVIS_TAG
-
-# install:
-#   - pip install --upgrade pip
-#   - pip install --upgrade setuptools
-#   - pip install tox
-
-    #   script:
-    #     - tox -c ./resilient-circuits
-    #     - tox -c ./resilient-sdk
-    # # - buildnum=$(git tag --list | tail -n 1 | sed s/[a-z]//g)
-    # # - ./buildall.sh $buildnum
-    # - stage: deploy to artifactory
-    #   script: 
-    #     - ./buildall.sh
-
-# after_script:
-#   - echo "Packages To Deploy"
-#   - ls -l *.tar.gz
-
-# deploy:
-#   # Note: This is going to run twice and fail the second time. Will fix with travis enterprise 2.2 "stages" feature
-#   provider: releases
-#   api_key: "$GITHUB_OAUTH_TOKEN"
-#   file_glob: true
-#   file: ./rc-*.tar.gz
-#   skip_cleanup: true
-#   on:
-#     tags: true
-
-#notifications:
-#  slack:
-#    rooms: ibm-security:9xGeUjQaqaNY1qgBG6ORFaSl
-#    on_success: change
+        - ./travis-scripts/deploy_artifactory.sh
