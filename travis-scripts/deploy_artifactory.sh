@@ -1,9 +1,15 @@
 #!/bin/bash -e
 
+ARTIFACTORY_REPO_LINK=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local
+
+# Array to hold paths of packages to copy to Artifactory
+paths_to_copy_to_artifactory=()
+
 readonly package_names=(
     "resilient"
     "resilient-circuits"
     "resilient-sdk"
+    "resilient-lib"
 )
 
 # Get the version number from the command line.
@@ -32,12 +38,19 @@ for p in "${package_names[@]}"; do
     # Build the source distribution.
     (cd $dir && python setup.py sdist --formats=gztar)
 
-    # Copy source distribution to $repo_dir
+    # Append path to sdist to paths_to_copy_to_artifactory array
     sdist_path=$(ls $dir/dist/*.tar.gz)
     echo "Path to sdist: $sdist_path"
-    cp $sdist_path $repo_dir
+    paths_to_copy_to_artifactory+=($sdist_path)
+
 done
 
-echo "Built source distributions:"
 cd $repo_dir
-ls -l *.tar.gz
+
+# Loop paths_to_copy_to_artifactory and copy to Artifactory using curl
+for p in "${paths_to_copy_to_artifactory[@]}"; do
+    package_name=$(basename $p)
+    artifactory_path=resilient-python-api/$version_number/$package_name
+    echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
+    curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY_SHANE}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
+done
