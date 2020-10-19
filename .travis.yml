@@ -24,6 +24,7 @@ matrix:
       env:
         - TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
       script:
+        - echo "Starting Python 2.7 Tests"
         - tox -c ./resilient-circuits
         - tox -c ./resilient-sdk
 
@@ -32,7 +33,8 @@ matrix:
       python: 3.6
       env:
         - TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
-      script: 
+      script:
+        - echo "Starting Python 3.6 Tests"
         - tox -c ./resilient-circuits
         - tox -c ./resilient-sdk
 
