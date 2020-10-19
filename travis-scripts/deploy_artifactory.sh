@@ -10,8 +10,8 @@ readonly package_names=(
 readonly version_number=$1
 echo "version_number: $version_number"
 
-# Get this directory
-readonly repo_dir="$( cd "$( dirname "../${BASH_SOURCE[0]}" )" && pwd )"
+# Get the repo directory
+readonly repo_dir=$TRAVIS_BUILD_DIR/resilient-python-api
 echo "repo_dir: $repo_dir"
 
 if [ ! -z "$version_number" ]; then
