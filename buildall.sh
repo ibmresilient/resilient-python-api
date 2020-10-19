@@ -12,31 +12,34 @@
 # itself to ensure that the version is properly processed.
 #
 
-readonly mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    echo "HERE"
 
-# Find all directories with a setup.py file in them.
-readonly project_dirs=$(find $mydir -name setup.py -exec dirname {} \;)
 
-# Get the version number from the command line.
-readonly version_number=$1
+# readonly mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ ! -z "$version_number" ]; then
-    # Write the version as environment variable.
-    export SETUPTOOLS_SCM_PRETEND_VERSION=$version_number
-else
-    echo "Version number not specified - skipping version processing."
-fi
+# # Find all directories with a setup.py file in them.
+# readonly project_dirs=$(find $mydir -name setup.py -exec dirname {} \;)
 
-# Build each of the projects.
-for dir in $project_dirs; do
-    echo "Building directory $dir"
+# # Get the version number from the command line.
+# readonly version_number=$1
 
-    # Remove any old dist files.
-    rm -rf $dir/dist/*
+# if [ ! -z "$version_number" ]; then
+#     # Write the version as environment variable.
+#     export SETUPTOOLS_SCM_PRETEND_VERSION=$version_number
+# else
+#     echo "Version number not specified - skipping version processing."
+# fi
 
-    # Build the source distribution.
-    (cd $dir && python setup.py sdist --formats=gztar)
-done
+# # Build each of the projects.
+# for dir in $project_dirs; do
+#     echo "Building directory $dir"
 
-# Build the documentation.
-# (cd docs && make clean html)
+#     # Remove any old dist files.
+#     rm -rf $dir/dist/*
+
+#     # Build the source distribution.
+#     (cd $dir && python setup.py sdist --formats=gztar)
+# done
+
+# # Build the documentation.
+# # (cd docs && make clean html)
