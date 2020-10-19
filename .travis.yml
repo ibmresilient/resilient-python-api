@@ -5,7 +5,7 @@ os: linux
 stages:
   - run tests
   - name: deploy to artifactory
-    if: branch = master OR branch =~ /^release\/.+/
+    if: branch = master OR branch =~ ^release\/.+
 
 env:
   global:
@@ -36,10 +36,13 @@ matrix:
         - tox -c ./resilient-circuits
         - tox -c ./resilient-sdk
 
+    - stage: deploy to artifactory
+      script:
+        - ./buildall.sh
+
 install:
   - pip install --upgrade pip
   - pip install --upgrade setuptools
-  # - pip install --upgrade setuptools_scm
   - pip install tox
 
     #   script:
