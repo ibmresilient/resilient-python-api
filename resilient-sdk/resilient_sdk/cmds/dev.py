@@ -116,7 +116,7 @@ class CmdDev(BaseCmd):
                                                      message_destinations=old_params.get("message_destinations"),
                                                      functions=old_params.get("functions"),
                                                      workflows=old_params.get("workflows"),
-                                                     rules=old_params.get("rules"),
+                                                     rules=old_params.get("actions"),
                                                      fields=old_params.get("incident_fields"),
                                                      artifact_types=old_params.get("incident_artifact_types"),
                                                      datatables=old_params.get("datatables"),
