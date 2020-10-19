@@ -21,31 +21,31 @@ matrix:
     - stage: run tests
       name: Python 2.7 Tests
       python: 2.7
-      env:
-        - TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 2.7 Tests"
-        - tox -c ./resilient-circuits
-        - tox -c ./resilient-sdk
+        - ./travis-scripts/run_unit_tests.sh
 
     - stage: run tests
       name: Python 3.6 Tests
       python: 3.6
-      env:
-        - TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.6 Tests"
-        - tox -c ./resilient-circuits
-        - tox -c ./resilient-sdk
+        - ./travis-scripts/run_unit_tests.sh
 
     - stage: deploy to artifactory
+      install: ./travis-scripts/install_artifactory_deps.sh
       script:
-        - ./buildall.sh
+        - echo "Deploying to Artifactory"
+        - ./travis-scripts/deploy_artifactory.sh
 
-install:
-  - pip install --upgrade pip
-  - pip install --upgrade setuptools
-  - pip install tox
+# install:
+#   - pip install --upgrade pip
+#   - pip install --upgrade setuptools
+#   - pip install tox
 
     #   script:
     #     - tox -c ./resilient-circuits
