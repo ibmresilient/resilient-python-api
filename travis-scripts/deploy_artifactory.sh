@@ -8,6 +8,9 @@ readonly package_names=(
     "resilient-circuits"
     "resilient-sdk"
     "resilient-lib"
+    "pytest-resilient-circuits"
+    "rc-cts"
+    "rc-webserver"
 )
 
 # Write the version as environment variable.
