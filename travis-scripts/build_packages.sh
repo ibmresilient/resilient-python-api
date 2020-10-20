@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
-# Set to blank array as we only want packages build in PY3.6
-PATHS_TO_COPY_TO_ARTIFACTORY=()
+cd $TRAVIS_BUILD_DIR
 
 readonly package_names=(
     "resilient"
@@ -30,8 +29,6 @@ for p in "${package_names[@]}"; do
     # Append path to sdist to PATHS_TO_COPY_TO_ARTIFACTORY array
     sdist_path=$(ls $dir/dist/*.tar.gz)
     echo "Path to sdist: $sdist_path"
+    PATHS_TO_COPY_TO_ARTIFACTORY+=($sdist_path)
 
-    if [ "$TRAVIS_JOB_NAME" == "Build Packages in Python 3.6" ]; then
-        PATHS_TO_COPY_TO_ARTIFACTORY+=($sdist_path)
-    fi
 done

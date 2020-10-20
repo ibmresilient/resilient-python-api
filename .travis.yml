@@ -64,6 +64,8 @@ matrix:
 
     - stage: deploy to artifactory
       script:
+        - echo "Building packages in Python 3.6"
+        - ./travis-scripts/build_packages.sh
         - echo "Deploying to Artifactory"
         - ./travis-scripts/deploy_artifactory.sh
         - echo "Sending notification to Slack"
