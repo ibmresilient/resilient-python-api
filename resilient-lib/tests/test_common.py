@@ -4,9 +4,12 @@ import os
 import sys
 import shutil
 import unittest
+import logging
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, write_to_tmp_file, close_incident
+    get_file_attachment_metadata, write_to_tmp_file, get_field_type, get_fields_required_to_close
+
+LOG = logging.getLogger(__name__)
 
 
 class TestFunctionMetrics(unittest.TestCase):
@@ -254,15 +257,58 @@ class TestFunctionMetrics(unittest.TestCase):
         actual_name = get_file_attachment_name(str_name_mock, incident_id=inc_id, artifact_id=artifact_id)
         assert actual_name == expected_name
 
-    def test_close_incident(self):
-        # close_incident(res_client, incident_id, kwargs):
-        incident_id = "123"
-        str_name_mock = {
-            "/incidents/{}".format(incident_id): {
-                "name": "test"
-            }
+    def test_get_field_type(self):
+        # get_field_type(res_client, field_name):
+        LOG.debug("get_field_type")
+        field_name = "resolution_id"
+        expected_output = "select"
+        mock_response = {
+          "id": 0,
+          "type_id": 0,
+          "type_name": "incident",
+          "fields": {
+              "country": {"name": "country", "input_type": "select"},
+              "resolution_id": {"name": "resolution_id", "input_type": "select", "required": "close"},
+              "resolution_summary": {"name": "resolution_summary", "input_type": "textarea", "required": "close"},
+              "workspace": {"name": "resolution_id", "input_type": "select", "required": "always"}
+          }
         }
+        mock_api = {
+            "/types/incident": mock_response
+        }
+        LOG.debug("mock_api {0}".format(mock_api))
+        actual_output = get_field_type(mock_api, field_name)
+        assert actual_output == expected_output
 
-        kwargs = {'foo': 3, 'bar': 4}
-        output = close_incident(str_name_mock, incident_id, kwargs)
-        assert output == "OK"
+    def test_get_fields_required_to_close(self):
+        # get_fields_required_to_close(res_client):
+        expected_output = ["resolution_id", "resolution_summary"]
+        mock = {
+          "id": 0,
+          "type_id": 0,
+          "type_name": "incident",
+          "fields": {
+              "country": {"name": "country", "input_type": "select"},
+              "resolution_id": {"name": "resolution_id", "input_type": "select", "required": "close"},
+              "resolution_summary": {"name": "resolution_summary", "input_type": "textarea", "required": "close"},
+              "workspace": {"name": "resolution_id", "input_type": "select", "required": "always"}
+          }
+        }
+        mock_api = {
+            "/types/incident": mock
+        }
+        actual_output = get_fields_required_to_close(mock_api)
+        assert actual_output == expected_output
+
+    # def test_close_incident(self):
+    #     # close_incident(res_client, incident_id, kwargs):
+    #     incident_id = "123"
+    #     str_name_mock = {
+    #         "/incidents/{}".format(incident_id): {
+    #             "name": "test"
+    #         }
+    #     }
+    #
+    #     kwargs = {'foo': 3, 'bar': 4}
+    #     output = close_incident(str_name_mock, incident_id, kwargs)
+    #     assert output == "OK"

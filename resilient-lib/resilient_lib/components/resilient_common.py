@@ -8,6 +8,7 @@ import os
 import io
 import mimetypes
 import base64
+import logging
 from bs4 import BeautifulSoup
 from six import string_types
 from cachetools import cached, TTLCache
@@ -19,6 +20,8 @@ except:
 
 INCIDENT_FRAGMENT = '#incidents'
 PAYLOAD_VERSION = "1.0"
+
+LOG = logging.getLogger(__name__)
 
 
 def build_incident_url(url, incidentId):
@@ -400,7 +403,10 @@ def get_field_type(res_client, field_name):
     """
     uri = "/types/incident"
     response = res_client.get(uri)
-    field_type = response.get("fields").get(field_name).get("input_type")
+    LOG.debug("FIELD TYPE {}".format(response))
+    field_type = response["fields"][field_name]["input_type"]
+    LOG.debug("FIELD TYPE {}".format(field_type))
+    # field_type = response.get("fields").get(field_name).get("input_type")
     return field_type
 
 
