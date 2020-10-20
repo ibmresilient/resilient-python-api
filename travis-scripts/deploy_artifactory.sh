@@ -10,16 +10,12 @@ readonly package_names=(
     "resilient-lib"
 )
 
-# Get the repo directory
-readonly repo_dir=$TRAVIS_BUILD_DIR
-echo "repo_dir: $repo_dir"
-
 # Write the version as environment variable.
 export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 
 for p in "${package_names[@]}"; do
     # Get directory of package
-    dir=$(echo $repo_dir/$p)
+    dir=$(echo $TRAVIS_BUILD_DIR/$p)
     echo "Building directory $dir"
 
     # Remove any old dist files.
@@ -35,7 +31,7 @@ for p in "${package_names[@]}"; do
 
 done
 
-cd $repo_dir
+cd $TRAVIS_BUILD_DIR
 
 # Loop paths_to_copy_to_artifactory and copy to Artifactory using curl
 for p in "${paths_to_copy_to_artifactory[@]}"; do
