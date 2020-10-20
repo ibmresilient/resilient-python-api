@@ -1,43 +1,9 @@
 #!/bin/bash -e
 
-# Array to hold paths of packages to copy to Artifactory
-paths_to_copy_to_artifactory=()
-
-readonly package_names=(
-    "resilient"
-    "resilient-circuits"
-    "resilient-sdk"
-    "resilient-lib"
-    "pytest-resilient-circuits"
-    "rc-cts"
-    "rc-webserver"
-)
-
-# Write the version as environment variable.
-export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
-
-for p in "${package_names[@]}"; do
-    # Get directory of package
-    dir=$(echo $TRAVIS_BUILD_DIR/$p)
-    echo "Building directory $dir"
-
-    # Remove any old dist files.
-    rm -rf $dir/dist/*
-
-    # Build the source distribution.
-    (cd $dir && python setup.py sdist --formats=gztar)
-
-    # Append path to sdist to paths_to_copy_to_artifactory array
-    sdist_path=$(ls $dir/dist/*.tar.gz)
-    echo "Path to sdist: $sdist_path"
-    paths_to_copy_to_artifactory+=($sdist_path)
-
-done
-
 cd $TRAVIS_BUILD_DIR
 
-# Loop paths_to_copy_to_artifactory and copy to Artifactory using curl
-for p in "${paths_to_copy_to_artifactory[@]}"; do
+# Loop PATHS_TO_COPY_TO_ARTIFACTORY and copy to Artifactory using curl
+for p in "${PATHS_TO_COPY_TO_ARTIFACTORY[@]}"; do
     package_name=$(basename $p)
     artifactory_path=$BASE_ARTIFACTORY_PATH/$package_name
     echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"

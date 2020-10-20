@@ -4,6 +4,8 @@ os: linux
 
 stages:
   - run tests
+  - name: build packages
+    # if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
     # if: branch = master OR branch =~ ^release\/.+
 
@@ -17,6 +19,7 @@ env:
   - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - PATHS_TO_COPY_TO_ARTIFACTORY=()
 
 # Install package deps
 before_install:
@@ -44,6 +47,20 @@ matrix:
       script:
         - echo "Starting Python 3.6 Tests"
         - ./travis-scripts/run_unit_tests.sh
+
+    - stage: build packages
+      name: Build Packages in Python 2.7
+      python: 2.7
+      script:
+        - echo "Building packages in Python 2.7"
+        - ./travis-scripts/build_packages.sh
+      
+    - stage: build packages
+      name: Build Packages in Python 3.6
+      python: 3.6
+      script:
+        - echo "Building packages in Python 3.6"
+        - ./travis-scripts/build_packages.sh
 
     - stage: deploy to artifactory
       script:
