@@ -31,8 +31,7 @@ for p in "${package_names[@]}"; do
     sdist_path=$(ls $dir/dist/*.tar.gz)
     echo "Path to sdist: $sdist_path"
 
-    if [ $TRAVIS_JOB_NAME == "Build Packages in Python 3.6" ]
-        then
-            PATHS_TO_COPY_TO_ARTIFACTORY+=($sdist_path)
+    if [ $TRAVIS_JOB_NAME == "Build Packages in Python 3.6" ]; then
+        PATHS_TO_COPY_TO_ARTIFACTORY+=($sdist_path)
     fi
 done
