@@ -49,3 +49,8 @@ matrix:
       script:
         - echo "Deploying to Artifactory"
         - ./travis-scripts/deploy_artifactory.sh
+        - echo "Sending notification to Slack"
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+
+after_failure:
+  - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
