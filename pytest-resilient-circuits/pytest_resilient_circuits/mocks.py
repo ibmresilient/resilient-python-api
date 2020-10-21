@@ -123,7 +123,7 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json=self.incident)
 
-    @resilient_endpoint("patch", "/incidents/[0-9]+")
+    @resilient_endpoint("PATCH", "/incidents/[0-9]+")
     def incident_patch(self, request):
         """ Callback for patch to /orgs/<org_id>/incidents/<inc_id> """
         LOG.debug("incident_patch")
@@ -138,9 +138,9 @@ class BasicResilientMock(ResilientMock):
                 new_value = change["new_value"]["object"].get("content")
             else:
                 new_value = change["new_value"]["object"]
-            if name and self.incident.get(name):
+            if name and name in self.incident:
                 self.incident[name] = new_value
-            elif name and self.incident['properties'].get(name):
+            elif name and name in self.incident['properties']:
                 self.incident['properties'][name] = new_value
             else:
                 LOG.error("Field '%s' not found in mock incident", name)
