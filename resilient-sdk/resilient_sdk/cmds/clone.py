@@ -19,9 +19,13 @@ from resilient_sdk.util.sdk_exception import SDKException
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger("resilient_sdk_log")
 
-MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
-SUPPORTED_ACTION_OBJECTS = ['function', 'workflow', 'rule', 'messagedestination', 'script']
-ACTION_OBJECT_KEYS = ['functions', 'workflows', 'actions', 'message_destinations', 'scripts']
+# Mandatory keys for a configuration import
+MANDATORY_KEYS = ["incident_types", "fields"]
+SUPPORTED_ACTION_OBJECTS = ['function', 'workflow',
+                            'rule', 'messagedestination', 'script']
+ACTION_OBJECT_KEYS = ['functions', 'workflows',
+                      'actions', 'message_destinations', 'scripts']
+
 
 class CmdClone(BaseCmd):
     """
@@ -117,13 +121,9 @@ class CmdClone(BaseCmd):
 
         org_export = get_latest_org_export(res_client)
 
-        # Copy the export data so we don't modify the existing object
-        new_export_data = org_export.copy()
+        # For the new export data DTO minify the export to only its mandatory attributes
+        new_export_data = minify_export(org_export)
 
-        for dict_key in new_export_data:
-            if dict_key not in MANDATORY_KEYS and isinstance(new_export_data[dict_key], list):
-                # clear the new export data, the stuff we clear isn't necessary for cloning
-                new_export_data[dict_key] = []
         # If any of the supported args are provided
         if any([args.function, args.workflow, args.rule, args.messagedestination, args.script]):
             if args.prefix:
@@ -133,23 +133,33 @@ class CmdClone(BaseCmd):
             else:
 
                 if args.script:
+                    # If a Script was provided, call _clone_action_object with Script related params and
+                    # add the newly cloned Script to new_export_data
                     new_export_data['scripts'] = self._clone_action_object(
-                        args.script, org_export, 'Script', 'scripts', CmdClone.replace_function_object_attrs, args.changetype)
+                        args.script, org_export, 'Script', ResilientObjMap.SCRIPTS, 'scripts', CmdClone.replace_function_object_attrs, args.changetype)
                 if args.function:
+                    # If a Function was provided, call _clone_action_object with Function related params and
+                    # add the newly cloned Function to new_export_data
                     new_export_data['functions'] = self._clone_action_object(
-                        args.function, org_export, 'Function', 'functions', CmdClone.replace_function_object_attrs)
+                        args.function, org_export, 'Function', ResilientObjMap.FUNCTIONS, 'functions', CmdClone.replace_function_object_attrs)
 
                 if args.rule:
+                    # If a Rule was provided, call _clone_action_object with Rule related params and
+                    # add the newly cloned Rule to new_export_data
                     new_export_data["actions"] = self._clone_action_object(
-                        args.rule, org_export, 'Rule', 'actions', CmdClone.replace_rule_object_attrs)
+                        args.rule, org_export, 'Rule', ResilientObjMap.RULES, 'actions', CmdClone.replace_rule_object_attrs)
 
                 if args.workflow:
+                    # If a Workflow was provided, call _clone_workflow with Workflow related params and
+                    # add the newly cloned Workflow to new_export_data
                     new_export_data["workflows"] = self._clone_workflow(
                         args, org_export)
 
                 if args.messagedestination:
+                    # If a Message Destination was provided, call _clone_action_object with Message Destination related params and
+                    # add the newly cloned Message Destination to new_export_data
                     new_export_data["message_destinations"] = self._clone_action_object(
-                        args.messagedestination, org_export, 'Message Destination', 'message_destinations', CmdClone.replace_md_object_attrs)
+                        args.messagedestination, org_export, 'Message Destination', ResilientObjMap.MESSAGE_DESTINATIONS, 'message_destinations', CmdClone.replace_md_object_attrs)
 
             add_configuration_import(new_export_data, res_client)
 
@@ -194,13 +204,13 @@ class CmdClone(BaseCmd):
                     args.prefix, old_api_name)
                 # If the object we are dealing with was one of the requested objects
                 if self.action_obj_was_specified(args, obj):
+                    # Handle functions for cloning
                     if obj.get('display_name', False):
                         new_function = CmdClone.replace_function_object_attrs(
                             obj, new_api_name)
 
                         new_export_data[object_type].append(new_function)
-                        LOG.info(new_export_data[object_type])
-                    # Handle workflows
+                    # Handle workflows for cloning
                     elif obj.get('content', {}).get('xml', False):
                         new_export_data['workflows'].append(CmdClone.replace_workflow_object_attrs(
                             obj, old_api_name, new_api_name, obj['name']))
@@ -228,27 +238,25 @@ class CmdClone(BaseCmd):
             if getattr(args, type_name):
                 specified_objs.extend(getattr(args, type_name))
 
-        specified_objs = set(specified_objs)
-
         # Functions contain a reference to the message destination, for this case check and handle functions first
         if obj.get('destination_handle', False):
             return obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs
-        return obj.get(ResilientObjMap.RULES, "") in specified_objs or obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs or obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs or obj.get(ResilientObjMap.DATATABLES, "") in specified_objs
+        return any([obj.get(ResilientObjMap.RULES, "") in specified_objs, obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs, obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs, obj.get(ResilientObjMap.DATATABLES, "") in specified_objs])
+         
 
     @staticmethod
-    def _clone_action_object(input_args, org_export, obj_name, obj_key, replace_fn, new_object_type=None):
+    def _clone_action_object(input_args, org_export, obj_name, obj_identifier, obj_key, replace_fn, new_object_type=None):
         if len(input_args) != 2:
             raise SDKException(
                 "Received less than 2 object names. Only specify the original action object name and a new object name")
 
         original_obj_api_name, new_obj_api_name = input_args
 
-        obj_defs = org_export.get(obj_key)
         original_obj = CmdClone.validate_provided_object_names(obj_type=obj_key,
-                                                               obj_identifier=getattr(ResilientObjMap, "{}S".format(obj_name.upper())), 
-                                                               obj_type_name=obj_name, 
+                                                               obj_identifier=obj_identifier,
+                                                               obj_type_name=obj_name,
                                                                new_workflow_api_name=new_obj_api_name,
-                                                               original_workflow_api_name=original_obj_api_name, 
+                                                               original_workflow_api_name=original_obj_api_name,
                                                                export=org_export)
 
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
@@ -267,10 +275,10 @@ class CmdClone(BaseCmd):
 
         # Validate both the original source workflow exists and the new workflow api name does not conflict with an existing workflow
         original_workflow = CmdClone.validate_provided_object_names(obj_type="workflows",
-                                                                    obj_identifier=ResilientObjMap.WORKFLOWS, 
-                                                                    obj_type_name="Workflow", 
+                                                                    obj_identifier=ResilientObjMap.WORKFLOWS,
+                                                                    obj_type_name="Workflow",
                                                                     new_workflow_api_name=new_workflow_api_name,
-                                                                    original_workflow_api_name=original_workflow_api_name, 
+                                                                    original_workflow_api_name=original_workflow_api_name,
                                                                     export=org_export)
         new_workflow = original_workflow.copy()
         # Gather the old workflow name before we modify the object
@@ -293,7 +301,8 @@ class CmdClone(BaseCmd):
         # Perform a duplication check with the provided new name
         try:
             # Try to get a res obj with the new name
-            get_res_obj(obj_type, obj_identifier, obj_type_name, [new_workflow_api_name], export, include_api_name=False)
+            get_res_obj(obj_type, obj_identifier, obj_type_name, [
+                        new_workflow_api_name], export, include_api_name=False)
         except SDKException:
             # get_res_obj raises an exception if the object is not found
             # normally this is good but for this unique use case
@@ -306,7 +315,8 @@ class CmdClone(BaseCmd):
                 obj_type_name, new_workflow_api_name))
 
         # Gather the original Action Object to be returned
-        original_workflow = get_res_obj(obj_type, obj_identifier, obj_type_name, [original_workflow_api_name], export, include_api_name=False)[0]
+        original_workflow = get_res_obj(obj_type, obj_identifier, obj_type_name, [
+                                        original_workflow_api_name], export, include_api_name=False)[0]
         # Return the object
         return original_workflow
 
@@ -336,7 +346,7 @@ class CmdClone(BaseCmd):
 
     @staticmethod
     def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_api_name, old_workflow_name):
-        """replace_workflow_object_attrs replace/overwrite the unique attributes of the workflow object so that 
+        """replace_workflow_object_attrs replace/overwrite the unique attributes of the workflow object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
         :param obj_to_modify: The object whose attributes will be modified, in this case a workflow
@@ -345,7 +355,7 @@ class CmdClone(BaseCmd):
         :type original_obj_api_name: str
         :param new_obj_api_name: the new cloned workflow name
         :type new_obj_api_name: str
-        :param old_workflow_name: workflows have api names and also a name in the content object 
+        :param old_workflow_name: workflows have api names and also a name in the content object
         :type old_workflow_name: str
         :return: the modified object
         :rtype: dict
@@ -356,8 +366,10 @@ class CmdClone(BaseCmd):
 
         workflow_xml = obj_to_modify.get("content").get("xml")
 
-        workflow_xml = workflow_xml.replace('id="{}"'.format(original_obj_api_name), 'id="{}"'.format(new_obj_api_name))
-        workflow_xml = workflow_xml.replace('name="{}"'.format(old_workflow_name), 'name="{}"'.format(new_obj_api_name))
+        workflow_xml = workflow_xml.replace(u'id="{}"'.format(
+            original_obj_api_name), u'id="{}"'.format(new_obj_api_name))
+        workflow_xml = workflow_xml.replace(u'name="{}"'.format(
+            old_workflow_name), u'name="{}"'.format(new_obj_api_name))
         # Now do the workflow specific ones and return
         obj_to_modify.update({
             ResilientObjMap.WORKFLOWS: new_obj_api_name,
@@ -419,7 +431,7 @@ class CmdClone(BaseCmd):
 
         :param obj_to_modify: the object to be modified, in this case a function
         :type obj_to_modify: dict
-        :param new_obj_api_name: the name of the function to modify 
+        :param new_obj_api_name: the name of the function to modify
         :type new_obj_api_name: str
         :return: the modified object
         :rtype: dict

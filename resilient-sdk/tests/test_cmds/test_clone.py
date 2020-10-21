@@ -18,13 +18,18 @@ TEST_OBJ = {
 }
 
 TEST_EXPORT = read_mock_json("export.JSON")
-MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
+# Mandatory keys for a configuration import
+MANDATORY_KEYS = ["incident_types", "fields"]
 # Map from export object keys to each objects unique identifier
-EXPORT_TYPE_MAP = {'actions': ResilientObjMap.RULES, 'functions': ResilientObjMap.FUNCTIONS, 'workflows':ResilientObjMap.WORKFLOWS}
-TEST_CLONE_FAILURE_DATA = [(("bad_function", "new_func"), "Function", 'functions', CmdClone.replace_function_object_attrs),
-                    (("bad_rule", "new_rule"), "Rule", 'actions', CmdClone.replace_rule_object_attrs),
-                    (("bad_md", "new_md"), "Message Destination", 'message_destinations', CmdClone.replace_md_object_attrs),
-                    (("bad_script", "new_script"), "Script", 'scripts', CmdClone.replace_function_object_attrs)]
+EXPORT_TYPE_MAP = {'actions': ResilientObjMap.RULES,
+                   'functions': ResilientObjMap.FUNCTIONS, 'workflows': ResilientObjMap.WORKFLOWS}
+TEST_CLONE_FAILURE_DATA = [(("bad_function", "new_func"), "Function", ResilientObjMap.FUNCTIONS, 'functions', CmdClone.replace_function_object_attrs),
+                           (("bad_rule", "new_rule"), "Rule", ResilientObjMap.RULES,
+                            'actions', CmdClone.replace_rule_object_attrs),
+                           (("bad_md", "new_md"), "Message Destination", ResilientObjMap.MESSAGE_DESTINATIONS,
+                            'message_destinations', CmdClone.replace_md_object_attrs),
+                           (("bad_script", "new_script"), "Script", ResilientObjMap.SCRIPTS, 'scripts', CmdClone.replace_function_object_attrs)]
+
 
 def test_cmd_clone_setup(fx_get_sub_parser):
     """
@@ -64,17 +69,16 @@ def test_clone_workflow(fx_get_sub_parser):
         Namespace(workflow=[old_name, new_name], changetype=""), TEST_EXPORT)
 
     original_obj = CmdClone.validate_provided_object_names(obj_type="workflows",
-                                                           obj_identifier=ResilientObjMap.WORKFLOWS, 
-                                                           obj_type_name="Workflow", 
+                                                           obj_identifier=ResilientObjMap.WORKFLOWS,
+                                                           obj_type_name="Workflow",
                                                            new_workflow_api_name=new_name,
-                                                           original_workflow_api_name=old_name, 
+                                                           original_workflow_api_name=old_name,
                                                            export=TEST_EXPORT)
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
     # Ensure the Object specific primary key is not duplicated
     assert export_data[0][ResilientObjMap.WORKFLOWS] != original_obj[
         ResilientObjMap.WORKFLOWS], "Expected that the export_key was updated"
-
 
 
 def test_replace_function_object_attrs():
@@ -92,7 +96,8 @@ def test_replace_function_object_attrs():
 
     old_function_name = obj_to_modify[ResilientObjMap.FUNCTIONS]
     new_obj = copy.copy(obj_to_modify)
-    new_obj = CmdClone.replace_function_object_attrs(obj_to_modify, "test_new_function")
+    new_obj = CmdClone.replace_function_object_attrs(
+        obj_to_modify, "test_new_function")
 
     assert new_obj[ResilientObjMap.FUNCTIONS] != old_function_name
 
@@ -119,7 +124,8 @@ def test_replace_rule_object_attrs():
 
     old_rule_name = obj_to_modify[ResilientObjMap.RULES]
     new_obj = copy.copy(obj_to_modify)
-    new_obj = CmdClone.replace_rule_object_attrs(obj_to_modify, "test_new_rule")
+    new_obj = CmdClone.replace_rule_object_attrs(
+        obj_to_modify, "test_new_rule")
 
     assert new_obj[ResilientObjMap.RULES] != old_rule_name
 
@@ -166,6 +172,7 @@ def test_action_obj_was_specified_not_present(fx_get_sub_parser, fx_cmd_line_arg
         if functions['name'] not in args.function:
             assert not CmdClone.action_obj_was_specified(args, functions)
 
+
 def test_action_obj_was_specified_success(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
     """
     Test to verify that if an action object is specified in the args
@@ -177,6 +184,7 @@ def test_action_obj_was_specified_success(fx_get_sub_parser, fx_cmd_line_args_cl
     function = TEST_EXPORT.get('functions')[0]
     assert function['name'] == 'mock_function_one'
     assert CmdClone.action_obj_was_specified(args, function)
+
 
 def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange):
     """
@@ -190,13 +198,13 @@ def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange)
     assert args.changetype == "task"
 
     export_data = cmd_clone._clone_workflow(args, TEST_EXPORT)
-    
+
     old_name, new_name = args.workflow
     original_obj = CmdClone.validate_provided_object_names(obj_type="workflows",
-                                                           obj_identifier=ResilientObjMap.WORKFLOWS, 
-                                                           obj_type_name="Workflow", 
+                                                           obj_identifier=ResilientObjMap.WORKFLOWS,
+                                                           obj_type_name="Workflow",
                                                            new_workflow_api_name=new_name,
-                                                           original_workflow_api_name=old_name, 
+                                                           original_workflow_api_name=old_name,
                                                            export=TEST_EXPORT)
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
@@ -235,16 +243,18 @@ def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
             # clear the new export data, the stuff we clear isn't necessary for cloning
             new_export_data[dict_key] = []
 
-    # Perform the cloning 
-    cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
-    
+    # Perform the cloning
+    cmd_clone._clone_multiple_action_objects(
+        args, new_export_data, TEST_EXPORT)
+
     # A mapping table of the org_export items and their unique identifiers
-    # for each tested type, get the type name in the export and its identifier    
+    # for each tested type, get the type name in the export and its identifier
     for obj_type, identifier in EXPORT_TYPE_MAP.items():
         # for each action onject of type obj_type
         for obj in new_export_data[obj_type]:
             # Ensure the provided prefix is found on the objects unique identifier
             assert "v2" in obj[identifier], "Expected the object's identifer to contain the prefix"
+
 
 def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
     """
@@ -272,10 +282,11 @@ def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
             # clear the new export data, the stuff we clear isn't necessary for cloning
             new_export_data[dict_key] = []
     # Perform the cloning
-    cmd_clone._clone_multiple_action_objects(args, new_export_data, TEST_EXPORT)
+    cmd_clone._clone_multiple_action_objects(
+        args, new_export_data, TEST_EXPORT)
 
-    # Assert in the new export dict that there is the same number of objects 
-    # as there is in the args  
+    # Assert in the new export dict that there is the same number of objects
+    # as there is in the args
     assert len(new_export_data['functions']) == len(args.function)
     assert len(new_export_data['workflows']) == len(args.workflow)
     assert len(new_export_data['actions']) == len(args.rule)
@@ -291,37 +302,40 @@ def test_clone_workflow_failure(fx_get_sub_parser, fx_cmd_line_args_clone_prefix
     new_name = "new_mocked_workflow"
     # Get sub_parser object, its dest is cmd
     cmd_clone = CmdClone(fx_get_sub_parser)
-    expected_error = "Workflow: '{}' not found in this export.".format(old_name)
+    expected_error = "Workflow: '{}' not found in this export.".format(
+        old_name)
     with pytest.raises(SDKException) as excinfo:
         export_data = cmd_clone._clone_workflow(
             Namespace(workflow=[old_name, new_name], changetype=""), TEST_EXPORT)
 
         original_obj = CmdClone.validate_provided_object_names(obj_type="workflows",
-                                                           obj_identifier=ResilientObjMap.WORKFLOWS, 
-                                                           obj_type_name="Workflow", 
-                                                           new_workflow_api_name=new_name,
-                                                           original_workflow_api_name=old_name, 
-                                                           export=TEST_EXPORT)
+                                                               obj_identifier=ResilientObjMap.WORKFLOWS,
+                                                               obj_type_name="Workflow",
+                                                               new_workflow_api_name=new_name,
+                                                               original_workflow_api_name=old_name,
+                                                               export=TEST_EXPORT)
     # Gather the message from the execution info, throwing away the other args
     exception_message, = excinfo.value.args
     assert expected_error in exception_message
 
-@pytest.mark.parametrize("input_args, obj_type, obj_name, replace_fn", 
-                    TEST_CLONE_FAILURE_DATA, ids=['Function', 'Rule', 'Message Destination', 'Scripts'])
-def test_clone_action_obj_failure(fx_get_sub_parser, input_args, obj_type, obj_name, replace_fn):
+@pytest.mark.parametrize("input_args, obj_type, obj_identifier, obj_name, replace_fn",
+                         TEST_CLONE_FAILURE_DATA, ids=['Function', 'Rule', 'Message Destination', 'Scripts'])
+def test_clone_action_obj_failure(fx_get_sub_parser, input_args, obj_type, obj_identifier, obj_name, replace_fn):
     """
     Parametrized tests to confirm for each scenario if a non-existant action object is provided
     an appropriate exception is raised with the expected message 
     """
     # Get sub_parser object, its dest is cmd
     cmd_clone = CmdClone(fx_get_sub_parser)
-    expected_error = "{}: '{}' not found in this export.".format(obj_type, input_args[0])
+    expected_error = "{}: '{}' not found in this export.".format(
+        obj_type, input_args[0])
     with pytest.raises(SDKException) as excinfo:
         export_data = cmd_clone._clone_action_object(
-            input_args, TEST_EXPORT, obj_type, obj_name, replace_fn)
+            input_args, TEST_EXPORT, obj_type, obj_identifier, obj_name, replace_fn)
     # Gather the message from the execution info, throwing away the other args
     exception_message, = excinfo.value.args
     assert expected_error in exception_message
+
 
 def test_clone_action_obj_too_many_args(fx_get_sub_parser):
     """
@@ -332,7 +346,7 @@ def test_clone_action_obj_too_many_args(fx_get_sub_parser):
     expected_error = "Received less than 2 object names. Only specify the original action object name and a new object name"
     with pytest.raises(SDKException) as excinfo:
         export_data = cmd_clone._clone_action_object(
-            ("thing1","thing2","thing3"), TEST_EXPORT, 'Fuction', 'functions', CmdClone.replace_function_object_attrs)
+            ("thing1", "thing2", "thing3"), TEST_EXPORT, 'Fuction', ResilientObjMap.FUNCTIONS, 'functions', CmdClone.replace_function_object_attrs)
     # Gather the message from the execution info, throwing away the other args
     exception_message, = excinfo.value.args
     assert exception_message == expected_error
