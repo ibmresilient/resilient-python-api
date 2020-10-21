@@ -47,6 +47,7 @@ if [ "$deploy" = true ] ; then
         package_name=$(basename $p)
         artifactory_path=$BASE_ARTIFACTORY_PATH/$package_name
         echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
+        # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
         curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY_SHANE}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
     done
 fi
