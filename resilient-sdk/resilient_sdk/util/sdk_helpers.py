@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
 
+import requests.exceptions
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
@@ -284,14 +285,23 @@ def add_configuration_import(new_export_data, res_client):
 
     After the request is made, the configuration import is set at a pending state and needs to be confirmed.
     If the configuration state is not reported as pending, raise an SDK Exception.
+
+
+    :param new_export_data: A dict representing a configuration import DTO
+    :type result: dict
+    :param import_id: The ID of the configuration import to confirm
+    :type import_id: int
+    :param res_client: An instantiated res_client for making REST calls
+    :type res_client: SimpleClient()
+    :raises SDKException: If the confirmation request fails raise an SDKException
     """
     try:
         result = res_client.post(IMPORT_URL, new_export_data)
-    except Exception as upload_exception:
+    except requests.RequestException as upload_exception:
         LOG.debug(new_export_data)
         raise SDKException(upload_exception)
 
-    if result["status"] == "PENDING":
+    if result.get("status", '') == "PENDING":
         confirm_configuration_import(result, result['id'], res_client)
     else:
         raise SDKException(
@@ -306,13 +316,21 @@ def confirm_configuration_import(result, import_id, res_client):
     The result of a configuration import request
     The ID of the configuration import request
     A res_client to perform the request
+
+    :param result: Result of the configuration import request
+    :type result: dict
+    :param import_id: The ID of the configuration import to confirm
+    :type import_id: int
+    :param res_client: An instantiated res_client for making REST calls
+    :type res_client: SimpleClient()
+    :raises SDKException: If the confirmation request fails raise an SDKException
     """
     try:
         result["status"] = "ACCEPTED"      # Have to confirm changes
         uri = "{}/{}".format(IMPORT_URL, import_id)
         res_client.put(uri, result, timeout=5)
         LOG.info("Imported configuration changes successfully")
-    except Exception as import_exception:
+    except requests.RequestException as import_exception:
         raise SDKException(repr(import_exception))
 
 def read_local_exportfile(path_local_exportfile):
@@ -529,8 +547,6 @@ def get_from_export(export,
 
             # Get Function's Message Destination name
             message_destinations.append(f.get("destination_handle", ""))
-
-        
 
         # Get Functions in Workflow
         for workflow in return_dict["workflows"]:
@@ -836,7 +852,7 @@ def get_timestamp(timestamp=None):
     Returns a string of the current time
     in the format YYYY-MM-DD-hh:mm:ss
 
-    If `timestamp` is defined, it will return that timestamp in 
+    If `timestamp` is defined, it will return that timestamp in
     the format YYYY-MM-DD-hh:mm:ss
 
     :param timestamp: Dictionary whose keys are file names
@@ -851,5 +867,4 @@ def get_timestamp(timestamp=None):
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
 
     return datetime.datetime.now().strftime(TIME_FORMAT)
-
 

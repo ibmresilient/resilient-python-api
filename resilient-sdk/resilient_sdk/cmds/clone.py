@@ -35,7 +35,7 @@ class CmdClone(BaseCmd):
     and make an configuration import request to complete the cloning process"""
 
     CMD_NAME = "clone"
-    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
+    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
     CMD_USAGE = """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
@@ -44,7 +44,7 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
-    CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api name"
+    CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
 
     def setup(self):
         # Define codegen usage and description
