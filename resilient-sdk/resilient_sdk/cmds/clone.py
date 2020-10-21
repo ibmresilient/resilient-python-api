@@ -20,8 +20,8 @@ from resilient_sdk.util.sdk_exception import SDKException
 LOG = logging.getLogger("resilient_sdk_log")
 
 MANDATORY_KEYS = ["incident_types", "fields"]  # Mandatory keys for a configuration import
-SUPPORTED_ACTION_OBJECTS = ['function', 'workflow', 'rule', 'datatable', 'messagedestination', 'script']
-
+SUPPORTED_ACTION_OBJECTS = ['function', 'workflow', 'rule', 'messagedestination', 'script']
+ACTION_OBJECT_KEYS = ['functions', 'workflows', 'actions', 'message_destinations', 'scripts']
 
 class CmdClone(BaseCmd):
     """
@@ -154,6 +154,7 @@ class CmdClone(BaseCmd):
             add_configuration_import(new_export_data, res_client)
 
         else:
+            LOG.info("One or more provided args are not supported")
             self.parser.print_help()
 
         end = time.perf_counter()
@@ -161,6 +162,7 @@ class CmdClone(BaseCmd):
 
     def _clone_multiple_action_objects(self, args, new_export_data, org_export):
         LOG.info("Prefix provided, copying multiple Action Objects")
+
         # Get data required from the export
         jinja_data = get_from_export(org_export,
                                      message_destinations=args.messagedestination,
@@ -184,37 +186,32 @@ class CmdClone(BaseCmd):
                                      ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
 
-        # for action_object in SUPPORTED_ACTION_OBJECTS:
-        #     for obj in minified.get(action_object, []):                    
-        # For every thing in the export
-        for object_type, action_objects in minified.items():
-            # If the type is not fields and the value of the type is a list
-            if object_type != "all_fields" and isinstance(action_objects, list):
-                # Iterate over each object in the filtered action_objects list. If the obj is not a dict, it is not an action object
-                for obj in filter(lambda obj: isinstance(obj, dict), action_objects):
-                    old_api_name = obj.get('export_key')
-                    new_api_name = "{}_{}".format(
-                        args.prefix, old_api_name)
-                    # If the object we are dealing with was one of the requested objects
-                    if self.action_obj_was_specified(args, obj):
-                        # Handle functions and datatables
-                        if obj.get('display_name', False):
-                            new_function = CmdClone.replace_function_object_attrs(
-                                obj, new_api_name)
+        # For each support object
+        for object_type in ACTION_OBJECT_KEYS:
+            for obj in minified.get(object_type, []):
+                old_api_name = obj.get('export_key')
+                new_api_name = "{}_{}".format(
+                    args.prefix, old_api_name)
+                # If the object we are dealing with was one of the requested objects
+                if self.action_obj_was_specified(args, obj):
+                    if obj.get('display_name', False):
+                        new_function = CmdClone.replace_function_object_attrs(
+                            obj, new_api_name)
 
-                            new_export_data[object_type].append(new_function)
-                        # Handle workflows
-                        elif obj.get('content', {}).get('xml', False):
-                            new_export_data['workflows'].append(CmdClone.replace_workflow_object_attrs(
-                                obj, old_api_name, new_api_name, obj['name']))
-                        # Handle Message Destination. Of the supported Action Object types; only Message Destination and Workflow use programmatic_name
-                        elif obj.get('programmatic_name', False):
-                            new_export_data['message_destinations'].append(CmdClone.replace_md_object_attrs(
-                                obj, new_api_name))
-                        # Handle Rules and everything else
-                        else:
-                            new_export_data[object_type].append(CmdClone.replace_rule_object_attrs(
-                                obj, new_api_name))
+                        new_export_data[object_type].append(new_function)
+                        LOG.info(new_export_data[object_type])
+                    # Handle workflows
+                    elif obj.get('content', {}).get('xml', False):
+                        new_export_data['workflows'].append(CmdClone.replace_workflow_object_attrs(
+                            obj, old_api_name, new_api_name, obj['name']))
+                    # Handle Message Destination. Of the supported Action Object types; only Message Destination and Workflow use programmatic_name
+                    elif obj.get('programmatic_name', False):
+                        new_export_data['message_destinations'].append(CmdClone.replace_md_object_attrs(
+                            obj, new_api_name))
+                    # Handle Rules and everything else
+                    else:
+                        new_export_data[object_type].append(CmdClone.replace_rule_object_attrs(
+                            obj, new_api_name))
 
     @staticmethod
     def action_obj_was_specified(args, obj):
@@ -248,13 +245,11 @@ class CmdClone(BaseCmd):
 
         obj_defs = org_export.get(obj_key)
         original_obj = CmdClone.validate_provided_object_names(obj_type=obj_key,
-                                                                    obj_identifier=ResilientObjMap.FUNCTIONS, 
-                                                                    obj_type_name=obj_name, 
-                                                                    new_workflow_api_name=new_obj_api_name,
-                                                                    original_workflow_api_name=original_obj_api_name, 
-                                                                    export=org_export)
-        original_obj = CmdClone.validate_provided_object_names(obj_name, new_obj_api_name,
-                                                               original_obj_api_name, obj_defs)
+                                                               obj_identifier=getattr(ResilientObjMap, "{}S".format(obj_name.upper())), 
+                                                               obj_type_name=obj_name, 
+                                                               new_workflow_api_name=new_obj_api_name,
+                                                               original_workflow_api_name=original_obj_api_name, 
+                                                               export=org_export)
 
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
 
@@ -390,7 +385,7 @@ class CmdClone(BaseCmd):
 
         # # Now do the workflow specific ones and return
         obj_to_modify.update({
-            # "display_name": new_obj_api_name,
+            "display_name": new_obj_api_name,
             ResilientObjMap.FUNCTIONS: new_obj_api_name
         })
         if obj_to_modify.get(ResilientObjMap.DATATABLES, False):
