@@ -123,6 +123,32 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json=self.incident)
 
+    @resilient_endpoint("patch", "/incidents/[0-9]+")
+    def incident_patch(self, request):
+        """ Callback for patch to /orgs/<org_id>/incidents/<inc_id> """
+        LOG.debug("incident_patch")
+        # update the incident object
+        vers = request.get("version", 0)
+        vers += 1
+        self.incident['vers'] = vers
+
+        for change in request.get('changes', []):
+            name = change.get("field", {}).get("name")
+            if isinstance(change.get("new_value", {}).get("object"), dict):
+                new_value = change["new_value"]["object"].get("content")
+            else:
+                new_value = change["new_value"]["object"]
+            if name and self.incident.get(name):
+                self.incident[name] = new_value
+            elif name and self.incident['properties'].get(name):
+                self.incident['properties'][name] = new_value
+            else:
+                LOG.error("Field '%s' not found in mock incident", name)
+
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=self.incident)
+
     @resilient_endpoint("POST", "/incidents/")
     def incident_post(self, request):
         """ Callback for POST to /orgs/<org_id>/incidents """
@@ -240,7 +266,7 @@ class BasicResilientMock(ResilientMock):
                                              json='"abcdef"')
 
     @resilient_endpoint("POST", "/incidents/[0-9]+/attachments$")
-    def attachment_contents_get(self, request):
+    def attachment_contents_post(self, request):
         """ Callback for POST to attachment """
         LOG.debug("attachment_post")
         data = test_data("200_JSON_POST__attachment.json")
