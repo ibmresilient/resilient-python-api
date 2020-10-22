@@ -52,11 +52,6 @@ class CmdClone(BaseCmd):
         self.parser.description = self.CMD_DESCRIPTION
 
         # Arguments for action objects which support cloning
-        self.parser.add_argument("-d", "--datatable",
-                                 type=ensure_unicode,
-                                 help="API names of datatables to include",
-                                 nargs="*")
-
         self.parser.add_argument("-f", "--function",
                                  type=ensure_unicode,
                                  help="API names of functions to include",
@@ -167,7 +162,6 @@ class CmdClone(BaseCmd):
             add_configuration_import(new_export_data, res_client)
 
         else:
-            LOG.info("One or more provided args are not supported")
             self.parser.print_help()
 
         end = time.perf_counter()
@@ -182,7 +176,6 @@ class CmdClone(BaseCmd):
                                      functions=args.function,
                                      workflows=args.workflow,
                                      rules=args.rule,
-                                     datatables=args.datatable,
                                      scripts=args.script,
                                      get_related_objects=False)
         # Get 'minified' version of the export. This is used in customize.py
@@ -195,8 +188,6 @@ class CmdClone(BaseCmd):
                                      ResilientObjMap.WORKFLOWS, jinja_data.get("workflows")),
                                  rules=get_object_api_names(
                                      ResilientObjMap.RULES, jinja_data.get("rules")),
-                                 datatables=get_object_api_names(
-                                     ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                  scripts=get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
 
         # For each support object
@@ -216,7 +207,7 @@ class CmdClone(BaseCmd):
                     # Handle workflows for cloning
                     elif obj.get('content', {}).get('xml', False):
                         new_export_data['workflows'].append(CmdClone.replace_workflow_object_attrs(
-                            obj, old_api_name, new_api_name, obj['name']))
+                            obj, old_api_name, new_api_name, obj['name'], args.changetype))
                     # Handle Message Destination. Of the supported Action Object types; only Message Destination and Workflow use programmatic_name
                     elif obj.get('programmatic_name', False):
                         new_export_data['message_destinations'].append(CmdClone.replace_md_object_attrs(
@@ -224,7 +215,7 @@ class CmdClone(BaseCmd):
                     # Handle Rules and everything else
                     else:
                         new_export_data[object_type].append(CmdClone.replace_rule_object_attrs(
-                            obj, new_api_name))
+                            obj, new_api_name, args.changetype))
 
     @staticmethod
     def action_obj_was_specified(args, obj):
@@ -284,11 +275,8 @@ class CmdClone(BaseCmd):
 
         # Update workflow specific items and any common obj attributes
         new_workflow = CmdClone.replace_workflow_object_attrs(
-            new_workflow, original_workflow_api_name, new_workflow_api_name, old_workflow_name)
+            new_workflow, original_workflow_api_name, new_workflow_api_name, old_workflow_name, args.changetype)
 
-        # If type was provided, change the workflows type
-        if args.changetype:
-            new_workflow['object_type'] = args.changetype
         # Add the cloned workflow to the new export object
         return [new_workflow]
 
@@ -348,7 +336,7 @@ class CmdClone(BaseCmd):
         return obj_to_modify
 
     @staticmethod
-    def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_api_name, old_workflow_name):
+    def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_api_name, old_workflow_name, changetype=None):
         """replace_workflow_object_attrs replace/overwrite the unique attributes of the workflow object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
@@ -360,6 +348,8 @@ class CmdClone(BaseCmd):
         :type new_obj_api_name: str
         :param old_workflow_name: workflows have api names and also a name in the content object
         :type old_workflow_name: str
+        :param changetype: A new type for the workflow or None
+        :type changetype: str or None
         :return: the modified object
         :rtype: dict
         """
@@ -380,6 +370,11 @@ class CmdClone(BaseCmd):
                 "xml": workflow_xml,
                 "workflow_id": new_obj_api_name
             }})
+
+        if changetype and obj_to_modify.get("object_type", False):
+            obj_to_modify.update({
+                "object_type": changetype
+            })
         return obj_to_modify
 
     @staticmethod
@@ -407,10 +402,11 @@ class CmdClone(BaseCmd):
             obj_to_modify.update({
                 ResilientObjMap.DATATABLES: new_obj_api_name
             })
+
         return obj_to_modify
 
     @staticmethod
-    def replace_rule_object_attrs(obj_to_modify, new_obj_api_name):
+    def replace_rule_object_attrs(obj_to_modify, new_obj_api_name, changetype=None):
         """replace_rule_object_attrs replace/overwrite the unique attributes of the rule object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
@@ -418,6 +414,8 @@ class CmdClone(BaseCmd):
         :type obj_to_modify: dict
         :param new_obj_api_name: the name of the function to modify
         :type new_obj_api_name: str
+        :param changetype: A new type for the workflow or None
+        :type changetype: str or None
         :return: the modified object
         :rtype: dict
         """
@@ -425,6 +423,10 @@ class CmdClone(BaseCmd):
         obj_to_modify = CmdClone.replace_common_object_attrs(
             obj_to_modify, new_obj_api_name)
 
+        if changetype and obj_to_modify.get("object_type", False):
+            obj_to_modify.update({
+                "object_type": changetype
+            })
         return obj_to_modify
 
     @staticmethod
