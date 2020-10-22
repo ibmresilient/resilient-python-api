@@ -16,7 +16,7 @@ from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 
 class CmdExtract(BaseCmd):

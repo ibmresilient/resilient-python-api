@@ -33,20 +33,36 @@ else:
     reload = importlib.reload
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Constants
 BASE_NAME_BUILD = "build"
 BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
+BASE_NAME_SETUP_PY = "setup.py"
+BASE_NAME_DIST_DIR = "dist"
+BASE_NAME_DOCKER_FILE = "Dockerfile"
+BASE_NAME_ENTRY_POINT = "entrypoint.sh"
+BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 
 PREFIX_EXTENSION_ZIP = "app-"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
+PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
+
+PATH_SETUP_PY = "setup.py"
+PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CONFIG_PY = os.path.join("util", "config.py")
+PATH_DOC_DIR = "doc"
+PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
+PATH_README = "README.md"
+PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
+
+MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
-    "author", "name", "version",
+    "author", "name", "display_name", "version",
     "description", "long_description", "url",
     "install_requires", "entry_points"
 )
@@ -696,6 +712,12 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
             height_accepted=100,
             default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
+        # Get the display name
+        # Use --display-name if passed
+        # If not use 'display_name' attribute in setup.py
+        # If not set use the 'name' attribute in setup.py
+        display_name = custom_display_name or setup_py_attributes.get("display_name") or setup_py_attributes.get("name")
+
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
             "author": {
@@ -710,7 +732,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "content": setup_py_attributes.get("description"),
                 "format": "text"
             },
-            "display_name": custom_display_name if custom_display_name is not None else setup_py_attributes.get("name"),
+            "display_name": display_name,
             "icon": {
                 "data": extension_logo,
                 "media_type": "image/png"

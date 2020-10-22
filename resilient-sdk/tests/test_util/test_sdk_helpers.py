@@ -74,6 +74,12 @@ def test_is_valid_url():
     assert sdk_helpers.is_valid_url("https://www. example.com") is False
 
 
+def test_does_url_contain():
+    assert sdk_helpers.does_url_contain("http://www.example.com", "example") is True
+    assert sdk_helpers.does_url_contain("not a url", "example") is False
+    assert sdk_helpers.does_url_contain("http://www.example.com", "abc") is False
+
+
 def test_generate_uuid_from_string():
     the_string, the_uuid = "fn_test_package", "7627eab9-8500-cf1d-380d-14a2c4364acf"
     the_generated_uuid = sdk_helpers.generate_uuid_from_string(the_string)
@@ -266,8 +272,12 @@ def test_rename_to_bak_file_if_file_not_exist(fx_mk_temp_dir):
 
 
 def test_generate_anchor():
-    anchor = sdk_helpers.generate_anchor("D מ ן נ ס עata Ta$%^ble Utils: Delete_Row")
-    assert anchor == "d-----ata-table-utils-delete-row"
+    anchor = sdk_helpers.generate_anchor(u"D מ ן נ ס עata Ta!@#$%^&*()__ble Utせ ぜ そ ぞ た だils: ✔✕✖✗✘✙✚✛ òDelete_Rowﻀ ﻁ ﻂ ﻃ ﻄ ﻅ ﻆ ﻇ ﻈ and 㐖 㐗 㐘 㐙 㐚 㐛 㐜 㐝")
+    assert anchor == u"d-מ-ן-נ-ס-עata-ta__ble-utせ-ぜ-そ-ぞ-た-だils--òdelete_rowﻀ-ﻁ-ﻂ-ﻃ-ﻄ-ﻅ-ﻆ-ﻇ-ﻈ-and-㐖-㐗-㐘-㐙-㐚-㐛-㐜-㐝"
+
+
+def test_simplify_string():
+    assert "d-----ata-ta--ble-ut-----ils--delete-row---------and--------" == sdk_helpers.simplify_string("D מ ן נ ס עata Ta!@#$%^&*()__ble Utせ ぜ そ ぞ た だils: ✔✕✖✗✘✙✚✛ òDelete_Rowﻀ ﻁ ﻂ ﻃ ﻄ ﻅ ﻆ ﻇ ﻈ and 㐖 㐗 㐘 㐙 㐚 㐛 㐜 㐝")
 
 
 def test_get_workflow_functions():
@@ -290,3 +300,13 @@ def test_get_timestamp():
 def test_get_timestamp_from_timestamp():
     ts = sdk_helpers.get_timestamp(1579258053.728)
     assert ts == "20200117104733"
+
+
+def test_str_to_bool():
+    assert sdk_helpers.str_to_bool('True') is True
+    assert sdk_helpers.str_to_bool('true') is True
+    assert sdk_helpers.str_to_bool('YES') is True
+    assert sdk_helpers.str_to_bool('truex') is False
+    assert sdk_helpers.str_to_bool(1) is True
+    assert sdk_helpers.str_to_bool(0) is False
+    assert sdk_helpers.str_to_bool('0') is False
