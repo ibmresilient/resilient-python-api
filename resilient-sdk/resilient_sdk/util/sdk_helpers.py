@@ -906,6 +906,8 @@ def get_timestamp(timestamp=None):
 
     return datetime.datetime.now().strftime(TIME_FORMAT)
 
+
+def str_to_bool(value):
     """
     Represents value as boolean.
     :param value:
