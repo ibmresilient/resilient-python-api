@@ -5,9 +5,10 @@ import sys
 import shutil
 import unittest
 import logging
+
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, write_to_tmp_file, get_field_type, get_fields_required_to_close
+    get_file_attachment_metadata, write_to_tmp_file, get_incident, patch_incident, get_field_type, get_fields_required_to_close
 
 LOG = logging.getLogger(__name__)
 
@@ -257,9 +258,59 @@ class TestFunctionMetrics(unittest.TestCase):
         actual_name = get_file_attachment_name(str_name_mock, incident_id=inc_id, artifact_id=artifact_id)
         assert actual_name == expected_name
 
+    def test_get_incident(self):
+        # get_incident(res_client, incident_id):
+        incident_id = 123
+        expected_output = {
+            "id": 123,
+            "resolution_summary": "<div class=\"rte\"><div>resolved</div></div>"
+        }
+        mock_response = {
+            "id": incident_id,
+            "resolution_summary": "<div class=\"rte\"><div>resolved</div></div>"
+        }
+        mock_api = {
+            "/incidents/{}".format(incident_id): mock_response
+        }
+        actual_output = get_incident(mock_api, incident_id)
+        assert actual_output == expected_output
+
+    def test_patch_incident(self):
+        # patch_incident(res_client, incident_id, body):
+        incident_id = 123
+        changes_list = [
+            {
+                "field": "resolution_summary",
+                "old_value": {"select": "<div class=\"rte\"><div>resolved</div></div>"},
+                "new_value": {"select": "<div class=\"rte\"><div>unresolved</div></div>"}
+            },
+            {
+                "field": "plan_status",
+                "old_value": {"text": "A"},
+                "new_value": {"text": "C"}
+            }
+        ]
+        incident_version = 10
+        body = {
+            "changes": changes_list,
+            "version": incident_version
+        }
+        expected_output = {
+            "id": 123,
+            "resolution_summary": "<div class=\"rte\"><div>resolved</div></div>"
+        }
+        mock_response = {
+            "id": incident_id,
+            "resolution_summary": "<div class=\"rte\"><div>resolved</div></div>"
+        }
+        mock_api = {
+            "/incidents/{}".format(incident_id): mock_response
+        }
+        actual_output = patch_incident(mock_api, incident_id, body)
+        assert actual_output == expected_output
+
     def test_get_field_type(self):
         # get_field_type(res_client, field_name):
-        LOG.debug("get_field_type")
         field_name = "resolution_id"
         expected_output = "select"
         mock_response = {
@@ -276,14 +327,13 @@ class TestFunctionMetrics(unittest.TestCase):
         mock_api = {
             "/types/incident": mock_response
         }
-        LOG.debug("mock_api {0}".format(mock_api))
         actual_output = get_field_type(mock_api, field_name)
         assert actual_output == expected_output
 
     def test_get_fields_required_to_close(self):
         # get_fields_required_to_close(res_client):
         expected_output = ["resolution_id", "resolution_summary"]
-        mock = {
+        mock_response = {
           "id": 0,
           "type_id": 0,
           "type_name": "incident",
@@ -295,7 +345,7 @@ class TestFunctionMetrics(unittest.TestCase):
           }
         }
         mock_api = {
-            "/types/incident": mock
+            "/types/incident": mock_response
         }
         actual_output = get_fields_required_to_close(mock_api)
         assert actual_output == expected_output

@@ -12,6 +12,8 @@ import logging
 from bs4 import BeautifulSoup
 from six import string_types
 from cachetools import cached, TTLCache
+import json
+import resilient
 
 try:
     from HTMLParser import HTMLParser as htmlparser
@@ -22,6 +24,8 @@ INCIDENT_FRAGMENT = '#incidents'
 PAYLOAD_VERSION = "1.0"
 
 LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+LOG.addHandler(logging.StreamHandler())
 
 
 def build_incident_url(url, incidentId):
@@ -375,8 +379,9 @@ def get_incident(res_client, incident_id):
     call the Resilient REST API to get the incident data
     :param res_client: required for communication back to resilient
     :param incident_id: required
-    :return: dict
+    :return: response object
     """
+    LOG.info("get_incident: %s", res_client)
     data_uri = "/incidents/{}".format(incident_id)
     return res_client.get(data_uri)
 
@@ -386,46 +391,53 @@ def patch_incident(res_client, incident_id, body):
     call the Resilient REST API to patch incident
     :param res_client: required for communication back to resilient
     :param incident_id: required
-    :return: dict
+    :param body: required
+    :return: response object
     """
+    LOG.info("patch_incident: %s", res_client)
     data_uri = "/incidents/{}".format(incident_id)
-    return res_client.patch(data_uri, body)
+    # version = body.get("version")
+    # patch = resilient.Patch(data_uri, body)
+    response = res_client.patch(data_uri, body)
+    return response
 
 
-@cached(cache=TTLCache(maxsize=10, ttl=600))
 def get_field_type(res_client, field_name):
     """
-    call the Resilient REST API to get input_type
-    this call is cached for multiple calls
     :param res_client: required for communication back to resilient
     :param field_name: required
-    :return: dict
+    :return: str
     """
-    uri = "/types/incident"
-    response = res_client.get(uri)
-    LOG.debug("FIELD TYPE {}".format(response))
-    field_type = response["fields"][field_name]["input_type"]
-    LOG.debug("FIELD TYPE {}".format(field_type))
-    # field_type = response.get("fields").get(field_name).get("input_type")
+    field_type = get_incident_fields(res_client).get(field_name).get("input_type")
     return field_type
 
 
-@cached(cache=TTLCache(maxsize=10, ttl=600))
 def get_fields_required_to_close(res_client):
+    """
+    :param res_client: required for communication back to resilient
+    :return: list
+    """
+    fields = get_incident_fields(res_client)
+    fields_required = []
+
+    for field in fields:
+        if fields[field].get("required") == "close":
+            fields_required.append(fields[field].get("name"))
+
+    return fields_required
+
+
+# @cached(cache=TTLCache(maxsize=10, ttl=600))
+def get_incident_fields(res_client):
     """
     call the Resilient REST API to get list of fields required to close an incident
     this call is cached for multiple calls
     :param res_client: required for communication back to resilient
-    :param field_name: required
-    :return: dict
+    :return: json
     """
     uri = "/types/incident"
     response = res_client.get(uri)
-    fields_required = []
-    # for field in response:
-    #     if "required" in field and field["required"] == "close":
-    #         fields_required.append(field["name"])
-    return fields_required
+    return response["fields"]
 
 
 def close_incident(res_client, incident_id, kwargs):
@@ -437,8 +449,8 @@ def close_incident(res_client, incident_id, kwargs):
     required_fields = get_fields_required_to_close(res_client)
     for field in required_fields:
         if field not in kwargs:
-            raise ValueError("'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
-
+            raise ValueError(
+                "'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
 
     # build changes_list to be used it in patch API call
     changes_list = []
