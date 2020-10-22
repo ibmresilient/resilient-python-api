@@ -300,9 +300,10 @@ def add_configuration_import(new_export_data, res_client):
     except requests.RequestException as upload_exception:
         LOG.debug(new_export_data)
         raise SDKException(upload_exception)
-
+    else:
+        assert isinstance(result, dict)
     if result.get("status", '') == "PENDING":
-        confirm_configuration_import(result, result['id'], res_client)
+        confirm_configuration_import(result, result.get("id"), res_client)
     else:
         raise SDKException(
             "Could not import because the server did not return an import ID")
@@ -325,11 +326,12 @@ def confirm_configuration_import(result, import_id, res_client):
     :type res_client: SimpleClient()
     :raises SDKException: If the confirmation request fails raise an SDKException
     """
+    
+    result["status"] = "ACCEPTED"      # Have to confirm changes
+    uri = "{}/{}".format(IMPORT_URL, import_id)
     try:
-        result["status"] = "ACCEPTED"      # Have to confirm changes
-        uri = "{}/{}".format(IMPORT_URL, import_id)
         res_client.put(uri, result, timeout=5)
-        LOG.info("Imported configuration changes successfully")
+        LOG.info("Imported configuration changes successfully to the Resilient Appliance")
     except requests.RequestException as import_exception:
         raise SDKException(repr(import_exception))
 
@@ -465,6 +467,7 @@ def get_from_export(export,
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
+    :param get_related_objects: Whether or not to hunt for related action objects, defaults to true 
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """

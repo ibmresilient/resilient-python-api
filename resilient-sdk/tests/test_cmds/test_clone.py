@@ -343,7 +343,7 @@ def test_clone_action_obj_too_many_args(fx_get_sub_parser):
     """
     # Get sub_parser object, its dest is cmd
     cmd_clone = CmdClone(fx_get_sub_parser)
-    expected_error = "Received less than 2 object names. Only specify the original action object name and a new object name"
+    expected_error = "Did not receive the right amount of object names. Only expect 2 and 3 were given. Only specify the original action object name and a new object name"
     with pytest.raises(SDKException) as excinfo:
         export_data = cmd_clone._clone_action_object(
             ("thing1", "thing2", "thing3"), TEST_EXPORT, 'Fuction', ResilientObjMap.FUNCTIONS, 'functions', CmdClone.replace_function_object_attrs)

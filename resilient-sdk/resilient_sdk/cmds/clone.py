@@ -100,10 +100,13 @@ class CmdClone(BaseCmd):
         """
         When the clone command is executed, we want to perform these actions:
         1: Setup a client to Resilient and get the latest export file.
-        2: For each specified action type:
+        2: Cloning a single object per type: For each specified action type:
             2.1: Ensure the user provided both the source and new action name
             2.2: Check that the provided source action type exists and the new action name is unique.
-            2.3: Prepare a new Object from the source action object replacing the names were needed.
+            2.3: Prepare a new Object from the source action object replacing the names as needed.
+        3: Cloning multiple objects with a prefix: For each specified action type:
+            3.1: Ensure the user provided source action objects which exist
+            3.2: Prepend the prefix to the unique identifiers for each object
         3: Prepare our configuration import object for upload with the newly cloned action objects
         4: Submit a configuration import through the API
         5: Confirm the change has been accepted
@@ -113,7 +116,7 @@ class CmdClone(BaseCmd):
         :raises SDKException: An SDKException detailing what failed in the operation
         """
         SDKException.command_ran = "clone"
-        LOG.info("Called clone with %s", args)
+        LOG.debug("Called clone with %s", args)
         start = time.perf_counter()
 
         # Instansiate connection to the Resilient Appliance
@@ -168,10 +171,10 @@ class CmdClone(BaseCmd):
             self.parser.print_help()
 
         end = time.perf_counter()
-        LOG.info("SDK 'Clone' command finished in {} seconds".format(end - start))
+        LOG.info("'clone' command finished in {} seconds".format(end - start))
 
     def _clone_multiple_action_objects(self, args, new_export_data, org_export):
-        LOG.info("Prefix provided, copying multiple Action Objects")
+        LOG.info("Prefix provided {}, copying multiple Action Objects".format(args.prefix))
 
         # Get data required from the export
         jinja_data = get_from_export(org_export,
@@ -242,13 +245,10 @@ class CmdClone(BaseCmd):
         if obj.get('destination_handle', False):
             return obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs
         return any([obj.get(ResilientObjMap.RULES, "") in specified_objs, obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs, obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs, obj.get(ResilientObjMap.DATATABLES, "") in specified_objs])
-         
 
     @staticmethod
     def _clone_action_object(input_args, org_export, obj_name, obj_identifier, obj_key, replace_fn, new_object_type=None):
-        if len(input_args) != 2:
-            raise SDKException(
-                "Received less than 2 object names. Only specify the original action object name and a new object name")
+        CmdClone.validate_provided_args_length(input_args)
 
         original_obj_api_name, new_obj_api_name = input_args
 
@@ -268,9 +268,7 @@ class CmdClone(BaseCmd):
 
     @staticmethod
     def _clone_workflow(args, org_export):
-        if len(args.workflow) != 2:
-            raise SDKException(
-                "Only specify the original workflow api name and a new workflow api name")
+        CmdClone.validate_provided_args_length(args.workflow)
         original_workflow_api_name, new_workflow_api_name = args.workflow
 
         # Validate both the original source workflow exists and the new workflow api name does not conflict with an existing workflow
@@ -289,7 +287,6 @@ class CmdClone(BaseCmd):
             new_workflow, original_workflow_api_name, new_workflow_api_name, old_workflow_name)
 
         # If type was provided, change the workflows type
-        # TODO: Only supported on workflow cloning, in future review which objects benefit most from type changing
         if args.changetype:
             new_workflow['object_type'] = args.changetype
         # Add the cloned workflow to the new export object
@@ -319,6 +316,12 @@ class CmdClone(BaseCmd):
                                         original_workflow_api_name], export, include_api_name=False)[0]
         # Return the object
         return original_workflow
+
+    @staticmethod
+    def validate_provided_args_length(input_args):
+        if len(input_args) != 2:
+            raise SDKException(
+                "Did not receive the right amount of object names. Only expect 2 and {} were given. Only specify the original action object name and a new object name".format(len(input_args)))
 
     @staticmethod
     def replace_common_object_attrs(obj_to_modify, new_obj_api_name):
