@@ -9,11 +9,10 @@ import io
 import mimetypes
 import base64
 import logging
+import resilient
 from bs4 import BeautifulSoup
 from six import string_types
 from cachetools import cached, TTLCache
-import json
-import resilient
 
 try:
     from HTMLParser import HTMLParser as htmlparser
@@ -374,56 +373,47 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
     return (path_tmp_file, path_tmp_dir)
 
 
-def get_incident(res_client, incident_id):
+def close_incident(res_client, incident_id, kwargs):
     """
-    call the Resilient REST API to get the incident data
     :param res_client: required for communication back to resilient
     :param incident_id: required
+    :param kwargs: required field_name:new_value pairs dict
     :return: response object
     """
-    LOG.info("get_incident: %s", res_client)
-    data_uri = "/incidents/{}".format(incident_id)
-    return res_client.get(data_uri)
 
+    if not incident_id:
+        raise ValueError("incident id must be specified")
 
-def patch_incident(res_client, incident_id, body):
-    """
-    call the Resilient REST API to patch incident
-    :param res_client: required for communication back to resilient
-    :param incident_id: required
-    :param body: required
-    :return: response object
-    """
-    LOG.info("patch_incident: %s", res_client)
-    data_uri = "/incidents/{}".format(incident_id)
-    # version = body.get("version")
-    # patch = resilient.Patch(data_uri, body)
-    response = res_client.patch(data_uri, body)
+    # API call to the TypeRest for fields "required": "close" if not in kwargs throw an error
+    required_fields = get_required_fields(res_client)
+
+    for field in required_fields:
+        if field not in kwargs:
+            raise ValueError(
+                "'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
+
+    # check for known mandatory field "plan_status" if not in kwargs add it
+    mandatory_fields = {}
+    for item in kwargs:
+        mandatory_fields[item] = kwargs[item]
+        if "plan_status" not in kwargs:
+            mandatory_fields["plan_status"] = "C"
+
+    # API call to the Resilient REST API to patch the incident data (close incident)
+    response = patch_to_close_incident(res_client, incident_id, mandatory_fields)
     return response
 
 
-def get_field_type(res_client, field_name):
-    """
-    :param res_client: required for communication back to resilient
-    :param field_name: required
-    :return: str
-    """
-    field_type = get_incident_fields(res_client).get(field_name).get("input_type")
-    return field_type
-
-
-def get_fields_required_to_close(res_client):
+def get_required_fields(res_client):
     """
     :param res_client: required for communication back to resilient
     :return: list
     """
     fields = get_incident_fields(res_client)
     fields_required = []
-
     for field in fields:
         if fields[field].get("required") == "close":
             fields_required.append(fields[field].get("name"))
-
     return fields_required
 
 
@@ -437,71 +427,23 @@ def get_incident_fields(res_client):
     """
     uri = "/types/incident"
     response = res_client.get(uri)
-    return response["fields"]
+    incident_fields = response.get("fields")
+    return incident_fields
 
 
-def close_incident(res_client, incident_id, kwargs):
-    if not incident_id:
-        raise ValueError("incident id must be specified")
-
-    # API call TypeRest for "required": "close" compare 2 lists
-    # get /orgs/{org_id}/types/{type}/fields
-    required_fields = get_fields_required_to_close(res_client)
-    for field in required_fields:
-        if field not in kwargs:
-            raise ValueError(
-                "'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
-
-    # build changes_list to be used it in patch API call
-    changes_list = []
-
-    # 1. Get fields for patch API
-
-    # dict of field_name:new_value pairs
-    provided_fields = kwargs
-
-    """get incident version to be used it in patch API call get version and old_value"""
-    incident = get_incident(res_client, incident_id)
-    incident_version = incident.get("vers")
-
-    # custom mandatory field/s (resolution_id, resolution_summary & other)
-    custom_mandatory_field = {}
-    """ 
-    loop for each field_name:new_value pair from provided_fields to build an dict (custom_mandatory_field) and append it
-    to the changes_list of dicts changes_list.append(custom_mandatory_field), check for empty
-    
-    custom_mandatory_field is to match the schema:
-    {
-      "field": {
-        "name": field_name
-      },
-      "old_value": {
-        get_field_type(res_client, field_name): incident.get(field_name)
-      },   TODO: populate from API get incident call {}
-      "new_value": {
-        get_field_type(res_client, field_name): new_value    TODO: call the Resilient REST API to get the input_type for provided_field str
-      }
-    }
+def patch_to_close_incident(res_client, incident_id, mandatory_fields):
     """
-
-    # known mandatory field (plan_status)
-    """check if that field exists in changes_list if not append it to the list"""
-    known_mandatory_field = {
-        "field": "plan_status",
-        "old_value": {"text": "A"},
-        "new_value": {"text": "C"}
-    }
-
-    # 2. Build the body of the patch API cal
-    body = {}
-    """build the body of the API call
-    body = {
-        "changes": changes_list,
-        "version": incident_version
-    }    
+    call the Resilient REST API to patch incident
+    :param res_client: required for communication back to resilient
+    :param incident_id: required
+    :param mandatory_fields: required
+    :return: response object
     """
-
-    # 3. call the Resilient REST API to patch the incident data (close incident)
-    response = patch_incident(res_client, incident_id, body)
-
-    return "OK"
+    LOG.info("patch_incident mandatory_fields: %s", mandatory_fields)
+    data_uri = "/incidents/{}".format(incident_id)
+    previous_object = res_client.get(data_uri)
+    patch = resilient.Patch(previous_object)
+    for field in mandatory_fields:
+        patch.add_value(field, mandatory_fields[field])
+    response = res_client.patch(data_uri, patch)
+    return response
