@@ -9,13 +9,16 @@ Resilient Python API Library
 .. toctree::
    :maxdepth: 4
    :caption: Contents:
-
+   
    resilient
    resilient_circuits
+   resilient_sdk
+   
    pytest_resilient_circuits
    rc-webserver
    rc-cts
 
+   
 
 Indices and tables
 ==================

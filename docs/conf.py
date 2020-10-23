@@ -21,6 +21,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath("../resilient"))
 sys.path.insert(0, os.path.abspath("../resilient-circuits"))
+sys.path.insert(0, os.path.abspath("../resilient-sdk"))
 sys.path.insert(0, os.path.abspath("../pytest-resilient-circuits"))
 sys.path.insert(0, os.path.abspath("../rc-cts"))
 sys.path.insert(0, os.path.abspath("../rc-webserver"))
@@ -37,8 +38,14 @@ import resilient
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
-    'sphinx.ext.viewcode']
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary']
 
+
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
+html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
+autodoc_inherit_docstrings = True  # If no class summary, inherit base class summary
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
