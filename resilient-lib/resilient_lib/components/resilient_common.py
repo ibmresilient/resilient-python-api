@@ -393,11 +393,9 @@ def close_incident(res_client, incident_id, kwargs):
                 "'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
 
     # check for known mandatory field "plan_status" if not in kwargs add it
-    mandatory_fields = {}
-    for item in kwargs:
-        mandatory_fields[item] = kwargs[item]
-        if "plan_status" not in kwargs:
-            mandatory_fields["plan_status"] = "C"
+    mandatory_fields = kwargs.copy()
+    if "plan_status" not in mandatory_fields:
+        mandatory_fields["plan_status"] = "C"
 
     # API call to the Resilient REST API to patch the incident data (close incident)
     response = patch_to_close_incident(res_client, incident_id, mandatory_fields)
