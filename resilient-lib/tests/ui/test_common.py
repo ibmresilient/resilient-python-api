@@ -36,7 +36,7 @@ class TestEditPermissions(object):
 		}
 		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
 
-	def test_function_permissions_override_global(self):
+	def test_function_permissions_override_global_lock(self):
 		opts = {
 			"resilient":{
 				"ui_lock": "True",
@@ -47,3 +47,38 @@ class TestEditPermissions(object):
 		}
 		assert permission_to_edit(TestEditPermissions.TestTab, opts)
 
+	def test_function_permissions_override_global_unlock(self):
+		opts = {
+			"resilient":{
+				"ui_lock": "False",
+			},
+			"fn_test": {
+				"ui_lock": "True"
+			}
+		}
+		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+
+	def test_function_permissions_override_integrations_unlock(self):
+		opts = {
+			"resilient": {
+				"ui_lock": "False"
+			},
+			"integrations":{
+				"ui_lock": "False",
+			},
+			"fn_test": {
+				"ui_lock": "True"
+			}
+		}
+		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+
+	def test_integrations_permissions_override_global_unlock(self):
+		opts = {
+			"resilient":{
+				"ui_lock": "False",
+			},
+			"integrations": {
+				"ui_lock": "True"
+			}
+		}
+		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
