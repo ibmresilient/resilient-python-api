@@ -1,6 +1,7 @@
 import resilient
 import copy
 from resilient_circuits.app import AppArgumentParser
+from resilient_lib.util.lib_common import get_config_boolean
 import logging
 
 LOG = logging.getLogger(__name__)
@@ -75,12 +76,15 @@ def permission_to_edit(tab, opts):
 	:param tab: class or instance that's a subclass of ui.Tab
 	:return: If app.config locks the tab or not
 	"""
-	if opts.get(tab.SECTION) and opts.get(tab.SECTION).get('ui_lock'):
-		return False
-	if opts.get('integrations') and opts.get('integrations').get('ui_lock'):
-		return False
-	if opts.get('resilient', {}).get('ui_lock'):
-		return False
+	if opts.get(tab.SECTION):
+		section_lock = get_config_boolean(opts.get(tab.SECTION).get('ui_lock'))
+		return not section_lock
+	if opts.get('integrations'):
+		integrations_lock = get_config_boolean(opts.get('integrations').get('ui_lock'))
+		return not integrations_lock
+	if opts.get('resilient'):
+		global_lock = get_config_boolean(opts.get('resilient').get('ui_lock'))
+		return not global_lock
 
 	return True
 
