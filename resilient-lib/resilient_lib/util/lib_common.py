@@ -12,7 +12,17 @@ import warnings
 import inspect
 import functools
 import sys
+import six
 
+def get_config_boolean(value):
+    if not isinstance(value, six.string_types):
+        return None
+    value = value.lower()
+    if value in ["false", "off"]:
+        return False
+    if value in ["true", "on"]:
+        return True
+    return None
 
 def deprecated(reason):
     """
