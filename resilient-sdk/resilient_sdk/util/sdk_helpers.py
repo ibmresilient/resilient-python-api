@@ -343,7 +343,7 @@ def confirm_configuration_import(result, import_id, res_client):
     result["status"] = "ACCEPTED"      # Have to confirm changes
     uri = "{}/{}".format(IMPORT_URL, import_id)
     try:
-        res_client.put(uri, result, timeout=5)
+        res_client.put(uri, result)
         LOG.info("Imported configuration changes successfully to the Resilient Appliance")
     except requests.RequestException as import_exception:
         raise SDKException(repr(import_exception))
