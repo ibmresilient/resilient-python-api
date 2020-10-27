@@ -70,14 +70,12 @@ def update_tab(client, layout, tab):
 
 	return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
 
-def permission_to_edit(tab):
+def permission_to_edit(tab, opts):
 	"""
 	Gets the config and determines if the UI had been locked or is allowed to be edited.
 	:param tab: class or instance that's a subclass of ui.Tab
 	:return: If app.config locks the tab or not
 	"""
-	config = resilient.get_config_file()
-	opts = AppArgumentParser(config_file=config).parse_args()
 	if opts.get(tab.SECTION) and opts.get(tab.SECTION).get('ui_lock'):
 		return False
 	if opts.get('integrations') and opts.get('integrations').get('ui_lock'):
@@ -88,10 +86,11 @@ def permission_to_edit(tab):
 	return True
 
 def create_tab(tab, update_existing=False):
-	if not permission_to_edit(tab):
+	opts = get_opts()
+	if not permission_to_edit(tab, opts):
 		LOG.info("No permission to edit UI for {}".format(tab.SECTION))
 		return
-	client = get_resilient_client()
+	client = resilient.get_client(opts)
 	layout = get_incident_layout(client)
 
 	# check if tab already exists in the layout
@@ -105,11 +104,8 @@ def create_tab(tab, update_existing=False):
 	LOG.info("Creating a UI tab for {}".format(tab.SECTION))
 	return add_tab_to_layout(client, layout, tab.as_dto())
 
-
-def get_resilient_client():	
+def get_opts():
 	config = resilient.get_config_file()
-	args = AppArgumentParser(config_file=config)
-	opts = args.parse_args()
+	return AppArgumentParser(config_file=config).parse_args()
 
-	return resilient.get_client(opts)
 
