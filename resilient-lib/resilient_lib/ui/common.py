@@ -1,6 +1,9 @@
 import resilient
 import copy
+from resilient_circuits.app import AppArgumentParser
+import logging
 
+LOG = logging.getLogger(__name__)
 
 TYPES_URL = "/types"
 ORGANIZATION_TYPE = "organization"
@@ -51,24 +54,62 @@ def add_tab_to_layout(client, layout, new_tab):
 	layout['content'].append(
 		new_tab
 	)
-	print(layout)
 	return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
 
+def update_tab(client, layout, tab):
+	"""
+	Needs to get the tab and add missing fields to it.
+	"""
+	layout = copy.deepcopy(layout)
+	missing_fields = tab.get_missing_fields(layout.get("content"))
+	print("missing fields")
+	if not len(missing_fields):
+		return None
+	tab_data = tab.get_from_tabs(layout.get("content"))
+	tab_data['fields'].extend(missing_fields)
 
-def create_tab_if_doesnt_exist(tab):
+	return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
+
+def permission_to_edit(tab):
+	"""
+	Gets the config and determines if the UI had been locked or is allowed to be edited.
+	:param tab: class or instance that's a subclass of ui.Tab
+	:return: If app.config locks the tab or not
+	"""
 	config = resilient.get_config_file()
-	args = resilient.ArgumentParser(config)
-	opts = args.parse_args()
+	opts = AppArgumentParser(config_file=config).parse_args()
+	if opts.get(tab.SECTION) and opts.get(tab.SECTION).get('ui_lock'):
+		return False
+	if opts.get('integrations') and opts.get('integrations').get('ui_lock'):
+		return False
+	if opts.get('resilient', {}).get('ui_lock'):
+		return False
 
-	client = resilient.get_client(opts)
+	return True
 
+def create_tab(tab, update_existing=False):
+	if not permission_to_edit(tab):
+		LOG.info("No permission to edit UI for {}".format(tab.SECTION))
+		return
+	client = get_resilient_client()
 	layout = get_incident_layout(client)
 
+	# check if tab already exists in the layout
 	if tab.exists_in(layout.get("content")):
-		return
-
-	print(tab.as_dto())
-
+		if update_existing:
+			LOG.info("UI tab for {} already exists. Checking for updates.".format(tab.SECTION))
+			return update_tab(client, layout, tab)
+		else:
+			LOG.info("UI tab for {} already exists. Not updating.".format(tab.SECTION))
+			return
+	LOG.info("Creating a UI tab for {}".format(tab.SECTION))
 	return add_tab_to_layout(client, layout, tab.as_dto())
 
+
+def get_resilient_client():	
+	config = resilient.get_config_file()
+	args = AppArgumentParser(config_file=config)
+	opts = args.parse_args()
+
+	return resilient.get_client(opts)
 

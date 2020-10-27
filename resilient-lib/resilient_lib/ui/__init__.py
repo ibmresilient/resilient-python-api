@@ -13,6 +13,6 @@ class QRadarTab(UITab):
 
 	CONDITIONS = []
 """
-from .common import get_incident_tabs, create_tab_if_doesnt_exist
+from .common import create_tab
 from .tab import Tab
-from .elements import Datatable
+from .elements import Datatable, Field
