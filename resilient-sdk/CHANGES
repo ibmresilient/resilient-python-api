@@ -5,6 +5,7 @@
 * Added environmental variable RES_SDK_DEV
 * Added '--set-version' argument to dev command
 * Added 'display_name' attribute to setup.py file
+* Added 'clone' command to clone an Action Object
 
 2020-07: ver. 37.2
 
