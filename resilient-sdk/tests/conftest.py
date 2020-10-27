@@ -186,6 +186,54 @@ def fx_cmd_line_args_docgen():
 
     sys.argv = original_cmd_line
 
+@pytest.fixture
+def fx_cmd_line_args_clone_typechange():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+
+    Sets 2 args for clone, a workflow to clone and a new type for the workflow
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "clone",
+        "-w", "mock_workflow_two", "mock_cloned_workflow",
+        "-type", "task"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_cmd_line_args_clone_prefix():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+
+    Sets 2 args for clone, a workflow to clone and a new type for the workflow
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "clone",
+        "-w", "mock_workflow_two", "mock_workflow_one",
+        "-m", "fn_main_mock_integration",
+        "-f", "mock_function_one",
+        "--rule", "Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination",
+        "-pre", "v2"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
 
 @pytest.fixture
 def fx_cmd_line_args_dev_set_version():
