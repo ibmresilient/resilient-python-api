@@ -48,7 +48,6 @@ def get_incident_tabs(client):
 	tab_data = get_incident_layout(client)
 	return tab_data.get('content')
 
-
 def add_tab_to_layout(client, layout, new_tab):
 	layout = copy.deepcopy(layout)
 	layout['content'].append(
