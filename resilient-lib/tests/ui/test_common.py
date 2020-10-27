@@ -1,84 +1,149 @@
 import pytest
+from mock import patch
+from resilient_lib.ui import Tab, Datatable, Field
+from resilient_lib.ui import create_tab
 
-from resilient_lib.ui import Tab
-from resilient_lib.ui.common import permission_to_edit
 
-class TestEditPermissions(object):
-	class TestTab(Tab):
-		NAME = "TestTab"
-		UUID = "42"
-		SECTION = "fn_test"
-		CONTAINS = []
+class MockTab(Tab):
+	NAME = "test"
+	UUID = "test"
+	SECTION = "test"
+	CONTAINS = [
+		Datatable('test'),
+		Field('test')
+	]
 
-	def test_function_permissions_lock_ui(self):
-		opts = {
-			"fn_test": {
-				"ui_lock": "True"
+class TestSubmittedData(object):
+	"""
+	Tests that payload submitted to the server contains proper tab information.
+	"""
+	@patch("resilient.get_client")
+	@patch("resilient_lib.ui.common.get_opts")
+	def test_create_tab(self, get_opts, get_client):
+		# these are a mock of app.config
+		get_opts.return_value = {
+			MockTab.SECTION: {
 			}
 		}
-		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
-
-	def test_integration_permissions_lock_ui(self):
-		opts = {
-			"integrations":{
-				"ui_lock": "True"
+		# this mocks the requests made to /types and /layout?type_id=xxx
+		get_client.return_value.get.side_effect = [
+			{
+				"organization": {
+					"type_id": 42
+				}
 			},
-			"fn_test": {
-			}
-		}
-		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+			[{
+				"id": 42,
+				"name": "incident",
+				"content": []
+			}]
+		]
 
-	def test_global_permissions_lock_ui(self):
-		opts = {
+		create_tab(MockTab)
+
+		# assert that PUT was called and correct payload present
+		get_client.return_value.put.assert_called_once()
+		call_args = get_client.return_value.put.call_args
+		payload = call_args.kwargs.get("payload")
+		assert MockTab.exists_in(payload.get('content'))
+		for field in MockTab.CONTAINS:
+			assert field.exists_in(MockTab.get_from_tabs(payload.get('content')).get("fields"))
+
+	@patch("resilient.get_client")
+	@patch("resilient_lib.ui.common.get_opts")
+	def test_create_tab_with_locked_ui(self, get_opts, get_client):
+		# these are a mock of app.config
+		get_opts.return_value = {
 			"resilient": {
 				"ui_lock": "True"
+			},
+			MockTab.SECTION: {
 			}
 		}
-		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+		# this mocks the requests made to /types and /layout?type_id=xxx
+		get_client.return_value.get.side_effect = [
+			{
+				"organization": {
+					"type_id": 42
+				}
+			},
+			[{
+				"id": 42,
+				"name": "incident",
+				"content": []
+			}]
+		]
 
-	def test_function_permissions_override_global_lock(self):
-		opts = {
-			"resilient":{
-				"ui_lock": "True",
-			},
-			"fn_test": {
-				"ui_lock": "False"
-			}
-		}
-		assert permission_to_edit(TestEditPermissions.TestTab, opts)
+		create_tab(MockTab)
 
-	def test_function_permissions_override_global_unlock(self):
-		opts = {
-			"resilient":{
-				"ui_lock": "False",
-			},
-			"fn_test": {
-				"ui_lock": "True"
-			}
-		}
-		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+		# assert that PUT was called and correct payload present
+		assert get_client.return_value.put.call_count == 0
 
-	def test_function_permissions_override_integrations_unlock(self):
-		opts = {
-			"resilient": {
-				"ui_lock": "False"
-			},
-			"integrations":{
-				"ui_lock": "False",
-			},
-			"fn_test": {
-				"ui_lock": "True"
+	@patch("resilient.get_client")
+	@patch("resilient_lib.ui.common.get_opts")
+	def test_update_tab_disabled(self, get_opts, get_client):
+		# these are a mock of app.config
+		get_opts.return_value = {
+			MockTab.SECTION: {
 			}
 		}
-		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+		# this mocks the requests made to /types and /layout?type_id=xxx
+		get_client.return_value.get.side_effect = [
+			{
+				"organization": {
+					"type_id": 42
+				}
+			},
+			[{
+				"id": 42,
+				"name": "incident",
+				"content": [{
+					"predefined_uuid": MockTab.UUID,
+					"fields": [
+						Field("test").as_dto()
+					]
+				}]
+			}]
+		]
 
-	def test_integrations_permissions_override_global_unlock(self):
-		opts = {
-			"resilient":{
-				"ui_lock": "False",
-			},
-			"integrations": {
-				"ui_lock": "True"
+		create_tab(MockTab)
+
+		# assert that PUT was called and correct payload present
+		get_client.return_value.put.call_count == 0
+
+
+	@patch("resilient.get_client")
+	@patch("resilient_lib.ui.common.get_opts")
+	def test_update_tab_enabled(self, get_opts, get_client):
+		# these are a mock of app.config
+		get_opts.return_value = {
+			MockTab.SECTION: {
 			}
 		}
-		assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+		# this mocks the requests made to /types and /layout?type_id=xxx
+		get_client.return_value.get.side_effect = [
+			{
+				"organization": {
+					"type_id": 42
+				}
+			},
+			[{
+				"id": 42,
+				"name": "incident",
+				"content": [{
+					"predefined_uuid": MockTab.UUID,
+					"fields": [
+						Field("test").as_dto()
+					]
+				}]
+			}]
+		]
+
+		create_tab(MockTab, update_existing=True)
+
+		get_client.return_value.put.assert_called_once()
+		call_args = get_client.return_value.put.call_args
+		payload = call_args.kwargs.get("payload")
+		assert MockTab.exists_in(payload.get('content'))
+		for field in MockTab.CONTAINS:
+			assert field.exists_in(MockTab.get_from_tabs(payload.get('content')).get("fields"))
