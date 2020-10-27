@@ -14,7 +14,7 @@ LAYOUT_FOR = "/layouts/{}"
 
 
 INCIDENT_TABS_NAME = "incident"
-
+UI_LOCK = "ui_lock"
 
 def get_organization_layout(client, layout_name):
 	# first get a type ID for layout UI
@@ -77,13 +77,13 @@ def permission_to_edit(tab, opts):
 	:return: If app.config locks the tab or not
 	"""
 	if opts.get(tab.SECTION):
-		section_lock = get_config_boolean(opts.get(tab.SECTION).get('ui_lock'))
+		section_lock = get_config_boolean(opts.get(tab.SECTION).get(UI_LOCK))
 		return not section_lock
 	if opts.get('integrations'):
-		integrations_lock = get_config_boolean(opts.get('integrations').get('ui_lock'))
+		integrations_lock = get_config_boolean(opts.get('integrations').get(UI_LOCK))
 		return not integrations_lock
 	if opts.get('resilient'):
-		global_lock = get_config_boolean(opts.get('resilient').get('ui_lock'))
+		global_lock = get_config_boolean(opts.get('resilient').get(UI_LOCK))
 		return not global_lock
 
 	return True
