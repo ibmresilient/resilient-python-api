@@ -1,58 +1,72 @@
 language: python
-python: 2.6
+python: 3.6
+os: linux
+
+stages:
+  - run tests
+  - name: build packages
+    if: branch = master OR branch =~ ^release\/.+
+  - name: deploy to artifactory
+    if: branch = master OR branch =~ ^release\/.+
 
 env:
   global:
+  - ARTIFACTORY_REPO_LINK=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local
   - TEST_RESILIENT_APPLIANCE=staging2.internal.resilientsystems.com
   - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
   - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
-  - secure: VU1PL2bWOE+E3ieBz/0Oa2hIRXGeSFYubE9SYh3dH541h8V8FWE0kGt8P6xdZOGmf9xNsDL/O+rKqrq5TCKTdUQqFXm7RCD//iQrHUcbu2YU38XPpBQrWxSZs29sR3R6UkUypZahHmn/ghjgZnRxQIWGscYPvvNCiOP9X85ckmVaKLYPwW0HPH7vIKs9zcT8tEyRDANokc0BQDjeVu0s29FeKGyy9JVbuye8/1TmVkQWBvutvcQ/z/mOQ7dOO3fW0wkVwOHPF9FtBc79WzjK5w/Ej30EWHC5zdRG46+2FLcqKSHvkyuV59f0ojxLzRmeR1ueS37pNncmXfVMREwtiIYN/Dd3isLsg14RK1leu/JHiPxfQtz2TV4+yeVO4aZk+Bs/JLf1ZbXAE+A71hIH6rTUpEBq1S8qjKsfTPEWLg1cuq1ujf2WOAumdIf8rSOnQ9EbEfBlm3N8Wo9RjXbEx6hq+UHr7L28tw0u00gcAex6Ky2eRk+USFnXBHs/Kf5i29CWzw4Lcnb2hPa0bup3yNQuss/Yy+cQO5tDW8jJPP8joR5Fvr8fJZVtGlTGp09odHcrDGKvbdlf0gVmVDYawKi0v4m0URCKVy0vYAbzVOgZF46nW+VfcexiLxomwYpKeltigk+L52aV5DIodfuxS9aB6IJtEYSTO8Mf+Yo2x8Q=
+  - LATEST_TAG=$(git describe --abbrev=0 --tags)
+  - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
+  - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
+  - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+
+# Install package deps
+before_install:
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
 
 matrix:
   fast_finish: true
-  exclude:
-    # This is to exclude the default build job
-    - python: 2.6
 
   include:
-  - python: 2.7
-    env:
-      - TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
-  - python: 3.6
-    env:
-      - TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+    - stage: run tests
+      name: Python 2.7 Tests
+      python: 2.7
+      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      install: ./travis-scripts/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 2.7 Tests"
+        - ./travis-scripts/run_unit_tests.sh
 
-install:
-  - pip install --upgrade pip
-  - pip install --upgrade 'setuptools<50.0'
-  - pip install --upgrade setuptools_scm
-  - pip install tox
-  - pip install sphinx
+    - stage: run tests
+      name: Python 3.6 Tests
+      python: 3.6
+      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install: ./travis-scripts/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 3.6 Tests"
+        - ./travis-scripts/run_unit_tests.sh
 
-before_script:
-  # nothing
+    - stage: build packages
+      name: Build Packages in Python 2.7
+      python: 2.7
+      script:
+        - echo "Building packages in Python 2.7"
+        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
+      
+    - stage: build packages
+      name: Build Packages in Python 3.6
+      python: 3.6
+      script:
+        - echo "Building packages in Python 3.6"
+        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
 
-script:
-  - tox -c ./resilient-circuits
-  - tox -c ./resilient-sdk
-  - buildnum=$(git tag --list | tail -n 1 | sed s/[a-z]//g)
-  - ./buildall.sh $buildnum
+    - stage: deploy to artifactory
+      script:
+        - echo "Building packages in Python 3.6 and Deploying to Artifactory"
+        - ./travis-scripts/build_and_deploy_packages.sh do_deploy
+        - echo "Sending notification to Slack"
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
 
-after_script:
-  - echo "Packages To Deploy"
-  - ls -l *.tar.gz
-
-deploy:
-  # Note: This is going to run twice and fail the second time. Will fix with travis enterprise 2.2 "stages" feature
-  provider: releases
-  api_key: "$GITHUB_OAUTH_TOKEN"
-  file_glob: true
-  file: ./rc-*.tar.gz
-  skip_cleanup: true
-  on:
-    tags: true
-
-#notifications:
-#  slack:
-#    rooms: ibm-security:9xGeUjQaqaNY1qgBG6ORFaSl
-#    on_success: change
+after_failure:
+  - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"

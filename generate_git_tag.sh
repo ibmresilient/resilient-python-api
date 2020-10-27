@@ -16,5 +16,3 @@ else
 	echo "Creating tag $libVersion.$BUILD_NUMBER"
 	git tag -a $libVersion.$BUILD_NUMBER -m "$libVersion Build $BUILD_NUMBER"
 fi
-
-
