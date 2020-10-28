@@ -336,6 +336,8 @@ def selftest(args):
 
     # make a copy
     install_list = list(args.install_list) if args.install_list else []
+    # Prepare a count of exceptions found with selftests.
+    exception_count = 0
 
     for dist, component_list in components.items():
         if args.install_list is None or dist.project_name in install_list:
@@ -364,11 +366,17 @@ def selftest(args):
                        LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
                 except Exception as e:
                     LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
+                    exception_count += 1
                     continue
 
     # any missed packages?
     if len(install_list):
         LOG.warning("%s not found. Check package name(s)", install_list)
+    # Check if any exceptions were found and printed to the console
+    if exception_count:
+        selftest_error = "1 or more exceptions found from selftests."
+        LOG.error(selftest_error)
+        raise Exception(selftest_error)
 
 
 def find_workflow_by_programmatic_name(workflows, pname):
