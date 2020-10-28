@@ -385,12 +385,11 @@ def close_incident(res_client, incident_id, kwargs):
         raise ValueError("incident id must be specified")
 
     # API call to the TypeRest for fields "required": "close" if not in kwargs throw an error
-    required_fields = get_required_fields(res_client)
+    required_fields = _get_required_fields(res_client)
 
-    for field in required_fields:
-        if field not in kwargs:
-            raise ValueError(
-                "'{0}' is mandatory and is not set. You must set this value to run this function.".format(field))
+    missing_fields = [field for field in required_fields if field not in kwargs]
+    if missing_fields:
+        raise ValueError("'%s' are mandatory field(s) to close an incident.", missing_fields)
 
     # check for known mandatory field "plan_status" if not in kwargs add it
     mandatory_fields = kwargs.copy()
@@ -398,25 +397,23 @@ def close_incident(res_client, incident_id, kwargs):
         mandatory_fields["plan_status"] = "C"
 
     # API call to the Resilient REST API to patch the incident data (close incident)
-    response = patch_to_close_incident(res_client, incident_id, mandatory_fields)
+    response = _patch_to_close_incident(res_client, incident_id, mandatory_fields)
     return response
 
 
-def get_required_fields(res_client):
+def _get_required_fields(res_client):
     """
     :param res_client: required for communication back to resilient
     :return: list
     """
-    fields = get_incident_fields(res_client)
-    fields_required = []
-    for field in fields:
-        if fields[field].get("required") == "close":
-            fields_required.append(fields[field].get("name"))
+    fields = _get_incident_fields(res_client)
+    fields_required = [field for field in fields if fields[field].get("required") == "close"]
+
     return fields_required
 
 
 # @cached(cache=TTLCache(maxsize=10, ttl=600))
-def get_incident_fields(res_client):
+def _get_incident_fields(res_client):
     """
     call the Resilient REST API to get list of fields required to close an incident
     this call is cached for multiple calls
@@ -429,19 +426,22 @@ def get_incident_fields(res_client):
     return incident_fields
 
 
-def patch_to_close_incident(res_client, incident_id, mandatory_fields):
+def _patch_to_close_incident(res_client, incident_id, close_fields):
     """
     call the Resilient REST API to patch incident
     :param res_client: required for communication back to resilient
     :param incident_id: required
-    :param mandatory_fields: required
+    :param close_fields: required
     :return: response object
     """
-    LOG.info("patch_incident mandatory_fields: %s", mandatory_fields)
+    LOG.info("patch_incident close_fields: %s", close_fields)
+
     data_uri = "/incidents/{}".format(incident_id)
     previous_object = res_client.get(data_uri)
     patch = resilient.Patch(previous_object)
-    for field in mandatory_fields:
-        patch.add_value(field, mandatory_fields[field])
+
+    for field in close_fields:
+        patch.add_value(field, close_fields[field])
+        
     response = res_client.patch(data_uri, patch)
     return response
