@@ -12,11 +12,16 @@ UI_TAB_FIELD_TYPE = "incident"
 
 
 class RequiredTabFields(type):
+    """
+    The job of this metaclass is to confirm that the user defined subclasses of Tab define
+    required attributes, or otherwise throw an error at the time of class definition.
+    """
     REQUIRED_TAB_ATTRIBUTES = ["UUID", "NAME", "SECTION", "CONTAINS"]
+
     def __init__(cls, name, bases, attrs):
         if not bases:
             return  # No bases implies Tab, which doesn't need to define the properties
-        for attr in REQUIRED_TAB_ATTRIBUTES:
+        for attr in cls.REQUIRED_TAB_ATTRIBUTES:
             if not hasattr(cls, attr) or getattr(cls, attr) is None:
                 raise AttributeError("{} is missing from class definition of a Tab".format(attr))
     
