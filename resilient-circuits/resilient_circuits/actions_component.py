@@ -36,6 +36,8 @@ SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 IDLE_TIMER_INTERVAL = 600
 _idle_timer = None
 
+# look for unrecoverable errors
+UNRECOVERABLE_ERRORS = ['Connection closed', 'Already subscribed', 'Not connected']
 
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
@@ -364,6 +366,12 @@ class Actions(ResilientComponent):
     def on_stomp_error(self, headers, message, error):
         """STOMP produced an error."""
         LOG.error('STOMP listener: Error:\n%s', message or error)
+
+        for unrecoverable_error in UNRECOVERABLE_ERRORS:
+            if unrecoverable_error in message or unrecoverable_error in error:
+                LOG.error("Unrecoverable error. Exiting")
+                raise SystemExit(0)
+
         # Just raise the event for anyone listening
         self.fire(Event("exception", "Actions",
                         headers.get("message"), message))
