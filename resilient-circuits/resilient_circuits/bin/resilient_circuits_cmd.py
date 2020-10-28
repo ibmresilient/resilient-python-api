@@ -23,7 +23,7 @@ from resilient_circuits.util.resilient_customize import customize_resilient
 from resilient_circuits.util.resilient_ext import ext_command_handler
 
 # What code will be used if any apps tests fail when running resilient-circuits 'selftest'
-SELFTEST_FAILURE_EXIT_CODE = 15
+SELFTEST_FAILURE_EXIT_CODE = 1
 
 if sys.version_info.major == 2:
     from io import open
@@ -372,6 +372,9 @@ def selftest(args):
 
                         if state.lower() == "failure":
                             selftest_failure_count += 1
+
+                    else:
+                        LOG.info("\t%s:\n\tUnsupported dictionary returned:\n\t%s\n\tElapsed time: %f seconds", ep.name, status, delta_seconds)
 
                 except Exception as e:
                     LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
