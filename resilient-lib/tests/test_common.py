@@ -32,7 +32,8 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertTrue(str_to_bool('true'))
         self.assertTrue(str_to_bool('YES'))
         self.assertFalse(str_to_bool('truex'))
-        self.assertTrue(str_to_bool(1))
+        self.assertFalse(str_to_bool(1))
+        self.assertTrue(str_to_bool('1'))
         self.assertFalse(str_to_bool(0))
         self.assertFalse(str_to_bool('0'))
 

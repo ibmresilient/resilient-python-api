@@ -305,12 +305,19 @@ def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%
 
 
 def str_to_bool(value):
-    """Represents value as boolean.
+    """
+    Represents value as boolean.
     :param value:
     :rtype: bool
     """
-    value = str(value).lower()
-    return value in ('1', 'true', 'yes')
+    if not isinstance(value, string_types):
+        return None
+    value = value.lower()
+    if value in ["0", "false", "off", "no"]:
+        return False
+    if value in ["1", "true", "on", "yes"]:
+        return True
+    return None
 
 
 def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
