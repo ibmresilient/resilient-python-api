@@ -22,6 +22,8 @@ from resilient_circuits.util.resilient_codegen import codegen_functions, codegen
 from resilient_circuits.util.resilient_customize import customize_resilient
 from resilient_circuits.util.resilient_ext import ext_command_handler
 
+# What code will be used if any apps tests fail when running resilient-circuits 'selftest'
+SELFTEST_FAILURE_EXIT_CODE = 15
 
 if sys.version_info.major == 2:
     from io import open
@@ -376,7 +378,7 @@ def selftest(args):
     if exception_count:
         selftest_error = "1 or more exceptions found from selftests."
         LOG.error(selftest_error)
-        raise Exception(selftest_error)
+        sys.exit(SELFTEST_FAILURE_EXIT_CODE)
 
 
 def find_workflow_by_programmatic_name(workflows, pname):
