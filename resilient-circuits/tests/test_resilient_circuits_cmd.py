@@ -89,7 +89,7 @@ class TestSelfTest(object):
                 selftest(parser)
 
         assert pytest_wrapped_e.type == SystemExit
-        assert pytest_wrapped_e.value.code == 15
+        assert pytest_wrapped_e.value.code == 1
 
     def test_selftest_passes_on_test_success(self):
         """
