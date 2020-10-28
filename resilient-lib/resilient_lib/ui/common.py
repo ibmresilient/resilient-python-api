@@ -1,7 +1,7 @@
 import resilient
 import copy
 from resilient_circuits.app import AppArgumentParser
-from resilient_lib.util.lib_common import get_config_boolean
+from resilient_lib.components.resilient_common import str_to_bool
 import logging
 
 LOG = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def get_organization_layout(client, layout_name):
     # first get a type ID for layout UI
     types = client.get(TYPES_URL)
     if ORGANIZATION_TYPE not in types:
-        raise KeyError("Can't find 'organization' in the list of types.")
+        raise KeyError("Can't find '{}' in the list of types.".format(ORGANIZATION_TYPE))
 
     organization = types[ORGANIZATION_TYPE]
     organization_type_id = organization["type_id"]
@@ -29,9 +29,9 @@ def get_organization_layout(client, layout_name):
     incident_tabs = [layout for layout in incident_layout if layout['name'] == layout_name]
 
     if not incident_tabs:
-        raise ValueError("No UI tabs are accessible")
+        raise ValueError("No UI tabs are received from the platform for {} layout.".format(layout_name))
     elif len(incident_tabs) != 1:
-        raise ValueError("Incorrect number of UI tabs supplied") 
+        raise ValueError("Expected 1 tab for {} layout, {} were returned".format(layout_name, len(incident_tabs))) 
 
     return incident_tabs[0]
 
@@ -62,7 +62,6 @@ def update_tab(client, layout, tab):
     """
     layout = copy.deepcopy(layout)
     missing_fields = tab.get_missing_fields(layout.get("content"))
-    print("missing fields")
     if not len(missing_fields):
         return None
     tab_data = tab.get_from_tabs(layout.get("content"))
@@ -77,13 +76,13 @@ def permission_to_edit(tab, opts):
     :return: If app.config locks the tab or not
     """
     if opts.get(tab.SECTION):
-        section_lock = get_config_boolean(opts.get(tab.SECTION).get(UI_LOCK))
+        section_lock = str_to_bool(opts.get(tab.SECTION).get(UI_LOCK))
         return not section_lock
     if opts.get('integrations'):
-        integrations_lock = get_config_boolean(opts.get('integrations').get(UI_LOCK))
+        integrations_lock = str_to_bool(opts.get('integrations').get(UI_LOCK))
         return not integrations_lock
     if opts.get('resilient'):
-        global_lock = get_config_boolean(opts.get('resilient').get(UI_LOCK))
+        global_lock = str_to_bool(opts.get('resilient').get(UI_LOCK))
         return not global_lock
 
     return True
