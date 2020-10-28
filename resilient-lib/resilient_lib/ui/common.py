@@ -20,6 +20,7 @@ def get_organization_layout(client, layout_name):
     # first get a type ID for layout UI
     types = client.get(TYPES_URL)
     if ORGANIZATION_TYPE not in types:
+        LOG.debug(types)
         raise KeyError("Can't find '{}' in the list of types.".format(ORGANIZATION_TYPE))
 
     organization = types[ORGANIZATION_TYPE]
