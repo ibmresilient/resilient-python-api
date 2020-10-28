@@ -338,8 +338,9 @@ def selftest(args):
 
     # make a copy
     install_list = list(args.install_list) if args.install_list else []
+
     # Prepare a count of exceptions found with selftests.
-    exception_count = 0
+    selftest_failure_count = 0
 
     for dist, component_list in components.items():
         if args.install_list is None or dist.project_name in install_list:
@@ -364,20 +365,25 @@ def selftest(args):
                     delta_milliseconds = end_time_milliseconds - start_time_milliseconds
                     delta_seconds = delta_milliseconds / 1000
 
-                    if status["state"] is not None:
-                       LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
+                    state = status.get("state")
+
+                    if isinstance(state, str):
+                        LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, state, delta_seconds)
+
+                        if state.lower() == "failure":
+                            selftest_failure_count += 1
+
                 except Exception as e:
                     LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
-                    exception_count += 1
+                    selftest_failure_count += 1
                     continue
 
     # any missed packages?
     if len(install_list):
         LOG.warning("%s not found. Check package name(s)", install_list)
-    # Check if any exceptions were found and printed to the console
-    if exception_count:
-        selftest_error = "1 or more exceptions found from selftests."
-        LOG.error(selftest_error)
+
+    # Check if any failures were found and printed to the console
+    if selftest_failure_count:
         sys.exit(SELFTEST_FAILURE_EXIT_CODE)
 
 
