@@ -22,4 +22,5 @@ resilient_circuits_lockfile
 *.egg-info
 build
 _build
+resilient-sdk/sdk_coverage_report
 *.bak

@@ -4,8 +4,10 @@
 
 """ TODO: module docstring """
 
+import os
 import sys
 import logging
+from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdClone, CmdExtract
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
@@ -13,11 +15,12 @@ from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 from resilient_sdk.cmds import (CmdDocgen,
                                 CmdCodegen,
                                 CmdExtract,
-                                CmdExtPackage)
+                                CmdExtPackage,
+                                CmdDev)
 
 
 # Setup logging
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
@@ -76,6 +79,9 @@ def main():
     Main entry point for resilient-sdk
     """
 
+    # See if RES_SDK_DEV environment var is set
+    sdk_dev = sdk_helpers.str_to_bool(os.getenv("RES_SDK_DEV"))
+
     # Get main parser object
     parser = get_main_app_parser()
 
@@ -84,9 +90,14 @@ def main():
 
     # Add any subcommands to main app parser here
     cmd_codegen = CmdCodegen(sub_parser)
+    cmd_clone = CmdClone(sub_parser)
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
     cmd_ext_package = CmdExtPackage(sub_parser)
+
+    if sdk_dev:
+        # Add 'dev' command if environment var set
+        cmd_dev = CmdDev(sub_parser)
 
     try:
         # Parse the arguments
@@ -107,6 +118,9 @@ def main():
         if "too few arguments" in err.message or "no subcommand provided" in err.message:
             if main_cmd == cmd_codegen.CMD_NAME:
                 cmd_codegen.parser.print_usage()
+            
+            elif main_cmd == cmd_clone.CMD_NAME:
+                cmd_clone.parser.print_usage()
 
             elif main_cmd == cmd_docgen.CMD_NAME:
                 cmd_docgen.parser.print_usage()
@@ -116,6 +130,9 @@ def main():
 
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
+
+            elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
+                cmd_dev.parser.print_usage()
 
             else:
                 parser.print_help()
@@ -135,11 +152,17 @@ def main():
     elif args.cmd == cmd_codegen.CMD_NAME:
         cmd_codegen.execute_command(args)
 
+    elif args.cmd == cmd_clone.CMD_NAME:
+        cmd_clone.execute_command(args)
+
     elif args.cmd == cmd_extract.CMD_NAME:
         cmd_extract.execute_command(args)
 
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
+
+    elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
+        cmd_dev.execute_command(args)
 
 
 if __name__ == "__main__":

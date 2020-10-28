@@ -1,0 +1,10 @@
+[run]
+source=resilient_sdk
+
+[report]
+# Don't include anything from these directories in the cov report
+omit=*/.tox/*, tests/*, resilient_sdk/data/*
+show_missing = true
+
+[html]
+directory = sdk_coverage_report

@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
 
+import requests.exceptions
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
@@ -33,15 +34,20 @@ else:
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
 
+LOGGER_NAME = "resilient_sdk_log"
+
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(LOGGER_NAME)
 
 # Regex for splitting version number at end of name from package basename.
 VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 # Resilient export file suffix.
 RES_EXPORT_SUFFIX = ".res"
+# Endpoint url for importing a configuration
+IMPORT_URL = "/configurations/imports"
+
 
 def get_resilient_client(path_config_file=None):
     """
@@ -198,6 +204,17 @@ def is_valid_url(url):
     return regex.search(url) is not None
 
 
+def does_url_contain(url, qry):
+    """
+    Checks if url is a valid url, if it isn't returns False.
+    Checks if qry is in url. Returns True if it is
+    """
+    if not is_valid_url(url):
+        return False
+
+    return qry in url
+
+
 def generate_uuid_from_string(the_string):
     """
     Returns String representation of the UUID of a hex md5 hash of the given string
@@ -275,6 +292,62 @@ def get_latest_org_export(res_client):
     return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
 
 
+def add_configuration_import(new_export_data, res_client):
+    """
+    Makes a REST request to add a configuration import. 
+
+    After the request is made, the configuration import is set at a pending state and needs to be confirmed.
+    If the configuration state is not reported as pending, raise an SDK Exception.
+
+
+    :param new_export_data: A dict representing a configuration import DTO
+    :type result: dict
+    :param import_id: The ID of the configuration import to confirm
+    :type import_id: int
+    :param res_client: An instantiated res_client for making REST calls
+    :type res_client: SimpleClient()
+    :raises SDKException: If the confirmation request fails raise an SDKException
+    """
+    try:
+        result = res_client.post(IMPORT_URL, new_export_data)
+    except requests.RequestException as upload_exception:
+        LOG.debug(new_export_data)
+        raise SDKException(upload_exception)
+    else:
+        assert isinstance(result, dict)
+    if result.get("status", '') == "PENDING":
+        confirm_configuration_import(result, result.get("id"), res_client)
+    else:
+        raise SDKException(
+            "Could not import because the server did not return an import ID")
+
+
+def confirm_configuration_import(result, import_id, res_client):
+    """
+    Makes a REST request to confirm a pending configuration import as accepted.
+
+    Takes 3 params 
+    The result of a configuration import request
+    The ID of the configuration import request
+    A res_client to perform the request
+
+    :param result: Result of the configuration import request
+    :type result: dict
+    :param import_id: The ID of the configuration import to confirm
+    :type import_id: int
+    :param res_client: An instantiated res_client for making REST calls
+    :type res_client: SimpleClient()
+    :raises SDKException: If the confirmation request fails raise an SDKException
+    """
+    
+    result["status"] = "ACCEPTED"      # Have to confirm changes
+    uri = "{}/{}".format(IMPORT_URL, import_id)
+    try:
+        res_client.put(uri, result)
+        LOG.info("Imported configuration changes successfully to the Resilient Appliance")
+    except requests.RequestException as import_exception:
+        raise SDKException(repr(import_exception))
+
 def read_local_exportfile(path_local_exportfile):
     """
     Read export from given path
@@ -326,7 +399,7 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     return dict((o[identifer], o) for o in obj_list if condition(o))
 
 
-def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True):
+def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
     """
     Return a List of Resilient Objects that are in the 'wanted_list' and meet the 'condition'
 
@@ -342,6 +415,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :type export: Dict
     :param condition: A lambda function to evaluate each object
     :type condition: function
+    :param export: Whether or not to return the objects API name as a field.
+    :type export: bool
     :return: List of Resilient Objects
     :rtype: List
     """
@@ -372,7 +447,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
             # Add x_api_name to each object, so we can easily reference. This avoids needing to know if
             # obj attribute is 'name' or 'programmatic_name' etc.
             obj = ex_obj.get(o)
-            obj["x_api_name"] = obj[obj_identifer]
+            if include_api_name:
+                obj["x_api_name"] = obj[obj_identifer]
             return_list.append(obj)
 
     return return_list
@@ -387,7 +463,8 @@ def get_from_export(export,
                     artifact_types=[],
                     datatables=[],
                     tasks=[],
-                    scripts=[]):
+                    scripts=[],
+                    get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
     The parameters are Lists of the Objects you want
@@ -403,6 +480,7 @@ def get_from_export(export,
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
+    :param get_related_objects: Whether or not to hunt for related action objects, defaults to true 
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -429,73 +507,78 @@ def get_from_export(export,
     # Get Rules
     return_dict["rules"] = get_res_obj("actions", ResilientObjMap.RULES, "Rule", rules, export)
 
-    for r in return_dict.get("rules"):
-
-        # Get Activity Fields for Rules
-        view_items = r.get("view_items", [])
-        activity_field_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.ACTIVITY_FIELD]
-        r["activity_fields"] = get_res_obj("fields", "uuid", "Activity Field", activity_field_uuids, export)
-        return_dict["all_fields"].extend([u"actioninvocation/{0}".format(fld.get("name")) for fld in r.get("activity_fields")])
-
-        # Get names of Workflows that are related to Rule
-        for w in r.get("workflows", []):
-            workflows.append(w)
-
-        # Get names of Message Destinations that are related to Rule
-        # Message Destinations in Rules are identified by their Display Name
-        for m in r.get("message_destinations", []):
-            message_destinations.append({"identifier": "name", "value": m})
-
-        # Get names of Tasks/Scripts/Fields that are related to Rule
-        automations = r.get("automations", [])
-        for a in automations:
-            if a.get("tasks_to_create"):
-                for t in a["tasks_to_create"]:
-                    tasks.append(t)
-
-            elif a.get("scripts_to_run"):
-                scripts.append(a.get("scripts_to_run"))
-
-            elif a.get("field"):
-                fields.append(a.get("field"))
-
     # Get Functions
-    # Get Function names that use 'wanted' Message Destinations
-    for f in export.get("functions", []):
-        if f.get("destination_handle") in message_destinations:
-            functions.append(f.get(ResilientObjMap.FUNCTIONS))
-
     return_dict["functions"] = get_res_obj("functions", ResilientObjMap.FUNCTIONS, "Function", functions, export)
-
-    for f in return_dict.get("functions"):
-        # Get Function Inputs
-        view_items = f.get("view_items", [])
-        function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
-        f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
-
-        return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
-
-        # Get Function's Message Destination name
-        message_destinations.append(f.get("destination_handle", ""))
 
     # Get Workflows
     return_dict["workflows"] = get_res_obj("workflows", ResilientObjMap.WORKFLOWS, "Workflow", workflows, export)
 
-    # Get Functions in Workflow
-    for workflow in return_dict["workflows"]:
-        # This gets all the Functions in the Workflow's XML
-        wf_functions = get_workflow_functions(workflow)
+    # By default, for each of the above resilient objects attempt to locate resilient objects which are related
+    # For rules -- attempt to locate related workflows and message_destinations
+    # For workflows -- attempt to locate related functions
+    # For functions -- attempt to locate related message destinations
+    if get_related_objects:
+        for r in return_dict.get("rules"):
 
-        # Add the Display Name and Name to each wf_function
-        for wf_fn in wf_functions:
-            for fn in return_dict["functions"]:
-                if wf_fn.get("uuid", "a") == fn.get("uuid", "b"):
-                    wf_fn["name"] = fn.get("name")
-                    wf_fn["display_name"] = fn.get("display_name")
-                    wf_fn["message_destination"] = fn.get("destination_handle", "")
-                    break
+            # Get Activity Fields for Rules
+            view_items = r.get("view_items", [])
+            activity_field_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.ACTIVITY_FIELD]
+            r["activity_fields"] = get_res_obj("fields", "uuid", "Activity Field", activity_field_uuids, export)
+            return_dict["all_fields"].extend([u"actioninvocation/{0}".format(fld.get("name")) for fld in r.get("activity_fields")])
 
-        workflow["wf_functions"] = wf_functions
+            # Get names of Workflows that are related to Rule
+            for w in r.get("workflows", []):
+                workflows.append(w)
+
+            # Get names of Message Destinations that are related to Rule
+            # Message Destinations in Rules are identified by their Display Name
+            for m in r.get("message_destinations", []):
+                message_destinations.append({"identifier": "name", "value": m})
+
+            # Get names of Tasks/Scripts/Fields that are related to Rule
+            automations = r.get("automations", [])
+            for a in automations:
+                if a.get("tasks_to_create"):
+                    for t in a["tasks_to_create"]:
+                        tasks.append(t)
+
+                elif a.get("scripts_to_run"):
+                    scripts.append(a.get("scripts_to_run"))
+
+                elif a.get("field"):
+                    fields.append(a.get("field"))
+
+        # Get Function names that use 'wanted' Message Destinations
+        for f in export.get("functions", []):
+            if f.get("destination_handle") in message_destinations:
+                functions.append(f.get(ResilientObjMap.FUNCTIONS))
+
+        for f in return_dict.get("functions"):
+            # Get Function Inputs
+            view_items = f.get("view_items", [])
+            function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
+            f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
+
+            return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
+
+            # Get Function's Message Destination name
+            message_destinations.append(f.get("destination_handle", ""))
+
+        # Get Functions in Workflow
+        for workflow in return_dict["workflows"]:
+            # This gets all the Functions in the Workflow's XML
+            wf_functions = get_workflow_functions(workflow)
+
+            # Add the Display Name and Name to each wf_function
+            for wf_fn in wf_functions:
+                for fn in return_dict["functions"]:
+                    if wf_fn.get("uuid", "a") == fn.get("uuid", "b"):
+                        wf_fn["name"] = fn.get("name")
+                        wf_fn["display_name"] = fn.get("display_name")
+                        wf_fn["message_destination"] = fn.get("destination_handle", "")
+                        break
+
+            workflow["wf_functions"] = wf_functions
 
     # Get Message Destinations
     return_dict["message_destinations"] = get_res_obj("message_destinations", ResilientObjMap.MESSAGE_DESTINATIONS, "Message Destination", message_destinations, export)
@@ -690,8 +773,9 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
 
 def generate_anchor(header):
     """
-    Converts header to lowercase, removes all characters except a-z, 0-9, - and spaces,
-    then replaces all spaces with -
+    Converts header to lowercase, removes all characters except a-z, 0-9, -,
+    unicode charaters that are used in words and spaces then replaces
+    all spaces with -
 
     An anchor is used in Markdown Templates to link certain parts of the document.
 
@@ -702,13 +786,34 @@ def generate_anchor(header):
     """
     anchor = header.lower()
 
-    regex = re.compile(r"[^a-z0-9\-\s_]")
+    regex = re.compile(r"[^\w\-\s]", re.U)
 
     anchor = re.sub(regex, "", anchor)
-    anchor = re.sub("_", "-", anchor)
     anchor = re.sub(r"[\s]", "-", anchor)
 
     return anchor
+
+
+def simplify_string(the_string):
+    """
+    Simplifies the_string by converting it to lowercases and
+    removing all characters except a-z, 0-9, - and spaces then
+    replaces all spaces with -
+
+    :param the_string: String to simplify
+    :type the_string: str
+    :return: the_string formatted
+    :rtype: str
+    """
+    the_string = the_string.lower()
+
+    regex = re.compile(r"[^a-z0-9\-\s_]")
+
+    the_string = re.sub(regex, "", the_string)
+    the_string = re.sub("_", "-", the_string)
+    the_string = re.sub(r"[\s]", "-", the_string)
+
+    return the_string
 
 
 def get_workflow_functions(workflow, function_uuid=None):
@@ -785,7 +890,7 @@ def get_timestamp(timestamp=None):
     Returns a string of the current time
     in the format YYYY-MM-DD-hh:mm:ss
 
-    If `timestamp` is defined, it will return that timestamp in 
+    If `timestamp` is defined, it will return that timestamp in
     the format YYYY-MM-DD-hh:mm:ss
 
     :param timestamp: Dictionary whose keys are file names
@@ -800,3 +905,13 @@ def get_timestamp(timestamp=None):
         return datetime.datetime.fromtimestamp(timestamp).strftime(TIME_FORMAT)
 
     return datetime.datetime.now().strftime(TIME_FORMAT)
+
+
+def str_to_bool(value):
+    """
+    Represents value as boolean.
+    :param value:
+    :rtype: bool
+    """
+    value = str(value).lower()
+    return value in ('1', 'true', 'yes')

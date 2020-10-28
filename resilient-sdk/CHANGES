@@ -1,3 +1,12 @@
+2020-10: ver. 39.0
+* docgen now creates a single README and updated the README to include info on App Host
+* Added Resilient Platform version to customize.py template
+* package command replaces tags on Resilient objects in export.res instead of extending them
+* Added environmental variable RES_SDK_DEV
+* Added '--set-version' argument to dev command
+* Added 'display_name' attribute to setup.py file
+* Added 'clone' command to clone an Action Object
+
 2020-07: ver. 37.2
 
 * Updates to Dockerfile template
