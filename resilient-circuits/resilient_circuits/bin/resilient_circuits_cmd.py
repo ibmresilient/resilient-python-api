@@ -368,7 +368,7 @@ def selftest(args):
                     state = status.get("state")
 
                     if isinstance(state, str):
-                        LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, state, delta_seconds)
+                        LOG.info("\t%s: %s\n\traw selftest output:\n\t%s\n\tElapsed time: %f seconds", ep.name, state, status, delta_seconds)
 
                         if state.lower() == "failure":
                             selftest_failure_count += 1
