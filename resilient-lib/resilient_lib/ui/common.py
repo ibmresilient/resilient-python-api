@@ -92,26 +92,42 @@ def permission_to_edit(tab, opts):
     return True
 
 def create_tab(tab, update_existing=False):
-    opts = get_opts()
-    if not permission_to_edit(tab, opts):
-        LOG.info("No permission to edit UI for {}".format(tab.SECTION))
-        return
-    client = resilient.get_client(opts)
-    layout = get_incident_layout(client)
+    """
+    If allowed by app.config - creates or updates a tab in the UI according to the 
+    specification passed in the class.
+    Can be forbidden to make changes by adding `ui_lock=<true/on>` in app.config under integration section,
+    resilient, or "integrations".
 
-    # check if tab already exists in the layout
-    if tab.exists_in(layout.get("content")):
-        if update_existing:
-            LOG.info("UI tab for {} already exists. Checking for updates.".format(tab.SECTION))
-            return update_tab(client, layout, tab)
-        else:
-            LOG.info("UI tab for {} already exists. Not updating.".format(tab.SECTION))
+    :param tab: Subclass of ui.Tab that has required parameters and describes the required layout.
+    :param update_existing: Defines the behavior if tab is already present in the system.
+    Either simply leave it alone, or go through required elements and add those that are missing.
+    """
+    try:
+        opts = _get_opts()
+        if not permission_to_edit(tab, opts):
+            LOG.info("No permission to edit UI for {}".format(tab.SECTION))
             return
-    LOG.info("Creating a UI tab for {}".format(tab.SECTION))
-    return add_tab_to_layout(client, layout, tab.as_dto())
+        client = resilient.get_client(opts)
+        layout = get_incident_layout(client)
 
-def get_opts():
-    config = resilient.get_config_file()
-    return AppArgumentParser(config_file=config).parse_args()
+        # check if tab already exists in the layout
+        if tab.exists_in(layout.get("content")):
+            if update_existing:
+                LOG.info("UI tab for {} already exists. Checking for updates.".format(tab.SECTION))
+                return update_tab(client, layout, tab)
+            else:
+                LOG.info("UI tab for {} already exists. Not updating.".format(tab.SECTION))
+                return
+        LOG.info("Creating a UI tab for {}".format(tab.SECTION))
+        return add_tab_to_layout(client, layout, tab.as_dto())
+    except Exception as e:
+        LOG.error("Failed to create/update tab in the UI for {}".format(tab.SECTION))
+        LOG.error(str(e))
+
+def _get_opts():
+    """
+    Gets options from AppArgumentParser in the same manner as circuits does.
+    """
+    return AppArgumentParser().parse_args()
 
 
