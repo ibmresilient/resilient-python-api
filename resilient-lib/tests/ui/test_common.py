@@ -18,10 +18,10 @@ class TestSubmittedData(object):
 	Tests that payload submitted to the server contains proper tab information.
 	"""
 	@patch("resilient.get_client")
-	@patch("resilient_lib.ui.common.get_opts")
-	def test_create_tab(self, get_opts, get_client):
+	@patch("resilient_lib.ui.common._get_opts")
+	def test_create_tab(self, _get_opts, get_client):
 		# these are a mock of app.config
-		get_opts.return_value = {
+		_get_opts.return_value = {
 			MockTab.SECTION: {
 			}
 		}
@@ -50,10 +50,10 @@ class TestSubmittedData(object):
 			assert field.exists_in(MockTab.get_from_tabs(payload.get('content')).get("fields"))
 
 	@patch("resilient.get_client")
-	@patch("resilient_lib.ui.common.get_opts")
-	def test_create_tab_with_locked_ui(self, get_opts, get_client):
+	@patch("resilient_lib.ui.common._get_opts")
+	def test_create_tab_with_locked_ui(self, _get_opts, get_client):
 		# these are a mock of app.config
-		get_opts.return_value = {
+		_get_opts.return_value = {
 			"resilient": {
 				"ui_lock": "True"
 			},
@@ -80,10 +80,10 @@ class TestSubmittedData(object):
 		assert get_client.return_value.put.call_count == 0
 
 	@patch("resilient.get_client")
-	@patch("resilient_lib.ui.common.get_opts")
-	def test_update_tab_disabled(self, get_opts, get_client):
+	@patch("resilient_lib.ui.common._get_opts")
+	def test_update_tab_disabled(self, _get_opts, get_client):
 		# these are a mock of app.config
-		get_opts.return_value = {
+		_get_opts.return_value = {
 			MockTab.SECTION: {
 			}
 		}
@@ -113,10 +113,10 @@ class TestSubmittedData(object):
 
 
 	@patch("resilient.get_client")
-	@patch("resilient_lib.ui.common.get_opts")
-	def test_update_tab_enabled(self, get_opts, get_client):
+	@patch("resilient_lib.ui.common._get_opts")
+	def test_update_tab_enabled(self, _get_opts, get_client):
 		# these are a mock of app.config
-		get_opts.return_value = {
+		_get_opts.return_value = {
 			MockTab.SECTION: {
 			}
 		}
