@@ -8,6 +8,6 @@ VALIDATE_DICT = {
     "num_workers": {
         "required": False,
         "valid_condition": lambda c: True if c >= 1 and c <= 50 else False,
-        "invalid_msg": "num_workers must be in the range: '1 >= num_workers <= 50'"
+        "invalid_msg": "num_workers must be in the range 1 <= 50"
     }
 }
