@@ -8,6 +8,8 @@ from pkg_resources import EggInfoDistribution, EntryPoint
 
 from resilient import get_config_file
 from resilient_circuits.bin.resilient_circuits_cmd import *
+from tests.shared_mock_data import mock_paths
+
 
 DEFAULT_CONFIG_FILENAME = "app.config"
 DEFAULT_CONFIG_FILE = os.path.expanduser(
@@ -19,7 +21,6 @@ MOCKED_SELFTEST_ENTRYPOINTS = [EntryPoint.parse('test = tests.selftest_tests.moc
 )), EntryPoint.parse('test2 = tests.selftest_tests.mocked_success_script:selftest', dist=EggInfoDistribution(
     project_name='test2',
     version="0.1"))]
-
 
 
 def mock_os_path_exists(path):
@@ -84,9 +85,11 @@ class TestSelfTest(object):
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             parser = Namespace(install_list=['test'], project_name=['test'])
 
-            with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_post_request:
-                mocked_post_request.return_value = MOCKED_SELFTEST_ENTRYPOINTS
-                selftest(parser)
+            with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
+                mocked_entrypoints.return_value = MOCKED_SELFTEST_ENTRYPOINTS
+                with patch("resilient_circuits.bin.resilient_circuits_cmd.resilient.get_config_file") as mocked_config:
+                    mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
+                    selftest(parser)
 
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == 1
@@ -98,6 +101,8 @@ class TestSelfTest(object):
         """
         parser = Namespace(install_list=['test2'], project_name=['test2'])
 
-        with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_post_request:
-            mocked_post_request.return_value = [MOCKED_SELFTEST_ENTRYPOINTS[1]]
-            selftest(parser)
+        with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
+            mocked_entrypoints.return_value = [MOCKED_SELFTEST_ENTRYPOINTS[1]]
+            with patch("resilient_circuits.bin.resilient_circuits_cmd.resilient.get_config_file") as mocked_config:
+                mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
+                selftest(parser)
