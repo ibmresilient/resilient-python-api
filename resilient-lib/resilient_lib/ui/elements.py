@@ -18,7 +18,8 @@ class UIElementBase(object):
         """
         Given a list of fields of a tab, find if current one is one of them.
         """
-        return next((field for field in fields if field["element"] == self.ELEMENT_TYPE and field["content"] == self.api_name), None) is not None
+        return next((field for field in fields
+                    if field["element"] == self.ELEMENT_TYPE and field["content"] == self.api_name), None) is not None
 
 
 class Field(UIElementBase):
