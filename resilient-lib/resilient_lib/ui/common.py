@@ -19,6 +19,7 @@ LAYOUT_FOR = "/layouts/{}"
 INCIDENT_TABS_NAME = "incident"
 UI_LOCK = "ui_lock"
 
+
 def get_organization_layout(client, layout_name):
     # first get a type ID for layout UI
     types = client.get(TYPES_URL)
@@ -35,7 +36,7 @@ def get_organization_layout(client, layout_name):
     if not incident_tabs:
         raise ValueError("No UI tabs are received from the platform for {} layout.".format(layout_name))
     elif len(incident_tabs) != 1:
-        raise ValueError("Expected 1 tab for {} layout, {} were returned".format(layout_name, len(incident_tabs))) 
+        raise ValueError("Expected 1 tab for {} layout, {} were returned".format(layout_name, len(incident_tabs)))
 
     return incident_tabs[0]
 
@@ -43,15 +44,16 @@ def get_organization_layout(client, layout_name):
 def get_incident_layout(client):
     return get_organization_layout(client, INCIDENT_TABS_NAME)
 
+
 def get_incident_tabs(client):
     """
     Get a list of incident tabs exposed to user.
     :param client: Resilient client
     :returns: a tuple of layout id for incident UI and current list of UI tabs
     """
-    
     tab_data = get_incident_layout(client)
     return tab_data.get('content')
+
 
 def add_tab_to_layout(client, layout, new_tab):
     layout = copy.deepcopy(layout)
@@ -59,6 +61,7 @@ def add_tab_to_layout(client, layout, new_tab):
         new_tab
     )
     return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
+
 
 def update_tab(client, layout, tab):
     """
@@ -72,6 +75,7 @@ def update_tab(client, layout, tab):
     tab_data['fields'].extend(missing_fields)
 
     return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
+
 
 def permission_to_edit(tab, opts):
     """
@@ -91,9 +95,10 @@ def permission_to_edit(tab, opts):
 
     return True
 
+
 def create_tab(tab, update_existing=False):
     """
-    If allowed by app.config - creates or updates a tab in the UI according to the 
+    If allowed by app.config - creates or updates a tab in the UI according to the
     specification passed in the class.
     Can be forbidden to make changes by adding `ui_lock=<true/on>` in app.config under integration section,
     resilient, or "integrations".
@@ -124,10 +129,9 @@ def create_tab(tab, update_existing=False):
         LOG.error("Failed to create/update tab in the UI for {}".format(tab.SECTION))
         LOG.error(str(e))
 
+
 def _get_opts():
     """
     Gets options from AppArgumentParser in the same manner as circuits does.
     """
     return AppArgumentParser().parse_args()
-
-

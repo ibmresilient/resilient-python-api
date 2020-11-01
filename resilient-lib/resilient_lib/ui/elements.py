@@ -12,7 +12,7 @@ class UIElementBase(object):
         """
         Returns a JSON serializable dictionary with DTO representing the field in the tab.
         """
-        raise NotImplemenetedError("DTO represenation for {} is not implemented".format(self.__class__))
+        raise NotImplementedError("DTO represenation for {} is not implemented".format(self.__class__))
 
     def exists_in(self, fields):
         """

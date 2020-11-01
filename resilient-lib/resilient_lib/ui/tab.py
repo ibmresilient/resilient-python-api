@@ -10,7 +10,6 @@ UI_TAB_ELEMENT = "tab"
 UI_TAB_FIELD_TYPE = "incident"
 
 
-
 class RequiredTabFields(type):
     """
     The job of this metaclass is to confirm that the user defined subclasses of Tab define
@@ -24,7 +23,7 @@ class RequiredTabFields(type):
         for attr in cls.REQUIRED_TAB_ATTRIBUTES:
             if not hasattr(cls, attr) or getattr(cls, attr) is None:
                 raise AttributeError("{} is missing from class definition of a Tab".format(attr))
-    
+
 
 class Tab(six.with_metaclass(RequiredTabFields)):
     """
@@ -35,7 +34,7 @@ class Tab(six.with_metaclass(RequiredTabFields)):
     - NAME is the name of the tab as it should appear in the UI
     - SECTION is integration's section in the app.config
     Can be used to place `ui_lock` in it to prevent changes being made to the tab.
-    - CONTAINS - array of UI Elements (Field, Datatable) with api names to be listed in the tab 
+    - CONTAINS - array of UI Elements (Field, Datatable) with api names to be listed in the tab
 
     Example usage:
 
@@ -54,7 +53,6 @@ class Tab(six.with_metaclass(RequiredTabFields)):
     UUID = None
     NAME = None
     SECTION = None
-    
 
     CONTAINS = None
 
@@ -98,5 +96,3 @@ class Tab(six.with_metaclass(RequiredTabFields)):
         tab = cls.get_from_tabs(tabs)
         tab_fields = tab.get('fields', [])
         return [field.as_dto() for field in cls.CONTAINS if not field.exists_in(tab_fields)]
-        
-
