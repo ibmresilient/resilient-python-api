@@ -7,6 +7,11 @@ try:
 except ImportError:
     # Support Apps running on resilient-circuits < v35.0.195
     from resilient_circuits.util import ImportDefinition
+import base64
+import os
+from resilient_circuits import FunctionError
+
+RES_FILE = "data/export.res"
 
 
 def codegen_reload_data():
@@ -86,5 +91,10 @@ def customization_data(client=None):
     {% endif %}
     """
 
-    yield ImportDefinition(u"""
-{{export_data|base64}}""")
+    res_file = os.path.join(os.path.dirname(__file__), RES_FILE)
+    if not os.path.isfile(res_file):
+        raise FunctionError("{} not found".format(RES_FILE))
+
+    with open(res_file, 'rb') as f:
+        b64_data = base64.b64encode(f.read())
+        yield ImportDefinition(b64_data)

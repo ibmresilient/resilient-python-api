@@ -267,6 +267,26 @@ def load_customize_py_module(path_customize_py, warn=True):
 
     return customize_py_module
 
+def remove_default_incident_type_from_import_definition(import_definition):
+    """Take import_definition as input and remove the DEFAULT_INCIDENT_TYPE added by
+       codegen in minify_export.
+    """
+    # Get reference to incident_types if there are any
+    incident_types = import_definition.get("incident_types", [])
+
+    if incident_types:
+
+        incident_type_to_remove = None
+
+        # Loop through and remove this custom one (that is originally added using codegen)
+        for incident_type in incident_types:
+            if incident_type.get("uuid") == DEFAULT_INCIDENT_TYPE_UUID:
+                incident_type_to_remove = incident_type
+                break
+
+        if incident_type_to_remove:
+            incident_types.remove(incident_type_to_remove)
+    return import_definition
 
 def get_import_definition_from_customize_py(path_customize_py_file):
     """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
@@ -295,24 +315,32 @@ def get_import_definition_from_customize_py(path_customize_py_file):
     # Get the import defintion as dict
     customize_py_import_definition = customize_py_import_definitions[0]
 
-    # Get reference to incident_types if there are any
-    incident_types = customize_py_import_definition.get("incident_types", [])
-
-    if incident_types:
-
-        incident_type_to_remove = None
-
-        # Loop through and remove this custom one (that is originally added using codegen)
-        for incident_type in incident_types:
-            if incident_type.get("uuid") == DEFAULT_INCIDENT_TYPE_UUID:
-                incident_type_to_remove = incident_type
-                break
-
-        if incident_type_to_remove:
-            incident_types.remove(incident_type_to_remove)
+    # Remove the incident type that was added by codegen that allows the data to import
+    customize_py_import_definition = remove_default_incident_type_from_import_definition(customize_py_import_definition)
 
     return customize_py_import_definition
 
+def get_import_definition_from_local_export_res(path_export_res_file):
+    """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
+
+    # Read /util/data/export.res file
+    import_definitions = sdk_helpers.read_file(path_export_res_file)
+
+    # If no ImportDefinition found
+    if not import_definitions:
+        raise SDKException("No ImportDefinition found in the /util/data/export.res file")
+
+    # If more than 1 found
+    elif len(import_definitions) > 1:
+        raise SDKException("Multiple ImportDefinitions found in the export.res file. There must only be 1 ImportDefinition defined")
+
+    # Get the import definition as dict
+    import_definition = json.loads(import_definitions[0])
+
+    # Remove the incident type that was added by codegen that allows the data to import
+    import_definition = remove_default_incident_type_from_import_definition(import_definition)
+
+    return import_definition
 
 def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
@@ -637,22 +665,30 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
     # Get the customize file location.
     path_customize_py_file = get_configuration_py_file_path("customize", setup_py_attributes)
-  
+
     # Get the config file location.
     path_config_py_file = get_configuration_py_file_path("config", setup_py_attributes)
 
     # Get ImportDefinition from the discovered customize file.
     if path_customize_py_file:
-        customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
+        # First check if there is a util/data/export.res file in the source tree and read
+        # from that file if it is there.  Otherwise, this is a an older package with the
+        # import definition in the customize.py file.
+        path_src = os.path.dirname(path_customize_py_file)
+        path_local_export_res = os.path.join(path_src, os.path.join("data", "export.res"))
+        if os.path.isfile(path_local_export_res):
+            import_definition = get_import_definition_from_local_export_res(path_local_export_res)
+        else:
+            import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
         # No 'customize.py' file found generate import definition with just mimimum server version.
-        customize_py_import_definition = {
+        import_definition = {
             'server_version':
                 IMPORT_MIN_SERVER_VERSION
         }
 
     # Add the tag to the import defintion
-    customize_py_import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, customize_py_import_definition)
+    import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, import_definition)
 
     # Parse the app.configs from the discovered config file
     if path_config_py_file:
@@ -742,10 +778,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "format": "html"
             },
             "minimum_resilient_version": {
-                "major": customize_py_import_definition.get("server_version").get("major", None),
-                "minor": customize_py_import_definition.get("server_version").get("minor", None),
-                "build_number": customize_py_import_definition.get("server_version").get("build_number", None),
-                "version": customize_py_import_definition.get("server_version").get("version", None)
+                "major": import_definition.get("server_version").get("major", None),
+                "minor": import_definition.get("server_version").get("minor", None),
+                "build_number": import_definition.get("server_version").get("build_number", None),
+                "version": import_definition.get("server_version").get("version", None)
             },
             "name": setup_py_attributes.get("name"),
             "tag": {
@@ -773,8 +809,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # Write the executable.json file
         sdk_helpers.write_file(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True))
 
-        # Write the customize ImportDefinition to the export.res file
-        sdk_helpers.write_file(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True))
+        # Write the customize ImportDefinition to the app*.zip export.res file
+        sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))
 
         # Copy the built distribution to the build dir, enforce rename to .tar.gz
         shutil.copy(path_built_distribution, os.path.join(path_build, "{0}.tar.gz".format(extension_name)))

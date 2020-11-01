@@ -20,6 +20,7 @@ LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Relative paths from with the package of files + directories used
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_EXPORT_RES = os.path.join(os.path.join("util", "data"), "export.res")
 PATH_SETUP_PY = "setup.py"
 
 # Regex for splitting version number at end of name from package basename.
@@ -272,6 +273,9 @@ class CmdCodegen(BaseCmd):
                     "__init__.py": ("package/components/__init__.py.jinja2", jinja_data),
                 },
                 "util": {
+                    "data": {
+                        "export.res": ("package/util/data/export.res.jinja2", jinja_data)
+                    },
                     "__init__.py": ("package/util/__init__.py.jinja2", jinja_data),
                     "config.py": ("package/util/config.py.jinja2", jinja_data),
                     "customize.py": ("package/util/customize.py.jinja2", jinja_data),
@@ -355,6 +359,14 @@ class CmdCodegen(BaseCmd):
         # Rename the old customize.py with .bak
         path_customize_py_bak = sdk_helpers.rename_to_bak_file(path_customize_py)
 
+        # If local export file exists then save it to a .bak file.
+        # (Older packages may not have the /util/data/export.res file)
+        path_export_res = os.path.join(path_package, path_package_basename, PATH_EXPORT_RES)
+        if os.path.exists(path_export_res):
+            path_export_res_bak = sdk_helpers.rename_to_bak_file(path_export_res)
+        else:
+            path_export_res_bak = None
+
         try:
             # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
             mapping_tuples = [
@@ -391,3 +403,6 @@ class CmdCodegen(BaseCmd):
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
                 sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
+            if not os.path.isfile(path_export_res) and path_export_res_bak:
+                LOG.info(u"An error occurred. Renaming export.res.bak to export.res")
+                sdk_helpers.rename_file(path_export_res_bak, "export.res")
