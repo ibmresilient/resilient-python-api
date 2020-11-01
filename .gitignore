@@ -24,3 +24,4 @@ build
 _build
 resilient-sdk/sdk_coverage_report
 *.bak
+.vscode
