@@ -26,6 +26,14 @@ SUPPORTED_ACTION_OBJECTS = ['function', 'workflow',
 ACTION_OBJECT_KEYS = ['functions', 'workflows',
                       'actions', 'message_destinations', 'scripts']
 
+resilient_export_obj_mapping = {
+    'workflows': ResilientObjMap.WORKFLOWS,
+    'functions': ResilientObjMap.FUNCTIONS,
+    'actions': ResilientObjMap.RULES,
+    'message_destinations': ResilientObjMap.MESSAGE_DESTINATIONS,
+    'scripts': ResilientObjMap.SCRIPTS,
+}
+
 
 class CmdClone(BaseCmd):
     """
@@ -198,6 +206,9 @@ class CmdClone(BaseCmd):
                     args.prefix, old_api_name)
                 # If the object we are dealing with was one of the requested objects
                 if self.action_obj_was_specified(args, obj):
+                    # Ensure the new_api_name for each object is unique, raise an Exception otherwise
+                    CmdClone.perform_duplication_check(object_type, resilient_export_obj_mapping.get(object_type), "Object", new_api_name, org_export)
+                        
                     # Handle functions for cloning
                     if obj.get('display_name', False):
                         new_function = CmdClone.replace_function_object_attrs(
@@ -246,8 +257,8 @@ class CmdClone(BaseCmd):
         original_obj = CmdClone.validate_provided_object_names(obj_type=obj_key,
                                                                obj_identifier=obj_identifier,
                                                                obj_type_name=obj_name,
-                                                               new_workflow_api_name=new_obj_api_name,
-                                                               original_workflow_api_name=original_obj_api_name,
+                                                               new_object_api_name=new_obj_api_name,
+                                                               original_object_api_name=original_obj_api_name,
                                                                export=org_export)
 
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
@@ -266,8 +277,8 @@ class CmdClone(BaseCmd):
         original_workflow = CmdClone.validate_provided_object_names(obj_type="workflows",
                                                                     obj_identifier=ResilientObjMap.WORKFLOWS,
                                                                     obj_type_name="Workflow",
-                                                                    new_workflow_api_name=new_workflow_api_name,
-                                                                    original_workflow_api_name=original_workflow_api_name,
+                                                                    new_object_api_name=new_workflow_api_name,
+                                                                    original_object_api_name=original_workflow_api_name,
                                                                     export=org_export)
         new_workflow = original_workflow.copy()
         # Gather the old workflow name before we modify the object
@@ -281,29 +292,50 @@ class CmdClone(BaseCmd):
         return [new_workflow]
 
     @staticmethod
-    def validate_provided_object_names(obj_type, obj_identifier, obj_type_name, new_workflow_api_name, original_workflow_api_name, export):
+    def perform_duplication_check(obj_type, obj_identifier, obj_type_name, new_object_api_name, export):
+        """Attempt to get the referenced object from the org_export
+        If the object is not found, return True.
+        If the object is found, raise an SDK Exception specifying the provided object name is not unique
+        and already exists on the system. 
 
+        :param obj_type: The type name in the org export to search 
+        :type obj_type: str
+        :param obj_identifier: The identifier for the given object
+        :type obj_identifier: str
+        :param obj_type_name: [description]
+        :type obj_type_name: str
+        :param new_object_api_name: [description]
+        :type new_object_api_name: str
+        :param export: The org export to search through
+        :type export: dict
+        :raises SDKException: If the provided object name is found then this function raises a SDK exception specifying this must be unique. 
+        """
         # Perform a duplication check with the provided new name
         try:
             # Try to get a res obj with the new name
             get_res_obj(obj_type, obj_identifier, obj_type_name, [
-                        new_workflow_api_name], export, include_api_name=False)
+                        new_object_api_name], export, include_api_name=False)
         except SDKException:
             # get_res_obj raises an exception if the object is not found
             # normally this is good but for this unique use case
             # we expect that the object will not be found and so catch and release the raised SDKException
-            pass
+            return True
         else:
             # if get_res_obj does not raise an exception it means an object with that identifier exists
             # and in this case we raise an SDKException as the new name provided for cloning needs to be unique
             raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name {} already exists".format(
-                obj_type_name, new_workflow_api_name))
+                obj_type_name, new_object_api_name))
+
+    @staticmethod
+    def validate_provided_object_names(obj_type, obj_identifier, obj_type_name, new_object_api_name, original_object_api_name, export):
+
+        CmdClone.perform_duplication_check(obj_type, obj_identifier, obj_type_name, new_object_api_name, export)
 
         # Gather the original Action Object to be returned
-        original_workflow = get_res_obj(obj_type, obj_identifier, obj_type_name, [
-                                        original_workflow_api_name], export, include_api_name=False)[0]
+        original_object = get_res_obj(obj_type, obj_identifier, obj_type_name, [
+                                        original_object_api_name], export, include_api_name=False)[0]
         # Return the object
-        return original_workflow
+        return original_object
 
     @staticmethod
     def validate_provided_args_length(input_args):
