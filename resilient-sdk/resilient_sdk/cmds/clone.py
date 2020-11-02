@@ -142,7 +142,7 @@ class CmdClone(BaseCmd):
                     # If a Script was provided, call _clone_action_object with Script related params and
                     # add the newly cloned Script to new_export_data
                     new_export_data['scripts'] = self._clone_action_object(
-                        args.script, org_export, 'Script', ResilientObjMap.SCRIPTS, 'scripts', CmdClone.replace_function_object_attrs, args.changetype)
+                        args.script, org_export, 'Script', ResilientObjMap.SCRIPTS, 'scripts', CmdClone.replace_common_object_attrs, args.changetype)
                 if args.function:
                     # If a Function was provided, call _clone_action_object with Function related params and
                     # add the newly cloned Function to new_export_data
