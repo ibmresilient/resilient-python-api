@@ -123,9 +123,9 @@ class CmdClone(BaseCmd):
         start = time.perf_counter()
 
         # Instansiate connection to the Resilient Appliance
-        res_client = get_resilient_client()
+        CmdClone.res_client = get_resilient_client()
 
-        org_export = get_latest_org_export(res_client)
+        org_export = get_latest_org_export(CmdClone.res_client)
 
         # For the new export data DTO minify the export to only its mandatory attributes
         new_export_data = minify_export(org_export)
@@ -167,13 +167,51 @@ class CmdClone(BaseCmd):
                     new_export_data["message_destinations"] = self._clone_action_object(
                         args.messagedestination, org_export, 'Message Destination', ResilientObjMap.MESSAGE_DESTINATIONS, 'message_destinations', CmdClone.replace_md_object_attrs)
 
-            add_configuration_import(new_export_data, res_client)
+            add_configuration_import(new_export_data, CmdClone.res_client)
+            # If any message destinations were cloned, after creation attach a Authorised User or API Key
+            # to the destination. Providing this info in the Configurations API call above will be ignored.
+            self.add_authorised_info_to_md(new_export_data)
 
         else:
             self.parser.print_help()
 
         end = time.perf_counter()
         LOG.info("'clone' command finished in {} seconds".format(end - start))
+
+    def add_authorised_info_to_md(self, new_export_data):
+        """ 
+        Function which takes a ConfigurationDTO and makes an API call to get all created message destinations
+        For any created message destinations which are found in the configuration export iterate over it 
+        and add either an API Key or a User ID to each. 
+        Then make a PUT API call to attach this auth info to each destination that
+        was created by the ConfigurationDTO 
+        :param new_export_data: A ConfigurationDTO specifying objects which were imported into resilient
+        :type new_export_data: dict
+        """
+        # Get all the names fo each newly cloned message destination
+        newly_cloned_dests_names = [dest.get("programmatic_name") for dest in new_export_data.get("message_destinations", [])]
+        # Make an API call and return a list of message_destinations whose name is found in our list newly cloned destination names
+        destination_objects = [dest for dest in CmdClone.res_client.get("/message_destinations")["entities"] if dest['programmatic_name'] in newly_cloned_dests_names]
+        # For each newly cloned object
+        for cloned_object in destination_objects:
+            # Inner function used with the get_put api call
+            def update_user(dest):
+                # If we are dealing with a message destination, add the current user API Key
+                if CmdClone.res_client.user_id is None:
+                    # We are using an API Key, append this to the object
+                    if CmdClone.res_client.api_key_handle not in dest["api_keys"]:
+                        LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
+                        dest["api_keys"].append(CmdClone.res_client.api_key_handle)
+                else:
+                    # We are using user/password to authenticate
+                    if CmdClone.res_client.user_id not in dest.get("users", []):
+                        LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
+                        dest["users"].append(CmdClone.res_client.user_id)
+                return dest
+
+            dest_id = cloned_object["id"]
+            uri = "/message_destinations/{}".format(dest_id)
+            CmdClone.res_client.get_put(uri, update_user)
 
     def _clone_multiple_action_objects(self, args, new_export_data, org_export):
         LOG.info("Prefix provided {}, copying multiple Action Objects".format(args.prefix))
@@ -434,6 +472,7 @@ class CmdClone(BaseCmd):
             obj_to_modify.update({
                 ResilientObjMap.DATATABLES: new_obj_api_name
             })
+        
 
         return obj_to_modify
 
