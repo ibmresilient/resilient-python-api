@@ -291,6 +291,13 @@ def remove_default_incident_type_from_import_definition(import_definition):
 def get_import_definition_from_customize_py(path_customize_py_file):
     """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
 
+    # If there is a /util/data/export.res then get the import definition from there.
+    path_src = os.path.dirname(path_customize_py_file)
+    path_local_export_res = os.path.join(path_src, os.path.join("data", "export.res"))
+    if os.path.isfile(path_local_export_res):
+        import_definition = get_import_definition_from_local_export_res(path_local_export_res)
+        return import_definition
+
     customize_py = load_customize_py_module(path_customize_py_file)
 
     # Call customization_data() to get all ImportDefinitions that are "yielded"
@@ -671,15 +678,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
     # Get ImportDefinition from the discovered customize file.
     if path_customize_py_file:
-        # First check if there is a util/data/export.res file in the source tree and read
-        # from that file if it is there.  Otherwise, this is a an older package with the
-        # import definition in the customize.py file.
-        path_src = os.path.dirname(path_customize_py_file)
-        path_local_export_res = os.path.join(path_src, os.path.join("data", "export.res"))
-        if os.path.isfile(path_local_export_res):
-            import_definition = get_import_definition_from_local_export_res(path_local_export_res)
-        else:
-            import_definition = get_import_definition_from_customize_py(path_customize_py_file)
+        import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
         # No 'customize.py' file found generate import definition with just mimimum server version.
         import_definition = {
