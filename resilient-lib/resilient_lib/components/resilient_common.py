@@ -7,7 +7,6 @@ import tempfile
 import os
 import io
 import mimetypes
-import base64
 import logging
 import resilient
 from bs4 import BeautifulSoup
@@ -382,14 +381,14 @@ def close_incident(res_client, incident_id, kwargs):
     """
 
     if not incident_id:
-        raise ValueError("incident id must be specified")
+        raise ValueError("'incident_id' must be specified")
 
     # API call to the TypeRest for fields "required": "close" if not in kwargs throw an error
     required_fields = _get_required_fields(res_client)
 
     missing_fields = [field for field in required_fields if field not in kwargs]
     if missing_fields:
-        raise ValueError("'%s' are mandatory field(s) to close an incident.", missing_fields)
+        raise ValueError("Missing mandatory field(s) to close an incident: {0}".format(missing_fields))
 
     # check for known mandatory field "plan_status" if not in kwargs add it
     mandatory_fields = kwargs.copy()
@@ -398,6 +397,7 @@ def close_incident(res_client, incident_id, kwargs):
 
     # API call to the Resilient REST API to patch the incident data (close incident)
     response = _patch_to_close_incident(res_client, incident_id, mandatory_fields)
+
     return response
 
 
@@ -412,7 +412,7 @@ def _get_required_fields(res_client):
     return fields_required
 
 
-# @cached(cache=TTLCache(maxsize=10, ttl=600))
+@cached(cache=TTLCache(maxsize=10, ttl=600))
 def _get_incident_fields(res_client):
     """
     call the Resilient REST API to get list of fields required to close an incident
@@ -423,6 +423,7 @@ def _get_incident_fields(res_client):
     uri = "/types/incident"
     response = res_client.get(uri)
     incident_fields = response.get("fields")
+
     return incident_fields
 
 
@@ -434,14 +435,13 @@ def _patch_to_close_incident(res_client, incident_id, close_fields):
     :param close_fields: required
     :return: response object
     """
-    LOG.info("patch_incident close_fields: %s", close_fields)
-
-    data_uri = "/incidents/{}".format(incident_id)
-    previous_object = res_client.get(data_uri)
+    uri = "/incidents/{}".format(incident_id)
+    previous_object = res_client.get(uri)
     patch = resilient.Patch(previous_object)
 
     for field in close_fields:
         patch.add_value(field, close_fields[field])
-        
-    response = res_client.patch(data_uri, patch)
+
+    response = res_client.patch(uri, patch)
+
     return response
