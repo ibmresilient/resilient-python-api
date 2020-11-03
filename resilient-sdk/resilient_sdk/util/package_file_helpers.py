@@ -289,7 +289,7 @@ def remove_default_incident_type_from_import_definition(import_definition):
     return import_definition
 
 def get_import_definition_from_customize_py(path_customize_py_file):
-    """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
+    """Return the ImportDefinition in a customize.py or /util/data/export.res file as a Dictionary"""
 
     # If there is a /util/data/export.res then get the import definition from there.
     path_src = os.path.dirname(path_customize_py_file)
@@ -753,6 +753,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # If not set use the 'name' attribute in setup.py
         display_name = custom_display_name or setup_py_attributes.get("display_name") or setup_py_attributes.get("name")
 
+        # Image string is all lowercase on quay.io
+        image = "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+        image = image.lower()
+
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
             "author": {
@@ -795,8 +799,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "executables": [
                     {
                         "name": setup_py_attributes.get("name"),
-                        "image": "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"),
-                                                      setup_py_attributes.get("version")),
+                        "image": image,
                         "config_string": app_configs[0],
                         "permission_handles": apikey_permissions,
                         "uuid": uuid
