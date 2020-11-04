@@ -53,7 +53,7 @@ def test_is_valid_package_name():
     assert sdk_helpers.is_valid_package_name("get") is False
     assert sdk_helpers.is_valid_package_name("$%&(#)@*$") is False
     assert sdk_helpers.is_valid_package_name("fn-ځ ڂ ڃ ڄ څ-integration") is False
-
+    assert sdk_helpers.is_valid_package_name("fn-MockIntegration") is False
 
 def test_is_valid_version_syntax():
     assert sdk_helpers.is_valid_version_syntax("1.0") is False

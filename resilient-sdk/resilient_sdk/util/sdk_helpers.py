@@ -165,7 +165,7 @@ def is_valid_package_name(name):
         return False
     if name in dir(__builtins__):
         return False
-    return re.match(r"[(_|\-)A-Za-z][(_|\-)a-zA-Z0-9]*$", name) is not None
+    return re.match(r"[(_|\-)a-z][(_|\-)a-z0-9]*$", name) is not None
 
 
 def is_valid_version_syntax(version):
