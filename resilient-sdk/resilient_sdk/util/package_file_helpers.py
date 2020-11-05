@@ -268,7 +268,7 @@ def load_customize_py_module(path_customize_py, warn=True):
     return customize_py_module
 
 def remove_default_incident_type_from_import_definition(import_definition):
-    """Take import_definition as input and remove the DEFAULT_INCIDENT_TYPE added by
+    """Take ImportDefinition as input and remove the DEFAULT_INCIDENT_TYPE added by
        codegen in minify_export.
     """
     # Get reference to incident_types if there are any
@@ -289,7 +289,11 @@ def remove_default_incident_type_from_import_definition(import_definition):
     return import_definition
 
 def get_import_definition_from_customize_py(path_customize_py_file):
-    """Return the ImportDefinition in a customize.py or /util/data/export.res file as a Dictionary"""
+    """Return the ImportDefinition in a customize.py or /util/data/export.res file as a Dictionary.
+       :param path_customize_py_file: Path to the customize.py file
+       :return import definition dict from /util/data/export.res if the file exists. Otherwise,
+               get it from customize.py
+    """
 
     # If there is a /util/data/export.res then get the import definition from there.
     path_src = os.path.dirname(path_customize_py_file)
@@ -328,7 +332,7 @@ def get_import_definition_from_customize_py(path_customize_py_file):
     return customize_py_import_definition
 
 def get_import_definition_from_local_export_res(path_export_res_file):
-    """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
+    """Return ImportDefinition from a local (/util/data) export.res file as a Dictionary"""
 
     # Read /util/data/export.res file
     import_definitions = sdk_helpers.read_file(path_export_res_file)
