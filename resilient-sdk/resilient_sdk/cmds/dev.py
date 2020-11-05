@@ -114,8 +114,8 @@ class CmdDev(BaseCmd):
         # (Older packages may not have the /util/data/export.res file)
         # Figure out the path of the files first
         dir_customize_py = os.path.dirname(path_customize_py)
-        dir_local_export_res = os.path.join(dir_customize_py, "data")
-        path_local_export_res = os.path.join(dir_local_export_res, "export.res")
+        path_local_export_res = os.path.join(dir_customize_py, package_helpers.PATH_LOCAL_EXPORT_RES)
+
         path_local_export_res_bak = None
         if os.path.exists(path_local_export_res):
             path_local_export_res_bak = sdk_helpers.rename_to_bak_file(path_local_export_res)
@@ -162,8 +162,8 @@ class CmdDev(BaseCmd):
             sdk_helpers.write_file(path_customize_py, jinja_rendered_text)
 
             # Instansiate Jinja2 Environment with path to Jinja2 templates for /util/dat/export.res
-            jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util/data")
-            jinja_template = jinja_env.get_template("export.res.jinja2")
+            #jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util/data")
+            jinja_template = jinja_env.get_template("/data/export.res.jinja2")
 
             LOG.info("Writing new /util/data/export.res file")
 
@@ -171,6 +171,7 @@ class CmdDev(BaseCmd):
             jinja_rendered_text = jinja_template.render(jinja_data)
 
             # Make sure the /util/data directory is there if it is not
+            dir_local_export_res = os.path.dirname(path_local_export_res)
             if not os.path.exists(dir_local_export_res):
                 os.makedirs(dir_local_export_res)
 

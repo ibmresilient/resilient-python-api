@@ -2,13 +2,13 @@
 
 """Generate the Resilient customizations required for {{package_name}}"""
 
+import base64
+import os
 try:
     from resilient import ImportDefinition
 except ImportError:
     # Support Apps running on resilient-circuits < v35.0.195
     from resilient_circuits.util import ImportDefinition
-import base64
-import os
 from resilient_circuits import FunctionError
 
 RES_FILE = "data/export.res"
@@ -95,6 +95,6 @@ def customization_data(client=None):
     if not os.path.isfile(res_file):
         raise FunctionError("{} not found".format(RES_FILE))
 
-    with open(res_file, 'rb') as f:
+    with io.open(res_file, mode="rt", encoding="utf-8") as f:
         b64_data = base64.b64encode(f.read())
         yield ImportDefinition(b64_data)

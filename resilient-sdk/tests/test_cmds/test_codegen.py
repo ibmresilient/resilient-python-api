@@ -102,7 +102,11 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
 
     files_in_util = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util")))
     assert files_in_util == ['__init__.py', 'config.py', 'customize.py', 'data', 'selftest.py']
-    
+
+    files_in_util_data = sorted(
+        os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", package_helpers.PATH_UTIL_DATA_DIR)))
+    assert files_in_util_data == ['export.res']
+
     files_in_components = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "components")))
     assert files_in_components == ['__init__.py']
 

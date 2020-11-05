@@ -39,6 +39,7 @@ LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 BASE_NAME_BUILD = "build"
 BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
+BASE_NAME_LOCAL_EXPORT_RES = "export.res"
 BASE_NAME_SETUP_PY = "setup.py"
 BASE_NAME_DIST_DIR = "dist"
 BASE_NAME_DOCKER_FILE = "Dockerfile"
@@ -54,6 +55,8 @@ PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data
 PATH_SETUP_PY = "setup.py"
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
+PATH_UTIL_DATA_DIR = os.path.join("util", "data")
+PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
 PATH_DOC_DIR = "doc"
 PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
 PATH_README = "README.md"
@@ -268,8 +271,11 @@ def load_customize_py_module(path_customize_py, warn=True):
     return customize_py_module
 
 def remove_default_incident_type_from_import_definition(import_definition):
-    """Take ImportDefinition as input and remove the DEFAULT_INCIDENT_TYPE added by
+    """
+      Take ImportDefinition as input and remove the DEFAULT_INCIDENT_TYPE added by
        codegen in minify_export.
+    :param import_definition dictionary
+    :return: import_definition dictionary
     """
     # Get reference to incident_types if there are any
     incident_types = import_definition.get("incident_types", [])
@@ -289,7 +295,8 @@ def remove_default_incident_type_from_import_definition(import_definition):
     return import_definition
 
 def get_import_definition_from_customize_py(path_customize_py_file):
-    """Return the ImportDefinition in a customize.py or /util/data/export.res file as a Dictionary.
+    """
+       Return the ImportDefinition in a customize.py or /util/data/export.res file as a Dictionary.
        :param path_customize_py_file: Path to the customize.py file
        :return import definition dict from /util/data/export.res if the file exists. Otherwise,
                get it from customize.py
@@ -297,7 +304,7 @@ def get_import_definition_from_customize_py(path_customize_py_file):
 
     # If there is a /util/data/export.res then get the import definition from there.
     path_src = os.path.dirname(path_customize_py_file)
-    path_local_export_res = os.path.join(path_src, os.path.join("data", "export.res"))
+    path_local_export_res = os.path.join(path_src, PATH_LOCAL_EXPORT_RES)
     if os.path.isfile(path_local_export_res):
         import_definition = get_import_definition_from_local_export_res(path_local_export_res)
         return import_definition
@@ -417,8 +424,8 @@ def get_configs_from_config_py(path_config_py_file):
     return (concat_cfg_str, config_list)
 
 def get_apikey_permissions(path):
-    """Returns a list of api keys to allow an integration to run.
-
+    """
+    Returns a list of api keys to allow an integration to run.
     :param path: Location to file with api keys one per line.
     :return apikey_permissions: Return list of api keys.
     """
@@ -758,8 +765,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         display_name = custom_display_name or setup_py_attributes.get("display_name") or setup_py_attributes.get("name")
 
         # Image string is all lowercase on quay.io
-        image = "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"), setup_py_attributes.get("version"))
-        image = image.lower()
+        image_name = "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+        image_name = image_name.lower()
 
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
@@ -803,7 +810,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "executables": [
                     {
                         "name": setup_py_attributes.get("name"),
-                        "image": image,
+                        "image": image_name,
                         "config_string": app_configs[0],
                         "permission_handles": apikey_permissions,
                         "uuid": uuid
