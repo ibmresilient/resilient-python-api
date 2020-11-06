@@ -165,7 +165,7 @@ class CmdDev(BaseCmd):
             #jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util/data")
             jinja_template = jinja_env.get_template("/data/export.res.jinja2")
 
-            LOG.info("Writing new /util/data/export.res file")
+            LOG.debug("Writing new /util/data/export.res file")
 
             # Render jinja2 template
             jinja_rendered_text = jinja_template.render(jinja_data)
