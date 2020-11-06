@@ -26,6 +26,14 @@ SUPPORTED_ACTION_OBJECTS = ['function', 'workflow',
 ACTION_OBJECT_KEYS = ['functions', 'workflows',
                       'actions', 'message_destinations', 'scripts']
 
+resilient_export_obj_mapping = {
+    'workflows': ResilientObjMap.WORKFLOWS,
+    'functions': ResilientObjMap.FUNCTIONS,
+    'actions': ResilientObjMap.RULES,
+    'message_destinations': ResilientObjMap.MESSAGE_DESTINATIONS,
+    'scripts': ResilientObjMap.SCRIPTS,
+}
+
 
 class CmdClone(BaseCmd):
     """
@@ -115,9 +123,9 @@ class CmdClone(BaseCmd):
         start = time.perf_counter()
 
         # Instansiate connection to the Resilient Appliance
-        res_client = get_resilient_client()
+        CmdClone.res_client = get_resilient_client()
 
-        org_export = get_latest_org_export(res_client)
+        org_export = get_latest_org_export(CmdClone.res_client)
 
         # For the new export data DTO minify the export to only its mandatory attributes
         new_export_data = minify_export(org_export)
@@ -134,7 +142,7 @@ class CmdClone(BaseCmd):
                     # If a Script was provided, call _clone_action_object with Script related params and
                     # add the newly cloned Script to new_export_data
                     new_export_data['scripts'] = self._clone_action_object(
-                        args.script, org_export, 'Script', ResilientObjMap.SCRIPTS, 'scripts', CmdClone.replace_function_object_attrs, args.changetype)
+                        args.script, org_export, 'Script', ResilientObjMap.SCRIPTS, 'scripts', CmdClone.replace_common_object_attrs, args.changetype)
                 if args.function:
                     # If a Function was provided, call _clone_action_object with Function related params and
                     # add the newly cloned Function to new_export_data
@@ -159,13 +167,53 @@ class CmdClone(BaseCmd):
                     new_export_data["message_destinations"] = self._clone_action_object(
                         args.messagedestination, org_export, 'Message Destination', ResilientObjMap.MESSAGE_DESTINATIONS, 'message_destinations', CmdClone.replace_md_object_attrs)
 
-            add_configuration_import(new_export_data, res_client)
+            add_configuration_import(new_export_data, CmdClone.res_client)
+            # If any message destinations were cloned, after creation attach a Authorised User or API Key
+            # to the destination. Providing this info in the Configurations API call above will be ignored.
+            self.add_authorised_info_to_md(new_export_data)
 
         else:
             self.parser.print_help()
 
         end = time.perf_counter()
         LOG.info("'clone' command finished in {} seconds".format(end - start))
+
+    def add_authorised_info_to_md(self, new_export_data):
+        """ 
+        Function which takes a ConfigurationDTO and makes an API call to get all created message destinations
+        For any created message destinations which are found in the configuration export iterate over it 
+        and add either an API Key or a User ID to each. 
+        Then make a PUT API call to attach this auth info to each destination that
+        was created by the ConfigurationDTO 
+        :param new_export_data: A ConfigurationDTO specifying objects which were imported into resilient
+        :type new_export_data: dict
+        """
+        # Get all the names fo each newly cloned message destination
+        newly_cloned_dests_names = [dest.get("programmatic_name") for dest in new_export_data.get("message_destinations", [])]
+        # Make an API call and return a list of message_destinations whose name is found in our list newly cloned destination names
+        destination_objects = [dest for dest in CmdClone.res_client.get("/message_destinations")["entities"] if dest['programmatic_name'] in newly_cloned_dests_names]
+        # For each newly cloned object
+        for cloned_object in destination_objects:
+            # Inner function used with the get_put api call
+            def update_user(dest):
+                # If we are dealing with a message destination, add the current user API Key
+                if CmdClone.res_client.api_key_handle is not None:
+                    # We are using an API Key, append this to the object
+                    if CmdClone.res_client.api_key_handle not in dest["api_keys"]:
+                        LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
+                        dest["api_keys"].append(CmdClone.res_client.api_key_handle)
+                elif CmdClone.res_client.user_id is not None:
+                    # We are using user/password to authenticate
+                    if CmdClone.res_client.user_id not in dest.get("users", []):
+                        LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
+                        dest["users"].append(CmdClone.res_client.user_id)
+                else:
+                    LOG.warning("Neither an API Key nor a User ID was found with the rest client")
+                return dest
+
+            dest_id = cloned_object["id"]
+            uri = "/message_destinations/{}".format(dest_id)
+            CmdClone.res_client.get_put(uri, update_user)
 
     def _clone_multiple_action_objects(self, args, new_export_data, org_export):
         LOG.info("Prefix provided {}, copying multiple Action Objects".format(args.prefix))
@@ -198,6 +246,9 @@ class CmdClone(BaseCmd):
                     args.prefix, old_api_name)
                 # If the object we are dealing with was one of the requested objects
                 if self.action_obj_was_specified(args, obj):
+                    # Ensure the new_api_name for each object is unique, raise an Exception otherwise
+                    CmdClone.perform_duplication_check(object_type, resilient_export_obj_mapping.get(object_type), "Object", new_api_name, org_export)
+                        
                     # Handle functions for cloning
                     if obj.get('display_name', False):
                         new_function = CmdClone.replace_function_object_attrs(
@@ -246,8 +297,8 @@ class CmdClone(BaseCmd):
         original_obj = CmdClone.validate_provided_object_names(obj_type=obj_key,
                                                                obj_identifier=obj_identifier,
                                                                obj_type_name=obj_name,
-                                                               new_workflow_api_name=new_obj_api_name,
-                                                               original_workflow_api_name=original_obj_api_name,
+                                                               new_object_api_name=new_obj_api_name,
+                                                               original_object_api_name=original_obj_api_name,
                                                                export=org_export)
 
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
@@ -266,8 +317,8 @@ class CmdClone(BaseCmd):
         original_workflow = CmdClone.validate_provided_object_names(obj_type="workflows",
                                                                     obj_identifier=ResilientObjMap.WORKFLOWS,
                                                                     obj_type_name="Workflow",
-                                                                    new_workflow_api_name=new_workflow_api_name,
-                                                                    original_workflow_api_name=original_workflow_api_name,
+                                                                    new_object_api_name=new_workflow_api_name,
+                                                                    original_object_api_name=original_workflow_api_name,
                                                                     export=org_export)
         new_workflow = original_workflow.copy()
         # Gather the old workflow name before we modify the object
@@ -281,29 +332,50 @@ class CmdClone(BaseCmd):
         return [new_workflow]
 
     @staticmethod
-    def validate_provided_object_names(obj_type, obj_identifier, obj_type_name, new_workflow_api_name, original_workflow_api_name, export):
+    def perform_duplication_check(obj_type, obj_identifier, obj_type_name, new_object_api_name, export):
+        """Attempt to get the referenced object from the org_export
+        If the object is not found, return True.
+        If the object is found, raise an SDK Exception specifying the provided object name is not unique
+        and already exists on the system. 
 
+        :param obj_type: The type name in the org export to search 
+        :type obj_type: str
+        :param obj_identifier: The identifier for the given object
+        :type obj_identifier: str
+        :param obj_type_name: [description]
+        :type obj_type_name: str
+        :param new_object_api_name: [description]
+        :type new_object_api_name: str
+        :param export: The org export to search through
+        :type export: dict
+        :raises SDKException: If the provided object name is found then this function raises a SDK exception specifying this must be unique. 
+        """
         # Perform a duplication check with the provided new name
         try:
             # Try to get a res obj with the new name
             get_res_obj(obj_type, obj_identifier, obj_type_name, [
-                        new_workflow_api_name], export, include_api_name=False)
+                        new_object_api_name], export, include_api_name=False)
         except SDKException:
             # get_res_obj raises an exception if the object is not found
             # normally this is good but for this unique use case
             # we expect that the object will not be found and so catch and release the raised SDKException
-            pass
+            return True
         else:
             # if get_res_obj does not raise an exception it means an object with that identifier exists
             # and in this case we raise an SDKException as the new name provided for cloning needs to be unique
             raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name {} already exists".format(
-                obj_type_name, new_workflow_api_name))
+                obj_type_name, new_object_api_name))
+
+    @staticmethod
+    def validate_provided_object_names(obj_type, obj_identifier, obj_type_name, new_object_api_name, original_object_api_name, export):
+
+        CmdClone.perform_duplication_check(obj_type, obj_identifier, obj_type_name, new_object_api_name, export)
 
         # Gather the original Action Object to be returned
-        original_workflow = get_res_obj(obj_type, obj_identifier, obj_type_name, [
-                                        original_workflow_api_name], export, include_api_name=False)[0]
+        original_object = get_res_obj(obj_type, obj_identifier, obj_type_name, [
+                                        original_object_api_name], export, include_api_name=False)[0]
         # Return the object
-        return original_workflow
+        return original_object
 
     @staticmethod
     def validate_provided_args_length(input_args):
@@ -402,6 +474,7 @@ class CmdClone(BaseCmd):
             obj_to_modify.update({
                 ResilientObjMap.DATATABLES: new_obj_api_name
             })
+        
 
         return obj_to_modify
 

@@ -71,8 +71,8 @@ def test_clone_workflow(fx_get_sub_parser):
     original_obj = CmdClone.validate_provided_object_names(obj_type="workflows",
                                                            obj_identifier=ResilientObjMap.WORKFLOWS,
                                                            obj_type_name="Workflow",
-                                                           new_workflow_api_name=new_name,
-                                                           original_workflow_api_name=old_name,
+                                                           new_object_api_name=new_name,
+                                                           original_object_api_name=old_name,
                                                            export=TEST_EXPORT)
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
@@ -203,8 +203,8 @@ def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange)
     original_obj = CmdClone.validate_provided_object_names(obj_type="workflows",
                                                            obj_identifier=ResilientObjMap.WORKFLOWS,
                                                            obj_type_name="Workflow",
-                                                           new_workflow_api_name=new_name,
-                                                           original_workflow_api_name=old_name,
+                                                           new_object_api_name=new_name,
+                                                           original_object_api_name=old_name,
                                                            export=TEST_EXPORT)
     assert export_data[0]['name'] != old_name, "Expected the returned export data to not have a reference to the old function"
     assert export_data[0][ResilientObjMap.WORKFLOWS] == new_name, "Expected the returned export to contain the new function name"
@@ -311,8 +311,8 @@ def test_clone_workflow_failure(fx_get_sub_parser, fx_cmd_line_args_clone_prefix
         original_obj = CmdClone.validate_provided_object_names(obj_type="workflows",
                                                                obj_identifier=ResilientObjMap.WORKFLOWS,
                                                                obj_type_name="Workflow",
-                                                               new_workflow_api_name=new_name,
-                                                               original_workflow_api_name=old_name,
+                                                               new_object_api_name=new_name,
+                                                               original_object_api_name=old_name,
                                                                export=TEST_EXPORT)
     # Gather the message from the execution info, throwing away the other args
     exception_message, = excinfo.value.args
