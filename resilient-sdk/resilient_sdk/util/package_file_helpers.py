@@ -37,6 +37,7 @@ LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Constants
 BASE_NAME_BUILD = "build"
+BASE_NAME_CUSTOMIZE_PY = "customize.py"
 BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
 BASE_NAME_LOCAL_EXPORT_RES = "export.res"

@@ -188,7 +188,7 @@ class CmdDev(BaseCmd):
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
+                sdk_helpers.rename_file(path_customize_py_bak, package_helpers.BASE_NAME_CUSTOMIZE_PY)
             if path_local_export_res_bak and not os.path.isfile(path_local_export_res):
                 LOG.info(u"An error occurred. Renaming /util/data/export.res.bak to export.res")
-                sdk_helpers.rename_file(path_local_export_res_bak, "export.res")
+                sdk_helpers.rename_file(path_local_export_res_bak, package_helpers.BASE_NAME_LOCAL_EXPORT_RES)

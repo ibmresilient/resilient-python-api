@@ -397,7 +397,7 @@ class CmdCodegen(BaseCmd):
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
+                sdk_helpers.rename_file(path_customize_py_bak, package_helpers.BASE_NAME_CUSTOMIZE_PY)
             if not os.path.isfile(path_export_res) and path_export_res_bak:
                 LOG.info(u"An error occurred. Renaming export.res.bak to export.res")
-                sdk_helpers.rename_file(path_export_res_bak, "export.res")
+                sdk_helpers.rename_file(path_export_res_bak, package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
