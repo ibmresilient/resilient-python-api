@@ -197,16 +197,18 @@ class CmdClone(BaseCmd):
             # Inner function used with the get_put api call
             def update_user(dest):
                 # If we are dealing with a message destination, add the current user API Key
-                if CmdClone.res_client.user_id is None:
+                if CmdClone.res_client.api_key_handle is not None:
                     # We are using an API Key, append this to the object
                     if CmdClone.res_client.api_key_handle not in dest["api_keys"]:
                         LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
                         dest["api_keys"].append(CmdClone.res_client.api_key_handle)
-                else:
+                elif CmdClone.res_client.user_id is not None:
                     # We are using user/password to authenticate
                     if CmdClone.res_client.user_id not in dest.get("users", []):
                         LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
                         dest["users"].append(CmdClone.res_client.user_id)
+                else:
+                    LOG.warning("Neither an API Key nor a User ID was found with the rest client")
                 return dest
 
             dest_id = cloned_object["id"]
