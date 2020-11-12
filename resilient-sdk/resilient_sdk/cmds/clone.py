@@ -153,7 +153,7 @@ class CmdClone(BaseCmd):
                     # If a Rule was provided, call _clone_action_object with Rule related params and
                     # add the newly cloned Rule to new_export_data
                     new_export_data["actions"] = self._clone_action_object(
-                        args.rule, org_export, 'Rule', ResilientObjMap.RULES, 'actions', CmdClone.replace_rule_object_attrs)
+                        args.rule, org_export, 'Rule', ResilientObjMap.RULES, 'actions', CmdClone.replace_rule_object_attrs, new_object_type=args.changetype)
 
                 if args.workflow:
                     # If a Workflow was provided, call _clone_workflow with Workflow related params and
@@ -302,10 +302,9 @@ class CmdClone(BaseCmd):
                                                                export=org_export)
 
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
-
         if new_object_type:
             cloned_object['object_type'] = new_object_type
-
+        
         return [cloned_object]
 
     @staticmethod
