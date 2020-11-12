@@ -33,6 +33,10 @@ resilient_export_obj_mapping = {
     'message_destinations': ResilientObjMap.MESSAGE_DESTINATIONS,
     'scripts': ResilientObjMap.SCRIPTS,
 }
+resilient_msg_dest_auth_info = {
+    "api_keys": {},
+    "users": {}
+}
 
 
 class CmdClone(BaseCmd):
@@ -196,19 +200,28 @@ class CmdClone(BaseCmd):
         for cloned_object in destination_objects:
             # Inner function used with the get_put api call
             def update_user(dest):
-                # If we are dealing with a message destination, add the current user API Key
-                if CmdClone.res_client.api_key_handle is not None:
-                    # We are using an API Key, append this to the object
-                    if CmdClone.res_client.api_key_handle not in dest["api_keys"]:
-                        LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
-                        dest["api_keys"].append(CmdClone.res_client.api_key_handle)
-                elif CmdClone.res_client.user_id is not None:
-                    # We are using user/password to authenticate
-                    if CmdClone.res_client.user_id not in dest.get("users", []):
-                        LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
-                        dest["users"].append(CmdClone.res_client.user_id)
-                else:
-                    LOG.warning("Neither an API Key nor a User ID was found with the rest client")
+                # TODO: Determine if we want to add the currently authenticated user just like customize does
+                # # If we are dealing with a message destination, add the current user API Key
+                # if CmdClone.res_client.api_key_handle is not None:
+                #     # We are using an API Key, append this to the object
+                #     if CmdClone.res_client.api_key_handle not in dest["api_keys"]:
+                #         LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
+                #         dest["api_keys"].append(CmdClone.res_client.api_key_handle)
+                # elif CmdClone.res_client.user_id is not None:
+                #     # We are using user/password to authenticate
+                #     if CmdClone.res_client.user_id not in dest.get("users", []):
+                #         LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
+                #         dest["users"].append(CmdClone.res_client.user_id)
+                # else:
+                #     LOG.warning("Neither an API Key nor a User ID was found with the rest client")
+
+                # Gather the API keys and users for the original copy of this cloned destination 
+                # and append to the destination object
+                if resilient_msg_dest_auth_info['api_keys'].get(cloned_object['name']):
+                    dest["api_keys"].extend(resilient_msg_dest_auth_info['api_keys'].get(cloned_object['name']))
+                if resilient_msg_dest_auth_info['users'].get(cloned_object['name']):
+                    dest["users"].extend(resilient_msg_dest_auth_info['users'].get(cloned_object['name']))
+
                 return dest
 
             dest_id = cloned_object["id"]
@@ -261,6 +274,13 @@ class CmdClone(BaseCmd):
                             obj, old_api_name, new_api_name, obj['name'], args.changetype))
                     # Handle Message Destination. Of the supported Action Object types; only Message Destination and Workflow use programmatic_name
                     elif obj.get('programmatic_name', False):
+                        # Save the User and API key auth for upload after initial clone
+                        resilient_msg_dest_auth_info['users'].update({
+                            obj['name']: obj['users']
+                        })
+                        resilient_msg_dest_auth_info['api_keys'].update({
+                            obj['name']: obj['api_keys']
+                        })
                         new_export_data['message_destinations'].append(CmdClone.replace_md_object_attrs(
                             obj, new_api_name))
                     # Handle Rules and everything else
@@ -304,6 +324,15 @@ class CmdClone(BaseCmd):
         cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
         if new_object_type:
             cloned_object['object_type'] = new_object_type
+
+        if obj_name == "Message Destination":
+            # Save the User and API key auth for upload after initial clone
+            resilient_msg_dest_auth_info['users'].update({
+                cloned_object['name']: original_obj['users']
+            })
+            resilient_msg_dest_auth_info['api_keys'].update({
+                cloned_object['name']: original_obj['api_keys']
+            })
         
         return [cloned_object]
 
