@@ -274,13 +274,14 @@ class CmdClone(BaseCmd):
                             obj, old_api_name, new_api_name, obj['name'], args.changetype))
                     # Handle Message Destination. Of the supported Action Object types; only Message Destination and Workflow use programmatic_name
                     elif obj.get('programmatic_name', False):
-                        # Save the User and API key auth for upload after initial clone
-                        resilient_msg_dest_auth_info['users'].update({
-                            obj['name']: obj['users']
-                        })
-                        resilient_msg_dest_auth_info['api_keys'].update({
-                            obj['name']: obj['api_keys']
-                        })
+                        if obj.get('api_keys', False) and obj.get('users', False):
+                            # Save the User and API key auth for upload after initial clone
+                            resilient_msg_dest_auth_info['users'].update({
+                                obj['name']: obj['users']
+                            })
+                            resilient_msg_dest_auth_info['api_keys'].update({
+                                obj['name']: obj['api_keys']
+                            })
                         new_export_data['message_destinations'].append(CmdClone.replace_md_object_attrs(
                             obj, new_api_name))
                     # Handle Rules and everything else
