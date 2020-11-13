@@ -356,8 +356,10 @@ class CmdCodegen(BaseCmd):
 
         # If local export file exists then save it to a .bak file.
         # (Older packages may not have the /util/data/export.res file)
-        path_export_res = os.path.join(path_package, path_package_basename, package_helpers.PATH_LOCAL_EXPORT_RES)
-        if os.path.exists(path_export_res):
+        path_export_res = os.path.join(path_package, path_package_basename,
+                                       package_helpers.PATH_UTIL_DATA_DIR,
+                                       package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
+        if os.path.isfile(path_export_res):
             path_export_res_bak = sdk_helpers.rename_to_bak_file(path_export_res)
         else:
             path_export_res_bak = None

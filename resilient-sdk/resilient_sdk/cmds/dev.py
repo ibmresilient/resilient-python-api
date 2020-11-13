@@ -117,7 +117,7 @@ class CmdDev(BaseCmd):
         path_local_export_res = os.path.join(dir_customize_py, package_helpers.PATH_LOCAL_EXPORT_RES)
 
         path_local_export_res_bak = None
-        if os.path.exists(path_local_export_res):
+        if os.path.isfile(path_local_export_res):
             path_local_export_res_bak = sdk_helpers.rename_to_bak_file(path_local_export_res)
 
         try:
