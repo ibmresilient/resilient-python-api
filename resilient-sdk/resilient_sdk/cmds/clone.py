@@ -200,21 +200,6 @@ class CmdClone(BaseCmd):
         for cloned_object in destination_objects:
             # Inner function used with the get_put api call
             def update_user(dest):
-                # TODO: Determine if we want to add the currently authenticated user just like customize does
-                # # If we are dealing with a message destination, add the current user API Key
-                # if CmdClone.res_client.api_key_handle is not None:
-                #     # We are using an API Key, append this to the object
-                #     if CmdClone.res_client.api_key_handle not in dest["api_keys"]:
-                #         LOG.info(u"    Adding api key to message destination {}".format(dest["programmatic_name"]))
-                #         dest["api_keys"].append(CmdClone.res_client.api_key_handle)
-                # elif CmdClone.res_client.user_id is not None:
-                #     # We are using user/password to authenticate
-                #     if CmdClone.res_client.user_id not in dest.get("users", []):
-                #         LOG.info(u"    Adding user to message destination {}".format(dest["programmatic_name"]))
-                #         dest["users"].append(CmdClone.res_client.user_id)
-                # else:
-                #     LOG.warning("Neither an API Key nor a User ID was found with the rest client")
-
                 # Gather the API keys and users for the original copy of this cloned destination 
                 # and append to the destination object
                 if resilient_msg_dest_auth_info['api_keys'].get(cloned_object['name']):
