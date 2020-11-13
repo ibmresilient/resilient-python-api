@@ -62,18 +62,46 @@ def add_tab_to_layout(client, layout, new_tab):
     )
     return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
 
-
-def update_tab(client, layout, tab):
+def add_missing_fields(og_layout, tab):
     """
-    Needs to get the tab and add missing fields to it.
+    Adds missing fields to the layout.
     """
-    layout = copy.deepcopy(layout)
+    layout = copy.deepcopy(og_layout)
     missing_fields = tab.get_missing_fields(layout.get("content"))
-    if not len(missing_fields):
-        return None
+    if not missing_fields:
+        return og_layout
     tab_data = tab.get_from_tabs(layout.get("content"))
     tab_data['fields'].extend(missing_fields)
+    return layout
 
+def add_missing_conditions(og_layout, tab):
+    """
+    Adds missing conditions. Removes value = None from all existing condition, because that's what
+    the UI does.
+    """
+    layout = copy.deepcopy(og_layout)
+    tab_data = tab.get_from_tabs(layout.get("content"))
+    # remove null values from conditions
+    if tab_data.get('show_if'):
+        for condition in tab_data.get('show_if'):
+            if condition.get('value') is None:
+                condition.pop('value')
+
+    missing_conditions = tab.get_missing_conditions(layout.get("content"))
+    if not missing_conditions:
+        return layout  # still return updated one since we deleted nulls
+    if not tab_data.get('show_if'):
+        tab_data['show_if'] = []
+    tab_data.get('show_if').extend(missing_conditions)
+    return layout
+    
+def update_tab(client, layout, tab):
+    """
+    Needs to get the tab and add missing fields and conditions to it.
+    """
+    layout = copy.deepcopy(layout)
+    layout = add_missing_fields(layout, tab)
+    layout = add_missing_conditions(layout, tab)
     return client.put(LAYOUT_FOR.format(layout['id']), payload=layout)
 
 

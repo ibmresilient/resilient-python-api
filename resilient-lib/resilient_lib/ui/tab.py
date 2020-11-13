@@ -3,7 +3,9 @@
 # pragma pylint: disable=unused-argument, no-self-use
 from .common import get_incident_tabs
 import six
+import logging
 
+LOG = logging.getLogger(__name__)
 TABS_LABEL = "step_label"
 
 UI_TAB_ELEMENT = "tab"
@@ -76,10 +78,12 @@ class Tab(six.with_metaclass(RequiredTabFields)):
 
     @classmethod
     def as_dto(cls):
+        if not hasattr(cls, "SHOW_IF"):
+            cls.SHOW_IF = []
         return {
             "step_label": cls.NAME,
             "fields": [field.as_dto() for field in cls.CONTAINS] if cls.CONTAINS else [],
-            "show_if": [],
+            "show_if": cls.SHOW_IF,
             "element": UI_TAB_ELEMENT,
             "field_type": UI_TAB_FIELD_TYPE,
             "predefined_uuid": cls.UUID,
@@ -87,12 +91,24 @@ class Tab(six.with_metaclass(RequiredTabFields)):
         }
 
     @classmethod
+    def get_missing_conditions(cls, tabs):
+        if not hasattr(cls, "SHOW_IF"):
+            return None
+        if not cls.exists_in(tabs):
+            return None
+        required_conditions = cls.SHOW_IF
+        tab = cls.get_from_tabs(tabs)
+        present_conditions = tab.get("show_if", [])
+        
+        return [condition for condition in required_conditions if condition not in present_conditions]
+
+    @classmethod
     def get_missing_fields(cls, tabs):
         """
-        Given all the tabs
+        Given all the tabs find what fields are missing that are required in the `cls` tab.
         """
         if not cls.exists_in(tabs):
-            return False
+            return None
         tab = cls.get_from_tabs(tabs)
         tab_fields = tab.get('fields', [])
         return [field.as_dto() for field in cls.CONTAINS if not field.exists_in(tab_fields)]
