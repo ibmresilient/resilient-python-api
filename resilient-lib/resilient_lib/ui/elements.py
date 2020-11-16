@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2020. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
+from .conditions import Conditions, FieldConditions
+
+
 class UIElementBase(object):
     ELEMENT_TYPE = None
 
     def __init__(self, api_name):
         assert self.ELEMENT_TYPE, "Element type for subclass needs to be defined"
         self.api_name = api_name
+        self.conditions = Conditions(self.api_name)
 
     def as_dto(self):
         """
@@ -24,6 +28,10 @@ class UIElementBase(object):
 
 class Field(UIElementBase):
     ELEMENT_TYPE = "field"
+
+    def __init__(self, api_name):
+        super(Field, self).__init__(api_name)
+        self.conditions = FieldConditions(api_name)
 
     def as_dto(self):
         return {
