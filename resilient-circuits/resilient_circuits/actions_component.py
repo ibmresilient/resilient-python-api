@@ -37,7 +37,7 @@ IDLE_TIMER_INTERVAL = 600
 _idle_timer = None
 
 # look for unrecoverable errors
-UNRECOVERABLE_ERRORS = ['Connection closed', 'Already subscribed', 'Not connected']
+UNRECOVERABLE_ERRORS = ['Already subscribed']
 
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
@@ -368,7 +368,8 @@ class Actions(ResilientComponent):
         LOG.error('STOMP listener: Error:\n%s', message or error)
 
         for unrecoverable_error in UNRECOVERABLE_ERRORS:
-            if unrecoverable_error in message or unrecoverable_error in error:
+            if (message and unrecoverable_error in str(message)) or \
+               (error and unrecoverable_error in str(error)):
                 LOG.error("Unrecoverable error. Exiting")
                 raise SystemExit(0)
 
