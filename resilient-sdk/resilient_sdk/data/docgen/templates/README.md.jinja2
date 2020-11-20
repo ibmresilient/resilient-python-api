@@ -12,7 +12,7 @@
   ![screenshot: screenshot_1](./screenshots/screenshot_1.png)
 -->
 
-# {{ name_dash }} for IBM Resilient
+# {{ display_name }}
 
 ## Table of Contents
 - [Release Notes](#release-notes)
@@ -84,27 +84,24 @@
   List any Requirements 
 -->
 * Resilient platform >= `v{{ server_version }}`
-* An App Host or an Integration Server:
-  * To setup up an App Host see:  [ibm.biz/res-app-host-setup](https://ibm.biz/res-app-host-setup)
-  * An Integration Server running `{{ res_circuits_dependency_str }}` (if using an Integration Server)
-    * To set up an Integration Server see: [ibm.biz/res-int-server-guide](https://ibm.biz/res-int-server-guide)
-    * If using an API key account, minimum required permissions are:
-      | Name | Permissions |
-      | ---- | ----------- |
-      | Org Data | Read |
-      | Function | Read |
+* An App Host or an Integration Server running `{{ res_circuits_dependency_str }}`
+* If using an API key account, minimum required permissions are:
+  | Name | Permissions |
+  | ---- | ----------- |
+  | Org Data | Read |
+  | Function | Read |
 * Proxy supported: Yes/No
+> An App Host is for container-based apps. To set up an App Host, see the App Host Deployment Guide at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this page, select your Resilient platform version. On the follow-on page, you can find the guide by expanding Resilient Apps in the Table of Contents pane. Note that the App Host is not available on versions prior to V37.2.
 
 ---
 
 ### Install
-* To install or uninstall an App using the App Host see [ibm.biz/res-install-app](https://ibm.biz/res-install-app)
+* To install or uninstall an App or Integration see [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
 
-* To install or uninstall an Integration using the Integration Server see the [ibm.biz/res-install-int](https://ibm.biz/res-install-int)
 ---
 
 ### App Configuration
-The following table describes the settings you need to configure in the app.config file. If using App Host, see the Resilient System Administrator Guide. If using the integration server, see the Integration Server Guide.
+The following table describes the settings you need to configure the app. If using App Host, see **Configure an app** under Apps on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). If using the integration server, you need to edit the app.config file, see the **Integration Server Guide** under Resilient Apps on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
 
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
@@ -254,9 +251,9 @@ results = {
 {% endif %}
 
 ## Troubleshooting & Support
-If using the app with an App Host, see the Resilient System Administrator Guide and the App Host Deployment Guide for troubleshooting procedures. You can find these guides on the [IBM Knowledge Center](https://www.ibm.com/support/knowledgecenter/SSBRUQ), where you can select which version of the Resilient platform you are using.
+If using the app with an App Host, see **Apps** under System administrator and the **App Host Deployment Guide** under Resilient Apps for troubleshooting procedures on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
 
-If using the app with an integration server, see the [Integration Server Guide](https://ibm.biz/res-int-server-guide)
+If using the app with an integration server, see the **Integration Server Guide** under Resilient Apps on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
 
 ### For Support
 {% if supported_app %}
