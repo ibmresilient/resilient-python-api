@@ -137,8 +137,6 @@ The guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs]
 ### Install
 * To install or uninstall an App or Integration see [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
 
----
-
 ### App Configuration
 The following table provides the settings you need to configure the app. These settings are made in the app.config file. See the documentation discussed in the Requirements section for the procedure.
 
@@ -147,8 +145,6 @@ The following table provides the settings you need to configure the app. These s
 {% for app_config in app_configs %}
 | **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* |
 {% endfor %}
-
----
 
 {% if datatables or custom_incident_fields %}
 ### Custom Layouts
@@ -161,8 +157,9 @@ The following table provides the settings you need to configure the app. These s
 
   ![screenshot: custom_layouts](./doc/screenshots/custom_layouts.png)
 
----
 {% endif %}
+
+---
 
 {% for fn in functions %}
 ## Function - {{ fn.name }}
