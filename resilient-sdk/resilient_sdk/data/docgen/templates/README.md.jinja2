@@ -10,6 +10,8 @@
 
   Store any screenshots in the "doc/screenshots" directory and reference them like:
   ![screenshot: screenshot_1](./screenshots/screenshot_1.png)
+
+  NOTE: If your app is available in the container-format only, there is no need to mention the integration server in this readme.
 -->
 
 # {{ display_name }}
@@ -18,8 +20,12 @@
 - [Release Notes](#release-notes)
 - [Overview](#overview)
   - [Key Features](#key-features)
+- [Requirements](#requirements)
+  - [Resilient platform](#resilient-platform)
+  - [Cloud Pak for Security](#cloud-pak-for-security)
+  - [Proxy Server](#proxy-server)
+  - [Documentation](#documentation)
 - [Installation](#installation)
-  - [Requirements](#requirements)
   - [Install](#install)
   - [App Configuration](#app-configuration)
 {% if datatables or custom_incident_fields %}
@@ -77,23 +83,56 @@
 
 ---
 
-## Installation
-
-### Requirements
+## Requirements
 <!--
   List any Requirements 
 -->
-* Resilient platform >= `v{{ server_version }}`
-* An App Host or an Integration Server running `{{ res_circuits_dependency_str }}`
-* If using an API key account, minimum required permissions are:
+The app supports the IBM Resilient SOAR Platform and the IBM Cloud Pak for Security.
+
+### Resilient platform
+The Resilient platform supports two app deployment mechanisms, App Host and integration server.
+
+If deploying to a Resilient platform with an App Host:
+* Resilient platform >= `{{ server_version }}`.
+* App is in a container-based format (typically provided as a zip file).
+
+If deploying to a Resilient platform with an integration server:
+* Resilient platform >= `{{ server_version }}`.
+* App is in the older integration format (typically provided as a tar.gz file).
+* Integration server is running resilient-circuits >= `{{ res_circuits_dependency_str }}`.
+* If using an API key account, make sure the account provides the following minimum permissions: 
   | Name | Permissions |
   | ---- | ----------- |
   | Org Data | Read |
   | Function | Read |
-* Proxy supported: Yes/No
-> An App Host is for container-based apps. To set up an App Host, see the App Host Deployment Guide at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this page, select your Resilient platform version. On the follow-on page, you can find the guide by expanding Resilient Apps in the Table of Contents pane. Note that the App Host is not available on versions prior to V37.2.
+
+### Cloud Pak for Security
+If you are deploying to IBM Cloud Pak for Security:
+* IBM Cloud Pak for Security >= 1.3.
+* Cloud Pak is configured with an App Host.
+* App is in a container-based format (typically provided as a zip file).
+
+### Proxy Server
+The app **does/does** not support a proxy server.
+
+### Documentation
+The following Resilient platform guides provide additional information: 
+* **App Host Deployment Guide**. Provides installation, configuration, and troubleshooting information, including proxy server settings. 
+* **Integration Server Guide**. Provides installation, configuration, and troubleshooting information, including proxy server settings.
+* **System Administrator Guide**. Provides procedure to install, configure and deploy apps. 
+
+The guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the App Host Deployment Guide or Integration Server Guide by expanding Resilient Apps in the Table of Contents pane. The System Administrator Guide is available by expanding System Administrator.
+
+The following Cloud Pak guides provide additional information: 
+* **App Host Deployment Guide**. Provides installation, configuration, and troubleshooting information, including proxy server settings. In the Table of Contents, expand Resilient Apps.
+* **System Administrator Guide**. Provides procedure to install, configure and deploy apps. In the Table of Contents, expand System administrator.
+
+The guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Cloud Pak version. On the follow-on page, you can find the App Host Deployment Guide by expanding Resilient Apps in the Table of Contents pane. The System Administrator Guide is available by expanding System Administrator.
+> [NOTE: Dara needs to update the Cloud Pak guide titles and navigation]
 
 ---
+
+## Installation
 
 ### Install
 * To install or uninstall an App or Integration see [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
@@ -101,7 +140,7 @@
 ---
 
 ### App Configuration
-The following table describes the settings you need to configure the app. If using App Host, see **Configure an app** under Apps on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). If using the integration server, you need to edit the app.config file, see the **Integration Server Guide** under Resilient Apps on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
+The following table provides the settings you need to configure the app. These settings are made in the app.config file. See the documentation discussed in the Requirements section for the procedure.
 
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
@@ -251,9 +290,7 @@ results = {
 {% endif %}
 
 ## Troubleshooting & Support
-If using the app with an App Host, see **Apps** under System administrator and the **App Host Deployment Guide** under Resilient Apps for troubleshooting procedures on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
-
-If using the app with an integration server, see the **Integration Server Guide** under Resilient Apps on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
+Refer to the documentation listed in the Requirements section for troubleshooting information.
 
 ### For Support
 {% if supported_app %}
