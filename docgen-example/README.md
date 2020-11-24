@@ -28,10 +28,10 @@
   - [Install](#install)
   - [App Configuration](#app-configuration)
   - [Custom Layouts](#custom-layouts)
-- [Function - mock function ล three](#function---mock-function-ล-three)
-- [Function - mock_function_one](#function---mock_function_one)
-- [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
 - [Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two](#function---mock-function--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ-two)
+- [Function - mock_function_one](#function---mock_function_one)
+- [Function - mock function ล three](#function---mock-function-ล-three)
+- [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
 - [Script - Mock Incident Script](#script---mock-incident-script)
 - [Script - Mock Script One](#script---mock-script-one)
 - [Data Table - Mock: Data Table  ล ฦ ว ศ ษ ส ห ฬ อ](#data-table---mock-data-table--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ)
@@ -98,7 +98,7 @@ If deploying to a Resilient platform with an integration server:
 The following Resilient platform guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. 
 * _Integration Server Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings.
-* _System Administrator Guide_: provides procedure to install, configure and deploy apps. 
+* _System Administrator Guide_: provides the procedure to install, configure and deploy apps. 
 
 The guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
 
@@ -109,8 +109,8 @@ If you are deploying to IBM Cloud Pak for Security:
 * App is in a container-based format (typically provided as a zip file).
 
 The following Cloud Pak guides provide additional information: 
-* _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration and Automation > **Orchestration and Automation Apps**.
-* _System Administrator Guide_: provide information to install, configure, and deploy apps. From the IBM Cloud Pak for Security Knowledge Center table of contents, select Case Management and Orchestration and Automation > **System administrator**.
+* _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration & Automation > **Orchestration and Automation Apps**.
+* _System Administrator Guide_: provides information to install, configure, and deploy apps. From the IBM Cloud Pak for Security Knowledge Center table of contents, select Case Management and Orchestration & Automation > **System administrator**.
 
 These guides are available on the IBM Knowledge Center at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific Knowledge Center page, select Case Management and Orchestration & Automation.
 
@@ -122,7 +122,7 @@ The app **does/does not** support a proxy server.
 ## Installation
 
 ### Install
-* To install or uninstall an App or Integration on the _Resilient platform_, see the documentation at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs)
+* To install or uninstall an App or Integration on the _Resilient platform_, see the documentation at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs).
 * To install or uninstall an App on _IBM Cloud Pak for Security_, see the documentation at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs) and follow the instructions above to navigate to Orchestration and Automation.
 
 ### App Configuration
@@ -148,10 +148,10 @@ The following table provides the settings you need to configure the app. These s
 
 ---
 
-## Function - mock function ล three
-mock function ล ฦ ว ศ ษ ส ห ฬ อ three description
+## Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two
+a  ล ฦ ว ศ ษ ส ห ฬ อ description of  ล ฦ ว ศ ษ ส ห ฬ อ mock function two
 
- ![screenshot: fn-mock-function--three ](./doc/screenshots/fn-mock-function--three.png)
+ ![screenshot: fn-mock-function-----------two ](./doc/screenshots/fn-mock-function-----------two.png)
 
 <details><summary>Inputs:</summary>
 <p>
@@ -159,6 +159,8 @@ mock function ล ฦ ว ศ ษ ส ห ฬ อ three description
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
 | `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_number` | `number` | Yes | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 </p>
 </details>
@@ -181,7 +183,11 @@ results = {
 <p>
 
 ```python
-None
+# mock pre script of function  ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ two:
+
+inputs.mock_input_boolean = False
+inputs.mock_input_number = 1001
+inputs.mock_input_text = u" ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ramdom text"
 ```
 
 </p>
@@ -262,17 +268,17 @@ if True:
 </details>
 
 ---
-## Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name
-A mock description of 'A Mock Function with No Unicode Characters in Name' with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
+## Function - mock function ล three
+mock function ล ฦ ว ศ ษ ส ห ฬ อ three description
 
- ![screenshot: fn-a-mock-function-with--no-unicode-characters-in-name ](./doc/screenshots/fn-a-mock-function-with--no-unicode-characters-in-name.png)
+ ![screenshot: fn-mock-function--three ](./doc/screenshots/fn-mock-function--three.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 </p>
 </details>
@@ -312,18 +318,16 @@ None
 </details>
 
 ---
-## Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two
-a  ล ฦ ว ศ ษ ส ห ฬ อ description of  ล ฦ ว ศ ษ ส ห ฬ อ mock function two
+## Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name
+A mock description of 'A Mock Function with No Unicode Characters in Name' with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
 
- ![screenshot: fn-mock-function-----------two ](./doc/screenshots/fn-mock-function-----------two.png)
+ ![screenshot: fn-a-mock-function-with--no-unicode-characters-in-name ](./doc/screenshots/fn-a-mock-function-with--no-unicode-characters-in-name.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_number` | `number` | Yes | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 </p>
@@ -347,11 +351,7 @@ results = {
 <p>
 
 ```python
-# mock pre script of function  ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ two:
-
-inputs.mock_input_boolean = False
-inputs.mock_input_number = 1001
-inputs.mock_input_text = u" ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ramdom text"
+None
 ```
 
 </p>
@@ -420,8 +420,8 @@ mock_data_table
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-| Mock:  ล ฦ ว ศ ษ ส ห ฬ อ field number | `mock_field_number` | `number` | `properties` | - | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | Mock: Field Text | `mock_field_text` | `text` | `properties` | - | a mock tooltip |
+| Mock:  ล ฦ ว ศ ษ ส ห ฬ อ field number | `mock_field_number` | `number` | `properties` | - | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | Mock: Field Text Area  ล ฦ ว ศ ษ ส ห ฬ อ | `mock_field_text_area` | `textarea` | `properties` | - | a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 ---
@@ -429,19 +429,19 @@ mock_data_table
 ## Custom Artifact Types
 | Display Name | API Access Name | Description |
 | ------------ | --------------- | ----------- |
-| Mock Artifact 2 ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖ | `mock_artifact_2` | ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖ ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖asdf ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖ |
 | Mock Artifact Type One | `mock_artifact_type_one` | A mock description of this Artifact type |
+| Mock Artifact 2 ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖ | `mock_artifact_2` | ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖ ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖asdf ㌎ ㌏ ㌐ ㌑ ㌒ ㌓ ㌔ ㌕ ㌖ |
 
 ---
 
 ## Rules
 | Rule Name | Object | Workflow Triggered |
 | --------- | ------ | ------------------ |
-| Mock Task Rule | incident | `-` |
+| Mock Manual Rule | artifact | `mock_workflow_one` |
 | Mock Script Rule | incident | `mock_workflow_one` |
 | Mock: Auto Rule | incident | `mock_workflow_one` |
 | Mock Manual Rule Message Destination | incident | `-` |
-| Mock Manual Rule | artifact | `mock_workflow_one` |
+| Mock Task Rule | incident | `-` |
 
 ---
 
@@ -449,4 +449,4 @@ mock_data_table
 Refer to the documentation listed in the Requirements section for troubleshooting information.
 
 ### For Support
-This is an IBM Supported app. Please search https://ibm.com/mysupport for assistance.
+This is an IBM supported app. Please search https://ibm.com/mysupport for assistance.
