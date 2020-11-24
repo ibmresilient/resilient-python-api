@@ -28,10 +28,10 @@
   - [Install](#install)
   - [App Configuration](#app-configuration)
   - [Custom Layouts](#custom-layouts)
-- [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
+- [Function - mock_function_one](#function---mock_function_one)
 - [Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two](#function---mock-function--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ-two)
 - [Function - mock function ล three](#function---mock-function-ล-three)
-- [Function - mock_function_one](#function---mock_function_one)
+- [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
 - [Script - Mock Script One](#script---mock-script-one)
 - [Script - Mock Incident Script](#script---mock-incident-script)
 - [Data Table - Mock: Data Table  ล ฦ ว ศ ษ ส ห ฬ อ](#data-table---mock-data-table--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ)
@@ -115,7 +115,7 @@ The following Cloud Pak guides provide additional information:
 These guides are available on the IBM Knowledge Center at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific Knowledge Center page, select Case Management and Orchestration & Automation.
 
 ### Proxy Server
-The app **does/does** not support a proxy server.
+The app **does/does not** support a proxy server.
 
 ---
 
@@ -147,17 +147,24 @@ The following table provides the settings you need to configure the app. These s
 
 ---
 
-## Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name
-A mock description of 'A Mock Function with No Unicode Characters in Name' with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
+## Function - mock_function_one
+A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
 
- ![screenshot: fn-a-mock-function-with--no-unicode-characters-in-name ](./doc/screenshots/fn-a-mock-function-with--no-unicode-characters-in-name.png)
+ ![screenshot: fn-mock-function-one ](./doc/screenshots/fn-mock-function-one.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
+| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_date_picker` | `datepicker` | No | `-` | a mock tooltip ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_date_time_picker` | `datetimepicker` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_multiselect` | `multiselect` | No | `-` | a mock input tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_number` | `number` | Yes | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_select` | `select` | No | `-` | mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_text_with_value_string` | `textarea` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 </p>
 </details>
@@ -180,7 +187,11 @@ results = {
 <p>
 
 ```python
-None
+# A mock pre-process script for mock_workflow_one
+
+inputs.mock_input_number = 123
+inputs.mock_input_boolean = True
+inputs.mock_input_text = "abc  ล ฦ ว ศ ษ ส ห ฬ อ abc"
 ```
 
 </p>
@@ -190,7 +201,10 @@ None
 <p>
 
 ```python
-None
+# a mock post  ล ฦ ว ศ ษ ส ห ฬ อ script of  ล ฦ ว ศ ษ ส ห ฬ อ function one
+
+if True:
+  incident.addNote("this note was added ")
 ```
 
 </p>
@@ -303,24 +317,17 @@ None
 </details>
 
 ---
-## Function - mock_function_one
-A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
+## Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name
+A mock description of 'A Mock Function with No Unicode Characters in Name' with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
 
- ![screenshot: fn-mock-function-one ](./doc/screenshots/fn-mock-function-one.png)
+ ![screenshot: fn-a-mock-function-with--no-unicode-characters-in-name ](./doc/screenshots/fn-a-mock-function-with--no-unicode-characters-in-name.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_date_picker` | `datepicker` | No | `-` | a mock tooltip ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_date_time_picker` | `datetimepicker` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_multiselect` | `multiselect` | No | `-` | a mock input tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_number` | `number` | Yes | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_select` | `select` | No | `-` | mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_text_with_value_string` | `textarea` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 </p>
 </details>
@@ -343,11 +350,7 @@ results = {
 <p>
 
 ```python
-# A mock pre-process script for mock_workflow_one
-
-inputs.mock_input_number = 123
-inputs.mock_input_boolean = True
-inputs.mock_input_text = "abc  ล ฦ ว ศ ษ ส ห ฬ อ abc"
+None
 ```
 
 </p>
@@ -357,10 +360,7 @@ inputs.mock_input_text = "abc  ล ฦ ว ศ ษ ส ห ฬ อ abc"
 <p>
 
 ```python
-# a mock post  ล ฦ ว ศ ษ ส ห ฬ อ script of  ล ฦ ว ศ ษ ส ห ฬ อ function one
-
-if True:
-  incident.addNote("this note was added ")
+None
 ```
 
 </p>
@@ -419,9 +419,9 @@ mock_data_table
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-| Mock: Field Text Area  ล ฦ ว ศ ษ ส ห ฬ อ | `mock_field_text_area` | `textarea` | `properties` | - | a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | Mock: Field Text | `mock_field_text` | `text` | `properties` | - | a mock tooltip |
 | Mock:  ล ฦ ว ศ ษ ส ห ฬ อ field number | `mock_field_number` | `number` | `properties` | - | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| Mock: Field Text Area  ล ฦ ว ศ ษ ส ห ฬ อ | `mock_field_text_area` | `textarea` | `properties` | - | a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 ---
 
@@ -436,11 +436,11 @@ mock_data_table
 ## Rules
 | Rule Name | Object | Workflow Triggered |
 | --------- | ------ | ------------------ |
-| Mock Task Rule | incident | `-` |
-| Mock: Auto Rule | incident | `mock_workflow_one` |
 | Mock Manual Rule Message Destination | incident | `-` |
 | Mock Script Rule | incident | `mock_workflow_one` |
+| Mock: Auto Rule | incident | `mock_workflow_one` |
 | Mock Manual Rule | artifact | `mock_workflow_one` |
+| Mock Task Rule | incident | `-` |
 
 ---
 
