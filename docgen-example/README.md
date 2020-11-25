@@ -28,10 +28,10 @@
   - [Install](#install)
   - [App Configuration](#app-configuration)
   - [Custom Layouts](#custom-layouts)
-- [Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two](#function---mock-function--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ-two)
 - [Function - mock_function_one](#function---mock_function_one)
 - [Function - mock function ล three](#function---mock-function-ล-three)
 - [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
+- [Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two](#function---mock-function--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ-two)
 - [Script - Mock Incident Script](#script---mock-incident-script)
 - [Script - Mock Script One](#script---mock-script-one)
 - [Data Table - Mock: Data Table  ล ฦ ว ศ ษ ส ห ฬ อ](#data-table---mock-data-table--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ)
@@ -88,7 +88,7 @@ If deploying to a Resilient platform with an App Host, the requirements are:
 
 If deploying to a Resilient platform with an integration server, the requirements are:
 * Resilient platform >= `37.2.38`.
-* The app is in the older integration format (available from the AppExchange as a `zip` file which will be unzipped to get a `tar.gz` file).
+* The app is in the older integration format (available from the AppExchange as a `zip` file which contains a `tar.gz` file).
 * Integration server is running `resilient_circuits>=30.0.0`.
 * If using an API key account, make sure the account provides the following minimum permissions: 
   | Name | Permissions |
@@ -149,62 +149,6 @@ The following table provides the settings you need to configure the app. These s
 
 ---
 
-## Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two
-a  ล ฦ ว ศ ษ ส ห ฬ อ description of  ล ฦ ว ศ ษ ส ห ฬ อ mock function two
-
- ![screenshot: fn-mock-function-----------two ](./doc/screenshots/fn-mock-function-----------two.png)
-
-<details><summary>Inputs:</summary>
-<p>
-
-| Name | Type | Required | Example | Tooltip |
-| ---- | :--: | :------: | ------- | ------- |
-| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_number` | `number` | Yes | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-
-</p>
-</details>
-
-<details><summary>Outputs:</summary>
-<p>
-
-```python
-results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
-```
-
-</p>
-</details>
-
-<details><summary>Example Pre-Process Script:</summary>
-<p>
-
-```python
-# mock pre script of function  ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ two:
-
-inputs.mock_input_boolean = False
-inputs.mock_input_number = 1001
-inputs.mock_input_text = u" ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ramdom text"
-```
-
-</p>
-</details>
-
-<details><summary>Example Post-Process Script:</summary>
-<p>
-
-```python
-None
-```
-
-</p>
-</details>
-
----
 ## Function - mock_function_one
 A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
 
@@ -369,6 +313,62 @@ None
 </details>
 
 ---
+## Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two
+a  ล ฦ ว ศ ษ ส ห ฬ อ description of  ล ฦ ว ศ ษ ส ห ฬ อ mock function two
+
+ ![screenshot: fn-mock-function-----------two ](./doc/screenshots/fn-mock-function-----------two.png)
+
+<details><summary>Inputs:</summary>
+<p>
+
+| Name | Type | Required | Example | Tooltip |
+| ---- | :--: | :------: | ------- | ------- |
+| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_number` | `number` | Yes | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+
+</p>
+</details>
+
+<details><summary>Outputs:</summary>
+<p>
+
+```python
+results = {
+    # TODO: Copy and paste an example of the Function Output within this code block.
+    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
+    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+}
+```
+
+</p>
+</details>
+
+<details><summary>Example Pre-Process Script:</summary>
+<p>
+
+```python
+# mock pre script of function  ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ two:
+
+inputs.mock_input_boolean = False
+inputs.mock_input_number = 1001
+inputs.mock_input_text = u" ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ramdom text"
+```
+
+</p>
+</details>
+
+<details><summary>Example Post-Process Script:</summary>
+<p>
+
+```python
+None
+```
+
+</p>
+</details>
+
+---
 
 ## Script - Mock Incident Script
 
@@ -421,9 +421,9 @@ mock_data_table
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-| Mock: Field Text Area  ล ฦ ว ศ ษ ส ห ฬ อ | `mock_field_text_area` | `textarea` | `properties` | - | a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| Mock:  ล ฦ ว ศ ษ ส ห ฬ อ field number | `mock_field_number` | `number` | `properties` | - | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 | Mock: Field Text | `mock_field_text` | `text` | `properties` | - | a mock tooltip |
+| Mock:  ล ฦ ว ศ ษ ส ห ฬ อ field number | `mock_field_number` | `number` | `properties` | - | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| Mock: Field Text Area  ล ฦ ว ศ ษ ส ห ฬ อ | `mock_field_text_area` | `textarea` | `properties` | - | a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
 
 ---
 
@@ -439,8 +439,8 @@ mock_data_table
 | Rule Name | Object | Workflow Triggered |
 | --------- | ------ | ------------------ |
 | Mock Script Rule | incident | `mock_workflow_one` |
-| Mock Task Rule | incident | `-` |
 | Mock Manual Rule | artifact | `mock_workflow_one` |
+| Mock Task Rule | incident | `-` |
 | Mock: Auto Rule | incident | `mock_workflow_one` |
 | Mock Manual Rule Message Destination | incident | `-` |
 
