@@ -29,9 +29,9 @@
   - [App Configuration](#app-configuration)
   - [Custom Layouts](#custom-layouts)
 - [Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two](#function---mock-function--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ-two)
-- [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
-- [Function - mock function ล three](#function---mock-function-ล-three)
 - [Function - mock_function_one](#function---mock_function_one)
+- [Function - mock function ล three](#function---mock-function-ล-three)
+- [Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name](#function---a-mock-function-with--no-unicode-characters-in-name)
 - [Script - Mock Incident Script](#script---mock-incident-script)
 - [Script - Mock Script One](#script---mock-script-one)
 - [Data Table - Mock: Data Table  ล ฦ ว ศ ษ ส ห ฬ อ](#data-table---mock-data-table--ล-ฦ-ว-ศ-ษ-ส-ห-ฬ-อ)
@@ -46,8 +46,9 @@
   Specify all changes in this release. Do not remove the release 
   notes of a previous release
 -->
-### v1.0.0
-* Initial Release
+| Version | Date | Notes |
+| ------- | ---- | ----- |
+| 1.0.0 | MM/YYYY | Initial Release |
 
 ---
 
@@ -76,18 +77,18 @@ Resilient Circuits Components for 'fn_main_mock_integration'
 <!--
   List any Requirements 
 -->
-The app supports the IBM Resilient SOAR Platform and the IBM Cloud Pak for Security.
+This app supports the IBM Resilient SOAR Platform and the IBM Cloud Pak for Security.
 
 ### Resilient platform
 The Resilient platform supports two app deployment mechanisms, App Host and integration server.
 
-If deploying to a Resilient platform with an App Host:
+If deploying to a Resilient platform with an App Host, the requirements are:
 * Resilient platform >= `37.2.38`.
-* App is in a container-based format (typically provided as a zip file).
+* The app is in a container-based format (available from the AppExchange as a `zip` file).
 
-If deploying to a Resilient platform with an integration server:
+If deploying to a Resilient platform with an integration server, the requirements are:
 * Resilient platform >= `37.2.38`.
-* App is in the older integration format (typically provided as a tar.gz file).
+* The app is in the older integration format (available from the AppExchange as a `zip` file which will be unzipped to get a `tar.gz` file).
 * Integration server is running `resilient_circuits>=30.0.0`.
 * If using an API key account, make sure the account provides the following minimum permissions: 
   | Name | Permissions |
@@ -100,13 +101,13 @@ The following Resilient platform guides provide additional information:
 * _Integration Server Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings.
 * _System Administrator Guide_: provides the procedure to install, configure and deploy apps. 
 
-The guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
+The above guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
 
 ### Cloud Pak for Security
-If you are deploying to IBM Cloud Pak for Security:
+If you are deploying to IBM Cloud Pak for Security, the requirements are:
 * IBM Cloud Pak for Security >= 1.4.
 * Cloud Pak is configured with an App Host.
-* App is in a container-based format (typically provided as a zip file).
+* The app is in a container-based format (available from the AppExchange as a `zip` file).
 
 The following Cloud Pak guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration & Automation > **Orchestration and Automation Apps**.
@@ -204,106 +205,6 @@ None
 </details>
 
 ---
-## Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name
-A mock description of 'A Mock Function with No Unicode Characters in Name' with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
-
- ![screenshot: fn-a-mock-function-with--no-unicode-characters-in-name ](./doc/screenshots/fn-a-mock-function-with--no-unicode-characters-in-name.png)
-
-<details><summary>Inputs:</summary>
-<p>
-
-| Name | Type | Required | Example | Tooltip |
-| ---- | :--: | :------: | ------- | ------- |
-| `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-
-</p>
-</details>
-
-<details><summary>Outputs:</summary>
-<p>
-
-```python
-results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
-```
-
-</p>
-</details>
-
-<details><summary>Example Pre-Process Script:</summary>
-<p>
-
-```python
-None
-```
-
-</p>
-</details>
-
-<details><summary>Example Post-Process Script:</summary>
-<p>
-
-```python
-None
-```
-
-</p>
-</details>
-
----
-## Function - mock function ล three
-mock function ล ฦ ว ศ ษ ส ห ฬ อ three description
-
- ![screenshot: fn-mock-function--three ](./doc/screenshots/fn-mock-function--three.png)
-
-<details><summary>Inputs:</summary>
-<p>
-
-| Name | Type | Required | Example | Tooltip |
-| ---- | :--: | :------: | ------- | ------- |
-| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-
-</p>
-</details>
-
-<details><summary>Outputs:</summary>
-<p>
-
-```python
-results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
-```
-
-</p>
-</details>
-
-<details><summary>Example Pre-Process Script:</summary>
-<p>
-
-```python
-None
-```
-
-</p>
-</details>
-
-<details><summary>Example Post-Process Script:</summary>
-<p>
-
-```python
-None
-```
-
-</p>
-</details>
-
----
 ## Function - mock_function_one
 A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
 
@@ -368,6 +269,106 @@ if True:
 </details>
 
 ---
+## Function - mock function ล three
+mock function ล ฦ ว ศ ษ ส ห ฬ อ three description
+
+ ![screenshot: fn-mock-function--three ](./doc/screenshots/fn-mock-function--three.png)
+
+<details><summary>Inputs:</summary>
+<p>
+
+| Name | Type | Required | Example | Tooltip |
+| ---- | :--: | :------: | ------- | ------- |
+| `mock_input_boolean` | `boolean` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+
+</p>
+</details>
+
+<details><summary>Outputs:</summary>
+<p>
+
+```python
+results = {
+    # TODO: Copy and paste an example of the Function Output within this code block.
+    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
+    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+}
+```
+
+</p>
+</details>
+
+<details><summary>Example Pre-Process Script:</summary>
+<p>
+
+```python
+None
+```
+
+</p>
+</details>
+
+<details><summary>Example Post-Process Script:</summary>
+<p>
+
+```python
+None
+```
+
+</p>
+</details>
+
+---
+## Function - A Mock Function with :: No Unicode Characters !@#$%^&*())))in Name
+A mock description of 'A Mock Function with No Unicode Characters in Name' with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
+
+ ![screenshot: fn-a-mock-function-with--no-unicode-characters-in-name ](./doc/screenshots/fn-a-mock-function-with--no-unicode-characters-in-name.png)
+
+<details><summary>Inputs:</summary>
+<p>
+
+| Name | Type | Required | Example | Tooltip |
+| ---- | :--: | :------: | ------- | ------- |
+| `mock_input_text` | `text` | No | `-` | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+
+</p>
+</details>
+
+<details><summary>Outputs:</summary>
+<p>
+
+```python
+results = {
+    # TODO: Copy and paste an example of the Function Output within this code block.
+    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
+    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+}
+```
+
+</p>
+</details>
+
+<details><summary>Example Pre-Process Script:</summary>
+<p>
+
+```python
+None
+```
+
+</p>
+</details>
+
+<details><summary>Example Post-Process Script:</summary>
+<p>
+
+```python
+None
+```
+
+</p>
+</details>
+
+---
 
 ## Script - Mock Incident Script
 
@@ -421,8 +422,8 @@ mock_data_table
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
 | Mock: Field Text Area  ล ฦ ว ศ ษ ส ห ฬ อ | `mock_field_text_area` | `textarea` | `properties` | - | a tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
-| Mock: Field Text | `mock_field_text` | `text` | `properties` | - | a mock tooltip |
 | Mock:  ล ฦ ว ศ ษ ส ห ฬ อ field number | `mock_field_number` | `number` | `properties` | - | a mock tooltip  ล ฦ ว ศ ษ ส ห ฬ อ |
+| Mock: Field Text | `mock_field_text` | `text` | `properties` | - | a mock tooltip |
 
 ---
 
@@ -437,11 +438,11 @@ mock_data_table
 ## Rules
 | Rule Name | Object | Workflow Triggered |
 | --------- | ------ | ------------------ |
-| Mock: Auto Rule | incident | `mock_workflow_one` |
-| Mock Task Rule | incident | `-` |
-| Mock Manual Rule Message Destination | incident | `-` |
-| Mock Manual Rule | artifact | `mock_workflow_one` |
 | Mock Script Rule | incident | `mock_workflow_one` |
+| Mock Task Rule | incident | `-` |
+| Mock Manual Rule | artifact | `mock_workflow_one` |
+| Mock: Auto Rule | incident | `mock_workflow_one` |
+| Mock Manual Rule Message Destination | incident | `-` |
 
 ---
 
