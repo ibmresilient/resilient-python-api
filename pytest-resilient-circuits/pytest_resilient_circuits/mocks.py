@@ -271,3 +271,48 @@ class BasicResilientMock(ResilientMock):
         LOG.debug("attachment_post")
         data = test_data("200_JSON_POST__attachment.json")
         return requests_mock.create_response(request, status_code=200, json=data)
+
+    @resilient_endpoint("GET", "/wikis")
+    def wikis_get(self, request):
+        """ Callback for GET to /wikis """
+        LOG.debug("wikis_get")
+        data = test_data("200_JSON_GET__wikis.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("GET", "/wikis/100$")
+    def wikis_get_100(self, request):
+        """ Callback for GET to /wikis/100 """
+        LOG.debug("wikis_get_100")
+        data = test_data("200_JSON_GET__wiki100.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("GET", "/wikis/[0123456789]{1,2}$")
+    def wikis_get_xxx(self, request):
+        """ Callback for GET to /wikis/<wiki_id> """
+        LOG.debug("wikis_get_xxx")
+        data = test_data("200_JSON_GET__wiki3.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("PUT", "/wikis/[0-9]+")
+    def wikis_put_xxx(self, request):
+        """ Callback for PUT to /wikis/<wiki_id> """
+        LOG.debug("wikis_put_xxx")
+        data = test_data("200_JSON_GET__wiki3.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("POST", "/wikis")
+    def wikis_post(self, request):
+        """ Callback for POST to /wikis """
+        LOG.debug("wikis_post")
+        data = test_data("200_JSON_GET__wiki3.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
