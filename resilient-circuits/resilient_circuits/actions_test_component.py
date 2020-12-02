@@ -17,6 +17,7 @@ from resilient_circuits.action_message import ActionMessage, FunctionMessage
 
 DEFAULT_TEST_HOST = "localhost"
 DEFAULT_TEST_PORT = 8008
+DEFAULT_WORKFLOW_INSTANCE_ID = 999
 
 LOG = logging.getLogger(__name__)
 
@@ -39,7 +40,10 @@ class SubmitTestFunction(Event):
             "function": {
                 "name": function_name
             },
-            "inputs": function_params
+            "inputs": function_params,
+            "workflow_instance": {
+                "workflow_instance_id": DEFAULT_WORKFLOW_INSTANCE_ID
+            }
         })
 
 
