@@ -343,18 +343,7 @@ def get_import_definition_from_local_export_res(path_export_res_file):
     """Return ImportDefinition from a local (/util/data) export.res file as a Dictionary"""
 
     # Read /util/data/export.res file
-    import_definitions = sdk_helpers.read_file(path_export_res_file)
-
-    # If no ImportDefinition found
-    if not import_definitions:
-        raise SDKException("No ImportDefinition found in the /util/data/export.res file")
-
-    # If more than 1 found
-    elif len(import_definitions) > 1:
-        raise SDKException("Multiple ImportDefinitions found in the export.res file. There must only be 1 ImportDefinition defined")
-
-    # Get the import definition as dict
-    import_definition = json.loads(import_definitions[0])
+    import_definition = sdk_helpers.read_json_file(path_export_res_file)
 
     # Remove the incident type that was added by codegen that allows the data to import
     import_definition = remove_default_incident_type_from_import_definition(import_definition)
