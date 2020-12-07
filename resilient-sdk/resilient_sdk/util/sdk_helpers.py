@@ -103,6 +103,12 @@ def read_file(path):
         file_lines = the_file.readlines()
     return file_lines
 
+def read_json_file(path):
+    file_contents = None
+    with io.open(path, mode="rt", encoding="utf-8") as the_file:
+        file_contents = json.load(the_file)
+    return file_contents
+
 def read_zip_file(path, pattern):
     """Returns unzipped contents of file whose name matches a pattern
     in zip file at path.
@@ -169,7 +175,7 @@ def is_valid_package_name(name):
         return False
     if name in dir(__builtins__):
         return False
-    return re.match(r"[(_|\-)A-Za-z][(_|\-)a-zA-Z0-9]*$", name) is not None
+    return re.match(r"[(_|\-)a-z][(_|\-)a-z0-9]*$", name) is not None
 
 
 def is_valid_version_syntax(version):

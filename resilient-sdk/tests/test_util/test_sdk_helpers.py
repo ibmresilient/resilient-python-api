@@ -33,6 +33,11 @@ def test_read_write_file(fx_mk_temp_dir):
     file_lines = sdk_helpers.read_file(temp_file)
     assert mock_data.mock_file_contents in file_lines
 
+def test_read_json_file(fx_mk_temp_dir):
+    export_data = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES)
+    assert isinstance(export_data, dict)
+    assert "functions" in export_data
+
 def test_rename_file(fx_mk_temp_dir):
     temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
     sdk_helpers.write_file(temp_file, mock_data.mock_file_contents)
@@ -53,7 +58,7 @@ def test_is_valid_package_name():
     assert sdk_helpers.is_valid_package_name("get") is False
     assert sdk_helpers.is_valid_package_name("$%&(#)@*$") is False
     assert sdk_helpers.is_valid_package_name("fn-ځ ڂ ڃ ڄ څ-integration") is False
-
+    assert sdk_helpers.is_valid_package_name("fn-MockIntegration") is False
 
 def test_is_valid_version_syntax():
     assert sdk_helpers.is_valid_version_syntax("1.0") is False

@@ -78,6 +78,9 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
                 "__init__.py": ("package/components/__init__.py.jinja2", mock_jinja_data),
             },
             "util": {
+                "data": {
+                    "export.res": ("package/util/data/export.res.jinja2", mock_jinja_data)
+                },
                 "__init__.py": ("package/util/__init__.py.jinja2", mock_jinja_data),
                 "config.py": ("package/util/config.py.jinja2", mock_jinja_data),
                 "customize.py": ("package/util/customize.py.jinja2", mock_jinja_data),
@@ -98,8 +101,12 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert files_in_test_package == ['LICENSE', '__init__.py', 'components', 'util']
 
     files_in_util = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util")))
-    assert files_in_util == ['__init__.py', 'config.py', 'customize.py', 'selftest.py']
-    
+    assert files_in_util == ['__init__.py', 'config.py', 'customize.py', 'data', 'selftest.py']
+
+    files_in_util_data = sorted(
+        os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", package_helpers.PATH_UTIL_DATA_DIR)))
+    assert files_in_util_data == ['export.res']
+
     files_in_components = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "components")))
     assert files_in_components == ['__init__.py']
 
