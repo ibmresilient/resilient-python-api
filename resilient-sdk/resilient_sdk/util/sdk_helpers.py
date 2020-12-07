@@ -508,7 +508,7 @@ def get_from_export(export,
     return_dict["rules"] = get_res_obj("actions", ResilientObjMap.RULES, "Rule", rules, export)
 
     if get_related_objects:
-        # INT-3260: for Rules we attempt to locate related workflows and message_destinations
+        # For Rules we attempt to locate related workflows and message_destinations
         for r in return_dict.get("rules"):
 
             # Get Activity Fields for Rules
@@ -541,7 +541,7 @@ def get_from_export(export,
 
     # Get Functions
     if get_related_objects:
-        # INT-3260: for functions we attempt to locate related message destinations
+        # For functions we attempt to locate related message destinations
         # Get Function names that use 'wanted' Message Destinations
         for f in export.get("functions", []):
             if f.get("destination_handle") in message_destinations:
@@ -564,7 +564,7 @@ def get_from_export(export,
     return_dict["workflows"] = get_res_obj("workflows", ResilientObjMap.WORKFLOWS, "Workflow", workflows, export)
 
     if get_related_objects:
-        # INT-3260: for workflows we attempt to locate related functions
+        # For workflows we attempt to locate related functions
         # Get Functions in Workflow
         for workflow in return_dict["workflows"]:
             # This gets all the Functions in the Workflow's XML
