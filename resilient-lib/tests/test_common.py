@@ -4,9 +4,16 @@ import os
 import sys
 import shutil
 import unittest
+import logging
+import pytest
+
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, write_to_tmp_file
+    get_file_attachment_metadata, write_to_tmp_file, close_incident
+
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+LOG.addHandler(logging.StreamHandler())
 
 
 class TestFunctionMetrics(unittest.TestCase):
@@ -33,6 +40,7 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertTrue(str_to_bool('YES'))
         self.assertFalse(str_to_bool('truex'))
         self.assertTrue(str_to_bool(1))
+        self.assertTrue(str_to_bool('1'))
         self.assertFalse(str_to_bool(0))
         self.assertFalse(str_to_bool('0'))
 
@@ -84,11 +92,13 @@ class TestFunctionMetrics(unittest.TestCase):
             validate_fields({}, inputs)
 
         # Test mandatory fields missing
-        with self.assertRaisesRegex(ValueError, "'cx' is mandatory and is not set. You must set this value to run this function"):
+        with self.assertRaisesRegex(ValueError,
+                                    "'cx' is mandatory and is not set. You must set this value to run this function"):
             validate_fields(("cx"), inputs)
 
         # Test mandatory field is empty string
-        with self.assertRaisesRegex(ValueError, "'empty_input' is mandatory and is not set. You must set this value to run this function"):
+        with self.assertRaisesRegex(ValueError,
+                                    "'empty_input' is mandatory and is not set. You must set this value to run this function"):
             validate_fields(("empty_input"), inputs)
 
         # Test no mandatory fields
@@ -103,13 +113,16 @@ class TestFunctionMetrics(unittest.TestCase):
 
         # Test select + multi-select type fields
         self.assertEquals(validate_fields(["select_input"], inputs).get("select_input"), "select choice")
-        self.assertEquals(validate_fields([], inputs).get("multi_select_input"), ["select choice one", "select choice two"])
+        self.assertEquals(validate_fields([], inputs).get("multi_select_input"),
+                          ["select choice one", "select choice two"])
 
         # Test 'Text with value string Input' type
-        self.assertEquals(validate_fields(["text_with_value_string"], inputs).get("text_with_value_string"), "mock text")
+        self.assertEquals(validate_fields(["text_with_value_string"], inputs).get("text_with_value_string"),
+                          "mock text")
 
         # Test placeholder
-        with self.assertRaisesRegex(ValueError, "'str_input' is mandatory and still has its placeholder value of 'some text'. You must set this value correctly to run this function"):
+        with self.assertRaisesRegex(ValueError,
+                                    "'str_input' is mandatory and still has its placeholder value of 'some text'. You must set this value correctly to run this function"):
             validate_fields(mandatory_fields, inputs)
 
     def test_unescape(self):
@@ -248,3 +261,34 @@ class TestFunctionMetrics(unittest.TestCase):
         }
         actual_name = get_file_attachment_name(str_name_mock, incident_id=inc_id, artifact_id=artifact_id)
         assert actual_name == expected_name
+
+    @pytest.mark.skip(reason="fails on decorator")
+    def test_close_incident(self):
+        # patch_to_close_incident(res_client, incident_id, mandatory_fields):
+        kwargs = {"resolution_summary": "<div class=\"rte\"><div>resolved</div></div>", "resolution_id": 2, "plan_status": "C"}
+        incident_id = 123
+
+        # Test incident_id missing
+        with self.assertRaisesRegex(ValueError, "'incident_id' must be specified"):
+            close_incident({}, None, kwargs)
+
+        # Test mandatory fields missing
+        kwargs_missing = {"resolution_summary": "<div class=\"rte\"><div>resolved</div></div>", "plan_status": "C"}
+        mock_response = {
+            "id": 0,
+            "type_id": 0,
+            "type_name": "incident",
+            "fields": {
+                "country": {"name": "country", "input_type": "select"},
+                "resolution_id": {"name": "resolution_id", "input_type": "select", "required": "close"},
+                "resolution_summary": {"name": "resolution_summary", "input_type": "textarea", "required": "close"},
+                "workspace": {"name": "resolution_id", "input_type": "select", "required": "always"}
+            },
+            "resolution_summary": "<div class=\"rte\"><div>unresolved</div></div>",
+            "vers": 5
+        }
+        mock_api = {
+            "/types/incident": mock_response
+        }
+        with self.assertRaises(ValueError):
+            close_incident(mock_api, incident_id, kwargs_missing)

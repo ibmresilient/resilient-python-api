@@ -12,6 +12,7 @@ import warnings
 import inspect
 import functools
 import sys
+import six
 
 
 def deprecated(reason):
