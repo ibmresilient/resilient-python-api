@@ -182,6 +182,12 @@ def test_action_obj_was_specified_success(fx_get_sub_parser, fx_cmd_line_args_cl
 
     args = cmd_clone.parser.parse_known_args()[0]
     function = TEST_EXPORT.get('functions')[0]
+
+    for fn in TEST_EXPORT.get('functions'):
+        if fn.get("name") == 'mock_function_one':
+            function = fn
+            break
+
     assert function['name'] == 'mock_function_one'
     assert CmdClone.action_obj_was_specified(args, function)
 
