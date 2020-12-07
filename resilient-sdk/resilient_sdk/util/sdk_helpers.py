@@ -480,7 +480,7 @@ def get_from_export(export,
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
-    :param get_related_objects: Whether or not to hunt for related action objects, defaults to true 
+    :param get_related_objects: Whether or not to hunt for related action objects, defaults to True
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -507,17 +507,8 @@ def get_from_export(export,
     # Get Rules
     return_dict["rules"] = get_res_obj("actions", ResilientObjMap.RULES, "Rule", rules, export)
 
-    # Get Functions
-    return_dict["functions"] = get_res_obj("functions", ResilientObjMap.FUNCTIONS, "Function", functions, export)
-
-    # Get Workflows
-    return_dict["workflows"] = get_res_obj("workflows", ResilientObjMap.WORKFLOWS, "Workflow", workflows, export)
-
-    # By default, for each of the above resilient objects attempt to locate resilient objects which are related
-    # For rules -- attempt to locate related workflows and message_destinations
-    # For workflows -- attempt to locate related functions
-    # For functions -- attempt to locate related message destinations
     if get_related_objects:
+        # INT-3260: for Rules we attempt to locate related workflows and message_destinations
         for r in return_dict.get("rules"):
 
             # Get Activity Fields for Rules
@@ -548,22 +539,32 @@ def get_from_export(export,
                 elif a.get("field"):
                     fields.append(a.get("field"))
 
+    # Get Functions
+    if get_related_objects:
+        # INT-3260: for functions we attempt to locate related message destinations
         # Get Function names that use 'wanted' Message Destinations
         for f in export.get("functions", []):
             if f.get("destination_handle") in message_destinations:
                 functions.append(f.get(ResilientObjMap.FUNCTIONS))
 
-        for f in return_dict.get("functions"):
-            # Get Function Inputs
-            view_items = f.get("view_items", [])
-            function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
-            f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
+    return_dict["functions"] = get_res_obj("functions", ResilientObjMap.FUNCTIONS, "Function", functions, export)
 
-            return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
+    for f in return_dict.get("functions"):
+        # Get Function Inputs
+        view_items = f.get("view_items", [])
+        function_input_uuids = [v.get("content") for v in view_items if "content" in v and v.get("field_type") == ResilientFieldTypes.FUNCTION_INPUT]
+        f["inputs"] = get_res_obj("fields", "uuid", "Function Input", function_input_uuids, export)
 
-            # Get Function's Message Destination name
-            message_destinations.append(f.get("destination_handle", ""))
+        return_dict["all_fields"].extend([u"__function/{0}".format(fld.get("name")) for fld in f.get("inputs")])
 
+        # Get Function's Message Destination name
+        message_destinations.append(f.get("destination_handle", ""))
+
+    # Get Workflows
+    return_dict["workflows"] = get_res_obj("workflows", ResilientObjMap.WORKFLOWS, "Workflow", workflows, export)
+
+    if get_related_objects:
+        # INT-3260: for workflows we attempt to locate related functions
         # Get Functions in Workflow
         for workflow in return_dict["workflows"]:
             # This gets all the Functions in the Workflow's XML
