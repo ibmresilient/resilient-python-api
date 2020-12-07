@@ -106,10 +106,10 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
                 if os.path.exists(target_file):
                     # If file already exists skip copy.
-                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
+                    files_skipped.append(os.path.join(target_dir, file_name))
                     continue
 
-                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+                newly_generated_files.append(os.path.join(target_dir, file_name))
                 shutil.copy(file_info, target_file)
 
             else:
@@ -122,13 +122,13 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
 
                 if os.path.exists(target_file):
-                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
+                    files_skipped.append(os.path.join(target_dir, file_name))
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
-                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+                newly_generated_files.append(os.path.join(target_dir, file_name))
 
                 sdk_helpers.write_file(target_file, jinja_rendered_text)
 
