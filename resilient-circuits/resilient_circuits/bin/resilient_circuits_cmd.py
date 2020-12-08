@@ -714,6 +714,8 @@ def main():
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
     elif args.cmd == "clone":
+        LOG.warning("\nDEPRECATING: We are deprecating the '%s' command in resilient-circuits."
+                    "\nThis functionality has been moved to the resilient-sdk tool.\n", args.cmd)
         if args.workflow is None:
             print('Please specify a workflow to clone')
             clone_parser.print_usage()
