@@ -280,23 +280,34 @@ class CmdCodegen(BaseCmd):
             }
         }
 
-        # If there are Functions, add a 'tests' directory
+        # If there are Functions, add a 'tests' and a 'payload_samples' directory
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
+            package_mapping_dict["payload_samples"] = {}
 
         # Loop each Function
         for f in jinja_data.get("functions"):
             # Add package_name to function data
             f["package_name"] = package_name
 
+            # Get function name
+            fn_name = f.get("export_key")
+
             # Generate function_component.py file name
-            file_name = u"funct_{0}.py".format(f.get("export_key"))
+            file_name = u"funct_{0}.py".format(fn_name)
 
             # Add to 'components' directory
             package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
 
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
+
+            # Add a 'payload_samples/fn_name' directory and the files to it
+            package_mapping_dict["payload_samples"][fn_name] = {}
+            package_mapping_dict["payload_samples"][fn_name]["output_json_example.json"] = ("payload_samples/function_name/output_json_example.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["output_json_schema.json"] = ("payload_samples/function_name/output_json_schema.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["mock_return_results_1.json"] = ("payload_samples/function_name/mock_return_results_1.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["mock_return_results_2.json"] = ("payload_samples/function_name/mock_return_results_2.json.jinja2", f)
 
         for w in jinja_data.get("workflows"):
 
