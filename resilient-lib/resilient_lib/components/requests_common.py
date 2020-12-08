@@ -49,12 +49,12 @@ class RequestsCommon:
         timeout = DEFAULT_TIMEOUT
 
         if self.integration_options and self.integration_options.get("timeout"):
-            timeout = int(self.integration_options.get("timeout"))
+            timeout = self.integration_options.get("timeout")
 
         if self.function_opts and self.function_opts.get("timeout"):
             timeout = self.function_opts.get("timeout")
 
-        return timeout
+        return int(timeout)
 
     def execute_call_v2(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
         """Constructs and sends a request. Returns :class:`Response` object.
