@@ -3,10 +3,38 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import os
+import sys
 from resilient_sdk.cmds import base_cmd, CmdCodegen
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
 from tests.shared_mock_data import mock_paths
+
+EXPECTED_FILES_ROOT_DIR = [
+    'Dockerfile',
+    'MANIFEST.in',
+    'README.md',
+    'apikey_permissions.txt',
+    'data',
+    'doc',
+    'entrypoint.sh',
+    'fn_main_mock_integration',
+    'icons',
+    'payload_samples',
+    'setup.py',
+    'tests',
+    'tox.ini'
+]
+
+EXPECTED_FILES_DATA_DIR = ['wf_mock_workflow_one.md', 'wf_mock_workflow_two.md']
+EXPECTED_FILES_DOC_DIR = ['screenshots']
+EXPECTED_FILES_DOC_SCREENSHOTS_DIR = ['main.png']
+EXPECTED_FILES_PACKAGE_DIR = ['LICENSE', '__init__.py', 'components', 'util']
+EXPECTED_FILES_PACKAGE_COMPONENTS_DIR = ['__init__.py', 'funct_mock_function_one.py', 'funct_mock_function_two.py']
+EXPECTED_FILES_PACKAGE_UTIL_DIR = ['__init__.py', 'config.py', 'customize.py', 'selftest.py']
+EXPECTED_FILES_ICONS_DIR = ['app_logo.png', 'company_logo.png']
+EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_function_two.py']
+EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_return_results_1.json', 'mock_return_results_2.json', 'output_json_example.json', 'output_json_schema.json']
 
 
 def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
@@ -139,9 +167,35 @@ def test_gen_function():
     pass
 
 
-def test_gen_package():
-    # TODO:
-    pass
+def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir):
+    output_path = mock_paths.TEST_TEMP_DIR
+
+    # Add paths to an output base and an export.res file
+    sys.argv.extend(["-o", output_path])
+    sys.argv.extend(["-e", mock_paths.MOCK_EXPORT_RES])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen._gen_package(args)
+
+    package_path = os.path.join(output_path, args.package)
+
+    assert EXPECTED_FILES_ROOT_DIR == sorted(os.listdir(package_path))
+    assert EXPECTED_FILES_DATA_DIR == sorted(os.listdir(os.path.join(package_path, "data")))
+    assert EXPECTED_FILES_DOC_DIR == sorted(os.listdir(os.path.join(package_path, "doc")))
+    assert EXPECTED_FILES_DOC_SCREENSHOTS_DIR == sorted(os.listdir(os.path.join(package_path, "doc", "screenshots")))
+    assert EXPECTED_FILES_PACKAGE_DIR == sorted(os.listdir(os.path.join(package_path, args.package)))
+    assert EXPECTED_FILES_PACKAGE_COMPONENTS_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "components")))
+    assert EXPECTED_FILES_PACKAGE_UTIL_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "util")))
+    assert EXPECTED_FILES_ICONS_DIR == sorted(os.listdir(os.path.join(package_path, "icons")))
+    assert EXPECTED_FILES_TESTS_DIR == sorted(os.listdir(os.path.join(package_path, "tests")))
+
+    # Test payload_samples were generated for each fn
+    files_in_payload_samples = sorted(os.listdir(os.path.join(package_path, "payload_samples")))
+    assert EXPECTED_FILES_PAYLOAD_SAMPLES_DIR == files_in_payload_samples
+
+    for file_name in files_in_payload_samples:
+        assert EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR == sorted(os.listdir(os.path.join(package_path, "payload_samples", file_name)))
 
 
 def test_reload_package():
