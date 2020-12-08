@@ -53,7 +53,6 @@ Package an integration into a Resilient app.
 $ resilient-sdk package -p <path_to_directory> --display-name "My Custom app"
 ```
 
-<!-- Add clone command -->
 ### `clone:`
 Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name
 ```
