@@ -1,3 +1,6 @@
+2021-02: ver. 40.0
+* codegen now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server"
+
 2020-10: ver. 39.0
 * docgen now creates a single README and updated the README to include info on App Host
 * Added Resilient Platform version to customize.py template
