@@ -89,7 +89,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         }
     }
 
-    CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR)
+    CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR, mock_paths.TEST_TEMP_DIR)
 
     files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
     assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']

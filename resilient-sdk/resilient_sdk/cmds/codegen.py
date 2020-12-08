@@ -68,7 +68,7 @@ class CmdCodegen(BaseCmd):
             self.parser.print_help()
 
     @staticmethod
-    def render_jinja_mapping(jinja_mapping_dict, jinja_env, target_dir):
+    def render_jinja_mapping(jinja_mapping_dict, jinja_env, target_dir, package_dir):
         """
         Write all the Jinja Templates specified in jinja_mapping_dict that
         are found in the jinja_env to the target_dir. Returns a Tuple of
@@ -97,7 +97,12 @@ class CmdCodegen(BaseCmd):
                 except OSError:
                     pass
 
-                new_files, skipped_files = CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
+                new_files, skipped_files = CmdCodegen.render_jinja_mapping(
+                    jinja_mapping_dict=sub_dir_mapping_dict,
+                    jinja_env=jinja_env,
+                    target_dir=path_sub_dir,
+                    package_dir=package_dir)
+
                 newly_generated_files += new_files
                 files_skipped += skipped_files
 
@@ -106,10 +111,10 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
                 if os.path.exists(target_file):
                     # If file already exists skip copy.
-                    files_skipped.append(os.path.join(target_file, file_name))
+                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
                     continue
 
-                newly_generated_files.append(os.path.join(target_dir, file_name))
+                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
                 shutil.copy(file_info, target_file)
 
             else:
@@ -122,13 +127,13 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
 
                 if os.path.exists(target_file):
-                    files_skipped.append(os.path.join(target_dir, file_name))
+                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
-                newly_generated_files.append(os.path.join(target_dir, file_name))
+                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
 
                 sdk_helpers.write_file(target_file, jinja_rendered_text)
 
@@ -305,7 +310,11 @@ class CmdCodegen(BaseCmd):
             # Add workflow to data directory
             package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
 
-        newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+        newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(
+            jinja_mapping_dict=package_mapping_dict,
+            jinja_env=jinja_env,
+            target_dir=output_base,
+            package_dir=output_base)
 
         # Log new and skipped files
         if newly_generated_files:
