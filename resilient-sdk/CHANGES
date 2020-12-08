@@ -1,14 +1,14 @@
 2020-10: ver. 39.0
-* docgen now creates a single README and updated the README to include info on App Host
-* Added Resilient Platform version to customize.py template
-* package command replaces tags on Resilient objects in export.res instead of extending them
-* Added environmental variable RES_SDK_DEV
-* Added '--set-version' argument to dev command
-* Added 'display_name' attribute to setup.py file
-* codegen, codegen --reload and dev --set-version commands now create /util/data/export.res file
-  that contains the import definition that was previously base64 encoded text in customize.py
-* codegen and package commands now return error if package name contains uppercase characters
-* Added 'clone' command to clone an Action Object
+* The 'docgen' command creates a single README and updated the README to include information on App Hosts.
+* Added the Resilient platform version to the customize.py template.
+* The 'package' command replaces tags on Resilient objects in export.res instead of extending them.
+* Added environmental variable RES_SDK_DEV.
+* Added '--set-version' argument to the dev command.
+* Added 'display_name' attribute to the setup.py file.
+* The 'codegen', 'codegen --reload' and 'dev --set-version' commands create a /util/data/export.res file that contains the import definition which was previously base64 encoded text in customize.py.
+* Before running the 'codegen --reload' on packages created with Resilient SDK < 39.0.0, ensure the MANIFEST.in file includes the line: recursive-include <package_name>/util *
+* The 'codegen' and 'package' commands return errors if the package name contains uppercase characters.
+* Added a 'clone' command to clone an Action Object.
 
 2020-07: ver. 37.2
 
