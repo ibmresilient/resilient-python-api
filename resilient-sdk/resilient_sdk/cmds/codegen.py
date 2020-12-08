@@ -398,9 +398,9 @@ class CmdCodegen(BaseCmd):
             # Regenerate the package
             CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
+            LOG.info("\nNOTE: Ensure the MANIFEST.in file includes line:\nrecursive-include %s/util *\n", args.package)
             LOG.info("'codegen --reload' complete for '%s'", args.package)
-            LOG.info("Check MANIFEST.in file includes line:")
-            LOG.info("recursive-include %s/util *", args.package)
+
         except Exception as err:
             LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
 
