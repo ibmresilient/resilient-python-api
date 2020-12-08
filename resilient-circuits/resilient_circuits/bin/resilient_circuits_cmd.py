@@ -25,6 +25,10 @@ from resilient_circuits.util.resilient_ext import ext_command_handler
 # What code will be used if any apps tests fail when running resilient-circuits 'selftest'
 SELFTEST_FAILURE_EXIT_CODE = 1
 
+# Deprecation messages
+DEPRECATION_MSG_CLONE = """\nDEPRECATING: We are deprecating the 'clone' command in resilient-circuits.
+This functionality has been moved to the resilient-sdk tool.\n"""
+
 if sys.version_info.major == 2:
     from io import open
 else:
@@ -580,7 +584,8 @@ def main():
     selftest_parser = subparsers.add_parser("selftest",
                                         help="Calls selftest functions for every package and prints out their return states")
     clone_parser = subparsers.add_parser("clone",
-                                         help="Clone Resilient objects")
+                                         help="Deprecated for resilient-circuits, functionality moved to the resilient-sdk tool",
+                                         description="Deprecated for resilient-circuits, functionality moved to the resilient-sdk tool")
     '''Commenting out ext commands until future release
     # Add parser for ext:package
     # Usage 1: resilient-circuits ext:package <<path_to_package>>
@@ -714,8 +719,7 @@ def main():
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
     elif args.cmd == "clone":
-        LOG.warning("\nDEPRECATING: We are deprecating the '%s' command in resilient-circuits."
-                    "\nThis functionality has been moved to the resilient-sdk tool.\n", args.cmd)
+        LOG.warning(DEPRECATION_MSG_CLONE)
         if args.workflow is None:
             print('Please specify a workflow to clone')
             clone_parser.print_usage()
