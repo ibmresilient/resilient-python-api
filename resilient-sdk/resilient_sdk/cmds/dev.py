@@ -24,7 +24,7 @@ class CmdDev(BaseCmd):
     CMD_NAME = "dev"
     CMD_HELP = "Unsupported functionality used to help develop an app"
     CMD_USAGE = """
-    $ resilient-sdk dev --set-version 36.0.0"""
+    $ resilient-sdk dev -p <path_to_package> --set-version 36.0.0"""
     CMD_DESCRIPTION = "WARNING: Use the functionality of 'dev' at your own risk"
 
     def setup(self):
