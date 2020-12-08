@@ -106,7 +106,7 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
                 if os.path.exists(target_file):
                     # If file already exists skip copy.
-                    files_skipped.append(os.path.join(target_dir, file_name))
+                    files_skipped.append(os.path.join(target_file, file_name))
                     continue
 
                 newly_generated_files.append(os.path.join(target_dir, file_name))
@@ -390,7 +390,8 @@ class CmdCodegen(BaseCmd):
             CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
             LOG.info("'codegen --reload' complete for '%s'", args.package)
-
+            LOG.info("Check MANIFEST.in file includes line:")
+            LOG.info("recursive-include %s/util *", args.package)
         except Exception as err:
             LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
 
