@@ -22,6 +22,12 @@ from resilient_circuits.util.resilient_codegen import codegen_functions, codegen
 from resilient_circuits.util.resilient_customize import customize_resilient
 from resilient_circuits.util.resilient_ext import ext_command_handler
 
+# What code will be used if any apps tests fail when running resilient-circuits 'selftest'
+SELFTEST_FAILURE_EXIT_CODE = 1
+
+# Deprecation messages
+DEPRECATION_MSG_CLONE = """\nDEPRECATING: We are deprecating the 'clone' command in resilient-circuits.
+This functionality has been moved to the resilient-sdk tool.\n"""
 
 if sys.version_info.major == 2:
     from io import open
@@ -337,6 +343,9 @@ def selftest(args):
     # make a copy
     install_list = list(args.install_list) if args.install_list else []
 
+    # Prepare a count of exceptions found with selftests.
+    selftest_failure_count = 0
+
     for dist, component_list in components.items():
         if args.install_list is None or dist.project_name in install_list:
             # remove name from list
@@ -360,15 +369,29 @@ def selftest(args):
                     delta_milliseconds = end_time_milliseconds - start_time_milliseconds
                     delta_seconds = delta_milliseconds / 1000
 
-                    if status["state"] is not None:
-                       LOG.info("\t%s: %s, Elapsed time: %f seconds", ep.name, status["state"], delta_seconds)
+                    state = status.get("state")
+
+                    if isinstance(state, str):
+                        LOG.info("\t%s: %s\n\tselftest output:\n\t%s\n\tElapsed time: %f seconds", ep.name, state, status, delta_seconds)
+
+                        if state.lower() == "failure":
+                            selftest_failure_count += 1
+
+                    else:
+                        LOG.info("\t%s:\n\tUnsupported dictionary returned:\n\t%s\n\tElapsed time: %f seconds", ep.name, status, delta_seconds)
+
                 except Exception as e:
                     LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
+                    selftest_failure_count += 1
                     continue
 
     # any missed packages?
     if len(install_list):
         LOG.warning("%s not found. Check package name(s)", install_list)
+
+    # Check if any failures were found and printed to the console
+    if selftest_failure_count:
+        sys.exit(SELFTEST_FAILURE_EXIT_CODE)
 
 
 def find_workflow_by_programmatic_name(workflows, pname):
@@ -561,7 +584,8 @@ def main():
     selftest_parser = subparsers.add_parser("selftest",
                                         help="Calls selftest functions for every package and prints out their return states")
     clone_parser = subparsers.add_parser("clone",
-                                         help="Clone Resilient objects")
+                                         help="Deprecated for resilient-circuits, functionality moved to the resilient-sdk tool",
+                                         description="Deprecated for resilient-circuits, functionality moved to the resilient-sdk tool")
     '''Commenting out ext commands until future release
     # Add parser for ext:package
     # Usage 1: resilient-circuits ext:package <<path_to_package>>
@@ -695,6 +719,7 @@ def main():
         logging.basicConfig(format='%(message)s', level=logging.INFO)
         customize_resilient(args)
     elif args.cmd == "clone":
+        LOG.warning(DEPRECATION_MSG_CLONE)
         if args.workflow is None:
             print('Please specify a workflow to clone')
             clone_parser.print_usage()

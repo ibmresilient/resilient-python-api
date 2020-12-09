@@ -16,11 +16,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
-
-# Relative paths from with the package of files + directories used
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
-PATH_SETUP_PY = "setup.py"
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Regex for splitting version number at end of name from package basename.
 VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
@@ -72,7 +68,7 @@ class CmdCodegen(BaseCmd):
             self.parser.print_help()
 
     @staticmethod
-    def render_jinja_mapping(jinja_mapping_dict, jinja_env, target_dir):
+    def render_jinja_mapping(jinja_mapping_dict, jinja_env, target_dir, package_dir):
         """
         Write all the Jinja Templates specified in jinja_mapping_dict that
         are found in the jinja_env to the target_dir. Returns a Tuple of
@@ -101,7 +97,12 @@ class CmdCodegen(BaseCmd):
                 except OSError:
                     pass
 
-                new_files, skipped_files = CmdCodegen.render_jinja_mapping(sub_dir_mapping_dict, jinja_env, path_sub_dir)
+                new_files, skipped_files = CmdCodegen.render_jinja_mapping(
+                    jinja_mapping_dict=sub_dir_mapping_dict,
+                    jinja_env=jinja_env,
+                    target_dir=path_sub_dir,
+                    package_dir=package_dir)
+
                 newly_generated_files += new_files
                 files_skipped += skipped_files
 
@@ -110,10 +111,10 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
                 if os.path.exists(target_file):
                     # If file already exists skip copy.
-                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
+                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
                     continue
 
-                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
                 shutil.copy(file_info, target_file)
 
             else:
@@ -126,13 +127,13 @@ class CmdCodegen(BaseCmd):
                 target_file = os.path.join(target_dir, file_name)
 
                 if os.path.exists(target_file):
-                    files_skipped.append(os.path.join(os.path.basename(target_dir), file_name))
+                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
-                newly_generated_files.append(os.path.join(os.path.basename(target_dir), file_name))
+                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
 
                 sdk_helpers.write_file(target_file, jinja_rendered_text)
 
@@ -159,7 +160,7 @@ class CmdCodegen(BaseCmd):
             arg_name = m[0]
             old_param_name = m[1]
 
-            arg = getattr(args, arg_name)
+            arg = getattr(args, arg_name, None)
             if arg:
                 all_obj_names_wanted = set(arg)
 
@@ -176,8 +177,6 @@ class CmdCodegen(BaseCmd):
     def _gen_package(args, setup_py_attributes={}):
 
         LOG.info("Generating codegen package...")
-
-        newly_generated_directories = []
 
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
@@ -232,7 +231,7 @@ class CmdCodegen(BaseCmd):
         jinja_data["package_name"] = package_name
 
         # Add version
-        jinja_data["version"] = setup_py_attributes.get("version", "1.0.0")
+        jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
@@ -262,7 +261,9 @@ class CmdCodegen(BaseCmd):
                 "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
             },
             "doc": {
-                "README.md": ("doc/README.md.jinja2", jinja_data)
+                "screenshots": {
+                    "main.png": package_helpers.PATH_DEFAULT_SCREENSHOT
+                }
             },
             package_name: {
                 "__init__.py": ("package/__init__.py.jinja2", jinja_data),
@@ -272,6 +273,9 @@ class CmdCodegen(BaseCmd):
                     "__init__.py": ("package/components/__init__.py.jinja2", jinja_data),
                 },
                 "util": {
+                    "data": {
+                        "export.res": ("package/util/data/export.res.jinja2", jinja_data)
+                    },
                     "__init__.py": ("package/util/__init__.py.jinja2", jinja_data),
                     "config.py": ("package/util/config.py.jinja2", jinja_data),
                     "customize.py": ("package/util/customize.py.jinja2", jinja_data),
@@ -306,7 +310,11 @@ class CmdCodegen(BaseCmd):
             # Add workflow to data directory
             package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
 
-        newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(package_mapping_dict, jinja_env, output_base)
+        newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(
+            jinja_mapping_dict=package_mapping_dict,
+            jinja_env=jinja_env,
+            target_dir=output_base,
+            package_dir=output_base)
 
         # Log new and skipped files
         if newly_generated_files:
@@ -314,18 +322,6 @@ class CmdCodegen(BaseCmd):
 
         if skipped_files:
             LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
-
-        # if /doc exists and /doc/screenshots does not, make /doc/screenshots
-        path_doc_dir = os.path.join(output_base, "doc")
-        path_screenshots_dir = os.path.join(path_doc_dir, "screenshots")
-
-        if os.path.isdir(path_doc_dir) and not os.path.isdir(path_screenshots_dir):
-            os.makedirs(path_screenshots_dir)
-            newly_generated_directories.append(os.path.join("doc", "screenshots"))
-
-        # Log new directories
-        if newly_generated_directories:
-            LOG.debug("Newly generated directories:\n\t> %s", "\n\t> ".join(newly_generated_directories))
 
         LOG.info("'codegen' complete for '%s'", package_name)
 
@@ -340,10 +336,10 @@ class CmdCodegen(BaseCmd):
         path_package_basename = re.split(VERSION_REGEX, os.path.basename(path_package), 1)[0]
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        path_customize_py = os.path.join(path_package, path_package_basename, PATH_CUSTOMIZE_PY)
+        path_customize_py = os.path.join(path_package, path_package_basename, package_helpers.PATH_CUSTOMIZE_PY)
         sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
 
-        path_setup_py_file = os.path.join(path_package, PATH_SETUP_PY)
+        path_setup_py_file = os.path.join(path_package, package_helpers.PATH_SETUP_PY)
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
@@ -366,6 +362,16 @@ class CmdCodegen(BaseCmd):
 
         # Rename the old customize.py with .bak
         path_customize_py_bak = sdk_helpers.rename_to_bak_file(path_customize_py)
+
+        # If local export file exists then save it to a .bak file.
+        # (Older packages may not have the /util/data/export.res file)
+        path_export_res = os.path.join(path_package, path_package_basename,
+                                       package_helpers.PATH_UTIL_DATA_DIR,
+                                       package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
+        if os.path.isfile(path_export_res):
+            path_export_res_bak = sdk_helpers.rename_to_bak_file(path_export_res)
+        else:
+            path_export_res_bak = None
 
         try:
             # Map command line arg name to dict key returned by codegen_reload_data() in customize.py
@@ -392,6 +398,7 @@ class CmdCodegen(BaseCmd):
             # Regenerate the package
             CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
+            LOG.info("\nNOTE: Ensure the MANIFEST.in file includes line:\nrecursive-include %s/util *\n", args.package)
             LOG.info("'codegen --reload' complete for '%s'", args.package)
 
         except Exception as err:
@@ -402,4 +409,7 @@ class CmdCodegen(BaseCmd):
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
+                sdk_helpers.rename_file(path_customize_py_bak, package_helpers.BASE_NAME_CUSTOMIZE_PY)
+            if not os.path.isfile(path_export_res) and path_export_res_bak:
+                LOG.info(u"An error occurred. Renaming export.res.bak to export.res")
+                sdk_helpers.rename_file(path_export_res_bak, package_helpers.BASE_NAME_LOCAL_EXPORT_RES)

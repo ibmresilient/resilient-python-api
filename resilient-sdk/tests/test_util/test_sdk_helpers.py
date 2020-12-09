@@ -33,6 +33,11 @@ def test_read_write_file(fx_mk_temp_dir):
     file_lines = sdk_helpers.read_file(temp_file)
     assert mock_data.mock_file_contents in file_lines
 
+def test_read_json_file(fx_mk_temp_dir):
+    export_data = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES)
+    assert isinstance(export_data, dict)
+    assert "functions" in export_data
+
 def test_rename_file(fx_mk_temp_dir):
     temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
     sdk_helpers.write_file(temp_file, mock_data.mock_file_contents)
@@ -53,7 +58,7 @@ def test_is_valid_package_name():
     assert sdk_helpers.is_valid_package_name("get") is False
     assert sdk_helpers.is_valid_package_name("$%&(#)@*$") is False
     assert sdk_helpers.is_valid_package_name("fn-ځ ڂ ڃ ڄ څ-integration") is False
-
+    assert sdk_helpers.is_valid_package_name("fn-MockIntegration") is False
 
 def test_is_valid_version_syntax():
     assert sdk_helpers.is_valid_version_syntax("1.0") is False
@@ -72,6 +77,12 @@ def test_is_valid_url():
     assert sdk_helpers.is_valid_url(None) is False
     assert sdk_helpers.is_valid_url("not a url") is False
     assert sdk_helpers.is_valid_url("https://www. example.com") is False
+
+
+def test_does_url_contain():
+    assert sdk_helpers.does_url_contain("http://www.example.com", "example") is True
+    assert sdk_helpers.does_url_contain("not a url", "example") is False
+    assert sdk_helpers.does_url_contain("http://www.example.com", "abc") is False
 
 
 def test_generate_uuid_from_string():
@@ -192,7 +203,26 @@ def test_get_message_destination_from_export(fx_mock_res_client):
 
     assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
 
-    assert all(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is True
+
+@pytest.mark.parametrize("get_related_param",
+                         [(True), (False)])
+def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_related_param):
+
+    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+
+    export_data = sdk_helpers.get_from_export(org_export,
+                                              message_destinations=["fn_main_mock_integration"],
+                                              functions=["mock_function__three"],
+                                              get_related_objects=get_related_param)
+
+    assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
+
+    if get_related_param:
+        assert len(export_data.get("functions", [])) > 0
+        assert any(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is True
+
+    else:
+        assert all(elem.get("name") in ("mock_function_one", "mock_function_two") for elem in export_data.get("functions")) is False
 
 
 def test_minify_export(fx_mock_res_client):
@@ -260,8 +290,12 @@ def test_rename_to_bak_file_if_file_not_exist(fx_mk_temp_dir):
 
 
 def test_generate_anchor():
-    anchor = sdk_helpers.generate_anchor("D מ ן נ ס עata Ta$%^ble Utils: Delete_Row")
-    assert anchor == "d-----ata-table-utils-delete-row"
+    anchor = sdk_helpers.generate_anchor(u"D מ ן נ ס עata Ta!@#$%^&*()__ble Utせ ぜ そ ぞ た だils: ✔✕✖✗✘✙✚✛ òDelete_Rowﻀ ﻁ ﻂ ﻃ ﻄ ﻅ ﻆ ﻇ ﻈ and 㐖 㐗 㐘 㐙 㐚 㐛 㐜 㐝")
+    assert anchor == u"d-מ-ן-נ-ס-עata-ta__ble-utせ-ぜ-そ-ぞ-た-だils--òdelete_rowﻀ-ﻁ-ﻂ-ﻃ-ﻄ-ﻅ-ﻆ-ﻇ-ﻈ-and-㐖-㐗-㐘-㐙-㐚-㐛-㐜-㐝"
+
+
+def test_simplify_string():
+    assert "d-----ata-ta--ble-ut-----ils--delete-row---------and--------" == sdk_helpers.simplify_string("D מ ן נ ס עata Ta!@#$%^&*()__ble Utせ ぜ そ ぞ た だils: ✔✕✖✗✘✙✚✛ òDelete_Rowﻀ ﻁ ﻂ ﻃ ﻄ ﻅ ﻆ ﻇ ﻈ and 㐖 㐗 㐘 㐙 㐚 㐛 㐜 㐝")
 
 
 def test_get_workflow_functions():
@@ -284,3 +318,13 @@ def test_get_timestamp():
 def test_get_timestamp_from_timestamp():
     ts = sdk_helpers.get_timestamp(1579258053.728)
     assert ts == "20200117104733"
+
+
+def test_str_to_bool():
+    assert sdk_helpers.str_to_bool('True') is True
+    assert sdk_helpers.str_to_bool('true') is True
+    assert sdk_helpers.str_to_bool('YES') is True
+    assert sdk_helpers.str_to_bool('truex') is False
+    assert sdk_helpers.str_to_bool(1) is True
+    assert sdk_helpers.str_to_bool(0) is False
+    assert sdk_helpers.str_to_bool('0') is False

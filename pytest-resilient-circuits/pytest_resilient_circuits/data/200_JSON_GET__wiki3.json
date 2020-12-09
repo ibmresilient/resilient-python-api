@@ -1,0 +1,26 @@
+{
+    "id": 3,
+    "title": "ΣΤ3",
+    "children": [],
+    "text": "{ \"ΣΤ3\": \"ΣΤ3\", \"b\": [1,2,3,4], \"c\": {\"d\":\"d\"}}",
+    "creator": {
+      "id": 3,
+      "type": "user",
+      "name": "a@example.com",
+      "display_name": "Resilient Sysadmin"
+    },
+    "create_date": 1605476650790,
+    "last_modified_time": 1605476650790,
+    "last_modified_by": {
+      "id": 3,
+      "type": "user",
+      "name": "a@example.com",
+      "display_name": "Resilient Sysadmin"
+    },
+    "mentioned_widgets": [],
+    "perms": {
+      "update": true,
+      "delete": true
+    },
+    "parent": null
+}

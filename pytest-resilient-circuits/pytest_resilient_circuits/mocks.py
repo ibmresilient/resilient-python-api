@@ -123,6 +123,32 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json=self.incident)
 
+    @resilient_endpoint("PATCH", "/incidents/[0-9]+")
+    def incident_patch(self, request):
+        """ Callback for patch to /orgs/<org_id>/incidents/<inc_id> """
+        LOG.debug("incident_patch")
+        # update the incident object
+        vers = request.get("version", 0)
+        vers += 1
+        self.incident['vers'] = vers
+
+        for change in request.get('changes', []):
+            name = change.get("field", {}).get("name")
+            if isinstance(change.get("new_value", {}).get("object"), dict):
+                new_value = change["new_value"]["object"].get("content")
+            else:
+                new_value = change["new_value"]["object"]
+            if name and name in self.incident:
+                self.incident[name] = new_value
+            elif name and name in self.incident['properties']:
+                self.incident['properties'][name] = new_value
+            else:
+                LOG.error("Field '%s' not found in mock incident", name)
+
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=self.incident)
+
     @resilient_endpoint("POST", "/incidents/")
     def incident_post(self, request):
         """ Callback for POST to /orgs/<org_id>/incidents """
@@ -240,8 +266,53 @@ class BasicResilientMock(ResilientMock):
                                              json='"abcdef"')
 
     @resilient_endpoint("POST", "/incidents/[0-9]+/attachments$")
-    def attachment_contents_get(self, request):
+    def attachment_contents_post(self, request):
         """ Callback for POST to attachment """
         LOG.debug("attachment_post")
         data = test_data("200_JSON_POST__attachment.json")
         return requests_mock.create_response(request, status_code=200, json=data)
+
+    @resilient_endpoint("GET", "/wikis")
+    def wikis_get(self, request):
+        """ Callback for GET to /wikis """
+        LOG.debug("wikis_get")
+        data = test_data("200_JSON_GET__wikis.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("GET", "/wikis/100$")
+    def wikis_get_100(self, request):
+        """ Callback for GET to /wikis/100 """
+        LOG.debug("wikis_get_100")
+        data = test_data("200_JSON_GET__wiki100.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("GET", "/wikis/[0123456789]{1,2}$")
+    def wikis_get_xxx(self, request):
+        """ Callback for GET to /wikis/<wiki_id> """
+        LOG.debug("wikis_get_xxx")
+        data = test_data("200_JSON_GET__wiki3.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("PUT", "/wikis/[0-9]+")
+    def wikis_put_xxx(self, request):
+        """ Callback for PUT to /wikis/<wiki_id> """
+        LOG.debug("wikis_put_xxx")
+        data = test_data("200_JSON_GET__wiki3.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("POST", "/wikis")
+    def wikis_post(self, request):
+        """ Callback for POST to /wikis """
+        LOG.debug("wikis_post")
+        data = test_data("200_JSON_GET__wiki3.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)

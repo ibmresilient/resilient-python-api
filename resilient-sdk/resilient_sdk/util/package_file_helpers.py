@@ -33,20 +33,40 @@ else:
     reload = importlib.reload
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 # Constants
 BASE_NAME_BUILD = "build"
+BASE_NAME_CUSTOMIZE_PY = "customize.py"
 BASE_NAME_EXTENSION_JSON = "app.json"
 BASE_NAME_EXPORT_RES = "export.res"
+BASE_NAME_LOCAL_EXPORT_RES = "export.res"
+BASE_NAME_SETUP_PY = "setup.py"
+BASE_NAME_DIST_DIR = "dist"
+BASE_NAME_DOCKER_FILE = "Dockerfile"
+BASE_NAME_ENTRY_POINT = "entrypoint.sh"
+BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 
 PREFIX_EXTENSION_ZIP = "app-"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
+PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
+
+PATH_SETUP_PY = "setup.py"
+PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CONFIG_PY = os.path.join("util", "config.py")
+PATH_UTIL_DATA_DIR = os.path.join("util", "data")
+PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
+PATH_DOC_DIR = "doc"
+PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
+PATH_README = "README.md"
+PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
+
+MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
-    "author", "name", "version",
+    "author", "name", "display_name", "version",
     "description", "long_description", "url",
     "install_requires", "entry_points"
 )
@@ -251,9 +271,44 @@ def load_customize_py_module(path_customize_py, warn=True):
 
     return customize_py_module
 
+def remove_default_incident_type_from_import_definition(import_definition):
+    """
+      Take ImportDefinition as input and remove the DEFAULT_INCIDENT_TYPE added by
+       codegen in minify_export.
+    :param import_definition dictionary
+    :return: import_definition dictionary
+    """
+    # Get reference to incident_types if there are any
+    incident_types = import_definition.get("incident_types", [])
+
+    if incident_types:
+
+        incident_type_to_remove = None
+
+        # Loop through and remove this custom one (that is originally added using codegen)
+        for incident_type in incident_types:
+            if incident_type.get("uuid") == DEFAULT_INCIDENT_TYPE_UUID:
+                incident_type_to_remove = incident_type
+                break
+
+        if incident_type_to_remove:
+            incident_types.remove(incident_type_to_remove)
+    return import_definition
 
 def get_import_definition_from_customize_py(path_customize_py_file):
-    """Return the base64 encoded ImportDefinition in a customize.py file as a Dictionary"""
+    """
+       Return the ImportDefinition in a customize.py or /util/data/export.res file as a Dictionary.
+       :param path_customize_py_file: Path to the customize.py file
+       :return import definition dict from /util/data/export.res if the file exists. Otherwise,
+               get it from customize.py
+    """
+
+    # If there is a /util/data/export.res then get the import definition from there.
+    path_src = os.path.dirname(path_customize_py_file)
+    path_local_export_res = os.path.join(path_src, PATH_LOCAL_EXPORT_RES)
+    if os.path.isfile(path_local_export_res):
+        import_definition = get_import_definition_from_local_export_res(path_local_export_res)
+        return import_definition
 
     customize_py = load_customize_py_module(path_customize_py_file)
 
@@ -279,24 +334,21 @@ def get_import_definition_from_customize_py(path_customize_py_file):
     # Get the import defintion as dict
     customize_py_import_definition = customize_py_import_definitions[0]
 
-    # Get reference to incident_types if there are any
-    incident_types = customize_py_import_definition.get("incident_types", [])
-
-    if incident_types:
-
-        incident_type_to_remove = None
-
-        # Loop through and remove this custom one (that is originally added using codegen)
-        for incident_type in incident_types:
-            if incident_type.get("uuid") == DEFAULT_INCIDENT_TYPE_UUID:
-                incident_type_to_remove = incident_type
-                break
-
-        if incident_type_to_remove:
-            incident_types.remove(incident_type_to_remove)
+    # Remove the incident type that was added by codegen that allows the data to import
+    customize_py_import_definition = remove_default_incident_type_from_import_definition(customize_py_import_definition)
 
     return customize_py_import_definition
 
+def get_import_definition_from_local_export_res(path_export_res_file):
+    """Return ImportDefinition from a local (/util/data) export.res file as a Dictionary"""
+
+    # Read /util/data/export.res file
+    import_definition = sdk_helpers.read_json_file(path_export_res_file)
+
+    # Remove the incident type that was added by codegen that allows the data to import
+    import_definition = remove_default_incident_type_from_import_definition(import_definition)
+
+    return import_definition
 
 def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
@@ -362,8 +414,8 @@ def get_configs_from_config_py(path_config_py_file):
     return (concat_cfg_str, config_list)
 
 def get_apikey_permissions(path):
-    """Returns a list of api keys to allow an integration to run.
-
+    """
+    Returns a list of api keys to allow an integration to run.
     :param path: Location to file with api keys one per line.
     :return apikey_permissions: Return list of api keys.
     """
@@ -456,10 +508,15 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
 def add_tag(tag_name, list_of_objs):
     """
-    TODO: update this docsting to correct standard
-    Returns list_of_objs with tag_name added to each object
-    """
+    Returns list_of_objs with tag_name added to each object.
+    Replaces any tags that were there originally to address bug INT-3077
 
+    :param tag_name: The name of the tag to add
+    :param list_of_objs: A list of all the objects you want to add the tag too
+    :raise: SDKException: if list_of_objs is corrupt
+    :return: list_of_objs with tag_name added to each object
+    :rtype: list of dicts
+    """
     # Create tag_to_add
     tag_to_add = {
         "tag_handle": tag_name,
@@ -481,23 +538,8 @@ def add_tag(tag_name, list_of_objs):
             LOG.error("Error adding tag.\n'list_of_objs': %s\n'obj': %s", list_of_objs, obj)
             raise SDKException(err_msg.format(tag_name, "obj", "Dictionary", type(obj)))
 
-        # Try get current_tags
-        current_tags = obj.get("tags")
-
-        # If None, create new empty List
-        if current_tags is None:
-            current_tags = []
-
-        # If current_tags is not a list, error
-        if not isinstance(current_tags, list):
-            LOG.error("Error adding tag.\n'current_tags': %s", current_tags)
-            raise SDKException(err_msg.format(tag_name, "current_tags", "List", type(current_tags)))
-
-        # Append our tag_to_add to current_tags
-        current_tags.append(tag_to_add)
-
-        # Set the obj's 'tags' value to current_tags
-        obj["tags"] = current_tags
+        # Set the obj's 'tags' value to tag_to_add
+        obj["tags"] = [tag_to_add]
 
     # Return the updated list_of_objs
     return list_of_objs
@@ -631,22 +673,22 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
     # Get the customize file location.
     path_customize_py_file = get_configuration_py_file_path("customize", setup_py_attributes)
-  
+
     # Get the config file location.
     path_config_py_file = get_configuration_py_file_path("config", setup_py_attributes)
 
     # Get ImportDefinition from the discovered customize file.
     if path_customize_py_file:
-        customize_py_import_definition = get_import_definition_from_customize_py(path_customize_py_file)
+        import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
         # No 'customize.py' file found generate import definition with just mimimum server version.
-        customize_py_import_definition = {
+        import_definition = {
             'server_version':
                 IMPORT_MIN_SERVER_VERSION
         }
 
     # Add the tag to the import defintion
-    customize_py_import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, customize_py_import_definition)
+    import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, import_definition)
 
     # Parse the app.configs from the discovered config file
     if path_config_py_file:
@@ -706,6 +748,16 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
             height_accepted=100,
             default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
+        # Get the display name
+        # Use --display-name if passed
+        # If not use 'display_name' attribute in setup.py
+        # If not set use the 'name' attribute in setup.py
+        display_name = custom_display_name or setup_py_attributes.get("display_name") or setup_py_attributes.get("name")
+
+        # Image string is all lowercase on quay.io
+        image_name = "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+        image_name = image_name.lower()
+
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
             "author": {
@@ -720,7 +772,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "content": setup_py_attributes.get("description"),
                 "format": "text"
             },
-            "display_name": custom_display_name if custom_display_name is not None else setup_py_attributes.get("name"),
+            "display_name": display_name,
             "icon": {
                 "data": extension_logo,
                 "media_type": "image/png"
@@ -730,10 +782,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "format": "html"
             },
             "minimum_resilient_version": {
-                "major": customize_py_import_definition.get("server_version").get("major", None),
-                "minor": customize_py_import_definition.get("server_version").get("minor", None),
-                "build_number": customize_py_import_definition.get("server_version").get("build_number", None),
-                "version": customize_py_import_definition.get("server_version").get("version", None)
+                "major": import_definition.get("server_version").get("major", None),
+                "minor": import_definition.get("server_version").get("minor", None),
+                "build_number": import_definition.get("server_version").get("build_number", None),
+                "version": import_definition.get("server_version").get("version", None)
             },
             "name": setup_py_attributes.get("name"),
             "tag": {
@@ -748,8 +800,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "executables": [
                     {
                         "name": setup_py_attributes.get("name"),
-                        "image": "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"),
-                                                      setup_py_attributes.get("version")),
+                        "image": image_name,
                         "config_string": app_configs[0],
                         "permission_handles": apikey_permissions,
                         "uuid": uuid
@@ -761,8 +812,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # Write the executable.json file
         sdk_helpers.write_file(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True))
 
-        # Write the customize ImportDefinition to the export.res file
-        sdk_helpers.write_file(path_export_res, json.dumps(customize_py_import_definition, sort_keys=True))
+        # Write the customize ImportDefinition to the app*.zip export.res file
+        sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))
 
         # Copy the built distribution to the build dir, enforce rename to .tar.gz
         shutil.copy(path_built_distribution, os.path.join(path_build, "{0}.tar.gz".format(extension_name)))

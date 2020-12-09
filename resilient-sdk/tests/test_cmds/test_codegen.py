@@ -46,7 +46,8 @@ def test_cmd_codegen_args_parser(fx_get_sub_parser, fx_cmd_line_args_codegen_pac
 def test_render_jinja_mapping(fx_mk_temp_dir):
 
     mock_jinja_data = {
-        "functions": [{"x_api_name": "fn_mock_function_1"}, {"x_api_name": "fn_mock_function_2"}]
+        "functions": [{"x_api_name": "fn_mock_function_1"}, {"x_api_name": "fn_mock_function_2"}],
+        "export_data": {"server_version": {"version": "35.0.0"}}
     }
 
     jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
@@ -65,7 +66,9 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
             "app_logo.png": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
         },
         "doc": {
-            "README.md": ("doc/README.md.jinja2", mock_jinja_data)
+            "screenshots": {
+                "main.png": package_helpers.PATH_DEFAULT_SCREENSHOT
+            }
         },
         "test_package": {
             "__init__.py": ("package/__init__.py.jinja2", mock_jinja_data),
@@ -75,6 +78,9 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
                 "__init__.py": ("package/components/__init__.py.jinja2", mock_jinja_data),
             },
             "util": {
+                "data": {
+                    "export.res": ("package/util/data/export.res.jinja2", mock_jinja_data)
+                },
                 "__init__.py": ("package/util/__init__.py.jinja2", mock_jinja_data),
                 "config.py": ("package/util/config.py.jinja2", mock_jinja_data),
                 "customize.py": ("package/util/customize.py.jinja2", mock_jinja_data),
@@ -83,7 +89,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         }
     }
 
-    CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR)
+    CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR, mock_paths.TEST_TEMP_DIR)
 
     files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
     assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']
@@ -95,8 +101,12 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert files_in_test_package == ['LICENSE', '__init__.py', 'components', 'util']
 
     files_in_util = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util")))
-    assert files_in_util == ['__init__.py', 'config.py', 'customize.py', 'selftest.py']
-    
+    assert files_in_util == ['__init__.py', 'config.py', 'customize.py', 'data', 'selftest.py']
+
+    files_in_util_data = sorted(
+        os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", package_helpers.PATH_UTIL_DATA_DIR)))
+    assert files_in_util_data == ['export.res']
+
     files_in_components = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "components")))
     assert files_in_components == ['__init__.py']
 
