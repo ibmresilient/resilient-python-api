@@ -24,7 +24,7 @@ class CmdDev(BaseCmd):
     CMD_NAME = "dev"
     CMD_HELP = "Unsupported functionality used to help develop an app"
     CMD_USAGE = """
-    $ resilient-sdk dev --set-version 36.0.0"""
+    $ resilient-sdk dev -p <path_to_package> --set-version 36.0.0"""
     CMD_DESCRIPTION = "WARNING: Use the functionality of 'dev' at your own risk"
 
     def setup(self):
@@ -110,6 +110,16 @@ class CmdDev(BaseCmd):
         # Rename the old customize.py with .bak
         path_customize_py_bak = sdk_helpers.rename_to_bak_file(path_customize_py)
 
+        # If local export file exists then save it to a .bak file.
+        # (Older packages may not have the /util/data/export.res file)
+        # Figure out the path of the files first
+        dir_customize_py = os.path.dirname(path_customize_py)
+        path_local_export_res = os.path.join(dir_customize_py, package_helpers.PATH_LOCAL_EXPORT_RES)
+
+        path_local_export_res_bak = None
+        if os.path.isfile(path_local_export_res):
+            path_local_export_res_bak = sdk_helpers.rename_to_bak_file(path_local_export_res)
+
         try:
 
             jinja_data = sdk_helpers.get_from_export(customize_py_import_definition,
@@ -141,7 +151,7 @@ class CmdDev(BaseCmd):
             # Add version
             jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
-            # Instansiate Jinja2 Environment with path to Jinja2 templates
+            # Instansiate Jinja2 Environment with path to Jinja2 templates for customize.py
             jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util")
             jinja_template = jinja_env.get_template("customize.py.jinja2")
 
@@ -150,6 +160,23 @@ class CmdDev(BaseCmd):
             # Render & write jinja2 template
             jinja_rendered_text = jinja_template.render(jinja_data)
             sdk_helpers.write_file(path_customize_py, jinja_rendered_text)
+
+            # Instansiate Jinja2 Environment with path to Jinja2 templates for /util/dat/export.res
+            #jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util/data")
+            jinja_template = jinja_env.get_template("/data/export.res.jinja2")
+
+            LOG.debug("Writing new /util/data/export.res file")
+
+            # Render jinja2 template
+            jinja_rendered_text = jinja_template.render(jinja_data)
+
+            # Make sure the /util/data directory is there if it is not
+            dir_local_export_res = os.path.dirname(path_local_export_res)
+            if not os.path.exists(dir_local_export_res):
+                os.makedirs(dir_local_export_res)
+
+            # Write the file
+            sdk_helpers.write_file(path_local_export_res, jinja_rendered_text)
 
             LOG.info("'dev --set-version' complete for '%s'", package_name)
 
@@ -161,4 +188,7 @@ class CmdDev(BaseCmd):
             # If an error occurred, customize.py does not exist, rename the backup file to original
             if not os.path.isfile(path_customize_py):
                 LOG.info(u"An error occurred. Renaming customize.py.bak to customize.py")
-                sdk_helpers.rename_file(path_customize_py_bak, "customize.py")
+                sdk_helpers.rename_file(path_customize_py_bak, package_helpers.BASE_NAME_CUSTOMIZE_PY)
+            if path_local_export_res_bak and not os.path.isfile(path_local_export_res):
+                LOG.info(u"An error occurred. Renaming /util/data/export.res.bak to export.res")
+                sdk_helpers.rename_file(path_local_export_res_bak, package_helpers.BASE_NAME_LOCAL_EXPORT_RES)

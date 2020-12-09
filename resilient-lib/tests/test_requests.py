@@ -505,3 +505,49 @@ class TestFunctionRequests(unittest.TestCase):
         value = get_case_insensitive_key_value(dictionary, "content-type")
 
         self.assertEqual(value, result)
+
+    def test_timeout_override(self):
+        rc = RequestsCommon(None, None)
+        timeout = rc.get_timeout()
+        self.assertEqual(timeout, 30) # default in get_timeout()
+
+        # test only integration proxies
+        integrations_60 =  {
+            "integrations": {
+                'timeout': "60"
+            }
+        }
+
+        function_timeout_none =  {
+        }
+
+        rc = RequestsCommon(integrations_60)
+        timeout = rc.get_timeout()
+        self.assertEqual(timeout, 60)
+
+        rc = RequestsCommon(integrations_60, function_timeout_none)
+        timeout = rc.get_timeout()
+        self.assertEqual(timeout, 60)
+
+        # test only function timeout
+        integrations_none =  {
+            "integrations": {
+            }
+        }
+
+        function_timeout_90 =  {
+            'timeout': "90"
+        }
+
+        rc = RequestsCommon(function_opts=function_timeout_90)
+        timeout = rc.get_timeout()
+        self.assertEqual(timeout, 90)
+
+        rc = RequestsCommon(integrations_none, function_timeout_90)
+        timeout = rc.get_timeout()
+        self.assertEqual(timeout, 90)
+
+        # test integration and function proxies (override)
+        rc = RequestsCommon(integrations_60, function_timeout_90)
+        timeout = rc.get_timeout()
+        self.assertEqual(timeout, 90)

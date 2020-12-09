@@ -19,7 +19,7 @@ def test_cmd_dev(fx_get_sub_parser, fx_cmd_line_args_dev_set_version):
     assert cmd_dev.CMD_NAME == "dev"
     assert cmd_dev.CMD_HELP == "Unsupported functionality used to help develop an app"
     assert cmd_dev.CMD_USAGE == """
-    $ resilient-sdk dev --set-version 36.0.0"""
+    $ resilient-sdk dev -p <path_to_package> --set-version 36.0.0"""
     assert cmd_dev.CMD_DESCRIPTION == "WARNING: Use the functionality of 'dev' at your own risk"
 
     args = cmd_dev.parser.parse_known_args()[0]
