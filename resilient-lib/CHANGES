@@ -1,3 +1,8 @@
+2020-12: version 39
+
+* add a capability to close an incident
+* fixes a bug where timeout defined in function section is not processed as an int
+
 2020-09: version 38
 
 * validate_fields now handles a field if it's type is "Text with value string"
