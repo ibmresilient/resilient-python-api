@@ -46,23 +46,23 @@ BASE_NAME_DIST_DIR = "dist"
 BASE_NAME_DOCKER_FILE = "Dockerfile"
 BASE_NAME_ENTRY_POINT = "entrypoint.sh"
 BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
-
-PREFIX_EXTENSION_ZIP = "app-"
+BASE_NAME_DOC_DIR = "doc"
+BASE_NAME_README = "README.md"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
+PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
 PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
 
-PATH_SETUP_PY = "setup.py"
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_UTIL_DATA_DIR = os.path.join("util", "data")
 PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
-PATH_DOC_DIR = "doc"
-PATH_SCREENSHOTS = os.path.join(PATH_DOC_DIR, "screenshots")
-PATH_README = "README.md"
-PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
+PATH_SCREENSHOTS = os.path.join(BASE_NAME_DOC_DIR, "screenshots")
+PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
+PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
 
+PREFIX_EXTENSION_ZIP = "app-"
 MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (

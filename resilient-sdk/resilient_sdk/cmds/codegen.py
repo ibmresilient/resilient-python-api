@@ -350,7 +350,7 @@ class CmdCodegen(BaseCmd):
         path_customize_py = os.path.join(path_package, path_package_basename, package_helpers.PATH_CUSTOMIZE_PY)
         sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
 
-        path_setup_py_file = os.path.join(path_package, package_helpers.PATH_SETUP_PY)
+        path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')

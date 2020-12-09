@@ -12,23 +12,10 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.package_file_helpers import create_extension
+from resilient_sdk.util import package_file_helpers as package_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
-
-# Constants
-BASE_NAME_SETUP_PY = "setup.py"
-BASE_NAME_DIST_DIR = "dist"
-BASE_NAME_DOCKER_FILE = "Dockerfile"
-BASE_NAME_ENTRY_POINT = "entrypoint.sh"
-BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
-
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
-PATH_CONFIG_PY = os.path.join("util", "config.py")
-
-PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
-PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
 
 # Regex for splitting version number at end of name from package basename.
 VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
@@ -105,13 +92,13 @@ class CmdExtPackage(BaseCmd):
         sdk_helpers.validate_dir_paths(os.W_OK, path_to_src)
 
         # Generate paths to files required to create app
-        path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
-        path_docker_file = os.path.join(path_to_src, BASE_NAME_DOCKER_FILE)
-        path_entry_point = os.path.join(path_to_src, BASE_NAME_ENTRY_POINT)
-        path_apikey_permissions_file = os.path.join(path_to_src, BASE_NAME_APIKEY_PERMS_FILE)
-        path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
-        path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
-        path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)
+        path_setup_py_file = os.path.join(path_to_src, package_helpers.BASE_NAME_SETUP_PY)
+        path_docker_file = os.path.join(path_to_src, package_helpers.BASE_NAME_DOCKER_FILE)
+        path_entry_point = os.path.join(path_to_src, package_helpers.BASE_NAME_ENTRY_POINT)
+        path_apikey_permissions_file = os.path.join(path_to_src, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
+        path_output_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_DIST_DIR)
+        path_extension_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_EXTENSION_LOGO)
+        path_company_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_COMPANY_LOGO)
 
         LOG.info("Built Distribution starting\n")
 
@@ -125,7 +112,7 @@ class CmdExtPackage(BaseCmd):
         sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
 
         # Create the app
-        path_the_extension_zip = create_extension(
+        path_the_extension_zip = package_helpers.create_extension(
             path_setup_py_file=path_setup_py_file,
             path_apikey_permissions_file=path_apikey_permissions_file,
             output_dir=path_output_dir,
