@@ -30,7 +30,8 @@ EXPECTED_FILES_DOC_DIR = ['screenshots']
 EXPECTED_FILES_DOC_SCREENSHOTS_DIR = ['main.png']
 EXPECTED_FILES_PACKAGE_DIR = ['LICENSE', '__init__.py', 'components', 'util']
 EXPECTED_FILES_PACKAGE_COMPONENTS_DIR = ['__init__.py', 'funct_mock_function_one.py', 'funct_mock_function_two.py']
-EXPECTED_FILES_PACKAGE_UTIL_DIR = ['__init__.py', 'config.py', 'customize.py', 'selftest.py']
+EXPECTED_FILES_PACKAGE_UTIL_DIR = ['__init__.py', 'config.py', 'customize.py', 'data', 'selftest.py']
+EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR = ['export.res']
 EXPECTED_FILES_ICONS_DIR = ['app_logo.png', 'company_logo.png']
 EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_function_two.py']
 EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
@@ -194,6 +195,7 @@ def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_
     assert EXPECTED_FILES_PACKAGE_DIR == sorted(os.listdir(os.path.join(package_path, args.package)))
     assert EXPECTED_FILES_PACKAGE_COMPONENTS_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "components")))
     assert EXPECTED_FILES_PACKAGE_UTIL_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "util")))
+    assert EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "util", "data")))
     assert EXPECTED_FILES_ICONS_DIR == sorted(os.listdir(os.path.join(package_path, "icons")))
     assert EXPECTED_FILES_TESTS_DIR == sorted(os.listdir(os.path.join(package_path, "tests")))
 
