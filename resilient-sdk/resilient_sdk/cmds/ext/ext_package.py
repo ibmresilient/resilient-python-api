@@ -6,7 +6,6 @@
 
 import logging
 import os
-import re
 from setuptools import sandbox as use_setuptools
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -17,8 +16,6 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
@@ -82,17 +79,23 @@ class CmdExtPackage(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.package)
 
-        # Get basename of path_to_src (version information is stripped from the basename).
-        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
-
-        LOG.debug("Path to project: %s", path_to_src)
-        LOG.debug("Project basename: %s", path_to_src_basename)
+        LOG.debug("\nPath to project: %s", path_to_src)
 
         # Ensure the src directory exists and we have WRITE access
         sdk_helpers.validate_dir_paths(os.W_OK, path_to_src)
 
-        # Generate paths to files required to create app
+        # Generate path to setup.py file
         path_setup_py_file = os.path.join(path_to_src, package_helpers.BASE_NAME_SETUP_PY)
+
+        # Ensure we have read permissions for setup.py
+        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+
+        # Parse the setup.py file
+        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+        LOG.debug("\nProject name: %s", setup_py_attributes.get("name", "unknown"))
+
+        # Generate paths to files required to create app
         path_docker_file = os.path.join(path_to_src, package_helpers.BASE_NAME_DOCKER_FILE)
         path_entry_point = os.path.join(path_to_src, package_helpers.BASE_NAME_ENTRY_POINT)
         path_apikey_permissions_file = os.path.join(path_to_src, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
@@ -100,16 +103,15 @@ class CmdExtPackage(BaseCmd):
         path_extension_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_EXTENSION_LOGO)
         path_company_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_COMPANY_LOGO)
 
-        LOG.info("Built Distribution starting\n")
+        # Ensure the 'Dockerfile' and 'entrypoint.sh' files exist and we have READ access
+        sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
+
+        LOG.info("\nBuilt Distribution starting\n")
 
         # Create the built distribution
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
 
         LOG.info("\nBuilt Distribution finished. See: %s", path_output_dir)
-
-        # Check that files 'Dockerfile' and 'entrypoint.sh' files exist in the integration package
-        # before attempting to create the app.
-        sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
 
         # Create the app
         path_the_extension_zip = package_helpers.create_extension(
