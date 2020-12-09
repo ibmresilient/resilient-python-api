@@ -31,7 +31,7 @@ def test_execute_command(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
     with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-        assert EXPECTED_FILES_APP_ZIP == app_zip.namelist()
+        assert EXPECTED_FILES_APP_ZIP == sorted(app_zip.namelist())
 
     # Test app.zip/app.json contents
     app_json_contents = sdk_helpers.read_zip_file(path_the_app_zip, "app.json")
