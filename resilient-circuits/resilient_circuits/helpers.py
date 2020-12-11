@@ -25,7 +25,7 @@ def get_fn_name(component):
     fn_name = None
 
     # Get a list of callable methods for this object
-    methods = [a for a in dir(component) if not a.startswith('__') and callable(getattr(component, a))]
+    methods = [a for a in dir(component) if callable(getattr(component, a))]
 
     for m in methods:
         this_method = getattr(component, m)
