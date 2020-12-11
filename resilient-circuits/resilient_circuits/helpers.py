@@ -5,7 +5,6 @@
 """Common Helper Functions for resilient-circuits"""
 import logging
 import re
-from circuits import BaseComponent
 
 LOG = logging.getLogger("__name__")
 
