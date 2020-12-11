@@ -14,9 +14,9 @@ def get_fn_names(component):
     appends the names in the function handler to `fn_names` and
     returns it, else returns an empty list.
 
-    :param component: the component object to get it's name for
+    :param component: the component object to get it's list of function names for
     :type component: object
-    :return: fn_names: the names in the function handler if found
+    :return: fn_names: the name in each function handler in the component if found
     :rtype: list
     """
 
