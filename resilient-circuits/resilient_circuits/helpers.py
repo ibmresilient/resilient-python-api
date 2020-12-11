@@ -5,40 +5,37 @@
 """Common Helper Functions for resilient-circuits"""
 import logging
 import re
+from circuits import BaseComponent
 
 LOG = logging.getLogger("__name__")
-FN_NAME_REGEX = re.compile(r'(?<=^\_)\w+(?=\_function$)')
 
 
-def get_fn_name(names):
-    """Returns the first string it finds in names of the function name
-    if it matches _{FUNCTION-NAME}_function, else returns None.
+def get_fn_name(component):
+    """If `component` has a `function` attribute and it is True,
+    returns the first position of a function's `name` attribute,
+    else returns None.
 
-    >>> get_fn_name(["don't return", "_fn_mock_integration_function"])
-    'fn_mock_integration'
-
-    >>> get_fn_name(["don't return", "_fn_mock_integration_functionX"])
-    None
-
-    >>> get_fn_name(["don't return", "X_fn_mock_integration_function"])
-    None
-
-    :param names: a list of strings to search
-    :type names: list
+    :param component: the component object to get it's name for
+    :type component: object
     :return: fn_name: name of the function if found
     :rtype: str
     """
-    assert isinstance(names, list)
+
+    assert isinstance(component, object)
 
     fn_name = None
 
-    for n in names:
-        if FN_NAME_REGEX.search(n):
-            fn_name = FN_NAME_REGEX.findall(n)
-            break
+    # Get a list of callable methods for this object
+    methods = [a for a in dir(component) if not a.startswith('__') and callable(getattr(component, a))]
 
-    if isinstance(fn_name, list) and len(fn_name) == 1:
-        return fn_name[0]
+    for m in methods:
+        this_method = getattr(component, m)
+        is_function = getattr(this_method, "function", False)
+
+        if is_function:
+            fn_names = this_method.names
+            assert isinstance(fn_names, tuple) and len(fn_names) == 1
+            return fn_names[0]
 
     return fn_name
 

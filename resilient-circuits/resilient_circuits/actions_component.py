@@ -93,7 +93,7 @@ class ResilientComponent(BaseComponent):
         self._destinations = {}
         self._functions = {}
         self._function_fields = {}
-        self.fn_name = helpers.get_fn_name(dir(self))
+        self.fn_name = helpers.get_fn_name(self)
 
         # Get fields, message destinations and functions
         self._get_fields(fn_name=self.fn_name)
