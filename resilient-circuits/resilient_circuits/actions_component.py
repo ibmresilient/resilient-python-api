@@ -93,16 +93,19 @@ class ResilientComponent(BaseComponent):
         self._destinations = {}
         self._functions = {}
         self._function_fields = {}
-        self.fn_name = helpers.get_fn_name(self)
+        self.fn_names = helpers.get_fn_names(self)
 
+        LOG.debug("Function names got: %s", self.fn_names)
         # Get fields, message destinations and functions
-        self._get_fields(fn_name=self.fn_name)
 
-        # If this component is a function, self.fn_name will be defined
-        if self.fn_name:
+        self._get_fields(fn_names=self.fn_names)
 
-            if not helpers.check_exists(self.fn_name, self._functions):
-                LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(self.fn_name))
+        # If this component is a function, self.fn_names will be defined
+        if self.fn_names:
+
+            for fn_name in self.fn_names:
+                if not helpers.check_exists(fn_name, self._functions):
+                    LOG.warning("Function '{0}' is not defined in this Resilient platform!".format(fn_name))
 
         else:
             # Check that decorated requirements are met
@@ -141,8 +144,7 @@ class ResilientComponent(BaseComponent):
                             raise Exception(errmsg.format(field_name,
                                                         name, input_type))
 
-
-    def _get_fields(self, fn_name=None):
+    def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
         client = self.rest_client()
         self._fields = dict((field["name"], field)
@@ -152,15 +154,17 @@ class ResilientComponent(BaseComponent):
         self._destinations = dict((dest["id"], dest)
                                   for dest in client.cached_get("/message_destinations")["entities"])
 
-        if fn_name:
-            try:
-                self._functions[fn_name] = client.cached_get("/functions/{0}".format(fn_name))
-                self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
+        if fn_names:
 
-            except resilient.SimpleHTTPException:
-                # functions are not available, pre-v30 server
-                self._functions = None
-                self._function_fields = None
+            for fn_name in fn_names:
+                try:
+                    self._functions[fn_name] = client.cached_get("/functions/{0}".format(fn_name))
+                    self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
+
+                except resilient.SimpleHTTPException:
+                    # functions are not available, pre-v30 server
+                    self._functions = None
+                    self._function_fields = None
 
     def rest_client(self):
         """Return a connected instance of the :class:`resilient.SimpleClient`

@@ -9,20 +9,20 @@ import re
 LOG = logging.getLogger("__name__")
 
 
-def get_fn_name(component):
+def get_fn_names(component):
     """If `component` has a `function` attribute and it is True,
-    returns the first position of a function's `name` attribute,
-    else returns None.
+    appends the names in the function handler to `fn_names` and
+    returns it, else returns an empty list.
 
     :param component: the component object to get it's name for
     :type component: object
-    :return: fn_name: name of the function if found
-    :rtype: str
+    :return: fn_names: the names in the function handler if found
+    :rtype: list
     """
 
     assert isinstance(component, object)
 
-    fn_name = None
+    fn_names = []
 
     # Get a list of callable methods for this object
     methods = [a for a in dir(component) if callable(getattr(component, a))]
@@ -32,11 +32,12 @@ def get_fn_name(component):
         is_function = getattr(this_method, "function", False)
 
         if is_function:
-            fn_names = this_method.names
-            assert isinstance(fn_names, tuple) and len(fn_names) == 1
-            return fn_names[0]
+            fn_decerator_names = this_method.names
+            assert isinstance(fn_decerator_names, tuple)
+            for n in fn_decerator_names:
+                fn_names.append(n)
 
-    return fn_name
+    return fn_names
 
 
 def check_exists(key, dict_to_check):

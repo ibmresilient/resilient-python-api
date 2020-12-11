@@ -6,21 +6,31 @@ import pytest
 from resilient_circuits import helpers, function, ResilientComponent
 
 
-def test_get_fn_name():
+def test_get_fn_names():
 
     class FunctionComponentA(ResilientComponent):
         @function("mock_fn")
         def _mock_function(self):
             return True
 
-    assert helpers.get_fn_name(FunctionComponentA) == "mock_fn"
+    assert helpers.get_fn_names(FunctionComponentA) == ["mock_fn"]
 
     class FunctionComponentB(ResilientComponent):
-        @function("mock_fn_2")
-        def _other_name_(self):
+        @function("mock_fn_2a")
+        def _other_name_a(self):
             return True
 
-    assert helpers.get_fn_name(FunctionComponentB) == "mock_fn_2"
+        @function("mock_fn_2b")
+        def _other_name_b(self):
+            return True
+
+    assert helpers.get_fn_names(FunctionComponentB) == ["mock_fn_2a", "mock_fn_2b"]
+
+    with pytest.raises(ValueError, match=r"Usage: @function\(api_name\)"):
+        class FunctionComponentC(ResilientComponent):
+            @function("mock_fn_3a", "mock_fn_3b")
+            def _other_name_a(self):
+                return True
 
 
 def test_check_exists():
