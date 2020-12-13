@@ -95,13 +95,13 @@ class ResilientComponent(BaseComponent):
         self._function_fields = {}
         self.fn_names = helpers.get_fn_names(self)
 
-        LOG.debug("Function names got: %s", self.fn_names)
         # Get fields, message destinations and functions
 
         self._get_fields(fn_names=self.fn_names)
 
         # If this component is a function, self.fn_names will be defined
         if self.fn_names:
+            LOG.debug("@function handler names: %s", self.fn_names)
 
             for fn_name in self.fn_names:
                 if not helpers.check_exists(fn_name, self._functions):
