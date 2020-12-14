@@ -32,10 +32,14 @@ def get_fn_names(component):
         is_function = getattr(this_method, "function", False)
 
         if is_function:
-            fn_decerator_names = this_method.names
-            # Fail if fn_decerator_names is not a tuple as may have unhandled side effects if a str etc.
-            assert isinstance(fn_decerator_names, tuple)
-            for n in fn_decerator_names:
+            fn_decorator_names = this_method.names
+            # Fail if fn_decorator_names is not a tuple as may have unhandled side effects if a str etc.
+            # When a function handler is decorated its __init__() function takes the '*args' parameter
+            # When * is prepended, it is known as an unpacking operator to allow the function handler to have
+            # multiple names. args (or names in our case) will be a tuple, so if the logic of the function
+            # decorator changes, this will catch it.
+            assert isinstance(fn_decorator_names, tuple)
+            for n in fn_decorator_names:
                 fn_names.append(n)
 
     return fn_names
