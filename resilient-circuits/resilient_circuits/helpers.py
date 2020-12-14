@@ -33,6 +33,7 @@ def get_fn_names(component):
 
         if is_function:
             fn_decerator_names = this_method.names
+            # Fail if fn_decerator_names is not a tuple as may have unhandled side effects if a str etc.
             assert isinstance(fn_decerator_names, tuple)
             for n in fn_decerator_names:
                 fn_names.append(n)
