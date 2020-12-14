@@ -35,7 +35,8 @@ EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR = ['export.res']
 EXPECTED_FILES_ICONS_DIR = ['app_logo.png', 'company_logo.png']
 EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_function_two.py']
 EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
-EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_return_results_1.json', 'mock_return_results_2.json', 'output_json_example.json', 'output_json_schema.json']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
+                                              'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
 
 
 def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):

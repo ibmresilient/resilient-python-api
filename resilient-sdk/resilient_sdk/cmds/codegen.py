@@ -308,10 +308,12 @@ class CmdCodegen(BaseCmd):
 
             # Add a 'payload_samples/fn_name' directory and the files to it
             package_mapping_dict["payload_samples"][fn_name] = {}
-            package_mapping_dict["payload_samples"][fn_name]["output_json_example.json"] = ("payload_samples/function_name/output_json_example.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["output_json_schema.json"] = ("payload_samples/function_name/output_json_schema.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["mock_return_results_1.json"] = ("payload_samples/function_name/mock_return_results_1.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["mock_return_results_2.json"] = ("payload_samples/function_name/mock_return_results_2.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["output_json_example.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["output_json_schema.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["mock_json_expectation_success.json"] = ("payload_samples/function_name/mock_json_expectation_success.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["mock_json_endpoint_success.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["mock_json_expectation_fail.json"] = ("payload_samples/function_name/mock_json_expectation_fail.json.jinja2", f)
+            package_mapping_dict["payload_samples"][fn_name]["mock_json_endpoint_fail.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
 
         for w in jinja_data.get("workflows"):
 
