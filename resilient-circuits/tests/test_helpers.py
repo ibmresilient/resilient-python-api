@@ -3,13 +3,34 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import pytest
-from resilient_circuits import helpers
+from resilient_circuits import helpers, function, ResilientComponent
 
 
-def test_get_fn_name():
-    assert helpers.get_fn_name(["don't return", "_fn_mock_integration_function"]) == "fn_mock_integration"
-    assert helpers.get_fn_name(["don't return", "_fn_mock_integration_functionX"]) is None
-    assert helpers.get_fn_name(["don't return", "X_fn_mock_integration_function"]) is None
+def test_get_fn_names():
+
+    class FunctionComponentA(ResilientComponent):
+        @function("mock_fn")
+        def _mock_function(self):
+            return True
+
+    assert helpers.get_fn_names(FunctionComponentA) == ["mock_fn"]
+
+    class FunctionComponentB(ResilientComponent):
+        @function("mock_fn_2a")
+        def _other_name_a(self):
+            return True
+
+        @function("mock_fn_2b")
+        def _other_name_b(self):
+            return True
+
+    assert helpers.get_fn_names(FunctionComponentB) == ["mock_fn_2a", "mock_fn_2b"]
+
+    with pytest.raises(ValueError, match=r"Usage: @function\(api_name\)"):
+        class FunctionComponentC(ResilientComponent):
+            @function("mock_fn_3a", "mock_fn_3b")
+            def _other_name_a(self):
+                return True
 
 
 def test_check_exists():
