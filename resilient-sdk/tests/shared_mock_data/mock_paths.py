@@ -30,3 +30,4 @@ MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, "fn_main_mock_int
 MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_files")
 MOCK_APP_ZIP_APP_JSON = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_app.json")
 MOCK_APP_ZIP_EXPORT_RES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_export.res")
+MOCK_APP_ZIP_EXPORT_RES_WITH_PAYLOAD_SAMPLES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_with_payload_samples_export.res")
