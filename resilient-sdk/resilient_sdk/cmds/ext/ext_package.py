@@ -55,6 +55,10 @@ class CmdExtPackage(BaseCmd):
                                  default="ibmresilient",
                                  nargs="?")
 
+        self.parser.add_argument("--no-samples",
+                                 help="Do not look for the payload_samples directory or try add them to the export.res file",
+                                 action="store_true")
+
     def execute_command(self, args):
         """
         Function that creates The App.zip file from the give source path and returns
@@ -68,6 +72,7 @@ class CmdExtPackage(BaseCmd):
             -  **args.repository_name**: if defined, it will replace the default image repository name in app.json for
                                          container access.
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
+            -  **args.no_samples**: if defined, set path_payload_samples to None.
         :type args: argparse Namespace
 
         :return: Path to new app.zip
@@ -102,6 +107,11 @@ class CmdExtPackage(BaseCmd):
         path_output_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_DIST_DIR)
         path_extension_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_EXTENSION_LOGO)
         path_company_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_COMPANY_LOGO)
+        path_payload_samples = os.path.join(path_to_src, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+        # if --no-samples flag, set path_payload_samples to None
+        if args.no_samples:
+            path_payload_samples = None
 
         # Ensure the 'Dockerfile' and 'entrypoint.sh' files exist and we have READ access
         sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
@@ -122,7 +132,8 @@ class CmdExtPackage(BaseCmd):
             repository_name=args.repository_name,
             keep_build_dir=args.keep_build_dir,
             path_extension_logo=path_extension_logo,
-            path_company_logo=path_company_logo
+            path_company_logo=path_company_logo,
+            path_payload_samples=path_payload_samples
         )
 
         LOG.info("App created at: %s", path_the_extension_zip)

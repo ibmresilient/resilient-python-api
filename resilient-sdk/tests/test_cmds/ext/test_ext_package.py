@@ -16,7 +16,7 @@ def test_setup():
     pass
 
 
-def test_execute_command(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
+def test_execute_command_no_samples(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
@@ -42,3 +42,6 @@ def test_execute_command(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx
     export_res_contents = sdk_helpers.read_zip_file(path_the_app_zip, "export.res")
     mock_export_res_contents = sdk_helpers.read_file(mock_paths.MOCK_APP_ZIP_EXPORT_RES)[0]
     assert export_res_contents == mock_export_res_contents
+
+def test_execute_command_with_samples():
+    pass

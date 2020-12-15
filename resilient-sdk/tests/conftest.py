@@ -157,7 +157,8 @@ def fx_cmd_line_args_package():
 
     args_to_add = [
         "package",
-        "-p", "fn_main_mock_integration"
+        "-p", "fn_main_mock_integration",
+        "--no-samples"
     ]
 
     _add_to_cmd_line_args(args_to_add)

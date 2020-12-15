@@ -17,7 +17,7 @@ import struct
 import tempfile
 import pkg_resources
 from resilient import ImportDefinition
-from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID
+from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID, ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
 
@@ -48,6 +48,9 @@ BASE_NAME_ENTRY_POINT = "entrypoint.sh"
 BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 BASE_NAME_DOC_DIR = "doc"
 BASE_NAME_README = "README.md"
+BASE_NAME_PAYLOAD_SAMPLES_DIR = "payload_samples"
+BASE_NAME_PAYLOAD_SAMPLES_SCHEMA = "output_json_schema.json"
+BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE = "output_json_example.json"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
@@ -618,25 +621,38 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
     return path_py_file
 
 def create_extension(path_setup_py_file, path_apikey_permissions_file,
-                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None,
+                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None, path_payload_samples=None,
                      custom_display_name=None, repository_name=None, keep_build_dir=False):
     """
-    TODO: update this docstring to new standard format
     Function that creates The App.zip file from the given setup.py, customize and config files
-    and copies it to the output_dir. Returns the path to the App.zip
-    - path_setup_py_file [String]: abs path to the setup.py file
-    - path_apikey_permissions_file [String]: abs path to the apikey_permissions.txt file
-    - output_dir [String]: abs path to the directory the App.zip should be produced
-    - path_built_distribution [String]: abs path to a tar.gz Built Distribution
+    and copies it to the output_dir. Returns the path to the app.zip
+
+    :param path_setup_py_file: abs path to the setup.py file
+    :type path_setup_py_file: str
+    :param path_apikey_permissions_file: abs path to the apikey_permissions.txt file
+    :type path_apikey_permissions_file: str
+    :param output_dir: abs path to the directory the App.zip should be produced
+    :type output_dir: str
+    :param path_built_distribution: abs path to a tar.gz Built Distribution
         - if provided uses that .tar.gz
         - else looks for it in the output_dir. E.g: output_dir/package_name.tar.gz
-    - path_extension_logo [String]: abs path to the app_logo.png. Has to be 200x72 and a .png file
+    :type path_built_distribution: str
+    :param path_extension_logo: abs path to the app_logo.png. Has to be 200x72 and a .png file
         - if not provided uses default icon
-    - path_company_logo [String]: abs path to the company_logo.png. Has to be 100x100 and a .png file
+    :type path_extension_logo: str
+    :param path_company_logo: abs path to the company_logo.png. Has to be 100x100 and a .png file
         - if not provided uses default icon
-    - custom_display_name [String]: will give the App that display name. Default: name from setup.py file
-    - repository_name [String]: will over-ride the container repository name for the App. Default: 'ibmresilient'
-    - keep_build_dir [Boolean]: if True, build/ will not be remove. Default: False
+    :type path_company_logo: str
+    :param path_payload_samples: abs path to directory containing the files with a JSON schema and example output of the functions
+    :type path_payload_samples: str
+    :param custom_display_name: will give the App that display name. Default: name from setup.py file
+    :type custom_display_name: str
+    :param repository_name: will over-ride the container repository name for the App. Default: 'ibmresilient'
+    :type repository_name: str
+    :param keep_build_dir: if True, build/ will not be removed. Default: False
+    :type keep_build_dir: bool
+    :return: Path to new app.zip
+    :rtype: str
     """
 
     LOG.info("Creating App")
@@ -812,13 +828,37 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # Write the executable.json file
         sdk_helpers.write_file(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True))
 
+        if not path_payload_samples:
+            LOG.warning("WARNING: No path for 'payload_samples' provided. Skipping adding them to the export.res file")
+
+        else:
+            for fn in import_definition.get("functions"):
+
+                # Get paths to payload_samples
+                fn_name = fn.get(ResilientObjMap.FUNCTIONS)
+                path_payload_samples_fn = os.path.join(path_payload_samples, fn_name)
+                path_payload_samples_schema = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+                path_payload_samples_example = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+
+                # Validate then read in schema payload and add to function import definition
+                payload_samples_schema_contents_dict = sdk_helpers.read_local_exportfile(path_payload_samples_schema)
+                LOG.debug("Adding this JSON output schema to '%s': %s", fn_name, payload_samples_schema_contents_dict)
+                json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
+                fn[json_schema_key] = payload_samples_schema_contents_dict
+
+                # Validate then read in example payload and add to function import definition
+                payload_samples_example_contents_dict = sdk_helpers.read_local_exportfile(path_payload_samples_example)
+                LOG.debug("Adding this JSON output example to '%s': %s", fn_name, payload_samples_schema_contents_dict)
+                json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
+                fn[json_example_key] = payload_samples_example_contents_dict
+
         # Write the customize ImportDefinition to the app*.zip export.res file
         sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))
 
         # Copy the built distribution to the build dir, enforce rename to .tar.gz
         shutil.copy(path_built_distribution, os.path.join(path_build, "{0}.tar.gz".format(extension_name)))
 
-        # create The Extension Zip by zipping the build directory
+        # Create the app.zip (Extension Zip) by zipping the build directory
         extension_zip_base_path = os.path.join(output_dir, "{0}{1}".format(PREFIX_EXTENSION_ZIP, extension_name))
         extension_zip_name = shutil.make_archive(base_name=extension_zip_base_path, format="zip", root_dir=path_build)
         path_the_extension_zip = os.path.join(extension_zip_base_path, extension_zip_name)
