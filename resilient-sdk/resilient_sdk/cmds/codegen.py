@@ -307,13 +307,13 @@ class CmdCodegen(BaseCmd):
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
             # Add a 'payload_samples/fn_name' directory and the files to it
-            package_mapping_dict["payload_samples"][fn_name] = {}
-            package_mapping_dict["payload_samples"][fn_name]["output_json_example.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["output_json_schema.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["mock_json_expectation_success.json"] = ("payload_samples/function_name/mock_json_expectation_success.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["mock_json_endpoint_success.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["mock_json_expectation_fail.json"] = ("payload_samples/function_name/mock_json_expectation_fail.json.jinja2", f)
-            package_mapping_dict["payload_samples"][fn_name]["mock_json_endpoint_fail.json"] = ("payload_samples/function_name/blank.json.jinja2", f)
+            fn_payload_samples_dict = package_mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][fn_name] = {}
+            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = ("payload_samples/function_name/blank.json.jinja2", f)
+            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = ("payload_samples/function_name/blank.json.jinja2", f)
+            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = ("payload_samples/function_name/mock_json_expectation_success.json.jinja2", f)
+            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = ("payload_samples/function_name/blank.json.jinja2", f)
+            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = ("payload_samples/function_name/mock_json_expectation_fail.json.jinja2", f)
+            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = ("payload_samples/function_name/blank.json.jinja2", f)
 
         for w in jinja_data.get("workflows"):
 
@@ -343,6 +343,7 @@ class CmdCodegen(BaseCmd):
 
         old_params, path_customize_py_bak = [], ""
 
+        # TODO: simplify logic using name in setup.py file
         # Get + validate package, customize.py and setup.py paths
         path_package = os.path.abspath(args.package)
         # Get basename of path_to_src (version information is stripped from the basename).

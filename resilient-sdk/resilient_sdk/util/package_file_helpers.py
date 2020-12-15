@@ -51,6 +51,10 @@ BASE_NAME_README = "README.md"
 BASE_NAME_PAYLOAD_SAMPLES_DIR = "payload_samples"
 BASE_NAME_PAYLOAD_SAMPLES_SCHEMA = "output_json_schema.json"
 BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE = "output_json_example.json"
+BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS = "mock_json_expectation_success.json"
+BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS = "mock_json_endpoint_success.json"
+BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL = "mock_json_expectation_fail.json"
+BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL = "mock_json_endpoint_fail.json"
 
 PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
 PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
