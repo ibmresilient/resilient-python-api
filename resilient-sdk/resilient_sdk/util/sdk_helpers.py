@@ -103,11 +103,22 @@ def read_file(path):
         file_lines = the_file.readlines()
     return file_lines
 
+
 def read_json_file(path):
+    """
+    If the contents of the file at path is valid JSON,
+    returns the contents of the file as a dictionary
+
+    :param path: Path to JSON file to read
+    :type path: str
+    :return: File contents as a dictionary
+    :rtype: dict
+    """
     file_contents = None
     with io.open(path, mode="rt", encoding="utf-8") as the_file:
         file_contents = json.load(the_file)
     return file_contents
+
 
 def read_zip_file(path, pattern):
     """Returns unzipped contents of file whose name matches a pattern
