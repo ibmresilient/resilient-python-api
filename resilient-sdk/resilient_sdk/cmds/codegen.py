@@ -18,8 +18,6 @@ from resilient_sdk.util import sdk_helpers
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdCodegen(BaseCmd):
     """TODO Docstring"""
@@ -181,10 +179,8 @@ class CmdCodegen(BaseCmd):
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
-        # Strip off version information, if present in package base folder, to get the package name.
-        package_name = re.split(VERSION_REGEX, args.package, 1)[0]
-        # Get base version if we are running against a package base folder with version.
-        base_version = ''.join(re.split(package_name, args.package))
+        # The package_name will be specified in the args
+        package_name = args.package
 
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
@@ -236,8 +232,9 @@ class CmdCodegen(BaseCmd):
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
-        # Join package_name to output base (add base version if running against a folder which includes a version).
-        output_base = os.path.join(output_base, package_name+base_version)
+        if not args.reload:
+            # If this is not a reload, join package_name to output base
+            output_base = os.path.join(output_base, package_name)
 
         # If the output_base directory does not exist, create it
         if not os.path.exists(output_base):
@@ -343,22 +340,31 @@ class CmdCodegen(BaseCmd):
 
         old_params, path_customize_py_bak = [], ""
 
-        # TODO: simplify logic using name in setup.py file
-        # Get + validate package, customize.py and setup.py paths
+        # Get absolute path to package
         path_package = os.path.abspath(args.package)
-        # Get basename of path_to_src (version information is stripped from the basename).
-        path_package_basename = re.split(VERSION_REGEX, os.path.basename(path_package), 1)[0]
-        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        path_customize_py = os.path.join(path_package, path_package_basename, package_helpers.PATH_CUSTOMIZE_PY)
-        sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
+        LOG.debug("\nPath to project: %s", path_package)
 
+        # Ensure the package directory exists and we have WRITE access
+        sdk_helpers.validate_dir_paths(os.W_OK, path_package)
+
+        # Generate path to setup.py file + validate we have permissions to read it
         path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
+        # Parse the setup.py file
+        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+        package_name = setup_py_attributes.get("name", "unknown")
+        LOG.debug("\nProject name: %s", package_name)
+
+        # Generate path to customize.py file + validate we have permissions to read it
+        path_customize_py = os.path.join(path_package, package_name, package_helpers.PATH_CUSTOMIZE_PY)
+        sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
+
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
-        args.package = os.path.basename(path_package)
-        args.output = os.path.dirname(path_package)
+        args.package = package_name
+        args.output = path_package
 
         LOG.info("'codegen --reload' started for '%s'", args.package)
 
@@ -379,7 +385,7 @@ class CmdCodegen(BaseCmd):
 
         # If local export file exists then save it to a .bak file.
         # (Older packages may not have the /util/data/export.res file)
-        path_export_res = os.path.join(path_package, path_package_basename,
+        path_export_res = os.path.join(path_package, package_name,
                                        package_helpers.PATH_UTIL_DATA_DIR,
                                        package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
         if os.path.isfile(path_export_res):
