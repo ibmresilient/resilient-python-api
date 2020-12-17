@@ -7,40 +7,42 @@ import logging
 import re
 
 LOG = logging.getLogger("__name__")
-FN_NAME_REGEX = re.compile(r'(?<=^\_)\w+(?=\_function$)')
 
 
-def get_fn_name(names):
-    """Returns the first string it finds in names of the function name
-    if it matches _{FUNCTION-NAME}_function, else returns None.
+def get_fn_names(component):
+    """If `component` has a `function` attribute and it is True,
+    appends the names in the function handler to `fn_names` and
+    returns it, else returns an empty list.
 
-    >>> get_fn_name(["don't return", "_fn_mock_integration_function"])
-    'fn_mock_integration'
-
-    >>> get_fn_name(["don't return", "_fn_mock_integration_functionX"])
-    None
-
-    >>> get_fn_name(["don't return", "X_fn_mock_integration_function"])
-    None
-
-    :param names: a list of strings to search
-    :type names: list
-    :return: fn_name: name of the function if found
-    :rtype: str
+    :param component: the component object to get it's list of function names for
+    :type component: object
+    :return: fn_names: the name in each function handler in the component if found
+    :rtype: list
     """
-    assert isinstance(names, list)
 
-    fn_name = None
+    assert isinstance(component, object)
 
-    for n in names:
-        if FN_NAME_REGEX.search(n):
-            fn_name = FN_NAME_REGEX.findall(n)
-            break
+    fn_names = []
 
-    if isinstance(fn_name, list) and len(fn_name) == 1:
-        return fn_name[0]
+    # Get a list of callable methods for this object
+    methods = [a for a in dir(component) if callable(getattr(component, a))]
 
-    return fn_name
+    for m in methods:
+        this_method = getattr(component, m)
+        is_function = getattr(this_method, "function", False)
+
+        if is_function:
+            fn_decorator_names = this_method.names
+            # Fail if fn_decorator_names is not a tuple as may have unhandled side effects if a str etc.
+            # When a function handler is decorated its __init__() function takes the '*args' parameter
+            # When * is prepended, it is known as an unpacking operator to allow the function handler to have
+            # multiple names. args (or names in our case) will be a tuple, so if the logic of the function
+            # decorator changes, this will catch it.
+            assert isinstance(fn_decorator_names, tuple)
+            for n in fn_decorator_names:
+                fn_names.append(n)
+
+    return fn_names
 
 
 def check_exists(key, dict_to_check):
