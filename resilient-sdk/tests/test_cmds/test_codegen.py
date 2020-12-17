@@ -217,10 +217,10 @@ def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_
 def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_reload):
     output_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path", "fn_main_mock_integration-1.1.0")
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
-    path_fn_main_mock_integration = shutil.move(fx_copy_fn_main_mock_integration[1], output_path)
+    shutil.move(fx_copy_fn_main_mock_integration[1], output_path)
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+    sys.argv[sys.argv.index(mock_integration_name)] = output_path
 
     # Add path to a mock export.res file
     sys.argv.extend(["-e", mock_paths.MOCK_RELOAD_EXPORT_RES])
