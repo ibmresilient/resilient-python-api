@@ -848,13 +848,13 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)
                 LOG.debug("Adding this JSON output schema to '%s': %s", fn_name, payload_samples_schema_contents_dict)
                 json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
-                fn[json_schema_key] = payload_samples_schema_contents_dict
+                fn[json_schema_key] = json.dumps(payload_samples_schema_contents_dict)
 
                 # Validate then read in example payload and add to function import definition
                 payload_samples_example_contents_dict = sdk_helpers.read_json_file(path_payload_samples_example)
                 LOG.debug("Adding this JSON output example to '%s': %s", fn_name, payload_samples_schema_contents_dict)
                 json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
-                fn[json_example_key] = payload_samples_example_contents_dict
+                fn[json_example_key] = json.dumps(payload_samples_example_contents_dict)
 
         # Write the customize ImportDefinition to the app*.zip export.res file
         sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))
