@@ -4,9 +4,11 @@
 
 import os
 import sys
+import shutil
 from resilient_sdk.cmds import base_cmd, CmdCodegen
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
+from tests import helpers
 from tests.shared_mock_data import mock_paths
 
 EXPECTED_FILES_ROOT_DIR = [
@@ -37,6 +39,26 @@ EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_
 EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
 EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
                                               'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
+
+
+def general_test_package_structure(package_name, package_path):
+    assert helpers.verify_expected_list(EXPECTED_FILES_ROOT_DIR, os.listdir(package_path))
+    assert helpers.verify_expected_list(EXPECTED_FILES_DATA_DIR, os.listdir(os.path.join(package_path, "data")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_DOC_DIR, os.listdir(os.path.join(package_path, "doc")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_DOC_SCREENSHOTS_DIR, os.listdir(os.path.join(package_path, "doc", "screenshots")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_PACKAGE_DIR, os.listdir(os.path.join(package_path, package_name)))
+    assert helpers.verify_expected_list(EXPECTED_FILES_PACKAGE_COMPONENTS_DIR, os.listdir(os.path.join(package_path, package_name, "components")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_PACKAGE_UTIL_DIR, os.listdir(os.path.join(package_path, package_name, "util")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR, os.listdir(os.path.join(package_path, package_name, "util", "data")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_ICONS_DIR, os.listdir(os.path.join(package_path, "icons")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_TESTS_DIR, os.listdir(os.path.join(package_path, "tests")))
+
+    # Test payload_samples were generated for each fn
+    files_in_payload_samples = sorted(os.listdir(os.path.join(package_path, "payload_samples")))
+    assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_DIR, files_in_payload_samples)
+
+    for file_name in files_in_payload_samples:
+        assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
 
 
 def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
@@ -187,30 +209,53 @@ def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_
     args = cmd_codegen.parser.parse_known_args()[0]
     cmd_codegen._gen_package(args)
 
+    package_name = args.package
     package_path = os.path.join(output_path, args.package)
-
-    assert EXPECTED_FILES_ROOT_DIR == sorted(os.listdir(package_path))
-    assert EXPECTED_FILES_DATA_DIR == sorted(os.listdir(os.path.join(package_path, "data")))
-    assert EXPECTED_FILES_DOC_DIR == sorted(os.listdir(os.path.join(package_path, "doc")))
-    assert EXPECTED_FILES_DOC_SCREENSHOTS_DIR == sorted(os.listdir(os.path.join(package_path, "doc", "screenshots")))
-    assert EXPECTED_FILES_PACKAGE_DIR == sorted(os.listdir(os.path.join(package_path, args.package)))
-    assert EXPECTED_FILES_PACKAGE_COMPONENTS_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "components")))
-    assert EXPECTED_FILES_PACKAGE_UTIL_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "util")))
-    assert EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR == sorted(os.listdir(os.path.join(package_path, args.package, "util", "data")))
-    assert EXPECTED_FILES_ICONS_DIR == sorted(os.listdir(os.path.join(package_path, "icons")))
-    assert EXPECTED_FILES_TESTS_DIR == sorted(os.listdir(os.path.join(package_path, "tests")))
-
-    # Test payload_samples were generated for each fn
-    files_in_payload_samples = sorted(os.listdir(os.path.join(package_path, "payload_samples")))
-    assert EXPECTED_FILES_PAYLOAD_SAMPLES_DIR == files_in_payload_samples
-
-    for file_name in files_in_payload_samples:
-        assert EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR == sorted(os.listdir(os.path.join(package_path, "payload_samples", file_name)))
+    general_test_package_structure(package_name, package_path)
 
 
-def test_reload_package():
-    # TODO:
-    pass
+def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_reload):
+    output_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path", "fn_main_mock_integration-1.1.0")
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = shutil.move(fx_copy_fn_main_mock_integration[1], output_path)
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add path to a mock export.res file
+    sys.argv.extend(["-e", mock_paths.MOCK_RELOAD_EXPORT_RES])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    path_package_reloaded = cmd_codegen._reload_package(args)
+
+    # This is really getting the import definition from the new data/export.res file, so tests that as well
+    import_definition = package_helpers.get_import_definition_from_customize_py(os.path.join(path_package_reloaded, mock_integration_name, package_helpers.PATH_CUSTOMIZE_PY))
+
+    res_objs = sdk_helpers.get_from_export(import_definition,
+                                           rules=["Additional Mock Rule", "Mock Manual Rule"],
+                                           functions=["additional_mock_function", "mock_function_one"],
+                                           workflows=["additional_mock_workflow", "mock_workflow_one"])
+
+    # Assert the general structure of the reloaded package
+    general_test_package_structure(mock_integration_name, path_package_reloaded)
+
+    # Assert the additional rule, function and workflow were added
+    assert helpers.verify_expected_list(["Additional Mock Rule", "Mock Manual Rule"], [o.get("x_api_name") for o in res_objs.get("rules")])
+    assert helpers.verify_expected_list(["additional_mock_function", "mock_function_one"], [o.get("x_api_name") for o in res_objs.get("functions")])
+    assert helpers.verify_expected_list(["additional_mock_workflow", "mock_workflow_one"], [o.get("x_api_name") for o in res_objs.get("workflows")])
+
+    # Assert a new components file is created
+    expected_component_files = EXPECTED_FILES_PACKAGE_COMPONENTS_DIR + ["funct_additional_mock_function.py"]
+    assert helpers.verify_expected_list(expected_component_files, os.listdir(os.path.join(path_package_reloaded, mock_integration_name, "components")))
+
+    # Assert a new tests file is created
+    expected_test_files = EXPECTED_FILES_TESTS_DIR + ["test_funct_additional_mock_function.py"]
+    assert helpers.verify_expected_list(expected_test_files, os.listdir(os.path.join(path_package_reloaded, "tests")))
+
+    # Assert a new md file is created in data dir
+    expected_workflow_files = EXPECTED_FILES_DATA_DIR + ["wf_additional_mock_workflow.md"]
+    assert helpers.verify_expected_list(expected_workflow_files, os.listdir(os.path.join(path_package_reloaded, "data")))
 
 
 def test_execute_command():
