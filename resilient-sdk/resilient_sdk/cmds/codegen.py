@@ -335,6 +335,8 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("'codegen' complete for '%s'", package_name)
 
+        return output_base
+
     @staticmethod
     def _reload_package(args):
 
@@ -416,13 +418,12 @@ class CmdCodegen(BaseCmd):
             LOG.debug("Regenerating codegen '%s' package now", args.package)
 
             # Regenerate the package
-            CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
+            path_reloaded = CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
             LOG.info("\nNOTE: Ensure the MANIFEST.in file includes line:\nrecursive-include %s/util *\n", args.package)
             LOG.info("'codegen --reload' complete for '%s'", args.package)
 
-        except Exception as err:
-            LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
+            return path_reloaded
 
         # This is required in finally block as user may kill using keyboard interrupt
         finally:
