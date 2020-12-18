@@ -11,7 +11,6 @@ import sys
 import io
 import copy
 import json
-from json.decoder import JSONDecodeError
 import datetime
 import importlib
 import hashlib
@@ -19,7 +18,6 @@ import uuid
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
-
 import requests.exceptions
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
@@ -28,12 +26,13 @@ from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
-    pass
+    # JSONDecodeError is not available in PY2.7 so we set it to None
+    JSONDecodeError = None
 else:
     # Handle PY 3 specific imports
-
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
+    from json.decoder import JSONDecodeError
 
 LOGGER_NAME = "resilient_sdk_log"
 
@@ -117,7 +116,9 @@ def read_json_file(path):
     with io.open(path, mode="rt", encoding="utf-8") as the_file:
         try:
             file_contents = json.load(the_file)
-        except JSONDecodeError as err:
+        # In PY2.7 it raises a ValueError and in PY3.6 it raises
+        # a JSONDecodeError if it cannot load the JSON from the file
+        except (ValueError, JSONDecodeError) as err:
             raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
     return file_contents
 
