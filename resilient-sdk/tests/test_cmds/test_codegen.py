@@ -42,6 +42,10 @@ EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_json_endpoint_fail.json', 'm
 
 
 def general_test_package_structure(package_name, package_path):
+    """
+    This is a general function that the tests for gen_package and reload_package
+    call to make sure that the expected files are created in each directory
+    """
     assert helpers.verify_expected_list(EXPECTED_FILES_ROOT_DIR, os.listdir(package_path))
     assert helpers.verify_expected_list(EXPECTED_FILES_DATA_DIR, os.listdir(os.path.join(package_path, "data")))
     assert helpers.verify_expected_list(EXPECTED_FILES_DOC_DIR, os.listdir(os.path.join(package_path, "doc")))
@@ -199,6 +203,12 @@ def test_gen_function():
 
 
 def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir):
+    """
+    This tests that when a package is generated with codegen
+    that each of the EXPECTED_FILES exist in each directory.
+    This test is NOT concerned about the contents of each file,
+    just that it exists
+    """
     output_path = mock_paths.TEST_TEMP_DIR
 
     # Add paths to an output base and an export.res file
@@ -215,6 +225,12 @@ def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_
 
 
 def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_reload):
+    """
+    This tests that when a package is reloaded with codegen --reload
+    that each of the EXPECTED_FILES exist and also the additional 'Additional Mock Rule'
+    and its related Workflow which has a Function is also added to the package
+    """
+    
     output_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path", "fn_main_mock_integration-1.1.0")
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     shutil.move(fx_copy_fn_main_mock_integration[1], output_path)
