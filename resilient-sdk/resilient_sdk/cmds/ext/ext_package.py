@@ -116,12 +116,12 @@ class CmdExtPackage(BaseCmd):
         # Ensure the 'Dockerfile' and 'entrypoint.sh' files exist and we have READ access
         sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
 
-        LOG.info("\nBuilt Distribution starting\n")
+        LOG.info("\nBuild Distribution starting\n")
 
-        # Create the built distribution
+        # Create the build distribution
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
 
-        LOG.info("\nBuilt Distribution finished. See: %s", path_output_dir)
+        LOG.info("\nBuild Distribution finished. See: %s", path_output_dir)
 
         # Create the app
         path_the_extension_zip = package_helpers.create_extension(
