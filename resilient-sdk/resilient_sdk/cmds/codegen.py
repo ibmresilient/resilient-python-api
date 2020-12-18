@@ -357,7 +357,11 @@ class CmdCodegen(BaseCmd):
         # Parse the setup.py file
         setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
 
-        package_name = setup_py_attributes.get("name", "unknown")
+        package_name = setup_py_attributes.get("name")
+
+        if not sdk_helpers.is_valid_package_name(package_name):
+            raise SDKException(u"'{0}' is not a valid package name. 'name' attribute in setup.py file is not valid or not specified".format(package_name))
+
         LOG.debug("\nProject name: %s", package_name)
 
         # Generate path to customize.py file + validate we have permissions to read it

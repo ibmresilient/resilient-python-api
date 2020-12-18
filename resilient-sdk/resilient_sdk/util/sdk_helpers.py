@@ -172,6 +172,8 @@ def is_valid_package_name(name):
 
        >>> is_valid_package_name("")
        False
+       >>> is_valid_package_name(None)
+       False
        >>> is_valid_package_name("get")
        False
        >>> is_valid_package_name("bang!")
@@ -184,7 +186,9 @@ def is_valid_package_name(name):
 
     if keyword.iskeyword(name):
         return False
-    if name in dir(__builtins__):
+    elif name in dir(__builtins__):
+        return False
+    elif name is None:
         return False
     return re.match(r"[(_|\-)a-z][(_|\-)a-z0-9]*$", name) is not None
 
