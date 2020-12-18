@@ -33,10 +33,21 @@ def test_read_write_file(fx_mk_temp_dir):
     file_lines = sdk_helpers.read_file(temp_file)
     assert mock_data.mock_file_contents in file_lines
 
-def test_read_json_file(fx_mk_temp_dir):
+
+def test_read_json_file_success():
     export_data = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES)
     assert isinstance(export_data, dict)
     assert "functions" in export_data
+
+
+def test_read_json_file_fail(fx_mk_temp_dir):
+    temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")
+    sdk_helpers.write_file(temp_file, mock_data.mock_file_contents)
+    match_text = "Could not read corrupt JSON file at {0}".format(temp_file)
+
+    with pytest.raises(SDKException, match=match_text):
+        sdk_helpers.read_json_file(temp_file)
+
 
 def test_rename_file(fx_mk_temp_dir):
     temp_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_file.txt")

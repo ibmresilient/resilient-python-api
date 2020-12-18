@@ -11,6 +11,7 @@ import sys
 import io
 import copy
 import json
+from json.decoder import JSONDecodeError
 import datetime
 import importlib
 import hashlib
@@ -114,7 +115,10 @@ def read_json_file(path):
     """
     file_contents = None
     with io.open(path, mode="rt", encoding="utf-8") as the_file:
-        file_contents = json.load(the_file)
+        try:
+            file_contents = json.load(the_file)
+        except JSONDecodeError as err:
+            raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
     return file_contents
 
 
