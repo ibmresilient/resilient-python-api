@@ -844,13 +844,20 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 path_payload_samples_schema = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
                 path_payload_samples_example = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
 
-                # Validate then read in schema payload and add to function import definition
+                try:
+                    # Validate payload_files, add custom error message if we can't
+                    sdk_helpers.validate_file_paths(os.R_OK, path_payload_samples_schema, path_payload_samples_example)
+                except SDKException as err:
+                    err.message += "\nERROR: could not access JSON file. Add '--no-samples' flag to avoid looking for them"
+                    raise err
+
+                # Read in schema payload and add to function import definition
                 payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)
                 LOG.debug("Adding JSON output schema to '%s' from file: %s", fn_name, path_payload_samples_schema)
                 json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
                 fn[json_schema_key] = json.dumps(payload_samples_schema_contents_dict)
 
-                # Validate then read in example payload and add to function import definition
+                # Read in example payload and add to function import definition
                 payload_samples_example_contents_dict = sdk_helpers.read_json_file(path_payload_samples_example)
                 LOG.debug("Adding JSON output example to '%s' from file: %s", fn_name, path_payload_samples_example)
                 json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
