@@ -167,6 +167,34 @@ class CmdCodegen(BaseCmd):
         return args
 
     @staticmethod
+    def add_payload_samples(mapping_dict, fn_name, jinja_data):
+        """
+        Add a section to the mapping_dict for fn_name and
+        for that function add a tuple with its jinja2 template
+        location and the jinja_data to render it with.
+
+        Note: as the mapping_dict is passed by reference,
+        there is no need to return it
+
+        :param mapping_dict: Dictionary of all the files to render
+        :type mapping_dict: dict
+        :param fn_name: Name of the Function
+        :type fn_name: str
+        :param jinja_data: A dictionary of the data to render the associated template with
+        :type jinja_data: dict
+        """
+        # Create new dict for this fn
+        ps_dict = mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][fn_name] = {}
+
+        # Add to that dict
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = ("payload_samples/function_name/mock_json_expectation_success.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = ("payload_samples/function_name/mock_json_expectation_fail.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
+
+    @staticmethod
     def _gen_function(args):
         # TODO: Handle just generating a FunctionComponent for the /components directory
         LOG.info("codegen _gen_function called")
@@ -304,13 +332,7 @@ class CmdCodegen(BaseCmd):
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
             # Add a 'payload_samples/fn_name' directory and the files to it
-            fn_payload_samples_dict = package_mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][fn_name] = {}
-            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = ("payload_samples/function_name/blank.json.jinja2", f)
-            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = ("payload_samples/function_name/blank.json.jinja2", f)
-            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = ("payload_samples/function_name/mock_json_expectation_success.json.jinja2", f)
-            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = ("payload_samples/function_name/blank.json.jinja2", f)
-            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = ("payload_samples/function_name/mock_json_expectation_fail.json.jinja2", f)
-            fn_payload_samples_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = ("payload_samples/function_name/blank.json.jinja2", f)
+            CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
         for w in jinja_data.get("workflows"):
 

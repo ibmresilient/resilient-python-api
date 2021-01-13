@@ -197,6 +197,19 @@ def test_merge_codegen_params():
     assert "script 1" in merged_args.script
 
 
+def test_add_payload_samples():
+
+    mock_fn_name = "Mock Function Name"
+    mock_jinja_data = {"mock": "data"}
+    mock_mapping_dict = {package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR: {}}
+    mock_mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][mock_fn_name] = {}
+    CmdCodegen.add_payload_samples(mock_mapping_dict, mock_fn_name, mock_jinja_data)
+
+    for f in EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR:
+        assert isinstance(mock_mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][mock_fn_name][f], tuple)
+        assert mock_mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][mock_fn_name][f][1] == mock_jinja_data
+
+
 def test_gen_function():
     # TODO:
     pass
