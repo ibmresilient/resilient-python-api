@@ -69,6 +69,19 @@ matrix:
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+    - stage: deploy documentation
+      # Install sphinx to handle the rebuild and deploy of docs
+      install:
+        - pip install sphinx
+      # Define a deploy step to the inbuilt git pages deployment provider
+      deploy:
+        - provider: pages:git
+          verbose: true
+          # A token is needed for the deployment, this token is a Personal Access token with limited permissions
+          token: $GH_TOKEN
+          edge: true
+          local_dir: ./docs/build/html/
+          keep_history: true
 
 
 after_failure:
