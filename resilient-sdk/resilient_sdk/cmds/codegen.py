@@ -187,12 +187,12 @@ class CmdCodegen(BaseCmd):
         ps_dict = mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][fn_name] = {}
 
         # Add to that dict
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = ("payload_samples/function_name/mock_json_expectation_success.json.jinja2", jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = ("payload_samples/function_name/mock_json_expectation_fail.json.jinja2", jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = ("payload_samples/function_name/blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = (package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES + "blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = (package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES + "blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = (package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES + "mock_json_expectation_success.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = (package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES + "blank.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = (package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES + "mock_json_expectation_fail.json.jinja2", jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = (package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES + "blank.json.jinja2", jinja_data)
 
     @staticmethod
     def _gen_function(args):
