@@ -151,8 +151,8 @@ def test_read_local_exportfile_resz():
     assert isinstance(export_data, dict)
     assert "functions" in export_data
 
-def test_get_obj_from_list(fx_mock_res_client):
-    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+def test_get_obj_from_list():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES)
     export_data = sdk_helpers.get_from_export(org_export, functions=["mock_function_one", "mock_function_two"])
 
     all_functions = export_data.get("functions")
@@ -178,13 +178,22 @@ def test_get_object_api_names(fx_mock_res_client):
     assert all(elem in ["mock_function_one", "mock_function_two"] for elem in func_api_names) is True
 
 
-def test_get_res_obj(fx_mock_res_client):
-    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+def test_get_res_obj():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES)
 
     artifacts_wanted = ["mock_artifact_2", "mock_artifact_type_one"]
     artifacts = sdk_helpers.get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifacts_wanted, org_export)
 
     assert all(elem.get("x_api_name") in artifacts_wanted for elem in artifacts) is True
+
+
+def test_get_res_obj_corrupt_export():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES_CORRUPT)
+
+    artifacts_wanted = ["mock_artifact_2", "mock_artifact_type_one"]
+
+    with pytest.raises(SDKException, match=r"'mock_artifact_2' not found in this export"):
+        sdk_helpers.get_res_obj("incident_artifact_types", "programmatic_name", "Custom Artifact", artifacts_wanted, org_export)
 
 
 def test_get_res_obj_dict_in_wanted_list(fx_mock_res_client):
