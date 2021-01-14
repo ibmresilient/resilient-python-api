@@ -52,5 +52,10 @@ num_workers=10
 
 [integrations]
 # Use this section to configure options for all Apps within this environment
+
+# Proxy settings
 #http_proxy=http://example.com:3000
 #https_proxy=https://example.com:3000
+
+# Global setting for API call timeouts, 30 seconds is the current default
+#timeout=30
