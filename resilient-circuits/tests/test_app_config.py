@@ -26,3 +26,9 @@ def test_num_workers(fx_clear_cmd_line_args):
     opts = AppArgumentParser(config_file=mock_paths.MOCK_APP_CONFIG).parse_args()
     assert isinstance(opts.get("num_workers"), int)
     assert opts.get("num_workers") == 30
+
+
+def test_proxy_options(fx_clear_cmd_line_args):
+    opts = AppArgumentParser(config_file=mock_paths.MOCK_APP_CONFIG).parse_args().get("integrations", {})
+    assert opts.get("http_proxy") == "http://example.com:3000"
+    assert opts.get("https_proxy") == "https://example.com:3000"

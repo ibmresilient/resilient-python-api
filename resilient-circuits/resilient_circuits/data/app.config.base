@@ -49,3 +49,8 @@ num_workers=10
 #    openssl s_client -connect resilient.example.com:443 -showcerts < /dev/null 2> /dev/null | openssl x509 -outform PEM > ~/.resilient/cert.cer
 # then specify the file (remove the '#' from the line below):
 #cafile=~/.resilient/cert.cer
+
+[integrations]
+# Use this section to configure options for all Apps within this environment
+#http_proxy=http://example.com:3000
+#https_proxy=https://example.com:3000
