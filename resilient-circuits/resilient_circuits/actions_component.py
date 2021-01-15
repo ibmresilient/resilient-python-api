@@ -594,8 +594,6 @@ class Actions(ResilientComponent):
                 LOG.info("'%s.%s' actions registered to '%s'",
                          type(component).__module__, type(component).__name__, queue_name)
             elif str(channel).startswith("functions.") and component._functions:
-
-                if self.test_mode:
                     continue
 
                 # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
