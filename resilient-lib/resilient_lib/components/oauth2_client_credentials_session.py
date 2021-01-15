@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 import time
 import logging
 import requests
@@ -143,13 +143,15 @@ class OAuth2ClientCredentialsSession(requests.Session):
         proxies = kwargs.pop("proxies") if "proxies" in kwargs else self.proxies
         self.add_authorization_header(headers)
 
-        resp = super(OAuth2ClientCredentialsSession, self).request(method, url, *args, headers=headers, proxies=proxies, **kwargs)
+        resp = super(OAuth2ClientCredentialsSession, self).request(method, url, *args, headers=headers, proxies=proxies,
+                                                                   **kwargs)
 
         # If the error anything other than Authorization issue, the problem is in user's request
         if resp.status_code in self.AUTHORIZATION_ERROR_CODES:
             self.update_token()
             with requests.Session() as s:
-                resp = super(OAuth2ClientCredentialsSession, self).request(method, url, *args, headers=headers, proxies=proxies, **kwargs)
+                resp = super(OAuth2ClientCredentialsSession, self).request(method, url, *args, headers=headers,
+                                                                           proxies=proxies, **kwargs)
 
         return resp
 
