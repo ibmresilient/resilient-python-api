@@ -61,7 +61,7 @@ PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk"
 PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
 PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
 
-PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name/"
+PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"
 
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
