@@ -1,17 +1,13 @@
-{# Macro for Function Inputs #}
-{%- macro paramvalue(param) -%}{% if param.input_type in ["select", "multiselect"] %}self.get_select_param(kwargs.get("{{param.name}}")){% elif param.input_type in ["textarea"] %}self.get_textarea_param(kwargs.get("{{param.name}}")){% else %}kwargs.get("{{param.name}}"){% endif %}{%- endmacro -%}
-
-{# Macro for Function Input Comment #}
-{%- macro paramcomment(param) -%}{{param.input_type}}{%if param.input_type in ["select", "multiselect"]%}, values: "{{param["values"]|list|map(attribute="label")|join('", "')}}"{%endif%}{%- endmacro -%}
-
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
 """Function implementation"""
 
 import logging
 from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
+from resilient_lib import ResultPayload, RequestsCommon, validate_fields
 
 PACKAGE_NAME = "{{package_name}}"
+FN_NAME = "{{name}}"
 
 
 class FunctionComponent(ResilientComponent):
@@ -31,31 +27,60 @@ class FunctionComponent(ResilientComponent):
     def _{{name}}_function(self, event, *args, **kwargs):
         """Function: {{description.content}}"""
         try:
+            LOG = logging.getLogger(__name__)
+            rc = RequestsCommon(self.opts, self.options)
+            rp = ResultPayload(PACKAGE_NAME, **kwargs)
 
             # Get the wf_instance_id of the workflow this Function was called in
             wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
 
-            yield StatusMessage("Starting '{{name}}' running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Starting '{0}' running in workflow '{1}'".format(FN_NAME, wf_instance_id))
 
-            # Get the function parameters:
-            {% for fn_input in inputs %}
-            {{fn_input.name}} = {{paramvalue(fn_input)}}  # {{paramcomment(fn_input)}}
-            {% endfor %}
+            # Get and validate app configs
+            # app_configs = validate_fields([
+            #     {"name": "api_key", "placeholder": "<your-api-key>"},
+            #     {"name": "base_url", "placeholder": "<api-base_url>"}],
+            #     self.options)
 
-            log = logging.getLogger(__name__)
-            {% for fn_input in inputs %}
-            log.info("{{fn_input.name}}: %s", {{fn_input.name}})
-            {% endfor %}
+            {% if inputs %}
+            # Get and validate required function inputs:
+            # If input is optional, remove it from list
+            # Optional inputs will still be available in fn_inputs
+            fn_inputs = validate_fields(
+                [{%+ for fn_input in inputs|sort(attribute="x_api_name") %}
+"{{fn_input.name}}"{{ ",\n" if not loop.last }}{{ " "|safe*17 if not loop.last }}{% endfor %}],
+                kwargs)
+
+            LOG.info("'{0}' inputs: %s", fn_inputs)
+            {% endif %}
+
+            yield StatusMessage("Validations complete. Starting business logic")
 
             ##############################################
             # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE #
             ##############################################
 
-            yield StatusMessage("Finished '{{name}}' that was running in workflow '{0}'".format(wf_instance_id))
+            # Call API implemtation example:
+            # params = {
+            #     "key": app_configs.get("api_key"),
+            #     "ip_address": fn_inputs.get("artifact_value")
+            # }
+            #
+            # response = rc.execute_call_v2(
+            #     method="get",
+            #     url=app_configs.get("api_url")
+            #     params=params
+            # )
+            #
+            # results = rp.done(True, response.json())
 
-            results = {
-                "content": "xyz"
-            }
+            ##############################################
+
+            yield StatusMessage("Finished '{0}' that was running in workflow '{1}'".format(FN_NAME, wf_instance_id))
+
+            results = rp.done(True, {"mock_key": "Mock Value!"})
+
+            LOG.info("'%s' complete", FN_NAME)
 
             # Produce a FunctionResult with the results
             yield FunctionResult(results)
