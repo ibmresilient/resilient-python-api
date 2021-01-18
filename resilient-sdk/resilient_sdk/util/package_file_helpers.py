@@ -850,8 +850,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                     # Validate payload_files, add custom error message if we can't
                     sdk_helpers.validate_file_paths(os.R_OK, path_payload_samples_schema, path_payload_samples_example)
                 except SDKException as err:
-                    err.message += "\nERROR: could not access JSON file. Add '--no-samples' flag to avoid looking for them"
-                    raise err
+                    err.message += ("\nWARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
+                                    "Add '--no-samples' flag to avoid looking for them and avoid this warning message.\n")
+                    LOG.warning(err.message)
+                    continue
 
                 # Read in schema payload and add to function import definition
                 payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)

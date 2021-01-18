@@ -80,7 +80,7 @@ def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_s
     assert export_res_contents == mock_export_res_contents
 
 
-def test_execute_command_with_payload_sample_file_missing(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
+def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
@@ -95,5 +95,7 @@ def test_execute_command_with_payload_sample_file_missing(fx_copy_fn_main_mock_i
     cmd_package = CmdPackage(fx_get_sub_parser)
     args = cmd_package.parser.parse_known_args()[0]
 
-    with pytest.raises(SDKException, match=r"ERROR: could not access JSON file. Add '--no-samples' flag to avoid looking for them"):
-        cmd_package.execute_command(args)
+    cmd_package.execute_command(args)
+
+    assert ("WARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
+            "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text
