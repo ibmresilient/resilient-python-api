@@ -7,7 +7,6 @@
 import logging
 import os
 import shutil
-import re
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
