@@ -1,3 +1,6 @@
+2021-02: ver. 40.0
+* Remove need for calling '/message_destinations' endpoint
+
 2020-12-08: version 39.0
 
 * resilient-circuits now only loads the functions that are pip installed and/or are in the components directory
