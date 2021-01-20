@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pragma pylint: disable=unused-argument, no-self-use
 """Function implementation"""
 
 import logging
@@ -14,21 +13,21 @@ class FunctionComponent(ResilientComponent):
     """Component that implements Resilient function '{{name}}''"""
 
     def __init__(self, opts):
-        """constructor provides access to the configuration options"""
+        """Constructor provides access to the configuration options"""
         super(FunctionComponent, self).__init__(opts)
-        self.options = opts.get(PACKAGE_NAME, {})
+        self.fn_options = opts.get(PACKAGE_NAME, {})
 
     @handler("reload")
     def _reload(self, event, opts):
         """Configuration options have changed, save new values"""
-        self.options = opts.get(PACKAGE_NAME, {})
+        self.fn_options = opts.get(PACKAGE_NAME, {})
 
     @function("{{name}}")
     def _{{name}}_function(self, event, *args, **kwargs):
         """Function: {{description.content}}"""
         try:
             LOG = logging.getLogger(__name__)
-            rc = RequestsCommon(self.opts, self.options)
+            rc = RequestsCommon(self.opts, self.fn_options)
             rp = ResultPayload(PACKAGE_NAME, **kwargs)
 
             # Get the wf_instance_id of the workflow this Function was called in
@@ -40,7 +39,7 @@ class FunctionComponent(ResilientComponent):
             # app_configs = validate_fields([
             #     {"name": "api_key", "placeholder": "<your-api-key>"},
             #     {"name": "base_url", "placeholder": "<api-base_url>"}],
-            #     self.options)
+            #     self.fn_options)
 
             {% if inputs %}
             # Get and validate required function inputs:
