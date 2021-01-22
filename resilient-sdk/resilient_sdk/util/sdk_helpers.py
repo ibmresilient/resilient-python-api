@@ -18,7 +18,6 @@ import uuid
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
-
 import requests.exceptions
 from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
@@ -27,12 +26,13 @@ from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
-    pass
+    # JSONDecodeError is not available in PY2.7 so we set it to None
+    JSONDecodeError = None
 else:
     # Handle PY 3 specific imports
-
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
+    from json.decoder import JSONDecodeError
 
 LOGGER_NAME = "resilient_sdk_log"
 
@@ -41,8 +41,6 @@ logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(LOGGER_NAME)
 
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 # Resilient export file suffix.
 RES_EXPORT_SUFFIX = ".res"
 # Endpoint url for importing a configuration
@@ -103,11 +101,27 @@ def read_file(path):
         file_lines = the_file.readlines()
     return file_lines
 
+
 def read_json_file(path):
+    """
+    If the contents of the file at path is valid JSON,
+    returns the contents of the file as a dictionary
+
+    :param path: Path to JSON file to read
+    :type path: str
+    :return: File contents as a dictionary
+    :rtype: dict
+    """
     file_contents = None
     with io.open(path, mode="rt", encoding="utf-8") as the_file:
-        file_contents = json.load(the_file)
+        try:
+            file_contents = json.load(the_file)
+        # In PY2.7 it raises a ValueError and in PY3.6 it raises
+        # a JSONDecodeError if it cannot load the JSON from the file
+        except (ValueError, JSONDecodeError) as err:
+            raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
     return file_contents
+
 
 def read_zip_file(path, pattern):
     """Returns unzipped contents of file whose name matches a pattern
@@ -158,6 +172,8 @@ def is_valid_package_name(name):
 
        >>> is_valid_package_name("")
        False
+       >>> is_valid_package_name(None)
+       False
        >>> is_valid_package_name("get")
        False
        >>> is_valid_package_name("bang!")
@@ -168,12 +184,11 @@ def is_valid_package_name(name):
        True
     """
 
-    # Strip off version information, if present in package base folder, to get the package name.
-    name = re.split(VERSION_REGEX, name, 1)[0]
-
     if keyword.iskeyword(name):
         return False
-    if name in dir(__builtins__):
+    elif name in dir(__builtins__):
+        return False
+    elif name is None:
         return False
     return re.match(r"[(_|\-)a-z][(_|\-)a-z0-9]*$", name) is not None
 

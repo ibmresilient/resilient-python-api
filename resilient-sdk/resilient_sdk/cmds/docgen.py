@@ -267,7 +267,7 @@ class CmdDocgen(BaseCmd):
         readme_template = jinja_env.get_template(README_TEMPLATE_NAME)
 
         # Generate path to setup.py file
-        path_setup_py_file = os.path.join(path_to_src, package_helpers.PATH_SETUP_PY)
+        path_setup_py_file = os.path.join(path_to_src, package_helpers.BASE_NAME_SETUP_PY)
 
         try:
             # Ensure we have read permissions for setup.py
@@ -284,7 +284,7 @@ class CmdDocgen(BaseCmd):
         # Generate paths to other required directories + files
         path_customize_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CUSTOMIZE_PY)
         path_config_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CONFIG_PY)
-        path_readme = os.path.join(path_to_src, package_helpers.PATH_README)
+        path_readme = os.path.join(path_to_src, package_helpers.BASE_NAME_README)
         path_screenshots_dir = os.path.join(path_to_src, package_helpers.PATH_SCREENSHOTS)
 
         # Ensure we have read permissions for each required file and the file exists

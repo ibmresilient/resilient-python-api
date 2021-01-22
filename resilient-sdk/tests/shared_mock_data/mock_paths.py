@@ -21,8 +21,15 @@ MOCK_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize.py")
 MOCK_OLD_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize_old.py")
 
 MOCK_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.res")
+MOCK_EXPORT_RES_CORRUPT = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export_corrupt.res")
+MOCK_RELOAD_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_reload_export.res")
 MOCK_ZIP = os.path.join(SHARED_MOCK_DATA_DIR, "mock.zip")
 MOCK_EXPORT_RESZ = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.resz")
 
 MOCK_INT_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_integrations")
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration")
+
+MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_files")
+MOCK_APP_ZIP_APP_JSON = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_app.json")
+MOCK_APP_ZIP_EXPORT_RES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_export.res")
+MOCK_APP_ZIP_EXPORT_RES_WITH_PAYLOAD_SAMPLES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_with_payload_samples_export.res")
