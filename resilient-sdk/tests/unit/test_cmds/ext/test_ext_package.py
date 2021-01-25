@@ -10,7 +10,7 @@ from resilient_sdk.cmds import CmdExtPackage as CmdPackage
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.sdk_exception import SDKException
-from tests import helpers
+from tests.unit import helpers
 from tests.shared_mock_data import mock_paths
 
 EXPECTED_FILES_APP_ZIP = ['app.json', 'export.res', 'fn_main_mock_integration-1.0.0.tar.gz']
