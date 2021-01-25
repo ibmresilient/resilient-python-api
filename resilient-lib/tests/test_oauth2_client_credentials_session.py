@@ -69,21 +69,21 @@ class TestAuthenticator(object):
             del OAuth2ClientCredentialsSession.__it__
 
     def test_multiple_sessions_multiple_tokens(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api1"))
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory(token="api1"))
         api1 = OAuth2ClientCredentialsSession("url:example1", "s", "t")
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(token="api2"))
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory(token="api2"))
         api2 = OAuth2ClientCredentialsSession("url:example2", "s", "t")
 
         assert api1.access_token == "api1"
         assert api2.access_token == "api2"
 
     def test_creates_session_with_passing_authentication(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory())
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory())
         auth = OAuth2ClientCredentialsSession("test", "test", "test")
         assert getattr(auth, 'access_token', None) is not None
 
     def test_fails_to_create_session_with_bad_authentication(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(status_code=403))
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory(status_code=403))
         with pytest.raises(ValueError):
             OAuth2ClientCredentialsSession("test", "test", "test")
 
@@ -105,22 +105,22 @@ class TestAuthenticator(object):
             assert data['scope'] is not None
             return mock_token_request_factory()()
 
-        monkeypatch.setattr(requests, 'post', confirm_scope_data)
+        monkeypatch.setattr(requests.sessions.Session, 'post', confirm_scope_data)
         OAuth2ClientCredentialsSession("test", "test", "test", scope=["scope"])
 
     def test_no_expiration_doesnt_fail(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory())
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory())
         auth = OAuth2ClientCredentialsSession("test", "test", "test")
         assert auth.expiration_time is None
         assert getattr(auth, 'access_token', None) is not None
 
     def test_expiration_time_is_set(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(expires_in=50))
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory(expires_in=50))
         auth = OAuth2ClientCredentialsSession("test", "test", "test")
         assert auth.expiration_time is not None
 
     def test_updating_token_after_expiration(self, monkeypatch):
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(expires_in=50))
+        monkeypatch.setattr(requests.sessions.Session, 'post', mock_token_request_factory(expires_in=50))
         monkeypatch.setattr(OAuth2ClientCredentialsSession, 'update_token', raise_error)
         auth = OAuth2ClientCredentialsSession("test", "test", "test")
         auth.expiration_time = time.time() - 1
@@ -138,7 +138,8 @@ class TestAuthenticator(object):
         monkey patch module's import of time, because pytest also uses time, to create the conditions
         where token expired during the duration of request being made.
         """
-        monkeypatch.setattr(requests, 'post', mock_token_request_factory(expires_in=10, elapsed_time=0))
+        monkeypatch.setattr(requests.sessions.Session, 'post',
+                            mock_token_request_factory(expires_in=10, elapsed_time=0))
         monkeypatch.setattr(oauth2_client_credentials_session.time, 'time',
                             return_values_each_call([time.time(), time.time(), time.time() + 15]))
         monkeypatch.setattr(requests.sessions.Session, 'request',
