@@ -328,7 +328,7 @@ def selftest(args):
     """loop through every selftest for every eligible package, call and store returned state,
         print out package and their selftest states"""
 
-    if args.print_env:
+    if hasattr(args, "print_env") and args.print_env:
         LOG.info("###############\nEnvironment:\n")
         LOG.info("Python Version: %s\n", sys.version)
 
