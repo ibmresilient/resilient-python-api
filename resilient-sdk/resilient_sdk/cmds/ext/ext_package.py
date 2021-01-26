@@ -25,7 +25,7 @@ class CmdExtPackage(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk package -p <path_to_directory>
     $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"
-    $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient"
+    $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient" --image-hash "dd2a1678b6e0..."
     $ resilient-sdk package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
@@ -53,6 +53,10 @@ class CmdExtPackage(BaseCmd):
         self.parser.add_argument("--repository-name",
                                  help="Name of the repository which contains the app container",
                                  default="ibmresilient",
+                                 nargs="?")
+
+        self.parser.add_argument("--image-hash",
+                                 help="The SHA256 hash of the Docker image to pull for this App",
                                  nargs="?")
 
         self.parser.add_argument("--no-samples",
@@ -133,7 +137,8 @@ class CmdExtPackage(BaseCmd):
             keep_build_dir=args.keep_build_dir,
             path_extension_logo=path_extension_logo,
             path_company_logo=path_company_logo,
-            path_payload_samples=path_payload_samples
+            path_payload_samples=path_payload_samples,
+            image_hash=args.image_hash
         )
 
         LOG.info("App created at: %s", path_the_extension_zip)
