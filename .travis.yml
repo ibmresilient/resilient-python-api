@@ -4,8 +4,6 @@ os: linux
 
 stages:
   - run tests
-  - name: run integration tests
-    if: env(RUN_INT_TESTS)
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
@@ -22,7 +20,7 @@ env:
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
   - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
-  - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" == *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
+  - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
 
 # Install package deps
 before_install:
@@ -34,29 +32,31 @@ matrix:
 
   include:
     - stage: run tests
-      name: Python 2.7 Tests
+      name: Python 2.7 Unit Tests
       python: 2.7
-      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      env: RUN_TYPE=unit_test TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
       install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 2.7 Tests"
         - ./travis-scripts/run_unit_tests.sh
 
     - stage: run tests
-      name: Python 3.6 Tests
+      name: Python 3.6 Unit Tests
       python: 3.6
-      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      env: RUN_TYPE=unit_test TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.6 Tests"
         - ./travis-scripts/run_unit_tests.sh
 
-    - stage: run integration tests
+    - stage: run tests
       name: Python 3.6 Integration Tests
       python: 3.6
-      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      env: RUN_TYPE=int_test TOXENV=py36
       script:
-        - echo "Starting Python 3.6 Integration Tests"
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            ./travis-scripts/manage_fyre_instance.sh DEPLOY;
+          fi
 
     - stage: build packages
       name: Build Packages in Python 2.7
