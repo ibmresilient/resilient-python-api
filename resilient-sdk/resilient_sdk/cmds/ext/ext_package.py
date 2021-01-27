@@ -56,7 +56,7 @@ class CmdExtPackage(BaseCmd):
                                  nargs="?")
 
         self.parser.add_argument("--image-hash",
-                                 help="The SHA256 hash of the Docker image to pull for this App",
+                                 help="The SHA256 hash of the container image to pull for this App",
                                  nargs="?")
 
         self.parser.add_argument("--no-samples",
