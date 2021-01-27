@@ -52,7 +52,7 @@ get_cluster_info () {
 
 deploy_stencil () {
     # param $1: (required) FYRE stencil_id
-    # param $1: (required) FYRE cluster_prefix - normally hydratest[$TRAVIS_BUILD_NUMBER]
+    # param $1: (required) FYRE cluster_prefix
 
     DEPLOY_STENCIL_DATA="{\"type\":\"stencil\", \"stencil_id\":\"$1\", \"cluster_prefix\" : \"$2\"}"
     print_msg "Deploying stencil: $DEPLOY_STENCIL_DATA"
@@ -64,7 +64,7 @@ deploy_stencil () {
 }
 
 delete_cluster () {
-    # param $1: (required) FYRE cluster_prefix - normally hydratest[$TRAVIS_BUILD_NUMBER]
+    # param $1: (required) FYRE cluster_prefix
 
     DELETE_CLUSTER_DATA="{\"cluster_name\":\"$1\"}"
     print_msg "Deleting cluster: $DELETE_CLUSTER_DATA"
@@ -136,10 +136,13 @@ FYRE_DEPLOY_TIMEOUT_SECONDS:\t$FYRE_DEPLOY_TIMEOUT_SECONDS \
 case $FYRE_ACTION in 
 
     QUOTA_INFO)
+    # param $2: FYRE product_group_id
+    # param $3: FYRE account user email address
     get_quota_info $2 $3
     ;;
 
     CLUSTER_INFO)
+    # param $2: FYRE request_id
     get_cluster_info $2
     ;;
 
@@ -148,6 +151,7 @@ case $FYRE_ACTION in
     ;;
 
     DELETE)
+    # param $2: FYRE cluster_prefix
     delete_cluster $2
     ;;
 
