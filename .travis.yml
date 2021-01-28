@@ -55,7 +55,7 @@ matrix:
       env: RUN_TYPE=int_test TOXENV=py36
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then
-            ./travis-scripts/manage_fyre_instance.sh DEPLOY;
+            ./travis-scripts/run_int_tests.sh;
           fi
 
     - stage: build packages

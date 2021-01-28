@@ -56,13 +56,15 @@ def get_resilient_client(path_config_file=None):
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
-    LOG.info("Connecting to Resilient Appliance...")
+    LOG.info("Connecting to IBM Security SOAR...")
 
     if not path_config_file:
         path_config_file = get_config_file()
 
     config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
+
+    LOG.info("Trying to connect to '%s'", opts.get("host"))
 
     return get_client(opts)
 
