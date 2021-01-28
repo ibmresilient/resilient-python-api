@@ -14,6 +14,7 @@ Note:
     -   Fixture must have BEFORE and AFTER docstring
 """
 
+import logging
 import copy
 import sys
 import os
@@ -22,6 +23,10 @@ import pytest
 import resilient_sdk.app as app
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
+
+# Get the same logger object that is used in app.py
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG.setLevel(logging.DEBUG)
 
 
 def _mk_temp_dir():
