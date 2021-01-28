@@ -6,9 +6,11 @@ import os
 import shutil
 import json
 import io
+import pytest
 from setuptools import sandbox as use_setuptools
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.sdk_exception import SDKException
 from tests.shared_mock_data import mock_paths
 
 
@@ -195,3 +197,19 @@ def test_create_extension_image_hash(fx_copy_fn_main_mock_integration):
     app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
 
     assert app_json.get("current_installation", {}).get("executables", [])[0].get("image", "") == "ibmresilient/fn_main_mock_integration@sha256:dd2a1678b6e0fd1d1a1313f78785fd0c4fad0565ac9008778bdb3b00bdff4420"
+
+
+def test_create_extension_invalid_image_hash(fx_copy_fn_main_mock_integration):
+
+    mock_image_hash = "xxx"
+
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    path_setup_py_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_SETUP_PY)
+    path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
+    output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
+
+    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+    with pytest.raises(SDKException, match=r"image_hash 'xxx' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long"):
+        package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir, image_hash=mock_image_hash)

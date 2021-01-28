@@ -91,6 +91,14 @@ def test_is_valid_url():
     assert sdk_helpers.is_valid_url("https://www. example.com") is False
 
 
+def test_is_valid_hash():
+    assert sdk_helpers.is_valid_hash("dd2a1678b6e0fd1d1a1313f78785fd0c4fad0565ac9008778bdb3b00bdff4420") is True
+    assert sdk_helpers.is_valid_hash("Xdd2a1678b6e0fd1d1a1313f78785fd0c4fad0565ac9008778bdb3b00bdff4420") is False
+    assert sdk_helpers.is_valid_hash("") is False
+    assert sdk_helpers.is_valid_hash(None) is False
+    assert sdk_helpers.is_valid_hash("xxx") is False
+
+
 def test_does_url_contain():
     assert sdk_helpers.does_url_contain("http://www.example.com", "example") is True
     assert sdk_helpers.does_url_contain("not a url", "example") is False

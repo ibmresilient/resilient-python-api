@@ -782,6 +782,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         image_name = "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"), setup_py_attributes.get("version"))
 
         if image_hash:
+
+            if not sdk_helpers.is_valid_hash(image_hash):
+                raise SDKException(u"image_hash '{0}' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long".format(image_hash))
+
             # If image_hash is defined append to image name e.g. <repository_name>/<package_name>@sha256:<image_hash>
             image_name = "{0}/{1}@sha256:{2}".format(repository_name, setup_py_attributes.get("name"), image_hash)
 
