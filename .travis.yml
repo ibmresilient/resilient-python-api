@@ -21,6 +21,11 @@ env:
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
   - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
   - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
+  - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
+  - FYRE_CLUSTER_DOMAIN="${FYRE_CLUSTER_NAME}1.fyre.ibm.com"
+  - FYRE_STENCIL_ID="6609"
+  - FYRE_DEPLOY_SLEEP_SECONDS=30
+  - FYRE_DEPLOY_TIMEOUT_SECONDS=180
 
 # Install package deps
 before_install:
