@@ -61,10 +61,12 @@ def get_resilient_client(path_config_file=None):
     if not path_config_file:
         path_config_file = get_config_file()
 
+    LOG.debug("Using app.config file at: %s", path_config_file)
+
     config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
 
-    LOG.info("Trying to connect to '%s'", opts.get("host"))
+    LOG.debug("Trying to connect to '%s'", opts.get("host"))
 
     return get_client(opts)
 
