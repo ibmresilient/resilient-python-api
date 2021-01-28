@@ -229,10 +229,10 @@ def is_valid_hash(input_hash):
     """Returns True if the input_hash is a valid SHA256 hash.
     Returns False if;
         -   input_hash is not a str
-        -   input_hash is longer than 64 characters
-        -   that all characters in input_hash are base 16 (valid hexadecimal
+        -   input_hash is not equal to 64 characters
+        -   that all characters in input_hash are base 16 (valid hexadecimal)
 
-    :param input_hash: String to validate if its a SHA256 hash
+    :param input_hash: str to validate if its a SHA256 hash
     :type input_hash: str
     :return: True/False
     """
