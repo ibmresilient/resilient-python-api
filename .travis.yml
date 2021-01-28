@@ -26,6 +26,7 @@ env:
   - FYRE_STENCIL_ID="6609"
   - FYRE_DEPLOY_SLEEP_SECONDS=30
   - FYRE_DEPLOY_TIMEOUT_SECONDS=180
+  - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
 
 # Install package deps
 before_install:
@@ -63,6 +64,10 @@ matrix:
         - if [ $RUN_INT_TESTS == 1 ]; then
             ./travis-scripts/manage_fyre_instance.sh DEPLOY;
             ./travis-scripts/run_int_tests.sh;
+          fi
+      after_script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            ./travis-scripts/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
           fi
 
     - stage: build packages
