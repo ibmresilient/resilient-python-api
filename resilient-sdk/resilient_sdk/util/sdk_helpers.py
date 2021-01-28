@@ -236,19 +236,12 @@ def is_valid_hash(input_hash):
     :type input_hash: str
     :return: True/False
     """
-    if not isinstance(input_hash, str):
+    if not input_hash:
         return False
 
-    if not len(input_hash) == 64:
-        return False
+    regex = re.compile(r'^[a-f0-9]{64}(:.+)?$')
 
-    try:
-        # Check all characters in input_hash are base 16 (valid hexadecimal)
-        int(input_hash, 16)
-    except ValueError:
-        return False
-
-    return True
+    return regex.match(input_hash) is not None
 
 
 def does_url_contain(url, qry):
