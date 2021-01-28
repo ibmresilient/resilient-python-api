@@ -53,6 +53,7 @@ matrix:
       name: Python 3.6 Integration Tests
       python: 3.6
       env: RUN_TYPE=int_test TOXENV=py36
+      install: ./travis-scripts/install_int_tests_deps.sh
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then
             ./travis-scripts/run_int_tests.sh;
