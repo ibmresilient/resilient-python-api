@@ -33,7 +33,17 @@ def verify_expected_list(list_expected_strs, list_actual_strs):
 
 
 def upload_app_zip(res_client, path_app_zip):
+    """
+    Uploads the app.zip at path_app_zip to the Appliance that
+    res_client is connected to
 
+    :param res_client: required for communication back to resilient
+    :type res_client: resilient.co3.SimpleClient obj
+    :param path_app_zip: file path to app.zip
+    :type path_app_zip: str
+    :return: Response after uploading the app.zip
+    :rtype: requests.Response obj
+    """
     app_zip_name_name = os.path.basename(path_app_zip)
 
     uri = u"{0}/rest/orgs/{1}{2}".format(res_client.base_url, res_client.org_id, "/apps")
@@ -56,7 +66,16 @@ def upload_app_zip(res_client, path_app_zip):
 
 
 def install_app_zip(res_client, app_data):
+    """
+    Installs the app the Appliance that res_client is connected to
 
+    :param res_client: required for communication back to resilient
+    :type res_client: resilient.co3.SimpleClient obj
+    :param app_data: Dict with info of app to install (Normally the response.json() of the result of upload_app_zip()
+    :type app_data: dict
+    :return: Response after uploading the app.zip
+    :rtype: requests.Response obj
+    """
     app_id = app_data.get("id")
 
     current_installation = app_data.get("current_installation", {})

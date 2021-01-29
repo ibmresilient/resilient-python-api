@@ -27,4 +27,5 @@ def test_installation(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cm
     upload_res = test_helpers.upload_app_zip(res_client, path_the_app_zip)
     assert upload_res.status_code == 200
 
-    test_helpers.install_app_zip(res_client, upload_res.json())
+    install_res = test_helpers.install_app_zip(res_client, upload_res.json())
+    assert install_res.get("status") == "installed"
