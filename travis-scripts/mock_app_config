@@ -4,8 +4,11 @@ cafile=false
 
 host={{FYRE_CLUSTER_DOMAIN}}
 org=Test Organization
-api_key_id={{FYRE_CLUSTER_API_KEY_ID}}
-api_key_secret={{FYRE_CLUSTER_API_KEY_SECRET}}
+email={{FYRE_CLUSTER_USER_EMAIL}}
+password={{FYRE_CLUSTER_USER_PASSWORD}}
+#api_key_id={{FYRE_CLUSTER_API_KEY_ID}}
+#api_key_secret={{FYRE_CLUSTER_API_KEY_SECRET}}
+
 port=443
 
 # Number of attempts to retry when connecting to Resilient. 0 = unlimited retries
