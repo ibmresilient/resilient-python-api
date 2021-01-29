@@ -8,7 +8,7 @@ import shutil
 from resilient_sdk.cmds import base_cmd, CmdCodegen
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
-from tests.unit import helpers
+from tests import helpers
 from tests.shared_mock_data import mock_paths
 
 EXPECTED_FILES_ROOT_DIR = [

@@ -5,7 +5,7 @@
 import requests
 import requests_mock
 from resilient.resilient_rest_mock import ResilientMock, resilient_endpoint
-from tests.unit.helpers import read_mock_json
+from tests.helpers import read_mock_json
 
 
 class ResilientAPIMock(ResilientMock):
