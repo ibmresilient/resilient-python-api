@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import pkg_resources
 import pytest
 from resilient_circuits import helpers, function, ResilientComponent
 
@@ -86,3 +87,13 @@ def test_validate_configs():
     # test valid_condition passes
     mock_configs["mock_config_2"] = 5
     helpers.validate_configs(mock_configs, {"mock_config_2": mock_config_2})
+
+
+def test_get_packages():
+
+    pkgs = helpers.get_packages(pkg_resources.working_set)
+
+    for pkg in pkgs:
+        assert len(pkg) == 2
+        assert isinstance(pkg[0], str)
+        assert isinstance(pkg[1], str)

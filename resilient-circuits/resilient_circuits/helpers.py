@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for resilient-circuits"""
+import pkg_resources
 import logging
 import re
 
@@ -108,3 +109,24 @@ def validate_configs(configs, validate_dict):
         # if meets its valid_condition
         if not valid_condition(config):
             raise ValueError(invalid_msg)
+
+
+def get_packages(working_set):
+    """
+    Return a sorted list of tuples of all package names
+    and their version in working_set
+
+    :param working_set: the working_set for all packages installed in this env
+    :type working_set: setuptools.pkg_resources.WorkingSet obj
+    :return: pkg_list: a list of tuples [('name','version')] e.g. [('resilient-circuits', '39.0.0')]
+    :rtype: list
+    """
+
+    isinstance(working_set, pkg_resources.WorkingSet)
+
+    pkg_list = []
+
+    for pkg in working_set:
+        pkg_list.append((pkg.project_name, pkg.version))
+
+    return sorted(pkg_list, key=lambda x: x[0].lower())
