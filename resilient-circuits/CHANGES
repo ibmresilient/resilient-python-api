@@ -1,5 +1,7 @@
 2021-02: ver. 40.0
 * Remove need for calling '/message_destinations' endpoint
+* Added '--print-env' flag to selftest command to print the environment when the test runs
+* Bug fixes
 
 2020-12-08: version 39.0
 

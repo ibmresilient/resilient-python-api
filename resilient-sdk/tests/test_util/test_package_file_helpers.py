@@ -167,7 +167,7 @@ def test_create_extension_display_name(fx_copy_fn_main_mock_integration):
 
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
-    path_setup_py_file = os.path.join(path_fn_main_mock_integration, package_helpers.PATH_SETUP_PY)
+    path_setup_py_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_SETUP_PY)
     path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
     output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
 
