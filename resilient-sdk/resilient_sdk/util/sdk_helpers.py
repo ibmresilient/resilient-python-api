@@ -225,6 +225,25 @@ def is_valid_url(url):
     return regex.search(url) is not None
 
 
+def is_valid_hash(input_hash):
+    """Returns True if the input_hash is a valid SHA256 hash.
+    Returns False if;
+        -   input_hash is not a str
+        -   input_hash is not equal to 64 characters
+        -   that all characters in input_hash are base 16 (valid hexadecimal)
+
+    :param input_hash: str to validate if its a SHA256 hash
+    :type input_hash: str
+    :return: True/False
+    """
+    if not input_hash:
+        return False
+
+    regex = re.compile(r'^[a-f0-9]{64}(:.+)?$')
+
+    return regex.match(input_hash) is not None
+
+
 def does_url_contain(url, qry):
     """
     Checks if url is a valid url, if it isn't returns False.

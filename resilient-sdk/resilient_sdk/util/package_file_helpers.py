@@ -628,7 +628,7 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
 
 def create_extension(path_setup_py_file, path_apikey_permissions_file,
                      output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None, path_payload_samples=None,
-                     custom_display_name=None, repository_name=None, keep_build_dir=False):
+                     custom_display_name=None, repository_name=None, image_hash=None, keep_build_dir=False):
     """
     Function that creates The App.zip file from the given setup.py, customize and config files
     and copies it to the output_dir. Returns the path to the app.zip
@@ -655,6 +655,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     :type custom_display_name: str
     :param repository_name: will over-ride the container repository name for the App. Default: 'ibmresilient'
     :type repository_name: str
+    :param image_hash: if defined will append the hash to the image_name in the app.json file e.g. <repository_name>/<package_name>@sha256:<image_hash>. Default: <repository_name>/<package_name>:<version>
+    :type image_hash: str
     :param keep_build_dir: if True, build/ will not be removed. Default: False
     :type keep_build_dir: bool
     :return: Path to new app.zip
@@ -778,7 +780,18 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
         # Image string is all lowercase on quay.io
         image_name = "{0}/{1}:{2}".format(repository_name, setup_py_attributes.get("name"), setup_py_attributes.get("version"))
+
+        if image_hash:
+
+            if not sdk_helpers.is_valid_hash(image_hash):
+                raise SDKException(u"image_hash '{0}' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long".format(image_hash))
+
+            # If image_hash is defined append to image name e.g. <repository_name>/<package_name>@sha256:<image_hash>
+            image_name = "{0}/{1}@sha256:{2}".format(repository_name, setup_py_attributes.get("name"), image_hash)
+
         image_name = image_name.lower()
+
+        LOG.debug("image_name generated: %s", image_name)
 
         # Generate the contents for the extension.json file
         the_extension_json_file_contents = {
