@@ -52,7 +52,7 @@ def test_execute_command_no_samples(fx_copy_fn_main_mock_integration, fx_get_sub
     assert export_res_contents == mock_export_res_contents
 
 
-def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
+def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
@@ -80,7 +80,7 @@ def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_s
     assert export_res_contents == mock_export_res_contents
 
 
-def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
+def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 

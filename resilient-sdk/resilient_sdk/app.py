@@ -80,7 +80,7 @@ def main():
     """
 
     # See if RES_SDK_DEV environment var is set
-    sdk_dev = sdk_helpers.str_to_bool(os.getenv("RES_SDK_DEV"))
+    sdk_dev = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV)
 
     # Get main parser object
     parser = get_main_app_parser()

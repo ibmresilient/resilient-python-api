@@ -330,8 +330,10 @@ class CmdCodegen(BaseCmd):
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
-            # Add a 'payload_samples/fn_name' directory and the files to it
-            CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
+            # See if RES_SDK_DEV environment var is set
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                # Add a 'payload_samples/fn_name' directory and the files to it
+                CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
         for w in jinja_data.get("workflows"):
 

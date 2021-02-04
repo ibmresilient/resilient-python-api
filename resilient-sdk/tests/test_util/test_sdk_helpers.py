@@ -358,3 +358,11 @@ def test_str_to_bool():
     assert sdk_helpers.str_to_bool(1) is True
     assert sdk_helpers.str_to_bool(0) is False
     assert sdk_helpers.str_to_bool('0') is False
+
+
+def test_is_env_var_set(fx_add_dev_env_var):
+    assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is True
+
+
+def test_is_env_var_not_set():
+    assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is False
