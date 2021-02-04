@@ -11,6 +11,7 @@ from distutils.util import strtobool
 import pkg_resources
 import resilient
 from resilient_circuits.app import AppArgumentParser
+from resilient_circuits import helpers
 from resilient import (SimpleHTTPException,
                        Definition,
                        TypeDefinition,
@@ -180,6 +181,7 @@ class Customizations(object):
     def load_import(self, definition, dist):
         """Load an importable block of customizations"""
         import_data = json.loads(base64.b64decode(definition.value).decode("utf-8"))
+        import_data = helpers.remove_tag(import_data)
         LOG.debug(json.dumps(import_data, indent=2))
         uri = "/configurations/imports"
         done = False
