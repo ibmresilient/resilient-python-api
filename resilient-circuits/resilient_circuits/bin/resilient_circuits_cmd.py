@@ -364,7 +364,7 @@ def selftest(args):
                 install_list.remove(dist.project_name)
 
             # add an entry for the package
-            LOG.info("%s: ", dist.project_name)
+            LOG.info("\n%s: ", dist.project_name)
             for ep in component_list:
                 # load the entry point
                 f_selftest = ep.load()
