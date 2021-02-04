@@ -215,7 +215,7 @@ def test_gen_function():
     pass
 
 
-def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir):
+def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir, fx_add_dev_env_var):
     """
     This tests that when a package is generated with codegen
     that each of the EXPECTED_FILES exist in each directory.

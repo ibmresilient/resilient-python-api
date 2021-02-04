@@ -35,6 +35,7 @@ else:
     from json.decoder import JSONDecodeError
 
 LOGGER_NAME = "resilient_sdk_log"
+ENV_VAR_DEV = "RES_SDK_DEV"
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -956,3 +957,11 @@ def str_to_bool(value):
     """
     value = str(value).lower()
     return value in ('1', 'true', 'yes')
+
+
+def is_env_var_set(env_var):
+    """
+    :return: True/False if env_var is set in environment
+    :rtype: bool
+    """
+    return str_to_bool(os.getenv(env_var))
