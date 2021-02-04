@@ -399,8 +399,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual(proxies['http'], "http://abc.com")
         self.assertEqual(proxies['https'], "https://abc.com")
 
-
-    #@pytest.mark.skip(reason="may be over the limit")
+    @unittest.skip(reason="may be over the limit")
     def test_proxy(self):
         rc = RequestsCommon()
 
