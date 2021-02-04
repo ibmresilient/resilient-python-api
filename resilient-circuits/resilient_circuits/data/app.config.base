@@ -51,7 +51,7 @@ num_workers=10
 #cafile=~/.resilient/cert.cer
 
 [integrations]
-# Use this section to configure options for all Apps within this environment
+# Use this section to configure options for all Apps that use resilient-lib within this environment
 
 # Proxy settings
 #http_proxy=http://example.com:3000
