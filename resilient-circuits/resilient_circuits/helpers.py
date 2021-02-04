@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for resilient-circuits"""
+import sys
 import pkg_resources
 import logging
 import re
@@ -130,3 +131,23 @@ def get_packages(working_set):
         pkg_list.append((pkg.project_name, pkg.version))
 
     return sorted(pkg_list, key=lambda x: x[0].lower())
+
+
+def get_env_str(packages):
+    """
+    Return a str with the Python version and the
+    packages
+
+    :param packages: the working_set for all packages installed in this env
+    :type packages: setuptools.pkg_resources.WorkingSet obj
+    :return: env_str: a str of the Environment
+    :rtype: str
+    """
+
+    env_str = u"###############\n\nEnvironment:\n\n"
+    env_str += u"Python Version: {0}\n\n".format(sys.version)
+    env_str += u"Installed packages:\n"
+    for pkg in get_packages(packages):
+        env_str += u"\n\t{0}: {1}".format(pkg[0], pkg[1])
+    env_str += u"\n###############"
+    return env_str

@@ -97,3 +97,13 @@ def test_get_packages():
         assert len(pkg) == 2
         assert isinstance(pkg[0], str)
         assert isinstance(pkg[1], str)
+
+
+def test_env_str():
+
+    env_str = helpers.get_env_str(pkg_resources.working_set)
+
+    assert "Environment" in env_str
+    assert "Python Version" in env_str
+    assert "Installed packages" in env_str
+    assert "\n\tresilient-circuits" in env_str
