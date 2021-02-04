@@ -308,10 +308,12 @@ class CmdCodegen(BaseCmd):
             }
         }
 
-        # If there are Functions, add a 'tests' and a 'payload_samples' directory
+        # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
-            package_mapping_dict["payload_samples"] = {}
+
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                package_mapping_dict["payload_samples"] = {}
 
         # Loop each Function
         for f in jinja_data.get("functions"):
