@@ -95,7 +95,7 @@ def run(resilient_circuits_args, restartable=False, config_file=None):
     if config_file:
         kwargs = {"config_file": config_file}
 
-    LOG.info("%s", helpers.get_env_str(pkg_resources.working_set))
+    LOG.info(helpers.get_env_str(pkg_resources.working_set))
 
     app.run(**kwargs)
 
@@ -332,7 +332,7 @@ def selftest(args):
         print out package and their selftest states"""
 
     if hasattr(args, "print_env") and args.print_env:
-        LOG.info("%s", helpers.get_env_str(pkg_resources.working_set))
+        LOG.info(helpers.get_env_str(pkg_resources.working_set))
 
     components = defaultdict(list)
 
