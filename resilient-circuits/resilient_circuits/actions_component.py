@@ -181,7 +181,6 @@ class ResilientComponent(BaseComponent):
                                 Event.create("idle_reset"), persist=True)
             _idle_timer.register(self)
         else:
-            LOG.debug("Reset idle timer")
             _idle_timer.reset()
 
     def get_incident_field(self, fieldname):

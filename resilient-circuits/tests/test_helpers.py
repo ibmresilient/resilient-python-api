@@ -99,6 +99,16 @@ def test_get_packages():
         assert isinstance(pkg[1], str)
 
 
+def test_env_str():
+
+    env_str = helpers.get_env_str(pkg_resources.working_set)
+
+    assert "Environment" in env_str
+    assert "Python Version" in env_str
+    assert "Installed packages" in env_str
+    assert "\n\tresilient-circuits" in env_str
+
+
 def test_remove_tag():
 
     mock_res_obj = {

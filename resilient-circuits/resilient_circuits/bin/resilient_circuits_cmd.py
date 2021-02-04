@@ -94,6 +94,9 @@ def run(resilient_circuits_args, restartable=False, config_file=None):
     kwargs = {}
     if config_file:
         kwargs = {"config_file": config_file}
+
+    LOG.info(helpers.get_env_str(pkg_resources.working_set))
+
     app.run(**kwargs)
 
 
@@ -329,13 +332,7 @@ def selftest(args):
         print out package and their selftest states"""
 
     if hasattr(args, "print_env") and args.print_env:
-        LOG.info("###############\nEnvironment:\n")
-        LOG.info("Python Version: %s\n", sys.version)
-
-        LOG.info("Installed packages:")
-        for pkg in helpers.get_packages(pkg_resources.working_set):
-            LOG.info("\t%s: %s", pkg[0], pkg[1])
-        LOG.info("###############")
+        LOG.info(helpers.get_env_str(pkg_resources.working_set))
 
     components = defaultdict(list)
 
@@ -364,7 +361,7 @@ def selftest(args):
                 install_list.remove(dist.project_name)
 
             # add an entry for the package
-            LOG.info("%s: ", dist.project_name)
+            LOG.info("\n%s: ", dist.project_name)
             for ep in component_list:
                 # load the entry point
                 f_selftest = ep.load()
