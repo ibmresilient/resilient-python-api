@@ -1,8 +1,8 @@
 2021-02: ver. 40.0
-* The function template that gets produced when you run 'codegen' now includes references to the resilient-lib library
-* When the var RES_SDK_DEV is set, 'codegen' now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server"
-* Added '--no-samples' flag to 'package' and when set do not look for the payload_samples directory or try add them to the export.res file
-* Added '--image-hash' flag to 'package' to specify the SHA256 of an image that the app.zip created refers to
+* The function template that is produced when you run 'codegen' now includes references to the resilient-lib library.
+* When the var RES_SDK_DEV is set, 'codegen' now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server".
+* Added '--no-samples' flag to 'package' and when set do not look for the payload_samples directory or try add them to the export.res file.
+* Added '--image-hash' flag to 'package' to specify the SHA256 of an image that the app.zip refers to.
 
 2020-10: ver. 39.0
 * The 'docgen' command creates a single README and updated the README to include information on App Hosts.
