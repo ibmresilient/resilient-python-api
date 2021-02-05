@@ -203,6 +203,9 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("Generating codegen package...")
 
+        if os.path.exists(args.package) and not args.reload:
+            raise SDKException(u"'{0}' already exists. Add --reload flag to regenerate it".format(args.package))
+
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
