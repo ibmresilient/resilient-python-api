@@ -5,9 +5,11 @@
 import os
 import sys
 import shutil
+import pytest
 from resilient_sdk.cmds import base_cmd, CmdCodegen
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util.sdk_exception import SDKException
 from tests import helpers
 from tests.shared_mock_data import mock_paths
 
@@ -285,6 +287,24 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     # Assert a new md file is created in data dir
     expected_workflow_files = EXPECTED_FILES_DATA_DIR + ["wf_additional_mock_workflow.md"]
     assert helpers.verify_expected_list(expected_workflow_files, os.listdir(os.path.join(path_package_reloaded, "data")))
+
+
+def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_package):
+    """
+    This tests that it you forget the --reload flag you get an error
+    """
+    output_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path", "fn_main_mock_integration-1.1.0")
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    shutil.move(fx_copy_fn_main_mock_integration[1], output_path)
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = output_path
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+
+    with pytest.raises(SDKException, match=r"already exists. Add --reload flag to regenerate it"):
+        cmd_codegen._gen_package(args)
 
 
 def test_execute_command():
