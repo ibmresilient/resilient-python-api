@@ -5,6 +5,7 @@
 
 Resilient Python API Library
 ============================
+This is a package reference of the packages in the resilient-python-api repo. Individual functions may be changed as their parent packages are continuously worked on.
 
 .. toctree::
    :maxdepth: 4
@@ -12,7 +13,6 @@ Resilient Python API Library
    
    resilient
    resilient_circuits
-   resilient_sdk
    resilient_lib
    
    pytest_resilient_circuits
