@@ -19,6 +19,7 @@ env:
   - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
 
 # Install package deps
 before_install:

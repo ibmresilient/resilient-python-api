@@ -1,27 +1,50 @@
 #!/bin/bash -e
 
+cd $TRAVIS_BUILD_DIR
+
+###############
+## Variables ##
+###############
+ARTIFACTORY_API_KEY=$ARTIFACTORY_API_KEY_SHANE
+ARTIFACTORY_USERNAME=$ARTIFACTORY_USERNAME_SHANE
+
+# Write the version as environment variable.
+export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
+
+paths_to_copy_to_artifactory=()
+
+# readonly package_names=(
+#     "resilient"
+#     "resilient-circuits"
+#     "resilient-sdk"
+#     "resilient-lib"
+#     "pytest-resilient-circuits"
+#     "rc-cts"
+#     "rc-webserver"
+# )
+
+readonly package_names=(
+    "resilient-sdk"
+)
+
+##################
+## Check params ##
+##################
 if [ $1 == "do_deploy" ]; then
     deploy=true
 else
     deploy=false
 fi
 
-paths_to_copy_to_artifactory=()
+###########
+## Start ##
+###########
 
-cd $TRAVIS_BUILD_DIR
-
-readonly package_names=(
-    "resilient"
-    "resilient-circuits"
-    "resilient-sdk"
-    "resilient-lib"
-    "pytest-resilient-circuits"
-    "rc-cts"
-    "rc-webserver"
-)
-
-# Write the version as environment variable.
-export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
+# Write .pypirc file
+sed -e "s|{{ARTIFACTORY_PYPI_REPO_URL}}|$ARTIFACTORY_PYPI_REPO_URL|" \
+-e "s|{{ARTIFACTORY_USERNAME}}|$ARTIFACTORY_USERNAME|" \
+-e "s|{{ARTIFACTORY_API_KEY}}|$ARTIFACTORY_API_KEY|" \
+$PATH_TEMPLATE_PYPIRC > $TRAVIS_BUILD_DIR/.pypirc
 
 for p in "${package_names[@]}"; do
     # Get directory of package
@@ -31,8 +54,15 @@ for p in "${package_names[@]}"; do
     # Remove any old dist files.
     rm -rf $dir/dist/*
 
+    cd $dir
+
     # Build the source distribution.
-    (cd $dir && python setup.py sdist --formats=gztar)
+    if [ "$deploy" = true ] ; then
+        python setup.py sdist --formats=gztar upload -r artifactory
+
+    else
+        python setup.py sdist --formats=gztar
+    fi
 
     # Append path to sdist to paths_to_copy_to_artifactory array
     sdist_path=$(ls $dir/dist/*.tar.gz)
@@ -48,6 +78,6 @@ if [ "$deploy" = true ] ; then
         artifactory_path=$BASE_ARTIFACTORY_PATH/$package_name
         echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
         # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
-        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY_SHANE}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
+        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
     done
 fi
