@@ -8,6 +8,8 @@ stages:
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
     if: branch = master OR branch =~ ^release\/.+
+  - name: deploy documentation
+    if: branch = master OR branch =~ ^release\/.+
 
 env:
   global:
@@ -67,6 +69,26 @@ matrix:
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+    - stage: deploy documentation
+      # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
+      install:
+      - pip install sphinx resilient resilient-circuits resilient-lib resilient-sdk pytest-resilient-circuits rc-cts rc-webserver
+      script:
+        - make -C docs/ html
+        - touch docs/_build/html/.nojekyll
+      # Define a deploy step to the inbuilt git pages deployment provider
+      deploy:
+        - provider: pages:git
+          verbose: true
+          skip_cleanup: true
+          # The github_url for the internal git needs to be specified otherwise the deploy will fail.
+          github_url: github.ibm.com
+          # A token is needed for the deployment, this token is a Personal Access token with limited permissions
+          github_token: $GH_TOKEN
+          edge: true
+          local_dir: ./docs/_build/html/
+          keep_history: true
+
 
 after_failure:
   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
