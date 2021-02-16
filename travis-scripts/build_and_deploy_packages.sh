@@ -44,7 +44,7 @@ fi
 sed -e "s|{{ARTIFACTORY_PYPI_REPO_URL}}|$ARTIFACTORY_PYPI_REPO_URL|" \
 -e "s|{{ARTIFACTORY_USERNAME}}|$ARTIFACTORY_USERNAME|" \
 -e "s|{{ARTIFACTORY_API_KEY}}|$ARTIFACTORY_API_KEY|" \
-$PATH_TEMPLATE_PYPIRC > $TRAVIS_BUILD_DIR/.pypirc
+$PATH_TEMPLATE_PYPIRC > $HOME/.pypirc
 
 for p in "${package_names[@]}"; do
     # Get directory of package
@@ -78,6 +78,6 @@ if [ "$deploy" = true ] ; then
         artifactory_path=$BASE_ARTIFACTORY_PATH/$package_name
         echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
         # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
-        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
+        # curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
     done
 fi

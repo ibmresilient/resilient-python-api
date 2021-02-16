@@ -3,11 +3,12 @@ python: 3.6
 os: linux
 
 stages:
-  - run tests
-  - name: build packages
-    if: branch = master OR branch =~ ^release\/.+
-  - name: deploy to artifactory
-    if: branch = master OR branch =~ ^release\/.+
+  # - run tests
+  - deploy to artifactory
+  # - name: build packages
+  #   if: branch = master OR branch =~ ^release\/.+
+  # - name: deploy to artifactory
+  #   if: branch = master OR branch =~ ^release\/.+
 
 env:
   global:
@@ -30,44 +31,44 @@ matrix:
   fast_finish: true
 
   include:
-    - stage: run tests
-      name: Python 2.7 Tests
-      python: 2.7
-      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
-      install: ./travis-scripts/install_unit_tests_deps.sh
-      script:
-        - echo "Starting Python 2.7 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+    # - stage: run tests
+    #   name: Python 2.7 Tests
+    #   python: 2.7
+    #   env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+    #   install: ./travis-scripts/install_unit_tests_deps.sh
+    #   script:
+    #     - echo "Starting Python 2.7 Tests"
+    #     - ./travis-scripts/run_unit_tests.sh
 
-    - stage: run tests
-      name: Python 3.6 Tests
-      python: 3.6
-      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
-      install: ./travis-scripts/install_unit_tests_deps.sh
-      script:
-        - echo "Starting Python 3.6 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+    # - stage: run tests
+    #   name: Python 3.6 Tests
+    #   python: 3.6
+    #   env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+    #   install: ./travis-scripts/install_unit_tests_deps.sh
+    #   script:
+    #     - echo "Starting Python 3.6 Tests"
+    #     - ./travis-scripts/run_unit_tests.sh
 
-    - stage: build packages
-      name: Build Packages in Python 2.7
-      python: 2.7
-      script:
-        - echo "Building packages in Python 2.7"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
+    # - stage: build packages
+    #   name: Build Packages in Python 2.7
+    #   python: 2.7
+    #   script:
+    #     - echo "Building packages in Python 2.7"
+    #     - ./travis-scripts/build_and_deploy_packages.sh no_deploy
       
-    - stage: build packages
-      name: Build Packages in Python 3.6
-      python: 3.6
-      script:
-        - echo "Building packages in Python 3.6"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
+    # - stage: build packages
+    #   name: Build Packages in Python 3.6
+    #   python: 3.6
+    #   script:
+    #     - echo "Building packages in Python 3.6"
+    #     - ./travis-scripts/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
       script:
         - echo "Building packages in Python 3.6 and Deploying to Artifactory"
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
-        - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+        # - echo "Sending notification to Slack"
+        # - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
 
-after_failure:
-  - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
+# after_failure:
+#   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
