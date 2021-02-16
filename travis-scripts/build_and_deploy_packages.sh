@@ -13,19 +13,16 @@ export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 
 paths_to_copy_to_artifactory=()
 
-# readonly package_names=(
-#     "resilient"
-#     "resilient-circuits"
-#     "resilient-sdk"
-#     "resilient-lib"
-#     "pytest-resilient-circuits"
-#     "rc-cts"
-#     "rc-webserver"
-# )
-
 readonly package_names=(
+    "resilient"
+    "resilient-circuits"
     "resilient-sdk"
+    "resilient-lib"
+    "pytest-resilient-circuits"
+    "rc-cts"
+    "rc-webserver"
 )
+
 
 ##################
 ## Check params ##
@@ -78,6 +75,6 @@ if [ "$deploy" = true ] ; then
         artifactory_path=$BASE_ARTIFACTORY_PATH/$package_name
         echo "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
         # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
-        # curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
+        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
     done
 fi
