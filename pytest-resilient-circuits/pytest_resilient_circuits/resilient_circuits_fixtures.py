@@ -53,10 +53,10 @@ class ConfiguredAppliance:
 
         # Connect to Resilient
         self.client = resilient.SimpleClient(org_name=org, base_url=url, verify=False)
-        if user is not None:
-            self.client.connect(user, password)
-        else:
+        if api_key_id is not None:
             self.client.set_api_key(api_key_id=api_key_id, api_key_secret=api_key_secret)
+        else:
+            self.client.connect(user, password)
 
         # Retrieve constants from appliance
         constants = self._get_constants()["actions_framework"]
