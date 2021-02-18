@@ -21,6 +21,7 @@ env:
   - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
 
 # Install package deps
 before_install:
@@ -68,7 +69,8 @@ matrix:
         - echo "Building packages in Python 3.6 and Deploying to Artifactory"
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+
     - stage: deploy documentation
       # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
       install:
