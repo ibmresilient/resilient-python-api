@@ -8,8 +8,6 @@ stages:
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
     if: branch = master OR branch =~ ^release\/.+
-  - name: deploy documentation
-    if: branch = master 
 
 env:
   global:
@@ -69,6 +67,7 @@ matrix:
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+
     - stage: deploy documentation
       # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
       install:
@@ -88,7 +87,6 @@ matrix:
           edge: true
           local_dir: ./docs/_build/html/
           keep_history: true
-
 
 after_failure:
   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
