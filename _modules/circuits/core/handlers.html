@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>circuits.core.handlers &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for circuits.core.handlers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module define the @handler decorator/function and the HandlesType type.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">from</span> <span class="nn">circuits.tools</span> <span class="kn">import</span> <span class="n">getargspec</span>
+
+
+<div class="viewcode-block" id="handler"><a class="viewcode-back" href="../../../resilient_circuits.html#resilient_circuits.handler">[docs]</a><span class="k">def</span> <span class="nf">handler</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates an Event Handler</span>
+
+<span class="sd">    This decorator can be applied to methods of classes derived from</span>
+<span class="sd">    :class:`circuits.core.components.BaseComponent`. It marks the method as a</span>
+<span class="sd">    handler for the events passed as arguments to the ``@handler`` decorator.</span>
+<span class="sd">    The events are specified by their name.</span>
+
+<span class="sd">    The decorated method&#39;s arguments must match the arguments passed to the</span>
+<span class="sd">    :class:`circuits.core.events.Event` on creation. Optionally, the</span>
+<span class="sd">    method may have an additional first argument named *event*. If declared,</span>
+<span class="sd">    the event object that caused the handler to be invoked is assigned to it.</span>
+
+<span class="sd">    By default, the handler is invoked by the component&#39;s root</span>
+<span class="sd">    :class:`~.manager.Manager` for events that are propagated on the channel</span>
+<span class="sd">    determined by the BaseComponent&#39;s *channel* attribute.</span>
+<span class="sd">    This may be overridden by specifying a different channel as a keyword</span>
+<span class="sd">    parameter of the decorator (``channel=...``).</span>
+
+<span class="sd">    Keyword argument ``priority`` influences the order in which handlers</span>
+<span class="sd">    for a specific event are invoked. The higher the priority, the earlier</span>
+<span class="sd">    the handler is executed.</span>
+
+<span class="sd">    If you want to override a handler defined in a base class of your</span>
+<span class="sd">    component, you must specify ``override=True``, else your method becomes</span>
+<span class="sd">    an additional handler for the event.</span>
+
+<span class="sd">    **Return value**</span>
+
+<span class="sd">    Normally, the results returned by the handlers for an event are simply</span>
+<span class="sd">    collected in the :class:`circuits.core.events.Event`&#39;s :attr:`value`</span>
+<span class="sd">    attribute. As a special case, a handler may return a</span>
+<span class="sd">    :class:`types.GeneratorType`. This signals to the dispatcher that the</span>
+<span class="sd">    handler isn&#39;t ready to deliver a result yet.</span>
+<span class="sd">    Rather, it has interrupted it&#39;s execution with a ``yield None``</span>
+<span class="sd">    statement, thus preserving its current execution state.</span>
+
+<span class="sd">    The dispatcher saves the returned generator object as a task.</span>
+<span class="sd">    All tasks are reexamined (i.e. their :meth:`next()` method is invoked)</span>
+<span class="sd">    when the pending events have been executed.</span>
+
+<span class="sd">    This feature avoids an unnecessarily complicated chaining of event</span>
+<span class="sd">    handlers. Imagine a handler A that needs the results from firing an</span>
+<span class="sd">    event E in order to complete. Then without this feature, the final</span>
+<span class="sd">    action of A would be to fire event E, and another handler for</span>
+<span class="sd">    an event ``SuccessE`` would be required to complete handler A&#39;s</span>
+<span class="sd">    operation, now having the result from invoking E available</span>
+<span class="sd">    (actually it&#39;s even a bit more complicated).</span>
+
+<span class="sd">    Using this &quot;suspend&quot; feature, the handler simply fires event E and</span>
+<span class="sd">    then yields ``None`` until e.g. it finds a result in E&#39;s :attr:`value`</span>
+<span class="sd">    attribute. For the simplest scenario, there even is a utility</span>
+<span class="sd">    method :meth:`circuits.core.manager.Manager.callEvent` that combines</span>
+<span class="sd">    firing and waiting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">f</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">names</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">priority</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;channel&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">override</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;override&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="n">getargspec</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">args</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<span class="k">class</span> <span class="nc">Unknown</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Unknown Dummy Component&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">reprhandler</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="s2">&quot;&lt;handler[</span><span class="si">%s</span><span class="s2">][</span><span class="si">%s</span><span class="s2">]</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">)&gt;&quot;</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="s2">&quot;channel&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">circuits.core.manager</span> <span class="kn">import</span> <span class="n">Manager</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">Manager</span><span class="p">):</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;&lt;instance of &quot;</span> <span class="o">+</span> <span class="n">channel</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;&gt;&quot;</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">handler</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="n">instance</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+        <span class="n">handler</span><span class="p">,</span> <span class="s2">&quot;im_self&quot;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">handler</span><span class="p">,</span> <span class="s2">&quot;__self__&quot;</span><span class="p">,</span> <span class="n">Unknown</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="n">method</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="n">priority</span> <span class="o">=</span> <span class="s2">&quot;[</span><span class="si">%0.2f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">handler</span><span class="o">.</span><span class="n">priority</span><span class="p">,)</span> <span class="k">if</span> <span class="n">handler</span><span class="o">.</span><span class="n">priority</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="nb">format</span> <span class="o">%</span> <span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">priority</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HandlerMetaClass</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">ns</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HandlerMetaClass</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+
+        <span class="n">callables</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ns</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">Callable</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">callable</span> <span class="ow">in</span> <span class="n">callables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">callable</span><span class="p">,</span> <span class="s2">&quot;handler&quot;</span><span class="p">)):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">handler</span><span class="p">(</span><span class="n">name</span><span class="p">)(</span><span class="n">callable</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> - </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">cls</span><span class="p">),</span> <span class="n">name</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

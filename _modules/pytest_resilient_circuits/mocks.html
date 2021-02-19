@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pytest_resilient_circuits.mocks &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pytest_resilient_circuits.mocks</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Requests mock for Resilient REST API &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">requests_mock</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">from</span> <span class="nn">resilient.resilient_rest_mock</span> <span class="kn">import</span> <span class="n">ResilientMock</span><span class="p">,</span> <span class="n">resilient_endpoint</span>
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">test_data</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a test JSON data file&quot;&quot;&quot;</span>
+    <span class="n">template_file_path</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="s2">&quot;pytest_resilient_circuits&quot;</span><span class="p">,</span> <span class="s2">&quot;data/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">template_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">template_file</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">template_file</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BasicResilientMock"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock">[docs]</a><span class="k">class</span> <span class="nc">BasicResilientMock</span><span class="p">(</span><span class="n">ResilientMock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mock that implements some of the basic REST endpoints.  Test classes can extend this where needed.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BasicResilientMock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__incidents_2314.json&quot;</span><span class="p">)</span>
+
+    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;/rest/session&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">session_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_data</span><span class="p">(</span><span class="s2">&quot;session_post&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+
+    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/rest/session&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">session_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_data</span><span class="p">(</span><span class="s2">&quot;session_get&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_session_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_type</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for POST/GET to /rest/session &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">session_type</span><span class="p">)</span>
+        <span class="n">session_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;saml_alias&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;csrf_token&quot;</span><span class="p">:</span> <span class="s2">&quot;79945884c2e6f2339cbffbbaba01f17b&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;user_lname&quot;</span><span class="p">:</span> <span class="s2">&quot;Doe&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;is_ldap&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;is_saml&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;orgs&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="s2">&quot;AnyCity&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;addr&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;zip&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;has_available_twofactor&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;perms&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;create_shared_layout&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;administrator&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;create_incs&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;master_administrator&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;observer&quot;</span><span class="p">:</span> <span class="kc">False</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;supports_ldap&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;twofactor_auth_domain&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;attachments_enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;has_saml&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;addr2&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;twofactor_cookie_lifetime_secs&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;require_saml&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;tasks_private&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;authorized_ldap_group&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_name</span>
+                <span class="p">},</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;addr&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;zip&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;has_available_twofactor&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;perms&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;create_shared_layout&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;administrator&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;create_incs&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;master_administrator&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;observer&quot;</span><span class="p">:</span> <span class="kc">False</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;supports_ldap&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;twofactor_auth_domain&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;attachments_enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;has_saml&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;addr2&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;twofactor_cookie_lifetime_secs&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;require_saml&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;tasks_private&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;authorized_ldap_group&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Mock Org&quot;</span>
+                <span class="p">}</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;session_ip&quot;</span><span class="p">:</span> <span class="s2">&quot;192.168.56.1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;user_fname&quot;</span><span class="p">:</span> <span class="s2">&quot;John&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;user_email&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span>
+        <span class="p">}</span>
+        <span class="n">cookies</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;JSESSIONID&#39;</span><span class="p">:</span> <span class="s1">&#39;FakeSessionId&#39;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">cookies</span><span class="o">=</span><span class="n">requests</span><span class="o">.</span><span class="n">cookies</span><span class="o">.</span><span class="n">cookiejar_from_dict</span><span class="p">(</span><span class="n">cookies</span><span class="p">),</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="n">session_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicResilientMock.incident_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.incident_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/incidents/[0-9]+$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">incident_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/incidents/&lt;inc_id&gt; &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;incident_get&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.incident_put"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.incident_put">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;/incidents/[0-9]+&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">incident_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for PUT to /orgs/&lt;org_id&gt;/incidents/&lt;inc_id&gt; &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;incident_put&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.incident_patch"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.incident_patch">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;PATCH&quot;</span><span class="p">,</span> <span class="s2">&quot;/incidents/[0-9]+&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">incident_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for patch to /orgs/&lt;org_id&gt;/incidents/&lt;inc_id&gt; &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;incident_patch&quot;</span><span class="p">)</span>
+        <span class="c1"># update the incident object</span>
+        <span class="n">vers</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">vers</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">[</span><span class="s1">&#39;vers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vers</span>
+
+        <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;changes&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;field&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;new_value&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;object&quot;</span><span class="p">),</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;new_value&quot;</span><span class="p">][</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;new_value&quot;</span><span class="p">][</span><span class="s2">&quot;object&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">[</span><span class="s1">&#39;properties&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">[</span><span class="s1">&#39;properties&#39;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Field &#39;</span><span class="si">%s</span><span class="s2">&#39; not found in mock incident&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.incident_post"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.incident_post">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;/incidents/&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">incident_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for POST to /orgs/&lt;org_id&gt;/incidents &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;incident_post&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">incident</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.org_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.org_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/orgs/[0-9]+$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">org_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt; &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;org_get&quot;</span><span class="p">)</span>
+        <span class="n">org_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                                    <span class="s2">&quot;fname&quot;</span><span class="p">:</span> <span class="s2">&quot;Resilient&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;lname&quot;</span><span class="p">:</span> <span class="s2">&quot;Sysadmin&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                                    <span class="s2">&quot;phone&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;cell&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;locked&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                    <span class="s2">&quot;roles&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                        <span class="s2">&quot;administrator&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                        <span class="s2">&quot;observer&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                        <span class="s2">&quot;master_administrator&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                        <span class="s2">&quot;create_incs&quot;</span><span class="p">:</span> <span class="kc">True</span>
+                                    <span class="p">},</span>
+                                    <span class="s2">&quot;last_login&quot;</span><span class="p">:</span> <span class="mi">1475614308048</span><span class="p">,</span>
+                                    <span class="s2">&quot;org_id&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
+                                    <span class="s2">&quot;group_ids&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                                    <span class="s2">&quot;is_external&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                              <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                                    <span class="s2">&quot;fname&quot;</span><span class="p">:</span> <span class="s2">&quot;User&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;lname&quot;</span><span class="p">:</span> <span class="s2">&quot;Three&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;someone@example.com&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;phone&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;cell&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="s2">&quot;locked&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                    <span class="s2">&quot;roles&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                        <span class="s2">&quot;administrator&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                        <span class="s2">&quot;observer&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                        <span class="s2">&quot;master_administrator&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                        <span class="s2">&quot;create_incs&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                                    <span class="s2">&quot;last_login&quot;</span><span class="p">:</span> <span class="mi">1476711664869</span><span class="p">,</span>
+                                    <span class="s2">&quot;org_id&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
+                                    <span class="s2">&quot;group_ids&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                                    <span class="s2">&quot;is_external&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+                              <span class="p">},</span>
+                    <span class="s2">&quot;actions_framework_enabled&quot;</span><span class="p">:</span> <span class="kc">True</span>
+                    <span class="p">}</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">org_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.incident_fields_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.incident_fields_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/types/incident/fields&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">incident_fields_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/types/incident/fields &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;incident_fields_get&quot;</span><span class="p">)</span>
+        <span class="n">field_data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__types_incident_fields.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">field_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.action_fields_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.action_fields_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/types/actioninvocation/fields&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">action_fields_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/types/actioninvocation/fields &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;action_fields_get&quot;</span><span class="p">)</span>
+        <span class="n">field_data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__types_incident_fields.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">field_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.function_fields_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.function_fields_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/types/__function/fields&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">function_fields_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/types/__function/fields &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;function_fields_get&quot;</span><span class="p">)</span>
+        <span class="n">field_data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__types_function_fields.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">field_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.actions_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.actions_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/actions&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">actions_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/actions &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;actions_get&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__actions.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.message_destinations_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.message_destinations_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/message_destinations&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">message_destinations_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/message_destinations &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;message_destinations_get&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__message_destinations.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.functions_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.functions_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/functions&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">functions_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/functions &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;functions_get&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__functions.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.functions_get_xxx"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.functions_get_xxx">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/functions/.*$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">functions_get_xxx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /orgs/&lt;org_id&gt;/functions/nnn &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;functions_get_xxx&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__functions.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;entities&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.attachment_contents_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.attachment_contents_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/incidents/[0-9]+/attachments/[0-9]+/contents$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">attachment_contents_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to attachment contents &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;attachment_contents_get&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="s1">&#39;&quot;abcdef&quot;&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.attachment_contents_post"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.attachment_contents_post">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;/incidents/[0-9]+/attachments$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">attachment_contents_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for POST to attachment &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;attachment_post&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_POST__attachment.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.wikis_get"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.wikis_get">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/wikis&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wikis_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /wikis &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;wikis_get&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__wikis.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.wikis_get_100"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.wikis_get_100">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/wikis/100$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wikis_get_100</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /wikis/100 &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;wikis_get_100&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__wiki100.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.wikis_get_xxx"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.wikis_get_xxx">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;/wikis/[0123456789]{1,2}$&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wikis_get_xxx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for GET to /wikis/&lt;wiki_id&gt; &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;wikis_get_xxx&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__wiki3.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.wikis_put_xxx"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.wikis_put_xxx">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;/wikis/[0-9]+&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wikis_put_xxx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for PUT to /wikis/&lt;wiki_id&gt; &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;wikis_put_xxx&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__wiki3.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicResilientMock.wikis_post"><a class="viewcode-back" href="../../pytest_resilient_circuits.html#pytest_resilient_circuits.BasicResilientMock.wikis_post">[docs]</a>    <span class="nd">@resilient_endpoint</span><span class="p">(</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;/wikis&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wikis_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Callback for POST to /wikis &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;wikis_post&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">(</span><span class="s2">&quot;200_JSON_GET__wiki3.json&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">requests_mock</span><span class="o">.</span><span class="n">create_response</span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+                                             <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                             <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

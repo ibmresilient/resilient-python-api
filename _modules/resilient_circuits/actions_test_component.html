@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient_circuits.actions_test_component &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient_circuits.actions_test_component</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Test Server component for injecting test Action Module messages&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> <span class="n">handler</span>
+<span class="kn">from</span> <span class="nn">circuits.net.sockets</span> <span class="kn">import</span> <span class="n">TCPServer</span>
+<span class="kn">from</span> <span class="nn">circuits.net.events</span> <span class="kn">import</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">resilient_circuits.action_message</span> <span class="kn">import</span> <span class="n">ActionMessage</span><span class="p">,</span> <span class="n">FunctionMessage</span>
+
+
+<span class="n">DEFAULT_TEST_HOST</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
+<span class="n">DEFAULT_TEST_PORT</span> <span class="o">=</span> <span class="mi">8008</span>
+<span class="n">DEFAULT_WORKFLOW_INSTANCE_ID</span> <span class="o">=</span> <span class="mi">999</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SubmitTestAction"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.SubmitTestAction">[docs]</a><span class="k">class</span> <span class="nc">SubmitTestAction</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Circuits event to insert a test Action Message &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SubmitTestAction.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.SubmitTestAction.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">((</span><span class="n">queue</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;queue, msg_id, and message are required&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SubmitTestAction</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="n">queue</span><span class="p">,</span> <span class="n">msg_id</span><span class="o">=</span><span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SubmitTestFunction"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.SubmitTestFunction">[docs]</a><span class="k">class</span> <span class="nc">SubmitTestFunction</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Circuits event to insert a test Function Message &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SubmitTestFunction.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.SubmitTestFunction.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">function_params</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">function_name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;function_name and function_params are required&quot;</span><span class="p">)</span>
+        <span class="n">msg_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SubmitTestFunction</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="p">,</span> <span class="n">msg_id</span><span class="o">=</span><span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">function_name</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">function_params</span><span class="p">,</span>
+            <span class="s2">&quot;workflow_instance&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;workflow_instance_id&quot;</span><span class="p">:</span> <span class="n">DEFAULT_WORKFLOW_INSTANCE_ID</span>
+            <span class="p">}</span>
+        <span class="p">})</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">ResilientTestActions</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Mock the stomp connection for testing&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_id</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="n">DEFAULT_TEST_HOST</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">DEFAULT_TEST_PORT</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ResilientTestActions</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span> <span class="o">=</span> <span class="n">org_id</span>
+        <span class="n">bind</span> <span class="o">=</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Binding test server to </span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+        <span class="n">TCPServer</span><span class="p">(</span><span class="n">bind</span><span class="p">)</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">messages_in_progress</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions_sent</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">usage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Submit actions with format: &lt;queue&gt; &lt;message json&gt;&quot;</span>
+
+    <span class="nd">@handler</span><span class="p">(</span><span class="s2">&quot;SubmitTestAction&quot;</span><span class="p">,</span> <span class="s2">&quot;SubmitTestFunction&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_submit_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create and fire an ActionMessage &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">message_id</span> <span class="o">=</span> <span class="s2">&quot;ID:resilient-54199-</span><span class="si">{val}</span><span class="s2">-6:2:12:1:1&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">msg_id</span><span class="p">)</span>
+            <span class="n">reply_to</span> <span class="o">=</span> <span class="s2">&quot;/queue/acks.</span><span class="si">{org}</span><span class="s2">.</span><span class="si">{queue}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">org</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span>
+                                                          <span class="n">queue</span><span class="o">=</span><span class="n">queue</span><span class="p">)</span>
+            <span class="n">destination</span> <span class="o">=</span> <span class="s2">&quot;/queue/actions.</span><span class="si">{org}</span><span class="s2">.</span><span class="si">{queue}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">org</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span>
+                                                                <span class="n">queue</span><span class="o">=</span><span class="n">queue</span><span class="p">)</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;reply-to&quot;</span><span class="p">:</span> <span class="n">reply_to</span><span class="p">,</span>
+                       <span class="s2">&quot;expires&quot;</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">),</span>
+                       <span class="s2">&quot;destination&quot;</span><span class="p">:</span> <span class="n">destination</span><span class="p">,</span>
+                       <span class="s2">&quot;correlation-id&quot;</span><span class="p">:</span> <span class="s2">&quot;invid:390&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;persistent&quot;</span><span class="p">:</span> <span class="s2">&quot;True&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;Co3MessagePayload&quot;</span><span class="p">:</span> <span class="s2">&quot;ActionDataDTO&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;Co3ContentType&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;message-id&quot;</span><span class="p">:</span> <span class="n">message_id</span><span class="p">,</span>
+                       <span class="s2">&quot;Co3ContextToken&quot;</span><span class="p">:</span> <span class="s2">&quot;dummy&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;subscription&quot;</span><span class="p">:</span> <span class="s2">&quot;stomp-</span><span class="si">{queue}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="n">queue</span><span class="p">)}</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">assert</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="nb">dict</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Bad Message&lt;action </span><span class="si">%d</span><span class="s2">&gt;: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sock</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Bad Message&lt;action </span><span class="si">%d</span><span class="s2">&gt;! </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;function&quot;</span><span class="p">):</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;functions.&quot;</span> <span class="o">+</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">action_event</span> <span class="o">=</span> <span class="n">FunctionMessage</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
+                                               <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                               <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                                               <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                               <span class="n">test_msg_id</span><span class="o">=</span><span class="n">msg_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;actions.&quot;</span> <span class="o">+</span> <span class="n">queue</span>
+                <span class="n">action_event</span> <span class="o">=</span> <span class="n">ActionMessage</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
+                                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                             <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                                             <span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                             <span class="n">test_msg_id</span><span class="o">=</span><span class="n">msg_id</span><span class="p">)</span>
+            <span class="n">action_event</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">event</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">action_event</span><span class="p">,</span> <span class="n">channel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sock</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="s2">&quot;Action Submitted&lt;action </span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="n">msg_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Action Failed&lt;action </span><span class="si">%d</span><span class="s2">&gt;&quot;</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sock</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Action Failed&lt;action </span><span class="si">%d</span><span class="s2">&gt;: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg_id</span><span class="p">,</span>
+                                                        <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@handler</span><span class="p">(</span><span class="s2">&quot;read&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Process data received from TCP stream &quot;&quot;&quot;</span>
+        <span class="n">msg_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># default</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data_as_bytes</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sock</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">messages_in_progress</span><span class="p">:</span>
+                <span class="c1"># New message, parse size out</span>
+                <span class="n">msg_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">data_as_bytes</span><span class="p">[:</span><span class="mi">4</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">partial_msg</span> <span class="o">=</span> <span class="n">data_as_bytes</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="n">msg_size</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Retrieve what we had so far</span>
+                <span class="n">msg_size</span><span class="p">,</span> <span class="n">partial_msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">messages_in_progress</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">sock</span><span class="p">)</span>
+                <span class="n">partial_msg</span> <span class="o">=</span> <span class="n">partial_msg</span> <span class="o">+</span> <span class="n">data_as_bytes</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">partial_msg</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">msg_size</span><span class="p">:</span>
+                <span class="c1"># Store what we have so far and wait for more</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">messages_in_progress</span><span class="p">[</span><span class="n">sock</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg_size</span><span class="p">,</span> <span class="n">partial_msg</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Complete message, parse out msg_id, queue, and msg</span>
+                <span class="n">msg_id</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">partial_msg</span><span class="p">[:</span><span class="mi">4</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">partial_msg</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="n">msg_size</span><span class="p">]</span>
+                <span class="n">remainder</span> <span class="o">=</span> <span class="n">partial_msg</span><span class="p">[</span><span class="n">msg_size</span><span class="p">:]</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="c1"># Bad Command</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&lt;action </span><span class="si">%d</span><span class="s2">&gt;: &quot;</span> <span class="o">%</span> <span class="n">msg_id</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">usage</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">queue</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">actions_sent</span><span class="p">[</span><span class="n">msg_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">sock</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">SubmitTestAction</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">remainder</span><span class="p">:</span>
+                    <span class="c1"># Process remainder</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">process_data</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">remainder</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Action Failed&lt;action </span><span class="si">%d</span><span class="s2">&gt;&quot;</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Action Failed&lt;action </span><span class="si">%d</span><span class="s2">&gt;: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Triggered for new connecting TCP clients&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">test_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; If action orginated from test client, send response&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Received message for test client&quot;</span><span class="p">)</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sock</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;RESPONSE&lt;action </span><span class="si">%d</span><span class="s2">&gt;: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handler when done&quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">test_msg_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Action Failed&lt;action </span><span class="si">%d</span><span class="s2">&gt;: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">test_msg_id</span><span class="p">,</span>
+                                                    <span class="nb">str</span><span class="p">(</span><span class="ne">Exception</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">status</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">status</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Action Completed&lt;action </span><span class="si">%d</span><span class="s2">&gt;: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">test_msg_id</span><span class="p">,</span>
+                                                       <span class="n">status</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fire_message</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fire_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Prefix message with length before firing&quot;&quot;&quot;</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="p">))</span> <span class="o">+</span> <span class="n">message</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Firing Message: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

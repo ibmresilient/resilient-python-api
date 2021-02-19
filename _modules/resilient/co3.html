@@ -1,0 +1,757 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient.co3 &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient.co3</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Simple client for Resilient REST API&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">ssl</span>
+<span class="kn">import</span> <span class="nn">mimetypes</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">unicodedata</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">co3base</span>
+<span class="kn">from</span> <span class="nn">.patch</span> <span class="kn">import</span> <span class="n">PatchStatus</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">Namespace</span>
+<span class="kn">from</span> <span class="nn">requests.adapters</span> <span class="kn">import</span> <span class="n">HTTPAdapter</span>
+<span class="kn">from</span> <span class="nn">requests.packages.urllib3.poolmanager</span> <span class="kn">import</span> <span class="n">PoolManager</span>
+<span class="kn">from</span> <span class="nn">requests_toolbelt.multipart.encoder</span> <span class="kn">import</span> <span class="n">MultipartEncoder</span>
+<span class="kn">from</span> <span class="nn">cachetools</span> <span class="kn">import</span> <span class="n">cachedmethod</span>
+<span class="kn">from</span> <span class="nn">cachetools.ttl</span> <span class="kn">import</span> <span class="n">TTLCache</span>
+<span class="kn">from</span> <span class="nn">.co3base</span> <span class="kn">import</span> <span class="n">ensure_unicode</span><span class="p">,</span> <span class="n">get_proxy_dict</span><span class="p">,</span> <span class="n">NoChange</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Python 3</span>
+    <span class="kn">import</span> <span class="nn">urllib.parse</span> <span class="k">as</span> <span class="nn">urlparse</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="c1"># Python 2</span>
+    <span class="kn">import</span> <span class="nn">urlparse</span>
+
+
+<span class="n">DEFAULT_CONFIG_FILENAME</span> <span class="o">=</span> <span class="s2">&quot;app.config&quot;</span>
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_resilient_circuits_version"><a class="viewcode-back" href="../../resilient.html#resilient.get_resilient_circuits_version">[docs]</a><span class="k">def</span> <span class="nf">get_resilient_circuits_version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If resilient-circuits is installed, returns its version</span>
+<span class="sd">    Else will return None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">resilient_circuits</span>
+        <span class="n">res_circuits_version</span> <span class="o">=</span> <span class="n">resilient_circuits</span><span class="o">.</span><span class="n">__version__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;major&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">res_circuits_version</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="s2">&quot;minor&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">res_circuits_version</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="s2">&quot;patch&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">res_circuits_version</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="get_config_file"><a class="viewcode-back" href="../../resilient.html#resilient.get_config_file">[docs]</a><span class="k">def</span> <span class="nf">get_config_file</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">generate_filename</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper: get the location of the configuration file</span>
+<span class="sd">    * Use the location specified in $APP_CONFIG_FILE, if set</span>
+<span class="sd">    * Otherwise if filename path specified in args exist in the current working use as config file.</span>
+<span class="sd">    * Otherwise if default config file name exists in current work directory use as config file.</span>
+<span class="sd">    * Otherwise use path in ~/.resilient/ directory</span>
+
+<span class="sd">    :param filename: The filename to use for the app config file.</span>
+<span class="sd">    :param generate_filename: Boolean is used for config filename generation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The config file location should usually be set in the environment</span>
+    <span class="c1"># First check environment, then cwd, then ~/.resilient/app.config</span>
+    <span class="n">env_app_config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;APP_CONFIG_FILE&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env_app_config_file</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">generate_filename</span> <span class="ow">and</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="c1"># If generating the config file and filename passed in, use it as the config file name.</span>
+            <span class="n">config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
+                <span class="c1"># If file not specified use default value.</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">DEFAULT_CONFIG_FILENAME</span>
+            <span class="c1"># If the filename exists in local directory use as config file name.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">generate_filename</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">config_file</span> <span class="o">=</span> <span class="n">filename</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Use default config file in ~/.resilient/app.config.</span>
+                <span class="n">config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">,</span> <span class="s2">&quot;.resilient&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">generate_filename</span><span class="p">:</span>
+                    <span class="c1"># If generating the config file location, create the &#39;~/.resilient&#39; directory if missing.</span>
+                    <span class="n">resilient_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">resilient_dir</span><span class="p">):</span>
+                        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;Creating </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">resilient_dir</span><span class="p">)</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">resilient_dir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config_file</span> <span class="o">=</span> <span class="n">env_app_config_file</span>
+    <span class="k">return</span> <span class="n">config_file</span></div>
+
+
+<div class="viewcode-block" id="get_client"><a class="viewcode-back" href="../../resilient.html#resilient.get_client">[docs]</a><span class="k">def</span> <span class="nf">get_client</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper: get a SimpleClient for Resilient REST API.</span>
+
+<span class="sd">    :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`</span>
+
+<span class="sd">    A standard way to initialize a SimpleClient with default configuration is,</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        parser = resilient.ArgumentParser(config_file=resilient.get_config_file())</span>
+<span class="sd">        opts = parser.parse_args()</span>
+<span class="sd">        client = resilient.get_client(opts)</span>
+
+<span class="sd">    Returns: a connected and verified instance of SimpleClient.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">Namespace</span><span class="p">):</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+    <span class="c1"># Allow explicit setting &quot;do not verify certificates&quot;</span>
+    <span class="n">verify</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cafile&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">verify</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;false&quot;</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unverified HTTPS requests (cafile=false).&quot;</span><span class="p">)</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">packages</span><span class="o">.</span><span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">()</span>  <span class="c1"># otherwise things get very noisy</span>
+        <span class="n">verify</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">proxy</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;proxy_host&quot;</span><span class="p">):</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="n">get_proxy_dict</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+    <span class="c1"># Create SimpleClient for a REST connection to the Resilient services</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://</span><span class="si">{0}</span><span class="s2">:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;port&quot;</span><span class="p">,</span> <span class="mi">443</span><span class="p">))</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urljoin</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;resource_prefix&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+    <span class="n">simple_client_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;org_name&quot;</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;org&quot;</span><span class="p">),</span>
+                          <span class="s2">&quot;proxies&quot;</span><span class="p">:</span> <span class="n">proxy</span><span class="p">,</span>
+                          <span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+                          <span class="s2">&quot;verify&quot;</span><span class="p">:</span> <span class="n">verify</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_http_responses&quot;</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Logging all HTTP Responses from Resilient to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;log_http_responses&quot;</span><span class="p">])</span>
+        <span class="n">simple_client</span> <span class="o">=</span> <span class="n">LoggingSimpleClient</span>
+        <span class="n">simple_client_args</span><span class="p">[</span><span class="s2">&quot;logging_directory&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;log_http_responses&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">simple_client</span> <span class="o">=</span> <span class="n">SimpleClient</span>
+
+    <span class="n">resilient_client</span> <span class="o">=</span> <span class="n">simple_client</span><span class="p">(</span><span class="o">**</span><span class="n">simple_client_args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;resilient_mock&quot;</span><span class="p">):</span>
+        <span class="c1"># Use a Mock for the Resilient Rest API</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using Mock &#39;</span><span class="si">%s</span><span class="s2">&#39; for Resilient REST API&quot;</span><span class="p">,</span> <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;resilient_mock&quot;</span><span class="p">])</span>
+        <span class="n">module_path</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;resilient_mock&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">path</span><span class="p">,</span> <span class="n">module_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">module_path</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Looking for </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">class_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
+        <span class="n">mock_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
+        <span class="n">res_mock</span> <span class="o">=</span> <span class="n">mock_class</span><span class="p">(</span><span class="n">org_name</span><span class="o">=</span><span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;org&quot;</span><span class="p">),</span> <span class="n">email</span><span class="o">=</span><span class="n">opts</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">])</span>
+        <span class="n">resilient_client</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">&quot;https://&quot;</span><span class="p">,</span> <span class="n">res_mock</span><span class="o">.</span><span class="n">adapter</span><span class="p">)</span>
+
+    <span class="c1">#</span>
+    <span class="c1">#   Check if we are using API Key or user/password. API key is the</span>
+    <span class="c1">#   preferable one if we can find from the opts</span>
+    <span class="c1">#</span>
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key_secret&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">userinfo</span> <span class="o">=</span> <span class="n">resilient_client</span><span class="o">.</span><span class="n">set_api_key</span><span class="p">(</span><span class="n">api_key_id</span><span class="o">=</span><span class="n">opts</span><span class="p">[</span><span class="s2">&quot;api_key_id&quot;</span><span class="p">],</span>
+                                                <span class="n">api_key_secret</span><span class="o">=</span><span class="n">opts</span><span class="p">[</span><span class="s2">&quot;api_key_secret&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">userinfo</span> <span class="o">=</span> <span class="n">resilient_client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span> <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Validate the org, and store org_id in the opts dictionary</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">userinfo</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">userinfo</span><span class="p">[</span><span class="s2">&quot;orgs&quot;</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;org&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;User is a member of multiple organizations; please specify one.&quot;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">userinfo</span><span class="p">[</span><span class="s2">&quot;orgs&quot;</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">org</span> <span class="ow">in</span> <span class="n">userinfo</span><span class="p">[</span><span class="s2">&quot;orgs&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">org</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;org&quot;</span><span class="p">):</span>
+                <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;org_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">org</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s2">&quot;org_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">userinfo</span><span class="p">[</span><span class="s2">&quot;orgs&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Check if action module is enabled and store to opts dictionary</span>
+    <span class="n">org_data</span> <span class="o">=</span> <span class="n">resilient_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">resilient_client</span><span class="o">.</span><span class="n">actions_enabled</span> <span class="o">=</span> <span class="n">org_data</span><span class="p">[</span><span class="s2">&quot;actions_framework_enabled&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">resilient_client</span></div>
+
+
+<div class="viewcode-block" id="SimpleHTTPException"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleHTTPException">[docs]</a><span class="k">class</span> <span class="nc">SimpleHTTPException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception for HTTP errors.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SimpleHTTPException.__init__"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleHTTPException.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param response: The Response object from the get/put/etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SimpleHTTPException</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">:  </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">response</span></div></div>
+
+
+<div class="viewcode-block" id="PatchConflictException"><a class="viewcode-back" href="../../resilient.html#resilient.PatchConflictException">[docs]</a><span class="k">class</span> <span class="nc">PatchConflictException</span><span class="p">(</span><span class="n">SimpleHTTPException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception for patch conflicts.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PatchConflictException.__init__"><a class="viewcode-back" href="../../resilient.html#resilient.PatchConflictException.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">patch_status</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PatchConflictException</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">patch_status</span> <span class="o">=</span> <span class="n">patch_status</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper to raise a SimpleHTTPException if the response.status_code is not 200.</span>
+
+<span class="sd">    :param response: the Response object from a get/put/etc.</span>
+<span class="sd">    :raises SimpleHTTPException: if response.status_code is not 200.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SimpleHTTPException</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SimpleClient"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient">[docs]</a><span class="k">class</span> <span class="nc">SimpleClient</span><span class="p">(</span><span class="n">co3base</span><span class="o">.</span><span class="n">BaseClient</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Python helper class for using the Resilient REST API.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SimpleClient.__init__"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_ttl</span><span class="o">=</span><span class="mi">240</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param org_name: The name of the organization to use.</span>
+<span class="sd">        :param base_url: The base URL of the Resilient server, e.g. &#39;https://app.resilientsystems.com/&#39;</span>
+<span class="sd">        :param proxies: A dictionary of HTTP proxies to use, if any.</span>
+<span class="sd">        :param verify: The path to a PEM file containing the trusted CAs, or False to disable all TLS verification</span>
+<span class="sd">        :param cache_ttl: Time to live for cached API responses</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">org_name</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">proxies</span><span class="p">,</span> <span class="n">verify</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">TTLCache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="n">cache_ttl</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimpleClient.connect"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Connect and authenticate to the Resilient REST API service.</span>
+
+<span class="sd">        :param email: The email address to use for authentication.</span>
+<span class="sd">        :param password: The password.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: The Resilient session object.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Calling connect of BaseClient. Convert the exception if there is any</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="k">def</span> <span class="nf">__make_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_headers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">,</span> <span class="n">additional_headers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_keyfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; function to generate cache key for cached_get &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">uri</span>
+
+    <span class="k">def</span> <span class="nf">_get_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+
+<div class="viewcode-block" id="SimpleClient.get"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the specified URI.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to fetch.</span>
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: A dictionary or array with the value returned by the server.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call get from BaseClient, convert exception if there is any</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="SimpleClient.cached_get"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.cached_get">[docs]</a>    <span class="nd">@cachedmethod</span><span class="p">(</span><span class="n">_get_cache</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_keyfunc</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">cached_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Same as :meth:`get()`, but checks cache first &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimpleClient.get_const"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.get_const">[docs]</a>    <span class="k">def</span> <span class="nf">get_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the ConstREST endpoint.</span>
+<span class="sd">        Endpoint for retrieving various constant information for this server.   This information is</span>
+<span class="sd">        useful in translating names that the user sees to IDs that other REST API endpoints accept.</span>
+<span class="sd">        For example, the incidentDTO has a field called &quot;crimestatus_id&quot;. The valid values are stored</span>
+<span class="sd">        in constDTO.crime_statuses.</span>
+
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: ConstDTO as a dictionary</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/const&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimpleClient.get_content"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.get_content">[docs]</a>    <span class="k">def</span> <span class="nf">get_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the specified URI.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to fetch.</span>
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: The raw value returned by the server for this resource.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call get_content from BaseClient. Convert exception if there is any</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_content</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="SimpleClient.post"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.post">[docs]</a>    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Posts to the specified URI.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to post.</span>
+<span class="sd">        :param payload: A dictionary value to be posted.</span>
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: A dictionary or array with the value returned by the server.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call post of BaseClient. Convert exception if there is any</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+    <span class="k">def</span> <span class="nf">_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal method used to call the underlying server patch endpoint&quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">patch</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">payload_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">payload_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+
+        <span class="n">hdrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;handle_format&quot;</span><span class="p">:</span> <span class="s2">&quot;names&quot;</span><span class="p">}</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">patch</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">data</span><span class="o">=</span><span class="n">payload_json</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">,</span>
+                                                                   <span class="n">additional_headers</span><span class="o">=</span><span class="n">hdrs</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">def</span> <span class="nf">_handle_patch_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper to determine if a patch retry is needed.  Will only return True if the server responds with a</span>
+<span class="sd">        409 or if the patch apply failed with field failures and the caller asked to overwrite conflicts.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">409</span><span class="p">:</span>
+            <span class="c1"># Just retry again, no adjustments.  The server can return 409 if there is a DB-level conflict.</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Retrying patch unchanged due to server CONFLICT&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">json</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+
+            <span class="n">patch_status</span> <span class="o">=</span> <span class="n">PatchStatus</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">patch_status</span><span class="o">.</span><span class="n">is_success</span><span class="p">()</span> <span class="ow">and</span> <span class="n">patch_status</span><span class="o">.</span><span class="n">has_field_failures</span><span class="p">():</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Patch conflict detected - invoking callback&quot;</span><span class="p">)</span>
+
+                <span class="n">before</span> <span class="o">=</span> <span class="n">patch</span><span class="o">.</span><span class="n">get_old_values</span><span class="p">()</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">callback</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">patch_status</span><span class="p">,</span> <span class="n">patch</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">NoChange</span><span class="p">:</span>
+                    <span class="c1"># Callback explicitly indicated that it didn&#39;t want to apply the change, so just</span>
+                    <span class="c1"># return False here to stop processing.</span>
+                    <span class="c1">#</span>
+                    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;callback indicated no change after conflict - skipping&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">patch</span><span class="o">.</span><span class="n">has_changes</span><span class="p">():</span>
+                    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;callback removed all conflicts from patch - no need to re-issue&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+                <span class="c1"># Make sure something in the patch has actually changed, otherwise we&#39;d</span>
+                <span class="c1"># just re-issue the same patch and get into a loop.</span>
+                <span class="n">after</span> <span class="o">=</span> <span class="n">patch</span><span class="o">.</span><span class="n">get_old_values</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">before</span> <span class="o">==</span> <span class="n">after</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invoked callback did not change the patch object, but returned True&quot;</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Raise an exception if there&#39;s some non-200 response.</span>
+        <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="c1"># Don&#39;t want to retry and got a 200 response.  There may or may not be field_failures.</span>
+        <span class="c1"># Handling that is now up to the caller of the patch method.</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_patch_overwrite_callback</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">patch_status</span><span class="p">,</span> <span class="n">patch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback to use when the caller specified overwrite_conflict=True in the patch call.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">patch</span><span class="o">.</span><span class="n">update_for_overwrite</span><span class="p">(</span><span class="n">patch_status</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_patch_raise_callback</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">patch_status</span><span class="p">,</span> <span class="n">patch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback to use when the caller specified overwrite_conflict=False in the patch call.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Got a conflict and no callback specified.  Just raise an exception.</span>
+        <span class="k">raise</span> <span class="n">PatchConflictException</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">patch_status</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SimpleClient.patch"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite_conflict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        PATCH request to the specified URI.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to patch.</span>
+<span class="sd">        :param patch: The :class:`Patch` object to apply</span>
+<span class="sd">        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :param overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch</span>
+<span class="sd">                object will be modified if necessary.</span>
+<span class="sd">        :return: The response object.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception or patch conflict occurs.</span>
+<span class="sd">        :raises PatchStatusException: If the patch failed to apply (and overwrite_conflict is False).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">overwrite_conflict</span><span class="p">:</span>
+            <span class="c1"># Re-issue patch with intent to overwrite conflicts.</span>
+            <span class="n">callback</span> <span class="o">=</span> <span class="n">SimpleClient</span><span class="o">.</span><span class="n">_patch_overwrite_callback</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Raise an exception on conflict.</span>
+            <span class="n">callback</span> <span class="o">=</span> <span class="n">SimpleClient</span><span class="o">.</span><span class="n">_patch_raise_callback</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_with_callback</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimpleClient.patch_with_callback"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.patch_with_callback">[docs]</a>    <span class="k">def</span> <span class="nf">patch_with_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        PATCH request to the specified URI.  If the patch application fails because of field conflicts,</span>
+<span class="sd">        the specified callback is invoked, allowing the caller to adjust the patch as necessary.</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to patch.</span>
+<span class="sd">        :param patch: The :class:`Patch` object to apply</span>
+<span class="sd">        :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be</span>
+<span class="sd">          of the following form: `def my_callback(response, patch_status, patch)`.</span>
+<span class="sd">          If your callback raises :class:`NoChange`, the update is skipped.</span>
+<span class="sd">        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: The response object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_patch_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="SimpleClient.post_attachment"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.post_attachment">[docs]</a>    <span class="k">def</span> <span class="nf">post_attachment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span>
+                        <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upload a file to the specified URI</span>
+<span class="sd">        e.g. &quot;/incidents/&lt;id&gt;/attachments&quot; (for incident attachments)</span>
+<span class="sd">        or,  &quot;/tasks/&lt;id&gt;/attachments&quot; (for task attachments)</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to post.</span>
+<span class="sd">        :param filepath: the path of the file to post</span>
+<span class="sd">        :param filename: optional name of the file when posted</span>
+<span class="sd">        :param mimetype: optional override for the guessed MIME type</span>
+<span class="sd">        :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)</span>
+<span class="sd">        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call BaseClient post_attachment. Convert exception if there is any</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">post_attachment</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                                                                 <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="SimpleClient.search"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.search">[docs]</a>    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts to the SearchExREST endpoint.</span>
+<span class="sd">        Endpoint for performing full text searches through incidents and incident child objects</span>
+<span class="sd">        (tasks, incident comments, task comments, milestones, artifacts, incident attachments,</span>
+<span class="sd">        task attachments, and data tables).</span>
+
+<span class="sd">        :param payload: The SearchExInputDTO parameters for performing a search, as a dictionary</span>
+<span class="sd">        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: List of results, as an array of SearchExResultDTO</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/search_ex&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
+        <span class="n">payload_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">data</span><span class="o">=</span><span class="n">payload_json</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimpleClient.get_put"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.get_put">[docs]</a>    <span class="k">def</span> <span class="nf">get_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">apply_func</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Safely performs an update operation by a GET, calls your `apply_func` callback, then PUT</span>
+<span class="sd">        with the updated value.  If the put call returns a 409 error, these steps are retried.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to get and update.</span>
+<span class="sd">        :param apply_func: A callback function that you implement to update the resource.  The function must be</span>
+<span class="sd">          of the following form: `def my_apply_func(object_to_update)`, and update the object.</span>
+<span class="sd">          If your callback raises :class:`NoChange`, the update is skipped.</span>
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: A dictionary or array with the value returned by the PUT operation.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call BaseClient get_put. Convert exception if there is any</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_put</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">apply_func</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="SimpleClient.put"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Directly performs an update operation by PUT to the specified URI.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to update.</span>
+<span class="sd">        :param payload: The object to update.</span>
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :return: A dictionary or array with the value returned by the server.</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call BaseClient put. Convert exception if there is any</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="SimpleClient.delete"><a class="viewcode-back" href="../../resilient.html#resilient.SimpleClient.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes the specified URI.</span>
+
+<span class="sd">        Note that this URI is relative to :samp:`&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;`.  So for example,</span>
+<span class="sd">        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:</span>
+<span class="sd">        `https://app.resilientsystems.com/rest/orgs/201/incidents`</span>
+
+<span class="sd">        :param uri: Relative URI of the resource to update.</span>
+<span class="sd">        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        :raises SimpleHTTPException: if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Call BaseClient delete. Convert exception if there is any</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">co3base</span><span class="o">.</span><span class="n">BasicHTTPException</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">_raise_if_error</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">get_response</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">response</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">LoggingSimpleClient</span><span class="p">(</span><span class="n">SimpleClient</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Simple Client version that logs all Resilient REST API responses to disk.  Useful when building a Mock.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logging_directory</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoggingSimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">logging_directory</span><span class="p">)</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+            <span class="k">assert</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logging_directory</span> <span class="o">=</span> <span class="n">directory</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Response Logging Directory </span><span class="si">%s</span><span class="s2"> does not exist!&quot;</span><span class="p">,</span>
+                            <span class="n">logging_directory</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_log_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Log Headers and JSON from a Requests Response object &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">),</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="p">,</span>
+                             <span class="n">response</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                             <span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">url</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
+                             <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logging_directory</span><span class="p">,</span>
+                                   <span class="n">filename</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;JSON&quot;</span><span class="p">)),</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logfile</span><span class="p">:</span>
+                <span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logging_directory</span><span class="p">,</span>
+                                   <span class="n">filename</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;DATA&quot;</span><span class="p">)),</span> <span class="s2">&quot;w+b&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logfile</span><span class="p">:</span>
+                <span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logging_directory</span><span class="p">,</span>
+                               <span class="n">filename</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;HEADER&quot;</span><span class="p">)),</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logfile</span><span class="p">:</span>
+            <span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Connect to Resilient and log response &quot;&quot;&quot;</span>
+        <span class="n">normal_post</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">normal_post</span><span class="p">(</span>
+            <span class="n">hooks</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_response</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">LoggingSimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">normal_post</span>
+        <span class="k">return</span> <span class="n">session</span>
+
+    <span class="k">def</span> <span class="nf">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a HTTP request and log response.</span>
+<span class="sd">           If unauthorized (likely due to a session timeout), retry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">wrapped_operation</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">operation</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_response</span><span class="p">),</span>
+                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">LoggingSimpleClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span>
+            <span class="n">wrapped_operation</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

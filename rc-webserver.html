@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rc-webserver package &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rc-cts package" href="rc-cts.html" />
+    <link rel="prev" title="pytest_resilient_circuits package" href="pytest_resilient_circuits.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="rc-webserver-package">
+<h1>rc-webserver package<a class="headerlink" href="#rc-webserver-package" title="Permalink to this headline">¶</a></h1>
+<p>This package provides a Circuits-based Web server that can be used to implement a Custom Threat Service,
+a web-hook, or other Web service that communicates with Resilient.</p>
+<hr class="docutils" />
+<span class="target" id="module-rc_webserver"></span><dl class="py function">
+<dt id="rc_webserver.exposeWeb">
+<code class="sig-prename descclassname"><span class="pre">rc_webserver.</span></code><code class="sig-name descname"><span class="pre">exposeWeb</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">channels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rc_webserver/web.html#exposeWeb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rc_webserver.exposeWeb" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator that identifies your Circuits function as a Web service endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channels</strong> – A path/fragment to handle calls that begin with that path.  A path of “index” is the
+handler for the “root document” or empty path.  Paths are all relative to <cite>self.channel</cite>.
+Alternatively, a HTTP verb (“GET”, “POST”, etc.) to handle all incoming events with that verb;</p></li>
+<li><p><strong>config</strong> – Optional (ignored)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dictionary that should be returned as JSON by the web service.</p>
+</dd>
+</dl>
+<p>Your class should inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">circuits.web.BaseController</span></code>, and may additionally
+inherit from <a class="reference internal" href="resilient_circuits.html#resilient_circuits.ResilientComponent" title="resilient_circuits.ResilientComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_circuits.ResilientComponent</span></code></a> to handle action and access the Resilient REST API.</p>
+<p>For example, to handle a specific path for a REST method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">WebExample</span><span class="p">(</span><span class="n">BaseController</span><span class="p">,</span> <span class="n">ResilientComponent</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WebExample</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+        <span class="c1"># &#39;self.channel&#39; declares the topmost path that will be handled in this class.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;/example&quot;</span>
+
+    <span class="nd">@exposeWeb</span><span class="p">(</span><span class="s2">&quot;incident&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_create_note</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Handle POST to /example/incident/&lt;inc_id&gt;/note</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">!=</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MethodNotAllowed</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="mi">200</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span><span class="s2">&quot;OK&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To handle requests for the index (root) path:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@exposeWeb</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_index_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># handle any request for the root (&quot;/&quot;)</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>A generic handler that sends all POST requests to one function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@exposeWeb</span><span class="p">(</span><span class="s2">&quot;POST&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_post_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># handle any POST</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pytest_resilient_circuits.html" title="previous chapter">pytest_resilient_circuits package</a></li>
+      <li>Next: <a href="rc-cts.html" title="next chapter">rc-cts package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/rc-webserver.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

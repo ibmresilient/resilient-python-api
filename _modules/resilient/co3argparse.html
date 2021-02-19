@@ -1,0 +1,427 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient.co3argparse &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient.co3argparse</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Command-line argument parser for Resilient apps&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">getpass</span>
+<span class="kn">import</span> <span class="nn">keyring</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">string_types</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="nb">open</span>
+    <span class="kn">from</span> <span class="nn">resilient</span> <span class="kn">import</span> <span class="n">ensure_unicode</span><span class="p">,</span> <span class="n">get_proxy_dict</span><span class="p">,</span> <span class="n">get_resilient_circuits_version</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">resilient.co3</span> <span class="kn">import</span> <span class="n">ensure_unicode</span><span class="p">,</span> <span class="n">get_proxy_dict</span><span class="p">,</span> <span class="n">get_resilient_circuits_version</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># For all python &lt; 3.2</span>
+    <span class="kn">import</span> <span class="nn">backports.configparser</span> <span class="k">as</span> <span class="nn">configparser</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">configparser</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ConfigDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A dictionary, with property-based accessor</span>
+
+<span class="sd">    &gt;&gt;&gt; opts = {&quot;one&quot;: 1}</span>
+<span class="sd">    &gt;&gt;&gt; cd = ConfigDict(opts)</span>
+<span class="sd">    &gt;&gt;&gt; cd[&quot;one&quot;]</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; cd.one</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Attributes are made accessible as properties&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ArgumentParser"><a class="viewcode-back" href="../../resilient.html#resilient.ArgumentParser">[docs]</a><span class="k">class</span> <span class="nc">ArgumentParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper to parse common Resilient command line arguments.</span>
+
+<span class="sd">    Optionally, arguments can be specified in a config file, section :samp:`[resilient]`.</span>
+
+<span class="sd">    It is expected that a command line utility that needs to work with a Resilient</span>
+<span class="sd">    server will create its own class that inherits this class.  Its `__init__`</span>
+<span class="sd">    method should call :samp:`self.add_argument(...)` as necessary.</span>
+
+<span class="sd">    See https://docs.python.org/3/library/argparse.html for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT_PORT</span> <span class="o">=</span> <span class="mi">443</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="ArgumentParser.getopt"><a class="viewcode-back" href="../../resilient.html#resilient.ArgumentParser.getopt">[docs]</a>    <span class="k">def</span> <span class="nf">getopt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a single option value.</span>
+
+<span class="sd">        :param section: The configuration section.</span>
+<span class="sd">        :param opt: The configuration option.</span>
+<span class="sd">        :return: The value, or None if not present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ArgumentParser.getopts"><a class="viewcode-back" href="../../resilient.html#resilient.ArgumentParser.getopts">[docs]</a>    <span class="k">def</span> <span class="nf">getopts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a comma-separated option value as an array.</span>
+
+<span class="sd">        :param section: The configuration section.</span>
+<span class="sd">        :param opt: The configuration option.</span>
+<span class="sd">        :return: The value, or [] if not present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="ArgumentParser.__init__"><a class="viewcode-back" href="../../resilient.html#resilient.ArgumentParser.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Read configuration options.</span>
+        <span class="k">if</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">config_path</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">(</span><span class="n">interpolation</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">first_byte</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">first_byte</span> <span class="o">!=</span> <span class="sa">u</span><span class="s1">&#39;</span><span class="se">\ufeff</span><span class="s1">&#39;</span><span class="p">:</span>
+                            <span class="c1"># Not a BOM, no need to skip first byte</span>
+                            <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;Couldn&#39;t read config file &#39;</span><span class="si">%s</span><span class="s2">&#39;: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;Couldn&#39;t read config file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">)</span>
+
+        <span class="n">default_email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">)</span>
+        <span class="n">default_password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">)</span>
+        <span class="n">default_key_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;api_key_id&quot;</span><span class="p">)</span>
+        <span class="n">default_key_secret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;api_key_secret&quot;</span><span class="p">)</span>
+        <span class="n">default_host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;host&quot;</span><span class="p">)</span>
+        <span class="n">default_port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_PORT</span>
+        <span class="n">default_proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopts</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;proxy&quot;</span><span class="p">)</span>
+        <span class="n">default_org</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;org&quot;</span><span class="p">)</span>
+        <span class="n">default_cafile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;cafile&quot;</span><span class="p">)</span>
+        <span class="n">default_cache_ttl</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;cache_ttl&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">default_proxy_host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;proxy_host&quot;</span><span class="p">)</span>
+        <span class="n">default_proxy_port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;proxy_port&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="n">default_proxy_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;proxy_user&quot;</span><span class="p">)</span>
+        <span class="n">default_proxy_password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;proxy_password&quot;</span><span class="p">)</span>
+        <span class="n">default_stomp_prefetch_limit</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;stomp_prefetch_limit&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">default_resilient_mock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getopt</span><span class="p">(</span><span class="s2">&quot;resilient&quot;</span><span class="p">,</span> <span class="s2">&quot;resilient_mock&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--email&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_email</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The email address to use to authenticate to the Resilient server.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--password&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_password</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;WARNING:  This is an insecure option since the password &quot;</span>
+                               <span class="s2">&quot;will be visible to other processes and stored in the &quot;</span>
+                               <span class="s2">&quot;command history.  The password to use to authenticate &quot;</span>
+                               <span class="s2">&quot;to the Resilient server.  If omitted, the you will be prompted.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--api_key_id&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_key_id</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The api key id for API key.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--api_key_secret&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_key_secret</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;WARNING:  This is an insecure option since the key secret &quot;</span>
+                               <span class="s2">&quot;will be visible to other processes and stored in the &quot;</span>
+                               <span class="s2">&quot;command history.  The password to use to authenticate &quot;</span>
+                               <span class="s2">&quot;to the Resilient server.  If omitted, the you will be prompted.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--host&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_host</span><span class="p">,</span>
+                          <span class="n">required</span><span class="o">=</span><span class="n">default_host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Resilient server host name.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--port&quot;</span><span class="p">,</span>
+                          <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_port</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Resilient server REST API port number.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--proxy&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_proxy</span><span class="p">,</span>
+                          <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;An optional HTTP proxy to use when connecting.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--org&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_org</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The name of the organization to use.  If you are a member &quot;</span>
+                               <span class="s2">&quot;of just one organization, then you can omit this argument.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--cafile&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_cafile</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The name of a file that contains trusted certificates.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--cache-ttl&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_cache_ttl</span> <span class="ow">or</span> <span class="mi">240</span><span class="p">,</span>
+                          <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;TTL for API responses when using cached_get&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--proxy_host&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_proxy_host</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;HTTP Proxy host for Resilient Connection.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--proxy_port&quot;</span><span class="p">,</span>
+                          <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_proxy_port</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;HTTP Proxy port for Resilient Connection.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--proxy_user&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_proxy_user</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;HTTP Proxy username for Resilient connection authentication.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--proxy_password&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_proxy_password</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;HTTP Proxy password for Resilient connection authentication.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--stomp-prefetch-limit&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="n">default_stomp_prefetch_limit</span><span class="p">,</span>
+                          <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;MAX number of Action Module messages to send before ACK is required&quot;</span><span class="p">)</span>
+
+        <span class="n">v_resc</span> <span class="o">=</span> <span class="n">get_resilient_circuits_version</span><span class="p">()</span>
+
+        <span class="c1"># Having --resilient-mock here allows us to run unit tests for resilient-circuits and resilient-sdk</span>
+        <span class="c1"># This argument will be added if:</span>
+        <span class="c1"># - resilient-circuits is not installed</span>
+        <span class="c1"># - resilient-circuits is installed and is &gt; 34</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">v_resc</span> <span class="ow">or</span> <span class="p">(</span><span class="n">v_resc</span> <span class="ow">and</span> <span class="n">v_resc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;major&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">34</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--resilient-mock&quot;</span><span class="p">,</span>
+                            <span class="n">default</span><span class="o">=</span><span class="n">default_resilient_mock</span><span class="p">,</span> 
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&lt;path_to_mock_module&gt;.NameOfMockClass&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArgumentParser.parse_args"><a class="viewcode-back" href="../../resilient.html#resilient.ArgumentParser.parse_args">[docs]</a>    <span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse the configuration options and command-line arguments.</span>
+
+<span class="sd">        :return: Note: the return value is a dict, not a Namespace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># (the implementation calls parse_known_args)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span></div>
+
+<div class="viewcode-block" id="ArgumentParser.parse_known_args"><a class="viewcode-back" href="../../resilient.html#resilient.ArgumentParser.parse_known_args">[docs]</a>    <span class="k">def</span> <span class="nf">parse_known_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse the configuration options and command-line arguments.</span>
+
+<span class="sd">        :return: Note: the return value is a dict, not a Namespace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Parse the known arguments</span>
+        <span class="n">args</span><span class="p">,</span> <span class="n">argv</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_post_process_args</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">argv</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_post_process_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="c1"># Post-process any options that reference keyring or environment variables</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">parse_parameters</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+    <span class="c1"># Post-processing for other special options</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">email</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="ow">not</span> <span class="n">password</span> <span class="ow">and</span> <span class="n">email</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;no_prompt_password&quot;</span><span class="p">)):</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">()</span>
+    <span class="n">args</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cafile&quot;</span><span class="p">):</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">&quot;cafile&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">cafile</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stomp_cafile&quot;</span><span class="p">):</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">&quot;stomp_cafile&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">stomp_cafile</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;proxy_host&quot;</span><span class="p">):</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">&quot;proxy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_proxy_dict</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">args</span>
+
+
+<div class="viewcode-block" id="parse_parameters"><a class="viewcode-back" href="../../resilient.html#resilient.parse_parameters">[docs]</a><span class="k">def</span> <span class="nf">parse_parameters</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a dict that has configuration keys mapped to values,</span>
+<span class="sd">       - If a value begins with &#39;^&#39;, redirect to fetch the value from</span>
+<span class="sd">         the secret key stored in the keyring.</span>
+<span class="sd">         The keyring service name is always just an underscore</span>
+<span class="sd">         (so keys must be unique in the whole options dict)</span>
+<span class="sd">       - If a value begins with &#39;$&#39;, fetch the value from environment.</span>
+
+<span class="sd">    &gt;&gt;&gt; opts = {</span>
+<span class="sd">    ...    &quot;thing&quot;: u&quot;value&quot;,</span>
+<span class="sd">    ...    &quot;key3&quot;: &quot;^val3&quot;,</span>
+<span class="sd">    ...    &quot;key4&quot;: u&quot;$val4&quot;,</span>
+<span class="sd">    ...    &quot;key5&quot;: &quot;$val5&quot;,</span>
+<span class="sd">    ...    &quot;deep1&quot;: {&quot;key1&quot;: &quot;val1&quot;, &quot;key2&quot;: u&quot;^val2&quot;}</span>
+<span class="sd">    ... }</span>
+
+<span class="sd">    &gt;&gt;&gt; keyring.set_password(&quot;_&quot;, &quot;val3&quot;, &quot;key3password&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; keyring.set_password(&quot;_&quot;, &quot;val2&quot;, &quot;&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; keyring.set_password(&quot;deep1&quot;, &quot;val2&quot;, &quot;key2password&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; os.environ[&quot;val4&quot;] = &quot;key4param&quot;</span>
+<span class="sd">    &gt;&gt;&gt; os.environ[&quot;val5&quot;] = &quot;key5param&quot;</span>
+
+<span class="sd">    &gt;&gt;&gt; str(parse_parameters(opts)[&quot;key3&quot;])</span>
+<span class="sd">    &#39;key3password&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_parameters(opts)[&quot;deep1&quot;][&quot;key1&quot;]</span>
+<span class="sd">    &#39;val1&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; str(parse_parameters(opts)[&quot;deep1&quot;][&quot;key2&quot;])</span>
+<span class="sd">    &#39;key2password&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_parameters(opts)[&quot;deep1&quot;][&quot;key1&quot;]</span>
+<span class="sd">    &#39;val1&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_parameters(opts)[&quot;key4&quot;]</span>
+<span class="sd">    &#39;key4param&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_parameters(opts)[&quot;key5&quot;]</span>
+<span class="sd">    &#39;key5param&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">return</span> <span class="n">_parse_parameters</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_parse_parameters</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse parameters, with a tuple of names for keyring context&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_parse_parameters</span><span class="p">(</span><span class="n">names</span> <span class="o">+</span> <span class="p">(</span><span class="n">key</span><span class="p">,),</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;^&quot;</span><span class="p">:</span>
+            <span class="c1"># Decode a secret from the keystore</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">service</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;_&quot;</span>
+            <span class="k">if</span> <span class="n">service</span> <span class="o">==</span> <span class="s2">&quot;resilient&quot;</span><span class="p">:</span>
+                <span class="c1"># Special case, becuase of the way we parse commandlines, treat this as root</span>
+                <span class="n">service</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;keyring get(&#39;</span><span class="si">%s</span><span class="s2">&#39;, &#39;</span><span class="si">%s</span><span class="s2">&#39;)&quot;</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">keyring</span><span class="o">.</span><span class="n">get_password</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;$&quot;</span><span class="p">:</span>
+            <span class="c1"># Read a value from the environment</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;env(&#39;</span><span class="si">%s</span><span class="s2">&#39;)&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="k">return</span> <span class="n">options</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

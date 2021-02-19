@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient.co3base &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient.co3base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Base client for Resilient REST API&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">ssl</span>
+<span class="kn">import</span> <span class="nn">mimetypes</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">unicodedata</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="kn">from</span> <span class="nn">requests.adapters</span> <span class="kn">import</span> <span class="n">HTTPAdapter</span>
+<span class="kn">from</span> <span class="nn">requests.packages.urllib3.poolmanager</span> <span class="kn">import</span> <span class="n">PoolManager</span>
+<span class="kn">from</span> <span class="nn">requests_toolbelt.multipart.encoder</span> <span class="kn">import</span> <span class="n">MultipartEncoder</span>
+<span class="kn">from</span> <span class="nn">requests.auth</span> <span class="kn">import</span> <span class="n">HTTPBasicAuth</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Python 3</span>
+    <span class="kn">import</span> <span class="nn">urllib.parse</span> <span class="k">as</span> <span class="nn">urlparse</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="c1"># Python 2</span>
+    <span class="kn">import</span> <span class="nn">urlparse</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">TLSHttpAdapter</span><span class="p">(</span><span class="n">HTTPAdapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter that ensures that we use the best available SSL/TLS version.</span>
+<span class="sd">    Some environments default to SSLv3, so we need to specifically ask for</span>
+<span class="sd">    the highest protocol version that both the client and server support.</span>
+<span class="sd">    Despite the name, SSLv23 can select &quot;TLS&quot; protocols as well as &quot;SSL&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">init_poolmanager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connections</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poolmanager</span> <span class="o">=</span> <span class="n">PoolManager</span><span class="p">(</span><span class="n">num_pools</span><span class="o">=</span><span class="n">connections</span><span class="p">,</span>
+                                       <span class="n">maxsize</span><span class="o">=</span><span class="n">maxsize</span><span class="p">,</span>
+                                       <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span>
+                                       <span class="n">ssl_version</span><span class="o">=</span><span class="n">ssl</span><span class="o">.</span><span class="n">PROTOCOL_SSLv23</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">BasicHTTPException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception for HTTP errors.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">          response - the Response object from the get/put/etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BasicHTTPException</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">:  </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">response</span>
+
+    <span class="k">def</span> <span class="nf">get_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BasicHTTPException</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="NoChange"><a class="viewcode-back" href="../../resilient.html#resilient.NoChange">[docs]</a><span class="k">class</span> <span class="nc">NoChange</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception that can be raised within a get/put handler or a patch callback</span>
+<span class="sd">       to indicate &#39;no change&#39; (which then just bypasses the update operation).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ensure_unicode"><a class="viewcode-back" href="../../resilient.html#resilient.ensure_unicode">[docs]</a><span class="k">def</span> <span class="nf">ensure_unicode</span><span class="p">(</span><span class="n">input_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; if input_value is type str, convert to unicode with utf-8 encoding &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">input_value</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_value</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">input_value</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">input_unicode</span> <span class="o">=</span> <span class="n">input_value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">input_unicode</span> <span class="o">=</span> <span class="n">input_value</span>
+
+    <span class="n">input_unicode</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s1">&#39;NFKC&#39;</span><span class="p">,</span> <span class="n">input_unicode</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">input_unicode</span></div>
+
+
+<div class="viewcode-block" id="get_proxy_dict"><a class="viewcode-back" href="../../resilient.html#resilient.get_proxy_dict">[docs]</a><span class="k">def</span> <span class="nf">get_proxy_dict</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Creates a dictionary with proxy config to be sent to the SimpleClient &quot;&quot;&quot;</span>
+    <span class="n">scheme</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">scheme</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scheme</span><span class="p">:</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="s1">&#39;https&#39;</span>
+        <span class="n">proxy_host</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">proxy_host</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_host&#39;</span><span class="p">][</span><span class="nb">len</span><span class="p">(</span><span class="n">scheme</span> <span class="o">+</span> <span class="s2">&quot;://&quot;</span><span class="p">):]</span>
+
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;proxy_user&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;proxy_password&#39;</span><span class="p">):</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;https&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">://</span><span class="si">{1}</span><span class="s1">:</span><span class="si">{2}</span><span class="s1">@</span><span class="si">{3}</span><span class="s1">:</span><span class="si">{4}</span><span class="s1">/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_user&#39;</span><span class="p">],</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_password&#39;</span><span class="p">],</span>
+                                                          <span class="n">proxy_host</span><span class="p">,</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">])}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;https&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">://</span><span class="si">{1}</span><span class="s1">:</span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">proxy_host</span><span class="p">,</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;proxy_port&#39;</span><span class="p">])}</span>
+
+    <span class="k">return</span> <span class="n">proxy</span></div>
+
+
+<span class="k">class</span> <span class="nc">BaseClient</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper for using Resilient REST API.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">          org_name - the name of the organization to use.</span>
+<span class="sd">          base_url - the base URL to use.</span>
+<span class="sd">          proxies - HTTP proxies to use, if any.</span>
+<span class="sd">          verify - The name of a PEM file to use as the list of trusted CAs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;content-type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cookies</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="sa">u</span><span class="s1">&#39;https://app.resilientsystems.com/&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_name</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">org_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">proxies</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxies</span> <span class="o">=</span> <span class="p">{</span><span class="n">ensure_unicode</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">proxies</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">proxies</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxies</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">base_url</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify</span> <span class="o">=</span> <span class="n">verify</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">verify</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verify</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">verify</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authdata</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;https://&#39;</span><span class="p">,</span> <span class="n">TLSHttpAdapter</span><span class="p">())</span>
+
+        <span class="c1"># API key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key_secret</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_api_key</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key_handle</span> <span class="o">=</span> <span class="kc">None</span>      <span class="c1"># This is the principle ID for an api key. Also called handle</span>
+
+    <span class="k">def</span> <span class="nf">set_api_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key_id</span><span class="p">,</span> <span class="n">api_key_secret</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call this method instead of the connect method in order to use API key</span>
+<span class="sd">        Just like the connect method, this method calls the session endpoint</span>
+<span class="sd">        to get org_id information.</span>
+<span class="sd">        :param api_key_id:</span>
+<span class="sd">        :param api_key_secret:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key_id</span> <span class="o">=</span> <span class="n">api_key_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key_secret</span> <span class="o">=</span> <span class="n">api_key_secret</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_api_key</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/session&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">),</span>
+                                    <span class="n">auth</span><span class="o">=</span><span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key_secret</span><span class="p">),</span>
+                                    <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                    <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(),</span>
+                                    <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extract_org_id</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key_handle</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key_handle&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">session</span>
+
+    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Performs connection, which includes authentication.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          email - the email address to use for authentication.</span>
+<span class="sd">          password - the password</span>
+<span class="sd">          timeout - number of seconds to wait for response</span>
+<span class="sd">        Returns:</span>
+<span class="sd">          The Resilient session object (dict)</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          BasicHTTPException - if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authdata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">u</span><span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">email</span><span class="p">),</span>
+            <span class="sa">u</span><span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_extract_org_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract org id from server resp</span>
+<span class="sd">        :param resp: server response from session endpoint</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">orgs</span> <span class="o">=</span> <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;orgs&#39;</span><span class="p">]</span>
+        <span class="n">selected_org</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">orgs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">orgs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;User is a member of no orgs&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_name</span><span class="p">:</span>
+            <span class="n">org_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">org</span> <span class="ow">in</span> <span class="n">orgs</span><span class="p">:</span>
+                <span class="n">org_name</span> <span class="o">=</span> <span class="n">org</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                <span class="n">org_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">org_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">org_name</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_name</span><span class="p">:</span>
+                    <span class="n">selected_org</span> <span class="o">=</span> <span class="n">org</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">org_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">org</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">org</span> <span class="ow">in</span> <span class="n">orgs</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;Please specify the organization name to which you want to connect.  &quot;</span> <span class="o">+</span> \
+                  <span class="sa">u</span><span class="s2">&quot;The user is a member of the following organizations: &#39;</span><span class="si">{0}</span><span class="s2">&#39;&quot;</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;&#39;, &#39;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">org_names</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">selected_org</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;The user is not a member of the specified organization &#39;</span><span class="si">{0}</span><span class="s2">&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">org_name</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">selected_org</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;This organization is not accessible to you.</span><span class="se">\n\n</span><span class="s2">&quot;</span> \
+                  <span class="s2">&quot;This can occur because of one of the following:</span><span class="se">\n\n</span><span class="s2">&quot;</span> \
+                  <span class="s2">&quot;The organization does not allow access from your current IP address.</span><span class="se">\n</span><span class="s2">&quot;</span> \
+                  <span class="s2">&quot;The organization requires authentication with a different provider than you are currently using.</span><span class="se">\n</span><span class="s2">&quot;</span> \
+                  <span class="s2">&quot;Your IP address is </span><span class="si">{0}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resp</span><span class="p">[</span><span class="s2">&quot;session_ip&quot;</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_orgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">org</span> <span class="k">for</span> <span class="n">org</span> <span class="ow">in</span> <span class="n">orgs</span> <span class="k">if</span> <span class="n">org</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span> <span class="o">=</span> <span class="n">selected_org</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Establish a session&quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/session&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">),</span>
+                                     <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">authdata</span><span class="p">),</span>
+                                     <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                     <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(),</span>
+                                     <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                     <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extract_org_id</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+        <span class="c1"># set the X-sess-id token, which is used to prevent CSRF attacks.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;X-sess-id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="p">[</span><span class="s1">&#39;csrf_token&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cookies</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;JSESSIONID&#39;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">cookies</span><span class="p">[</span><span class="s1">&#39;JSESSIONID&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">session</span>
+
+    <span class="k">def</span> <span class="nf">make_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_headers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified).&quot;&quot;&quot;</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">co3_context_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;X-Co3ContextToken&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">co3_context_token</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">additional_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">additional_headers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">headers</span>
+
+    <span class="k">def</span> <span class="nf">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a HTTP request.</span>
+<span class="sd">           If unauthorized (likely due to a session timeout), retry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_api_key</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;auth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key_secret</span><span class="p">)</span>
+            <span class="c1">#</span>
+            <span class="c1">#   Note this is a temporary walk around. Theoretically the server</span>
+            <span class="c1">#   shall ignore the session id if api key is used. But we don&#39;t have</span>
+            <span class="c1">#   time to do that yet. So we clear the session id here</span>
+            <span class="c1">#</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">cookies</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">operation</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_api_key</span><span class="p">:</span>  <span class="c1"># unauthorized, re-auth and try again</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">operation</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the specified URI.  Note that this URI is relative to &lt;base_url&gt;/rest/orgs/&lt;org_id&gt;.  So</span>
+<span class="sd">        for example, if you specify a uri of /incidents, the actual URL would be something like this:</span>
+
+<span class="sd">            https://app.resilientsystems.com/rest/orgs/201/incidents</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          uri</span>
+<span class="sd">          co3_context_token</span>
+<span class="sd">          timeout: number of seconds to wait for response</span>
+<span class="sd">        Returns:</span>
+<span class="sd">          A dictionary or array with the value returned by the server.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          BasicHTTPException - if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the specified URI.  Note that this URI is relative to &lt;base_url&gt;/rest/orgs/&lt;org_id&gt;.  So</span>
+<span class="sd">        for example, if you specify a uri of /incidents, the actual URL would be something like this:</span>
+
+<span class="sd">            https://app.resilientsystems.com/rest/orgs/201/incidents</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          uri</span>
+<span class="sd">          co3_context_token</span>
+<span class="sd">          timeout: number of seconds to wait for response</span>
+<span class="sd">        Returns:</span>
+<span class="sd">          The raw value returned by the server for this resource.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          BasicHTTPException - if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span>
+
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts to the specified URI.</span>
+<span class="sd">        Note that this URI is relative to &lt;base_url&gt;/rest/orgs/&lt;org_id&gt;.  So for example, if you</span>
+<span class="sd">        specify a uri of /incidents, the actual URL would be something like this:</span>
+
+<span class="sd">            https://app.resilientsystems.com/rest/orgs/201/incidents</span>
+<span class="sd">        Args:</span>
+<span class="sd">           uri</span>
+<span class="sd">           payload</span>
+<span class="sd">           co3_context_token</span>
+<span class="sd">          timeout: number of seconds to wait for response</span>
+<span class="sd">        Returns:</span>
+<span class="sd">          A dictionary or array with the value returned by the server.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          BasicHTTPException - if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">payload_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">data</span><span class="o">=</span><span class="n">payload_json</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">post_attachment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span>
+                        <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upload a file to the specified URI</span>
+<span class="sd">        e.g. &quot;/incidents/&lt;id&gt;/attachments&quot; (for incident attachments)</span>
+<span class="sd">        or,  &quot;/tasks/&lt;id&gt;/attachments&quot; (for task attachments)</span>
+
+<span class="sd">        :param uri: The REST URI for posting</span>
+<span class="sd">        :param filepath: the path of the file to post</span>
+<span class="sd">        :param filename: optional name of the file when posted</span>
+<span class="sd">        :param mimetype: optional override for the guessed MIME type</span>
+<span class="sd">        :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)</span>
+<span class="sd">        :param co3_context_token: Action Module context token, if responding to an Action Module event</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">mime_type</span> <span class="o">=</span> <span class="n">mimetype</span> <span class="ow">or</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">filename</span> <span class="ow">or</span> <span class="n">filepath</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;application/octet-stream&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">filehandle</span><span class="p">:</span>
+            <span class="n">attachment_name</span> <span class="o">=</span> <span class="n">filename</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="n">multipart_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">attachment_name</span><span class="p">,</span> <span class="n">filehandle</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">)}</span>
+            <span class="n">multipart_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span>
+            <span class="n">encoder</span> <span class="o">=</span> <span class="n">MultipartEncoder</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="n">multipart_data</span><span class="p">)</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">,</span>
+                                        <span class="n">additional_headers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;content-type&#39;</span><span class="p">:</span> <span class="n">encoder</span><span class="o">.</span><span class="n">content_type</span><span class="p">})</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">,</span>
+                                             <span class="n">url</span><span class="p">,</span>
+                                             <span class="n">data</span><span class="o">=</span><span class="n">encoder</span><span class="p">,</span>
+                                             <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                             <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                             <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                             <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">post_artifact_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">artifact_type</span><span class="p">,</span> <span class="n">artifact_filepath</span><span class="p">,</span>
+                           <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Post a file artifact to the specified URI</span>
+<span class="sd">        e.g. &quot;/incidents/&lt;id&gt;/artifacts/files&quot;</span>
+
+<span class="sd">        :param uri: The REST URI for posting</span>
+<span class="sd">        :param artifact_type: the artifact type name (&quot;IP Address&quot;, etc) or type ID</span>
+<span class="sd">        :param artifact_filepath: the path of the file to post</span>
+<span class="sd">        :param description: optional description for the artifact</span>
+<span class="sd">        :param value: optional value for the artifact</span>
+<span class="sd">        :param mimetype: optional override for the guessed MIME type</span>
+<span class="sd">        :param co3_context_token: Action Module context token, if responding to an Action Module event</span>
+<span class="sd">        :param timeout: optional timeout (seconds)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">artifact</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">artifact_type</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="p">}</span>
+        <span class="n">mimedata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;artifact&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">artifact</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_attachment</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span>
+                                    <span class="n">artifact_filepath</span><span class="p">,</span>
+                                    <span class="n">mimetype</span><span class="o">=</span><span class="n">mimetype</span><span class="p">,</span>
+                                    <span class="n">data</span><span class="o">=</span><span class="n">mimedata</span><span class="p">,</span>
+                                    <span class="n">co3_context_token</span><span class="o">=</span><span class="n">co3_context_token</span><span class="p">,</span>
+                                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">apply_func</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal helper to do a get/apply/put loop</span>
+<span class="sd">        (for situations where the put might return a 409/conflict status code)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">apply_func</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NoChange</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">payload</span>
+        <span class="n">payload_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">put</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">data</span><span class="o">=</span><span class="n">payload_json</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">409</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">get_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">apply_func</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Performs a get, calls apply_func on the returned value, then calls self.put.</span>
+<span class="sd">        If the put call returns a 409 error, then retry.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          uri - the URI to use.  Note that this is expected to be relative to the org.</span>
+<span class="sd">          apply_func - a function to call on the object returned by get.  This is expected</span>
+<span class="sd">          to alter the object with the desired changes.</span>
+<span class="sd">          co3_context_token - the Co3ContextToken from a CAF message (if the caller is</span>
+<span class="sd">          a CAF message processor.</span>
+<span class="sd">          timeout - number of seconds to wait for response</span>
+<span class="sd">        Returns;</span>
+<span class="sd">          The object returned by the put operation (converted from JSON to a Python dict).</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          Exception if the get or put returns an unexpected status code.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_put</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">apply_func</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="n">co3_context_token</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Puts to the specified URI.</span>
+<span class="sd">        Note that this URI is relative to &lt;base_url&gt;/rest/orgs/&lt;org_id&gt;.  So for example, if you</span>
+<span class="sd">        specify a uri of /incidents, the actual URL would be something like this:</span>
+
+<span class="sd">            https://app.resilientsystems.com/rest/orgs/201/incidents</span>
+<span class="sd">        Args:</span>
+<span class="sd">           uri</span>
+<span class="sd">           payload</span>
+<span class="sd">           co3_context_token</span>
+<span class="sd">          timeout: number of seconds to wait for response</span>
+<span class="sd">        Returns:</span>
+<span class="sd">          A dictionary or array with the value returned by the server.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          BasicHTTPException - if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">payload_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">put</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">data</span><span class="o">=</span><span class="n">payload_json</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">co3_context_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes the specified URI.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          uri</span>
+<span class="sd">          co3_context_token</span>
+<span class="sd">          timeout: number of seconds to wait for response</span>
+<span class="sd">        Returns:</span>
+<span class="sd">          A dictionary or array with the value returned by the server.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">          BasicHTTPException - if an HTTP exception occurs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/rest/orgs/</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_id</span><span class="p">,</span> <span class="n">ensure_unicode</span><span class="p">(</span><span class="n">uri</span><span class="p">))</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">,</span>
+                                         <span class="n">url</span><span class="p">,</span>
+                                         <span class="n">proxies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">,</span>
+                                         <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                                         <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_headers</span><span class="p">(</span><span class="n">co3_context_token</span><span class="p">),</span>
+                                         <span class="n">verify</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verify</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span><span class="p">:</span>
+            <span class="c1"># 204 - No content is OK for a delete</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">BasicHTTPException</span><span class="o">.</span><span class="n">raise_if_error</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

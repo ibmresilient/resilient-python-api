@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient_circuits.decorators &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient_circuits.decorators</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Circuits component for Action Module subscription and message handling&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">inspect</span> <span class="k">as</span> <span class="nn">_inspect</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">GeneratorType</span>
+<span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Timer</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">Event</span>
+<span class="kn">import</span> <span class="nn">circuits.core.handlers</span>
+<span class="kn">from</span> <span class="nn">resilient_circuits.action_message</span> <span class="kn">import</span> <span class="n">FunctionResult</span><span class="p">,</span> \
+    <span class="n">StatusMessage</span><span class="p">,</span> <span class="n">StatusMessageEvent</span><span class="p">,</span> \
+    <span class="n">FunctionError_</span><span class="p">,</span> <span class="n">FunctionErrorEvent</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># for convenience we alias the circuits &#39;handler&#39;</span>
+<span class="n">handler</span> <span class="o">=</span> <span class="n">circuits</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">handler</span>
+
+
+<div class="viewcode-block" id="function"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.function">[docs]</a><span class="k">class</span> <span class="nc">function</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a Function Handler.</span>
+
+<span class="sd">    This decorator can be applied to methods of classes derived from :class:`ResilientComponent`.</span>
+<span class="sd">    It marks the method as a handler for the events passed as arguments to the :func:`function` decorator.</span>
+<span class="sd">    Specify the function&#39;s API name as parameter to the decorator.</span>
+<span class="sd">    The function handler will automatically be subscribed to the function&#39;s message destination.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This is an extended version of circuits.core.handlers:handler</span>
+
+<div class="viewcode-block" id="function.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.function.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Usage: @function(api_name)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at decoration time, with the bare function being decorated&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;@function </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+        <span class="n">func</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Circuits properties</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">priority</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;channel&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;functions.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">]))</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">override</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;override&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        
+        <span class="c1"># If getfullargspec if available to us </span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_inspect</span><span class="p">,</span> <span class="s1">&#39;getfullargspec&#39;</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">_inspect</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="n">func</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># fall back to deprecated getargspec</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">_inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">func</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">args</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">))</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;the decorated function&quot;&quot;&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;decorated&quot;</span><span class="p">)</span>
+            <span class="n">function_parameters</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputs&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+            <span class="k">def</span> <span class="nf">_the_task</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">_call_the_task</span><span class="p">(</span><span class="n">evt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+                <span class="c1"># On the worker thread, call the function, and handle a single or generator result.</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: _call_the_task&quot;</span><span class="p">,</span> <span class="n">threading</span><span class="o">.</span><span class="n">currentThread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">result_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">task_result_or_gen</span> <span class="o">=</span> <span class="n">_the_task</span><span class="p">(</span><span class="n">evt</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task_result_or_gen</span><span class="p">,</span> <span class="n">GeneratorType</span><span class="p">):</span>
+                    <span class="n">task_result_or_gen</span> <span class="o">=</span> <span class="p">[</span><span class="n">task_result_or_gen</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">task_result_or_gen</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">StatusMessage</span><span class="p">):</span>
+                        <span class="c1"># Fire the wrapped status message event to notify resilient</span>
+                        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] StatusMessage: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">evt</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+                        <span class="n">itself</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">StatusMessageEvent</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">evt</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">):</span>
+                        <span class="c1"># Collect the result for return</span>
+                        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] FunctionResult: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">evt</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+                        <span class="n">result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Event</span><span class="p">):</span>
+                        <span class="c1"># Some other event, just fire it</span>
+                        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                        <span class="n">itself</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">FunctionError_</span><span class="p">):</span>
+                        <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] FunctionError: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">evt</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+                        <span class="n">itself</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">FunctionErrorEvent</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">evt</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
+                        <span class="n">evt</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">return</span>  <span class="c1"># Don&#39;t wait for more results!</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="n">val</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Whatever this is, add it to the results</span>
+                        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                        <span class="n">result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result_list</span>
+
+            <span class="n">the_task</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span><span class="n">_call_the_task</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">**</span><span class="n">function_parameters</span><span class="p">)</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">itself</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">the_task</span><span class="p">,</span> <span class="s2">&quot;functionworker&quot;</span><span class="p">)</span>
+            <span class="n">xxx</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">value</span>
+            <span class="c1"># Return value is the result_list that was yielded from the wrapped function</span>
+            <span class="k">yield</span> <span class="n">xxx</span>
+        <span class="k">return</span> <span class="n">decorated</span></div>
+
+
+<div class="viewcode-block" id="required_field"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.required_field">[docs]</a><span class="k">class</span> <span class="nc">required_field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator, declares a required field for a ResilientComponent or its methods&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="required_field.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.required_field.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fieldname</span> <span class="o">=</span> <span class="n">fieldname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span> <span class="o">=</span> <span class="n">input_type</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at decoration time&quot;&quot;&quot;</span>
+        <span class="c1"># Set or extend the function&#39;s &quot;custom_fields&quot; attribute</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">required_fields</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="s2">&quot;required_fields&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">required_fields</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fieldname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span>
+        <span class="c1"># The decorated function is unchanged</span>
+        <span class="k">return</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="required_action_field"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.required_action_field">[docs]</a><span class="k">class</span> <span class="nc">required_action_field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator, declares a required field for a ResilientComponent or its methods&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="required_action_field.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.required_action_field.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fieldname</span> <span class="o">=</span> <span class="n">fieldname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span> <span class="o">=</span> <span class="n">input_type</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at decoration time&quot;&quot;&quot;</span>
+        <span class="c1"># Set or extend the function&#39;s &quot;action_fields&quot; attribute</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">required_action_fields</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span>
+                                              <span class="s2">&quot;required_action_fields&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">required_action_fields</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fieldname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span>
+        <span class="c1"># The decorated function is unchanged</span>
+        <span class="k">return</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="defer"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.defer">[docs]</a><span class="k">class</span> <span class="nc">defer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for an event handler, delays it awhile.</span>
+
+<span class="sd">       Usage:</span>
+<span class="sd">       Decorate a Resilient Circuits handler.</span>
+<span class="sd">       This decorator should go *before* the `@handler(...)`.</span>
+<span class="sd">       Do not use on &#39;generic&#39; handlers, only on named-event handlers.</span>
+
+<span class="sd">       .. code-block:: python</span>
+
+<span class="sd">            @defer(delay=5)</span>
+<span class="sd">            @handler(&quot;actions_event_name&quot;)</span>
+<span class="sd">            def _function(self, event, *args, **kwargs):</span>
+<span class="sd">                # handle the event</span>
+<span class="sd">                pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="defer.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.defer.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delay</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;delay&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Usage: @defer() or @defer(delay=&lt;seconds&gt;)&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at decoration time, with function&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;@defer </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;the decorated function&quot;&quot;&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;decorated&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">defer</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delay</span><span class="p">):</span>
+                <span class="c1"># OK, let&#39;s handle it later</span>
+                <span class="k">return</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">decorated</span></div>
+
+
+<span class="k">def</span> <span class="nf">debounce_get_incident_key</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback to return the debounce-key for an event.</span>
+<span class="sd">       Multiple events with this key will be debounced together.</span>
+<span class="sd">       Default is: event name and incident id.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">message</span><span class="p">[</span><span class="s2">&quot;incident&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">key</span>
+
+
+<div class="viewcode-block" id="debounce"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.debounce">[docs]</a><span class="k">class</span> <span class="nc">debounce</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for an event handler, debounces multiple occurrences.</span>
+
+<span class="sd">       :param delay: (seconds).  Time before the event will be processed.</span>
+<span class="sd">                  If another event (with the same key) occurs in this</span>
+<span class="sd">                  time, the timer starts over.</span>
+<span class="sd">       :param discard: (Boolean, optional).  If true, when there are multiple</span>
+<span class="sd">                  events before the delay expires, only the most recent one</span>
+<span class="sd">                  is processed, and the previous ones are discarded.</span>
+
+<span class="sd">       Usage:</span>
+<span class="sd">       Decorate a Resilient Circuits handler.</span>
+<span class="sd">       This decorator should go *before* the `@handler(...)`.</span>
+<span class="sd">       Do not use on &#39;generic&#39; handlers, only on named-event handlers.</span>
+
+<span class="sd">       .. code-block:: python</span>
+
+<span class="sd">            @debounce(delay=10, discard=True)</span>
+<span class="sd">            @handler(&quot;actions_event_name&quot;)</span>
+<span class="sd">            def _my_action_handler(self, event, *args, **kwargs):</span>
+<span class="sd">                # handle the event</span>
+<span class="sd">                pass</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="debounce.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.debounce.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delay</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;delay&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discard</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discard&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;get_key_func&quot;</span><span class="p">,</span> <span class="n">debounce_get_incident_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Usage: @debounce(delay=&lt;seconds&gt;, [discard=True])&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called at decoration time, with function&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;@debounce </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">decorated</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;the decorated function&quot;&quot;&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;decorated&quot;</span><span class="p">)</span>
+            <span class="c1"># De-bounce messages for this event and the same key:</span>
+            <span class="c1"># (key is the incident-id, by default):</span>
+            <span class="c1"># - Don&#39;t handle the message immediately.</span>
+            <span class="c1">#   - Note that we have a deferred event.</span>
+            <span class="c1">#   - Defer it for &lt;&lt;delay&gt;&gt;.</span>
+            <span class="c1"># - If an event arrives and there is any deferred message,</span>
+            <span class="c1">#   - Reset the timer interval to &lt;&lt;delay&gt;&gt;</span>
+            <span class="c1">#   - Optionally: throw away the new message.</span>
+            <span class="c1">#     Otherwise: defer this one too (to be processed</span>
+            <span class="c1">#     immediately after the first deferred message).</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">deferred</span><span class="p">:</span>
+                <span class="c1"># We deferred this event earlier,</span>
+                <span class="c1"># and now it has fired without being reset in the meantime.</span>
+                <span class="c1"># All the pending events are OK to go!  Forget their timers!</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Handling deferred </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">deferred</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># This is a new event.</span>
+                <span class="c1"># Are there any other deferred events for this [action+incident]?</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="p">:</span>
+                    <span class="c1"># We&#39;ll keep a list of all the timers</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Duplicate event</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discard</span><span class="p">:</span>
+                        <span class="c1"># Unregister all the previous timers so they don&#39;t fire</span>
+                        <span class="k">for</span> <span class="n">timer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                            <span class="n">evt</span> <span class="o">=</span> <span class="n">timer</span><span class="o">.</span><span class="n">event</span>
+                            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Unregister timer&quot;</span><span class="p">)</span>
+                            <span class="n">timer</span><span class="o">.</span><span class="n">unregister</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">evt</span><span class="p">:</span>
+                                <span class="c1"># The timer&#39;s event will not fire now.</span>
+                                <span class="c1"># Mark it as not &#39;deferred&#39; and fire a &#39;success&#39; child event</span>
+                                <span class="c1"># so that it gets ack&#39;d to the message queue.</span>
+                                <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Fire success&quot;</span><span class="p">)</span>
+                                <span class="n">evt</span><span class="o">.</span><span class="n">deferred</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="n">channels</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">evt</span><span class="p">,</span> <span class="s2">&quot;success_channels&quot;</span><span class="p">,</span> <span class="n">evt</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+                                <span class="n">itself</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">evt</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="s2">&quot;success&quot;</span><span class="p">,</span> <span class="n">evt</span><span class="p">,</span> <span class="n">evt</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="o">*</span><span class="n">channels</span><span class="p">)</span>
+                        <span class="c1"># Now we can get rid of the list of timers</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Reset all the pending timers</span>
+                        <span class="k">for</span> <span class="n">timer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                            <span class="n">timer</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delay</span><span class="p">)</span>
+                <span class="c1"># Defer this new event with a timer.</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deferring </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delay</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+                <span class="n">timer</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">itself</span><span class="p">)</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">deferred</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># Remember the new timer so that we can reset it if necessary</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">debouncedata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">timer</span><span class="p">)</span>
+                <span class="c1"># We&#39;re done until the timer fires</span>
+                <span class="k">return</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">itself</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">decorated</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

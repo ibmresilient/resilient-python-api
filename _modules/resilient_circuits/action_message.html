@@ -1,0 +1,475 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient_circuits.action_message &#8212; Resilient Python API 39.0.227 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient_circuits.action_message</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Circuits component for Action Module subscription and message handling&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Timer</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ActionMessageBase"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessageBase">[docs]</a><span class="k">class</span> <span class="nc">ActionMessageBase</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Superclass for :class:`ActionMessage` and :class:`FunctionMessage`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ActionMessageBase.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessageBase.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">test_msg_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ActionMessageBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                                                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                                <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Source: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Headers: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Message: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">deferred</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Co3ContextToken&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action_id&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">object_type</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;object_type&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="n">test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_msg_id</span> <span class="o">=</span> <span class="n">test_msg_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timestamp&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;_unknown_&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">displayname</span> <span class="o">=</span> <span class="s2">&quot;Unknown&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;principal&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span> <span class="o">=</span> <span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;workflow&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;programmatic_name&quot;</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Fire a {name}_success event when this event is successfully processed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;x.__repr__() &lt;==&gt; repr(x)&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%s</span><span class="s2">] (id=</span><span class="si">%s</span><span class="s2">, workflow=</span><span class="si">%s</span><span class="s2">, user=</span><span class="si">%s</span><span class="s2">) </span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                              <span class="n">channels</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">action_id</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">principal</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Message attributes are made accessible as properties</span>
+<span class="sd">           (&quot;incident&quot;, &quot;task&quot;, &quot;note&quot;, &quot;milestone&quot;. &quot;task&quot;, &quot;artifact&quot;;</span>
+<span class="sd">           and &quot;properties&quot; for the action fields on manual actions)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ActionMessageBase.hdr"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessageBase.hdr">[docs]</a>    <span class="k">def</span> <span class="nf">hdr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the headers (dict)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ActionMessageBase.msg"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessageBase.msg">[docs]</a>    <span class="k">def</span> <span class="nf">msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the message (dict)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ActionMessageBase.defer"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessageBase.defer">[docs]</a>    <span class="k">def</span> <span class="nf">defer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Defer this message for handling later&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deferred</span><span class="p">:</span>
+            <span class="c1"># This message was already deferred.  You should just handle it.</span>
+            <span class="c1"># (Mark it as no longer deferred, so that it will ack now)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deferred</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Fire me again after a dela</span>
+        <span class="k">if</span> <span class="n">delay</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">delay</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deferred</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Deferring </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdr</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message-id&quot;</span><span class="p">))</span>
+        <span class="n">Timer</span><span class="p">(</span><span class="n">delay</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_log_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Log Message JSON to File&quot;&quot;&quot;</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">displayname</span><span class="p">,</span>
+                             <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span>
+                               <span class="n">filename</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;JSON&quot;</span><span class="p">)),</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logfile</span><span class="p">:</span>
+            <span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ActionMessage"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessage">[docs]</a><span class="k">class</span> <span class="nc">ActionMessage</span><span class="p">(</span><span class="n">ActionMessageBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Circuits event for a Resilient Action Module message.</span>
+
+<span class="sd">    This event holds details of the Action Module message,</span>
+<span class="sd">    including its context (the incident, task, artifact... where the action</span>
+<span class="sd">    was triggered).  Your components will receive these events from the</span>
+<span class="sd">    Resilient Action Module message destination.</span>
+
+<span class="sd">    These events are named by the rule that triggered them (lowercased).</span>
+<span class="sd">    So a custom action rule named &quot;Manual Action&quot; will generate an event with name</span>
+<span class="sd">    &quot;manual_action&quot;.  To handle that event, you should implement a :class:`ResilientComponent`</span>
+<span class="sd">    that has a method named :samp:`manual_action`:  the Circuits framework will call</span>
+<span class="sd">    your component&#39;s methods based on the name of the event.</span>
+
+<span class="sd">    The parameters for your event-handler method are:</span>
+<span class="sd">       * event: this event object</span>
+<span class="sd">       * source: the component that fired the event</span>
+<span class="sd">       * headers: the Action Module message headers (dict)</span>
+<span class="sd">       * message: the Action Module message (dict)</span>
+<span class="sd">    For convenience, the message is also broken out onto event properties,</span>
+<span class="sd">       * event.incident: the incident that the event relates to</span>
+<span class="sd">       * event.artifact: the artifact that the event was triggered from (if any)</span>
+<span class="sd">       * event.task: the task that the event was triggered from (if any)</span>
+<span class="sd">         (etc).</span>
+
+<span class="sd">    To have your component&#39;s method with a different name from the action,</span>
+<span class="sd">    you can use the :func:`handler` decorator:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        @handler(&quot;the_action_name&quot;)</span>
+<span class="sd">        def _any_method_name(self, event, source=None, headers=None, message=None):</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    To have a method handle *any* event on the component&#39;s channel,</span>
+<span class="sd">    use the :func:`handler` decorator with no event name,</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        @handler()</span>
+<span class="sd">        def _any_method_name(self, event, source=None, headers=None, message=None):</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    Refer to the developer documentation for additional details on writing components and event handlers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ActionMessage.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.ActionMessage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">test_msg_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ActionMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                                            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                            <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                                            <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
+                                            <span class="n">test_msg_id</span><span class="o">=</span><span class="n">test_msg_id</span><span class="p">,</span>
+                                            <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
+                                            <span class="n">log_dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action_id&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># just for testing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">displayname</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="k">elif</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">displayname</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">action_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_id</span><span class="p">)</span>
+
+        <span class="c1"># The name of this event (=the function that subscribers implement)</span>
+        <span class="c1"># is determined from the name of the action.</span>
+        <span class="c1"># In future, this should be the action&#39;s &quot;programmatic name&quot;,</span>
+        <span class="c1"># but for now it&#39;s the downcased displayname with underscores.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\W+&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">displayname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">log_dir</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_message</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="FunctionMessage"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.FunctionMessage">[docs]</a><span class="k">class</span> <span class="nc">FunctionMessage</span><span class="p">(</span><span class="n">ActionMessageBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Circuits event for a Resilient Function call.</span>
+
+<span class="sd">    This event holds details of the Function message, including its input parameters.</span>
+<span class="sd">    Your components will receive these events from their Resilient message destination.</span>
+
+<span class="sd">    To handle a function, you should implement a :class:`ResilientComponent` with a method</span>
+<span class="sd">    annotated with the :func:`function` decorator:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        @function(&quot;the_function_name&quot;)</span>
+<span class="sd">        def _any_method_name(self, event, *args, **kwargs):</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    The parameters for your function method are:</span>
+<span class="sd">       * event: this event object</span>
+<span class="sd">       * args and kwargs: additional context</span>
+<span class="sd">    The `event.message` contains:</span>
+<span class="sd">       * user: details of the user who triggered the function call</span>
+<span class="sd">       * function: details of the function being called</span>
+<span class="sd">       * workflow: information about the workflow containing the function</span>
+<span class="sd">       * inputs: the input parameter values.</span>
+
+<span class="sd">    To return a value from your function, yield or return a :class:`FunctionResult` containing</span>
+<span class="sd">    the value:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        yield FunctionResult(&quot;xyz&quot;)</span>
+
+<span class="sd">    Refer to the developer documentation for additional details on writing components and event handlers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FunctionMessage.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.FunctionMessage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">test_msg_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                                              <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                                              <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                                              <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
+                                              <span class="n">test_msg_id</span><span class="o">=</span><span class="n">test_msg_id</span><span class="p">,</span>
+                                              <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
+                                              <span class="n">log_dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">)</span>
+
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_id</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+        <span class="c1"># The name of this event is the API name name of the function.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;_unnamed_&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">displayname</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;display_name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">log_dir</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_message</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="StatusMessage"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.StatusMessage">[docs]</a><span class="k">class</span> <span class="nc">StatusMessage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Encapsulates a status message yielded from an action or function call&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="StatusMessage.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.StatusMessage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StatusMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FunctionResult"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.FunctionResult">[docs]</a><span class="k">class</span> <span class="nc">FunctionResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Encapsulates the result of a function call.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FunctionResult.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.FunctionResult.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionResult</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;FunctionResult must be a dictionary. &quot;</span> \
+                  <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; may cause the workflow to fail.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div></div>
+
+
+<div class="viewcode-block" id="FunctionError"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.FunctionError">[docs]</a><span class="k">def</span> <span class="nf">FunctionError</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Way to pass an error message back to the client.</span>
+<span class="sd">    Usage in the function:</span>
+<span class="sd">    yield FunctionError(&quot;Message goes here&quot;)</span>
+
+<span class="sd">    if an exception happened prior to this, if will return FunctionException_,</span>
+<span class="sd">    otherwise it will return FunctionError_. Both of them are subclassing BaseFunctionError, which</span>
+<span class="sd">    makes it easier to handle Function Errors specifically.</span>
+
+<span class="sd">    :param: trace - boolean that shows whether the trace should be passed on</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># can&#39;t just include it into params, because Python2.7 doesn&#39;t allow args to be first</span>
+    <span class="c1"># and doing it otherwise might break backwards compatibility</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;trace&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Just grab the stack trace and wrap in a FunctionError_.</span>
+    <span class="n">exc</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">exc_trace</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FunctionError_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">FunctionException_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">include_trace</span><span class="o">=</span><span class="n">trace</span><span class="p">,</span> <span class="n">trace</span><span class="o">=</span><span class="n">exc_trace</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFunctionError"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.BaseFunctionError">[docs]</a><span class="k">class</span> <span class="nc">BaseFunctionError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides an extra layer between FunctionError_/FunctionException_ that allows to check</span>
+<span class="sd">    more precisely if it&#39;s a resilient-circuits error, and not a ValueError, but doesn&#39;t require</span>
+<span class="sd">    to check for both separately.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BaseFunctionError.__init__"><a class="viewcode-back" href="../../resilient_circuits.html#resilient_circuits.BaseFunctionError.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">include_trace</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;include_trace&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;trace&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">BaseFunctionError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_trace</span> <span class="o">=</span> <span class="n">include_trace</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace</span> <span class="o">=</span> <span class="n">trace</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+            <span class="c1"># not Python 2</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unicode__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">message</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets called by unicode in Python 2.</span>
+<span class="sd">        :return: unicode representation of the class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+                    <span class="c1"># already unicode in Py2</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="n">message</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_trace</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">+=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace</span>
+            <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+                <span class="c1"># already unicode in Py2</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="n">message</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">message</span></div>
+
+<span class="k">class</span> <span class="nc">FunctionException_</span><span class="p">(</span><span class="n">BaseFunctionError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps an exception from a function call.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">FunctionError_</span><span class="p">(</span><span class="n">BaseFunctionError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps a simple &quot;we failed&quot; error from a function call.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">StatusMessageEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Event that we use to send &quot;action status&quot; update back to resilient&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StatusMessageEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Text of the message&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">FunctionErrorEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Event that we use to send &quot;action failure&quot; update back to resilient&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionErrorEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Text of the message&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
