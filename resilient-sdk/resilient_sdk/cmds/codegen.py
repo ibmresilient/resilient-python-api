@@ -7,7 +7,6 @@
 import logging
 import os
 import shutil
-import re
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
@@ -18,8 +17,6 @@ from resilient_sdk.util import sdk_helpers
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdCodegen(BaseCmd):
     """TODO Docstring"""
@@ -169,6 +166,34 @@ class CmdCodegen(BaseCmd):
         return args
 
     @staticmethod
+    def add_payload_samples(mapping_dict, fn_name, jinja_data):
+        """
+        Add a section to the mapping_dict for fn_name and
+        for that function add a tuple with its jinja2 template
+        location and the jinja_data to render it with.
+
+        Note: as the mapping_dict is passed by reference,
+        there is no need to return it
+
+        :param mapping_dict: Dictionary of all the files to render
+        :type mapping_dict: dict
+        :param fn_name: Name of the Function
+        :type fn_name: str
+        :param jinja_data: A dictionary of the data to render the associated template with
+        :type jinja_data: dict
+        """
+        # Create new dict for this fn
+        ps_dict = mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR][fn_name] = {}
+
+        # Add to that dict
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = (u"{0}/mock_json_expectation_success.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = (u"{0}/mock_json_expectation_fail.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+
+    @staticmethod
     def _gen_function(args):
         # TODO: Handle just generating a FunctionComponent for the /components directory
         LOG.info("codegen _gen_function called")
@@ -178,13 +203,14 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("Generating codegen package...")
 
+        if os.path.exists(args.package) and not args.reload:
+            raise SDKException(u"'{0}' already exists. Add --reload flag to regenerate it".format(args.package))
+
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
-        # Strip off version information, if present in package base folder, to get the package name.
-        package_name = re.split(VERSION_REGEX, args.package, 1)[0]
-        # Get base version if we are running against a package base folder with version.
-        base_version = ''.join(re.split(package_name, args.package))
+        # The package_name will be specified in the args
+        package_name = args.package
 
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
@@ -236,8 +262,9 @@ class CmdCodegen(BaseCmd):
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
-        # Join package_name to output base (add base version if running against a folder which includes a version).
-        output_base = os.path.join(output_base, package_name+base_version)
+        if not args.reload:
+            # If this is not a reload, join package_name to output base
+            output_base = os.path.join(output_base, package_name)
 
         # If the output_base directory does not exist, create it
         if not os.path.exists(output_base):
@@ -284,23 +311,34 @@ class CmdCodegen(BaseCmd):
             }
         }
 
-        # If there are Functions, add a 'tests' directory
+        # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
+
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                package_mapping_dict["payload_samples"] = {}
 
         # Loop each Function
         for f in jinja_data.get("functions"):
             # Add package_name to function data
             f["package_name"] = package_name
 
+            # Get function name
+            fn_name = f.get("export_key")
+
             # Generate function_component.py file name
-            file_name = u"funct_{0}.py".format(f.get("export_key"))
+            file_name = u"funct_{0}.py".format(fn_name)
 
             # Add to 'components' directory
             package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
 
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
+
+            # See if RES_SDK_DEV environment var is set
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                # Add a 'payload_samples/fn_name' directory and the files to it
+                CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
         for w in jinja_data.get("workflows"):
 
@@ -325,26 +363,42 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("'codegen' complete for '%s'", package_name)
 
+        return output_base
+
     @staticmethod
     def _reload_package(args):
 
         old_params, path_customize_py_bak = [], ""
 
-        # Get + validate package, customize.py and setup.py paths
+        # Get absolute path to package
         path_package = os.path.abspath(args.package)
-        # Get basename of path_to_src (version information is stripped from the basename).
-        path_package_basename = re.split(VERSION_REGEX, os.path.basename(path_package), 1)[0]
-        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        path_customize_py = os.path.join(path_package, path_package_basename, package_helpers.PATH_CUSTOMIZE_PY)
-        sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
+        LOG.debug("\nPath to project: %s", path_package)
 
-        path_setup_py_file = os.path.join(path_package, package_helpers.PATH_SETUP_PY)
+        # Ensure the package directory exists and we have WRITE access
+        sdk_helpers.validate_dir_paths(os.W_OK, path_package)
+
+        # Generate path to setup.py file + validate we have permissions to read it
+        path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
+        # Parse the setup.py file
+        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+        package_name = setup_py_attributes.get("name")
+
+        if not sdk_helpers.is_valid_package_name(package_name):
+            raise SDKException(u"'{0}' is not a valid package name. 'name' attribute in setup.py file is not valid or not specified".format(package_name))
+
+        LOG.debug("\nProject name: %s", package_name)
+
+        # Generate path to customize.py file + validate we have permissions to read it
+        path_customize_py = os.path.join(path_package, package_name, package_helpers.PATH_CUSTOMIZE_PY)
+        sdk_helpers.validate_file_paths(os.W_OK, path_customize_py)
+
         # Set package + output args correctly (this handles if user runs 'codegen --reload -p .')
-        args.package = os.path.basename(path_package)
-        args.output = os.path.dirname(path_package)
+        args.package = package_name
+        args.output = path_package
 
         LOG.info("'codegen --reload' started for '%s'", args.package)
 
@@ -365,7 +419,7 @@ class CmdCodegen(BaseCmd):
 
         # If local export file exists then save it to a .bak file.
         # (Older packages may not have the /util/data/export.res file)
-        path_export_res = os.path.join(path_package, path_package_basename,
+        path_export_res = os.path.join(path_package, package_name,
                                        package_helpers.PATH_UTIL_DATA_DIR,
                                        package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
         if os.path.isfile(path_export_res):
@@ -396,13 +450,12 @@ class CmdCodegen(BaseCmd):
             LOG.debug("Regenerating codegen '%s' package now", args.package)
 
             # Regenerate the package
-            CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
+            path_reloaded = CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
             LOG.info("\nNOTE: Ensure the MANIFEST.in file includes line:\nrecursive-include %s/util *\n", args.package)
             LOG.info("'codegen --reload' complete for '%s'", args.package)
 
-        except Exception as err:
-            LOG.error(u"Error running resilient-sdk codegen --reload\n\nERROR:%s", err)
+            return path_reloaded
 
         # This is required in finally block as user may kill using keyboard interrupt
         finally:

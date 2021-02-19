@@ -1,3 +1,10 @@
+2021-02: ver. 40.0
+* Remove need for calling '/message_destinations' endpoint
+* Added '--print-env' flag to selftest command to print the environment when the test runs
+* Python version and installed packages printed out to log at start of 'resilient-circuits run'
+* [integrations] section added by default when app.config file first created with 'resilient-circuits config -c'
+* Bug fixes
+
 2020-12-08: version 39.0
 
 * resilient-circuits now only loads the functions that are pip installed and/or are in the components directory

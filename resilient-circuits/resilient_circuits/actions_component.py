@@ -90,7 +90,6 @@ class ResilientComponent(BaseComponent):
         self.opts = opts
         self._fields = {}
         self._action_fields = {}
-        self._destinations = {}
         self._functions = {}
         self._function_fields = {}
         self.fn_names = helpers.get_fn_names(self)
@@ -151,15 +150,13 @@ class ResilientComponent(BaseComponent):
                             for field in client.cached_get("/types/incident/fields"))
         self._action_fields = dict((field["name"], field)
                                    for field in client.cached_get("/types/actioninvocation/fields"))
-        self._destinations = dict((dest["id"], dest)
-                                  for dest in client.cached_get("/message_destinations")["entities"])
 
         if fn_names:
 
             try:
 
                 for fn_name in fn_names:
-                    self._functions[fn_name] = client.cached_get("/functions/{0}".format(fn_name))
+                    self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name))
 
                 self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
 
@@ -184,7 +181,6 @@ class ResilientComponent(BaseComponent):
                                 Event.create("idle_reset"), persist=True)
             _idle_timer.register(self)
         else:
-            LOG.debug("Reset idle timer")
             _idle_timer.reset()
 
     def get_incident_field(self, fieldname):
@@ -594,6 +590,8 @@ class Actions(ResilientComponent):
                 LOG.info("'%s.%s' actions registered to '%s'",
                          type(component).__module__, type(component).__name__, queue_name)
             elif str(channel).startswith("functions.") and component._functions:
+                if self.test_mode:
+                    continue
                 # Function handler, channel "functions.xx" subscribes to the message dest associated with function "xx"
                 func_name = channel.split(".", 1)[1]
                 if func_name not in component._functions:
@@ -601,8 +599,7 @@ class Actions(ResilientComponent):
                     LOG.warning("'%s.%s' function '%s' is not defined!",
                                 type(component).__module__, type(component).__name__, func_name)
                     continue
-                queue_id = component._functions[func_name]["destination_handle"]
-                queue_name = component._destinations[queue_id]["programmatic_name"]
+                queue_name = component._functions[func_name]["destination_handle"]
                 LOG.info("'%s.%s' function '%s' registered to '%s'",
                          type(component).__module__, type(component).__name__, func_name, queue_name)
             else:
@@ -615,7 +612,6 @@ class Actions(ResilientComponent):
             else:
                 self.listeners[queue_name] = set([component])
                 # Defer subscribing until all components are loaded
-            LOG.debug("Listeners: %s", self.listeners)
 
     @handler("load_all_success", "subscribe_to_all")
     def subscribe_to_queues(self):

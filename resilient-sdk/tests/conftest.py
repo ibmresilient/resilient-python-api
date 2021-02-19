@@ -148,6 +148,28 @@ def fx_cmd_line_args_codegen_package():
 
 
 @pytest.fixture
+def fx_cmd_line_args_codegen_reload():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "codegen",
+        "-p", "fn_main_mock_integration",
+        "--reload",
+        "--rule", "Additional Mock Rule"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
 def fx_cmd_line_args_package():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
@@ -234,7 +256,6 @@ def fx_cmd_line_args_clone_prefix():
     sys.argv = original_cmd_line
 
 
-
 @pytest.fixture
 def fx_cmd_line_args_dev_set_version():
     """
@@ -286,3 +307,16 @@ def fx_get_sub_parser():
     main_parser = app.get_main_app_parser()
     sub_parser = app.get_main_app_sub_parser(main_parser)
     return sub_parser
+
+
+@pytest.fixture
+def fx_add_dev_env_var():
+    """
+    Before: sets RES_SDK_DEV=1
+    After: sets RES_SDK_DEV=0
+    """
+    os.environ[sdk_helpers.ENV_VAR_DEV] = "1"
+
+    yield
+
+    os.environ[sdk_helpers.ENV_VAR_DEV] = "0"

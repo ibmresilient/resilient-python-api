@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 import time
 import logging
 import requests
@@ -67,8 +67,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         self.access_token = None
         self.token_type = None
         self.expiration_time = None
-        self.proxies = proxies
-        self.close()  # release the socket, since all the requests will be made in a new session
+        self.proxies = proxies if proxies is not None else {}
 
         self.authenticate(url, client_id, client_secret, scope, proxies)
 
@@ -104,8 +103,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         return True
 
 
-    @staticmethod
-    def get_token(token_url, client_id, client_secret, scope=None, proxies=None):
+    def get_token(self, token_url, client_id, client_secret, scope=None, proxies=None):
         """
         Override this method if there are any specific things that need to be changed.
         Such as Cloud Foundry asking grant_type to be 'password' and API key to be passed in 'password'.
@@ -117,7 +115,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         }
         if scope is not None:
             post_data['scope'] = scope
-        return requests.post(token_url, data=post_data, proxies=proxies)
+        return self.post(token_url, data=post_data, proxies=proxies)
 
     def update_token(self):
         """
@@ -125,7 +123,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         """
         try:
             self.authenticate(self.authorization_url, self.client_id,
-                                 self.client_secret, self.scope, self.proxies)
+                              self.client_secret, self.scope, self.proxies)
         except ValueError:
             raise ValueError("Can't update the token, did the credentials for {0} change?"
                              .format(self.authorization_url))
@@ -142,16 +140,17 @@ class OAuth2ClientCredentialsSession(requests.Session):
                 self.update_token()
 
         headers = kwargs.pop("headers") if "headers" in kwargs else {}
-
+        proxies = kwargs.pop("proxies") if "proxies" in kwargs else self.proxies
         self.add_authorization_header(headers)
-        with requests.Session() as s:
-            resp = s.request(method, url, *args, headers=headers, **kwargs)
+
+        resp = super(OAuth2ClientCredentialsSession, self).request(method, url, *args, headers=headers, proxies=proxies,
+                                                                   **kwargs)
 
         # If the error anything other than Authorization issue, the problem is in user's request
         if resp.status_code in self.AUTHORIZATION_ERROR_CODES:
             self.update_token()
-            with requests.Session() as s:
-                resp = s.request(method, url, *args, headers=headers, **kwargs)
+            resp = super(OAuth2ClientCredentialsSession, self).request(method, url, *args, headers=headers,
+                                                                        proxies=proxies, **kwargs)
 
         return resp
 

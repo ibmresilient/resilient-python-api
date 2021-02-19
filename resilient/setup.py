@@ -115,7 +115,7 @@ setup(
     author='IBM Resilient',
     install_requires=[
         'argparse',
-        'requests>=2.6.0',
+        'requests>=2.25.0',
         'requests-toolbelt>=0.6.0',
         'requests-mock>=1.2.0',
         'six',

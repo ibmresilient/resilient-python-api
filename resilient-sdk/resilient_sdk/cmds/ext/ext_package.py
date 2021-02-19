@@ -6,32 +6,16 @@
 
 import logging
 import os
-import re
 from setuptools import sandbox as use_setuptools
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.package_file_helpers import create_extension
+from resilient_sdk.util import package_file_helpers as package_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
-# Constants
-BASE_NAME_SETUP_PY = "setup.py"
-BASE_NAME_DIST_DIR = "dist"
-BASE_NAME_DOCKER_FILE = "Dockerfile"
-BASE_NAME_ENTRY_POINT = "entrypoint.sh"
-BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
-
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
-PATH_CONFIG_PY = os.path.join("util", "config.py")
-
-PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
-PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
-
-# Regex for splitting version number at end of name from package basename.
-VERSION_REGEX = "-(\d+\.)(\d+\.)(\d+)$"
 
 class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
@@ -41,7 +25,7 @@ class CmdExtPackage(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk package -p <path_to_directory>
     $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"
-    $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient"
+    $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient" --image-hash "dd2a1678b6e0..."
     $ resilient-sdk package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
     """
     CMD_DESCRIPTION = CMD_HELP
@@ -71,6 +55,14 @@ class CmdExtPackage(BaseCmd):
                                  default="ibmresilient",
                                  nargs="?")
 
+        self.parser.add_argument("--image-hash",
+                                 help="The SHA256 hash of the container image to pull for this App",
+                                 nargs="?")
+
+        self.parser.add_argument("--no-samples",
+                                 help="Do not look for the payload_samples directory or try add them to the export.res file",
+                                 action="store_true")
+
     def execute_command(self, args):
         """
         Function that creates The App.zip file from the give source path and returns
@@ -84,6 +76,7 @@ class CmdExtPackage(BaseCmd):
             -  **args.repository_name**: if defined, it will replace the default image repository name in app.json for
                                          container access.
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
+            -  **args.no_samples**: if defined, set path_payload_samples to None.
         :type args: argparse Namespace
 
         :return: Path to new app.zip
@@ -95,37 +88,47 @@ class CmdExtPackage(BaseCmd):
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.package)
 
-        # Get basename of path_to_src (version information is stripped from the basename).
-        path_to_src_basename = re.split(VERSION_REGEX, os.path.basename(path_to_src), 1)[0]
-
-        LOG.debug("Path to project: %s", path_to_src)
-        LOG.debug("Project basename: %s", path_to_src_basename)
+        LOG.debug("\nPath to project: %s", path_to_src)
 
         # Ensure the src directory exists and we have WRITE access
         sdk_helpers.validate_dir_paths(os.W_OK, path_to_src)
 
+        # Generate path to setup.py file
+        path_setup_py_file = os.path.join(path_to_src, package_helpers.BASE_NAME_SETUP_PY)
+
+        # Ensure we have read permissions for setup.py
+        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+
+        # Parse the setup.py file
+        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+        LOG.debug("\nProject name: %s", setup_py_attributes.get("name", "unknown"))
+
         # Generate paths to files required to create app
-        path_setup_py_file = os.path.join(path_to_src, BASE_NAME_SETUP_PY)
-        path_docker_file = os.path.join(path_to_src, BASE_NAME_DOCKER_FILE)
-        path_entry_point = os.path.join(path_to_src, BASE_NAME_ENTRY_POINT)
-        path_apikey_permissions_file = os.path.join(path_to_src, BASE_NAME_APIKEY_PERMS_FILE)
-        path_output_dir = os.path.join(path_to_src, BASE_NAME_DIST_DIR)
-        path_extension_logo = os.path.join(path_to_src, PATH_ICON_EXTENSION_LOGO)
-        path_company_logo = os.path.join(path_to_src, PATH_ICON_COMPANY_LOGO)
+        path_docker_file = os.path.join(path_to_src, package_helpers.BASE_NAME_DOCKER_FILE)
+        path_entry_point = os.path.join(path_to_src, package_helpers.BASE_NAME_ENTRY_POINT)
+        path_apikey_permissions_file = os.path.join(path_to_src, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
+        path_output_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_DIST_DIR)
+        path_extension_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_EXTENSION_LOGO)
+        path_company_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_COMPANY_LOGO)
+        path_payload_samples = os.path.join(path_to_src, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
 
-        LOG.info("Built Distribution starting\n")
+        # if --no-samples flag, set path_payload_samples to None
+        if args.no_samples:
+            path_payload_samples = None
 
-        # Create the built distribution
-        use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
-
-        LOG.info("\nBuilt Distribution finished. See: %s", path_output_dir)
-
-        # Check that files 'Dockerfile' and 'entrypoint.sh' files exist in the integration package
-        # before attempting to create the app.
+        # Ensure the 'Dockerfile' and 'entrypoint.sh' files exist and we have READ access
         sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
 
+        LOG.info("\nBuild Distribution starting\n")
+
+        # Create the build distribution
+        use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+        LOG.info("\nBuild Distribution finished. See: %s", path_output_dir)
+
         # Create the app
-        path_the_extension_zip = create_extension(
+        path_the_extension_zip = package_helpers.create_extension(
             path_setup_py_file=path_setup_py_file,
             path_apikey_permissions_file=path_apikey_permissions_file,
             output_dir=path_output_dir,
@@ -133,7 +136,9 @@ class CmdExtPackage(BaseCmd):
             repository_name=args.repository_name,
             keep_build_dir=args.keep_build_dir,
             path_extension_logo=path_extension_logo,
-            path_company_logo=path_company_logo
+            path_company_logo=path_company_logo,
+            path_payload_samples=path_payload_samples,
+            image_hash=args.image_hash
         )
 
         LOG.info("App created at: %s", path_the_extension_zip)

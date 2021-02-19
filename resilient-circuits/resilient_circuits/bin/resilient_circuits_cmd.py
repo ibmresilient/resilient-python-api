@@ -17,6 +17,7 @@ import datetime
 import time
 import uuid
 from resilient import ensure_unicode, get_config_file
+from resilient_circuits import helpers
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_codegen import codegen_functions, codegen_package, codegen_reload_package, print_codegen_reload_commandline, extract_to_res
 from resilient_circuits.util.resilient_customize import customize_resilient
@@ -93,6 +94,9 @@ def run(resilient_circuits_args, restartable=False, config_file=None):
     kwargs = {}
     if config_file:
         kwargs = {"config_file": config_file}
+
+    LOG.info(helpers.get_env_str(pkg_resources.working_set))
+
     app.run(**kwargs)
 
 
@@ -322,9 +326,13 @@ def generate_code(args):
         codegen_functions(client, args.exportfile, args.function, args.workflow, args.rule, args.artifacttype,
                           output_dir, output_file)
 
+
 def selftest(args):
     """loop through every selftest for every eligible package, call and store returned state,
         print out package and their selftest states"""
+
+    if hasattr(args, "print_env") and args.print_env:
+        LOG.info(helpers.get_env_str(pkg_resources.working_set))
 
     components = defaultdict(list)
 
@@ -338,7 +346,7 @@ def selftest(args):
         return None
 
     # Generate opts array necessary for ResilientComponent instantiation
-    opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None);
+    opts = AppArgumentParser(config_file=resilient.get_config_file()).parse_args("", None)
 
     # make a copy
     install_list = list(args.install_list) if args.install_list else []
@@ -353,7 +361,7 @@ def selftest(args):
                 install_list.remove(dist.project_name)
 
             # add an entry for the package
-            LOG.info("%s: ", dist.project_name)
+            LOG.info("\n%s: ", dist.project_name)
             for ep in component_list:
                 # load the entry point
                 f_selftest = ep.load()
@@ -615,6 +623,10 @@ def main():
                                dest="install_list",
                                help="Test specified list of package(s)",
                                nargs="+")
+
+    selftest_parser.add_argument("--print-env",
+                                 help="Print Python version and list installed Packages",
+                                 action="store_true")
 
     # Options for 'list'
     list_parser.add_argument("-v", "--verbose", action="store_true")

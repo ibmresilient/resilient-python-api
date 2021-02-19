@@ -1,3 +1,6 @@
+2021-02: version 40.0
+* Bump minimum 'requests' version to 2.25.0
+
 2020-07-15: version 37.2
 
 * Bug fix for proxy in python 3.
