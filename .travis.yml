@@ -8,8 +8,6 @@ stages:
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
     if: branch = master OR branch =~ ^release\/.+
-  - name: deploy documentation
-    if: branch = master 
 
 env:
   global:
@@ -90,7 +88,6 @@ matrix:
           edge: true
           local_dir: ./docs/_build/html/
           keep_history: true
-
 
 after_failure:
   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
