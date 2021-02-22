@@ -7,6 +7,8 @@
 import os
 import sys
 import logging
+import requests
+import pkg_resources
 from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdClone, CmdExtract
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
@@ -78,6 +80,28 @@ def main():
     """
     Main entry point for resilient-sdk
     """
+
+    response = requests.request("GET", "https://pypi.org/pypi/resilient-sdk/json", timeout=10)
+
+    res_json = response.json()
+
+    available_versions = []
+
+    res_json["releases"].update({"42.0.0": None})
+
+    for k in res_json.get("releases", {}):
+        try:
+            available_versions.append(pkg_resources.parse_version(k))
+        except TypeError:
+            LOG.debug("WARNING: Could not parse version for '%s', skipping...", k)
+
+    available_versions = sorted(available_versions)
+    latest_available_version = available_versions[-1]
+
+    current_version = pkg_resources.parse_version(pkg_resources.require("resilient-sdk")[0].version)
+
+    if current_version < latest_available_version:
+        LOG.warning("--------------------\nWARNING: '%s' is not the latest version. v%s is available on https://pypi.org/project/resilient-sdk/ \nRun: 'pip install -U resilient-sdk' to get latest version\n--------------------", current_version, latest_available_version)
 
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV)
