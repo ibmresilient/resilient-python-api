@@ -364,7 +364,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="resilient-circuits",
-        description="Runtime environment for IBM Security SOAR",
+        description="Runtime environment for apps used with IBM Security SOAR",
         epilog="For support, please visit ibm.biz/soarcommunity"
     )
 
@@ -390,7 +390,7 @@ def main():
                                         help="List the installed Resilient Circuits components")
 
     test_parser = subparsers.add_parser("test",
-                                        help="An interactive client for testing Resilient Circuits messages")
+                                        help="Run an interactive client for testing Resilient Circuits messages")
 
     service_parser = subparsers.add_parser("service",
                                            help="Manage Resilient Circuits as a service")
@@ -402,7 +402,7 @@ def main():
                                              help="Apply customizations to the Resilient platform")
 
     selftest_parser = subparsers.add_parser("selftest",
-                                            help="Calls selftest functions for every package and prints out their return states")
+                                            help="Call selftest functions for every package and print their return states")
 
     # Options for selftest
     selftest_parser.add_argument("-l", "--list",
