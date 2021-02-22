@@ -44,8 +44,9 @@ class RedactingFilter(logging.Filter):
         # Best effort regex filter pattern to redact password logging.
         if isinstance(record.msg, string_types):
             for p in PASSWD_PATTERNS:
-                regex = r"(?:{0}.?':\s)(None,|.+?,)".format(p)
-                record.msg = re.sub(regex, r"***", record.msg)
+                if p in record.msg.lower():
+                    regex = r"(?:{0}.?':\s)(None,|.+?,)".format(p)
+                    record.msg = re.sub(regex, r"***", record.msg)
 
         return True
 
