@@ -12,6 +12,7 @@ Resilient Python API Library
 
    resilient
    resilient_circuits
+   resilient_lib
    pytest_resilient_circuits
    rc-webserver
    rc-cts

@@ -1,0 +1,553 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>resilient_lib.components.resilient_common &#8212; Resilient Python API 40.0.100 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for resilient_lib.components.resilient_common</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># (c) Copyright IBM Corp. 2018. All Rights Reserved.</span>
+<span class="c1"># pragma pylint: disable=unused-argument, no-self-use</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">mimetypes</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">resilient</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">from</span> <span class="nn">cachetools</span> <span class="kn">import</span> <span class="n">cached</span><span class="p">,</span> <span class="n">TTLCache</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">HTMLParser</span> <span class="kn">import</span> <span class="n">HTMLParser</span> <span class="k">as</span> <span class="n">htmlparser</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">html.parser</span> <span class="kn">import</span> <span class="n">HTMLParser</span> <span class="k">as</span> <span class="n">htmlparser</span>
+
+<span class="n">INCIDENT_FRAGMENT</span> <span class="o">=</span> <span class="s1">&#39;#incidents&#39;</span>
+<span class="n">PAYLOAD_VERSION</span> <span class="o">=</span> <span class="s2">&quot;1.0&quot;</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">LOG</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">LOG</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="build_incident_url"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.build_incident_url">[docs]</a><span class="k">def</span> <span class="nf">build_incident_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">incidentId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    build the url to link to an resilient incident</span>
+<span class="sd">    :param url: base url</span>
+<span class="sd">    :param incidentId:</span>
+<span class="sd">    :return: full url</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">url</span><span class="p">,</span> <span class="n">INCIDENT_FRAGMENT</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">incidentId</span><span class="p">)])</span></div>
+
+
+<div class="viewcode-block" id="build_resilient_url"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.build_resilient_url">[docs]</a><span class="k">def</span> <span class="nf">build_resilient_url</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    build basic url to resilient instance</span>
+<span class="sd">    :param host: host name</span>
+<span class="sd">    :param port: port</span>
+<span class="sd">    :return: base url</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;https://</span><span class="si">{0}</span><span class="s2">:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="clean_html"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.clean_html">[docs]</a><span class="k">def</span> <span class="nf">clean_html</span><span class="p">(</span><span class="n">html_fragment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resilient textarea fields return html fragments. This routine will remove the html and insert any code within &lt;div&gt;&lt;/div&gt;</span>
+<span class="sd">    with a linefeed</span>
+<span class="sd">    :param html_fragment: str presenting the html to clean up</span>
+<span class="sd">    :return: cleaned up code. This may not format well as no presentation of line feeds are preserved in the way supported by</span>
+<span class="sd">       tags such as &lt;br&gt; or &lt;ol&gt;, &lt;ul&gt;, etc. See html2markdown for a better way to translate html input to markdown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">html_fragment</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">html_fragment</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">html_fragment</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">unescape</span><span class="p">(</span><span class="n">html_fragment</span><span class="p">),</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strings</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unescape"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.unescape">[docs]</a><span class="k">def</span> <span class="nf">unescape</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return unescaped data such as &amp;gt; -&gt; &gt;, &amp;quot -&gt; &#39;, etc.</span>
+<span class="sd">    :param data: text to convert</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="n">htmlparser</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">unescape</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_fields"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.validate_fields">[docs]</a><span class="k">def</span> <span class="nf">validate_fields</span><span class="p">(</span><span class="n">field_list</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensure each mandatory field in field_list is present in kwargs.</span>
+<span class="sd">    Throw ValueError if not.</span>
+
+<span class="sd">    field_list can be a list/tuple of strings where each string is</span>
+<span class="sd">    a field name or it can be a list/tuple of dicts where each item</span>
+<span class="sd">    has the attributes &#39;name&#39; (required) and &#39;placeholder&#39; (optional).</span>
+
+<span class="sd">    If the value of the item in kwargs is equal to its placeholder</span>
+<span class="sd">    defined in field_list, a ValueError is raised.</span>
+
+<span class="sd">    If an item in kwargs is a Resilient Select Function Input, its</span>
+<span class="sd">    value will be a dict that has a &#39;name&#39; attribute. This returns</span>
+<span class="sd">    the value of &#39;name&#39;.</span>
+
+<span class="sd">    If an item in kwargs is a Resilient Multi-Select Function Input, its</span>
+<span class="sd">    value will be a list of dicts that have the &#39;name&#39; attribute. This</span>
+<span class="sd">    returns a list of the &#39;name&#39; values for that item.</span>
+
+<span class="sd">    :param field_list: list/tuple of the mandatory fields. Can be an empty list if no mandatory fields.</span>
+<span class="sd">    :param kwargs: dict of all the fields to search.</span>
+<span class="sd">    :return: a Dictionary of all fields with Select/Multi-Select fields handled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mandatory_fields</span> <span class="o">=</span> <span class="n">field_list</span>
+    <span class="n">provided_fields</span> <span class="o">=</span> <span class="n">kwargs</span>
+    <span class="n">return_fields</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">mandatory_err_msg</span> <span class="o">=</span> <span class="s2">&quot;&#39;</span><span class="si">{0}</span><span class="s2">&#39; is mandatory and is not set. You must set this value to run this function&quot;</span>
+
+    <span class="c1"># This is needed to handle something like: validate_fields((&#39;incident_id&#39;), kwargs)</span>
+    <span class="c1"># In this case field_list will be a string and not a tuple</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mandatory_fields</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+        <span class="n">mandatory_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">mandatory_fields</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mandatory_fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mandatory_fields</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;field_list&#39; must be of type list/tuple, not </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">mandatory_fields</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">provided_fields</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;kwargs&#39; must be of type dict, not </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">provided_fields</span><span class="p">)))</span>
+
+    <span class="c1"># Validate that mandatory fields exist + are not equal to their placeholder values</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">mandatory_fields</span><span class="p">:</span>
+
+        <span class="n">placeholder_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">placeholder_value</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;placeholder&quot;</span><span class="p">)</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If the field value is a defined empty str, raise an error</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">provided_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">),</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">provided_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">mandatory_err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">provided_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">mandatory_err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">placeholder_value</span> <span class="ow">and</span> <span class="n">provided_fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="o">==</span> <span class="n">placeholder_value</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;</span><span class="si">{0}</span><span class="s2">&#39; is mandatory and still has its placeholder value of &#39;</span><span class="si">{1}</span><span class="s2">&#39;. You must set this value correctly to run this function&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">field</span><span class="p">,</span> <span class="n">placeholder_value</span><span class="p">))</span>
+
+    <span class="c1"># Loop provided fields and get their value</span>
+    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_value</span> <span class="ow">in</span> <span class="n">provided_fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="c1"># Handle if Select Function Input type</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">field_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">):</span>
+            <span class="n">field_value</span> <span class="o">=</span> <span class="n">field_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Handle if &#39;Text with value string Input&#39; type</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">field_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">):</span>
+            <span class="n">field_value</span> <span class="o">=</span> <span class="n">field_value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Handle if Multi-Select Function Input type</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">field_value</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">field_value</span><span class="p">]</span>
+
+        <span class="n">return_fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">field_value</span>
+
+    <span class="k">return</span> <span class="n">return_fields</span></div>
+
+
+<div class="viewcode-block" id="get_file_attachment"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.get_file_attachment">[docs]</a><span class="k">def</span> <span class="nf">get_file_attachment</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">incident_id</span><span class="p">,</span> <span class="n">artifact_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attachment_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    call the Resilient REST API to get the attachment or artifact data</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :param incident_id: required</span>
+<span class="sd">    :param artifact_id: optional</span>
+<span class="sd">    :param task_id: optional</span>
+<span class="sd">    :param attachment_id: optional</span>
+<span class="sd">    :return: byte string of attachment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">incident_id</span> <span class="ow">and</span> <span class="n">artifact_id</span><span class="p">:</span>
+        <span class="n">data_uri</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/artifacts/</span><span class="si">{}</span><span class="s2">/contents&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">,</span> <span class="n">artifact_id</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">attachment_id</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task_id</span><span class="p">:</span>
+            <span class="n">data_uri</span> <span class="o">=</span> <span class="s2">&quot;/tasks/</span><span class="si">{}</span><span class="s2">/attachments/</span><span class="si">{}</span><span class="s2">/contents&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">attachment_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">incident_id</span><span class="p">:</span>
+            <span class="n">data_uri</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/attachments/</span><span class="si">{}</span><span class="s2">/contents&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">,</span> <span class="n">attachment_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;task_id or incident_id must be specified with attachment&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;artifact or attachment or incident id must be specified&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get the data</span>
+    <span class="k">return</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get_content</span><span class="p">(</span><span class="n">data_uri</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_file_attachment_metadata"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.get_file_attachment_metadata">[docs]</a><span class="k">def</span> <span class="nf">get_file_attachment_metadata</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">incident_id</span><span class="p">,</span> <span class="n">artifact_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attachment_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    call the Resilient REST API to get the attachment or artifact attachment metadata</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :param incident_id: required</span>
+<span class="sd">    :param artifact_id: optional</span>
+<span class="sd">    :param task_id: optional</span>
+<span class="sd">    :param attachment_id: optional</span>
+<span class="sd">    :return: file attachment metadata</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">incident_id</span> <span class="ow">and</span> <span class="n">artifact_id</span><span class="p">:</span>
+        <span class="n">metadata_url</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/artifacts/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">,</span> <span class="n">artifact_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metadata_url</span><span class="p">)[</span><span class="s2">&quot;attachment&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">attachment_id</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task_id</span><span class="p">:</span>
+            <span class="n">metadata_url</span> <span class="o">=</span> <span class="s2">&quot;/tasks/</span><span class="si">{}</span><span class="s2">/attachments/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">attachment_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">incident_id</span><span class="p">:</span>
+            <span class="n">metadata_url</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/attachments/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">,</span> <span class="n">attachment_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;If attachment_id is defined, you must specify task_id OR incident_id&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metadata_url</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;artifact_id AND incident_id, OR attachment_id AND (task_id OR incident_id) must be specified&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_file_attachment_name"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.get_file_attachment_name">[docs]</a><span class="k">def</span> <span class="nf">get_file_attachment_name</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">incident_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">artifact_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attachment_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    call the Resilient REST API to get the attachment or artifact attachment name</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :param incident_id: required</span>
+<span class="sd">    :param artifact_id: optional</span>
+<span class="sd">    :param task_id: optional</span>
+<span class="sd">    :param attachment_id: optional</span>
+<span class="sd">    :return: file attachment name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">incident_id</span> <span class="ow">and</span> <span class="n">artifact_id</span><span class="p">:</span>
+        <span class="n">name_url</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/artifacts/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">,</span> <span class="n">artifact_id</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name_url</span><span class="p">)[</span><span class="s2">&quot;attachment&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">attachment_id</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task_id</span><span class="p">:</span>
+            <span class="n">name_url</span> <span class="o">=</span> <span class="s2">&quot;/tasks/</span><span class="si">{}</span><span class="s2">/attachments/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">attachment_id</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name_url</span><span class="p">)[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">incident_id</span><span class="p">:</span>
+            <span class="n">name_url</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/attachments/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">,</span> <span class="n">attachment_id</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name_url</span><span class="p">)[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;task_id or incident_id must be specified with attachment&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;artifact or attachment or incident id must be specified&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Return name string</span>
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="write_file_attachment"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.write_file_attachment">[docs]</a><span class="k">def</span> <span class="nf">write_file_attachment</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">datastream</span><span class="p">,</span> <span class="n">incident_id</span><span class="p">,</span> <span class="n">task_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    call the Resilient REST API to create the attachment on incident or task</span>
+
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :param file_name: required, name of the attachment</span>
+<span class="sd">    :param dataStream: required, stream of bytes</span>
+<span class="sd">    :param incident_id: required</span>
+<span class="sd">    :param task_id: optional</span>
+<span class="sd">    :param content_type: optional, MIME type of attachment</span>
+<span class="sd">    :return: new attachment -dictionary of attachment metadata</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">content_type</span> <span class="o">=</span> <span class="n">content_type</span> \
+                   <span class="ow">or</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">file_name</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> \
+                   <span class="ow">or</span> <span class="s2">&quot;application/octet-stream&quot;</span>
+
+    <span class="n">attachment</span> <span class="o">=</span> <span class="n">datastream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Writing to temp path so that the REST API client can use this file path </span>
+<span class="sd">    to read and POST the attachment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">temp_file</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">temp_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">attachment</span><span class="p">)</span>
+            <span class="n">temp_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="c1"># Create a new attachment by calling resilient REST API</span>
+
+            <span class="k">if</span> <span class="n">task_id</span><span class="p">:</span>
+                <span class="n">attachment_uri</span> <span class="o">=</span> <span class="s2">&quot;/tasks/</span><span class="si">{}</span><span class="s2">/attachments&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">attachment_uri</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">/attachments&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">)</span>
+
+            <span class="n">new_attachment</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">post_attachment</span><span class="p">(</span><span class="n">attachment_uri</span><span class="p">,</span>
+                                                        <span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                        <span class="n">filename</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+                                                        <span class="n">mimetype</span><span class="o">=</span><span class="n">content_type</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_attachment</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">new_attachment</span> <span class="o">=</span> <span class="n">new_attachment</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">new_attachment</span></div>
+
+
+<div class="viewcode-block" id="readable_datetime"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.readable_datetime">[docs]</a><span class="k">def</span> <span class="nf">readable_datetime</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">milliseconds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rtn_format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%SZ&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    convert an epoch timestamp to a string using a format</span>
+<span class="sd">    :param timestamp:</span>
+<span class="sd">    :param milliseconds: True = epoch in</span>
+<span class="sd">    :param rtn_format: format of resulant string</span>
+<span class="sd">    :return: string representation of timestamp</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">milliseconds</span><span class="p">:</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">timestamp</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">timestamp</span>
+
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">rtn_format</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="str_to_bool"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.str_to_bool">[docs]</a><span class="k">def</span> <span class="nf">str_to_bool</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents value as boolean.</span>
+<span class="sd">    :param value:</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;on&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_to_tmp_file"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.write_to_tmp_file">[docs]</a><span class="k">def</span> <span class="nf">write_to_tmp_file</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tmp_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path_tmp_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes data to a file in a safely created temp directory. If no</span>
+<span class="sd">    `tmp_file_name` is provided, a temp name will be given. If no `path_tmp_dir`</span>
+<span class="sd">    is provided a temp directory is created with the prefix `resilient-lib-tmp-`.</span>
+
+<span class="sd">    When used within a Resilient Function, ensure you safely remove the created temp</span>
+<span class="sd">    directory in the `finally` block of the FunctionComponent code.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        import os</span>
+<span class="sd">        import shutil</span>
+<span class="sd">        try:</span>
+<span class="sd">            path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get(&quot;name&quot;))</span>
+
+<span class="sd">        except Exception:</span>
+<span class="sd">            yield FunctionError()</span>
+
+<span class="sd">        finally:</span>
+<span class="sd">            if path_tmp_dir and os.path.isdir(path_tmp_dir):</span>
+<span class="sd">                shutil.rmtree(path_tmp_dir)</span>
+
+<span class="sd">    :param data: bytes to be written to the file</span>
+<span class="sd">    :type data: `bytes`</span>
+<span class="sd">    :param tmp_file_name: name to be given to the file.</span>
+<span class="sd">    :type tmp_file_name: `str`</span>
+<span class="sd">    :param path_tmp_dir: path to an existing directory to use as the temp dir</span>
+<span class="sd">    :type path_tmp_dir: `str`</span>
+<span class="sd">    :return: a tuple (path_tmp_file, path_tmp_dir)</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If no tmp_file_name provided use next tempfile candidate name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tmp_file_name</span><span class="p">:</span>
+        <span class="n">tmp_file_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">_get_candidate_names</span><span class="p">())</span>
+
+    <span class="c1"># If no path_tmp_dir provided, create one</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_tmp_dir</span><span class="p">:</span>
+        <span class="n">path_tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;resilient-lib-tmp-&quot;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path_tmp_dir</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Path does not exist: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_tmp_dir</span><span class="p">))</span>
+
+    <span class="c1"># Generate path to tmp file</span>
+    <span class="n">path_tmp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_tmp_dir</span><span class="p">,</span> <span class="n">tmp_file_name</span><span class="p">)</span>
+
+    <span class="c1"># Write the file</span>
+    <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_tmp_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">temp_file</span><span class="p">:</span>
+        <span class="n">temp_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">path_tmp_file</span><span class="p">,</span> <span class="n">path_tmp_dir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="close_incident"><a class="viewcode-back" href="../../../resilient_lib.components.html#resilient_lib.components.resilient_common.close_incident">[docs]</a><span class="k">def</span> <span class="nf">close_incident</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">incident_id</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :param incident_id: required</span>
+<span class="sd">    :param kwargs: required field_name:new_value pairs dict</span>
+<span class="sd">    :return: response object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">incident_id</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;incident_id&#39; must be specified&quot;</span><span class="p">)</span>
+
+    <span class="c1"># API call to the TypeRest for fields &quot;required&quot;: &quot;close&quot; if not in kwargs throw an error</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="n">_get_required_fields</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
+
+    <span class="n">missing_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">required_fields</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_fields</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing mandatory field(s) to close an incident: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing_fields</span><span class="p">))</span>
+
+    <span class="c1"># check for known mandatory field &quot;plan_status&quot; if not in kwargs add it</span>
+    <span class="n">mandatory_fields</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">&quot;plan_status&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mandatory_fields</span><span class="p">:</span>
+        <span class="n">mandatory_fields</span><span class="p">[</span><span class="s2">&quot;plan_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;C&quot;</span>
+
+    <span class="c1"># API call to the Resilient REST API to patch the incident data (close incident)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">_patch_to_close_incident</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">incident_id</span><span class="p">,</span> <span class="n">mandatory_fields</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_required_fields</span><span class="p">(</span><span class="n">res_client</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :return: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">_get_incident_fields</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
+    <span class="n">fields_required</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span> <span class="k">if</span> <span class="n">fields</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;close&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">fields_required</span>
+
+
+<span class="nd">@cached</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="n">TTLCache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="mi">600</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">_get_incident_fields</span><span class="p">(</span><span class="n">res_client</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    call the Resilient REST API to get list of fields required to close an incident</span>
+<span class="sd">    this call is cached for multiple calls</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :return: json</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;/types/incident&quot;</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+    <span class="n">incident_fields</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fields&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">incident_fields</span>
+
+
+<span class="k">def</span> <span class="nf">_patch_to_close_incident</span><span class="p">(</span><span class="n">res_client</span><span class="p">,</span> <span class="n">incident_id</span><span class="p">,</span> <span class="n">close_fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    call the Resilient REST API to patch incident</span>
+<span class="sd">    :param res_client: required for communication back to resilient</span>
+<span class="sd">    :param incident_id: required</span>
+<span class="sd">    :param close_fields: required</span>
+<span class="sd">    :return: response object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uri</span> <span class="o">=</span> <span class="s2">&quot;/incidents/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident_id</span><span class="p">)</span>
+    <span class="n">previous_object</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span>
+    <span class="n">patch</span> <span class="o">=</span> <span class="n">resilient</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">previous_object</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">close_fields</span><span class="p">:</span>
+        <span class="n">patch</span><span class="o">.</span><span class="n">add_value</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">close_fields</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">patch</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Resilient Python API</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../resilient.html">resilient package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resilient_circuits.html">resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resilient_lib.html">resilient_lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pytest_resilient_circuits.html">pytest_resilient_circuits package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rc-webserver.html">rc-webserver package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rc-cts.html">rc-cts package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019 International Business Machines Corporation.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
