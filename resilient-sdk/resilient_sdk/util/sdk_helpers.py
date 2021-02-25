@@ -35,6 +35,7 @@ else:
     from json.decoder import JSONDecodeError
 
 LOGGER_NAME = "resilient_sdk_log"
+ENV_VAR_DEV = "RES_SDK_DEV"
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -227,6 +228,25 @@ def is_valid_url(url):
         re.IGNORECASE)
 
     return regex.search(url) is not None
+
+
+def is_valid_hash(input_hash):
+    """Returns True if the input_hash is a valid SHA256 hash.
+    Returns False if;
+        -   input_hash is not a str
+        -   input_hash is not equal to 64 characters
+        -   that all characters in input_hash are base 16 (valid hexadecimal)
+
+    :param input_hash: str to validate if its a SHA256 hash
+    :type input_hash: str
+    :return: True/False
+    """
+    if not input_hash:
+        return False
+
+    regex = re.compile(r'^[a-f0-9]{64}(:.+)?$')
+
+    return regex.match(input_hash) is not None
 
 
 def does_url_contain(url, qry):
@@ -941,3 +961,11 @@ def str_to_bool(value):
     """
     value = str(value).lower()
     return value in ('1', 'true', 'yes')
+
+
+def is_env_var_set(env_var):
+    """
+    :return: True/False if env_var is set in environment
+    :rtype: bool
+    """
+    return str_to_bool(os.getenv(env_var))

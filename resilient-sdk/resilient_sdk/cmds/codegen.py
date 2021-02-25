@@ -203,6 +203,9 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("Generating codegen package...")
 
+        if os.path.exists(args.package) and not args.reload:
+            raise SDKException(u"'{0}' already exists. Add --reload flag to regenerate it".format(args.package))
+
         if not sdk_helpers.is_valid_package_name(args.package):
             raise SDKException(u"'{0}' is not a valid package name".format(args.package))
 
@@ -308,10 +311,12 @@ class CmdCodegen(BaseCmd):
             }
         }
 
-        # If there are Functions, add a 'tests' and a 'payload_samples' directory
+        # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
-            package_mapping_dict["payload_samples"] = {}
+
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                package_mapping_dict["payload_samples"] = {}
 
         # Loop each Function
         for f in jinja_data.get("functions"):
@@ -330,8 +335,10 @@ class CmdCodegen(BaseCmd):
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
-            # Add a 'payload_samples/fn_name' directory and the files to it
-            CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
+            # See if RES_SDK_DEV environment var is set
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                # Add a 'payload_samples/fn_name' directory and the files to it
+                CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
         for w in jinja_data.get("workflows"):
 

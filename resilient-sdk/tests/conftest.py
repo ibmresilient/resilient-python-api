@@ -312,3 +312,16 @@ def fx_get_sub_parser():
     main_parser = app.get_main_app_parser()
     sub_parser = app.get_main_app_sub_parser(main_parser)
     return sub_parser
+
+
+@pytest.fixture
+def fx_add_dev_env_var():
+    """
+    Before: sets RES_SDK_DEV=1
+    After: sets RES_SDK_DEV=0
+    """
+    os.environ[sdk_helpers.ENV_VAR_DEV] = "1"
+
+    yield
+
+    os.environ[sdk_helpers.ENV_VAR_DEV] = "0"

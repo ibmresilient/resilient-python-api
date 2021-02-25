@@ -19,6 +19,7 @@ env:
   - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+<<<<<<< HEAD
   - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
   - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
   - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
@@ -27,6 +28,9 @@ env:
   - FYRE_DEPLOY_SLEEP_SECONDS=30
   - FYRE_DEPLOY_TIMEOUT_SECONDS=180
   - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
+=======
+  - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
+>>>>>>> release/v41.0.x
 
 # Install package deps
 before_install:
@@ -89,7 +93,27 @@ matrix:
         - echo "Building packages in Python 3.6 and Deploying to Artifactory"
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+
+    - stage: deploy documentation
+      # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
+      install:
+      - pip install sphinx resilient resilient-circuits resilient-lib resilient-sdk pytest-resilient-circuits rc-cts rc-webserver
+      script:
+        - make -C docs/ html
+        - touch docs/_build/html/.nojekyll
+      # Define a deploy step to the inbuilt git pages deployment provider
+      deploy:
+        - provider: pages:git
+          verbose: true
+          skip_cleanup: true
+          # The github_url for the internal git needs to be specified otherwise the deploy will fail.
+          github_url: github.ibm.com
+          # A token is needed for the deployment, this token is a Personal Access token with limited permissions
+          github_token: $GH_TOKEN
+          edge: true
+          local_dir: ./docs/_build/html/
+          keep_history: true
 
 after_failure:
   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"

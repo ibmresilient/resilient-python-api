@@ -3,7 +3,10 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for resilient-circuits"""
+import sys
+import pkg_resources
 import logging
+import copy
 import re
 
 LOG = logging.getLogger("__name__")
@@ -108,3 +111,96 @@ def validate_configs(configs, validate_dict):
         # if meets its valid_condition
         if not valid_condition(config):
             raise ValueError(invalid_msg)
+
+
+def get_packages(working_set):
+    """
+    Return a sorted list of tuples of all package names
+    and their version in working_set
+
+    :param working_set: the working_set for all packages installed in this env
+    :type working_set: setuptools.pkg_resources.WorkingSet obj
+    :return: pkg_list: a list of tuples [('name','version')] e.g. [('resilient-circuits', '39.0.0')]
+    :rtype: list
+    """
+
+    isinstance(working_set, pkg_resources.WorkingSet)
+
+    pkg_list = []
+
+    for pkg in working_set:
+        pkg_list.append((pkg.project_name, pkg.version))
+
+    return sorted(pkg_list, key=lambda x: x[0].lower())
+
+
+def get_env_str(packages):
+    """
+    Return a str with the Python version and the
+    packages
+
+    :param packages: the working_set for all packages installed in this env
+    :type packages: setuptools.pkg_resources.WorkingSet obj
+    :return: env_str: a str of the Environment
+    :rtype: str
+    """
+
+    env_str = u"###############\n\nEnvironment:\n\n"
+    env_str += u"Python Version: {0}\n\n".format(sys.version)
+    env_str += u"Installed packages:\n"
+    for pkg in get_packages(packages):
+        env_str += u"\n\t{0}: {1}".format(pkg[0], pkg[1])
+    env_str += u"\n###############"
+    return env_str
+
+
+def remove_tag(original_res_obj):
+    """
+    Return the original_res_obj with any of the "tags"
+    attribute set to an empty list
+
+    Example:
+    ```
+    mock_res_obj = {
+        "tags": [{"tag_handle": "fn_tag_test", "value": None}],
+        "functions": [
+            {"export_key": "fn_tag_test_function",
+            "tags": [{'tag_handle': 'fn_tag_test', 'value': None}]}
+        ]
+    }
+
+    new_res_obj = remove_tag(mock_res_obj)
+
+    Returns: {
+        "tags": [],
+        "functions": [
+            {"export_key": "fn_tag_test_function", "tags": []}
+        ]
+    }
+    ```
+    :param original_res_obj: the res_obj you want to remove the tags attribute from
+    :type original_res_obj: dict
+    :return: new_res_obj: a dict with the tag attribute removed
+    :rtype: dict
+    """
+    ATTRIBUTE_NAME = "tags"
+
+    new_res_obj = copy.deepcopy(original_res_obj)
+
+    if isinstance(new_res_obj, dict):
+
+        # Set "tags" to empty list
+        if new_res_obj.get(ATTRIBUTE_NAME):
+            new_res_obj[ATTRIBUTE_NAME] = []
+
+        # Recursively loop the dict
+        for obj_name, obj_value in new_res_obj.items():
+
+            if isinstance(obj_value, list):
+                for index, obj in enumerate(obj_value):
+                    new_res_obj[obj_name][index] = remove_tag(obj)
+
+            elif isinstance(obj_value, dict):
+                new_res_obj[obj_name] = remove_tag(obj_value)
+
+    return new_res_obj
