@@ -19,7 +19,6 @@ env:
   - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
-<<<<<<< HEAD
   - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
   - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
   - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
@@ -28,9 +27,7 @@ env:
   - FYRE_DEPLOY_SLEEP_SECONDS=30
   - FYRE_DEPLOY_TIMEOUT_SECONDS=180
   - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
-=======
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
->>>>>>> release/v41.0.x
 
 # Install package deps
 before_install:
