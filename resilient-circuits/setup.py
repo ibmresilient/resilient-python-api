@@ -58,7 +58,6 @@ setup(
     author='IBM Resilient',
     install_requires=[
         'stompest>=2.3.0',
-        'requests>=2.6.0',
         'circuits',
         'pytz',
         'jinja2>=2.10.0',
@@ -66,7 +65,8 @@ setup(
         'filelock>=2.0.5',
         'watchdog>=0.9.0, <1.0.0; python_version < "3.6.0"',
         'watchdog>=0.9.0; python_version >= "3.6.0"',
-        'resilient>=38.0.0'
+        'resilient>=38.0.0',
+        'resilient-lib>=40.0.0'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
