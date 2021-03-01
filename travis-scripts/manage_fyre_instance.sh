@@ -23,6 +23,20 @@ print_msg () {
     printf "\n--------------------\n$1\n--------------------\n"
 }
 
+print_start() {
+    print_msg "\
+FYRE_ACTION:\t\t\t$1 \n\
+FYRE_API_URL:\t\t\t$2 \n\
+FYRE_USERNAME:\t\t\t$3 \n\
+FYRE_CLUSTER_NAME:\t\t$4 \n\
+FYRE_CLUSTER_DOMAIN:\t\t$5 \n\
+FYRE_STENCIL_ID:\t\t$6 \n\
+FYRE_REQUEST_ID:\t\t$7 \n\
+FYRE_DEPLOY_SLEEP_SECONDS:\t$8 \n\
+FYRE_DEPLOY_TIMEOUT_SECONDS:\t$9 \
+"
+}
+
 get_quota_info () {
     # param $1: (required) FYRE product_group_id
     # param $2: (required) FYRE account user email address
@@ -116,37 +130,34 @@ build_and_run_cluster () {
 ###########
 ## Start ##
 ###########
-print_msg "\
-FYRE_ACTION:\t\t\t$FYRE_ACTION \n\
-FYRE_API_URL:\t\t\t$FYRE_API_URL \n\
-FYRE_USERNAME:\t\t\t$FYRE_USERNAME \n\
-FYRE_CLUSTER_NAME:\t\t$FYRE_CLUSTER_NAME \n\
-FYRE_CLUSTER_DOMAIN:\t\t$FYRE_CLUSTER_DOMAIN \n\
-FYRE_STENCIL_ID:\t\t$FYRE_STENCIL_ID \n\
-FYRE_REQUEST_ID:\t\t$FYRE_REQUEST_ID \n\
-FYRE_DEPLOY_SLEEP_SECONDS:\t$FYRE_DEPLOY_SLEEP_SECONDS \n\
-FYRE_DEPLOY_TIMEOUT_SECONDS:\t$FYRE_DEPLOY_TIMEOUT_SECONDS \
-"
-
 case $FYRE_ACTION in 
 
     QUOTA_INFO)
     # param $2: FYRE product_group_id
     # param $3: FYRE account user email address
+    print_start $FYRE_ACTION $FYRE_API_URL $FYRE_USERNAME "N/A" "N/A" "N/A" "N/A" "N/A" "N/A"
     get_quota_info $2 $3
     ;;
 
     CLUSTER_INFO)
     # param $2: FYRE request_id
+    print_start $FYRE_ACTION $FYRE_API_URL $FYRE_USERNAME "N/A" "N/A" "N/A" $2 "N/A" "N/A"
     get_cluster_info $2
     ;;
 
     DEPLOY)
-    build_and_run_cluster $FYRE_STENCIL_ID $FYRE_CLUSTER_NAME $FYRE_CLUSTER_DOMAIN $FYRE_DEPLOY_SLEEP_SECONDS $FYRE_DEPLOY_TIMEOUT_SECONDS
+    # param $2: FYRE_STENCIL_ID
+    # param $3: FYRE_CLUSTER_NAME
+    # param $4: FYRE_CLUSTER_DOMAIN
+    # param $5: FYRE_DEPLOY_SLEEP_SECONDS
+    # param $6: FYRE_DEPLOY_TIMEOUT_SECONDS
+    print_start $FYRE_ACTION $FYRE_API_URL $FYRE_USERNAME $3 $4 $2 "N/A" $5 $6
+    build_and_run_cluster $2 $3 $4 $5 $6
     ;;
 
     DELETE)
     # param $2: FYRE cluster_prefix
+    print_start $FYRE_ACTION $FYRE_API_URL $FYRE_USERNAME $2 "N/A" "N/A" "N/A" "N/A" "N/A" "N/A"
     delete_cluster $2
     ;;
 
