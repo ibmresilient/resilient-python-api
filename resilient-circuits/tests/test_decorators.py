@@ -4,7 +4,6 @@
 
 import os
 import pytest
-import re
 from circuits import Event
 from mock import patch
 from resilient_lib import IntegrationError
@@ -78,9 +77,8 @@ def test_app_function_handles_StatusMessage(circuits_app):
 
 
 def test_app_function_handles_Exception(circuits_app):
-    regex = re.compile(r'mock error message with unicode զ է ը թ ժ ի լ խ', re.U)
     MockComponent(opts=mock_opts).register(circuits_app.app.component_loader)
-    with pytest.raises(IntegrationError, match=regex):
+    with pytest.raises(IntegrationError, match=r"mock error message with unicode"):
         helpers.call_fn(MOCK_FN_NAME + u"raise_exception", {"input_one": "abc"}, circuits_app)
 
 
