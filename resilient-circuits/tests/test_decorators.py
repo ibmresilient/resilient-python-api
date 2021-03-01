@@ -3,7 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import pytest
-from resilient_circuits import ResilientComponent, ng_function, StatusMessage, FunctionResult, FunctionMessage, SubmitTestFunction
+from resilient_circuits import ResilientComponent, app_function, StatusMessage, FunctionResult, FunctionMessage, SubmitTestFunction
 from circuits import Event
 import os
 
@@ -27,7 +27,7 @@ class MockComponent(ResilientComponent):
 
     PACKAGE_NAME = "mock_function"
 
-    @ng_function("mock_function")
+    @app_function("mock_function")
     def mock_function(self, fn_inputs, **kwargs):
         yield StatusMessage("Mock StatusMessage 1")
         yield StatusMessage("Mock StatusMessage 2")
@@ -59,7 +59,7 @@ def call_fn(circuits_app):
         return event.kwargs["result"].value
 
 
-def test_ng_function_basic_decoration():
+def test_app_function_basic_decoration():
     assert MockComponent.mock_function.handler is True
     assert MockComponent.mock_function.function is True
     assert MockComponent.mock_function.names == ("mock_function",)
@@ -69,35 +69,35 @@ def test_ng_function_basic_decoration():
     assert MockComponent.mock_function.event is True
 
 
-def test_ng_function_validates_fn_inputs():
+def test_app_function_validates_fn_inputs():
     # TODO
     pass
 
 
-def test_ng_function_runs_2(circuits_app):
+def test_app_function_runs_2(circuits_app):
     # TODO
     MockComponent(opts=mock_opts).register(circuits_app.app.component_loader)
     mock_results = call_fn(circuits_app)
 
 
-def test_ng_function_handles_FunctionResult():
+def test_app_function_handles_FunctionResult():
     # TODO
     pass
 
 
-def test_ng_function_handles_StatusMessage():
+def test_app_function_handles_StatusMessage():
     # TODO
     pass
 
 
-def test_ng_function_handles_Exception():
+def test_app_function_handles_Exception():
     # TODO
     pass
 
 
 def test_too_many_function_names():
-    with pytest.raises(ValueError, match=r"Usage: @ng_function\(api_name\)"):
+    with pytest.raises(ValueError, match=r"Usage: @app_function\(api_name\)"):
         class MockComponent2(ResilientComponent):
-            @ng_function("mock_function_2", "mock_function_3")
+            @app_function("mock_function_2", "mock_function_3")
             def mock_function_2(self, fn_inputs, **kwargs):
                 return

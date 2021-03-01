@@ -110,9 +110,9 @@ class function(object):
         return decorated
 
 
-class ng_function(object):
+class app_function(object):
     """
-    Creates new a Next Generation Function (@ng_function) Handler.
+    Creates new a Next Generation Function (@app_function) Handler.
 
     This decorator can be applied to methods of classes derived from the class `ResilientComponent`.
     It marks the method as a handler for the events passed as arguments to the decorator.
@@ -122,7 +122,7 @@ class ng_function(object):
 
     def __init__(self, *args, **kwargs):
         if len(args) != 1:
-            raise ValueError("Usage: @ng_function(api_name)")
+            raise ValueError("Usage: @app_function(api_name)")
         self.names = args
         self.kwargs = kwargs
 
@@ -144,7 +144,7 @@ class ng_function(object):
         fn.event = True
 
         @wraps(fn)
-        def ng_function_decorator(itself, event, *args, **kwargs):
+        def app_function_decorator(itself, event, *args, **kwargs):
             """
             The decorated function
 
@@ -155,12 +155,12 @@ class ng_function(object):
             """
             function_inputs = event.message.get("inputs", {})
 
-            def _invoke_ng_function(evt, **kwds):
+            def _invoke_app_function(evt, **kwds):
                 """
-                The code to call when a function with the decorator `@ng_function(api_name)`
+                The code to call when a function with the decorator `@app_function(api_name)`
                 is invoked.
 
-                Returns result_list when function with the decorator `@ng_function(api_name)` is
+                Returns result_list when function with the decorator `@app_function(api_name)` is
                 finished processing.
 
                 A method that has this handler should yield a StatusMessage or a FunctionResult
@@ -173,7 +173,7 @@ class ng_function(object):
                 :param evt: The Event with the StompFrame and the Message read off the Message Destination
                 :type fn: resilient_circuits.action_message.FunctionMessage
                 """
-                LOG.debug("Running _invoke_ng_function in Thread: %s", threading.currentThread().name)
+                LOG.debug("Running _invoke_app_function in Thread: %s", threading.currentThread().name)
 
                 result_list = []
 
@@ -218,11 +218,11 @@ class ng_function(object):
 
                 return result_list
 
-            invoke_ng_function = task(_invoke_ng_function, event, **function_inputs)
-            fn_result = yield itself.call(invoke_ng_function, channels="functionworker")
+            invoke_app_function = task(_invoke_app_function, event, **function_inputs)
+            fn_result = yield itself.call(invoke_app_function, channels="functionworker")
             yield fn_result.value
 
-        return ng_function_decorator
+        return app_function_decorator
 
 
 class required_field(object):

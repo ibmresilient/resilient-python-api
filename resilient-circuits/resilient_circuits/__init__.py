@@ -10,5 +10,5 @@ from .actions_component import ResilientComponent
 from .action_message import ActionMessageBase, ActionMessage, \
     FunctionMessage, FunctionResult, FunctionError, \
     StatusMessage, BaseFunctionError
-from .decorators import function, ng_function, handler, required_field, required_action_field, defer, debounce
+from .decorators import function, app_function, handler, required_field, required_action_field, defer, debounce
 from .actions_test_component import SubmitTestAction, SubmitTestFunction
