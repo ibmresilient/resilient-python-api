@@ -11,7 +11,6 @@ from resilient_circuits import SubmitTestFunction, FunctionResult
 
 def call_fn(fn_name, fn_inputs, circuits_app, status_message_only=False):
 
-    assert isinstance(fn_name, str)
     assert isinstance(fn_inputs, dict)
 
     # Create the submitTestFunction event
