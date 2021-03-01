@@ -9,7 +9,7 @@ from resilient_sdk.cmds import base_cmd, CmdClone
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
 
-from ..helpers import read_mock_json
+from tests.helpers import read_mock_json
 import pytest
 TEST_OBJ = {
     "uuid": uuid.uuid4(),
