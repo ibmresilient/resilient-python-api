@@ -744,15 +744,17 @@ class Actions(ResilientComponent):
                 log_message = message
             else:
                 if etype:
-                    message = u"ERROR:\n" + message + u"\n{0}".format(value)
+                    message = u"ERROR:\n{0}\n{1}".format(message, value)
                 else:
                     message = u"Processing failed"
                 if traceback and isinstance(traceback, list):
 
-                    if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-                        message = message + "\n" + ("".join(traceback))
+                    str_traceback = "".join(traceback)
 
-                    log_message = message + "\n" + ("".join(traceback))
+                    if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                        message = u"{0}\n{1}".format(message, str_traceback)
+
+                    log_message = u"{0}\n{1}".format(message, str_traceback)
 
             LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), log_message)
 
