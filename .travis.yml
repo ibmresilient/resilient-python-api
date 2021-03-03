@@ -18,7 +18,8 @@ env:
   - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
   - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
-  - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
+  - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
+  - LIB_VERSION=$( if [[ $IS_MASTER -eq 1 ]] ; then echo $(echo $LATEST_TAG | cut -d "." -f 1,2) ; else echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2) ; fi)
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
