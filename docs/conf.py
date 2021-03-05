@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Resilient Python API'
-copyright = u'2010-2019 International Business Machines Corporation'
+copyright = u'2010-2021 International Business Machines Corporation'
 author = u'IBM Resilient'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -89,8 +89,21 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+html_theme = 'sphinx_material'
+html_favicon = "images/IBM_Security_Shield.ico"
 
+# Get html logo from static folder
+html_logo = "_static/IBM_Security_Shield.svg"
+
+html_theme_options = {
+    "color_primary": "blue",
+    "color_accent": "cyan",
+    "html_prettify": True,
+    "css_minify": False,
+    "theme_color": "2196f3",
+    "logo_icon": '<img height="30" width="30" src="{}"/>'.format(html_logo),
+}
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.

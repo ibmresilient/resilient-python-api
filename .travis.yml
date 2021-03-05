@@ -72,8 +72,10 @@ matrix:
 
     - stage: deploy documentation
       # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
+      # Also install sphinx-material to update the theming of the resultant web page
       install:
-      - pip install sphinx resilient resilient-circuits resilient-lib resilient-sdk pytest-resilient-circuits rc-cts rc-webserver
+        - pip install sphinx resilient resilient-circuits resilient-lib resilient-sdk pytest-resilient-circuits rc-cts rc-webserver
+        - pip install git+https://github.com/bashtage/sphinx-material.git
       script:
         - make -C docs/ html
         - touch docs/_build/html/.nojekyll
