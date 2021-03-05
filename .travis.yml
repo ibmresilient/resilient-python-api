@@ -4,6 +4,7 @@ os: linux
 
 stages:
   - run tests
+  - static analysis
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
@@ -48,6 +49,44 @@ matrix:
       script:
         - echo "Starting Python 3.6 Tests"
         - ./travis-scripts/run_unit_tests.sh
+
+    # Jobs that perform static analysis; code quality, security scans etc
+    - stage: static analysis
+      name: Python 2.7 Bandit Security Scan
+      python: 2.7
+      env:
+        - ANALYSIS_NAME="Py2.7 Bandit Security Scan"
+      install:
+        - pip install bandit==1.6.2
+      script:
+        - ./travis-scripts/run_bandit_scan.sh
+    - stage: static analysis
+      name: Python 3.6 Bandit Security Scan
+      python: 3.6
+      env:
+        - ANALYSIS_NAME="Py3.6 Bandit Security Scan"
+      install:
+        - pip install bandit
+      script:
+        - ./travis-scripts/run_bandit_scan.sh
+    - stage: static analysis
+      name: Pylint
+      python: 3.6
+      env:
+        - ANALYSIS_NAME="Pylint"
+      install:
+        - pip install pylint
+      script:
+        - ./travis-scripts/run_pylint_scan.sh
+    - stage: static analysis
+      name: CVE Safety Check
+      python: 3.6
+      env:
+        - ANALYSIS_NAME="CVE Search against dependancies"
+      install:
+        - pip install safety
+      script:
+        - ./travis-scripts/run_cve_scan.sh
 
     - stage: build packages
       name: Build Packages in Python 2.7
