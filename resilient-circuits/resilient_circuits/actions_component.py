@@ -17,6 +17,7 @@ from circuits.core.handlers import handler
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 import resilient
 from resilient import ensure_unicode
+from resilient_lib import IntegrationError
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
@@ -25,6 +26,7 @@ from resilient_circuits.action_message import ActionMessageBase, ActionMessage, 
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 from resilient_circuits import helpers
+from resilient_circuits import constants
 
 LOG = logging.getLogger(__name__)
 
@@ -386,7 +388,7 @@ class Actions(ResilientComponent):
                         headers.get("message"), message))
 
     @handler("Message")
-    def on_stomp_message(self, event, headers, message):
+    def on_stomp_message(self, event, headers, message, queue):
         """STOMP produced a message."""
         # Find the queue name from the subscription id (stomp_listener_xxx)
         msg_id = event.frame.headers.get("message-id")
@@ -430,7 +432,16 @@ class Actions(ResilientComponent):
 
                 message = json.loads(mstr)
                 # Construct a Circuits event with the message, and fire it on the channel
-                if message.get("function"):
+                if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                    channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
+                    # TODO: create new message type
+                    event = FunctionMessage(source=self,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+
+                elif message.get("function"):
                     channel = "functions." + message["function"]["name"]
                     event = FunctionMessage(source=self,
                                             headers=headers,
@@ -602,6 +613,21 @@ class Actions(ResilientComponent):
                 queue_name = component._functions[func_name]["destination_handle"]
                 LOG.info("'%s.%s' function '%s' registered to '%s'",
                          type(component).__module__, type(component).__name__, func_name, queue_name)
+
+            elif str(channel).startswith(constants.INBOUND_MSG_DEST_PREFIX):
+                # If name for inbound q in app.config file, use that
+                try:
+                    # TODO: write unit test to check this error raised
+                    app_config_q_name = component.app_configs.get("inbound_destination_api_name")
+                except AttributeError as e:
+                    raise IntegrationError(u"'{0}' does not have app_configs defined\n{1}".format(type(component).__name__, str(e)))
+                if app_config_q_name:
+                    handler_name = app_config_q_name
+                else:
+                    handler_name = channel.split(".", 1)[1]
+                queue_name = u"{0}.{1}.{2}".format(constants.INBOUND_MSG_DEST_PREFIX, self.org_id, handler_name)
+                LOG.info("'%s.%s' inbound handler '%s' registered to '%s'", type(component).__module__, type(component).__name__, handler_name, queue_name)
+
             else:
                 continue
 
@@ -667,7 +693,11 @@ class Actions(ResilientComponent):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.resilient_mock:
             return
-        if self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
+
+        if queue_name.startswith(constants.INBOUND_MSG_DEST_PREFIX):
+            self.fire(Subscribe(queue_name, additional_headers=self.subscribe_headers))
+
+        elif self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
             LOG.info("Subscribe to message destination '%s'", queue_name)
