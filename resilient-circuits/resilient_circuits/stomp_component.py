@@ -305,7 +305,7 @@ class StompClient(BaseComponent):
             self.fire(OnStompError(frame, err))
 
     @handler("Message")
-    def on_message(self, event, headers, message):
+    def on_message(self, event, headers, message, queue):
         LOG.debug("Stomp message received")
 
     @handler("Ack")
