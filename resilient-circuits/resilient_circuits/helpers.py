@@ -204,3 +204,31 @@ def remove_tag(original_res_obj):
                 new_res_obj[obj_name] = remove_tag(obj_value)
 
     return new_res_obj
+
+
+def get_queue(destination):
+    """
+    Return a tuple (queue_type, org_id, queue_name).
+    Returns None if fails to get queue
+
+    :param destination: str in the format '/queue/actions.201.fn_main_mock_integration'
+    :type destination: str
+    :return: queue: (queue_type, org_id, queue_name) e.g. ('actions', '201', 'fn_main_mock_integration')
+    :rtype: tuple
+    """
+
+    try:
+        assert isinstance(destination, str)
+
+        regex = re.compile(r'\/.+\/')
+
+        destination = re.sub(regex, "", destination, count=1)
+        q = destination.split(".")
+
+        assert len(q) == 3
+
+        return (q[0], q[1], q[2])
+
+    except AssertionError as e:
+        LOG.error("Could not get queue name\n%s", str(e))
+        return None

@@ -126,3 +126,13 @@ def test_remove_tag():
     assert new_res_obj.get("tags") == []
     assert new_res_obj.get("functions", [])[0].get("tags") == []
     assert new_res_obj.get("workflows", []).get("nested_2")[0].get("tags") == []
+
+
+def test_get_queue(caplog):
+    assert helpers.get_queue("/queue/actions.201.fn_main_mock_integration") == ("actions", "201", "fn_main_mock_integration")
+    assert helpers.get_queue("/queue/inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
+    assert helpers.get_queue("inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
+    assert helpers.get_queue("111.inbound_app_mock") is None
+    assert helpers.get_queue("") is None
+    assert helpers.get_queue(None) is None
+    assert "Could not get queue name" in caplog.text
