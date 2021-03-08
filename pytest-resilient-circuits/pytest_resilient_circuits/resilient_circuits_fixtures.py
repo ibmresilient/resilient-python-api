@@ -434,6 +434,7 @@ port = 443
     def finalizer(self):
         """ Unregister and reset CWD back to where it was originally """
         print("Finalizer Running")
+        os.environ["APP_CONFIG_FILE"] = ""
         self.flush_logs()
         self.manager.stop()
         pytest.wait_for(self.manager, "_running", False)
