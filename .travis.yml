@@ -75,13 +75,13 @@ matrix:
         # Install sphinx to handle the rebuild and deploy of docs
         - pip install sphinx
         # Install each of the packages from their source so that their code and comments can be gathered
-        - pip install -e ./resilient 
+        - pip install -e ./resilient
         - pip install -e ./resilient-circuits
-        - pip install -e  ./resilient-lib
-        - pip install -e  ./resilient-sdk
-        - pip install -e  ./pytest-resilient-circuits
-        - pip install -e  ./rc-cts
-        - pip install -e  ./rc-webserver
+        - pip install -e ./resilient-lib
+        - pip install -e ./resilient-sdk
+        - pip install -e ./pytest-resilient-circuits
+        - pip install -e ./rc-cts
+        - pip install -e ./rc-webserver
         # Also install sphinx-material to update the theming of the resultant web page
         - pip install git+https://github.com/bashtage/sphinx-material.git
       script:
