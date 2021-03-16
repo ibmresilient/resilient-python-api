@@ -10,6 +10,7 @@ from functools import wraps
 from types import GeneratorType
 from circuits import Timer, task, Event
 import circuits.core.handlers
+from resilient_circuits import constants
 from resilient_circuits.action_message import FunctionResult, \
     StatusMessage, StatusMessageEvent, \
     FunctionError_, FunctionErrorEvent
@@ -107,6 +108,80 @@ class function(object):
             # Return value is the result_list that was yielded from the wrapped function
             yield xxx
         return decorated
+
+
+class inbound_app(object):
+    def __init__(self, *args, **kwargs):
+        if len(args) != 1:
+            raise ValueError("Usage: @inbound_app(<{0}>)".format(constants.INBOUND_MSG_APP_CONFIG_Q_NAME))
+        self.names = args
+        self.kwargs = kwargs
+
+    def __call__(self, ia):
+        """
+        Called at decoration time, with the bare method being decorated
+
+        :param ia: The method to decorate
+        :type ia: resilient_circuits.ResilientComponent
+        """
+        ia.handler = True
+        ia.inbound_handler = True
+
+        # Circuits properties
+        ia.names = self.names
+        ia.priority = self.kwargs.get("priority", 0)
+        ia.channel = "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, self.names[0])
+        ia.override = self.kwargs.get("override", False)
+        ia.event = True
+
+        @wraps(ia)
+        def inbound_app_decorator(itself, event, *args, **kwargs):
+            """
+            The decorated method
+
+            :param itself: The method to decorate
+            :type itself: resilient_circuits.ResilientComponent
+            :param event: The Event with the StompFrame and the Message read off the Message Destination
+            :type event: resilient_circuits.action_message.InboundMessage
+            """
+
+            def _invoke_inbound_app(evt, **kwds):
+                """
+                The code to call when a method with the decorator `@inbound_app(<inbound_destination_api_name>)`
+                is invoked.
+
+                Returns result_list when method with the decorator `@inbound_app(<inbound_destination_api_name>)` is
+                finished processing.
+
+                A method that has this handler should yield a str when done
+                    -  E.g:
+                        `yield "Processing Complete!"`
+
+                :param evt: The Event with the StompFrame and the Message read off the Message Destination
+                :type ia: resilient_circuits.action_message.FunctionMessage
+                """
+                result_list = []
+                LOG.debug("Running _invoke_inbound_app in Thread: %s", threading.currentThread().name)
+
+                # Get the required attribute from the message
+                message = evt.message
+                inbound_action = message.get("action", "Unknown")
+
+                # Invoke the actual Function
+                ia_results = ia(itself, evt.message, inbound_action)
+
+                for r in ia_results:
+                    LOG.debug(r)
+                    result_list.append(r)
+
+                return result_list
+
+            invoke_inbound_app = task(_invoke_inbound_app, event)
+            # TODO custom worker for inbound messages
+            ia_result = yield itself.call(invoke_inbound_app, channels="functionworker")
+            yield ia_result.value
+
+        return inbound_app_decorator
 
 
 class required_field(object):

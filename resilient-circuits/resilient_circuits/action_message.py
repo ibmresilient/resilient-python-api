@@ -58,6 +58,7 @@ class ActionMessageBase(Event):
 
     def __repr__(self):
         "x.__repr__() <==> repr(x)"
+        # TODO: inbound message not displaying properly
         if len(self.channels) > 1:
             channels = repr(self.channels)
         elif len(self.channels) == 1:
@@ -239,6 +240,20 @@ class FunctionMessage(ActionMessageBase):
         # The name of this event is the API name name of the function.
         self.name = fn.get("name", "_unnamed_")
         self.displayname = fn.get("display_name", self.name)
+
+        if message and log_dir:
+            self._log_message(log_dir)
+
+
+class InboundMessage(ActionMessageBase):
+    def __init__(self, source=None, headers=None, message=None, queue=None,
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
+
+        super(InboundMessage, self).__init__(source=source, headers=headers, message=message,
+                                             test=test, test_msg_id=test_msg_id, frame=frame, log_dir=log_dir)
+
+        self.name = queue[2]
+        self.displayname = queue[2]
 
         if message and log_dir:
             self._log_message(log_dir)

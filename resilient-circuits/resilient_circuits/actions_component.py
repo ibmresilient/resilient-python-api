@@ -22,7 +22,7 @@ import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
 from resilient_circuits.action_message import ActionMessageBase, ActionMessage, \
-    FunctionMessage, StatusMessage, FunctionResult, BaseFunctionError
+    FunctionMessage, InboundMessage, StatusMessage, FunctionResult, BaseFunctionError
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
 from resilient_circuits import helpers
@@ -435,11 +435,12 @@ class Actions(ResilientComponent):
                 if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
                     channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
                     # TODO: create new message type
-                    event = FunctionMessage(source=self,
-                                            headers=headers,
-                                            message=message,
-                                            frame=event.frame,
-                                            log_dir=self.logging_directory)
+                    event = InboundMessage(source=self,
+                                           queue=queue,
+                                           headers=headers,
+                                           message=message,
+                                           frame=event.frame,
+                                           log_dir=self.logging_directory)
 
                 elif message.get("function"):
                     channel = "functions." + message["function"]["name"]
@@ -618,7 +619,7 @@ class Actions(ResilientComponent):
                 # If name for inbound q in app.config file, use that
                 try:
                     # TODO: write unit test to check this error raised
-                    app_config_q_name = component.app_configs.get("inbound_destination_api_name")
+                    app_config_q_name = component.app_configs.get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME)
                 except AttributeError as e:
                     raise IntegrationError(u"'{0}' does not have app_configs defined\n{1}".format(type(component).__name__, str(e)))
                 if app_config_q_name:
@@ -785,7 +786,17 @@ class Actions(ResilientComponent):
                     if isinstance(arg, ActionMessageBase):
                         fevent = arg
                         break
-            if fevent and isinstance(fevent, ActionMessageBase):
+
+            if isinstance(fevent, InboundMessage):
+                # TODO: better way to get headers
+                headers = fevent.hdr()
+                message_id = headers.get("message-id", None)
+                if not fevent.test:
+                    # TODO: Better log message
+                    LOG.debug("Ack %s", message_id)
+                    self.fire(Ack(fevent.frame, message_id=message_id))
+
+            elif fevent and isinstance(fevent, ActionMessageBase):
                 fevent.stop()  # Stop further event processing
                 status = 1
                 headers = fevent.hdr()
@@ -959,6 +970,15 @@ class Actions(ResilientComponent):
             fevent = event.parent
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
+
+            elif isinstance(fevent, InboundMessage):
+                # TODO: better way to get headers
+                headers = fevent.hdr()
+                message_id = headers.get("message-id", None)
+                if not fevent.test:
+                    # TODO: Better log message
+                    LOG.debug("Ack %s", message_id)
+                    self.fire(Ack(fevent.frame, message_id=message_id))
             else:
                 value = event.parent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
