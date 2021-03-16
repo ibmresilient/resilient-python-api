@@ -1,0 +1,64 @@
+{
+    "name": "Investigate Exposure of Personal Information/Data",
+    "inc_id": 2096,
+    "inc_owner_id": 1,
+    "due_date": null,
+    "required": true,
+    "owner_id": null,
+    "user_notes": null,
+    "status": "O",
+    "frozen": false,
+    "owner_fname": null,
+    "owner_lname": null,
+    "init_date": 1611168711663,
+    "active": true,
+    "src_name": null,
+    "inc_name": "mocked incident",
+    "instr_text": null,
+    "instructions": null,
+    "form": "data_compromised, determined_date",
+    "members": null,
+    "perms": {
+      "read": true,
+      "write": true,
+      "comment": true,
+      "assign": true,
+      "close": true,
+      "change_members": true,
+      "attach_file": true,
+      "read_attachments": true,
+      "delete_attachments": true,
+      "change_header": false
+    },
+    "notes": [],
+    "closed_date": null,
+    "actions": [
+      {
+        "id": 157,
+        "name": "An available action",
+        "enabled": true
+      }
+    ],
+    "phase_id": 1005,
+    "category_id": 1,
+    "notes_count": 0,
+    "attachments_count": 0,
+    "task_layout": [],
+    "auto_deactivate": true,
+    "creator_principal": {
+      "id": 1,
+      "type": "user",
+      "name": "a@example.com",
+      "display_name": "Test user"
+    },
+    "regs": {
+      "88": "Data Breach Best Practices"
+    },
+    "custom": false,
+    "id": 2,
+    "inc_training": false,
+    "cat_name": "Respond",
+    "description": "",
+    "at_id": null,
+    "private": null
+}
