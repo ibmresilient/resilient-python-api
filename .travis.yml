@@ -25,7 +25,6 @@ env:
 # Install package deps
 before_install:
   - pip install --upgrade pip
-  - pip install --upgrade setuptools==5.0.2
   - pip install --upgrade setuptools-scm==5.0.2
 
 matrix:
