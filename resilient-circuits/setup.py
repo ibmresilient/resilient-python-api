@@ -36,7 +36,7 @@ with io.open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='resilient_circuits',
     use_scm_version={"root": "../", "relative_to": __file__},
-    setup_requires=['setuptools_scm'],
+    setup_requires=['setuptools_scm<60.0'],
     url='https://developer.ibm.com/resilient',
     license='MIT',
     classifiers=[
