@@ -25,7 +25,7 @@ env:
 # Install package deps
 before_install:
   - pip install --upgrade pip
-  - pip install --upgrade setuptools
+  - pip install --upgrade setuptools<6.0
 
 matrix:
   fast_finish: true
