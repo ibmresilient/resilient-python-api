@@ -19,9 +19,14 @@ import sys
 import os
 import shutil
 import pytest
+import logging
 import resilient_sdk.app as app
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
+
+# Set the logging to DEBUG for tests
+LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG.setLevel(logging.DEBUG)
 
 
 def _mk_temp_dir():
