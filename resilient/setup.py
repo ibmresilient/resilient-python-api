@@ -93,7 +93,7 @@ with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
     name='resilient',
     use_scm_version={"root": "../", "relative_to": __file__},
-    setup_requires=['setuptools_scm<60.0'],
+    setup_requires=['setuptools_scm'],
     url='https://developer.ibm.com/resilient',
     license='MIT',
     classifiers=[
@@ -120,7 +120,7 @@ setup(
         'requests-mock>=1.2.0',
         'six',
         'cachetools<3.0.0',
-        'setuptools>=41.0.0,!=50.0,<60.0'
+        'setuptools>=41.0.0,!=50.0'
     ],
     extras_require={
         ':python_version < "3.2"': [
