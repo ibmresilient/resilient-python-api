@@ -25,6 +25,8 @@ env:
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
   - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
   - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
+  - SKIP_SCANS_KEYWORD="[skip-scans]"
+  - SKIP_SCANS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$SKIP_SCANS_KEYWORD"* ]]; echo $?)
   - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
   - FYRE_CLUSTER_DOMAIN="${FYRE_CLUSTER_NAME}1.fyre.ibm.com"
   - FYRE_DEPLOY_SLEEP_SECONDS=90
@@ -68,7 +70,9 @@ matrix:
       install:
         - pip install bandit==1.6.2
       script:
-        - ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
+        - if [ $SKIP_SCANS == 1 ]; then
+            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
+          fi
     - stage: static analysis
       name: Python 3.6 Bandit Security Scan
       python: 3.6
@@ -77,7 +81,9 @@ matrix:
       install:
         - pip install bandit
       script:
-        - ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
+        - if [ $SKIP_SCANS == 1 ]; then
+            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
+          fi
     - stage: static analysis
       name: Pylint
       python: 3.6
@@ -86,7 +92,9 @@ matrix:
       install:
         - pip install pylint
       script:
-        - ./travis-scripts/run_pylint_scan.sh $PACKAGES_TO_RUN_SCANS_ON $PYTEST_RCFILE
+        - if [ $SKIP_SCANS == 1 ]; then
+            ./travis-scripts/run_pylint_scan.sh $PACKAGES_TO_RUN_SCANS_ON $PYTEST_RCFILE
+          fi
     - stage: static analysis
       name: CVE Safety Check
       python: 3.6
@@ -95,7 +103,9 @@ matrix:
       install:
         - pip install safety
       script:
-        - ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON
+        - if [ $SKIP_SCANS == 1 ]; then
+            ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON
+          fi
     - stage: run tests
       name: Python 3.6 Integration Tests
       python: 3.6
