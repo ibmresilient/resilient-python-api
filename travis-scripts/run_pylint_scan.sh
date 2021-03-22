@@ -19,7 +19,7 @@ RCFILE:\t\t\t$2 \n\
 print_msg "Starting a script to run pylint on python files."
 readonly MIN_PASSING_SCORE=6.25
 readonly ERROR_MSG="Aborting commit. Your commit has a pylint score lower than ${MIN_PASSING_SCORE}"
-DEFAULT_RCFILE="./travis-scripts/travis-configs/.pylintrc"
+DEFAULT_RCFILE="./configs/.pylintrc"
 RCFILE="${2:-$DEFAULT_RCFILE}"
 status=0
 for package in $1; do

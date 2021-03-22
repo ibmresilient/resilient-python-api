@@ -1,5 +1,5 @@
 #!/bin/bash -e
-DEFAULT_RCFILE="./travis-scripts/travis-configs/banditconfig.yaml"
+DEFAULT_RCFILE="./configs/banditconfig.yaml"
 RCFILE="${1:-$DEFAULT_RCFILE}"
 # Run a Bandit scan on all packages
 # Bandit configurgation is pulled from a yaml file
