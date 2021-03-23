@@ -296,6 +296,7 @@ class Actions(ResilientComponent):
         _retry_timer.register(self)
 
         # Make a worker thread-pool that will run functions
+        LOG.debug("num_workers set to %s", opts.get("num_workers"))
         self._functionworker = FunctionWorker(process=False, channel="functionworker", workers=opts.get("num_workers"))
         self._functionworker.register(self.root)
 
