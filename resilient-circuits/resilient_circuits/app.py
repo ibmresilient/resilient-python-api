@@ -28,7 +28,7 @@ from six import string_types
 import re
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
-PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin']
+PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin','key']
 
 application = None
 logging_initialized = False
