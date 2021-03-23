@@ -1,5 +1,6 @@
 2021-05: version 41.0
 * Remove deprecated commands clone, extract and codegen
+* Increase num_workers limit to 100
 
 2021-02: ver. 40.0
 * Remove need for calling '/message_destinations' endpoint

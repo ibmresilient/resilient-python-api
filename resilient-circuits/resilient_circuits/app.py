@@ -28,7 +28,7 @@ from six import string_types
 import re
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
-PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin']
+PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin','key']
 
 application = None
 logging_initialized = False
@@ -45,8 +45,9 @@ class RedactingFilter(logging.Filter):
         if isinstance(record.msg, string_types):
             for p in PASSWD_PATTERNS:
                 if p in record.msg.lower():
-                    record.msg = re.sub(r"(?i)^(.*)({})(.*?:\s*)(.+?)((?:[\s,].*)*)$".format(p),
-                                        r"\1\2\3***\5", record.msg)
+                    regex = r"(?:{0}.?':\s)(None,|.+?,)".format(p)
+                    record.msg = re.sub(regex, r"***", record.msg)
+
         return True
 
 
@@ -296,23 +297,26 @@ class App(Component):
             logging.getLogger().setLevel(logging.INFO)
             LOG.warning("Invalid logging level specified. Using INFO level")
 
-        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            self += Debugger()
+        LOG.addFilter(RedactingFilter())
 
         file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000,
                                            backupCount=10)
         file_handler.setFormatter(logging.Formatter(self.FILE_LOG_FORMAT))
+        file_handler.addFilter(RedactingFilter())
         logging.getLogger().addHandler(file_handler)
+
         syslog = logging.handlers.SysLogHandler()
         syslog.setFormatter(logging.Formatter(self.SYSLOG_LOG_FORMAT))
+        syslog.addFilter(RedactingFilter())
         logging.getLogger().addHandler(syslog)
+
         stderr = logging.StreamHandler()
         stderr.setFormatter(logging.Formatter(self.STDERR_LOG_FORMAT))
-        logging.getLogger().addHandler(stderr)
-        # Add password redacting filter for logging.
-        syslog.addFilter(RedactingFilter())
-        file_handler.addFilter(RedactingFilter())
         stderr.addFilter(RedactingFilter())
+        logging.getLogger().addHandler(stderr)
+
+        if LOG.getEffectiveLevel() == logging.DEBUG:
+            self += Debugger(logger=LOG)
 
     def load_all_success(self, event):
         """OK, component loader says we're ready"""

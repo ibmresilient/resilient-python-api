@@ -9,7 +9,7 @@ stages:
   - name: deploy to artifactory
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy documentation
-    if: branch = master 
+    if: branch = master
 
 env:
   global:
@@ -18,9 +18,17 @@ env:
   - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
   - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
-  - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
+  - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
+  - LIB_VERSION=`if [[ $IS_MASTER -eq 1 ]]; then echo $(echo $LATEST_TAG | cut -d "." -f 1,2); else echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); fi`
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
+  - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
+  - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
+  - FYRE_CLUSTER_DOMAIN="${FYRE_CLUSTER_NAME}1.fyre.ibm.com"
+  - FYRE_DEPLOY_SLEEP_SECONDS=90
+  - FYRE_DEPLOY_TIMEOUT_SECONDS=540
+  - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
 
 # Install package deps
@@ -33,22 +41,37 @@ matrix:
 
   include:
     - stage: run tests
-      name: Python 2.7 Tests
+      name: Python 2.7 Unit Tests
       python: 2.7
-      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      env: RUN_TYPE=unit_test TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
       install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 2.7 Tests"
         - ./travis-scripts/run_unit_tests.sh
 
     - stage: run tests
-      name: Python 3.6 Tests
+      name: Python 3.6 Unit Tests
       python: 3.6
-      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      env: RUN_TYPE=unit_test TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.6 Tests"
         - ./travis-scripts/run_unit_tests.sh
+
+    - stage: run tests
+      name: Python 3.6 Integration Tests
+      python: 3.6
+      env: RUN_TYPE=int_test TOXENV=py36
+      install: ./travis-scripts/install_int_tests_deps.sh
+      script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            ./travis-scripts/manage_fyre_instance.sh DEPLOY $FYRE_STENCIL_ID $FYRE_CLUSTER_NAME $FYRE_CLUSTER_DOMAIN $FYRE_DEPLOY_SLEEP_SECONDS $FYRE_DEPLOY_TIMEOUT_SECONDS;
+            ./travis-scripts/run_int_tests.sh;
+          fi
+      after_script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            ./travis-scripts/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
+          fi
 
     - stage: build packages
       name: Build Packages in Python 2.7
@@ -90,7 +113,6 @@ matrix:
           edge: true
           local_dir: ./docs/_build/html/
           keep_history: true
-
 
 after_failure:
   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
