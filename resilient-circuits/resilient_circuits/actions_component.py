@@ -8,6 +8,7 @@ import json
 import logging
 import os.path
 import base64
+import traceback
 from collections import Callable
 from signal import SIGINT, SIGTERM
 from six import string_types
@@ -71,6 +72,7 @@ class FunctionWorker(Worker):
         try:
             yield result.get()
         except Exception as e:
+            LOG.error(traceback.format_exc())
             yield ExceptionWrapper(e)
 
 
@@ -733,21 +735,28 @@ class Actions(ResilientComponent):
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
         try:
-            message = u""
+            log_message, message = u"", u""
             if etype and issubclass(etype, BaseFunctionError):
                 try:
                     message += str(value)
                 except UnicodeDecodeError:
                     message += unicode(value)
+                log_message = message
             else:
                 if etype:
-                    message = message + etype.__name__ + u": <{}>".format(value)
+                    message = u"ERROR:\n{0}\n{1}".format(message, value)
                 else:
                     message = u"Processing failed"
                 if traceback and isinstance(traceback, list):
-                    message = message + "\n" + ("".join(traceback))
 
-            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
+                    str_traceback = "".join(traceback)
+
+                    if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                        message = u"{0}\n{1}".format(message, str_traceback)
+
+                    log_message = u"{0}\n{1}".format(message, str_traceback)
+
+            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), log_message)
 
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
