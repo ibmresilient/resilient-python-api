@@ -37,7 +37,7 @@ logdir=/tmp
 logfile=app.log
 loglevel=INFO
 
-# The number of Functions to run concurrently (within the range: 1 <= 50)
+# The number of Functions to run concurrently (within the range: 1 <= 100)
 num_workers=10
 
 # If your Resilient server uses a self-signed TLS certificate, or some
