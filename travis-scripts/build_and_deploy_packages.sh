@@ -10,18 +10,14 @@ ARTIFACTORY_USERNAME=$ARTIFACTORY_USERNAME_SHANE
 
 paths_all_sdists=()
 
-# readonly package_names=(
-#     "resilient"
-#     "resilient-circuits"
-#     "resilient-sdk"
-#     "resilient-lib"
-#     "pytest-resilient-circuits"
-#     "rc-cts"
-#     "rc-webserver"
-# )
-
 readonly package_names=(
+    "resilient"
+    "resilient-circuits"
     "resilient-sdk"
+    "resilient-lib"
+    "pytest-resilient-circuits"
+    "rc-cts"
+    "rc-webserver"
 )
 
 ###############
@@ -99,7 +95,7 @@ if [ "$do_release" = true ] ; then
     # Loop paths_all_sdists and release to PyPi using twine
     for p in "${paths_all_sdists[@]}"; do
         package_name=$(basename $p)
-        twine upload --config-file $HOME/.pypirc --repository testpypi $p
+        twine upload --config-file $HOME/.pypirc $p
         print_msg "released: $package_name"
     done
 fi
