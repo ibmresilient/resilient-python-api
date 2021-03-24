@@ -106,7 +106,7 @@ class BasicResilientMock(ResilientMock):
                                              cookies=requests.cookies.cookiejar_from_dict(cookies),
                                              json=session_data)
 
-    @resilient_endpoint("GET", "/incidents/[0-9]+$")
+    @resilient_endpoint("GET", "/incidents/[0-9]+(\?.*)*$")
     def incident_get(self, request):
         """ Callback for GET to /orgs/<org_id>/incidents/<inc_id> """
         LOG.debug("incident_get")
@@ -264,6 +264,16 @@ class BasicResilientMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json='"abcdef"')
+
+    @resilient_endpoint("GET", "/incidents/[0-9]+/attachments(\?.*)*$")
+    def attachments_get(self, request):
+        """ Callback for GET to attachment list """
+        LOG.debug("attachments_get")
+        data = test_data("200_JSON_GET__attachments.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
 
     @resilient_endpoint("POST", "/incidents/[0-9]+/attachments$")
     def attachment_contents_post(self, request):
