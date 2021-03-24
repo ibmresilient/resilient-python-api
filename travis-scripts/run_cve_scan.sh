@@ -14,7 +14,6 @@ virtualenv safetycheck
 source safetycheck/bin/activate
 for package in $1;
 do 
-    print_msg "[$package]"
     print_msg "Running CVE scan for $package python package"
     print_msg "Installing $package"
     # Install the package and all its deps. 
