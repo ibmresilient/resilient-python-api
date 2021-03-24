@@ -21,8 +21,10 @@ env:
   - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
   - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
-  - LIB_VERSION=`if [[ $IS_MASTER -eq 1 ]]; then echo $(echo $LATEST_TAG | cut -d "." -f 1,2); else echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); fi`
+  - IS_RELEASE=$([[ "$TRAVIS_BRANCH" != *"release/"* ]]; echo $?)
+  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2); fi`
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
+  - SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
 
