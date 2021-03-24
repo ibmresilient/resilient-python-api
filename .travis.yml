@@ -71,7 +71,7 @@ matrix:
         - pip install bandit==1.6.2
       script:
         - if [ $SKIP_SCANS == 0 ]; then
-            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
+            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE;
           fi
     - stage: static analysis
       name: Python 3.6 Bandit Security Scan
@@ -82,7 +82,7 @@ matrix:
         - pip install bandit
       script:
         - if [ $SKIP_SCANS == 0 ]; then
-            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
+            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE;
           fi
     - stage: static analysis
       name: Pylint
@@ -93,7 +93,7 @@ matrix:
         - pip install pylint
       script:
         - if [ $SKIP_SCANS == 0 ]; then
-            ./travis-scripts/run_pylint_scan.sh $PACKAGES_TO_RUN_SCANS_ON $PYTEST_RCFILE
+            ./travis-scripts/run_pylint_scan.sh $PACKAGES_TO_RUN_SCANS_ON $PYTEST_RCFILE;
           fi
     - stage: static analysis
       name: CVE Safety Check
@@ -104,7 +104,7 @@ matrix:
         - pip install safety
       script:
         - if [ $SKIP_SCANS == 0 ]; then
-            ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON
+            ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON;
           fi
     - stage: run tests
       name: Python 3.6 Integration Tests
