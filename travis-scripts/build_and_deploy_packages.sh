@@ -8,9 +8,6 @@ cd $TRAVIS_BUILD_DIR
 ARTIFACTORY_API_KEY=$ARTIFACTORY_API_KEY_SHANE
 ARTIFACTORY_USERNAME=$ARTIFACTORY_USERNAME_SHANE
 
-# Write the version as environment variable.
-export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
-
 paths_all_sdists=()
 
 # readonly package_names=(
