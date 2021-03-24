@@ -10,6 +10,8 @@ stages:
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy documentation
     if: branch = master
+  - name: release to pypi
+    if: tag =~ ^release\/pypi\/.+
 
 env:
   global:
@@ -71,6 +73,15 @@ matrix:
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+
+    - stage: release to pypi
+      install:
+        - pip install twine
+      script:
+        - echo "Building packages in Python 3.6 and releasing to PyPi"
+        - ./travis-scripts/build_and_deploy_packages.sh no_deploy do_release
+        - echo "Sending notification to Slack"
+        - ./travis-scripts/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
     - stage: deploy documentation
       # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
