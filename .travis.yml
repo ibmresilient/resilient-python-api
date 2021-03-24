@@ -70,7 +70,7 @@ matrix:
       install:
         - pip install bandit==1.6.2
       script:
-        - if [ $SKIP_SCANS == 1 ]; then
+        - if [ $SKIP_SCANS == 0 ]; then
             ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
           fi
     - stage: static analysis
@@ -81,7 +81,7 @@ matrix:
       install:
         - pip install bandit
       script:
-        - if [ $SKIP_SCANS == 1 ]; then
+        - if [ $SKIP_SCANS == 0 ]; then
             ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE
           fi
     - stage: static analysis
@@ -92,7 +92,7 @@ matrix:
       install:
         - pip install pylint
       script:
-        - if [ $SKIP_SCANS == 1 ]; then
+        - if [ $SKIP_SCANS == 0 ]; then
             ./travis-scripts/run_pylint_scan.sh $PACKAGES_TO_RUN_SCANS_ON $PYTEST_RCFILE
           fi
     - stage: static analysis
@@ -103,7 +103,7 @@ matrix:
       install:
         - pip install safety
       script:
-        - if [ $SKIP_SCANS == 1 ]; then
+        - if [ $SKIP_SCANS == 0 ]; then
             ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON
           fi
     - stage: run tests
