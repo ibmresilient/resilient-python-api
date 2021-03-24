@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# An example script to do linting on the repo.
-# Called by "git commit" with no arguments.  The hook should
-# exit with non-zero status after issuing an appropriate message if
-# it wants to stop the commit.
+# Run pylint on each package passed in through $1
+# For each package extract the score value 
+# and if the value does not exceed the threshold 
+# mark the job as failed
 #
 
 print_msg () {
@@ -23,7 +23,6 @@ DEFAULT_RCFILE="./configs/.pylintrc"
 RCFILE="${2:-$DEFAULT_RCFILE}"
 status=0
 for package in $1; do
-    print_msg "[$package]"
     print_msg "Running Pylint scan for $package python package"
     # Lint all the python files;
     # **/**/*.py catches every dir such as cmds, util, tests 
