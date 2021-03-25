@@ -88,7 +88,14 @@ matrix:
     - stage: deploy documentation
       # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
       install:
-      - pip install sphinx resilient resilient-circuits resilient-lib resilient-sdk pytest-resilient-circuits rc-cts rc-webserver
+      - pip install sphinx
+      - pip install install -e ./resilient
+      - pip install install -e ./resilient-circuits
+      - pip install install -e ./resilient-lib
+      - pip install install -e ./resilient-sdk
+      - pip install install -e ./pytest-resilient-circuits
+      - pip install install -e ./rc-cts
+      - pip install install -e ./rc-webserver
       script:
         - make -C docs/ html
         - touch docs/_build/html/.nojekyll
