@@ -437,7 +437,6 @@ class Actions(ResilientComponent):
                 # Construct a Circuits event with the message, and fire it on the channel
                 if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
                     channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
-                    # TODO: create new message type
                     event = InboundMessage(source=self,
                                            queue=queue,
                                            headers=headers,
@@ -798,12 +797,10 @@ class Actions(ResilientComponent):
                         break
 
             if isinstance(fevent, InboundMessage):
-                # TODO: better way to get headers
                 headers = fevent.hdr()
                 message_id = headers.get("message-id", None)
                 if not fevent.test:
-                    # TODO: Better log message
-                    LOG.debug("Ack %s", message_id)
+                    LOG.debug("Exception raised.\nAcknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame, message_id=message_id))
 
             elif fevent and isinstance(fevent, ActionMessageBase):
@@ -978,16 +975,15 @@ class Actions(ResilientComponent):
         """Report the successful handling of an action event"""
         if isinstance(event.parent, ActionMessageBase) and event.name.endswith("_success"):
             fevent = event.parent
+            headers = fevent.hdr()
+            message_id = headers.get("message-id", None)
+
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
 
             elif isinstance(fevent, InboundMessage):
-                # TODO: better way to get headers
-                headers = fevent.hdr()
-                message_id = headers.get("message-id", None)
                 if not fevent.test:
-                    # TODO: Better log message
-                    LOG.debug("Ack %s", message_id)
+                    LOG.debug("Acknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame, message_id=message_id))
             else:
                 value = event.parent.value.getValue()
