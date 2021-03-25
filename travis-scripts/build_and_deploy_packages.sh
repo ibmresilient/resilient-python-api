@@ -10,8 +10,8 @@ readonly package_names=(
     "resilient-sdk"
     "resilient-lib"
     "pytest-resilient-circuits"
-    "rc-cts"
     "rc-webserver"
+    "rc-cts"
 )
 
 ###############
