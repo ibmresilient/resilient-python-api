@@ -10,6 +10,8 @@ stages:
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy documentation
     if: branch = master
+  - name: release to pypi
+    if: tag =~ ^release\/pypi\/.+
 
 env:
   global:
@@ -18,9 +20,13 @@ env:
   - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
   - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
-  - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
+  - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
+  - IS_RELEASE=$([[ "$TRAVIS_BRANCH" != *"release/"* ]]; echo $?)
+  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2); fi`
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
+  - SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
 
 # Install package deps
 before_install:
@@ -68,7 +74,16 @@ matrix:
         - echo "Building packages in Python 3.6 and Deploying to Artifactory"
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION>" "success"
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+
+    - stage: release to pypi
+      install:
+        - pip install twine
+      script:
+        - echo "Building packages in Python 3.6 and releasing to PyPi"
+        - ./travis-scripts/build_and_deploy_packages.sh no_deploy do_release
+        - echo "Sending notification to Slack"
+        - ./travis-scripts/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
     - stage: deploy documentation
       # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
