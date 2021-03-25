@@ -2,12 +2,6 @@
 
 cd $TRAVIS_BUILD_DIR
 
-###############
-## Variables ##
-###############
-ARTIFACTORY_API_KEY=$ARTIFACTORY_API_KEY_SHANE
-ARTIFACTORY_USERNAME=$ARTIFACTORY_USERNAME_SHANE
-
 paths_all_sdists=()
 
 readonly package_names=(
