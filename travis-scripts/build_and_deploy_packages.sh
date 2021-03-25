@@ -80,6 +80,9 @@ for p in "${package_names[@]}"; do
 
 done
 
+# Go back to main directory when done building
+cd $TRAVIS_BUILD_DIR
+
 if [ "$deploy" = true ] ; then
     # Loop paths_all_sdists and copy to Artifactory using curl
     for p in "${paths_all_sdists[@]}"; do
