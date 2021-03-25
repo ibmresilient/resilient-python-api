@@ -42,6 +42,12 @@ else
     do_release=false
 fi
 
+if [ $3 == "deploy_docs" ]; then
+    deploy_docs=true
+else
+    deploy_docs=false
+fi
+
 ###########
 ## Start ##
 ###########
@@ -98,4 +104,14 @@ if [ "$do_release" = true ] ; then
         twine upload --config-file $HOME/.pypirc $p
         print_msg "released: $package_name"
     done
+fi
+
+if [ "$deploy_docs" = true ] ; then
+    # Loop paths_all_sdists and build docs
+    for p in "${paths_all_sdists[@]}"; do
+        print_msg "pip install: $p"
+        pip install $p
+    done
+    make -C docs/ html
+    touch docs/_build/html/.nojekyll
 fi
