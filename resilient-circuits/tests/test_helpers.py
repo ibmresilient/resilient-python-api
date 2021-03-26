@@ -5,6 +5,8 @@
 import pkg_resources
 import pytest
 from resilient_circuits import helpers, function, ResilientComponent
+from tests import mock_constants
+from tests.shared_mock_data import mock_component
 
 
 def test_get_fn_names():
@@ -32,6 +34,13 @@ def test_get_fn_names():
             @function("mock_fn_3a", "mock_fn_3b")
             def _other_name_a(self):
                 return True
+
+
+def test_get_handlers_inbound_handler():
+    mock_cmp_class = mock_component.MockInboundComponent(mock_constants.MOCK_OPTS)
+    mock_handlers = helpers.get_handlers(mock_cmp_class, "inbound_handler")
+    assert isinstance(mock_handlers, list)
+    assert mock_handlers[0][0] == "_inbound_app_mock_one"
 
 
 def test_check_exists():

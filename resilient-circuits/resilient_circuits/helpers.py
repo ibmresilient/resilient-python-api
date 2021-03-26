@@ -62,7 +62,7 @@ def get_handlers(component, handler_type="inbound_handler"):
     :return: handlers: the name in each function handler in the component if found
     :rtype: list of tuples
     """
-    # TODO: Add unit test
+
     assert isinstance(component, object)
     assert isinstance(handler_type, str)
 
