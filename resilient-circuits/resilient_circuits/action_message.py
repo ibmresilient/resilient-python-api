@@ -58,7 +58,6 @@ class ActionMessageBase(Event):
 
     def __repr__(self):
         "x.__repr__() <==> repr(x)"
-        # TODO: inbound message not displaying properly
         if len(self.channels) > 1:
             channels = repr(self.channels)
         elif len(self.channels) == 1:
