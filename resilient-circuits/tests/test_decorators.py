@@ -4,8 +4,6 @@
 
 import os
 import pytest
-from circuits import Event
-from mock import patch
 from resilient_lib import IntegrationError
 from resilient_circuits import constants, ResilientComponent, inbound_app
 from tests import helpers
