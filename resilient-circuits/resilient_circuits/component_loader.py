@@ -114,9 +114,9 @@ class ComponentLoader(Loader):
                     return_list.append(cmp_class)
             return return_list
 
-        except ImportError:
+        except ImportError as e:
             LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
-            raise
+            raise e
 
     def _register_components(self, component_list):
         """ register all installed components and ones from componentsdir """
