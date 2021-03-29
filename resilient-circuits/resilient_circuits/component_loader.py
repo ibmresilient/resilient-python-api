@@ -88,7 +88,6 @@ class ComponentLoader(Loader):
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
         ep = None
         try:
-            # TODO: write unit test for this
             return_list = []
             # Loop entry points
             for ep in entry_points:
@@ -108,8 +107,18 @@ class ComponentLoader(Loader):
                         # Get the inbound_handlers in this component and overwite their 'channel' and 'names' attributes
                         inbound_handlers = helpers.get_handlers(cmp_class, handler_type="inbound_handler")
                         for ih in inbound_handlers:
-                            ih[1].channel = "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, custom_q_name)
-                            ih[1].names = (custom_q_name, )
+
+                            new_channel = "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, custom_q_name)
+                            new_names = (custom_q_name, )
+
+                            if sys.version_info.major < 3:
+                                # Handle PY < 3
+                                ih[1].__func__.channel = new_channel
+                                ih[1].__func__.names = new_names
+                            else:
+                                # Handle PY >= 3 specific imports
+                                ih[1].channel = new_channel
+                                ih[1].names = new_names
 
                     return_list.append(cmp_class)
             return return_list
