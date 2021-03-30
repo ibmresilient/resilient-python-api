@@ -27,6 +27,11 @@ def test_num_workers(fx_clear_cmd_line_args):
     assert isinstance(opts.get("num_workers"), int)
     assert opts.get("num_workers") == 30
 
+    # Test if over limit
+    sys.argv.extend(["--num-workers", "101"])
+    with pytest.raises(ValueError, match=r"num_workers must be in the range 1 <= 100"):
+        AppArgumentParser(config_file=mock_paths.MOCK_APP_CONFIG).parse_args()
+
 
 def test_global_integrations_options(fx_clear_cmd_line_args):
     opts = AppArgumentParser(config_file=mock_paths.MOCK_APP_CONFIG).parse_args().get("integrations", {})
