@@ -803,6 +803,9 @@ class Actions(ResilientComponent):
                     self.fire(Ack(fevent.frame))
 
             elif fevent and isinstance(fevent, ActionMessageBase):
+                # For a ActionMessageBase type
+                # 1. Ack message
+                # 2. Send a message of type 1 containing the exception text
                 fevent.stop()  # Stop further event processing
                 status = 1
                 headers = fevent.hdr()
