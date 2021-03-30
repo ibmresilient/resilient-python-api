@@ -11,7 +11,7 @@ from tests import mock_constants, mock_paths
 
 class TestComponentLoader:
 
-    @pytest.mark.parametrize("ep_str", ["mock_component:MockInboundComponent"])
+    @pytest.mark.parametrize("ep_str", ["mock_component:MockInboundAppComponent"])
     @pytest.mark.parametrize("path_dist", [mock_paths.SHARED_MOCK_DATA_DIR])
     def test_discover_installed_components_with_inbound_app(self, fx_add_entry_point):
         found = False
@@ -30,7 +30,7 @@ class TestComponentLoader:
 
         assert found is True
 
-    @pytest.mark.parametrize("ep_str", ["mock_component:MockInboundComponent"])
+    @pytest.mark.parametrize("ep_str", ["mock_component:MockInboundAppComponent"])
     @pytest.mark.parametrize("path_dist", [mock_paths.SHARED_MOCK_DATA_DIR])
     def test_installed_components_with_custom_inbound_q(self, fx_add_entry_point):
         found = False

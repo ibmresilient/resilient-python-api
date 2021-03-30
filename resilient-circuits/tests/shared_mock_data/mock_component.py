@@ -3,20 +3,22 @@
 """Function implementation"""
 
 import logging
-from resilient_circuits import ResilientComponent, inbound_app, handler, StatusMessage, FunctionResult
+from resilient_circuits import ResilientComponent, handler, inbound_app
 from resilient_lib import IntegrationError
+from tests import mock_constants
+
 
 LOG = logging.getLogger(__name__)
 PACKAGE_NAME = "fn_main_mock_integration"
 QUEUE_NAME = "mock_inbound_q"
 
 
-class MockInboundComponent(ResilientComponent):
+class MockInboundAppComponent(ResilientComponent):
     """Component that implements Resilient function 'mock_function_one''"""
 
     def __init__(self, opts):
         """constructor provides access to the configuration options"""
-        super(MockInboundComponent, self).__init__(opts)
+        super(MockInboundAppComponent, self).__init__(opts)
         self.app_configs = opts.get(PACKAGE_NAME, {})
 
     @handler("reload")
@@ -44,3 +46,18 @@ class MockInboundComponent(ResilientComponent):
             LOG.error(u"Unsupported functionality. Message: %s", message)
 
         yield "Done!"
+
+    @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME)
+    def inbound_app_mock(self, message, inbound_action):
+        assert isinstance(message, dict)
+        yield inbound_action
+
+    @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME_CREATE)
+    def inbound_app_mock_create(self, message, inbound_action):
+        assert inbound_action == "create"
+        assert isinstance(message, dict)
+        yield u"Mock incident created with unicode զ է ը թ"
+
+    @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME_EX)
+    def inbound_app_mock_raise_exception(self, message, inbound_action):
+        raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")

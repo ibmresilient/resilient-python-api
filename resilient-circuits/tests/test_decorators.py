@@ -6,34 +6,11 @@ import os
 import pytest
 from resilient_lib import IntegrationError
 from resilient_circuits import constants, ResilientComponent, inbound_app
-from tests import helpers, mock_constants
+from tests import helpers, mock_constants, MockInboundAppComponent
 
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
-
-
-class MockInboundAppComponent(ResilientComponent):
-
-    def __init__(self, opts):
-        """constructor provides access to the configuration options"""
-        super(MockInboundAppComponent, self).__init__(opts)
-        self.app_configs = opts.get(mock_constants.MOCK_PACKAGE_NAME, {})
-
-    @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME)
-    def inbound_app_mock(self, message, inbound_action):
-        assert isinstance(message, dict)
-        yield inbound_action
-
-    @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME_CREATE)
-    def inbound_app_mock_create(self, message, inbound_action):
-        assert inbound_action == "create"
-        assert isinstance(message, dict)
-        yield u"Mock incident created with unicode զ է ը թ"
-
-    @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME_EX)
-    def inbound_app_mock_raise_exception(self, message, inbound_action):
-        raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")
 
 
 class TestInboundAppDecorator:
@@ -59,7 +36,7 @@ class TestInboundAppDecorator:
 
     def test_too_many_q_names(self):
         with pytest.raises(ValueError, match=r"Usage: @inbound_app\(<inbound_destination_api_name>\)"):
-            class MockInboundAppComponent(ResilientComponent):
+            class MockInboundAppComponent2(ResilientComponent):
                 @inbound_app("mock_q_2", "mock_q_3")
                 def inbound_app_mock_2(self, message, *args, **kwargs):
                     return
