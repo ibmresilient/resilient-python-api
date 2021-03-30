@@ -251,6 +251,9 @@ class InboundMessage(ActionMessageBase):
         super(InboundMessage, self).__init__(source=source, headers=headers, message=message,
                                              test=test, test_msg_id=test_msg_id, frame=frame, log_dir=log_dir)
 
+        assert isinstance(queue, tuple)
+        assert len(queue) == 3
+
         self.name = queue[2]
         self.displayname = queue[2]
 
