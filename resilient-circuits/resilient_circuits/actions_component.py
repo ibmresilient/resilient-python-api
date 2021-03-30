@@ -620,7 +620,6 @@ class Actions(ResilientComponent):
             elif str(channel).startswith(constants.INBOUND_MSG_DEST_PREFIX):
                 # If name for inbound q in app.config file, use that
                 try:
-                    # TODO: write unit test to check this error raised
                     app_config_q_name = component.app_configs.get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME)
                 except AttributeError as e:
                     raise IntegrationError(u"'{0}' does not have app_configs defined\n{1}".format(type(component).__name__, str(e)))

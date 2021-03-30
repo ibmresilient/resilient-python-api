@@ -177,7 +177,6 @@ class inbound_app(object):
                 return result_list
 
             invoke_inbound_app = task(_invoke_inbound_app, event)
-            # TODO custom worker for inbound messages
             ia_result = yield itself.call(invoke_inbound_app, channels="functionworker")
             yield ia_result.value
 
