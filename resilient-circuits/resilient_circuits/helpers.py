@@ -260,7 +260,7 @@ def get_queue(destination):
 
         assert len(q) == 3
 
-        return (q[0], q[1], q[2])
+        return (tuple(q))
 
     except AssertionError as e:
         LOG.error("Could not get queue name\n%s", str(e))
