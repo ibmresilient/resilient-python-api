@@ -800,7 +800,7 @@ class Actions(ResilientComponent):
                 message_id = headers.get("message-id", None)
                 if not fevent.test:
                     LOG.debug("Exception raised.\nAcknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
-                    self.fire(Ack(fevent.frame, message_id=message_id))
+                    self.fire(Ack(fevent.frame))
 
             elif fevent and isinstance(fevent, ActionMessageBase):
                 fevent.stop()  # Stop further event processing
@@ -983,7 +983,7 @@ class Actions(ResilientComponent):
             elif isinstance(fevent, InboundMessage):
                 if not fevent.test:
                     LOG.debug("Acknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
-                    self.fire(Ack(fevent.frame, message_id=message_id))
+                    self.fire(Ack(fevent.frame))
             else:
                 value = event.parent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
