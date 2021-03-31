@@ -244,6 +244,23 @@ class FunctionMessage(ActionMessageBase):
             self._log_message(log_dir)
 
 
+class InboundMessage(ActionMessageBase):
+    def __init__(self, source=None, headers=None, message=None, queue=None,
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
+
+        super(InboundMessage, self).__init__(source=source, headers=headers, message=message,
+                                             test=test, test_msg_id=test_msg_id, frame=frame, log_dir=log_dir)
+
+        assert isinstance(queue, tuple)
+        assert len(queue) == 3
+
+        self.name = queue[2]
+        self.displayname = queue[2]
+
+        if message and log_dir:
+            self._log_message(log_dir)
+
+
 class StatusMessage(object):
     """Encapsulates a status message yielded from an action or function call"""
     def __init__(self, text):

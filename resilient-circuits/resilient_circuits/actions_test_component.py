@@ -12,7 +12,8 @@ import uuid
 from circuits import Component, Event, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
-from resilient_circuits.action_message import ActionMessage, FunctionMessage
+from resilient_circuits.action_message import ActionMessage, FunctionMessage, InboundMessage
+from resilient_circuits import constants, helpers
 
 
 DEFAULT_TEST_HOST = "localhost"
@@ -45,6 +46,31 @@ class SubmitTestFunction(Event):
                 "workflow_instance_id": DEFAULT_WORKFLOW_INSTANCE_ID
             }
         })
+
+
+class SubmitTestInboundApp(Event):
+
+    def __init__(self, queue_name, action, content, message=None):
+
+        msg_id = str(uuid.uuid4())
+
+        if not message:
+            message = {
+                "origin": {
+                    "source": "mock_source",
+                    "name": "mock.domain.com",
+                    "id": "",
+                    "version": "1.1.1"
+                },
+                "schema_version": "1.0",
+                "content_type": "offense",
+                "content_date": "2020-11-15T00:00:00+0600",
+                "content_schema_version": "1.0",
+                "action": action,
+                "content": content
+            }
+
+        super(SubmitTestInboundApp, self).__init__(queue_name=queue_name, msg_id=msg_id, message=message)
 
 
 class ResilientTestActions(Component):
@@ -119,6 +145,50 @@ class ResilientTestActions(Component):
                 msg = "Action Failed<action %d>: %s" % (msg_id,
                                                         str(e))
                 self.fire_message(sock, msg)
+
+    @handler("SubmitTestInboundApp")
+    def _submit_inbound_message(self, event, queue_name, msg_id, message, channel="*"):
+        try:
+            message_id = "ID:resilient-54199-{msg_id}-6:2:12:1:1".format(msg_id=msg_id)
+            subscription = "{0}.{1}.{2}".format(constants.INBOUND_MSG_DEST_PREFIX, self.org_id, queue_name)
+            destination = "/queue/{0}".format(subscription)
+            queue = helpers.get_queue(destination)
+
+            headers = {
+                "timestamp": str(int(time.time()) * 1000),
+                "persistent": "True",
+                "message-id": message_id,
+                "priority": "4",
+                "subscription": subscription,
+                "destination": destination,
+                "expires": "0"
+            }
+
+            try:
+
+                if not isinstance(message, dict):
+                    message = json.loads(message)
+                    assert(isinstance(message, dict))
+
+            except Exception as e:
+                LOG.exception("Bad InboundMessage <message_id: %s>: %s", msg_id, message)
+                raise e
+
+            if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue_name)
+                action_event = InboundMessage(source=self.parent,
+                                              queue=queue,
+                                              headers=headers,
+                                              message=message,
+                                              test=True,
+                                              test_msg_id=msg_id)
+
+            action_event.parent = event
+            self.fire(action_event, channel)
+
+        except Exception as e:
+            LOG.exception("Failed to SubmitTestInboundApp <message_id: %s>", msg_id)
+            raise e
 
     @handler("read")
     def process_data(self, sock, data):
