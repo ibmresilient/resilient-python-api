@@ -5,6 +5,7 @@
 
 import logging
 import threading
+from collections import namedtuple
 import inspect as _inspect
 from functools import wraps
 from types import GeneratorType
@@ -186,8 +187,10 @@ class app_function(object):
                 # Update the kwds with details in the Message
                 kwds.update({"workflow_instance": evt.message.get("workflow_instance")})
 
+                fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
+
                 # Invoke the actual Function
-                fn_results = fn(itself, fn_inputs, **kwds)
+                fn_results = fn(itself, fn_inputs_tuple, **kwds)
 
                 for r in fn_results:
                     if isinstance(r, StatusMessage):

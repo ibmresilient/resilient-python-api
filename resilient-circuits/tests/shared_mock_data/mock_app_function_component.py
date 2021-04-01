@@ -5,7 +5,6 @@ from resilient_lib import ResultPayload, RequestsCommon, IntegrationError, valid
 from tests import mock_constants
 
 PACKAGE_NAME = mock_constants.MOCK_PACKAGE_NAME
-APP_FUNCTION_PREFIX = "app_function_mock_"
 
 
 class AppFunctionMockComponent(ResilientComponent):
@@ -20,8 +19,13 @@ class AppFunctionMockComponent(ResilientComponent):
     def _reload(self, event, opts):
         self.app_configs = validate_fields([], opts.get(PACKAGE_NAME, {}))
 
-    @app_function(APP_FUNCTION_PREFIX + "one")
+    @app_function(mock_constants.MOCK_APP_FN_NAME_ONE)
     def _app_function_mock_one(self, fn_inputs, **kwargs):
+        yield self.status_message(u"Mock զ է ը թ ժ ի լ StatusMessage 1")
+        yield self.status_message(u"Mock StatusMessage 2")
+        yield self.status_message(fn_inputs.input_one)
+        yield FunctionResult({"malware": True})
 
-        yield self.status_message("Custom message with unicode լ խ ծ կ հ ձ ղ ճ ")
-        yield FunctionResult({"response": "yes"})
+    @app_function(mock_constants.MOCK_APP_FN_NAME_EX)
+    def _app_function_mock_raise_exception(self, fn_inputs, **kwargs):
+        raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")

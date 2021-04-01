@@ -6,6 +6,10 @@
 
 MOCK_PACKAGE_NAME = u"mock_function_package"
 
+MOCK_APP_FUNCTION_PREFIX = "app_function_mock"
+MOCK_APP_FN_NAME_ONE = u"{0}_{1}".format(MOCK_APP_FUNCTION_PREFIX, "one")
+MOCK_APP_FN_NAME_EX = u"{0}_{1}".format(MOCK_APP_FUNCTION_PREFIX, "raise_exception")
+
 RESILIENT_MOCK = u"pytest_resilient_circuits.BasicResilientMock"
 
 CONFIG_DATA = """[{0}]
