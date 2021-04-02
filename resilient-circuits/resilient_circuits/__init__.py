@@ -12,3 +12,4 @@ from .action_message import ActionMessageBase, ActionMessage, \
     StatusMessage, BaseFunctionError
 from .decorators import function, app_function, handler, required_field, required_action_field, defer, debounce
 from .actions_test_component import SubmitTestAction, SubmitTestFunction
+from .app_function_component import AppFunctionComponent
