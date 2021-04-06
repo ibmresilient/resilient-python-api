@@ -4,11 +4,8 @@
 
 """Implementation of AppFunctionComponent"""
 
-import logging
 from resilient_circuits import ResilientComponent, handler, StatusMessage
 from resilient_lib import RequestsCommon, validate_fields
-
-LOG = logging.getLogger(__name__)
 
 
 class AppFunctionComponent(ResilientComponent):
