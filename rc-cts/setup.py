@@ -33,7 +33,10 @@ with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='rc-cts',
-    setup_requires=['setuptools_scm'],
+    setup_requires=[
+        "setuptools_scm < 6.0.0;python_version<'3.0'",
+        "setuptools_scm >= 6.0.0;python_version>='3.0'"
+    ],
     use_scm_version={"root": "../", "relative_to": __file__},
     url='https://github.com/ibmresilient/resilient-circuits-packages',
     license='MIT',
