@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*
 
-from resilient_circuits import ResilientComponent, handler, app_function, StatusMessage, FunctionResult
+from resilient_circuits import AppFunctionComponent, app_function, FunctionResult
 from resilient_lib import ResultPayload, RequestsCommon, IntegrationError, validate_fields
 from tests import mock_constants
 
 PACKAGE_NAME = mock_constants.MOCK_PACKAGE_NAME
+REQUIRED_APP_CONFIGS = mock_constants.MOCK_REQUIRED_APP_CONFIGS
 
 
-class AppFunctionMockComponent(ResilientComponent):
+class AppFunctionMockComponent(AppFunctionComponent):
 
-    def __init__(self, opts):
-        super(AppFunctionMockComponent, self).__init__(opts)
-        self.PACKAGE_NAME = PACKAGE_NAME
-        self.app_configs = validate_fields([], opts.get(PACKAGE_NAME, {}))
-        self.rc = RequestsCommon(opts=self.opts, function_opts=self.app_configs)
+    def __init__(self, opts, package_name="", required_app_configs=[]):
+        if not package_name:
+            package_name = PACKAGE_NAME
 
-    @handler("reload")
-    def _reload(self, event, opts):
-        self.app_configs = validate_fields([], opts.get(PACKAGE_NAME, {}))
+        if not required_app_configs:
+            required_app_configs = REQUIRED_APP_CONFIGS
+
+        super(AppFunctionMockComponent, self).__init__(opts, package_name, required_app_configs)
 
     @app_function(mock_constants.MOCK_APP_FN_NAME_ONE)
     def _app_function_mock_one(self, fn_inputs, **kwargs):

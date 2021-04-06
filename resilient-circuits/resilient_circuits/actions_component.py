@@ -145,19 +145,6 @@ class ResilientComponent(BaseComponent):
                             raise Exception(errmsg.format(field_name,
                                                         name, input_type))
 
-    def status_message(self, message):
-        """
-        Returns the message encapsulated in a
-        resilient_circuits.StatusMessage object
-
-        :param message: Message you want to sent to Action Status
-        :type message: str
-
-        :return: message encapsulated as StatusMessage
-        :rtype: resilient_circuits.StatusMessage
-        """
-        return StatusMessage(message)
-
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
         client = self.rest_client()

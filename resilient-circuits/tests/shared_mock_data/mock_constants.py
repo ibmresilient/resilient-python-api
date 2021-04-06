@@ -15,10 +15,21 @@ RESILIENT_MOCK = u"pytest_resilient_circuits.BasicResilientMock"
 CONFIG_DATA = """[{0}]
 url = https://www.example.com""".format(MOCK_PACKAGE_NAME)
 
+
+MOCK_REQUIRED_APP_CONFIGS = [
+    {"name": "url", "placeholder": "https://www.example.com"}
+]
+
+MOCK_APP_CONFIGS = {
+    "url": "https://www.mockexample.com"
+}
+
+
 MOCK_OPTS = {
     "host": "192.168.0.1",
     "org": "Test Organization",
     "email": "admin@example.com",
     "password": "123",
-    "resilient_mock": RESILIENT_MOCK
+    "resilient_mock": RESILIENT_MOCK,
+    MOCK_PACKAGE_NAME: MOCK_APP_CONFIGS
 }

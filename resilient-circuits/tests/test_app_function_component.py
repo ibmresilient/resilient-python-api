@@ -3,13 +3,25 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import pytest
-from resilient_lib import IntegrationError
+from resilient_lib import IntegrationError, RequestsCommon
 from resilient_circuits import StatusMessage
 from tests import mock_constants, AppFunctionMockComponent
 
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
+
+
+def test_basic_instantiation(circuits_app):
+    mock_cmp = AppFunctionMockComponent(
+        opts=mock_constants.MOCK_OPTS,
+        package_name=mock_constants.MOCK_PACKAGE_NAME,
+        required_app_configs=mock_constants.MOCK_REQUIRED_APP_CONFIGS)
+
+    assert mock_cmp.PACKAGE_NAME == mock_constants.MOCK_PACKAGE_NAME
+    assert mock_cmp.opts == mock_constants.MOCK_OPTS
+    assert mock_cmp.required_app_configs == mock_constants.MOCK_REQUIRED_APP_CONFIGS
+    assert isinstance(mock_cmp.rc, RequestsCommon)
 
 
 def test_status_message(circuits_app):
