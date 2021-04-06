@@ -9,7 +9,7 @@ Common place for helper functions used in tests
 from resilient_circuits import SubmitTestFunction, FunctionResult
 
 
-def call_fn(fn_name, fn_inputs, circuits_app, status_message_only=False):
+def call_app_function(fn_name, fn_inputs, circuits_app, status_message_only=False):
 
     assert isinstance(fn_inputs, dict)
 

@@ -27,12 +27,12 @@ class TestAppFunctionDecorator:
 
     def test_runs(self, circuits_app):
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
-        helpers.call_fn(mock_constants.MOCK_APP_FN_NAME_ONE, {"input_one": "abc"}, circuits_app)
+        helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, {"input_one": "abc"}, circuits_app)
 
     def test_handles_FunctionResult(self, circuits_app):
         mock_fn_inputs = {"input_one": u"abc", "input_two": u"unicode ઠ ડ ઢ ણ ત થ દ ધ ન પ ફ input"}
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
-        mock_results = helpers.call_fn(mock_constants.MOCK_APP_FN_NAME_ONE, mock_fn_inputs, circuits_app)
+        mock_results = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, mock_fn_inputs, circuits_app)
 
         assert mock_results["version"] == "1.0"
         assert mock_results["success"] is True
@@ -43,13 +43,13 @@ class TestAppFunctionDecorator:
 
     def test_handles_StatusMessage(self, circuits_app):
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
-        mock_status_message = helpers.call_fn(mock_constants.MOCK_APP_FN_NAME_ONE, {"input_one": "abc"}, circuits_app, status_message_only=True)
+        mock_status_message = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, {"input_one": "abc"}, circuits_app, status_message_only=True)
         assert mock_status_message.text == u"Mock զ է ը թ ժ ի լ StatusMessage 1"
 
     def test_handles_Exception(self, circuits_app):
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
         with pytest.raises(IntegrationError, match=r"mock error message with unicode"):
-            helpers.call_fn(mock_constants.MOCK_APP_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
+            helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
 
     def test_too_many_function_names(self):
         with pytest.raises(ValueError, match=r"Usage: @app_function\(api_name\)"):
