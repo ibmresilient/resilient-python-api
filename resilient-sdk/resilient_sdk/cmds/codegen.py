@@ -116,16 +116,33 @@ class CmdCodegen(BaseCmd):
                 shutil.copy(file_info, target_file)
 
             else:
+                # Initialize variable for target file name from export.
+                export_target_file = None
                 # Get path to Jinja2 template
                 path_template = file_info[0]
 
                 # Get data dict for this Jinja2 template
                 template_data = file_info[1]
-
                 target_file = os.path.join(target_dir, file_name)
+                # Get target file extension.
+                target_ext = os.path.splitext(target_file)[1]
+                # Get function or workflow name from export.
+                export_obj_name = template_data.get("export_key")
+
+                if export_obj_name:
+                    # Get file path using export object name.
+                    if os.path.dirname(path_template) == "tests":
+                        export_target_file = os.path.join(target_dir, u"test_{0}{1}".format(export_obj_name, target_ext))
+                    else:
+                        export_target_file = os.path.join(target_dir, u"{0}{1}".format(export_obj_name, target_ext))
 
                 if os.path.exists(target_file):
                     files_skipped.append(os.path.relpath(target_file, start=package_dir))
+                    continue
+
+                # Check for possible target_files created from earlier versions of codegen.
+                if export_target_file and os.path.exists(export_target_file):
+                    files_skipped.append(os.path.relpath(export_target_file, start=package_dir))
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
