@@ -184,12 +184,10 @@ class app_function(object):
 
                 rp = ResultPayload(itself.PACKAGE_NAME, **fn_inputs)
 
-                # TODO: get message as self method
-
                 fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
 
                 # Invoke the actual Function
-                fn_results = fn(itself, fn_inputs_tuple)
+                fn_results = fn(itself, fn_inputs_tuple, evt.message)
 
                 for r in fn_results:
                     if isinstance(r, StatusMessage):
