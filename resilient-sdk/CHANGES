@@ -1,3 +1,6 @@
+2021-05: version 41.0
+* List all setup.py "install_requires" dependencies in docgen README template
+
 2021-03: version 40.1
 * Adjust entrypoint.sh template to ensure resilient-circuits is restarted when a fatal error occurs when running on App Host
 * Added timestamp to logs on App Host
