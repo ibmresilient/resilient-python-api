@@ -203,11 +203,6 @@ class app_function(object):
                         LOG.debug("[%s] FunctionResult: %s", evt.name, r)
                         result_list.append(r)
 
-                    elif isinstance(r, Event):
-                        # Some other event, just fire it
-                        LOG.debug(r)
-                        itself.fire(r)
-
                     elif isinstance(r, Exception):
                         raise r
 
