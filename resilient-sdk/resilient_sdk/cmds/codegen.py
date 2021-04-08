@@ -347,7 +347,7 @@ class CmdCodegen(BaseCmd):
                 package_mapping_dict["payload_samples"] = {}
 
         # Get a list of function names in export.
-        fn_names = [f.get("export_key") for f in jinja_data.get("functions")]
+        fn_names = [f.get(ResilientObjMap.FUNCTIONS) for f in jinja_data.get("functions")]
 
         # Loop each Function
         for f in jinja_data.get("functions"):
@@ -355,7 +355,7 @@ class CmdCodegen(BaseCmd):
             f["package_name"] = package_name
 
             # Get function name
-            fn_name = f.get("export_key")
+            fn_name = f.get(ResilientObjMap.FUNCTIONS)
 
             # Generate funct_function_component.py file name
             # Don't add prefix if function name already begins with "func_" or "funct_".
@@ -380,11 +380,11 @@ class CmdCodegen(BaseCmd):
                 CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
         # Get a list of workflow names in export.
-        wf_names = [w.get("export_key") for w in jinja_data.get("workflows")]
+        wf_names = [w.get(ResilientObjMap.WORKFLOWS) for w in jinja_data.get("workflows")]
 
         for w in jinja_data.get("workflows"):
             # Get workflow name
-            wf_name = w.get("export_key")
+            wf_name = w.get(ResilientObjMap.WORKFLOWS)
 
             # Generate wf_xx.md file name
             # Don't add prefix if workflow name already begins with "wf_".
