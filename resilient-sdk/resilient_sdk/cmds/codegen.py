@@ -139,27 +139,27 @@ class CmdCodegen(BaseCmd):
                     else:
                         export_target_file = os.path.join(target_dir, u"{0}{1}".format(export_obj_name, target_ext))
 
-                if os.path.exists(target_file):
-                    # Don't skip for workflows.
-                    if target_ext != ".md" or not export_target_file:
-                        files_skipped.append(os.path.relpath(target_file, start=package_dir))
-                        continue
+                write_target_file = None
+                for t_file in [target_file, export_target_file]:
+                    if t_file and os.path.exists(t_file):
+                        # Don't skip for workflows.
+                        if target_ext != ".md" or not export_target_file:
+                            files_skipped.append(os.path.relpath(t_file, start=package_dir))
+                            write_target_file = None
+                            break
+                        elif target_ext == ".md":
+                            # Write to first workflow target file name format found.
+                            write_target_file = t_file
+                            break
+                    if t_file and not write_target_file:
+                        # We will use default (target_file) format if file doesn't already exist.
+                        write_target_file = t_file
 
-                # Check for possible target_files created from earlier versions of codegen.
-                if export_target_file and os.path.exists(export_target_file):
-                    # Don't skip for workflows.
-                    if target_ext != ".md":
-                        files_skipped.append(os.path.relpath(export_target_file, start=package_dir))
-                        continue
+                if not write_target_file:
+                    continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
-
-                if export_target_file and os.path.exists(export_target_file):
-                    # Overwrite file e.g. workflow data created from earlier versions of codegen.
-                    write_target_file = export_target_file
-                else:
-                    write_target_file = target_file
 
                 newly_generated_files.append(os.path.relpath(write_target_file, start=package_dir))
 
