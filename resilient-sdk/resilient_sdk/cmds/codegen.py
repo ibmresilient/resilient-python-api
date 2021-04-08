@@ -364,7 +364,7 @@ class CmdCodegen(BaseCmd):
             else:
                 file_name = u"funct_{0}.py".format(fn_name)
                 # Check if file_name without extension already exists in functions names list.
-                if file_name.rsplit('.', 1)[ 0 ] in fn_names:
+                if os.path.splitext(file_name)[0] in fn_names:
                     raise SDKException(u"File name '{0}' already in use please rename the function '{1}'."
                                        .format(file_name, fn_name))
 
@@ -393,7 +393,7 @@ class CmdCodegen(BaseCmd):
             else:
                 file_name = u"wf_{0}.md".format(wf_name)
                 # Check if file_name without extension already exists in workflow names list.
-                if file_name.rsplit('.', 1)[ 0 ] in wf_names:
+                if os.path.splitext(file_name)[0] in wf_names:
                     raise SDKException(u"File name '{0}' already in use please recreate the workflow '{1}'."
                                        .format(file_name, wf_name))
 
