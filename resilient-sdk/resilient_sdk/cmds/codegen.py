@@ -146,11 +146,10 @@ class CmdCodegen(BaseCmd):
                         if target_ext != ".md" or not export_target_file:
                             files_skipped.append(os.path.relpath(t_file, start=package_dir))
                             write_target_file = None
-                            break
                         elif target_ext == ".md":
                             # Write to first workflow target file name format found.
                             write_target_file = t_file
-                            break
+                        break
                     if t_file and not write_target_file:
                         # We will use default (target_file) format if file doesn't already exist.
                         write_target_file = t_file
