@@ -1,3 +1,6 @@
+2021-03: version 40.2
+* Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments
+
 2021-03: version 40.1
 * Adjust entrypoint.sh template to ensure resilient-circuits is restarted when a fatal error occurs when running on App Host
 * Added timestamp to logs on App Host
