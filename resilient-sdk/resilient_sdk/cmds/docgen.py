@@ -348,6 +348,7 @@ class CmdDocgen(BaseCmd):
             "long_description": setup_py_attributes.get("long_description"),
             "version": setup_py_attributes.get("version"),
             "server_version": server_version.get("version"),
+            "all_dependencies": setup_py_attributes.get("install_requires", []),
             "res_circuits_dependency_str": res_circuits_dep_str,
             "author": setup_py_attributes.get("author"),
             "support_url": setup_py_attributes.get("url"),
