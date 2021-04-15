@@ -10,8 +10,8 @@ readonly package_names=(
     "resilient-sdk"
     "resilient-lib"
     "pytest-resilient-circuits"
-    "rc-cts"
     "rc-webserver"
+    "rc-cts"
 )
 
 ###############
@@ -34,6 +34,12 @@ if [ $2 == "do_release" ]; then
     do_release=true
 else
     do_release=false
+fi
+
+if [ $3 == "deploy_docs" ]; then
+    deploy_docs=true
+else
+    deploy_docs=false
 fi
 
 ###########
@@ -74,6 +80,9 @@ for p in "${package_names[@]}"; do
 
 done
 
+# Go back to main directory when done building
+cd $TRAVIS_BUILD_DIR
+
 if [ "$deploy" = true ] ; then
     # Loop paths_all_sdists and copy to Artifactory using curl
     for p in "${paths_all_sdists[@]}"; do
@@ -92,4 +101,14 @@ if [ "$do_release" = true ] ; then
         twine upload --config-file $HOME/.pypirc $p
         print_msg "released: $package_name"
     done
+fi
+
+if [ "$deploy_docs" = true ] ; then
+    # Loop paths_all_sdists and build docs
+    for p in "${paths_all_sdists[@]}"; do
+        print_msg "pip install: $p"
+        pip install $p
+    done
+    make -C docs/ html
+    touch docs/_build/html/.nojekyll
 fi
