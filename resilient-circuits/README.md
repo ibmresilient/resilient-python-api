@@ -1,3 +1,5 @@
+![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
+
 # resilient-circuits
 This package is a framework for rapid development of Resilient Action Module event processors in Python.
 

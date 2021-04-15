@@ -1,4 +1,4 @@
-![IBM Security](./assets/IBM_Security_lockup_pos_RGB.png)
+![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
 <!-- [[pypi_changelog]] -->
 
