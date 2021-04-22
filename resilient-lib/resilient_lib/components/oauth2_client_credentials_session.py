@@ -137,7 +137,8 @@ class OAuth2ClientCredentialsSession(requests.Session):
         Returns :class:`Response <Response>` object.
         """
 
-        if self.expiration_time is not None:
+        # don't check expiration if attempting to refresh authorization - would cause infinite recursion loop
+        if self.expiration_time is not None and url != self.authorization_url:
             if self.expiration_time < time.time():
                 self.update_token()
 
