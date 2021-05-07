@@ -23,6 +23,7 @@ class BasicResilientMock(ResilientMock):
     def __init__(self, *args, **kwargs):
         super(BasicResilientMock, self).__init__(*args, **kwargs)
         self.incident = test_data("200_JSON_GET__incidents_2314.json")
+        self.task = test_data("200_JSON_GET__task.json")
 
     @resilient_endpoint("POST", "/rest/session")
     def session_post(self, request):
@@ -157,6 +158,14 @@ class BasicResilientMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=self.incident)
+
+    @resilient_endpoint("GET", "/tasks/[0-9]+$")
+    def task_get(self, request):
+        """ Callback for GET to /orgs/<org_id>/tasks/<inc_id> """
+        LOG.debug("task_get")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=self.task)
 
     @resilient_endpoint("GET", "/orgs/[0-9]+$")
     def org_get(self, request):

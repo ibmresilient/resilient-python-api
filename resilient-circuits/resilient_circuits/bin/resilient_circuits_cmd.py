@@ -390,7 +390,7 @@ def main():
                                         help="List the installed Resilient Circuits components")
 
     test_parser = subparsers.add_parser("test",
-                                        help="Run an interactive client for testing Resilient Circuits messages")
+                                        help="(Deprecated) Run an interactive client for testing Resilient Circuits messages")
 
     service_parser = subparsers.add_parser("service",
                                            help="Manage Resilient Circuits as a service")

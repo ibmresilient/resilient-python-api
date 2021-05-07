@@ -28,7 +28,7 @@ from six import string_types
 import re
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
-PASSWD_PATTERNS = ['passcode','password','passwd','secret','pin','key']
+PASSWD_PATTERNS = ['pass', 'secret', 'pin', 'key', 'id']
 
 application = None
 logging_initialized = False
@@ -45,7 +45,7 @@ class RedactingFilter(logging.Filter):
         if isinstance(record.msg, string_types):
             for p in PASSWD_PATTERNS:
                 if p in record.msg.lower():
-                    regex = r"(?:{0}.?':\s)(None,|.+?,)".format(p)
+                    regex = r"{0}(?=.*?':\s)(None,|.+?,|.+?'}})".format(p)
                     record.msg = re.sub(regex, r"***", record.msg)
 
         return True

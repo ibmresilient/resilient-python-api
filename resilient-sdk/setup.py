@@ -35,7 +35,10 @@ with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 setup(
     name="resilient_sdk",
     use_scm_version={"root": "../", "relative_to": __file__},
-    setup_requires=['setuptools_scm'],
+    setup_requires=[
+        "setuptools_scm < 6.0.0;python_version<'3.0'",
+        "setuptools_scm >= 6.0.0;python_version>='3.0'"
+    ],
     license="MIT",
     packages=find_packages(),
 

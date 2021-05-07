@@ -1,6 +1,10 @@
 2021-05: version 41.0
+* Deprecate 'test' command
 * Remove deprecated commands clone, extract and codegen
 * Increase num_workers limit to 100
+
+2021-03: version 40.2
+* Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments
 
 2021-03: version 40.1
 * No major changes. Just bumping build number to coincide with other builds
