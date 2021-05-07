@@ -34,7 +34,7 @@ class TestAppFunctionDecorator:
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
         mock_results = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, mock_fn_inputs, circuits_app)
 
-        assert mock_results["version"] == "1.0"
+        assert mock_results["version"] == 2.0
         assert mock_results["success"] is True
         assert mock_results["reason"] is None
         assert mock_results["inputs"]["input_one"] == mock_fn_inputs["input_one"]

@@ -12,6 +12,7 @@ from types import GeneratorType
 from circuits import Timer, task, Event
 import circuits.core.handlers
 from resilient_lib import ResultPayload, validate_fields
+from resilient_circuits import constants
 from resilient_circuits.action_message import FunctionResult, \
     StatusMessage, StatusMessageEvent, \
     FunctionError_, FunctionErrorEvent
@@ -182,7 +183,7 @@ class app_function(object):
                 fn_inputs = validate_fields([], kwds)
                 LOG.info("Validated function inputs: %s", fn_inputs)
 
-                rp = ResultPayload(itself.PACKAGE_NAME, **fn_inputs)
+                rp = ResultPayload(itself.PACKAGE_NAME, version=constants.APP_FUNCTION_PAYLOAD_VERSION, **fn_inputs)
 
                 fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
 
@@ -202,7 +203,6 @@ class app_function(object):
                             content=r.value,
                             success=r.success,
                             reason=r.reason)
-                        # TODO add a version for ResultsPayload
                         LOG.info("[%s] Returning results", evt.name)
                         LOG.debug("[%s] FunctionResult: %s", evt.name, r)
                         result_list.append(r)
