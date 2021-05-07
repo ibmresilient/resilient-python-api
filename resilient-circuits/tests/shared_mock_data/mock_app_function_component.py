@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*
 
+import time
 from resilient_circuits import AppFunctionComponent, app_function, FunctionResult
 from resilient_lib import ResultPayload, RequestsCommon, IntegrationError, validate_fields
 from tests import mock_constants
@@ -20,13 +21,16 @@ class AppFunctionMockComponent(AppFunctionComponent):
         super(AppFunctionMockComponent, self).__init__(opts, package_name, required_app_configs)
 
     @app_function(mock_constants.MOCK_APP_FN_NAME_ONE)
-    def _app_function_mock_one(self, fn_inputs, fn_msg):
+    def _app_function_mock_one(self, fn_inputs):
         yield self.status_message(u"Mock զ է ը թ ժ ի լ StatusMessage 1")
         yield self.status_message(u"Mock StatusMessage 2")
         yield self.status_message(fn_inputs.input_one)
+
+        fn_msg = self.get_fn_msg()
+
         yield self.status_message(u"Function name: {0}".format(fn_msg.get("function", {}).get("name", "Unknown")))
         yield FunctionResult({"malware": True})
 
     @app_function(mock_constants.MOCK_APP_FN_NAME_EX)
-    def _app_function_mock_raise_exception(self, fn_inputs, fn_msg):
+    def _app_function_mock_raise_exception(self, fn_inputs):
         raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")

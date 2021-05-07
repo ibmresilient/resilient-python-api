@@ -4,8 +4,12 @@
 
 """Implementation of AppFunctionComponent"""
 
+import logging
+import threading
 from resilient_circuits import ResilientComponent, handler, StatusMessage
 from resilient_lib import RequestsCommon, validate_fields
+
+LOG = logging.getLogger(__name__)
 
 
 class AppFunctionComponent(ResilientComponent):
@@ -21,6 +25,8 @@ class AppFunctionComponent(ResilientComponent):
         self._required_app_configs = required_app_configs
         self.app_configs = validate_fields(required_app_configs, opts.get(package_name, {}))
         self.rc = RequestsCommon(opts=opts, function_opts=self.app_configs)
+
+        self._local_storage = threading.local()
 
         super(AppFunctionComponent, self).__init__(opts)
 
@@ -49,3 +55,31 @@ class AppFunctionComponent(ResilientComponent):
         :rtype: resilient_circuits.StatusMessage
         """
         return StatusMessage(message)
+
+    def set_fn_msg(self, message_dict):
+        """
+        Uses threading.local() to store the message received
+        locally for this Thread. Is accessed using the
+        `get_fn_msg()` method below
+
+        :param message_dict: Message received from SOAR
+        :type message: dict
+        """
+        self._local_storage.fn_msg = message_dict
+
+    def get_fn_msg(self):
+        """
+        If 'fn_msg' is defined in local Thread storage,
+        return it, else return an empty dictionary
+
+        :return: Message received from SOAR
+        :rtype: dict
+        """
+        fn_msg = {}
+
+        try:
+            fn_msg = self._local_storage.fn_msg
+        except AttributeError as err:
+            LOG.warning("fn_msg could not be found\n%s", err)
+
+        return fn_msg

@@ -186,8 +186,11 @@ class app_function(object):
 
                 fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
 
+                # Set evt.message in local thread storage
+                itself.set_fn_msg(evt.message)
+
                 # Invoke the actual Function
-                fn_results = fn(itself, fn_inputs_tuple, evt.message)
+                fn_results = fn(itself, fn_inputs_tuple)
 
                 for r in fn_results:
                     if isinstance(r, StatusMessage):
@@ -199,6 +202,7 @@ class app_function(object):
                             content=r.value,
                             success=r.success,
                             reason=r.reason)
+                        # TODO add a version for ResultsPayload
                         LOG.info("[%s] Returning results", evt.name)
                         LOG.debug("[%s] FunctionResult: %s", evt.name, r)
                         result_list.append(r)
