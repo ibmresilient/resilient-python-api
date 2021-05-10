@@ -25,13 +25,13 @@ class AppFunctionComponent(ResilientComponent):
         self._required_app_configs = required_app_configs
 
         # Validate app_configs and get dictionary as result
-        _app_configs = validate_fields(required_app_configs, opts.get(package_name, {}))
+        self._app_configs_as_dict = validate_fields(required_app_configs, opts.get(package_name, {}))
 
-        # Instansiate RequestsCommon with dictionary of _app_configs
-        self.rc = RequestsCommon(opts=opts, function_opts=_app_configs)
+        # Instansiate RequestsCommon with dictionary of _app_configs_as_dict
+        self.rc = RequestsCommon(opts=opts, function_opts=self._app_configs_as_dict)
 
-        # Convert dictionary of _app_configs to namedtuple
-        self.app_configs = namedtuple("app_configs", _app_configs.keys())(*_app_configs.values())
+        # Convert _app_configs_as_dict to namedtuple
+        self.app_configs = namedtuple("app_configs", self._app_configs_as_dict.keys())(*self._app_configs_as_dict.values())
 
         self._local_storage = threading.local()
 
