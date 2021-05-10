@@ -36,6 +36,8 @@ else:
 
 LOGGER_NAME = "resilient_sdk_log"
 ENV_VAR_DEV = "RES_SDK_DEV"
+RESILIENT_CIRCUITS_VERSION = "35.0.0"
+RESILIENT_CIRCUITS_VERSION_DEV = "41.0.0"
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -969,3 +971,14 @@ def is_env_var_set(env_var):
     :rtype: bool
     """
     return str_to_bool(os.getenv(env_var))
+
+
+def get_resilient_circuits_version_to_use():
+    """
+    :return: Version of resilient-circuits to use depending on ENV_VAR_DEV set
+    :rtype: str
+    """
+    if is_env_var_set(ENV_VAR_DEV):
+        return RESILIENT_CIRCUITS_VERSION_DEV
+    else:
+        return RESILIENT_CIRCUITS_VERSION

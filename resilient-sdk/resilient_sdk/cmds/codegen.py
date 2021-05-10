@@ -289,6 +289,8 @@ class CmdCodegen(BaseCmd):
         # Add version
         jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
+        jinja_data["resilient_circuits_version"] = sdk_helpers.get_resilient_circuits_version_to_use()
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
@@ -370,8 +372,12 @@ class CmdCodegen(BaseCmd):
                     raise SDKException(u"File name '{0}' already in use please rename the function '{1}'."
                                        .format(file_name, fn_name))
 
-            # Add to 'components' directory
-            package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
+            # If in dev mode add an 'atomic function' to 'components' directory else add a 'normal function'
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                package_mapping_dict[package_name]["components"][file_name] = ("package/components/atomic_function.py.jinja2", f)
+
+            else:
+                package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
 
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
