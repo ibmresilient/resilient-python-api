@@ -27,7 +27,7 @@ class AppFunctionComponent(ResilientComponent):
         # Validate app_configs and get dictionary as result
         _app_configs = validate_fields(required_app_configs, opts.get(package_name, {}))
 
-        # Instansiate RequestsComment with dictionary of _app_configs
+        # Instansiate RequestsCommon with dictionary of _app_configs
         self.rc = RequestsCommon(opts=opts, function_opts=_app_configs)
 
         # Convert dictionary of _app_configs to namedtuple
