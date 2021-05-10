@@ -6,10 +6,9 @@
 
 import logging
 import threading
+from collections import namedtuple
 from resilient_circuits import ResilientComponent, handler, StatusMessage
 from resilient_lib import RequestsCommon, validate_fields
-
-LOG = logging.getLogger(__name__)
 
 
 class AppFunctionComponent(ResilientComponent):
@@ -22,11 +21,21 @@ class AppFunctionComponent(ResilientComponent):
         """
 
         self.PACKAGE_NAME = package_name
+
         self._required_app_configs = required_app_configs
-        self.app_configs = validate_fields(required_app_configs, opts.get(package_name, {}))
-        self.rc = RequestsCommon(opts=opts, function_opts=self.app_configs)
+
+        # Validate app_configs and get dictionary as result
+        _app_configs = validate_fields(required_app_configs, opts.get(package_name, {}))
+
+        # Instansiate RequestsComment with dictionary of _app_configs
+        self.rc = RequestsCommon(opts=opts, function_opts=_app_configs)
+
+        # Convert dictionary of _app_configs to namedtuple
+        self.app_configs = namedtuple("app_configs", _app_configs.keys())(*_app_configs.values())
 
         self._local_storage = threading.local()
+
+        self.LOG = logging.getLogger(__name__)
 
         super(AppFunctionComponent, self).__init__(opts)
 
@@ -80,6 +89,6 @@ class AppFunctionComponent(ResilientComponent):
         try:
             fn_msg = self._local_storage.fn_msg
         except AttributeError as err:
-            LOG.warning("fn_msg could not be found\n%s", err)
+            self.LOG.warning("fn_msg could not be found\n%s", err)
 
         return fn_msg

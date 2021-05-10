@@ -181,7 +181,8 @@ class app_function(object):
 
                 # Validate the fn_inputs in the Message
                 fn_inputs = validate_fields([], kwds)
-                LOG.info("Validated function inputs: %s", fn_inputs)
+                LOG.info("[%s] Validated function inputs", evt.name)
+                LOG.debug("[%s] fn_inputs: %s", evt.name, fn_inputs)
 
                 rp = ResultPayload(itself.PACKAGE_NAME, version=constants.APP_FUNCTION_PAYLOAD_VERSION, **fn_inputs)
 
