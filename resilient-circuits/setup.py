@@ -68,8 +68,8 @@ setup(
         'filelock>=2.0.5',
         'watchdog>=0.9.0, <1.0.0; python_version < "3.6.0"',
         'watchdog>=0.9.0; python_version >= "3.6.0"',
-        'resilient>=38.0.0',
-        'resilient-lib>=40.0.0'
+        'resilient>=41.0.0',
+        'resilient-lib>=41.0.0'
     ],
     author_email='support@resilientsystems.com',
     description='Resilient Circuits Framework for Custom Integrations',
