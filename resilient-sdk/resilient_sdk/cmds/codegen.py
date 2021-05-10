@@ -289,7 +289,7 @@ class CmdCodegen(BaseCmd):
         # Add version
         jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
-        jinja_data["resilient_circuits_version"] = sdk_helpers.get_resilient_circuits_version_to_use()
+        jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)

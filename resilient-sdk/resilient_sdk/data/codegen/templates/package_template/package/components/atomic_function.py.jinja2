@@ -3,21 +3,17 @@
 """AppFunction implementation"""
 
 from resilient_circuits import AppFunctionComponent, app_function, FunctionResult
-from resilient_lib import IntegrationError
+from resilient_lib import IntegrationError, validate_fields
 
 PACKAGE_NAME = "{{package_name}}"
 FN_NAME = "{{name}}"
-REQUIRED_APP_CONFIGS = [
-    # {"name": "api_key", "placeholder": "YOUR_API_KEY"},
-    # {"name": "api_base_url", "placeholder": "https://example.com"}
-]
 
 
 class FunctionComponent(AppFunctionComponent):
     """Component that implements function '{{name}}'"""
 
     def __init__(self, opts):
-        super(FunctionComponent, self).__init__(opts, PACKAGE_NAME, REQUIRED_APP_CONFIGS)
+        super(FunctionComponent, self).__init__(opts, PACKAGE_NAME)
 
     @app_function(FN_NAME)
     def _app_function(self, fn_inputs):
@@ -32,6 +28,12 @@ class FunctionComponent(AppFunctionComponent):
         """
 
         yield self.status_message("Starting App Function: '{0}'".format(FN_NAME))
+
+        # Example validating app_configs
+        # validate_fields([
+        #     {"name": "api_key", "placeholder": "<your-api-key>"},
+        #     {"name": "base_url", "placeholder": "<api-base-url>"}],
+        #     self._app_configs_as_dict)
 
         # Example getting access to self.get_fn_msg()
         # fn_msg = self.get_fn_msg()

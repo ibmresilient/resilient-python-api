@@ -98,7 +98,7 @@ def main():
     if sdk_dev:
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
-        LOG.info("\n-----------------\nRunning SDK in Developer Mode\n-----------------\n")
+        LOG.info("\n-----------------------------\nRunning SDK in Developer Mode\n-----------------------------\n")
 
     try:
         # Parse the arguments
