@@ -1,5 +1,6 @@
 2021-05: version 41.0
 * List all setup.py "install_requires" dependencies in docgen README template
+* Bug fixes
 
 2021-03: version 40.2
 * Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments

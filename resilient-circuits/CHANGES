@@ -2,6 +2,8 @@
 * Deprecate 'test' command
 * Remove deprecated commands clone, extract and codegen
 * Increase num_workers limit to 100
+* Bug fixes
+* Handle new app_function decorator
 
 2021-03: version 40.2
 * Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments
