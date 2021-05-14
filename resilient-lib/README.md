@@ -1,3 +1,5 @@
+![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
+
 ### Changelog
 <!-- Changelog will go here -->
 # Resilient Library for Integrations

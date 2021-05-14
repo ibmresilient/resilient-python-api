@@ -1,3 +1,14 @@
+2021-05: version 41.0
+* List all setup.py "install_requires" dependencies in docgen README template
+* Bug fixes
+
+2021-03: version 40.2
+* Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments
+
+2021-03: version 40.1
+* Adjust entrypoint.sh template to ensure resilient-circuits is restarted when a fatal error occurs when running on App Host
+* Added timestamp to logs on App Host
+
 2021-02: ver. 40.0
 * The function template that is produced when you run 'codegen' now includes references to the resilient-lib library.
 * When the var RES_SDK_DEV is set, 'codegen' now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server".
