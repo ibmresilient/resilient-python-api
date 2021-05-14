@@ -107,7 +107,7 @@ if [ "$deploy_docs" = true ] ; then
     # Loop paths_all_sdists and build docs
     for p in "${paths_all_sdists[@]}"; do
         print_msg "pip install: $p"
-        pip install $p
+        pip install -e "./$p"
     done
     make -C docs/ html
     touch docs/_build/html/.nojekyll
