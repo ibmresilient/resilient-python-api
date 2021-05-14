@@ -156,9 +156,9 @@ matrix:
         - ./travis-scripts/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
     - stage: deploy documentation
-      # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
       install:
       - pip install sphinx
+      - pip install git+https://github.com/bashtage/sphinx-material.git
       script:
         - echo "Building packages in Python 3.6 and deploying Documentation"
         - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
