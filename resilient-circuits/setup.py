@@ -63,7 +63,7 @@ setup(
         'stompest>=2.3.0',
         'circuits',
         'pytz',
-        'jinja2>=2.10.0',
+        'jinja2~=2.10.0',
         'pysocks',
         'filelock>=2.0.5',
         'watchdog>=0.9.0, <1.0.0; python_version < "3.6.0"',
