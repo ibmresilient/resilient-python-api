@@ -205,7 +205,6 @@ class app_function(object):
                             success=r.success,
                             reason=r.reason)
                         LOG.info("[%s] Returning results", evt.name)
-                        LOG.debug("[%s] FunctionResult: %s", evt.name, r)
                         result_list.append(r)
 
                     elif isinstance(r, Exception):
