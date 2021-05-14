@@ -190,7 +190,8 @@ def parse_setup_py(path, attribute_names):
                                                                        .replace(".", os.path.sep)) + ".py"})
             return_dict[attribute_name] = entry_point_paths
         else:
-            return_dict[attribute_name] = result.get(attribute_name)
+            if result.get(attribute_name):
+                return_dict[attribute_name] = result.get(attribute_name)
 
     return return_dict
 

@@ -87,7 +87,7 @@ class TestSelfTest(object):
 
             with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
                 mocked_entrypoints.return_value = MOCKED_SELFTEST_ENTRYPOINTS
-                with patch("resilient_circuits.bin.resilient_circuits_cmd.resilient.get_config_file") as mocked_config:
+                with patch("resilient_circuits.bin.resilient_circuits_cmd.get_config_file") as mocked_config:
                     mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
                     selftest(parser)
 
@@ -103,6 +103,6 @@ class TestSelfTest(object):
 
         with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
             mocked_entrypoints.return_value = [MOCKED_SELFTEST_ENTRYPOINTS[1]]
-            with patch("resilient_circuits.bin.resilient_circuits_cmd.resilient.get_config_file") as mocked_config:
+            with patch("resilient_circuits.bin.resilient_circuits_cmd.get_config_file") as mocked_config:
                 mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
                 selftest(parser)

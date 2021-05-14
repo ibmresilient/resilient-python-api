@@ -36,6 +36,8 @@ else:
 
 LOGGER_NAME = "resilient_sdk_log"
 ENV_VAR_DEV = "RES_SDK_DEV"
+RESILIENT_LIBRARIES_VERSION = "41.0.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "41.0.0"
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -57,13 +59,17 @@ def get_resilient_client(path_config_file=None):
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
-    LOG.info("Connecting to Resilient Appliance...")
+    LOG.info("Connecting to IBM Security SOAR...")
 
     if not path_config_file:
         path_config_file = get_config_file()
 
+    LOG.debug("Using app.config file at: %s", path_config_file)
+
     config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
+
+    LOG.debug("Trying to connect to '%s'", opts.get("host"))
 
     return get_client(opts)
 
@@ -965,3 +971,14 @@ def is_env_var_set(env_var):
     :rtype: bool
     """
     return str_to_bool(os.getenv(env_var))
+
+
+def get_resilient_libraries_version_to_use():
+    """
+    :return: Version of resilient-circuits to use depending on ENV_VAR_DEV set
+    :rtype: str
+    """
+    if is_env_var_set(ENV_VAR_DEV):
+        return RESILIENT_LIBRARIES_VERSION_DEV
+    else:
+        return RESILIENT_LIBRARIES_VERSION

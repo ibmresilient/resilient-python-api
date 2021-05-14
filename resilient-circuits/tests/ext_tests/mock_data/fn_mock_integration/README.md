@@ -1,1 +1,0 @@
-# Mock Integration README file

@@ -4,6 +4,7 @@ os: linux
 
 stages:
   - run tests
+  - static analysis
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
@@ -26,6 +27,15 @@ env:
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
   - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
+  - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
+  - SKIP_SCANS_KEYWORD="[skip-scans]"
+  - SKIP_SCANS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$SKIP_SCANS_KEYWORD"* ]]; echo $?)
+  - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
+  - FYRE_CLUSTER_DOMAIN="${FYRE_CLUSTER_NAME}1.fyre.ibm.com"
+  - FYRE_DEPLOY_SLEEP_SECONDS=90
+  - FYRE_DEPLOY_TIMEOUT_SECONDS=540
+  - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
 
 # Install package deps
@@ -38,22 +48,82 @@ matrix:
 
   include:
     - stage: run tests
-      name: Python 2.7 Tests
+      name: Python 2.7 Unit Tests
       python: 2.7
-      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      env: RUN_TYPE=unit_test TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
       install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 2.7 Tests"
         - ./travis-scripts/run_unit_tests.sh
 
     - stage: run tests
-      name: Python 3.6 Tests
+      name: Python 3.6 Unit Tests
       python: 3.6
-      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      env: RUN_TYPE=unit_test TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install: ./travis-scripts/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.6 Tests"
         - ./travis-scripts/run_unit_tests.sh
+
+    # Jobs that perform static analysis; code quality, security scans etc
+    - stage: static analysis
+      name: Python 2.7 Bandit Security Scan
+      python: 2.7
+      env:
+        - ANALYSIS_NAME="Py2.7 Bandit Security Scan"
+      install:
+        - pip install bandit==1.6.2
+      script:
+        - if [ $SKIP_SCANS == 0 ]; then
+            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE;
+          fi
+    - stage: static analysis
+      name: Python 3.6 Bandit Security Scan
+      python: 3.6
+      env:
+        - ANALYSIS_NAME="Py3.6 Bandit Security Scan"
+      install:
+        - pip install bandit
+      script:
+        - if [ $SKIP_SCANS == 0 ]; then
+            ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE;
+          fi
+    - stage: static analysis
+      name: Pylint
+      python: 3.6
+      env:
+        - ANALYSIS_NAME="Pylint"
+      install:
+        - pip install pylint
+      script:
+        - if [ $SKIP_SCANS == 0 ]; then
+            ./travis-scripts/run_pylint_scan.sh $PACKAGES_TO_RUN_SCANS_ON $PYTEST_RCFILE;
+          fi
+    - stage: static analysis
+      name: CVE Safety Check
+      python: 3.6
+      env:
+        - ANALYSIS_NAME="CVE Search against dependancies"
+      install:
+        - pip install safety
+      script:
+        - if [ $SKIP_SCANS == 0 ]; then
+            ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON;
+          fi
+    - stage: run tests
+      name: Python 3.6 Integration Tests
+      python: 3.6
+      env: RUN_TYPE=int_test TOXENV=py36
+      install: ./travis-scripts/install_int_tests_deps.sh
+      script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            ./travis-scripts/manage_fyre_instance.sh DEPLOY $FYRE_STENCIL_ID $FYRE_CLUSTER_NAME $FYRE_CLUSTER_DOMAIN $FYRE_DEPLOY_SLEEP_SECONDS $FYRE_DEPLOY_TIMEOUT_SECONDS;
+            ./travis-scripts/run_int_tests.sh;
+          fi
+      after_script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            ./travis-scripts/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
+          fi
 
     - stage: build packages
       name: Build Packages in Python 2.7
