@@ -366,3 +366,11 @@ def test_is_env_var_set(fx_add_dev_env_var):
 
 def test_is_env_var_not_set():
     assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is False
+
+
+def test_get_resilient_libraries_version_to_use():
+    assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION
+
+
+def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
+    assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION_DEV
