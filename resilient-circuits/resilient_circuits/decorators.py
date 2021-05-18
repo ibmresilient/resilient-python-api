@@ -5,11 +5,13 @@
 
 import logging
 import threading
+from collections import namedtuple
 import inspect as _inspect
 from functools import wraps
 from types import GeneratorType
 from circuits import Timer, task, Event
 import circuits.core.handlers
+from resilient_lib import ResultPayload, validate_fields
 from resilient_circuits import constants
 from resilient_circuits.action_message import FunctionResult, \
     StatusMessage, StatusMessageEvent, \
@@ -181,6 +183,116 @@ class inbound_app(object):
             yield ia_result.value
 
         return inbound_app_decorator
+class app_function(object):
+    """
+    Creates new a Next Generation Function (@app_function) Handler.
+
+    This decorator can be applied to methods of classes derived from the class `ResilientComponent`.
+    It marks the method as a handler for the events passed as arguments to the decorator.
+    Specify the function's API name as parameter to the decorator. It only accepts 1 api_name as an argument.
+    The function handler will automatically be subscribed to the function's message destination.
+    """
+
+    def __init__(self, *args, **kwargs):
+        if len(args) != 1:
+            raise ValueError("Usage: @app_function(api_name)")
+        self.names = args
+        self.kwargs = kwargs
+
+    def __call__(self, fn):
+        """
+        Called at decoration time, with the bare function being decorated
+
+        :param fn: The function to decorate
+        :type fn: resilient_circuits.ResilientComponent
+        """
+        fn.handler = True
+        fn.function = True
+
+        # Circuits properties
+        fn.names = self.names
+        fn.priority = self.kwargs.get("priority", 0)
+        fn.channel = "functions.{0}".format(self.names[0])
+        fn.override = self.kwargs.get("override", False)
+        fn.event = True
+
+        @wraps(fn)
+        def app_function_decorator(itself, event, *args, **kwargs):
+            """
+            The decorated function
+
+            :param itself: The function to decorate
+            :type itself: resilient_circuits.ResilientComponent
+            :param event: The Event with the StompFrame and the Message read off the Message Destination
+            :type event: resilient_circuits.action_message.FunctionMessage
+            """
+            function_inputs = event.message.get("inputs", {})
+
+            def _invoke_app_function(evt, **kwds):
+                """
+                The code to call when a function with the decorator `@app_function(api_name)`
+                is invoked.
+
+                Returns result_list when function with the decorator `@app_function(api_name)` is
+                finished processing.
+
+                A method that has this handler should yield a StatusMessage or a FunctionResult
+                    -   When a StatusMessage is yield'ed a StatusMessageEvent is fired with the text of the StatusMessage
+                    -   When a FunctionResult is yield'ed it calls resilient-lib.ResultPayload.done() with the parameters of
+                        FunctionResult being passed to it and appends the result to result_list. E.g:
+                            `yield FunctionResult({"key":"value"})`
+                            `yield FunctionResult({"key": "value"}, success=False, reason="Bad call")`
+
+                :param evt: The Event with the StompFrame and the Message read off the Message Destination
+                :type fn: resilient_circuits.action_message.FunctionMessage
+                """
+                LOG.debug("Running _invoke_app_function in Thread: %s", threading.currentThread().name)
+
+                result_list = []
+
+                # Validate the fn_inputs in the Message
+                fn_inputs = validate_fields([], kwds)
+                LOG.info("[%s] Validated function inputs", evt.name)
+                LOG.debug("[%s] fn_inputs: %s", evt.name, fn_inputs)
+
+                rp = ResultPayload(itself.PACKAGE_NAME, version=constants.APP_FUNCTION_PAYLOAD_VERSION, **fn_inputs)
+
+                fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
+
+                # Set evt.message in local thread storage
+                itself.set_fn_msg(evt.message)
+
+                # Invoke the actual Function
+                fn_results = fn(itself, fn_inputs_tuple)
+
+                for r in fn_results:
+                    if isinstance(r, StatusMessage):
+                        LOG.info("[%s] StatusMessage: %s", evt.name, r)
+                        itself.fire(StatusMessageEvent(parent=evt, message=r.text))
+
+                    elif isinstance(r, FunctionResult):
+                        r.value = rp.done(
+                            content=r.value,
+                            success=r.success,
+                            reason=r.reason)
+                        LOG.info("[%s] Returning results", evt.name)
+                        result_list.append(r)
+
+                    elif isinstance(r, Exception):
+                        raise r
+
+                    else:
+                        # Whatever this is, add it to the results
+                        LOG.debug(r)
+                        result_list.append(r)
+
+                return result_list
+
+            invoke_app_function = task(_invoke_app_function, event, **function_inputs)
+            fn_result = yield itself.call(invoke_app_function, channels="functionworker")
+            yield fn_result.value
+
+        return app_function_decorator
 
 
 class required_field(object):

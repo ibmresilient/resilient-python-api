@@ -5,6 +5,7 @@
 import os
 import sys
 import shutil
+from pathlib import Path
 import pytest
 from resilient_sdk.cmds import base_cmd, CmdCodegen
 from resilient_sdk.util import sdk_helpers
@@ -265,29 +266,88 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
 
     res_objs = sdk_helpers.get_from_export(import_definition,
                                            rules=["Additional Mock Rule", "Mock Manual Rule"],
-                                           functions=["additional_mock_function", "mock_function_one"],
-                                           workflows=["additional_mock_workflow", "mock_workflow_one"])
+                                           functions=["additional_mock_function", "mock_function_one", "funct_new_mock_function", "func_new_mock_function"],
+                                           workflows=["additional_mock_workflow", "mock_workflow_one", "wf_new_mock_workflow"])
 
     # Assert the general structure of the reloaded package
     general_test_package_structure(mock_integration_name, path_package_reloaded)
 
     # Assert the additional rule, function and workflow were added
     assert helpers.verify_expected_list(["Additional Mock Rule", "Mock Manual Rule"], [o.get("x_api_name") for o in res_objs.get("rules")])
-    assert helpers.verify_expected_list(["additional_mock_function", "mock_function_one"], [o.get("x_api_name") for o in res_objs.get("functions")])
-    assert helpers.verify_expected_list(["additional_mock_workflow", "mock_workflow_one"], [o.get("x_api_name") for o in res_objs.get("workflows")])
+    assert helpers.verify_expected_list(["additional_mock_function", "mock_function_one", "funct_new_mock_function", "func_new_mock_function" ], [o.get("x_api_name") for o in res_objs.get("functions")])
+    assert helpers.verify_expected_list(["additional_mock_workflow", "mock_workflow_one", "wf_new_mock_workflow"], [o.get("x_api_name") for o in res_objs.get("workflows")])
 
     # Assert a new components file is created
     expected_component_files = EXPECTED_FILES_PACKAGE_COMPONENTS_DIR + ["funct_additional_mock_function.py"]
     assert helpers.verify_expected_list(expected_component_files, os.listdir(os.path.join(path_package_reloaded, mock_integration_name, "components")))
 
+    # Assert a new components file with prefix 'funct_' is created
+    expected_component_files = ["funct_new_mock_function.py"]
+    assert helpers.verify_expected_list(expected_component_files, os.listdir(os.path.join(path_package_reloaded, mock_integration_name, "components")))
+
+    # Assert a new components file with prefix 'func_' is created
+    expected_component_files = ["func_new_mock_function.py"]
+    assert helpers.verify_expected_list(expected_component_files, os.listdir(
+        os.path.join(path_package_reloaded, mock_integration_name, "components")))
+
     # Assert a new tests file is created
     expected_test_files = EXPECTED_FILES_TESTS_DIR + ["test_funct_additional_mock_function.py"]
+    assert helpers.verify_expected_list(expected_test_files, os.listdir(os.path.join(path_package_reloaded, "tests")))
+
+    # Assert a new tests file including 'func_' is created.
+    expected_test_files = ["test_func_new_mock_function.py"]
     assert helpers.verify_expected_list(expected_test_files, os.listdir(os.path.join(path_package_reloaded, "tests")))
 
     # Assert a new md file is created in data dir
     expected_workflow_files = EXPECTED_FILES_DATA_DIR + ["wf_additional_mock_workflow.md"]
     assert helpers.verify_expected_list(expected_workflow_files, os.listdir(os.path.join(path_package_reloaded, "data")))
 
+    # Assert a new md file with 'wf_' is created in data dir
+    expected_workflow_files = ["wf_new_mock_workflow.md"]
+    assert helpers.verify_expected_list(expected_workflow_files, os.listdir(os.path.join(path_package_reloaded, "data")))
+
+    # Remove files from generated package path and recreate without prefix or substring of 'funct_' or 'wd_'.
+    os.remove(os.path.join(path_package_reloaded, mock_integration_name, "components",
+                           "funct_additional_mock_function.py"))
+    Path(os.path.join(path_package_reloaded, mock_integration_name, "components",
+                           "additional_mock_function.py")).touch()
+    os.remove(os.path.join(path_package_reloaded, "tests", "test_funct_additional_mock_function.py"))
+    Path(os.path.join(path_package_reloaded, "tests", "test_additional_mock_function.py")).touch()
+    os.remove(os.path.join(path_package_reloaded, "data", "wf_additional_mock_workflow.md"))
+    Path(os.path.join(path_package_reloaded, "data", "additional_mock_workflow.md")).touch()
+
+    # Get modification time for workflow file "wf_mock_workflow_one.md" in seconds since the epoch.'
+    wf_modified_time = os.path.getmtime(os.path.join(path_package_reloaded, "data", "wf_mock_workflow_one.md"))
+
+    # Perform another test reload.
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    path_package_reloaded = cmd_codegen._reload_package(args)
+
+    # This is really getting the import definition from the new data/export.res file, so tests that as well
+    import_definition = package_helpers.get_import_definition_from_customize_py(os.path.join(path_package_reloaded, mock_integration_name, package_helpers.PATH_CUSTOMIZE_PY))
+
+    res_objs = sdk_helpers.get_from_export(import_definition,
+                                           rules=["Additional Mock Rule", "Mock Manual Rule"],
+                                           functions=["additional_mock_function", "mock_function_one", "funct_new_mock_function", "func_new_mock_function"],
+                                           workflows=["additional_mock_workflow", "mock_workflow_one", "wf_new_mock_workflow"])
+
+    # Assert the general structure of the reloaded package
+    general_test_package_structure(mock_integration_name, path_package_reloaded)
+
+    # Assert a new components file with 'funct_'  prefix is not created
+    expected_component_files = ["funct_additional_mock_function.py"]
+    assert not helpers.verify_expected_list(expected_component_files, os.listdir(os.path.join(path_package_reloaded, mock_integration_name, "components")))
+    # Assert a new workflow file with 'md_' prefix is not created in data dir
+    expected_workflow_files = ["wf_additional_mock_workflow.md"]
+    assert not helpers.verify_expected_list(expected_workflow_files, os.listdir(os.path.join(path_package_reloaded, "data")))
+    # Assert a new tests file with "funct_" substring is not created
+    expected_test_files = ["test_func_additional_mock_function.py"]
+    assert not helpers.verify_expected_list(expected_test_files, os.listdir(os.path.join(path_package_reloaded, "tests")))
+    # Get new modification time for test workflow file.
+    new_wf_modified_time = os.path.getmtime(os.path.join(path_package_reloaded, "data", "wf_mock_workflow_one.md"))
+    # Assert modification time of workflow has been updated.
+    assert new_wf_modified_time > wf_modified_time
 
 def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     """

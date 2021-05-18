@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 import shutil
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -115,24 +116,53 @@ class CmdCodegen(BaseCmd):
                 shutil.copy(file_info, target_file)
 
             else:
+                # Initialize variable for target file name from export.
+                export_target_file = None
                 # Get path to Jinja2 template
                 path_template = file_info[0]
 
                 # Get data dict for this Jinja2 template
                 template_data = file_info[1]
-
                 target_file = os.path.join(target_dir, file_name)
+                # Get target file extension.
+                target_ext = os.path.splitext(target_file)[1]
+                # Try to set object name to function name if it exists in export.
+                export_obj_name = template_data.get(ResilientObjMap.FUNCTIONS)
+                if not export_obj_name:
+                    # Not a function try to set to workflow name from export instead.
+                    export_obj_name = template_data.get(ResilientObjMap.WORKFLOWS)
 
-                if os.path.exists(target_file):
-                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
+                if export_obj_name:
+                    # Is a function or workflow so get file path(s) using export object name.
+                    if os.path.dirname(path_template) == "tests":
+                        export_target_file = os.path.join(target_dir, u"test_{0}{1}".format(export_obj_name, target_ext))
+                    else:
+                        export_target_file = os.path.join(target_dir, u"{0}{1}".format(export_obj_name, target_ext))
+
+                write_target_file = None
+                for t_file in [target_file, export_target_file]:
+                    if t_file and os.path.exists(t_file):
+                        # Don't skip for workflows.
+                        if target_ext == ".md" and export_target_file:
+                            # Write to first workflow target file name format found.
+                            write_target_file = t_file
+                        else:
+                            files_skipped.append(os.path.relpath(t_file, start=package_dir))
+                            write_target_file = None
+                        break
+                    if t_file and not write_target_file:
+                        # We will use default (target_file) format if file doesn't already exist.
+                        write_target_file = t_file
+
+                if not write_target_file:
                     continue
 
                 jinja_template = jinja_env.get_template(path_template)
                 jinja_rendered_text = jinja_template.render(template_data)
 
-                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
+                newly_generated_files.append(os.path.relpath(write_target_file, start=package_dir))
 
-                sdk_helpers.write_file(target_file, jinja_rendered_text)
+                sdk_helpers.write_file(write_target_file, jinja_rendered_text)
 
         return newly_generated_files, files_skipped
 
@@ -259,6 +289,8 @@ class CmdCodegen(BaseCmd):
         # Add version
         jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
 
+        jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
@@ -318,19 +350,34 @@ class CmdCodegen(BaseCmd):
             if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
                 package_mapping_dict["payload_samples"] = {}
 
+        # Get a list of function names in export.
+        fn_names = [f.get(ResilientObjMap.FUNCTIONS) for f in jinja_data.get("functions")]
+
         # Loop each Function
         for f in jinja_data.get("functions"):
             # Add package_name to function data
             f["package_name"] = package_name
 
             # Get function name
-            fn_name = f.get("export_key")
+            fn_name = f.get(ResilientObjMap.FUNCTIONS)
 
-            # Generate function_component.py file name
-            file_name = u"funct_{0}.py".format(fn_name)
+            # Generate funct_function_component.py file name
+            # Don't add prefix if function name already begins with "func_" or "funct_".
+            if re.search(r"^(func|funct)_", fn_name):
+                file_name = u"{0}.py".format(fn_name)
+            else:
+                file_name = u"funct_{0}.py".format(fn_name)
+                # Check if file_name without extension already exists in functions names list.
+                if os.path.splitext(file_name)[0] in fn_names:
+                    raise SDKException(u"File name '{0}' already in use please rename the function '{1}'."
+                                       .format(file_name, fn_name))
 
-            # Add to 'components' directory
-            package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
+            # If in dev mode add an 'atomic function' to 'components' directory else add a 'normal function'
+            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+                package_mapping_dict[package_name]["components"][file_name] = ("package/components/atomic_function.py.jinja2", f)
+
+            else:
+                package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
 
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
@@ -340,10 +387,23 @@ class CmdCodegen(BaseCmd):
                 # Add a 'payload_samples/fn_name' directory and the files to it
                 CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
+        # Get a list of workflow names in export.
+        wf_names = [w.get(ResilientObjMap.WORKFLOWS) for w in jinja_data.get("workflows")]
+
         for w in jinja_data.get("workflows"):
+            # Get workflow name
+            wf_name = w.get(ResilientObjMap.WORKFLOWS)
 
             # Generate wf_xx.md file name
-            file_name = u"wf_{0}.md".format(w.get(ResilientObjMap.WORKFLOWS))
+            # Don't add prefix if workflow name already begins with "wf_".
+            if re.search(r"^wf_", wf_name):
+                file_name = u"{0}.md".format(wf_name)
+            else:
+                file_name = u"wf_{0}.md".format(wf_name)
+                # Check if file_name without extension already exists in workflow names list.
+                if os.path.splitext(file_name)[0] in wf_names:
+                    raise SDKException(u"File name '{0}' already in use please recreate the workflow '{1}'."
+                                       .format(file_name, wf_name))
 
             # Add workflow to data directory
             package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
