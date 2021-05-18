@@ -44,7 +44,6 @@ setup(
     long_description_content_type='text/markdown',
     install_requires=[
         'bs4',
-        'resilient_circuits>=30.0.0',
         'six'
     ],
     packages=find_packages(),
