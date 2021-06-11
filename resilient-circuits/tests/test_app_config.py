@@ -6,6 +6,7 @@ import copy
 import sys
 import pytest
 from resilient_circuits.app import AppArgumentParser
+from resilient_circuits.validate_configs import MAX_NUM_WORKERS
 from tests.shared_mock_data import mock_paths
 
 
@@ -28,8 +29,8 @@ def test_num_workers(fx_clear_cmd_line_args):
     assert opts.get("num_workers") == 30
 
     # Test if over limit
-    sys.argv.extend(["--num-workers", "101"])
-    with pytest.raises(ValueError, match=r"num_workers must be in the range 1 <= 100"):
+    sys.argv.extend(["--num-workers", str(MAX_NUM_WORKERS+1)])
+    with pytest.raises(ValueError, match=r"num_workers must be in the range .*"):
         AppArgumentParser(config_file=mock_paths.MOCK_APP_CONFIG).parse_args()
 
 

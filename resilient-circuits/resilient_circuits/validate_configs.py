@@ -4,10 +4,12 @@
 
 """Contains a dict to validate the app configs"""
 
+MAX_NUM_WORKERS=200
+
 VALIDATE_DICT = {
     "num_workers": {
         "required": False,
-        "valid_condition": lambda c: True if c >= 1 and c <= 100 else False,
-        "invalid_msg": "num_workers must be in the range 1 <= 100"
+        "valid_condition": lambda c: True if c >= 1 and c <= MAX_NUM_WORKERS else False,
+        "invalid_msg": "num_workers must be in the range 1 <= {}".format(MAX_NUM_WORKERS)
     }
 }
