@@ -5,3 +5,5 @@
 INBOUND_MSG_DEST_PREFIX = "inbound_destinations"
 INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_FUNCTION_PAYLOAD_VERSION = 2.0
+
+MAX_NUM_WORKERS=200

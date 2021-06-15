@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+from .constants import MAX_NUM_WORKERS
 """Contains a dict to validate the app configs"""
-
-MAX_NUM_WORKERS=200
 
 VALIDATE_DICT = {
     "num_workers": {
