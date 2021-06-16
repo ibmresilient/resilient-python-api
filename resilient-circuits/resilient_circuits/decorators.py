@@ -183,6 +183,8 @@ class inbound_app(object):
             yield ia_result.value
 
         return inbound_app_decorator
+
+
 class app_function(object):
     """
     Creates new a Next Generation Function (@app_function) Handler.
