@@ -137,6 +137,9 @@ class RequestsCommon:
             log and log.error(msg)
             raise IntegrationError(msg)
 
+    # Create alias for execute_call_v2
+    execute = execute_call_v2
+
     @deprecated("Use the new method execute_call_v2()")
     def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
