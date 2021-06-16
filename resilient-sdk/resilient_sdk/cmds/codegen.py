@@ -372,12 +372,8 @@ class CmdCodegen(BaseCmd):
                     raise SDKException(u"File name '{0}' already in use please rename the function '{1}'."
                                        .format(file_name, fn_name))
 
-            # If in dev mode add an 'atomic function' to 'components' directory else add a 'normal function'
-            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
-                package_mapping_dict[package_name]["components"][file_name] = ("package/components/atomic_function.py.jinja2", f)
-
-            else:
-                package_mapping_dict[package_name]["components"][file_name] = ("package/components/function.py.jinja2", f)
+            # Add an 'atomic function' to 'components' directory else add a 'normal function'
+            package_mapping_dict[package_name]["components"][file_name] = ("package/components/atomic_function.py.jinja2", f)
 
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
