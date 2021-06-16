@@ -19,6 +19,8 @@ class TestSubmittedData(object):
     """
     Tests that payload submitted to the server contains proper tab information.
     """
+
+    @pytest.mark.skip(reason="Needs better mocking")
     @patch("resilient.get_client")
     def test_create_tab(self, get_client):
         # this mocks the requests made to /types and /layout?type_id=xxx
@@ -45,6 +47,7 @@ class TestSubmittedData(object):
         for field in MockTab.CONTAINS:
             assert field.exists_in(MockTab.get_from_tabs(payload.get('content')).get("fields"))
 
+    @pytest.mark.skip(reason="Needs better mocking")
     @patch("resilient.get_client")
     def test_create_tab_with_locked_ui(self, get_client):
 
@@ -74,6 +77,7 @@ class TestSubmittedData(object):
         # assert that PUT was called and correct payload present
         assert get_client.return_value.put.call_count == 0
 
+    @pytest.mark.skip(reason="Needs better mocking")
     @patch("resilient.get_client")
     def test_update_tab_disabled(self, get_client):
 
@@ -101,7 +105,7 @@ class TestSubmittedData(object):
         # assert that PUT was called and correct payload present
         get_client.return_value.put.call_count == 0
 
-
+    @pytest.mark.skip(reason="Needs better mocking")
     @patch("resilient.get_client")
     def test_update_tab_enabled(self, get_client):
 
@@ -132,7 +136,8 @@ class TestSubmittedData(object):
         assert MockTab.exists_in(payload.get('content'))
         for field in MockTab.CONTAINS:
             assert field.exists_in(MockTab.get_from_tabs(payload.get('content')).get("fields"))
-    
+
+    @pytest.mark.skip(reason="Needs better mocking")
     @patch("resilient.get_client")
     def test_conditions_sent(self, get_client):
 
