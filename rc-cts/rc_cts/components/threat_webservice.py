@@ -36,6 +36,7 @@ Searchers register to a single path, e.g. '/cts/gsb' for the Google Safe Browsin
 import json
 import logging
 from collections import namedtuple
+from distutils.util import strtobool
 from uuid import UUID, uuid4, uuid5
 from cachetools import TTLCache
 from pkg_resources import Requirement, resource_filename
@@ -54,7 +55,7 @@ LOG = logging.getLogger(__name__)
 ConfigKey = namedtuple("ConfigKey", "key default")
 CONFIG_SECTION = "custom_threat_service"
 CONFIG_URLBASE = ConfigKey(key="urlbase", default="/cts")
-CONFIG_UPLOAD_FILE = ConfigKey(key="upload_file", default=False)
+CONFIG_UPLOAD_FILE = ConfigKey(key="upload_file", default="False")
 CONFIG_FIRST_RETRY_SECS = ConfigKey(key="first_retry_secs", default=0)
 CONFIG_LATER_RETRY_SECS = ConfigKey(key="later_retry_secs", default=0)
 CONFIG_CACHE_SIZE = ConfigKey(key="cache_size", default=10000)
@@ -169,7 +170,7 @@ class CustomThreatService(BaseController):
 
         # Do we support "file-content" artifacts?  Default is no.
         # TODO add implementation support to parse the file content
-        self.support_upload_file = bool(self.options.get(CONFIG_UPLOAD_FILE.key, CONFIG_UPLOAD_FILE.default))
+        self.support_upload_file = strtobool(self.options.get(CONFIG_UPLOAD_FILE.key, CONFIG_UPLOAD_FILE.default))
 
         # Default time that this service will tell Resilient to retry
         self.first_retry_secs = int(self.options.get(CONFIG_FIRST_RETRY_SECS.key, CONFIG_FIRST_RETRY_SECS.default)) or 5
@@ -202,7 +203,7 @@ class CustomThreatService(BaseController):
         Options indicate to Resilient whether file upload is supported.
         """
         LOG.info(event.args[0])
-        options = {"upload_file": self.support_upload_file}
+        options = {"upload_file": bool(self.support_upload_file)}
         return options
 
     @exposeWeb("POST")
@@ -258,7 +259,7 @@ class CustomThreatService(BaseController):
             err = "Invalid request: {}".format(json.dumps(body))
             LOG.warn(err)
             return {"id": str(uuid4()), "hits": []}
-        
+
         # Generate a request ID, derived from the artifact being requested.
         request_id = str(uuid5(self.namespace, json.dumps(body)))
         artifact_type = body.get("type", "unknown")
