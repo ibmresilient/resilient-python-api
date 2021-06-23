@@ -200,7 +200,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         # P O S T
         # test json argument without headers
-        resp = rc.execute_call_v2("post", "/".join((URL, "post")), json=payload)
+        resp = rc.execute("post", "/".join((URL, "post")), json=payload)
         print (resp.json())
         self.assertEqual(resp.json()["json"].get("body"), "bar")
 
@@ -213,7 +213,7 @@ class TestFunctionRequests(unittest.TestCase):
         headers_data = {
             "Content-type": "application/x-www-form-urlencoded"
         }
-        resp = rc.execute_call_v2("post", "/".join((URL, "post")), data=payload, headers=headers_data)
+        resp = rc.execute("post", "/".join((URL, "post")), data=payload, headers=headers_data)
         print (resp.json())
         self.assertEqual(resp.json()['json'].get("body"), "bar")
 
@@ -224,7 +224,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         # P U T
         # With params
-        resp = rc.execute_call_v2("put", "/".join((URL, "put")), params=payload, headers=headers)
+        resp = rc.execute("put", "/".join((URL, "put")), params=payload, headers=headers)
         TestFunctionRequests.LOG.info(resp)
         self.assertTrue(resp.json()['args'].get("title"))
         self.assertEqual(resp.json()['args'].get("title"), 'foo')

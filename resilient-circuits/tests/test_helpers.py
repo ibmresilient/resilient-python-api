@@ -4,7 +4,8 @@
 
 import pkg_resources
 import pytest
-from resilient_circuits import helpers, function, ResilientComponent
+from resilient_circuits import helpers, constants, function, ResilientComponent
+from tests import mock_constants, MockInboundAppComponent
 
 
 def test_get_fn_names():
@@ -32,6 +33,14 @@ def test_get_fn_names():
             @function("mock_fn_3a", "mock_fn_3b")
             def _other_name_a(self):
                 return True
+
+
+def test_get_handlers_inbound_handler():
+    mock_cmp_class = MockInboundAppComponent(mock_constants.MOCK_OPTS)
+    mock_handlers = helpers.get_handlers(mock_cmp_class, "inbound_handler")
+    assert isinstance(mock_handlers, list)
+    assert mock_handlers[0][0] == "_inbound_app_mock_one"
+    assert mock_handlers[0][1].channel == "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, "mock_inbound_q")
 
 
 def test_check_exists():
@@ -126,3 +135,13 @@ def test_remove_tag():
     assert new_res_obj.get("tags") == []
     assert new_res_obj.get("functions", [])[0].get("tags") == []
     assert new_res_obj.get("workflows", []).get("nested_2")[0].get("tags") == []
+
+
+def test_get_queue(caplog):
+    assert helpers.get_queue("/queue/actions.201.fn_main_mock_integration") == ("actions", "201", "fn_main_mock_integration")
+    assert helpers.get_queue("/queue/inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
+    assert helpers.get_queue("inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
+    assert helpers.get_queue("111.inbound_app_mock") is None
+    assert helpers.get_queue("") is None
+    assert helpers.get_queue(None) is None
+    assert "Could not get queue name" in caplog.text

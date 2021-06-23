@@ -48,6 +48,39 @@ def get_fn_names(component):
     return fn_names
 
 
+def get_handlers(component, handler_type="inbound_handler"):
+    """If `component` has a `handler_type` attribute and it is True,
+    appends a tuple to the handlers list and returns the list,
+    else returns an empty list.
+
+    Return example:
+        -  `[(<method_name>, <method>, <handler_type>)]`
+        -  `[('_inbound_app_mock_one', <function InboundAppComponent._inbound_app_mock_one at 0x10ccc9510>, 'inbound_handler')]`
+
+    :param component: the component object to check if it's methods is a `handler_type`
+    :type component: object
+    :return: handlers: the name in each function handler in the component if found
+    :rtype: list of tuples
+    """
+
+    assert isinstance(component, object)
+    assert isinstance(handler_type, str)
+
+    handlers = []
+
+    # Get a list of callable methods for this object
+    methods = [a for a in dir(component) if callable(getattr(component, a))]
+
+    for m in methods:
+        this_method = getattr(component, m)
+        is_handler = getattr(this_method, handler_type, False)
+
+        if is_handler:
+            handlers.append((m, this_method, handler_type))
+
+    return handlers
+
+
 def check_exists(key, dict_to_check):
     """Returns the value of the key in dict_to_check if found,
     else returns False. If dict_to_check is None, returns False
@@ -204,3 +237,31 @@ def remove_tag(original_res_obj):
                 new_res_obj[obj_name] = remove_tag(obj_value)
 
     return new_res_obj
+
+
+def get_queue(destination):
+    """
+    Return a tuple (queue_type, org_id, queue_name).
+    Returns None if fails to get queue
+
+    :param destination: str in the format '/queue/actions.201.fn_main_mock_integration'
+    :type destination: str
+    :return: queue: (queue_type, org_id, queue_name) e.g. ('actions', '201', 'fn_main_mock_integration')
+    :rtype: tuple
+    """
+
+    try:
+        assert isinstance(destination, str)
+
+        regex = re.compile(r'\/.+\/')
+
+        destination = re.sub(regex, "", destination, count=1)
+        q = destination.split(".")
+
+        assert len(q) == 3
+
+        return (tuple(q))
+
+    except AssertionError as e:
+        LOG.error("Could not get queue name\n%s", str(e))
+        return None

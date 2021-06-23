@@ -10,6 +10,7 @@ import traceback
 import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
+from resilient_circuits import constants, helpers
 
 LOG = logging.getLogger(__name__)
 
@@ -87,11 +88,44 @@ class ComponentLoader(Loader):
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
         ep = None
         try:
-            return [ep.load() for ep in entry_points if ep.name not in self.noload]
-        except ImportError:
-            LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
-            raise
+            return_list = []
+            # Loop entry points
+            for ep in entry_points:
+                if ep.name not in self.noload:
 
+                    # Load the component class
+                    cmp_class = ep.load()
+
+                    # Get the class' __module__ name
+                    # Note: the name used for the app.config section of this app should be the same as the __module__
+                    cmp_module_name = cmp_class.__module__.split(".")[0]
+
+                    # If an INBOUND_MSG_APP_CONFIG_Q_NAME is defined in the app.config in the section for this app, use it
+                    custom_q_name = self.opts.get(cmp_module_name, {}).get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME, "")
+
+                    if custom_q_name:
+                        # Get the inbound_handlers in this component and overwite their 'channel' and 'names' attributes
+                        inbound_handlers = helpers.get_handlers(cmp_class, handler_type="inbound_handler")
+                        for ih in inbound_handlers:
+
+                            new_channel = "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, custom_q_name)
+                            new_names = (custom_q_name, )
+
+                            if sys.version_info.major < 3:
+                                # Handle PY < 3
+                                ih[1].__func__.channel = new_channel
+                                ih[1].__func__.names = new_names
+                            else:
+                                # Handle PY >= 3 specific imports
+                                ih[1].channel = new_channel
+                                ih[1].names = new_names
+
+                    return_list.append(cmp_class)
+            return return_list
+
+        except ImportError as e:
+            LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
+            raise e
 
     def _register_components(self, component_list):
         """ register all installed components and ones from componentsdir """
