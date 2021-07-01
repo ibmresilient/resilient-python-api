@@ -3,7 +3,6 @@
 # pragma pylint: disable=unused-argument, no-self-use
 import resilient
 import copy
-from resilient_circuits.app import AppArgumentParser
 from resilient_lib.components.resilient_common import str_to_bool
 import logging
 
@@ -124,7 +123,7 @@ def permission_to_edit(tab, opts):
     return True
 
 
-def create_tab(tab, update_existing=False):
+def create_tab(tab, opts, update_existing=False):
     """
     If allowed by app.config - creates or updates a tab in the UI according to the
     specification passed in the class.
@@ -136,7 +135,6 @@ def create_tab(tab, update_existing=False):
     Either simply leave it alone, or go through required elements and add those that are missing.
     """
     try:
-        opts = _get_opts()
         if not permission_to_edit(tab, opts):
             LOG.info("No permission to edit UI for {}".format(tab.SECTION))
             return
@@ -156,10 +154,3 @@ def create_tab(tab, update_existing=False):
     except Exception as e:
         LOG.error("Failed to create/update tab in the UI for {}".format(tab.SECTION))
         LOG.error(str(e))
-
-
-def _get_opts():
-    """
-    Gets options from AppArgumentParser in the same manner as circuits does.
-    """
-    return AppArgumentParser().parse_args()
