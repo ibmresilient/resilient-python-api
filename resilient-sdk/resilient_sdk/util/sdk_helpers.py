@@ -36,8 +36,8 @@ else:
 
 LOGGER_NAME = "resilient_sdk_log"
 ENV_VAR_DEV = "RES_SDK_DEV"
-RESILIENT_LIBRARIES_VERSION = "41.0.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "41.0.0"
+RESILIENT_LIBRARIES_VERSION = "42.0.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "42.0.0"
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
