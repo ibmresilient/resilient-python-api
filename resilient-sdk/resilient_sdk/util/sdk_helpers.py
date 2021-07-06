@@ -38,6 +38,7 @@ LOGGER_NAME = "resilient_sdk_log"
 ENV_VAR_DEV = "RES_SDK_DEV"
 RESILIENT_LIBRARIES_VERSION = "42.0.0"
 RESILIENT_LIBRARIES_VERSION_DEV = "42.0.0"
+MIN_SUPPORTED_PY_VERSION = (3, 6)
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
@@ -982,3 +983,12 @@ def get_resilient_libraries_version_to_use():
         return RESILIENT_LIBRARIES_VERSION_DEV
     else:
         return RESILIENT_LIBRARIES_VERSION
+
+
+def is_python_min_supported_version():
+    """
+    Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
+    """
+    if sys.version_info < MIN_SUPPORTED_PY_VERSION:
+        LOG.warning("WARNING: this package can only be installed on a Python Environment >= {0}.{1} "
+                    "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
