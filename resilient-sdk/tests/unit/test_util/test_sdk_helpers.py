@@ -377,7 +377,7 @@ def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
 
 
 def test_is_python_min_supported_version(caplog):
-    mock_log = "WARNING: this package can only be installed on a Python Environment >="
+    mock_log = "WARNING: this package should only be installed on a Python Environment >="
 
     sdk_helpers.is_python_min_supported_version()
 

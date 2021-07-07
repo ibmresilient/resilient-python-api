@@ -990,5 +990,5 @@ def is_python_min_supported_version():
     Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
     """
     if sys.version_info < MIN_SUPPORTED_PY_VERSION:
-        LOG.warning("WARNING: this package can only be installed on a Python Environment >= {0}.{1} "
+        LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
                     "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
