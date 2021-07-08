@@ -4,6 +4,7 @@
 
 import requests
 import logging
+from resilient import is_env_proxies_set
 from resilient_lib.components.integration_errors import IntegrationError
 from resilient_lib.util.lib_common import deprecated
 
@@ -33,6 +34,10 @@ class RequestsCommon:
     def get_proxies(self):
         """ proxies can be specified globally for all integrations or specifically per function """
         proxies = None
+
+        if is_env_proxies_set():
+            return proxies
+
         if self.integration_options and (self.integration_options.get("http_proxy") or self.integration_options.get("https_proxy")):
             proxies = {'http': self.integration_options.get("http_proxy"), 'https': self.integration_options.get("https_proxy")}
 
