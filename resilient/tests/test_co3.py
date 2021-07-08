@@ -22,7 +22,7 @@ def mock_os_path_not_exists(path):
 def mock_makedirs(dir):
     pass
 
-class TestCo3:
+class xTestCo3:
     """Basic API tests"""
 
     def test_doctest(self):
@@ -117,7 +117,7 @@ class TestCo3:
                 assert False
 
 
-class TestCo3Patch:
+class xTestCo3Patch:
     """Tests for patch, create_patch, and get_patch methods"""
     def _connect(self, co3_args):
         uri = "https://{0}:{1}".format(co3_args.host, co3_args.port or 443)
