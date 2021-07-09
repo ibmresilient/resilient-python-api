@@ -19,7 +19,7 @@ else:
 
 LOG = logging.getLogger(__name__)
 
-CHARS_TO_MASK = [("?", "%3F"), ("#", "%23")]
+CHARS_TO_MASK = [("?", "%3F"), ("#", "%23"), ("/", "%2F")]
 MASK = "_*_{0}_*_"
 
 
@@ -123,7 +123,7 @@ def get_and_parse_proxy_env_var(var_to_get=constants.ENV_HTTP_PROXY):
     var = os.getenv(var_to_get)
 
     if not var:
-        return None
+        return {}
 
     var = mask_special_chars(var)
     var = unquote_str(var)

@@ -22,7 +22,7 @@ def test_unquote_str():
 
 
 def test_get_and_parse_proxy_env_var_not_set():
-    assert helpers.get_and_parse_proxy_env_var() is None
+    assert helpers.get_and_parse_proxy_env_var() == {}
 
 
 def test_get_and_parse_proxy_env_var(fx_add_proxy_env_var):
@@ -40,4 +40,4 @@ def test_get_and_parse_proxy_env_var_with_user(fx_add_proxy_env_var_with_user):
     assert proxy_details["hostname"] == "192.168.0.5"
     assert proxy_details["port"] == 3128
     assert proxy_details["username"] == "mockusername"
-    assert proxy_details["password"] == """mockpw1234567890!@@@@#$%^&*()-+_=[]{;\'\\}:"|,<>?`~"""
+    assert proxy_details["password"] == """mockpw1234567890!@@@@#$%^&*()-+_=[]{;\'\\}:"/|,<>?`~"""
