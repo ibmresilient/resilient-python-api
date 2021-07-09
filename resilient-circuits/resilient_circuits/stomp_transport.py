@@ -6,6 +6,7 @@ import ssl
 import socket
 from stompest.sync.transport import StompFrameTransport
 from stompest.error import StompConnectionError
+from resilient import constants, helpers
 
 LOG = logging.getLogger(__name__)
 
@@ -44,6 +45,16 @@ class EnhancedStompFrameTransport(StompFrameTransport):
             # This is actually a dictionary of ssl parameters for wrapping the socket
             ssl_params = self.sslContext
             self.sslContext = None
+
+        proxy_details = helpers.get_and_parse_proxy_env_var(constants.ENV_HTTP_PROXY)
+
+        if helpers.is_env_proxies_set() and proxy_details:
+
+            # TODO: if proxy_details.get("hostname", "") not in NO_PROXY
+            self.proxy_host = proxy_details.get("hostname", "")
+            self.proxy_port = proxy_details.get("port")
+            self.proxy_user = proxy_details.get("username", "")
+            self.proxy_password = proxy_details.get("password", "")
 
         try:
             if self.proxy_host:
