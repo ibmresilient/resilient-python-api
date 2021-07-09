@@ -19,6 +19,60 @@ else:
 
 LOG = logging.getLogger(__name__)
 
+CHARS_TO_MASK = [("?", "%3F"), ("#", "%23")]
+MASK = "_*_{0}_*_"
+
+
+def mask_special_chars(s):
+    """
+    For any chars in CHARS_TO_MASK found in s
+    replace them with their mask: _*_<URL Encoding minus the %>_*_
+
+    Example:
+    ```
+    s = 'http://mockusername:mockpw%23%24%25%5E%26%2A%28%29-%2B_%3F%60%7E@192.168.0.5:3128'
+    s = mask_special_chars(s)
+    print(s)
+    >>> 'http://mockusername:mockpw_*_23_*_%24%25%5E%26%2A%28%29-%2B__*_3F_*_%60%7E@192.168.0.5:3128'
+    ```
+    :param s: The string a urlencoded sting that may have characters to mask
+    :type s: str
+    :return: s replacing and special chars with their respective mask
+    :rtype: str
+    """
+    if not s:
+        return ""
+
+    for c in CHARS_TO_MASK:
+        mask = MASK.format(c[1][1:])
+        s = s.replace(c[1], mask)
+    return s
+
+
+def unmask_special_chars(s):
+    """
+    Find any masked chars in s and replace them with their
+    equivlent original character
+    Example:
+    ```
+    s = 'mockpw_*_23_*_$%^&*()_*_3F_*_`~'
+    s = unmask_special_chars(s)
+    print(s)
+    >>> 'mockpw#$%^&*()?`~'
+    ```
+    :param s: The string wanting to unmask
+    :type s: str
+    :return: s replaced with original chars if any
+    :rtype: str
+    """
+    if not s:
+        return ""
+
+    for c in CHARS_TO_MASK:
+        mask = MASK.format(c[1][1:])
+        s = s.replace(mask, c[0])
+    return s
+
 
 def is_env_proxies_set():
     """
@@ -48,3 +102,37 @@ def unquote_str(s):
         return ""
 
     return unquote(s)
+
+
+def get_and_parse_proxy_env_var(var_to_get=constants.ENV_HTTP_PROXY):
+    """
+    Get the `var_to_get` environment variable,
+    and parse it returning a dictionary with the attributes:
+    `scheme`, `hostname`, `port`, `username` and `password`
+
+    `username` and `password` will be empty strings if not provided in the var
+
+    `var_to_get` is by default HTTP_PROXY
+
+    :param var_to_get: A str of the name of the env var to get and parse
+    :type var_to_get: str
+    :return: a dict included attributes with information of the proxy
+    :rtype: dict
+    """
+
+    var = os.getenv(var_to_get)
+
+    if not var:
+        return None
+
+    var = mask_special_chars(var)
+    var = unquote_str(var)
+    parsed_var = urlparse(var)
+
+    return {
+        "scheme": parsed_var.scheme,
+        "hostname": parsed_var.hostname,
+        "port": parsed_var.port,
+        "username": unmask_special_chars(parsed_var.username),
+        "password": unmask_special_chars(parsed_var.password)
+    }
