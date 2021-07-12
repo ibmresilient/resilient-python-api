@@ -43,6 +43,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     install_requires=[
+        'resilient>=42.0.0',
         'bs4',
         'six'
     ],
