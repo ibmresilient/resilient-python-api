@@ -143,7 +143,7 @@ def is_in_no_proxy(host, no_proxy_var=constants.ENV_NO_PROXY):
     Return True if `host` is found in `no_proxy_var`
     else returns False
 
-    :param host: must be a str and a fully qualified domain name of an IPv4 Address
+    :param host: must be a str and a fully qualified domain name or an IPv4 Address
     :type host: str
     :return: a bool whether or not `host` is in NO_PROXY env var
     :rtype: bool
