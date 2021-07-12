@@ -50,7 +50,7 @@ class EnhancedStompFrameTransport(StompFrameTransport):
 
         if helpers.is_env_proxies_set() and proxy_details:
 
-            if helpers.is_in_no_proxy(proxy_details.get("hostname", "")):
+            if helpers.is_in_no_proxy(self.host):
                 self.proxy_host = None
                 self.proxy_port = None
                 self.proxy_user = None
