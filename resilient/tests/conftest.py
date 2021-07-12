@@ -57,7 +57,7 @@ def fx_add_proxy_env_var():
     """
     os.environ[constants.ENV_HTTPS_PROXY] = "https://192.168.0.5:3128"
     os.environ[constants.ENV_HTTP_PROXY] = "http://192.168.0.5:3128"
-    os.environ[constants.ENV_NO_PROXY] = "example.com"
+    os.environ[constants.ENV_NO_PROXY] = "subdomain.example.com,192.168.1.5,.example.com"
 
     yield
 
@@ -74,7 +74,7 @@ def fx_add_proxy_env_var_with_user():
     """
     os.environ[constants.ENV_HTTPS_PROXY] = "https://mockusername:mockpw1234567890%21%40%23%24%25%5E%26%2A%28%29-%2B_%3D%5B%5D%7B%3B%27%5C%7D%3A%22%2F%7C%2C%3C%3E%3F%60%7E@192.168.0.5:3128"
     os.environ[constants.ENV_HTTP_PROXY] = "http://mockusername:mockpw1234567890%21%40%40%40%40%23%24%25%5E%26%2A%28%29-%2B_%3D%5B%5D%7B%3B%27%5C%7D%3A%22%2F%7C%2C%3C%3E%3F%60%7E@192.168.0.5:3128"
-    os.environ[constants.ENV_NO_PROXY] = "example.com"
+    os.environ[constants.ENV_NO_PROXY] = "subdomain.example.com,192.168.1.5,.example.com"
 
     yield
 

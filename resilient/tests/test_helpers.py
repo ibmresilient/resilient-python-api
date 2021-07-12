@@ -41,3 +41,19 @@ def test_get_and_parse_proxy_env_var_with_user(fx_add_proxy_env_var_with_user):
     assert proxy_details["port"] == 3128
     assert proxy_details["username"] == "mockusername"
     assert proxy_details["password"] == """mockpw1234567890!@@@@#$%^&*()-+_=[]{;\'\\}:"/|,<>?`~"""
+
+
+def test_is_in_no_proxy(fx_add_proxy_env_var):
+    assert helpers.is_in_no_proxy("subdomain.example.com") is True
+    assert helpers.is_in_no_proxy("192.168.1.5") is True
+    assert helpers.is_in_no_proxy("domain.not.in.com") is False
+    assert helpers.is_in_no_proxy("") is False
+    assert helpers.is_in_no_proxy(None) is False
+
+
+def test_no_proxy_is_not_set():
+    assert helpers.is_in_no_proxy("subdomain.example.com") is False
+    assert helpers.is_in_no_proxy("192.168.1.5") is False
+    assert helpers.is_in_no_proxy("domain.not.in.com") is False
+    assert helpers.is_in_no_proxy("") is False
+    assert helpers.is_in_no_proxy(None) is False

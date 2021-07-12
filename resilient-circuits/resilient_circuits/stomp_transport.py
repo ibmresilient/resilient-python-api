@@ -50,17 +50,24 @@ class EnhancedStompFrameTransport(StompFrameTransport):
 
         if helpers.is_env_proxies_set() and proxy_details:
 
-            # TODO: if proxy_details.get("hostname", "") not in NO_PROXY
-            self.proxy_host = proxy_details.get("hostname", "")
-            self.proxy_port = proxy_details.get("port")
-            self.proxy_user = proxy_details.get("username", "")
-            self.proxy_password = proxy_details.get("password", "")
+            if helpers.is_in_no_proxy(proxy_details.get("hostname", "")):
+                self.proxy_host = None
+                self.proxy_port = None
+                self.proxy_user = None
+                self.proxy_password = None
+
+            else:
+                self.proxy_host = proxy_details.get("hostname", "")
+                self.proxy_port = proxy_details.get("port")
+                self.proxy_user = proxy_details.get("username", "")
+                self.proxy_password = proxy_details.get("password", "")
 
         try:
             if self.proxy_host:
                 LOG.info("Connecting through proxy %s", self.proxy_host)
                 import socks
                 self._socket = socks.socksocket()
+                # TODO: add logic to support HTTPS proxy
                 self._socket.set_proxy(socks.HTTP, self.proxy_host, self.proxy_port, True,
                                        username=self.proxy_user, password=self.proxy_password)
             else:

@@ -136,3 +136,27 @@ def get_and_parse_proxy_env_var(var_to_get=constants.ENV_HTTP_PROXY):
         "username": unmask_special_chars(parsed_var.username),
         "password": unmask_special_chars(parsed_var.password)
     }
+
+
+def is_in_no_proxy(host, no_proxy_var=constants.ENV_NO_PROXY):
+    """
+    Return True if `host` is found in `no_proxy_var`
+    else returns False
+
+    :param host: must be a str and a fully qualified domain name of an IPv4 Address
+    :type host: str
+    :return: a bool whether or not `host` is in NO_PROXY env var
+    :rtype: bool
+    """
+    if not host or not isinstance(host, str):
+        return False
+
+    no_proxy = os.getenv(no_proxy_var)
+
+    if not no_proxy or not isinstance(no_proxy, str):
+        return False
+
+    if host in no_proxy:
+        return True
+
+    return False
