@@ -6,6 +6,7 @@ import ssl
 import socket
 from stompest.sync.transport import StompFrameTransport
 from stompest.error import StompConnectionError
+import socks
 from resilient import constants, helpers
 
 LOG = logging.getLogger(__name__)
@@ -46,7 +47,11 @@ class EnhancedStompFrameTransport(StompFrameTransport):
             ssl_params = self.sslContext
             self.sslContext = None
 
-        proxy_details = helpers.get_and_parse_proxy_env_var(constants.ENV_HTTP_PROXY)
+        proxy_details = helpers.get_and_parse_proxy_env_var(constants.ENV_HTTPS_PROXY)
+        proxy_type = socks.HTTP
+
+        if not proxy_details:
+            proxy_details = helpers.get_and_parse_proxy_env_var(constants.ENV_HTTP_PROXY)
 
         if helpers.is_env_proxies_set() and proxy_details:
 
@@ -65,10 +70,8 @@ class EnhancedStompFrameTransport(StompFrameTransport):
         try:
             if self.proxy_host:
                 LOG.info("Connecting through proxy %s", self.proxy_host)
-                import socks
                 self._socket = socks.socksocket()
-                # TODO: add logic to support HTTPS proxy
-                self._socket.set_proxy(socks.HTTP, self.proxy_host, self.proxy_port, True,
+                self._socket.set_proxy(proxy_type, self.proxy_host, self.proxy_port, True,
                                        username=self.proxy_user, password=self.proxy_password)
             else:
                 self._socket = socket.socket()
