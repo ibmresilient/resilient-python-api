@@ -7,7 +7,8 @@ import os
 from resilient import parse_parameters, get_config_file
 import resilient_circuits.keyring_arguments as keyring_arguments
 from resilient_circuits.validate_configs import VALIDATE_DICT
-from resilient_circuits import constants, helpers
+from resilient_circuits.helpers import validate_configs
+from resilient_circuits import constants
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
@@ -158,7 +159,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
             parse_parameters(opts)
 
-        helpers.validate_configs(opts, VALIDATE_DICT)
+        validate_configs(opts, VALIDATE_DICT)
 
         return opts
 

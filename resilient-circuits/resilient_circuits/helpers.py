@@ -8,8 +8,7 @@ import pkg_resources
 import logging
 import copy
 import re
-from resilient import get_config_file
-from resilient_circuits.app_argument_parser import AppArgumentParser
+
 
 LOG = logging.getLogger("__name__")
 
@@ -112,6 +111,9 @@ def get_configs(path_config_file=None):
     :return: dictionary of all the configs in the app.config file
     :rtype: dict
     """
+    from resilient import get_config_file
+    from resilient_circuits.app_argument_parser import AppArgumentParser
+
     if not path_config_file:
         path_config_file = get_config_file()
 

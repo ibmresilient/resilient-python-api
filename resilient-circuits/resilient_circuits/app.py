@@ -20,10 +20,10 @@ import os
 import filelock
 from circuits import Manager, BaseComponent, Component, Debugger, Loader
 from resilient import get_config_file
+from resilient_circuits import constants, helpers
 from resilient_circuits.app_argument_parser import AppArgumentParser
 from resilient_circuits.component_loader import ComponentLoader
 from resilient_circuits.actions_component import Actions, ResilientComponent
-from resilient_circuits import constants, helpers
 
 
 application = None
