@@ -1,7 +1,9 @@
+2021-08: version 42.0
+* Support for collecting incident types in codegen and extract. See the command line parameters -i and --incidenttype.
+
 2021-06: version 41.1
 * To address a security vulnerability, the Dockerfile codegen template now assigns user 1001 to the non-root group 1001. User 1001 is used to run a container.
 * Added a new Atomic Function template generated with codegen, which is a condensed version of our Original Function template. It includes comments on best practices.
-
 
 2021-05: version 41.0
 * List all setup.py "install_requires" dependencies in docgen README template
