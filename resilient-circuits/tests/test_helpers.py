@@ -6,6 +6,7 @@ import pkg_resources
 import pytest
 from resilient_circuits import helpers, constants, function, ResilientComponent
 from tests import mock_constants, MockInboundAppComponent
+from tests.shared_mock_data import mock_paths
 
 
 def test_get_fn_names():
@@ -49,6 +50,12 @@ def test_check_exists():
     assert helpers.check_exists("mock", None) is False
     with pytest.raises(AssertionError):
         helpers.check_exists("mock", "abc")
+
+
+def test_get_configs(fx_clear_cmd_line_args):
+    configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG)
+    assert isinstance(configs, dict)
+    assert configs.get("host") == "resilient"
 
 
 def test_validate_configs():
