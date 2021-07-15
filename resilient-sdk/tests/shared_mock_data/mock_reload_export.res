@@ -7484,7 +7484,7 @@
     "name" : "mock_incidenttype_Āā",
     "parent_id" : null,
     "system" : false,
-    "tags" : [ ],
+    "tags": [{"tag_handle": "fn_main_mock_integration", "value": null}],
     "update_date" : 1626202388909,
     "uuid" : "ec3c8e09-11bc-43de-9457-096c2c0fc06e"
   }, {
@@ -7497,7 +7497,7 @@
     "name" : "mock incident type one",
     "parent_id" : null,
     "system" : false,
-    "tags" : [ ],
+    "tags": [{"tag_handle": "fn_main_mock_integration", "value": null}],
     "update_date" : 1626202416869,
     "uuid" : "06fb54fe-0c90-4006-9383-9ef6f180b0b6"
   },

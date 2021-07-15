@@ -496,6 +496,7 @@ class CmdCodegen(BaseCmd):
                 ("rule", "actions"),
                 ("field", "incident_fields"),
                 ("artifacttype", "incident_artifact_types"),
+                ("incidenttype", "incident_types"),
                 ("datatable", "datatables"),
                 ("task", "automatic_tasks"),
                 ("script", "scripts")
