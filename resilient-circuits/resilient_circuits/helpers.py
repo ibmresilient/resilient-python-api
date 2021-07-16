@@ -8,6 +8,8 @@ import pkg_resources
 import logging
 import copy
 import re
+from resilient_circuits import constants
+from resilient import get_client
 
 
 LOG = logging.getLogger("__name__")
@@ -100,7 +102,7 @@ def check_exists(key, dict_to_check):
     return dict_to_check.get(key, False)
 
 
-def get_configs(path_config_file=None):
+def get_configs(path_config_file=None, ALLOW_UNRECOGNIZED=False):
     """
     Gets all the configs that are defined in the app.config file
     Uses the path to the config file from the parameter
@@ -108,6 +110,8 @@ def get_configs(path_config_file=None):
 
     :param path_config_file: path to the app.config to parse
     :type path_config_file: str
+    :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
+    :type ALLOW_UNRECOGNIZED: bool
     :return: dictionary of all the configs in the app.config file
     :rtype: dict
     """
@@ -117,8 +121,24 @@ def get_configs(path_config_file=None):
     if not path_config_file:
         path_config_file = get_config_file()
 
-    configs = AppArgumentParser(config_file=path_config_file).parse_args()
+    configs = AppArgumentParser(config_file=path_config_file).parse_args(ALLOW_UNRECOGNIZED=ALLOW_UNRECOGNIZED)
     return configs
+
+
+def get_resilient_client(path_config_file=None, ALLOW_UNRECOGNIZED=False):
+    """
+    Return a SimpleClient for Resilient REST API using configurations
+    options from provided path_config_file or from ~/.resilient/app.config
+
+    :param path_config_file: path to the app.config to parse
+    :type path_config_file: str
+    :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
+    :type ALLOW_UNRECOGNIZED: bool
+    :return: SimpleClient for Resilient REST API
+    :rtype: SimpleClient
+    """
+    client = get_client(get_configs(path_config_file=path_config_file, ALLOW_UNRECOGNIZED=ALLOW_UNRECOGNIZED))
+    return client
 
 
 def validate_configs(configs, validate_dict):
@@ -200,12 +220,12 @@ def get_env_str(packages):
     :rtype: str
     """
 
-    env_str = u"###############\n\nEnvironment:\n\n"
+    env_str = u"{0}Environment:\n".format(constants.LOG_DIVIDER)
     env_str += u"Python Version: {0}\n\n".format(sys.version)
     env_str += u"Installed packages:\n"
     for pkg in get_packages(packages):
         env_str += u"\n\t{0}: {1}".format(pkg[0], pkg[1])
-    env_str += u"\n###############"
+    env_str += constants.LOG_DIVIDER
     return env_str
 
 

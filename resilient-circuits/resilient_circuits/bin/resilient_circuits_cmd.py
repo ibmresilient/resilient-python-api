@@ -11,10 +11,10 @@ from collections import defaultdict
 import pkg_resources
 import time
 from resilient import get_config_file
-from resilient_circuits import helpers
+from resilient_circuits import helpers, constants
 from resilient_circuits.app import AppArgumentParser
 from resilient_circuits.util.resilient_customize import customize_resilient
-
+from resilient_circuits.cmds import selftest
 
 # What code will be used if any apps tests fail when running resilient-circuits 'selftest'
 SELFTEST_FAILURE_EXIT_CODE = 1
@@ -36,7 +36,7 @@ except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
 
-LOG = logging.getLogger("resilient_circuits_cmd_logger")
+LOG = logging.getLogger(constants.CMDS_LOGGER_NAME)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
@@ -284,7 +284,7 @@ def generate_or_update_config(args):
                 LOG.info(u"No updates.")
 
 
-def selftest(args):
+def selftestb(args):
     """loop through every selftest for every eligible package, call and store returned state,
         print out package and their selftest states"""
 
@@ -501,7 +501,8 @@ def main():
         customize_resilient(args)
 
     elif args.cmd == "selftest":
-        selftest(args)
+        # selftestb(args)
+        selftest.execute_command(args)
 
 
 if __name__ == "__main__":
