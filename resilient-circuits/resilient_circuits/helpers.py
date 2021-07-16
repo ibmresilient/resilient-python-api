@@ -9,6 +9,7 @@ import logging
 import copy
 import re
 
+
 LOG = logging.getLogger("__name__")
 
 
@@ -97,6 +98,27 @@ def check_exists(key, dict_to_check):
     assert isinstance(dict_to_check, dict)
 
     return dict_to_check.get(key, False)
+
+
+def get_configs(path_config_file=None):
+    """
+    Gets all the configs that are defined in the app.config file
+    Uses the path to the config file from the parameter
+    Or uses the `get_config_file()` method in resilient if None
+
+    :param path_config_file: path to the app.config to parse
+    :type path_config_file: str
+    :return: dictionary of all the configs in the app.config file
+    :rtype: dict
+    """
+    from resilient import get_config_file
+    from resilient_circuits.app_argument_parser import AppArgumentParser
+
+    if not path_config_file:
+        path_config_file = get_config_file()
+
+    configs = AppArgumentParser(config_file=path_config_file).parse_args()
+    return configs
 
 
 def validate_configs(configs, validate_dict):
