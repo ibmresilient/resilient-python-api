@@ -22,12 +22,31 @@ ERROR_EXIT_CODES_MAP = {
 
 
 def error_connecting_to_soar_rest(host, reason="Unknown", status_code=20):
+    """
+    Logs the host, reason and error code why it cannot connect to SOAR
+    and exits with the error code defined in ERROR_EXIT_CODES_MAP
+    """
     LOG.info("\nERROR: could not connect to SOAR at '{0}'.\nReason: {1}\nError Code: {2}".format(host, reason, ERROR_EXIT_CODES_MAP.get(status_code, 1)))
     exit(ERROR_EXIT_CODES_MAP.get(status_code, 1))
 
 
 def check_soar_rest_connection(cmd_line_args, app_configs):
+    """
+    Check if we can  successfully get a resilient_client
+    therefore that will tell us if we have configured the app.config
+    file correctly in order to establish a connection and authenticate
+    with SOAR
 
+    :param cmd_line_args: an argparse.Namespace object containing all command line params
+    :type cmd_line_args: argparse.Namespace
+    :param app_configs: a dict of all the configurations in the app.config file
+    :type app_configs: dict
+    :excepts BasicHTTPException: if we cannot authenticate. Exists with 21
+    :excepts SSLError: if the cafile that is supplied is invalid. Exits with 23
+    :excepts Exception: generic error. Also raises if the user is not a member of the current org. Exits with 20
+    :return: Nothing
+
+    """
     LOG.info("{0}Testing REST connection to SOAR{0}".format(constants.LOG_DIVIDER))
 
     host = app_configs.get("host", constants.DEFAULT_NONE_STR)
