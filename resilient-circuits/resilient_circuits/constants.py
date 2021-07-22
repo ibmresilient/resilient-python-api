@@ -12,6 +12,8 @@ INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_FUNCTION_PAYLOAD_VERSION = 2.0
 
 MAX_NUM_WORKERS = 500
+DEFAULT_SELFTEST_TIMEOUT_KEY = "selftest_timeout"
+DEFAULT_SELFTEST_TIMEOUT_VALUE = 10
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
 CMDS_LOGGER_NAME = "resilient_circuits_cmd_logger"

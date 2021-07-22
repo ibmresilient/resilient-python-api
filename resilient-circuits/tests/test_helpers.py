@@ -152,3 +152,14 @@ def test_get_queue(caplog):
     assert helpers.get_queue("") is None
     assert helpers.get_queue(None) is None
     assert "Could not get queue name" in caplog.text
+
+
+def test_is_this_a_selftest():
+    # TODO
+    pass
+
+
+def test_should_timeout():
+    # TODO
+    pass
+

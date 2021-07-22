@@ -8,7 +8,7 @@ from resilient_circuits.cmds import selftest
 
 def test_error_connecting_to_soar_rest(caplog):
     with pytest.raises(SystemExit) as sys_exit:
-        selftest.error_connecting_to_soar_rest("mock_host", status_code=20)
+        selftest.error_connecting_to_soar("mock_host", status_code=20)
 
     assert sys_exit.type == SystemExit
     assert sys_exit.value.code == 20

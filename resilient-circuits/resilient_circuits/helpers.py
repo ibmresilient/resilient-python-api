@@ -8,6 +8,7 @@ import pkg_resources
 import logging
 import copy
 import re
+import time
 from resilient_circuits import constants
 from resilient import get_client
 
@@ -307,3 +308,44 @@ def get_queue(destination):
     except AssertionError as e:
         LOG.error("Could not get queue name\n%s", str(e))
         return None
+
+
+def is_this_a_selftest(component):
+    """
+    Return a True or False if this instantiation of
+    resilient-circuits is from selftest or not.
+
+    :param component: the current component that is calling this method (usually 'self')
+    :type component: circuits.Component
+    :rtype: bool
+    """
+    if component.parent.name == "App" and component.parent.IS_SELFTEST:
+        return True
+
+    return False
+
+
+def should_timeout(start_time, timeout_value):
+    """
+    Returns True if the delta between the
+    start_time and the current_time is greater
+
+    All time values are the time in seconds since
+    the epoch as a floating point number
+
+    :param start_time: the time before the loop starts
+    :type start_time: float
+    :param timeout_value: number of seconds to timeout after
+    :type timeout_value: int/float
+    :rtype: bool
+    """
+
+    current_time = time.time()
+
+    delta = current_time - start_time
+
+    if delta > timeout_value:
+        return True
+
+    else:
+        return False
