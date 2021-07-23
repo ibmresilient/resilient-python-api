@@ -935,7 +935,8 @@ class Actions(ResilientComponent):
     @handler("SelftestTerminateEvent")
     def _selftest_terminate(self):
         """
-        TODO
+        Exits resilient-circuits if a SelftestTerminateEvent
+        is fired
         """
         LOG.info("SelftestTerminateEvent, exiting resilient-circuits")
         raise SystemExit(0)

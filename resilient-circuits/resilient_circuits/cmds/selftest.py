@@ -44,14 +44,14 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
     """
     Check if we can  successfully get a resilient_client
     therefore that will tell us if we have configured the app.config
-    file correctly in order to establish a connection and authenticate
+    file correctly in order to establish a REST connection and authenticate
     with SOAR
 
     :param cmd_line_args: an argparse.Namespace object containing all command line params
     :type cmd_line_args: argparse.Namespace
     :param app_configs: a dict of all the configurations in the app.config file
     :type app_configs: dict
-    :excepts BasicHTTPException: if we cannot authenticate. Exists with 21
+    :excepts BasicHTTPException: if we cannot authenticate. Exits with 21
     :excepts SSLError: if the cafile that is supplied is invalid. Exits with 23
     :excepts Exception: generic error. Also raises if the user is not a member of the current org. Exits with 20
     :return: Nothing
@@ -102,7 +102,19 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
 
 def check_soar_stomp_connection(cmd_line_args, app_configs):
     """
-    TODO
+    Check if we can  successfully start an instance of resilient_circuits
+    therefore that will tell us if we have configured the app.config
+    file correctly in order to establish a STOMP connection and authenticate
+    with SOAR
+
+    :param cmd_line_args: an argparse.Namespace object containing all command line params
+    :type cmd_line_args: argparse.Namespace
+    :param app_configs: a dict of all the configurations in the app.config file
+    :type app_configs: dict
+    :excepts BasicHTTPException: if we cannot authenticate. Exits with 32
+    :excepts Exception: generic error. Exits with 30
+    :return: Nothing
+
     """
     LOG.info("{0}Testing STOMP connection to SOAR{0}".format(constants.LOG_DIVIDER))
 
