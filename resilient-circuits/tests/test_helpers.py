@@ -9,6 +9,9 @@ from resilient_circuits import app, helpers, constants, function, ResilientCompo
 from tests import mock_constants, MockInboundAppComponent
 from tests.shared_mock_data import mock_paths
 
+resilient_mock = mock_constants.RESILIENT_MOCK
+config_data = mock_constants.CONFIG_DATA
+
 
 def test_get_fn_names():
 
@@ -155,14 +158,14 @@ def test_get_queue(caplog):
     assert "Could not get queue name" in caplog.text
 
 
-def test_is_this_a_selftest():
-    resilient_circuits_instance = app.App(ALLOW_UNRECOGNIZED=True, IS_SELFTEST=True)
-    assert helpers.is_this_a_selftest(resilient_circuits_instance.action_component) is True
+def test_is_this_a_selftest(circuits_app):
+    circuits_app.app.IS_SELFTEST = True
+    assert helpers.is_this_a_selftest(circuits_app.app.action_component) is True
 
 
-def test_is_this_not_a_selftest():
-    resilient_circuits_instance = app.App(ALLOW_UNRECOGNIZED=True)
-    assert helpers.is_this_a_selftest(resilient_circuits_instance.action_component) is False
+def test_is_this_not_a_selftest(circuits_app):
+    circuits_app.app.IS_SELFTEST = False
+    assert helpers.is_this_a_selftest(circuits_app.app.action_component) is False
 
 
 def test_should_timeout():
