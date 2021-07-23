@@ -6,6 +6,7 @@ import logging
 import os
 from threading import Thread
 import time
+from collections import defaultdict
 import pkg_resources
 from requests.exceptions import ConnectionError, SSLError
 from resilient import constants as res_constants
@@ -18,12 +19,13 @@ from resilient_circuits import constants, helpers, app
 LOG = logging.getLogger(constants.CMDS_LOGGER_NAME)
 
 ERROR_EXIT_CODES_MAP = {
+    1: 1,       # Error running App's selftest
     20: 20,     # REST: Generic connection error
     401: 21,    # REST: Connection unauthorized
     23: 23,     # REST: SSL Error (Certificate Error)
     30: 30,     # STOMP: Generic connection error
     31: 31,     # STOMP: Not authorized to instansiate STOMP connection
-    32: 32,     # STOMP: Not authorized to read from queue
+    32: 32      # STOMP: Not authorized to read from queue
 }
 
 
@@ -164,17 +166,86 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
     LOG.info("{0}Successfully connected via STOMP!{0}".format(constants.LOG_DIVIDER))
 
 
-def run_apps_selftest(cmd_line_args):
-    # TODO
-    pass
+def run_apps_selftest(cmd_line_args, app_configs):
+    """
+    loop through every selftest for every eligible package, call and store returned state,
+    print out package and their selftest states
+    """
+
+    if hasattr(cmd_line_args, "print_env") and cmd_line_args.print_env:
+        LOG.info(helpers.get_env_str(pkg_resources.working_set))
+
+    components = defaultdict(list)
+
+    # custom entry_point only for selftest functions
+    selftest_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.selftest')]
+    for ep in selftest_entry_points:
+        components[ep.dist].append(ep)
+
+    if len(selftest_entry_points) == 0:
+        LOG.info("No selftest entry points found.")
+        return None
+
+    # make a copy
+    install_list = list(cmd_line_args.install_list) if cmd_line_args.install_list else []
+
+    # Prepare a count of exceptions found with selftests.
+    selftest_failure_count = 0
+
+    for dist, component_list in components.items():
+        if cmd_line_args.install_list is None or dist.project_name in install_list:
+            # remove name from list
+            if dist.project_name in install_list:
+                install_list.remove(dist.project_name)
+
+            LOG.info("{0}Running selftest for: '{1}'{0}".format(constants.LOG_DIVIDER, dist.project_name))
+            # add an entry for the package
+            LOG.info("\n%s: ", dist.project_name)
+            for ep in component_list:
+                # load the entry point
+                f_selftest = ep.load()
+
+                try:
+                    # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
+                    start_time_milliseconds = int(round(time.time() * 1000))
+
+                    status = f_selftest(app_configs)
+
+                    end_time_milliseconds = int(round(time.time() * 1000))
+
+                    delta_milliseconds = end_time_milliseconds - start_time_milliseconds
+                    delta_seconds = delta_milliseconds / 1000
+
+                    state = status.get("state")
+
+                    if isinstance(state, str):
+                        LOG.info("\t%s: %s\n\tselftest output:\n\t%s\n\tElapsed time: %f seconds", ep.name, state, status, delta_seconds)
+
+                        if state.lower() == "failure":
+                            selftest_failure_count += 1
+
+                    else:
+                        LOG.info("\t%s:\n\tUnsupported dictionary returned:\n\t%s\n\tElapsed time: %f seconds", ep.name, status, delta_seconds)
+
+                except Exception as e:
+                    LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
+                    selftest_failure_count += 1
+                    continue
+
+    # any missed packages?
+    if len(install_list):
+        LOG.warning("%s not found. Check package name(s)", install_list)
+
+    # Check if any failures were found and printed to the console
+    if selftest_failure_count:
+        LOG.info("\nERROR: running selftest for App.\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(1, 1)))
+        exit(ERROR_EXIT_CODES_MAP.get(1, 1))
+
+    LOG.info("{0}Successfully ran App's selftest!{0}".format(constants.LOG_DIVIDER))
 
 
 def execute_command(cmd_line_args):
-    """
-    TODO
-    """
-    # TODO: get the app name
-    LOG.info("{0}Running selftest for <App Name> with IBM SOAR{0}".format(constants.LOG_DIVIDER))
+    LOG.info("{0}Running selftest with IBM SOAR{0}".format(constants.LOG_DIVIDER))
 
     if hasattr(cmd_line_args, "print_env") and cmd_line_args.print_env:
         LOG.info("- Printing runtime environment")
@@ -185,5 +256,6 @@ def execute_command(cmd_line_args):
 
     check_soar_rest_connection(cmd_line_args, app_configs)
     check_soar_stomp_connection(cmd_line_args, app_configs)
+    run_apps_selftest(cmd_line_args, app_configs)
 
     LOG.info("{0}selftest complete{0}".format(constants.LOG_DIVIDER))

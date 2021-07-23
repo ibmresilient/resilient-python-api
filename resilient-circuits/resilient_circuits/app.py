@@ -68,7 +68,7 @@ class App(Component):
         self.do_initialization()
 
     def do_initialization(self):
-        self.opts = helpers.get_configs(ALLOW_UNRECOGNIZED=self.ALLOW_UNRECOGNIZED)
+        self.opts = helpers.get_configs(path_config_file=self.config_file, ALLOW_UNRECOGNIZED=self.ALLOW_UNRECOGNIZED)
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file: %s", self.config_file)
