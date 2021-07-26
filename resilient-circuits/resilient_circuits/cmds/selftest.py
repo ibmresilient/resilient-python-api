@@ -82,15 +82,19 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
         res_client = helpers.get_resilient_client(ALLOW_UNRECOGNIZED=True)
 
     except BasicHTTPException as e:
+        # Connection unauthorized
         error_connecting_to_soar(host, e.response.reason, e.response.status_code)
 
     except SSLError as e:
+        # SSL Error (Certificate Error)
         error_connecting_to_soar(host, e, 23)
 
     except ConnectionError as e:
+        # Generic connection error
         error_connecting_to_soar(host, e, 20)
 
     except Exception as e:
+        # Generic connection error (normally related to the user's org membership)
         if hasattr(e, "args") and isinstance(e.args, tuple):
             error_connecting_to_soar(host, e, 20)
 
@@ -104,8 +108,8 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
 
 def check_soar_stomp_connection(cmd_line_args, app_configs):
     """
-    Check if we can  successfully start an instance of resilient_circuits
-    therefore that will tell us if we have configured the app.config
+    Check if we can successfully start an instance of resilient_circuits
+    and therefore that will tell us if we have configured the app.config
     file correctly in order to establish a STOMP connection and authenticate
     with SOAR
 
@@ -151,6 +155,7 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
         LOG.parent.handlers = []
 
         if SELFTEST_ERRORS:
+            # Not authorized to read from queue
             for e in SELFTEST_ERRORS:
                 if b"is not authorized to read from queue" in e:
                     error_connecting_to_soar(host, "{0} is not authorized to read from the App's Message Destination".format(host), 32)
@@ -158,9 +163,11 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
             error_connecting_to_soar(host, u"Unknown STOMP Error: {0}".format(e), 30)
 
     except BasicHTTPException as e:
-        error_connecting_to_soar(host, e.response.reason, 32)
+        # Not authorized to instansiate STOMP connection
+        error_connecting_to_soar(host, e.response.reason, 31)
 
     except Exception as e:
+        # Generic connection error
         error_connecting_to_soar(host, u"Unknown STOMP Error: {0}".format(e), 30)
 
     LOG.info("{0}Successfully connected via STOMP!{0}".format(constants.LOG_DIVIDER))

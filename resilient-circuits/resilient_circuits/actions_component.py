@@ -43,6 +43,7 @@ _idle_timer = None
 # look for unrecoverable errors
 UNRECOVERABLE_ERRORS = ['Already subscribed']
 
+# Errors and Message Destination names will get appended when ran in selftest
 SELFTEST_ERRORS = []
 SELFTEST_SUBSCRIPTIONS = []
 

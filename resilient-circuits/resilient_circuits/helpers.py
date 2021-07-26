@@ -319,10 +319,7 @@ def is_this_a_selftest(component):
     :type component: circuits.Component
     :rtype: bool
     """
-    if component.parent.name == "App" and component.parent.IS_SELFTEST:
-        return True
-
-    return False
+    return bool(component.parent.name == "App" and component.parent.IS_SELFTEST)
 
 
 def should_timeout(start_time, timeout_value):
@@ -339,13 +336,4 @@ def should_timeout(start_time, timeout_value):
     :type timeout_value: int/float
     :rtype: bool
     """
-
-    current_time = time.time()
-
-    delta = current_time - start_time
-
-    if delta > timeout_value:
-        return True
-
-    else:
-        return False
+    return (time.time() - start_time) > timeout_value
