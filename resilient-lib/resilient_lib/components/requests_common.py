@@ -4,7 +4,7 @@
 
 import requests
 import logging
-from resilient import is_env_proxies_set
+from resilient import is_env_proxies_set, get_and_parse_proxy_env_var, constants as res_constants
 from resilient_lib.components.integration_errors import IntegrationError
 from resilient_lib.util.lib_common import deprecated
 
@@ -36,6 +36,14 @@ class RequestsCommon:
         proxies = None
 
         if is_env_proxies_set():
+            proxy_details = get_and_parse_proxy_env_var(res_constants.ENV_HTTPS_PROXY)
+
+            if not proxy_details:
+                proxy_details = get_and_parse_proxy_env_var(res_constants.ENV_HTTP_PROXY)
+
+            if proxy_details:
+                log.debug(u"Sending request through proxy: '{0}://{1}:{2}'".format(proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port")))
+
             return proxies
 
         if self.integration_options and (self.integration_options.get("http_proxy") or self.integration_options.get("https_proxy")):
