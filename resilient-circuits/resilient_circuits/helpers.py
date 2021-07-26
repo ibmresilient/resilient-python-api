@@ -8,6 +8,8 @@ import pkg_resources
 import logging
 import copy
 import re
+from resilient import is_env_proxies_set, get_and_parse_proxy_env_var
+from resilient import constants as res_constants
 
 
 LOG = logging.getLogger("__name__")
@@ -205,6 +207,17 @@ def get_env_str(packages):
     env_str += u"Installed packages:\n"
     for pkg in get_packages(packages):
         env_str += u"\n\t{0}: {1}".format(pkg[0], pkg[1])
+
+    if is_env_proxies_set():
+
+        proxy_details = get_and_parse_proxy_env_var(res_constants.ENV_HTTPS_PROXY)
+
+        if not proxy_details:
+            proxy_details = get_and_parse_proxy_env_var(res_constants.ENV_HTTP_PROXY)
+
+        if proxy_details:
+            env_str += u"\n\nConnecting through proxy: '{0}://{1}:{2}'".format(proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port"))
+
     env_str += u"\n###############"
     return env_str
 
