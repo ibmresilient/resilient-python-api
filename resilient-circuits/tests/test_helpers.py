@@ -125,6 +125,17 @@ def test_env_str():
     assert "\n\tresilient-circuits" in env_str
 
 
+def test_env_str_with_env_var(fx_add_proxy_env_var):
+
+    env_str = helpers.get_env_str(pkg_resources.working_set)
+
+    assert "Environment" in env_str
+    assert "Python Version" in env_str
+    assert "Installed packages" in env_str
+    assert "\n\tresilient-circuits" in env_str
+    assert "Connecting through proxy: 'https://192.168.0.5:3128'" in env_str
+
+
 def test_remove_tag():
 
     mock_res_obj = {

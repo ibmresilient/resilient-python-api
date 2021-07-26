@@ -15,7 +15,7 @@ from .co3 import SimpleClient, \
     get_config_file, \
     get_resilient_circuits_version
 
-from .helpers import is_env_proxies_set
+from .helpers import is_env_proxies_set, get_and_parse_proxy_env_var
 
 from .co3base import ensure_unicode, \
     get_proxy_dict, \

@@ -14,10 +14,12 @@ Note:
     -   Fixture must have BEFORE and AFTER docstring
 """
 
+import os
 import copy
 import sys
 import pytest
 import pkg_resources
+from resilient import constants as res_constants
 
 
 @pytest.fixture
@@ -57,3 +59,20 @@ def fx_add_entry_point(ep_str, path_dist):
     yield
 
     pkg_resources.working_set = original_working_set
+
+
+@pytest.fixture
+def fx_add_proxy_env_var():
+    """
+    Before: set HTTPS_PROXY, HTTP_PROXY and NO_PROXY
+    After: unset HTTPS_PROXY, HTTP_PROXY and NO_PROXY
+    """
+    os.environ[res_constants.ENV_HTTPS_PROXY] = "https://192.168.0.5:3128"
+    os.environ[res_constants.ENV_HTTP_PROXY] = "http://192.168.0.5:3128"
+    os.environ[res_constants.ENV_NO_PROXY] = "subdomain.example.com,192.168.1.5,.example.com"
+
+    yield
+
+    os.environ[res_constants.ENV_HTTPS_PROXY] = ""
+    os.environ[res_constants.ENV_HTTP_PROXY] = ""
+    os.environ[res_constants.ENV_NO_PROXY] = ""
