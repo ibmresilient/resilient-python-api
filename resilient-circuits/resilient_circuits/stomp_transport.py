@@ -50,9 +50,6 @@ class EnhancedStompFrameTransport(StompFrameTransport):
         proxy_details = helpers.get_and_parse_proxy_env_var(constants.ENV_HTTPS_PROXY)
         proxy_type = socks.HTTP
 
-        if not proxy_details:
-            proxy_details = helpers.get_and_parse_proxy_env_var(constants.ENV_HTTP_PROXY)
-
         if helpers.is_env_proxies_set() and proxy_details:
 
             if helpers.is_in_no_proxy(self.host):
