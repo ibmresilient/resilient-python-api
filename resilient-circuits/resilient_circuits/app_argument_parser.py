@@ -149,9 +149,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           help=("Number of FunctionWorkers to use. "
                                 "Number of Functions that can run in parallel"))
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""
-        opts = super(AppArgumentParser, self).parse_args(args, namespace)
+        opts = super(AppArgumentParser, self).parse_args(args, namespace, ALLOW_UNRECOGNIZED)
         if self.config:
             for section in self.config.sections():
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))

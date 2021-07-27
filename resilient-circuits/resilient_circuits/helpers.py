@@ -8,6 +8,9 @@ import pkg_resources
 import logging
 import copy
 import re
+import time
+from resilient_circuits import constants
+from resilient import get_client
 from resilient import is_env_proxies_set, get_and_parse_proxy_env_var
 from resilient import constants as res_constants
 
@@ -102,7 +105,7 @@ def check_exists(key, dict_to_check):
     return dict_to_check.get(key, False)
 
 
-def get_configs(path_config_file=None):
+def get_configs(path_config_file=None, ALLOW_UNRECOGNIZED=False):
     """
     Gets all the configs that are defined in the app.config file
     Uses the path to the config file from the parameter
@@ -110,6 +113,8 @@ def get_configs(path_config_file=None):
 
     :param path_config_file: path to the app.config to parse
     :type path_config_file: str
+    :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
+    :type ALLOW_UNRECOGNIZED: bool
     :return: dictionary of all the configs in the app.config file
     :rtype: dict
     """
@@ -119,8 +124,24 @@ def get_configs(path_config_file=None):
     if not path_config_file:
         path_config_file = get_config_file()
 
-    configs = AppArgumentParser(config_file=path_config_file).parse_args()
+    configs = AppArgumentParser(config_file=path_config_file).parse_args(ALLOW_UNRECOGNIZED=ALLOW_UNRECOGNIZED)
     return configs
+
+
+def get_resilient_client(path_config_file=None, ALLOW_UNRECOGNIZED=False):
+    """
+    Return a SimpleClient for Resilient REST API using configurations
+    options from provided path_config_file or from ~/.resilient/app.config
+
+    :param path_config_file: path to the app.config to parse
+    :type path_config_file: str
+    :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
+    :type ALLOW_UNRECOGNIZED: bool
+    :return: SimpleClient for Resilient REST API
+    :rtype: SimpleClient
+    """
+    client = get_client(get_configs(path_config_file=path_config_file, ALLOW_UNRECOGNIZED=ALLOW_UNRECOGNIZED))
+    return client
 
 
 def validate_configs(configs, validate_dict):
@@ -202,7 +223,7 @@ def get_env_str(packages):
     :rtype: str
     """
 
-    env_str = u"###############\n\nEnvironment:\n\n"
+    env_str = u"{0}Environment:\n".format(constants.LOG_DIVIDER)
     env_str += u"Python Version: {0}\n\n".format(sys.version)
     env_str += u"Installed packages:\n"
     for pkg in get_packages(packages):
@@ -300,3 +321,32 @@ def get_queue(destination):
     except AssertionError as e:
         LOG.error("Could not get queue name\n%s", str(e))
         return None
+
+
+def is_this_a_selftest(component):
+    """
+    Return a True or False if this instantiation of
+    resilient-circuits is from selftest or not.
+
+    :param component: the current component that is calling this method (usually 'self')
+    :type component: circuits.Component
+    :rtype: bool
+    """
+    return bool(component.parent.name == "App" and component.parent.IS_SELFTEST)
+
+
+def should_timeout(start_time, timeout_value):
+    """
+    Returns True if the delta between the
+    start_time and the current_time is greater
+
+    All time values are the time in seconds since
+    the epoch as a floating point number
+
+    :param start_time: the time before the loop starts
+    :type start_time: float
+    :param timeout_value: number of seconds to timeout after
+    :type timeout_value: int/float
+    :rtype: bool
+    """
+    return (time.time() - start_time) > timeout_value
