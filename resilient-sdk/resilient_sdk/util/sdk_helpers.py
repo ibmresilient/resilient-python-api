@@ -35,10 +35,13 @@ else:
     from json.decoder import JSONDecodeError
 
 LOGGER_NAME = "resilient_sdk_log"
+LOG_DIVIDER = "\n------------------------\n"
 ENV_VAR_DEV = "RES_SDK_DEV"
 RESILIENT_LIBRARIES_VERSION = "42.0.0"
 RESILIENT_LIBRARIES_VERSION_DEV = "42.0.0"
 MIN_SUPPORTED_PY_VERSION = (3, 6)
+
+SUB_CMD_PACKAGE = ("--package", "-p")
 
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())

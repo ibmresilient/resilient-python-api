@@ -16,6 +16,7 @@ from resilient_sdk.cmds import (CmdDocgen,
                                 CmdCodegen,
                                 CmdExtract,
                                 CmdExtPackage,
+                                CmdValidate,
                                 CmdDev)
 
 
@@ -94,6 +95,7 @@ def main():
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
     cmd_ext_package = CmdExtPackage(sub_parser)
+    cmd_validate = CmdValidate(sub_parser)
 
     if sdk_dev:
         # Add 'dev' command if environment var set
@@ -119,7 +121,7 @@ def main():
         if "too few arguments" in err.message or "no subcommand provided" in err.message:
             if main_cmd == cmd_codegen.CMD_NAME:
                 cmd_codegen.parser.print_usage()
-            
+
             elif main_cmd == cmd_clone.CMD_NAME:
                 cmd_clone.parser.print_usage()
 
@@ -131,6 +133,9 @@ def main():
 
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
+
+            elif main_cmd == cmd_validate.CMD_NAME:
+                cmd_validate.parser.print_usage()
 
             elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
                 cmd_dev.parser.print_usage()
@@ -161,6 +166,9 @@ def main():
 
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
+
+    elif args.cmd == cmd_validate.CMD_NAME:
+        cmd_validate.execute_command(args)
 
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)
