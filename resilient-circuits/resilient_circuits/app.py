@@ -56,9 +56,11 @@ class App(Component):
     SYSLOG_LOG_FORMAT = '%(module)s: %(levelname)s %(message)s'
     STDERR_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] %(message)s'
 
-    def __init__(self, auto_load_components=True, config_file=None):
+    def __init__(self, auto_load_components=True, config_file=None, ALLOW_UNRECOGNIZED=False, IS_SELFTEST=False):
         super(App, self).__init__()
         # Read the configuration options
+        self.ALLOW_UNRECOGNIZED = ALLOW_UNRECOGNIZED
+        self.IS_SELFTEST = IS_SELFTEST
         self.action_component = None
         self.component_loader = None
         self.auto_load_components = auto_load_components
@@ -66,7 +68,7 @@ class App(Component):
         self.do_initialization()
 
     def do_initialization(self):
-        self.opts = helpers.get_configs()
+        self.opts = helpers.get_configs(path_config_file=self.config_file, ALLOW_UNRECOGNIZED=self.ALLOW_UNRECOGNIZED)
 
         self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
         LOG.info("Configuration file: %s", self.config_file)
