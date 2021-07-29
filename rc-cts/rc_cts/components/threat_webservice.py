@@ -217,7 +217,9 @@ class CustomThreatService(BaseController):
         LOG.info(event.args[0])
 
         if not self.check_authentication(event.args[0]):
-            LOG.error("Authentication Error")
+            LOG.error("Custom Threat Service Authentication Error")
+            response = event.args[1]
+            response.status = 500
             return {"id": None, "hits": []}
 
         result = self._handle_post_request(event, *args, **kwargs)
@@ -305,7 +307,9 @@ class CustomThreatService(BaseController):
         LOG.info(event.args[0])
 
         if not self.check_authentication(event.args[0]):
-            LOG.error("Authentication Error")
+            LOG.error("Custom Threat Service Authentication Error")
+            response = event.args[1]
+            response.status = 500
             return {"id": None, "hits": []}
 
         result = self._handle_get_request(event, *args, **kwargs)
