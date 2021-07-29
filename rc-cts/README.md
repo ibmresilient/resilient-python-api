@@ -16,7 +16,7 @@ a standalone threat service, for example based on the Django example
 (https://github.com/ibmresilient/resilient-python-examples/tree/master/django-custom-threat-service).
 
 ## What's new
-v42 supports resutil threatserviceedit --user and --password authentication
+v42 supports resutil threatserviceedit -user and -password authentication
 
 ## Environment
 
