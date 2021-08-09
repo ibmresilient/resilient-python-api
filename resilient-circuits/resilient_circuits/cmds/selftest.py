@@ -25,7 +25,8 @@ ERROR_EXIT_CODES_MAP = {
     23: 23,     # REST: SSL Error (Certificate Error)
     30: 30,     # STOMP: Generic connection error
     31: 31,     # STOMP: Not authorized to instansiate STOMP connection
-    32: 32      # STOMP: Not authorized to read from queue
+    32: 32,     # STOMP: Not authorized to read from queue
+    33: 33      # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
 }
 
 
