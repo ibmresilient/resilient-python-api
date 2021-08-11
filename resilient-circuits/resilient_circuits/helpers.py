@@ -350,3 +350,26 @@ def should_timeout(start_time, timeout_value):
     :rtype: bool
     """
     return (time.time() - start_time) > timeout_value
+
+
+def get_user(app_configs):
+    """
+    Looks for either 'api_key_id' or 'email'
+    in the provided dict and returns its value.
+
+    Returns None if neither are found or set to
+    a valid value
+
+    :param app_configs: a dictionary of all the values in the app.config file
+    :type app_configs: dict
+    :rtype: [str/None]
+    """
+    usr = app_configs.get("api_key_id", None)
+
+    if not usr:
+        usr = app_configs.get("email", None)
+
+        if not usr:
+            return None
+
+    return usr
