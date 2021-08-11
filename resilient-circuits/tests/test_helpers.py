@@ -188,3 +188,10 @@ def test_should_timeout():
 def test_should_not_timeout():
     start_time = time.time()
     assert helpers.should_timeout(start_time, 10) is False
+
+
+def test_get_usr():
+    assert helpers.get_user({"api_key_id": "abc", "email": None}) == "abc"
+    assert helpers.get_user({"api_key_id": None, "email": "def"}) == "def"
+    assert helpers.get_user({"api_key_id": "", "email": ""}) is None
+    assert helpers.get_user({"api_key_id": None, "email": None}) is None
