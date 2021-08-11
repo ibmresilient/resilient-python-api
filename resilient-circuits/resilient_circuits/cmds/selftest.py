@@ -106,6 +106,7 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
 
     except OSError as e:
         if hasattr(e, "args") and isinstance(e.args, tuple) and constants.ERROR_CA_FILE_NOT_FOUND in e.args[0]:
+            # CA file could not be found/read
             error_connecting_to_soar(host, e, 22)
 
         error_connecting_to_soar(host, u"Unknown REST Error: {0}".format(e), 20)
