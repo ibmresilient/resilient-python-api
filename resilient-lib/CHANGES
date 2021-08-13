@@ -1,5 +1,5 @@
 2021-08: version 42.0
-* Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables
+* Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables. See the App Host Deployment Guide for details.
 
 2021-06: version 41.1
 * Added 'execute' as an alias for 'execute_call_v2'
