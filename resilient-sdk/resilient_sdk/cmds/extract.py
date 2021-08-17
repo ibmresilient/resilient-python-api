@@ -84,7 +84,8 @@ class CmdExtract(BaseCmd):
                                                    artifact_types=args.artifacttype,
                                                    datatables=args.datatable,
                                                    tasks=args.task,
-                                                   scripts=args.script)
+                                                   scripts=args.script,
+                                                   incident_types=args.incidenttype)
 
         # Get 'minified' version of the export. This is used in to create export.res
         min_extract_data = sdk_helpers.minify_export(org_export,
@@ -97,7 +98,8 @@ class CmdExtract(BaseCmd):
                                                      datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, extract_data.get("datatables")),
                                                      tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, extract_data.get("tasks")),
                                                      phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, extract_data.get("phases")),
-                                                     scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")))
+                                                     scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")),
+                                                     incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")))
 
         # Convert dict to JSON string
         if sys.version_info.major >= 3:

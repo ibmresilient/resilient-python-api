@@ -76,6 +76,11 @@ class BaseCmd(object):
         """
         res_obj_parser = argparse.ArgumentParser(add_help=False)
 
+        res_obj_parser.add_argument("-i", "--incidenttype",
+                                    type=ensure_unicode,
+                                    help="API names of incident types to include",
+                                    nargs="*")
+
         res_obj_parser.add_argument("-a", "--artifacttype",
                                     type=ensure_unicode,
                                     help="API names of artifact types to include",

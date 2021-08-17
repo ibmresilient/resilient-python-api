@@ -270,7 +270,8 @@ class CmdCodegen(BaseCmd):
                                                  artifact_types=args.artifacttype,
                                                  datatables=args.datatable,
                                                  tasks=args.task,
-                                                 scripts=args.script)
+                                                 scripts=args.script,
+                                                 incident_types=args.incidenttype)
 
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = sdk_helpers.minify_export(org_export,
@@ -283,7 +284,8 @@ class CmdCodegen(BaseCmd):
                                                               datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                                               tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
                                                               phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
-                                                              scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+                                                              scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")),
+                                                              incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, jinja_data.get("incident_types")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
@@ -494,6 +496,7 @@ class CmdCodegen(BaseCmd):
                 ("rule", "actions"),
                 ("field", "incident_fields"),
                 ("artifacttype", "incident_artifact_types"),
+                ("incidenttype", "incident_types"),
                 ("datatable", "datatables"),
                 ("task", "automatic_tasks"),
                 ("script", "scripts")
