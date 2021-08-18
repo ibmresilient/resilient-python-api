@@ -645,7 +645,7 @@ def get_from_export(export,
     return_dict["artifact_types"] = get_res_obj("incident_artifact_types", ResilientObjMap.INCIDENT_ARTIFACT_TYPES, "Custom Artifact", artifact_types, export)
 
     # Get Incident Types
-    return_dict["incident_types"] = get_res_obj("incident_types", ResilientObjMap.INCIDENT_TYPES, "Custom Incident Types", incident_types, export)
+    return_dict["incident_types"] = get_res_obj("incident_types", ResilientObjMap.INCIDENT_TYPES, "Custom Incident Type", incident_types, export)
 
     # Get Data Tables
     return_dict["datatables"] = get_res_obj("types", ResilientObjMap.DATATABLES, "Datatable", datatables, export,
