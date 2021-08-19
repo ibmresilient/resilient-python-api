@@ -444,7 +444,7 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    return dict((o[identifer], o) for o in obj_list if condition(o))
+    return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
 
 
 def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
@@ -489,12 +489,13 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
         ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
 
         for o in set(wanted_list):
-            if o not in ex_obj:
-                raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, o, "\n\t".join(ex_obj.keys())))
+            stripped_o = o.strip()
+            if stripped_o not in ex_obj:
+                raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, stripped_o, "\n\t".join(ex_obj.keys())))
 
             # Add x_api_name to each object, so we can easily reference. This avoids needing to know if
             # obj attribute is 'name' or 'programmatic_name' etc.
-            obj = ex_obj.get(o)
+            obj = ex_obj.get(stripped_o)
             if include_api_name:
                 obj["x_api_name"] = obj[obj_identifer]
             return_list.append(obj)
@@ -738,14 +739,17 @@ def minify_export(export,
             attribute_name = list(keys_to_minify[key].keys())[0]
 
             values = keys_to_minify[key][attribute_name]
+            # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
+            values = [name.strip() for name in values]
 
             for data in list(minified_export[key]):
 
                 if not data.get(attribute_name):
                     LOG.warning("No %s in %s", attribute_name, key)
 
+                # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
                 # If this Resilient Object is not in our minify list, remove it
-                if not data.get(attribute_name) in values:
+                if not data.get(attribute_name, "").strip() in values:
                     minified_export[key].remove(data)
 
         elif isinstance(minified_export[key], list):
