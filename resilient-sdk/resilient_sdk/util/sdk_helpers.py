@@ -342,7 +342,7 @@ def get_latest_org_export(res_client):
 
 def add_configuration_import(new_export_data, res_client):
     """
-    Makes a REST request to add a configuration import. 
+    Makes a REST request to add a configuration import.
 
     After the request is made, the configuration import is set at a pending state and needs to be confirmed.
     If the configuration state is not reported as pending, raise an SDK Exception.
@@ -374,7 +374,7 @@ def confirm_configuration_import(result, import_id, res_client):
     """
     Makes a REST request to confirm a pending configuration import as accepted.
 
-    Takes 3 params 
+    Takes 3 params
     The result of a configuration import request
     The ID of the configuration import request
     A res_client to perform the request
@@ -387,7 +387,7 @@ def confirm_configuration_import(result, import_id, res_client):
     :type res_client: SimpleClient()
     :raises SDKException: If the confirmation request fails raise an SDKException
     """
-    
+
     result["status"] = "ACCEPTED"      # Have to confirm changes
     uri = "{}/{}".format(IMPORT_URL, import_id)
     try:
@@ -444,7 +444,7 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    return dict((o[identifer], o) for o in obj_list if condition(o))
+    return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
 
 
 def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
@@ -489,12 +489,13 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
         ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
 
         for o in set(wanted_list):
-            if o not in ex_obj:
-                raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, o, "\n\t".join(ex_obj.keys())))
+            stripped_o = o.strip()
+            if stripped_o not in ex_obj:
+                raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, stripped_o, "\n\t".join(ex_obj.keys())))
 
             # Add x_api_name to each object, so we can easily reference. This avoids needing to know if
             # obj attribute is 'name' or 'programmatic_name' etc.
-            obj = ex_obj.get(o)
+            obj = ex_obj.get(stripped_o)
             if include_api_name:
                 obj["x_api_name"] = obj[obj_identifer]
             return_list.append(obj)
@@ -509,6 +510,7 @@ def get_from_export(export,
                     rules=[],
                     fields=[],
                     artifact_types=[],
+                    incident_types=[],
                     datatables=[],
                     tasks=[],
                     scripts=[],
@@ -525,6 +527,7 @@ def get_from_export(export,
     :param rules: List of Rule Display Names
     :param fields: List of Field API Names
     :param artifact_types: List of Custom Artifact Type API Names
+    :param incident_types: List of Custom Incident Type API Names
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
@@ -543,6 +546,7 @@ def get_from_export(export,
     rules = rules if rules else []
     fields = fields if fields else []
     artifact_types = artifact_types if artifact_types else []
+    incident_types = incident_types if incident_types else []
     datatables = datatables if datatables else []
     tasks = tasks if tasks else []
     scripts = scripts if scripts else []
@@ -641,6 +645,9 @@ def get_from_export(export,
     # Get Custom Artifact Types
     return_dict["artifact_types"] = get_res_obj("incident_artifact_types", ResilientObjMap.INCIDENT_ARTIFACT_TYPES, "Custom Artifact", artifact_types, export)
 
+    # Get Incident Types
+    return_dict["incident_types"] = get_res_obj("incident_types", ResilientObjMap.INCIDENT_TYPES, "Custom Incident Type", incident_types, export)
+
     # Get Data Tables
     return_dict["datatables"] = get_res_obj("types", ResilientObjMap.DATATABLES, "Datatable", datatables, export,
                                             condition=lambda o: True if o.get("type_id") == ResilientTypeIds.DATATABLE else False)
@@ -669,7 +676,8 @@ def minify_export(export,
                   datatables=[],
                   tasks=[],
                   phases=[],
-                  scripts=[]):
+                  scripts=[],
+                  incident_types=[]):
     """
     Return a 'minified' version of the export.
     All parameters are a list of api_names of objects to include in the export.
@@ -687,6 +695,7 @@ def minify_export(export,
     :param tasks: List of Custom Task API Names
     :param tasks: List of Phases API Names
     :param scripts: List of Script Display Names
+    :param incident_types: List of Custom Incident Type Names
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -713,7 +722,8 @@ def minify_export(export,
         "types": {"type_name": datatables},
         "automatic_tasks": {"programmatic_name": tasks},
         "phases": {"name": phases},
-        "scripts": {"name": scripts}
+        "scripts": {"name": scripts},
+        "incident_types": {"name": incident_types}
     }
 
     for key in minified_export.keys():
@@ -729,14 +739,17 @@ def minify_export(export,
             attribute_name = list(keys_to_minify[key].keys())[0]
 
             values = keys_to_minify[key][attribute_name]
+            # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
+            values = [name.strip() for name in values]
 
             for data in list(minified_export[key]):
 
                 if not data.get(attribute_name):
                     LOG.warning("No %s in %s", attribute_name, key)
 
+                # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
                 # If this Resilient Object is not in our minify list, remove it
-                if not data.get(attribute_name) in values:
+                if not data.get(attribute_name, "").strip() in values:
                     minified_export[key].remove(data)
 
         elif isinstance(minified_export[key], list):
@@ -749,7 +762,10 @@ def minify_export(export,
             minified_export[key] = None
 
     # Add default incident_type. Needed for every Import
-    minified_export["incident_types"] = [DEFAULT_INCIDENT_TYPE]
+    if minified_export.get("incident_types"):
+        minified_export["incident_types"].append(DEFAULT_INCIDENT_TYPE)
+    else:
+        minified_export["incident_types"] = [DEFAULT_INCIDENT_TYPE]
 
     # If no Custom Incident Fields are in the export, add this default.
     # An import needs at least 1 Incident Field

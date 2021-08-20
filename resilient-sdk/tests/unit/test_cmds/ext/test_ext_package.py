@@ -5,7 +5,7 @@
 import os
 import sys
 import zipfile
-import pytest
+import json
 from resilient_sdk.cmds import CmdExtPackage as CmdPackage
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
@@ -49,7 +49,7 @@ def test_execute_command_no_samples(fx_copy_fn_main_mock_integration, fx_get_sub
     # Test app.zip/export.res contents
     export_res_contents = sdk_helpers.read_zip_file(path_the_app_zip, "export.res")
     mock_export_res_contents = sdk_helpers.read_file(mock_paths.MOCK_APP_ZIP_EXPORT_RES)[0]
-    assert export_res_contents == mock_export_res_contents
+    assert json.loads(export_res_contents) == json.loads(mock_export_res_contents)
 
 
 def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
@@ -77,7 +77,8 @@ def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_s
     # Test app.zip/export.res contents
     export_res_contents = sdk_helpers.read_zip_file(path_the_app_zip, "export.res")
     mock_export_res_contents = sdk_helpers.read_file(mock_paths.MOCK_APP_ZIP_EXPORT_RES_WITH_PAYLOAD_SAMPLES)[0]
-    assert export_res_contents == mock_export_res_contents
+    # compare are dictionaries
+    assert json.loads(export_res_contents) == json.loads(mock_export_res_contents)
 
 
 def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):

@@ -63,6 +63,7 @@ class ResilientObjMap(object):
     RULES = "name"  # Also known as ACTIONS
     FIELDS = "name"
     INCIDENT_ARTIFACT_TYPES = "programmatic_name"
+    INCIDENT_TYPES = "name"
     DATATABLES = "type_name"
     TASKS = "programmatic_name"
     PHASES = "export_key"
