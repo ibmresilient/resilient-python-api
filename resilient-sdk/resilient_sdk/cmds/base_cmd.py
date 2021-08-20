@@ -76,11 +76,6 @@ class BaseCmd(object):
         """
         res_obj_parser = argparse.ArgumentParser(add_help=False)
 
-        res_obj_parser.add_argument("-i", "--incidenttype",
-                                    type=ensure_unicode,
-                                    help="Display Names of incident types to include (surrounded by \"\")",
-                                    nargs="*")
-
         res_obj_parser.add_argument("-a", "--artifacttype",
                                     type=ensure_unicode,
                                     help="API names of artifact types to include",
@@ -91,14 +86,19 @@ class BaseCmd(object):
                                     help="API names of datatables to include",
                                     nargs="*")
 
+        res_obj_parser.add_argument("-f", "--function",
+                                    type=ensure_unicode,
+                                    help="API names of functions to include",
+                                    nargs="*")
+
         res_obj_parser.add_argument("-fd", "--field",
                                     type=ensure_unicode,
                                     help="API names of custom fields to include",
                                     nargs="*")
 
-        res_obj_parser.add_argument("-f", "--function",
+        res_obj_parser.add_argument("-i", "--incidenttype",
                                     type=ensure_unicode,
-                                    help="API names of functions to include",
+                                    help="Display names of custom incident types to include (surrounded by \"\")",
                                     nargs="*")
 
         res_obj_parser.add_argument("-m", "--messagedestination",
