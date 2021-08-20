@@ -35,6 +35,8 @@ Generate boilerplate code to start developing an app.
 $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
 
+Note: When using --incidenttype for a child custom incident type, refer instead to the parent incident type.
+
 ### `docgen:`
 Generate documentation for an app.
 ```

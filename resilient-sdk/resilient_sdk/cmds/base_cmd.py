@@ -78,7 +78,7 @@ class BaseCmd(object):
 
         res_obj_parser.add_argument("-i", "--incidenttype",
                                     type=ensure_unicode,
-                                    help="Display Name of incident types to include (surrounded by \"\")",
+                                    help="Display Names of incident types to include (surrounded by \"\")",
                                     nargs="*")
 
         res_obj_parser.add_argument("-a", "--artifacttype",
