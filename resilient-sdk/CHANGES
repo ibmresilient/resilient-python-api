@@ -1,4 +1,6 @@
 2021-08: version 42.0
+* codegen now generates a template for App's to be developed to run in a Python >= 3.6 environment.
+* Bug fixes.
 * Support for collecting incident types in codegen and extract. See the command line parameters -i and --incidenttype.
 
 2021-06: version 41.1
