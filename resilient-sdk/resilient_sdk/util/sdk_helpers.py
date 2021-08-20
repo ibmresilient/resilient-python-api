@@ -711,6 +711,9 @@ def minify_export(export,
             "server_version"
         ]
 
+    # some incident types are parent/child. This routine will return all the parent incident types
+    parent_child_incident_types = find_parent_child_types(export, "incident_types", "name", incident_types)
+
     # Setup the keys_to_minify dict
     keys_to_minify = {
         "message_destinations": {"programmatic_name": message_destinations},
@@ -723,7 +726,7 @@ def minify_export(export,
         "automatic_tasks": {"programmatic_name": tasks},
         "phases": {"name": phases},
         "scripts": {"name": scripts},
-        "incident_types": {"name": incident_types}
+        "incident_types": {"name": parent_child_incident_types}
     }
 
     for key in minified_export.keys():
@@ -773,6 +776,29 @@ def minify_export(export,
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
     return minified_export
+
+def find_parent_child_types(export, object_type, attribute_name, name_list):
+    """[get all parent objects (like incident_types)]
+
+    Args:
+        export ([dict]): [export file to parse]
+        object_type ([str]): [heirarchy of objects to parse]
+        attribute_name ([str]): [name of field to check for]
+        name_list ([list]): [list of objects to same]
+    """
+    extended_name_list = name_list.copy()
+
+    if export.get(object_type):
+        section = export.get(object_type)
+        for name in name_list:
+            for item in section:
+              if item.get(attribute_name) == name:
+                  if item.get('parent_id'):
+                      # add the parent hierarchy
+                      parent_list = find_parent_child_types(export, object_type, attribute_name, [item.get('parent_id')])
+                      extended_name_list.extend(parent_list)
+
+    return list(set(extended_name_list))
 
 
 def load_py_module(path_python_file, module_name):
