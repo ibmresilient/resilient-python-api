@@ -786,7 +786,8 @@ def find_parent_child_types(export, object_type, attribute_name, name_list):
         attribute_name ([str]): [name of field to check for]
         name_list ([list]): [list of objects to same]
     """
-    extended_name_list = name_list.copy()
+
+    extended_name_list = name_list[:]
 
     if export.get(object_type):
         section = export.get(object_type)
