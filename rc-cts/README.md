@@ -3,7 +3,7 @@
 This package implements the Custom Threat Service API, providing a
 simple framework to develop threat source lookups in Python using the
 Resilient Circuits integration framework.
-  
+
 It's suitable for simple "lightweight" threat source lookups.
 * All lookups are asynchronous.
 * There is currently no support for file-attachment handling.
@@ -15,6 +15,8 @@ For more robust and advanced features, you should consider deploying
 a standalone threat service, for example based on the Django example
 (https://github.com/ibmresilient/resilient-python-examples/tree/master/django-custom-threat-service).
 
+## What's new
+v42 supports resutil threatserviceedit -user and -password authentication
 
 ## Environment
 
@@ -40,6 +42,11 @@ urlbase=/cts
 # Cache management
 #cache_size=10000
 #cache_ttl=600000
+
+# use auth_user and auth_password when specifying the -user and -password parameters on
+#  resutil threatserviceedit to ensure basic authentication
+#auth_user=
+#auth_password=
 ```
 
 Run with: `resilient-circuits run`.

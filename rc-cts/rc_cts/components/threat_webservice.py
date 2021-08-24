@@ -35,6 +35,7 @@ Searchers register to a single path, e.g. '/cts/gsb' for the Google Safe Browsin
 
 import json
 import logging
+import base64
 from collections import namedtuple
 from distutils.util import strtobool
 from uuid import UUID, uuid4, uuid5
@@ -61,6 +62,8 @@ CONFIG_LATER_RETRY_SECS = ConfigKey(key="later_retry_secs", default=0)
 CONFIG_CACHE_SIZE = ConfigKey(key="cache_size", default=10000)
 CONFIG_CACHE_TTL = ConfigKey(key="cache_ttl", default=600)
 CONFIG_MAX_RETRIES = ConfigKey(key="max_retries", default=60)
+CONFIG_AUTH_USER = ConfigKey(key="auth_user", default=None)
+CONFIG_AUTH_PASSWORD = ConfigKey(key="auth_password", default=None)
 
 HELPER_CHANNEL = "threat_lookup_helper"
 LOOKUP_COMPLETE_CHANNEL = "threat_lookup_complete"
@@ -195,6 +198,9 @@ class CustomThreatService(BaseController):
         urls = ["{0}/{1}".format(self.channel, e) for e in self.events()]
         LOG.info("Web handler for %s", ", ".join(urls))
 
+        self.auth_user = self.options.get(CONFIG_AUTH_USER.key, CONFIG_AUTH_USER.default)
+        self.auth_password = self.options.get(CONFIG_AUTH_PASSWORD.key, CONFIG_AUTH_USER.default)
+
     # Web endpoints
 
     @exposeWeb("OPTIONS")
@@ -209,6 +215,13 @@ class CustomThreatService(BaseController):
     @exposeWeb("POST")
     def _post_request(self, event, *args, **kwargs):
         LOG.info(event.args[0])
+
+        if not self.check_authentication(event.args[0]):
+            LOG.error("Custom Threat Service Authentication Error")
+            response = event.args[1]
+            response.status = 500
+            return {"id": None, "hits": []}
+
         result = self._handle_post_request(event, *args, **kwargs)
         LOG.info("%s: %s", event.args[1].status, json.dumps(result))
         return result
@@ -292,6 +305,13 @@ class CustomThreatService(BaseController):
     @exposeWeb("GET")
     def _get_request(self, event, *args, **kwargs):
         LOG.info(event.args[0])
+
+        if not self.check_authentication(event.args[0]):
+            LOG.error("Custom Threat Service Authentication Error")
+            response = event.args[1]
+            response.status = 500
+            return {"id": None, "hits": []}
+
         result = self._handle_get_request(event, *args, **kwargs)
         LOG.info("%s: %s", event.args[1].status, json.dumps(result))
         return result
@@ -390,3 +410,27 @@ class CustomThreatService(BaseController):
         # Store the result and mark as complete (or not)
         cache_key = (cts_channel, request_id)
         self.cache[cache_key] = {"id": request_id, "artifact": artifact, "hits": hits, "complete": complete}
+
+    def _get_authentication_headers(self, request):
+        """[extract user/password info in http header: Authentication Basic into a list]"""
+        if request.headers and "Basic" in request.headers.get("Authorization", ""):
+            auth = request.headers.get("Authorization", "").split(' ')
+            user_password = base64.b64decode(auth[1])
+            return b_to_s(user_password).split(":")
+
+        return [None, None]
+
+    def _is_authenticated(self, user_password_list):
+        """[check if a user/password pair matches values set in app.config]"""
+        return self.auth_user == user_password_list[0] and self.auth_password == user_password_list[1]
+
+    def check_authentication(self, request):
+        """[check if the headers contain user/password information and they match the settings in app.config]"""
+        return self._is_authenticated(self._get_authentication_headers(request))
+
+def b_to_s(value):
+    """[binary to string]"""
+    try:
+        return value.decode()
+    except:
+        return value
