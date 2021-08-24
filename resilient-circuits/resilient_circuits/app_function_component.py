@@ -27,6 +27,9 @@ class AppFunctionComponent(ResilientComponent):
         # Validate app_configs and get dictionary as result
         self._app_configs_as_dict = validate_fields(required_app_configs, opts.get(package_name, {}))
 
+        # This variable also is used to get the app.configs
+        self.options = self._app_configs_as_dict
+
         # Instansiate RequestsCommon with dictionary of _app_configs_as_dict
         self.rc = RequestsCommon(opts=opts, function_opts=self._app_configs_as_dict)
 
