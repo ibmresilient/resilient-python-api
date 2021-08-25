@@ -9,15 +9,10 @@ import os
 import sys
 from collections import defaultdict
 import pkg_resources
-import time
 from resilient import get_config_file
-from resilient_circuits import helpers
-from resilient_circuits.app import AppArgumentParser
+from resilient_circuits import helpers, constants
 from resilient_circuits.util.resilient_customize import customize_resilient
-
-
-# What code will be used if any apps tests fail when running resilient-circuits 'selftest'
-SELFTEST_FAILURE_EXIT_CODE = 1
+from resilient_circuits.cmds import selftest
 
 
 if sys.version_info.major == 2:
@@ -36,7 +31,7 @@ except ImportError:
     # Python 2
     from __builtin__ import raw_input as input
 
-LOG = logging.getLogger("resilient_circuits_cmd_logger")
+LOG = logging.getLogger(constants.CMDS_LOGGER_NAME)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
@@ -284,81 +279,6 @@ def generate_or_update_config(args):
                 LOG.info(u"No updates.")
 
 
-def selftest(args):
-    """loop through every selftest for every eligible package, call and store returned state,
-        print out package and their selftest states"""
-
-    if hasattr(args, "print_env") and args.print_env:
-        LOG.info(helpers.get_env_str(pkg_resources.working_set))
-
-    components = defaultdict(list)
-
-    # custom entry_point only for selftest functions
-    selftest_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.selftest')]
-    for ep in selftest_entry_points:
-        components[ep.dist].append(ep)
-
-    if len(selftest_entry_points) == 0:
-        LOG.info("No selftest entry points found.")
-        return None
-
-    # Generate opts array necessary for ResilientComponent instantiation
-    opts = AppArgumentParser(config_file=get_config_file()).parse_args("", None)
-
-    # make a copy
-    install_list = list(args.install_list) if args.install_list else []
-
-    # Prepare a count of exceptions found with selftests.
-    selftest_failure_count = 0
-
-    for dist, component_list in components.items():
-        if args.install_list is None or dist.project_name in install_list:
-            # remove name from list
-            if dist.project_name in install_list:
-                install_list.remove(dist.project_name)
-
-            # add an entry for the package
-            LOG.info("\n%s: ", dist.project_name)
-            for ep in component_list:
-                # load the entry point
-                f_selftest = ep.load()
-
-                try:
-                    # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
-                    start_time_milliseconds = int(round(time.time() * 1000))
-
-                    status = f_selftest(opts)
-
-                    end_time_milliseconds = int(round(time.time() * 1000))
-
-                    delta_milliseconds = end_time_milliseconds - start_time_milliseconds
-                    delta_seconds = delta_milliseconds / 1000
-
-                    state = status.get("state")
-
-                    if isinstance(state, str):
-                        LOG.info("\t%s: %s\n\tselftest output:\n\t%s\n\tElapsed time: %f seconds", ep.name, state, status, delta_seconds)
-
-                        if state.lower() == "failure":
-                            selftest_failure_count += 1
-
-                    else:
-                        LOG.info("\t%s:\n\tUnsupported dictionary returned:\n\t%s\n\tElapsed time: %f seconds", ep.name, status, delta_seconds)
-
-                except Exception as e:
-                    LOG.error("Error while calling %s. Exception: %s", ep.name, str(e))
-                    selftest_failure_count += 1
-                    continue
-
-    # any missed packages?
-    if len(install_list):
-        LOG.warning("%s not found. Check package name(s)", install_list)
-
-    # Check if any failures were found and printed to the console
-    if selftest_failure_count:
-        sys.exit(SELFTEST_FAILURE_EXIT_CODE)
-
-
 def main():
     """Main commandline"""
 
@@ -501,7 +421,7 @@ def main():
         customize_resilient(args)
 
     elif args.cmd == "selftest":
-        selftest(args)
+        selftest.execute_command(args)
 
 
 if __name__ == "__main__":

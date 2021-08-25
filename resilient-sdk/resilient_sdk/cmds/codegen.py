@@ -25,7 +25,7 @@ class CmdCodegen(BaseCmd):
     CMD_NAME = "codegen"
     CMD_HELP = "Generate boilerplate code to start developing an app"
     CMD_USAGE = """
-    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["res_obj_parser", "io_parser"]
@@ -233,6 +233,8 @@ class CmdCodegen(BaseCmd):
 
         LOG.info("Generating codegen package...")
 
+        sdk_helpers.is_python_min_supported_version()
+
         if os.path.exists(args.package) and not args.reload:
             raise SDKException(u"'{0}' already exists. Add --reload flag to regenerate it".format(args.package))
 
@@ -268,7 +270,8 @@ class CmdCodegen(BaseCmd):
                                                  artifact_types=args.artifacttype,
                                                  datatables=args.datatable,
                                                  tasks=args.task,
-                                                 scripts=args.script)
+                                                 scripts=args.script,
+                                                 incident_types=args.incidenttype)
 
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = sdk_helpers.minify_export(org_export,
@@ -281,7 +284,8 @@ class CmdCodegen(BaseCmd):
                                                               datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                                               tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
                                                               phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
-                                                              scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+                                                              scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")),
+                                                              incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, jinja_data.get("incident_types")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
@@ -492,6 +496,7 @@ class CmdCodegen(BaseCmd):
                 ("rule", "actions"),
                 ("field", "incident_fields"),
                 ("artifacttype", "incident_artifact_types"),
+                ("incidenttype", "incident_types"),
                 ("datatable", "datatables"),
                 ("task", "automatic_tasks"),
                 ("script", "scripts")

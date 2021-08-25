@@ -43,6 +43,11 @@ _idle_timer = None
 # look for unrecoverable errors
 UNRECOVERABLE_ERRORS = ['Already subscribed']
 
+# Errors and Message Destination names will get appended when ran in selftest
+SELFTEST_ERRORS = []
+SELFTEST_SUBSCRIPTIONS = []
+
+
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
     try:
@@ -380,6 +385,9 @@ class Actions(ResilientComponent):
         """STOMP produced an error."""
         LOG.error('STOMP listener: Error:\n%s', message or error)
 
+        if helpers.is_this_a_selftest(self):
+            SELFTEST_ERRORS.append(message or error)
+
         for unrecoverable_error in UNRECOVERABLE_ERRORS:
             if (message and unrecoverable_error in str(message)) or \
                (error and unrecoverable_error in str(error)):
@@ -703,6 +711,10 @@ class Actions(ResilientComponent):
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
             LOG.info("Subscribe to message destination '%s'", queue_name)
+
+            if helpers.is_this_a_selftest(self):
+                SELFTEST_SUBSCRIPTIONS.append(queue_name)
+
             destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))
         else:
@@ -920,6 +932,15 @@ class Actions(ResilientComponent):
         """
         if signo in [SIGINT, SIGTERM]:
             raise SystemExit(0)
+
+    @handler("SelftestTerminateEvent")
+    def _selftest_terminate(self):
+        """
+        Exits resilient-circuits if a SelftestTerminateEvent
+        is fired
+        """
+        LOG.info("SelftestTerminateEvent, exiting resilient-circuits")
+        raise SystemExit(0)
 
     @handler("reload", priority=999)
     def reload(self, event, opts):

@@ -2,6 +2,7 @@ import json
 import logging
 import unittest
 import requests
+import os
 from parameterized import parameterized
 from resilient_lib import RequestsCommon, IntegrationError
 from resilient_lib.components.requests_common import get_case_insensitive_key_value, is_payload_in_json
@@ -47,7 +48,13 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
 
-        
+        os.environ["HTTP_PROXY"] = "https://mock.example.com:3128"
+        integrations = { "integrations": { "https_proxy": "abc", 'http_proxy': 'def' } }
+        rc = RequestsCommon(integrations)
+        proxies = rc.get_proxies()
+        os.environ["HTTP_PROXY"] = ""
+        self.assertEqual(None, proxies)
+
     def test_timeout_overrides(self):
         # test default timeout
         integrations = { "integrations": { } }

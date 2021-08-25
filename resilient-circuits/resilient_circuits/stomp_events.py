@@ -120,3 +120,7 @@ class Ack(StompEvent):
         super(Ack, self).__init__(frame=frame)
         self.frame = frame
         self.message_id = message_id
+
+
+class SelftestTerminateEvent(Event):
+    pass
