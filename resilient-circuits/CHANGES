@@ -1,3 +1,6 @@
+2021-08: version 42.1
+* No major changes. Just bumping build number to coincide with other builds
+
 2021-08: version 42.0
 * Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables. See the App Host Deployment Guide for details.
 * Enhancement to selftest to also check connection back to SOAR platform.

@@ -1,3 +1,6 @@
+2021-08: version 42.1
+* No major changes. Just bumping build number to coincide with other builds
+
 2021-08: version 42.0
 * codegen now generates a template for App's to be developed to run in a Python >= 3.6 environment.
 * Bug fixes.
