@@ -1,3 +1,6 @@
+2021-08: version 42.1
+* Bug fix removing pinned urllib3 dependency
+
 2021-08: version 42.0
 * Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables. See the App Host Deployment Guide for details.
 * Add new 'User-Agent: soar-app-1.0' header for API calls to SOAR platform.
