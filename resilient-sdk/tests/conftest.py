@@ -304,6 +304,27 @@ def fx_cmd_line_args_dev_set_bad_version():
     sys.argv = original_cmd_line
 
 
+@pytest.fixture
+def fx_cmd_line_args_extract():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "extract",
+        "--rule",
+        "Mock Script Rule"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
 @pytest.fixture(scope="session")
 def fx_get_sub_parser():
     """

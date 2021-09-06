@@ -48,6 +48,9 @@ class BaseCmd(object):
         if "zip_parser" in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_zip_parser())
 
+        if "app_config_parser" in self.CMD_ADD_PARSERS:
+            parser_parents.append(self._get_app_config_parser())
+
         self.parser = sub_parser.add_parser(self.CMD_NAME,
                                             help=self.CMD_HELP,
                                             formatter_class=SDKArgHelpFormatter,
@@ -163,3 +166,19 @@ class BaseCmd(object):
                                 help="Generate a .zip of the generated file")
 
         return zip_parser
+
+    @staticmethod
+    def _get_app_config_parser():
+        """
+        Create a parser has an argument for the path to the app.config file
+
+        :return: A single argparse.ArgumentParser
+        :rtype: argparse.ArgumentParser
+        """
+        app_config_parser = argparse.ArgumentParser(add_help=False)
+
+        app_config_parser.add_argument("-c", "--config",
+                                       type=ensure_unicode,
+                                       help="Path to app.config file to use")
+
+        return app_config_parser
