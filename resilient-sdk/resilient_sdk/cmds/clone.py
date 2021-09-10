@@ -6,7 +6,7 @@
 
 import logging
 import uuid
-import time
+from datetime import datetime
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
@@ -124,7 +124,7 @@ class CmdClone(BaseCmd):
         """
         SDKException.command_ran = "clone"
         LOG.debug("Called clone with %s", args)
-        start = time.perf_counter()
+        start = datetime.now()
 
         # Instansiate connection to the Resilient Appliance
         CmdClone.res_client = get_resilient_client()
@@ -179,8 +179,8 @@ class CmdClone(BaseCmd):
         else:
             self.parser.print_help()
 
-        end = time.perf_counter()
-        LOG.info("'clone' command finished in {} seconds".format(end - start))
+        time_delta = (datetime.now() - start).total_seconds()
+        LOG.info("'clone' command finished in {} seconds".format(time_delta))
 
     def add_authorised_info_to_md(self, new_export_data):
         """ 
@@ -377,7 +377,7 @@ class CmdClone(BaseCmd):
         else:
             # if get_res_obj does not raise an exception it means an object with that identifier exists
             # and in this case we raise an SDKException as the new name provided for cloning needs to be unique
-            raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name {} already exists".format(
+            raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name '{}' already exists".format(
                 obj_type_name, new_object_api_name))
 
     @staticmethod
