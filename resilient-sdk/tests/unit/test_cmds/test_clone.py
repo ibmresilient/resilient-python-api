@@ -50,6 +50,7 @@ def test_cmd_clone_setup(fx_get_sub_parser):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    assert cmd_clone.CMD_ADD_PARSERS == ["app_config_parser"]
 
 
 def test_execute_command(fx_get_sub_parser, fx_mock_res_client, caplog):

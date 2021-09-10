@@ -36,7 +36,7 @@ class CmdExtract(BaseCmd):
     $ resilient-sdk extract --script 'custom_script' --zip
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
-    CMD_ADD_PARSERS = ["res_obj_parser", "io_parser", "zip_parser"]
+    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]
 
     def setup(self):
         # Define docgen usage and description
@@ -67,7 +67,7 @@ class CmdExtract(BaseCmd):
 
         else:
             # Instantiate connection to the Resilient Appliance
-            res_client = sdk_helpers.get_resilient_client()
+            res_client = sdk_helpers.get_resilient_client(path_config_file=args.config)
 
             # Generate + get latest export from Resilient Server
             org_export = sdk_helpers.get_latest_org_export(res_client)

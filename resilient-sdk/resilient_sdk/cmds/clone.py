@@ -57,6 +57,7 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    CMD_ADD_PARSERS = ["app_config_parser"]
 
     def setup(self):
         # Define codegen usage and description
@@ -127,7 +128,7 @@ class CmdClone(BaseCmd):
         start = datetime.now()
 
         # Instansiate connection to the Resilient Appliance
-        CmdClone.res_client = get_resilient_client()
+        CmdClone.res_client = get_resilient_client(path_config_file=args.config)
 
         org_export = get_latest_org_export(CmdClone.res_client)
 
