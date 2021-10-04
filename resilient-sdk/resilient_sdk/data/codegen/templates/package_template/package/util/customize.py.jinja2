@@ -32,6 +32,8 @@ def codegen_reload_data():
 
         "incident_artifact_types": {% if artifact_types %}[{% for o in artifact_types|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
+        "incident_types": {% if incident_types %}[{% for o in incident_types|sort(attribute="name") %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+
         "datatables": {% if datatables %}[{% for o in datatables|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
         "automatic_tasks": {% if tasks %}[{% for o in tasks|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}

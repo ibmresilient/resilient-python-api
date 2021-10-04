@@ -142,7 +142,8 @@ def fx_cmd_line_args_codegen_package():
         "--artifacttype", "mock_artifact_2", "mock_artifact_type_one",
         "--datatable", "mock_data_table",
         "--task", "mock_custom_task_one", "mock_cusom_task__________two",
-        "--script", "Mock Script One"
+        "--script", "Mock Script One",
+        "--incidenttype", "mock_incidenttype_Āā", "mock incident type one",
     ]
 
     _add_to_cmd_line_args(args_to_add)

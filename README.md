@@ -4,11 +4,11 @@ This directory contains
 
  * [resilient](resilient), the Resilient Python Client Module for the Resilient APIs.
  * [resilient_circuits](resilient-circuits), an application framework for Resilient Action Module.
- * [pytest_resilient\_circuits](pytest-resilient-circuits), a collection of pytest fixtures. 
+ * [pytest_resilient\_circuits](pytest-resilient-circuits), a collection of pytest fixtures.
  * [rc_cts](rc-cts), a lightweight Custom Threat Service for Resilient.
  * [rc_webserver](rc-webserver), a web server which can be extended by additional components.
  * [resilient_lib](resilient-lib), a package with common library calls which facilitate the development of functions for IBM Resilient.
-
+* [resilient-sdk](resilient-sdk), a CLI tool for app development including code generation, documentation generation, and exporting SOAR appliance components such as scripts, rules, playbooks, custom fields, etc.
 
 ## Python Client Module
 
@@ -47,35 +47,35 @@ password=passw0rd
 org=Culture
 ```
 
-__Configuration Values From Keystore__  
+__Configuration Values From Keystore__
 Values in the config file can be pulled from a compatible keystore system
-on your OS.  To retrieve a value named `yourkey` from a keystore, set it to `^yourkey`.  
-   
-Example from app.confg:  
+on your OS.  To retrieve a value named `yourkey` from a keystore, set it to `^yourkey`.
+
+Example from app.confg:
 ```
 [resilient]
 password=^resilient_password
 ```
 
-__Adding the Values to Keystore__  
-The resilient package includes a utility to add all of the keystore-based values from 
-your app.config file to your system's compatible  keystore system.  Once you have 
-referenced the keys in your app.config file, run `res-keyring` and you will be 
-prompted for the secure values to store.  
-  
+__Adding the Values to Keystore__
+The resilient package includes a utility to add all of the keystore-based values from
+your app.config file to your system's compatible  keystore system.  Once you have
+referenced the keys in your app.config file, run `res-keyring` and you will be
+prompted for the secure values to store.
+
 ```
-  $ res-keyring 
+  $ res-keyring
   Configuration file: /Users/example/.resilient/app.config
   Secrets are stored with 'keyring.backends.OS_X'
   [resilient] password: <not set>
-  Enter new value (or <ENTER> to leave unchanged): 
+  Enter new value (or <ENTER> to leave unchanged):
 ```
-  
-__Configuration Values From Environment__  
-Values in your config file can also be pulled from environment variables.
-To retrieve a value from the environment, set it to `$YOUR_ENV_VAR`.  
 
-Example from app.confg:  
+__Configuration Values From Environment__
+Values in your config file can also be pulled from environment variables.
+To retrieve a value from the environment, set it to `$YOUR_ENV_VAR`.
+
+Example from app.confg:
 ```
 [resilient]
 password=$resilient_password
@@ -98,7 +98,7 @@ client = resilient.get_client(opts)
 ### Installing the 'resilient' module
 
 Current versions of the release package are available on
-[PyPi](https://pypi.python.org/pypi/resilient) and 
+[PyPi](https://pypi.python.org/pypi/resilient) and
 [GitHub](https://github.com/IBMResilient/resilient-python-api/releases).
 Install using `pip`:
 
@@ -133,9 +133,9 @@ is a lightweight framework for rapid development of Resilient Action Module
 event processors in Python.
 
 It provides an extensible "application" class that loads any Python files
-in the application's `components` directory as well as any installed 
-compatible packages. For each of these components, it automatically subscribes 
-to the appropriate Action Module message destination (queue or topic), and 
+in the application's `components` directory as well as any installed
+compatible packages. For each of these components, it automatically subscribes
+to the appropriate Action Module message destination (queue or topic), and
 dispatches messages to the relevant method.
 
 The framework manages the connection to the Action Module, including any
@@ -149,7 +149,7 @@ access to the REST API and action message data.
 ### Installing the 'resilient_circuits' module
 
 Current versions of the release package are available on
-[PyPi](https://pypi.python.org/pypi/resilient-circuits) and 
+[PyPi](https://pypi.python.org/pypi/resilient-circuits) and
 [GitHub](https://github.com/IBMResilient/resilient-python-api/releases).
 Install using `pip`:
 

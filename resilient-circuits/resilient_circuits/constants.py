@@ -20,3 +20,6 @@ CMDS_LOGGER_NAME = "resilient_circuits_cmd_logger"
 LOG_DIVIDER = "\n------------------------\n"
 
 DEFAULT_NONE_STR = "Not found"
+ERROR_CA_FILE_NOT_FOUND = "Could not find a suitable TLS CA certificate bundle"
+ERROR_USR_NOT_MEMBER_ORG = "The user is not a member of the specified organization"
+ERROR_INVALID_USR = "Invalid user name or password"

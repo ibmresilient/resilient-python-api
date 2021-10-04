@@ -18,7 +18,7 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from requests.auth import HTTPBasicAuth
 
-from resilient import helpers
+from resilient import helpers, constants
 
 try:
     # Python 3
@@ -248,6 +248,9 @@ class BaseClient(object):
     def make_headers(self, co3_context_token=None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
+
+        headers[constants.HEADER_USR_AGENT_KEY] = constants.HEADER_USR_AGENT_VALUE
+
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token
         if isinstance(additional_headers, dict):
