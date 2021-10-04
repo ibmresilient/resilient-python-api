@@ -48,6 +48,9 @@ class BaseCmd(object):
         if "zip_parser" in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_zip_parser())
 
+        if "app_config_parser" in self.CMD_ADD_PARSERS:
+            parser_parents.append(self._get_app_config_parser())
+
         self.parser = sub_parser.add_parser(self.CMD_NAME,
                                             help=self.CMD_HELP,
                                             formatter_class=SDKArgHelpFormatter,
@@ -86,14 +89,19 @@ class BaseCmd(object):
                                     help="API names of datatables to include",
                                     nargs="*")
 
+        res_obj_parser.add_argument("-f", "--function",
+                                    type=ensure_unicode,
+                                    help="API names of functions to include",
+                                    nargs="*")
+
         res_obj_parser.add_argument("-fd", "--field",
                                     type=ensure_unicode,
                                     help="API names of custom fields to include",
                                     nargs="*")
 
-        res_obj_parser.add_argument("-f", "--function",
+        res_obj_parser.add_argument("-i", "--incidenttype",
                                     type=ensure_unicode,
-                                    help="API names of functions to include",
+                                    help="Display names of custom incident types to include (surrounded by \"\")",
                                     nargs="*")
 
         res_obj_parser.add_argument("-m", "--messagedestination",
@@ -158,3 +166,19 @@ class BaseCmd(object):
                                 help="Generate a .zip of the generated file")
 
         return zip_parser
+
+    @staticmethod
+    def _get_app_config_parser():
+        """
+        Create a parser has an argument for the path to the app.config file
+
+        :return: A single argparse.ArgumentParser
+        :rtype: argparse.ArgumentParser
+        """
+        app_config_parser = argparse.ArgumentParser(add_help=False)
+
+        app_config_parser.add_argument("-c", "--config",
+                                       type=ensure_unicode,
+                                       help="Path to app.config file to use")
+
+        return app_config_parser

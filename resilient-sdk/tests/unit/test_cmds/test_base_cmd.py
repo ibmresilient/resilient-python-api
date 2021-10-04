@@ -61,6 +61,7 @@ def test_get_res_obj_parser(fx_cmd_line_args_codegen_package):
     assert args.datatable == ["mock_data_table"]
     assert args.task == ["mock_custom_task_one", "mock_cusom_task__________two"]
     assert args.script == ["Mock Script One"]
+    assert args.incidenttype == [u"mock_incidenttype_Āā", u"mock incident type one"]
 
 
 def test_parser_parents():

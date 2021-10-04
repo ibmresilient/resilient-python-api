@@ -195,6 +195,13 @@ def test_get_res_obj():
 
     assert all(elem.get("x_api_name") in artifacts_wanted for elem in artifacts) is True
 
+def test_get_incident_types():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES)
+
+    incident_types_wanted = [u"mock_incidenttype_Āā", u"mock incident type one"]
+    incident_types = sdk_helpers.get_res_obj("incident_types", "name", "Custom Incident Types", incident_types_wanted, org_export)
+
+    assert all(elem.get("name") in incident_types_wanted for elem in incident_types) is True
 
 def test_get_res_obj_corrupt_export():
     org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES_CORRUPT)
@@ -276,7 +283,7 @@ def test_minify_export(fx_mock_res_client):
     assert minified_fields[0].get("uuid") == "bfeec2d4-3770-11e8-ad39-4a0004044aa1"
 
     # Test it added the default incident type
-    assert len(minified_incident_types) == 1
+    assert len(minified_incident_types) >= 1
     assert minified_incident_types[0].get("export_key") == "Customization Packages (internal)"
     assert minified_incident_types[0].get("uuid") == "bfeec2d4-3770-11e8-ad39-4a0004044aa0"
 

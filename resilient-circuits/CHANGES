@@ -1,3 +1,12 @@
+2021-08: version 42.1
+* No major changes. Just bumping build number to coincide with other builds
+
+2021-08: version 42.0
+* Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables. See the App Host Deployment Guide for details.
+* Enhancement to selftest to also check connection back to SOAR platform.
+* Added 'selftest_timeout' to app.config file. It sets the value in seconds for selftest to wait for a response from the SOAR platform.
+* Bug fixes.
+
 2021-06: version 41.1
 * Increase num_workers limit to 500
 

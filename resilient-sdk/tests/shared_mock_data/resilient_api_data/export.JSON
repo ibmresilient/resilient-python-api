@@ -9754,7 +9754,35 @@
     "uuid" : "0a76fa64-b3a3-40a2-9b16-0d4f52abfb2e",
     "version" : 0
   } ],
-  "incident_types" : [ {
+  "incident_types" : [
+  {
+    "create_date" : 1626202388906,
+    "description" : null,
+    "enabled" : true,
+    "export_key" : "mock_incidenttype_Āā",
+    "hidden" : false,
+    "id" : 0,
+    "name" : "mock_incidenttype_Āā",
+    "parent_id" : null,
+    "system" : false,
+    "tags" : [ ],
+    "update_date" : 1626202388909,
+    "uuid" : "ec3c8e09-11bc-43de-9457-096c2c0fc06e"
+  }, {
+    "create_date" : 1626202416868,
+    "description" : null,
+    "enabled" : true,
+    "export_key" : "mock incident type one",
+    "hidden" : false,
+    "id" : 0,
+    "name" : "mock incident type one",
+    "parent_id" : null,
+    "system" : false,
+    "tags" : [ ],
+    "update_date" : 1626202416869,
+    "uuid" : "06fb54fe-0c90-4006-9383-9ef6f180b0b6"
+  },
+  {
     "create_date" : 1296778427539,
     "description" : null,
     "enabled" : true,

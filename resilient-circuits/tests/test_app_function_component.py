@@ -23,6 +23,7 @@ def test_basic_instantiation(circuits_app):
     assert mock_cmp.required_app_configs == mock_constants.MOCK_REQUIRED_APP_CONFIGS
     assert isinstance(mock_cmp.rc, RequestsCommon)
     assert mock_cmp.app_configs.url == "https://www.mockexample.com"
+    assert mock_cmp.options == mock_cmp._app_configs_as_dict
 
 
 def test_status_message(circuits_app):

@@ -10,7 +10,7 @@ from collections import defaultdict
 import pkg_resources
 from requests.exceptions import ConnectionError, SSLError
 from resilient import constants as res_constants
-from resilient import BasicHTTPException, SimpleClient, is_env_proxies_set, get_and_parse_proxy_env_var
+from resilient import BasicHTTPException, SimpleHTTPException, SimpleClient, is_env_proxies_set, get_and_parse_proxy_env_var
 from resilient_circuits.actions_component import SELFTEST_ERRORS, SELFTEST_SUBSCRIPTIONS
 from resilient_circuits.stomp_events import SelftestTerminateEvent
 from resilient_circuits import constants, helpers, app
@@ -22,10 +22,14 @@ ERROR_EXIT_CODES_MAP = {
     1: 1,       # Error running App's selftest
     20: 20,     # REST: Generic connection error
     401: 21,    # REST: Connection unauthorized
-    23: 23,     # REST: SSL Error (Certificate Error)
+    22: 22,     # REST: OSError (Could not find Certificate file)
+    23: 23,     # REST: SSL Error (Invalid Certificate Error)
+    24: 24,     # REST: Organization Membership Error
+    25: 25,     # REST: Invalid Username or Password
     30: 30,     # STOMP: Generic connection error
     31: 31,     # STOMP: Not authorized to instansiate STOMP connection
-    32: 32      # STOMP: Not authorized to read from queue
+    32: 32,     # STOMP: Not authorized to read from queue
+    33: 33      # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
 }
 
 
@@ -85,6 +89,13 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
         # Connection unauthorized
         error_connecting_to_soar(host, e.response.reason, e.response.status_code)
 
+    except SimpleHTTPException as e:
+        # Incorrect User/Password
+        if hasattr(e, "args") and isinstance(e.args, tuple) and constants.ERROR_INVALID_USR in e.args[0]:
+            error_connecting_to_soar(host, e, 25)
+
+        error_connecting_to_soar(host, u"Unknown REST Error: {0}".format(e), 20)
+
     except SSLError as e:
         # SSL Error (Certificate Error)
         error_connecting_to_soar(host, e, 23)
@@ -93,9 +104,21 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
         # Generic connection error
         error_connecting_to_soar(host, e, 20)
 
+    except OSError as e:
+        if hasattr(e, "args") and isinstance(e.args, tuple) and constants.ERROR_CA_FILE_NOT_FOUND in e.args[0]:
+            # CA file could not be found/read
+            error_connecting_to_soar(host, e, 22)
+
+        error_connecting_to_soar(host, u"Unknown REST Error: {0}".format(e), 20)
+
     except Exception as e:
         # Generic connection error (normally related to the user's org membership)
         if hasattr(e, "args") and isinstance(e.args, tuple):
+
+            # User not member of organization error
+            if constants.ERROR_USR_NOT_MEMBER_ORG in e.args[0]:
+                error_connecting_to_soar(host, e, 24)
+
             error_connecting_to_soar(host, e, 20)
 
         error_connecting_to_soar(host, u"Unknown REST Error: {0}".format(e), 20)
@@ -145,7 +168,7 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
 
             if helpers.should_timeout(start_time, app_configs.get(constants.DEFAULT_SELFTEST_TIMEOUT_KEY, constants.DEFAULT_SELFTEST_TIMEOUT_VALUE)):
                 resilient_circuits_instance.action_component.fire(SelftestTerminateEvent())
-                error_connecting_to_soar(host, "Could not subscribe to any message destinations", 30)
+                error_connecting_to_soar(host, "Could not subscribe to any message destinations", 33)
 
         # Send event to Terminate resilient-circuits
         resilient_circuits_instance.action_component.fire(SelftestTerminateEvent())
@@ -158,7 +181,7 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
             # Not authorized to read from queue
             for e in SELFTEST_ERRORS:
                 if b"is not authorized to read from queue" in e:
-                    error_connecting_to_soar(host, "{0} is not authorized to read from the App's Message Destination".format(host), 32)
+                    error_connecting_to_soar(host, "'{0}' is not authorized to read from the App's Message Destination".format(helpers.get_user(app_configs)), 32)
 
             error_connecting_to_soar(host, u"Unknown STOMP Error: {0}".format(e), 30)
 

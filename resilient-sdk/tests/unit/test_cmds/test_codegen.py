@@ -75,10 +75,10 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     assert cmd_codegen.CMD_NAME == "codegen"
     assert cmd_codegen.CMD_HELP == "Generate boilerplate code to start developing an app"
     assert cmd_codegen.CMD_USAGE == """
-    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     assert cmd_codegen.CMD_DESCRIPTION == "Generate boilerplate code to start developing an app"
-    assert cmd_codegen.CMD_ADD_PARSERS == ["res_obj_parser", "io_parser"]
+    assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser"]
 
     args = cmd_codegen.parser.parse_known_args()[0]
     assert args.package == "fn_main_mock_integration"
@@ -100,6 +100,7 @@ def test_cmd_codegen_args_parser(fx_get_sub_parser, fx_cmd_line_args_codegen_pac
     assert args.datatable == ["mock_data_table"]
     assert args.task == ["mock_custom_task_one", "mock_cusom_task__________two"]
     assert args.script == ["Mock Script One"]
+    assert args.incidenttype == [u"mock_incidenttype_Āā", u"mock incident type one"]
 
 
 def test_render_jinja_mapping(fx_mk_temp_dir):
@@ -246,7 +247,7 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     that each of the EXPECTED_FILES exist and also the additional 'Additional Mock Rule'
     and its related Workflow which has a Function is also added to the package
     """
-    
+
     output_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path", "fn_main_mock_integration-1.1.0")
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     shutil.move(fx_copy_fn_main_mock_integration[1], output_path)

@@ -21,3 +21,7 @@ urlbase=/cts
 # tests can be run with a minimal mock in the [resilient] section,
 #resilient_mock=rc_cts.lib.resilient_mock.MyResilientMock
 
+# use auth_user and auth_password when specifying the -user and -password parameters on
+#  resutil threatserviceedit to ensure basic authentication
+#auth_user=
+#auth_password=
