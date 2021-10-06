@@ -910,3 +910,23 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
     # Return the path to the extension zip
     return path_the_extension_zip
+
+def get_required_python_version(python_requires_str):
+    """
+    Given a value from the 'python_requires' attribute of setup.py, parse out the
+    numerical value given for the version required.
+
+    :param python_requires_str: str representation of the value assosciated with the 'python_requires' attr in setup.py
+    :return: return the minimum required python version or None if not found
+    :rtype: tuple with (<major>, <minor>) version format
+    """
+    try:
+        i = re.search(r"\d", python_requires_str)
+        major = int(python_requires_str[i.start():].split(".")[0])
+        if len(python_requires_str[i.start():].split(".")) > 1:
+            minor = int(python_requires_str[i.start():].split(".")[1])
+        else:
+            minor = 0
+        return (major, minor)
+    except Exception as e:
+        raise SDKException("'python_requires' version not given in correct format.")

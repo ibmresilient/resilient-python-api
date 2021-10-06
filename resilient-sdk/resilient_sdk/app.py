@@ -82,6 +82,7 @@ def main():
 
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV)
+    sdk_validate_enabled = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_VAL)
 
     # Get main parser object
     parser = get_main_app_parser()
@@ -167,8 +168,13 @@ def main():
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
 
-    elif args.cmd == cmd_validate.CMD_NAME:
+    elif sdk_validate_enabled and args.cmd == cmd_validate.CMD_NAME:
+        # TODO: remove sdk_validate_enabled check once validate is ready for use
+        # functionality is currently hidden behind sdk_validate_enabled env var 
         cmd_validate.execute_command(args)
+    elif not sdk_validate_enabled and args.cmd == cmd_validate.CMD_NAME:
+        LOG.info("'resilient-sdk validate' is currently in testing." \
+            "\nTo run 'resilient-sdk validate' please set the env variable {0}".format(sdk_helpers.ENV_VAR_VAL))
 
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)
