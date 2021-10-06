@@ -222,7 +222,6 @@ class CmdValidate(BaseCmd):
         try:
             sdk_helpers.validate_dir_paths(os.R_OK, path_package)
         except Exception as e:
-            # something else happened.
             raise e
 
         ##############
@@ -234,7 +233,6 @@ class CmdValidate(BaseCmd):
             sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
             LOG.info("setup.py file found at path {0}\n".format(path_setup_py_file))
         except Exception as e:
-            # an issue other than what would normally be thrown by validate_file_paths
             raise e
 
         res = CmdValidate._validate_setup(path_package, path_setup_py_file)
@@ -290,66 +288,66 @@ class CmdValidate(BaseCmd):
         LOG.debug("Path to project: {0}".format(path_package))
 
         # each attribute has format (<name>, <regex to match to fail>, <failure message>, <severity>)
-        attributes = (
-            ("name", {
+        attributes = {
+            "name": {
                 "pattern": "r[^a-z_]+", # TODO: are numbers allowed?
                 "fail_msg": "setup.py attribute '{0}' is has the following invalid character(s): '{1}'", 
                 "solution": "make sure that '{0}' is all lowercase and does not include and special characters besides underscores",
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            }),
-            ("display_name", {
+            },
+            "display_name": {
                 "pattern": r"^<<|>>$", 
                 "fail_msg": "setup.py attribute '{0}' appears to still be the default value", 
                 "solution": "please set '{0}' to an appropriate value. this value will be displayed when the integration is installed",
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            }),
-            ("license", {
+            },
+            "license": {
                 "pattern": r"^<<|>>$", # TODO: what are the GPL's?
                 "fail_msg": "setup.py attribute '{0}' appears to still be the default value", 
                 "solution": "please set '{0}' to an appropriate value. more info HERE", # TODO: documentation link 
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            }),
-            ("author", {
+            },
+            "author": {
                 "pattern": r"^<<|>>$", 
                 "fail_msg": "setup.py attribute '{0}' appears to still be the default value", 
                 "solution": "please set '{0}' to the name of the author",
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            }),
-            ("author_email", {
+            },
+            "author_email": {
                 "pattern": r"@example\.com", 
                 "fail_msg": "setup.py attribute '{0}' appears to still be the default value. validation found invalid address '{1}'", 
                 "solution": "please set '{0}' to the author's contact email",
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            }),
-            ("description", {
+            },
+            "description": {
                 "pattern": r"^(?!Resilient Circuits Components).+", 
                 "fail_msg": "setup.py attribute '{0}' doesn't start with 'Resilient Circuits Components'", 
                 "solution": "'{0}' should start with 'Resilient Circuits Components'. This will be displayed when the integration is installed",
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            }),
-            ("long_description", {
+            },
+            "long_description": {
                 "pattern": r"^(?!Resilient Circuits Components).+", 
                 "fail_msg": "setup.py attribute '{0}' doesn't start with 'Resilient Circuits Components'", 
                 "solution": "'{0}' should start with 'Resilient Circuits Components'. This will be displayed when the integration is installed",
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            }),
-            # ATTRIBUTES BELOW HERE ARE MANUALLY PARSED
-            ("install_requires", {
+            },
+            # ATTRIBUTES BELOW HERE ARE MANUALLY PARSED - EXCLUDE "pattern" TO SKIP AUTOMATIC PARSING
+            "install_requires": {
                 "fail_msg": "", 
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            }),
-            ("python_requires", {
+            },
+            "python_requires": {
                 "fail_msg": "", 
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            }),
-            ("entry_points", {
+            },
+            "entry_points": {
                 "fail_msg": "", 
                 "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            })
-        )
+            }
+        }
 
         # check through setup.py file parse
-        for attr, attr_dict in attributes:
+        for attr, attr_dict in attributes.items():
             parsed_attr = package_helpers.parse_setup_py(path_setup_py_file, [attr]).get(attr)
 
             pattern = attr_dict.get("pattern")
@@ -396,11 +394,13 @@ class CmdValidate(BaseCmd):
                     pass # TODO: log info on success?
 
         parsed_attr = package_helpers.parse_setup_py(path_setup_py_file, ["install_requires"]).get("install_requires")
-        if not package_helpers.get_dependency_from_install_requires(parsed_attr, "resilient-circuits") \
+        if not parsed_attr or not package_helpers.get_dependency_from_install_requires(parsed_attr, "resilient-circuits") \
             and not package_helpers.get_dependency_from_install_requires(parsed_attr, "resilient_circuits"):
             issue = SDKValidateIssue(
-                "dependency issue in setup.py",
-                "'resilient_circuits' must be included as a dependency in 'install_requires'"
+                "dependency issue for 'install_requires' in setup.py",
+                "'resilient_circuits' must be included as a dependency in 'install_requires'",
+                severity=attributes.get("install_requires").get("sev"),
+                solution="include 'resilient_circuits' as a requirement in 'install_requires'"
             )
             LOG.log(issue.get_logging_level(), issue.error_str())
 
@@ -414,7 +414,7 @@ class CmdValidate(BaseCmd):
             issue = SDKValidateIssue(
                 "python_requires version too low",
                 "given version '{0}' in setup.py is too low.".format(package_helpers.get_required_python_version(parsed_attr)),
-                severity=SDKValidateIssue.SEVERITY_LEVEL_MED,
+                severity=attributes.get("python_requires").get("sev"),
                 solution="please use '>={0}.{1}' or greater".format(
                     sdk_helpers.MIN_SUPPORTED_PY_VERSION[0],
                     sdk_helpers.MIN_SUPPORTED_PY_VERSION[1]
@@ -426,13 +426,14 @@ class CmdValidate(BaseCmd):
         elif not parsed_attr:
             issue = SDKValidateIssue(
                 "python version not set",
-                "suggested requirement is >={0}.{1}".format(
+                "'python_requires' is a recommended attribute",
+                severity=attributes.get("python_requires").get("sev"),
+                solution="suggested requirement is 'python_requires>={0}.{1}".format(
                     sdk_helpers.MIN_SUPPORTED_PY_VERSION[0],
                     sdk_helpers.MIN_SUPPORTED_PY_VERSION[1]
-                ),
-                severity=SDKValidateIssue.SEVERITY_LEVEL_MED
+                )
             )
-            LOG.log(issue.get_logging_level(), "WARNING %s", "python_requires must be set to:  'python_requires>=3.6'")
+            LOG.log(issue.get_logging_level(), issue.error_str())
 
             issues.append(issue)
         else:
