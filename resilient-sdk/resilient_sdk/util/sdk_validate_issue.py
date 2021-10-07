@@ -54,7 +54,15 @@ class SDKValidateIssue(object):
                 "WARNING:" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_MED else "INFO:\t"
 
     def get_logging_level(self):
-        """Returns logging level to use with logger"""
+        """
+        Returns logging level to use with logger
+        
+        40=LOG.error
+        30=LOG.warning
+        20=LOG.info
+
+        https://docs.python.org/3.5/library/logging.html#levels
+        """
         if self.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH:
             return 40
         elif self.severity == SDKValidateIssue.SEVERITY_LEVEL_MED:
