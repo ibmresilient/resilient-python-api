@@ -75,9 +75,9 @@ PREFIX_EXTENSION_ZIP = "app-"
 MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
-    "author", "name", "display_name", "version",
-    "description", "long_description", "url",
-    "install_requires", "entry_points"
+    "display_name", "name", "version", "author",
+    "author_email", "install_requires", "description", 
+    "long_description", "url", "entry_points", "python_requires"
 )
 
 # Tuple of all Resilient Object Names we support when packaging/converting to ext
@@ -96,8 +96,8 @@ BASE_PERMISSIONS = [
 # List of supported entry points.
 SUPPORTED_EP = [
     "resilient.circuits.customize",
-    "resilient.circuits.apphost.configsection",
-    "resilient.circuits.configsection"
+    "resilient.circuits.configsection",
+    "resilient.circuits.selftest"
 ]
 # Minimum server version for import if no customize.py defined.
 IMPORT_MIN_SERVER_VERSION = {
@@ -109,6 +109,17 @@ IMPORT_MIN_SERVER_VERSION = {
 
 # The default app container repository name.
 REPOSITORY_NAME = "ibmresilient"
+
+# Color dict for printing in color
+COLORS = {
+    "PASS": '\033[92m',
+    "FAIL": '\033[91m',
+    "CRITICAL": '\033[91m',
+    "WARNING": '\033[93m',
+    "INFO": '\033[0m',
+    "END": '\033[0m'
+}
+
 
 def get_setup_callable(content):
     """ Parse the setup.py file, returning just the callable setup() section.
@@ -930,3 +941,8 @@ def get_required_python_version(python_requires_str):
         return (major, minor)
     except Exception as e:
         raise SDKException("'python_requires' version not given in correct format.")
+
+def color_output(s, level):
+    """Uses class COLORS to color given string. 'level' maps to values in COLORS dict"""
+    # print("***", s, level)
+    return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))

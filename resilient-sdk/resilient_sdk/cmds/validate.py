@@ -14,6 +14,7 @@ from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_validate_configs as val_configs
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
@@ -132,6 +133,7 @@ class CmdValidate(BaseCmd):
         - setup.py
         - util/data/export.res
         - TODO: a file that specifies the location of proxy support??
+                if running res-circuits >= sdk_helpers.RESILIENT_LIBRARIES_VERSION
 
         :param args: command line args
         :return: Prints output to the console and returns a list of SDKValidateIssues objects if it encountered
@@ -156,30 +158,30 @@ class CmdValidate(BaseCmd):
         path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
-        absolute_path = "Absolute path to package: {0}".format(path_package)
-
-        attributes_to_parse = [
-            "display_name",
-            "name",
-            "version",
-            "author",
-            "author_email",
-            "install_requires",
-            "python_requires"
-        ]
-        parsed_setup_file = package_helpers.parse_setup_py(path_setup_py_file, attributes_to_parse)
+        parsed_setup_file = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
 
         # check through setup.py file parse
-        for attr in attributes_to_parse:
-            package_details_output.append("{0}: {1}".format(attr, parsed_setup_file.get(attr)))
+        for attr in package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES:
+            if attr != "description" and attr != "long_description" and attr != "entry_points": 
+                attr_val = parsed_setup_file.get(attr)
+                package_details_output.append("{0}: {1}".format(attr, attr_val if attr_val else "**NOT FOUND**"))
 
-        # parse import definition from export.res file
-        path_export_res = os.path.join(path_package, parsed_setup_file.get("name"), 
-                                       package_helpers.PATH_UTIL_DATA_DIR, package_helpers.BASE_NAME_EXPORT_RES)
-        sdk_helpers.validate_file_paths(os.R_OK, path_export_res)
-        import_definition = package_helpers.get_import_definition_from_local_export_res(path_export_res)
+        # parse import definition from export.res file or from customize.py (deprecated)
+        try:
+            path_export_res = os.path.join(path_package, parsed_setup_file.get("name"), 
+                                    package_helpers.PATH_UTIL_DATA_DIR, package_helpers.BASE_NAME_EXPORT_RES)
+            sdk_helpers.validate_file_paths(os.R_OK, path_export_res)
+            import_definition = package_helpers.get_import_definition_from_local_export_res(path_export_res)
+        except SDKException as e:
+            LOG.warning("WARNING: your code was generated with an older version of resilient-sdk. Please use the latest version and reload")
 
-        if import_definition.get("server_version").get("version"):
+            path_customize_py = os.path.join(path_package, parsed_setup_file.get("name"), package_helpers.PATH_CUSTOMIZE_PY)
+            sdk_helpers.validate_file_paths(os.R_OK, path_customize_py)
+            import_definition = package_helpers.get_import_definition_from_customize_py(path_customize_py)
+        except Exception as e:
+            package_details_output.append("SOAR version: NOT FOUND; <path_to_package>/<package_name>/util/data/export.res not found")
+        
+        if import_definition and import_definition.get("server_version").get("version"):
             package_details_output.append("SOAR version: {0}".format(import_definition.get("server_version").get("version")))
         else:
             package_details_output.append("SOAR version: not specified in 'util/data/export.res'")
@@ -207,11 +209,10 @@ class CmdValidate(BaseCmd):
         - entrypoint.sh (optional but warn that should be App Host supported)
         - Dockerfile (optional but warn that should be App Host supported)
 
-        :param: 
-        :return: 
-        :rtype: 
+        :param args: list of args
+        :return: list of issues of type SDKValidateIssue 
+        :rtype: list of SDKValidateIssue
         """
-        LOG.info("{0}Validating{0}".format(sdk_helpers.LOG_DIVIDER))
         
         issues = []
         setup_pass = True
@@ -232,17 +233,16 @@ class CmdValidate(BaseCmd):
         try:
             sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
             LOG.info("setup.py file found at path {0}\n".format(path_setup_py_file))
-        except Exception as e:
+        except SDKException as e:
             raise e
 
-        res = CmdValidate._validate_setup(path_package, path_setup_py_file)
-        issues += res[0]
-        setup_pass = res[1]
+        results = CmdValidate._validate_setup(path_package, path_setup_py_file)
+        issues += results[0]
+        setup_pass = results[1]
 
-        print("\n***ISSUES***\n\t", "\n\t".join((str(i) for i in issues)))
-        print("\n***SETUP PASSS?***",setup_pass)
-
+        CmdValidate._print_summary(issues)
         exit(0)
+        return issues
         # TODO: implement other static validates
         #       - fn_package/util/config.py
         #       - fn_package/util/customize.py
@@ -279,6 +279,7 @@ class CmdValidate(BaseCmd):
         :return: Returns a list of SDKValidateIssues that describes the issues found when running this method
         :rtype: list of SDKValidateIssues
         """
+        LOG.info("{0}Validating setup.py{0}".format(sdk_helpers.LOG_DIVIDER))
         
         # empty list of SDKValidateIssues
         issues = []
@@ -287,173 +288,58 @@ class CmdValidate(BaseCmd):
 
         LOG.debug("Path to project: {0}".format(path_package))
 
-        # each attribute has format (<name>, <regex to match to fail>, <failure message>, <severity>)
-        attributes = {
-            "name": {
-                "pattern": "r[^a-z_]+", # TODO: are numbers allowed?
-                "fail_msg": "setup.py attribute '{0}' is has the following invalid character(s): '{1}'",
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "make sure that '{0}' is all lowercase and does not include and special characters besides underscores",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            },
-            "display_name": {
-                "pattern": r"^<<|>>$", 
-                "fail_msg": "setup.py attribute '{0}' appears to still be the default value", 
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "please set '{0}' to an appropriate value. this value will be displayed when the integration is installed",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            },
-            "license": {
-                "pattern": r"^<<|>>$", # TODO: what are the GPL's?
-                "fail_msg": "setup.py attribute '{0}' appears to still be the default value", 
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "please set '{0}' to an appropriate value. more info HERE", # TODO: documentation link 
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            },
-            "author": {
-                "pattern": r"^<<|>>$", 
-                "fail_msg": "setup.py attribute '{0}' appears to still be the default value", 
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "please set '{0}' to the name of the author",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            },
-            "author_email": {
-                "pattern": r"@example\.com", 
-                "fail_msg": "setup.py attribute '{0}' appears to still be the default value. validation found invalid address '{1}'", 
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "please set '{0}' to the author's contact email",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            },
-            "description": {
-                "pattern": r"^(?!Resilient Circuits Components).+", 
-                "fail_msg": "setup.py attribute '{0}' doesn't start with 'Resilient Circuits Components'", 
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "'{0}' should start with 'Resilient Circuits Components'. This will be displayed when the integration is installed",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            },
-            "long_description": {
-                "pattern": r"^(?!Resilient Circuits Components).+", 
-                "fail_msg": "setup.py attribute '{0}' doesn't start with 'Resilient Circuits Components'", 
-                "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-                "solution": "'{0}' should start with 'Resilient Circuits Components'. This will be displayed when the integration is installed",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            },
-            # ATTRIBUTES BELOW HERE ARE MANUALLY PARSED - EXCLUDE "pattern" TO SKIP AUTOMATIC PARSING
-            "install_requires": {
-                "fail_msg": "'resilient_circuits' must be included as a dependency in 'install_requires'",
-                "solution": "include 'resilient_circuits' as a requirement in 'install_requires'",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            },
-            "python_requires": {
-                "fail_msg": "given version '{0}.{1}' in setup.py is too low.",
-                "missing_msg": "'python_requires' is a recommended attribute",
-                "solution": "suggested requirement is 'python_requires>={0}.{1}".format(
-                    sdk_helpers.MIN_SUPPORTED_PY_VERSION[0],
-                    sdk_helpers.MIN_SUPPORTED_PY_VERSION[1]
-                ),
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_MED
-            },
-            "entry_points": {
-                "fail_msg": "", 
-                "missing_msg": "",
-                "solution": "",
-                "sev": SDKValidateIssue.SEVERITY_LEVEL_HIGH
-            }
-        }
+        attributes = val_configs.setup_py_attributes
 
         # check through setup.py file parse
-        for attr, attr_dict in attributes.items(): # TODO: @shane: ok to use py3 specific .items()?
+        for attr in attributes:
+            attr_dict = attributes.get(attr)
             parsed_attr = package_helpers.parse_setup_py(path_setup_py_file, [attr]).get(attr)
 
-            pattern = attr_dict.get("pattern")
-            severity = attr_dict.get("sev")
+            fail_func = attr_dict.get("fail_func")
+            severity = attr_dict.get("severity")
             fail_msg = attr_dict.get("fail_msg")
             missing_msg = attr_dict.get("missing_msg")
             solution = attr_dict.get("solution")
 
-            if not pattern:
-                # cannot be parsed in loop; is dealt with below loop and can be skipped here
-                continue
-
             if not parsed_attr:
+                name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
+            elif fail_func(parsed_attr):
+                formats = [attr, parsed_attr]
+                if attr_dict.get("fail_msg_lambda_supplement"):
+                    formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
 
-                issue = SDKValidateIssue(
-                    "{0} not found".format(attr),
-                    description,
-                    severity=severity,
-                    solution="please implement a value for attribute '{0}'".format(attr)
-                )
-                LOG.log(issue.get_logging_level(), issue.error_str())
-
-                issues.append(issue)
-                if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH: setup_valid = False
+                name = "invalid values in setup.py"
+                description = fail_msg.format(*formats)
             else:
-                matches = re.findall(pattern, str(parsed_attr))
-                if matches:
-                    fail_msg = fail_msg.format(*[attr, matches])
-                    solution = solution.format(attr)
-
-                    issue = SDKValidateIssue(
-                        "invalid character(s) in setup.py",
-                        fail_msg,
-                        severity=severity,
-                        solution=solution
-                    )
-                    LOG.log(issue.get_logging_level(), issue.error_str())
-
-                    issues.append(issue)
-                    if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH: setup_valid = False
-                else:
-                    pass # TODO: log info on success?
-
-        # INSTALL_REQUIRES parse
-        parsed_attr = package_helpers.parse_setup_py(path_setup_py_file, ["install_requires"]).get("install_requires")
-        if not parsed_attr or not package_helpers.get_dependency_from_install_requires(parsed_attr, "resilient-circuits") \
-            and not package_helpers.get_dependency_from_install_requires(parsed_attr, "resilient_circuits"):
+                # TODO: @shane thoughts on creating a SDKValidateIssue object that will LOG.debug on success?
+                # this helps us keep track for summary at the end but won't output unless the user sets log level=debug
+                name = "{0} valid in setup.py".format(attr)
+                description = "'{0}' passed".format(attr)
+                severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+                solution = ""
             issue = SDKValidateIssue(
-                "dependency issue for 'install_requires' in setup.py",
-                attributes.get("install_requires").get("fail_msg"),
-                severity=attributes.get("install_requires").get("sev"),
-                solution=attributes.get("install_requires").get("solution")
+                name,
+                description,
+                severity=severity,
+                solution=solution.format(attr)
             )
-            LOG.log(issue.get_logging_level(), issue.error_str())
 
             issues.append(issue)
-            if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH: setup_valid = False
-        else:
-            pass # TODO: deal with success
-
-        # PYTHON_REQUIRES parse
-        parsed_attr = package_helpers.parse_setup_py(path_setup_py_file, ["python_requires"]).get("python_requires")
-        if parsed_attr and package_helpers.get_required_python_version(parsed_attr) < sdk_helpers.MIN_SUPPORTED_PY_VERSION:
-            version = package_helpers.get_required_python_version(parsed_attr)
-            issue = SDKValidateIssue(
-                "python_requires version too low",
-                attributes.get("python_requires").get("fail_msg").format(version[0], version[1]),
-                severity=attributes.get("python_requires").get("sev"),
-                solution=attributes.get("python_requires").get("solution")
-            )
-            LOG.log(issue.get_logging_level(), issue.error_str())
-
-            issues.append(issue)
-            if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH: setup_valid = False
-        elif not parsed_attr:
-            issue = SDKValidateIssue(
-                "python version not set",
-                attributes.get("python_requires").get("missing_msg"),
-                severity=attributes.get("python_requires").get("sev"),
-                solution=attributes.get("python_requires").get("solution")
-            )
-            LOG.log(issue.get_logging_level(), issue.error_str())
-
-            issues.append(issue)
-            if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH: setup_valid = False
-        else:
-            pass # TODO: deal with success
+            if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: setup_valid = False
 
         # TODO: ENTRY_POINTS parse
+        # SUPPORTED_EP
 
+        issues.sort()
+        for issue in issues:
+            LOG.log(issue.get_logging_level(), issue.error_str())
+
+        status_str = "PASS" if setup_valid else "FAIL"
+        LOG.info(package_helpers.color_output("{0}setup.py validation {1}{0}".format(
+            sdk_helpers.LOG_DIVIDER, 
+            status_str
+        ), status_str))
         return issues, setup_valid
 
     @staticmethod
@@ -483,3 +369,28 @@ class CmdValidate(BaseCmd):
         TODO
         """
         LOG.info("{0}Running safety{0}".format(sdk_helpers.LOG_DIVIDER))
+
+    @staticmethod
+    def _print_summary(issues_list):
+        counts = {
+            SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
+            SDKValidateIssue.SEVERITY_LEVEL_WARN: 0,
+            SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
+            SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0,
+        }
+        for issue in issues_list:
+            counts[issue.severity] += 1
+        
+        LOG.info("{0}Results{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.info(sdk_helpers.LOG_DIVIDER)
+        LOG.info("Critical Issues: {0:>14}".format(
+            package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
+        ))
+        LOG.info("Warnings: {0:>21}".format(package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_WARN], "WARNING")))
+        LOG.info("Components Passed: {0:>12}".format(package_helpers.color_output(
+            int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG] + counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
+        ))
+        LOG.info("\nSee the detailed report at TODO: <path_to_report>") # TODO
+        LOG.info(sdk_helpers.LOG_DIVIDER)
+
+        

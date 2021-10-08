@@ -6,6 +6,7 @@
 
 import logging
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import package_file_helpers as package_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
@@ -14,11 +15,12 @@ LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
 
 
 class SDKValidateIssue(object):
-    SEVERITY_LEVEL_HIGH = 1
-    SEVERITY_LEVEL_MED = 2
-    SEVERITY_LEVEL_LOW = 3
+    SEVERITY_LEVEL_CRITICAL = 1
+    SEVERITY_LEVEL_WARN = 2
+    SEVERITY_LEVEL_INFO = 3
+    SEVERITY_LEVEL_DEBUG = 0
 
-    def __init__(self, name, description, severity=SEVERITY_LEVEL_HIGH, solution="UNKNOWN"):
+    def __init__(self, name, description, severity=SEVERITY_LEVEL_CRITICAL, solution="UNKNOWN"):
 
         self.name = name
         self.description = description
@@ -45,13 +47,13 @@ class SDKValidateIssue(object):
         return self.__str__()
 
     def _get_severity_as_str(self):
-        return "HIGH" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH else \
-                "MEDIUM" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_MED else \
-                "LOW" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_LOW else "UNKNOWN"
+        return "CRITICAL" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL else \
+               "WARNING" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN else \
+               "INFO" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO else "PASS"
 
-    def _get_formatted_severity_error_level(self):
-        return "ERROR:\t" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH else \
-                "WARNING:" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_MED else "INFO:\t"
+    def as_dict(self):
+        """Returns this class object as a dictionary"""
+        return self.__dict__
 
     def get_logging_level(self):
         """
@@ -60,21 +62,22 @@ class SDKValidateIssue(object):
         40=LOG.error
         30=LOG.warning
         20=LOG.info
+        10=LOG.debug
 
         https://docs.python.org/3.5/library/logging.html#levels
         """
-        if self.severity == SDKValidateIssue.SEVERITY_LEVEL_HIGH:
+        if self.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL:
             return 40
-        elif self.severity == SDKValidateIssue.SEVERITY_LEVEL_MED:
+        elif self.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN:
             return 30
-        else:
+        elif self.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO:
             return 20
-
-    def as_dict(self):
-        """Returns this class object as a dictionary"""
-        return self.__dict__
+        else:
+            return 10
 
     def error_str(self):
         """Returns an error string to be output to the console"""
-        return "{0}\t{1}; \n\t\tseverity={2}; \n\t\tsolution: {3}\n".format(self._get_formatted_severity_error_level(), 
-                                                                  self.description, self._get_severity_as_str(), self.solution)
+        return "{0:<20} {1}. {2}".format(
+            package_helpers.color_output(self._get_severity_as_str(), self._get_severity_as_str()), 
+            self.description, self.solution
+        )
