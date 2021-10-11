@@ -52,7 +52,7 @@ def test_set_version(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd
 
     # Get the old_version
     old_version = customize_py_import_definition["server_version"]["version"]
-    assert old_version == "36.0.0"
+    assert old_version == "41.0.6783"
 
     # Run _set_version
     cmd_dev = CmdDev(fx_get_sub_parser)
