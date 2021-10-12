@@ -5,12 +5,13 @@
 import uuid
 from argparse import Namespace
 import copy
+from mock import patch
+import pytest
 from resilient_sdk.cmds import base_cmd, CmdClone
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
 
 from tests.helpers import read_mock_json
-import pytest
 TEST_OBJ = {
     "uuid": uuid.uuid4(),
     "export_key": "TEST_OBJ",
@@ -49,6 +50,18 @@ def test_cmd_clone_setup(fx_get_sub_parser):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    assert cmd_clone.CMD_ADD_PARSERS == ["app_config_parser"]
+
+
+def test_execute_command(fx_get_sub_parser, fx_mock_res_client, caplog):
+    with patch("resilient_sdk.cmds.clone.get_resilient_client") as mock_client:
+
+        mock_client.return_value = fx_mock_res_client
+        cmd_clone = CmdClone(fx_get_sub_parser)
+        args = cmd_clone.parser.parse_known_args()[0]
+
+        cmd_clone.execute_command(args)
+        assert "'clone' command finished in" in caplog.text
 
 
 def test_clone_workflow(fx_get_sub_parser):
