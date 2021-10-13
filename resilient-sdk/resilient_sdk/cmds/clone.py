@@ -6,7 +6,7 @@
 
 import logging
 import uuid
-import time
+from datetime import datetime
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
@@ -57,6 +57,7 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    CMD_ADD_PARSERS = ["app_config_parser"]
 
     def setup(self):
         # Define codegen usage and description
@@ -124,10 +125,10 @@ class CmdClone(BaseCmd):
         """
         SDKException.command_ran = "clone"
         LOG.debug("Called clone with %s", args)
-        start = time.perf_counter()
+        start = datetime.now()
 
         # Instansiate connection to the Resilient Appliance
-        CmdClone.res_client = get_resilient_client()
+        CmdClone.res_client = get_resilient_client(path_config_file=args.config)
 
         org_export = get_latest_org_export(CmdClone.res_client)
 
@@ -179,8 +180,8 @@ class CmdClone(BaseCmd):
         else:
             self.parser.print_help()
 
-        end = time.perf_counter()
-        LOG.info("'clone' command finished in {} seconds".format(end - start))
+        time_delta = (datetime.now() - start).total_seconds()
+        LOG.info("'clone' command finished in {} seconds".format(time_delta))
 
     def add_authorised_info_to_md(self, new_export_data):
         """ 
@@ -377,7 +378,7 @@ class CmdClone(BaseCmd):
         else:
             # if get_res_obj does not raise an exception it means an object with that identifier exists
             # and in this case we raise an SDKException as the new name provided for cloning needs to be unique
-            raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name {} already exists".format(
+            raise SDKException("The new name for a cloned object needs to be unique and a {} with the api name '{}' already exists".format(
                 obj_type_name, new_object_api_name))
 
     @staticmethod

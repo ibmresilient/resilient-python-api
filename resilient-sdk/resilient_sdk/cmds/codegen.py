@@ -28,7 +28,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["res_obj_parser", "io_parser"]
+    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
 
     def setup(self):
         # Define codegen usage and description
@@ -255,7 +255,7 @@ class CmdCodegen(BaseCmd):
 
         else:
             # Instantiate connection to the Resilient Appliance
-            res_client = sdk_helpers.get_resilient_client()
+            res_client = sdk_helpers.get_resilient_client(path_config_file=args.config)
 
             # Generate + get latest export from Resilient Server
             org_export = sdk_helpers.get_latest_org_export(res_client)
