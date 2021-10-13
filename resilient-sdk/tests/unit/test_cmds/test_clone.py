@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import uuid
+import sys
 from argparse import Namespace
 import copy
 from mock import patch
@@ -61,6 +62,23 @@ def test_execute_command(fx_get_sub_parser, fx_mock_res_client, caplog):
         args = cmd_clone.parser.parse_known_args()[0]
 
         cmd_clone.execute_command(args)
+        mock_client.assert_called_once_with(path_config_file=None)
+        assert "'clone' command finished in" in caplog.text
+
+
+def test_execute_command_with_custom_config_file(fx_get_sub_parser, fx_mock_res_client, caplog):
+
+    mock_app_config_path = "mock_path"
+    sys.argv.extend(["-c", mock_app_config_path])
+
+    with patch("resilient_sdk.cmds.clone.get_resilient_client") as mock_client:
+
+        mock_client.return_value = fx_mock_res_client
+        cmd_clone = CmdClone(fx_get_sub_parser)
+        args = cmd_clone.parser.parse_known_args()[0]
+
+        cmd_clone.execute_command(args)
+        mock_client.assert_called_once_with(path_config_file=mock_app_config_path)
         assert "'clone' command finished in" in caplog.text
 
 
