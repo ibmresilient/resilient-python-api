@@ -1,5 +1,6 @@
-2021-09: version 42.2
+2021-10: version 42.2
 * Bug fix for 'clone' to support Python 2.7
+* Ability to use different app.config file per command using '-c' flag
 
 2021-08: version 42.1
 * No major changes. Just bumping build number to coincide with other builds
