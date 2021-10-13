@@ -943,6 +943,21 @@ def get_required_python_version(python_requires_str):
     except Exception as e:
         raise SDKException("'python_requires' version not given in correct format.")
 
+def check_package_installed(package_name):
+    """
+    Uses pkg_resources.require to certify that a package is installed
+    
+    :param package_name: name of package
+    :return: boolean value whether or not package is installed in current python env
+    :rtype: bool
+    """
+    try:
+        pkg_resources.require(package_name)
+    except Exception as e:
+        return False
+
+    return True
+
 def color_output(s, level):
     """Uses class COLORS to color given string. 'level' maps to values in COLORS dict"""
     return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))

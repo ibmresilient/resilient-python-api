@@ -4,7 +4,7 @@
 
 import re
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 
 # formatted strings follow array of values: [attr, attr_value, <OPTIONAL: fail_msg_lambda_supplement>]

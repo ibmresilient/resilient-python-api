@@ -13,6 +13,7 @@ CURRENT_SOAR_SERVER_VERSION = 42
 
 MIN_SUPPORTED_PY_VERSION = (3, 6)
 SDK_PACKAGE_NAME = "resilient-sdk"
+CIRCUITS_PACKAGE_NAME = "resilient-circuits"
 
 SUB_CMD_PACKAGE = ("--package", "-p")
 

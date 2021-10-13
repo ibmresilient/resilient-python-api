@@ -114,6 +114,17 @@ class CmdValidate(BaseCmd):
 
         self._print_summary(self.VALIDATE_ISSUES, output_suppressed)
 
+    @classmethod
+    def _run_main_validation(cls, args, output_suppressed):
+        """
+        TODO
+        """
+        LOG.log(cls._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
+        cls.VALIDATE_ISSUES += cls._validate(args, output_suppressed)
+
+        # cls.VALIDATE_ISSUES += cls._run_tests(args, output_suppressed)
+
     @staticmethod
     def _get_class_log_level(level, output_suppressed):
         if output_suppressed:
@@ -127,17 +138,6 @@ class CmdValidate(BaseCmd):
             return 20
         else:
             return 10
-
-    @classmethod
-    def _run_main_validation(cls, args, output_suppressed):
-        """
-        TODO
-        """
-        LOG.log(cls._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
-        cls.VALIDATE_ISSUES += cls._validate(args, output_suppressed)
-
-        # cls.VALIDATE_ISSUES += cls._run_tests(args, output_suppressed)
 
     @staticmethod
     def _print_package_details(args, output_suppressed):
@@ -257,7 +257,7 @@ class CmdValidate(BaseCmd):
         
         issues = []
         setup_pass = True
-        selftest_pass = False
+        selftest_pass = True
 
         # Get absolute path to package
         path_package = os.path.abspath(args.package)
@@ -284,6 +284,13 @@ class CmdValidate(BaseCmd):
         issues += results[0]
         setup_pass = results[1]
 
+        status_str = "PASS" if setup_pass else "FAIL"
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                package_helpers.color_output("{0}setup.py validation {1}{0}".format(
+            constants.LOG_DIVIDER, 
+            status_str
+        ), status_str))
+
         #################
         ## SEFLTEST.PY ##
         #################
@@ -294,17 +301,32 @@ class CmdValidate(BaseCmd):
             LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
                 "selftest.py file found at path {0}\n".format(path_selftest_py_file))
         except SDKException as e:
-            raise e
+            issue = SDKValidateIssue(
+                "selftest.py not found",
+                "selftest.py is a required file",
+                severity=SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+                solution="Please run codegen --reload and implement the selftest function that will be found at {0}".format(path_selftest_py_file)
+            )
+            LOG.log(issue.get_logging_level(output_suppressed), issue.error_str())
+            issues.append(issue)
+            selftest_pass = False
 
-        results = CmdValidate._validate_selftest(path_package, path_selftest_py_file, output_suppressed)
-        issues += results[0]
-        selftest_pass = results[1]
+        if selftest_pass:
+            results = CmdValidate._validate_selftest(package_name, output_suppressed)
+            issues += results[0]
+            selftest_pass = results[1]
+
+        status_str = "PASS" if selftest_pass else "FAIL"
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                package_helpers.color_output("{0}selftest.py validation {1}{0}".format(
+            constants.LOG_DIVIDER, 
+            status_str
+        ), status_str))
 
         return issues
         # TODO: implement other static validates
         #       - fn_package/util/config.py
         #       - fn_package/util/customize.py
-        #       - fn_package/util/selftest.py
         #       - fn_package/LICENSE
         #       - fn_package/icons
         #       - README.md
@@ -390,23 +412,15 @@ class CmdValidate(BaseCmd):
         for issue in issues:
             LOG.log(issue.get_logging_level(output_suppressed), issue.error_str())
 
-        status_str = "PASS" if setup_valid else "FAIL"
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                package_helpers.color_output("{0}setup.py validation {1}{0}".format(
-            constants.LOG_DIVIDER, 
-            status_str
-        ), status_str))
         return issues, setup_valid
 
     @staticmethod
-    def _validate_selftest(path_package, path_selftest_py_file, output_suppressed):
+    def _validate_selftest(package_name, output_suppressed):
         """
         Validate the contents of the selftest.py file in the given package:
         - check if the package resilient-circuits>=42.0.0 is installed on this Python environment 
-          and WARN the user that it is not installed, tell them how to get it and finish,
-          So that the user is informed correctly, we do not get any unexpected results and there 
-          is no extra dependency in the resilient-sdk
-        - verify that this package is insalled
+          and WARN the user that it is not installed, tell them how to get it
+        - verify that this package is installed
         - verify that a util/selftest.py file is present
         - verify that unimplemented does not exist in the file
         - run the selftest method
@@ -414,14 +428,75 @@ class CmdValidate(BaseCmd):
         Requires that <args.package> path contains:
         - <fn_package_name>/util/selftest.py
 
-        :param args: command line args
+        :param packge_name: name of package
+        :param output_suppressed: boolean indicating whether or not the output should be suppressed
         :return: Returns a list of SDKValidateIssues that describes the issues found when running this method
         :rtype: list of SDKValidateIssues
         """
         LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
                 "{0}Validating selftest.py{0}".format(constants.LOG_DIVIDER))
 
-        
+        # empty list of SDKValidateIssues
+        issues = []
+        # boolean to determine if selftest passes validation
+        selftest_valid = True
+
+        try:
+            res_circuits_version = sdk_helpers.get_package_version(constants.CIRCUITS_PACKAGE_NAME)
+        except Exception as e:
+            name = "'{0}' not found".format(constants.CIRCUITS_PACKAGE_NAME)
+            description = "'{0}' is not installed in your python environment".format(constants.CIRCUITS_PACKAGE_NAME)
+            severity = SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+            solution = "Please install '{0}' by running 'pip install {0}".format(constants.CIRCUITS_PACKAGE_NAME)
+        else:
+            if res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
+                name = "'{0}' version is too low".format(constants.CIRCUITS_PACKAGE_NAME)
+                description = "'{0}=={1}' is too low".format(constants.CIRCUITS_PACKAGE_NAME, res_circuits_version)
+                severity = SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+                solution = "Upgrade '{0}' by running 'pip install {0}>={1}'".format(constants.RESILIENT_LIBRARIES_VERSION)
+            else:
+                name = "'{0}' found in env".format(constants.CIRCUITS_PACKAGE_NAME)
+                description = "'{0}' was found in the python environment with the minimum version installed".format(constants.CIRCUITS_PACKAGE_NAME)
+                severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+                solution = ""
+
+        issue = SDKValidateIssue(
+            name=name,
+            description=description,
+            severity=severity,
+            solution=solution
+        )
+        issues.append(issue)
+        if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL:
+            selftest_valid = False
+            return issues, selftest_valid
+
+        if package_helpers.check_package_installed(package_name):
+            name = "'{0}' found in env".format(package_name)
+            description = "'{0}' is correctly installed in the python environment".format(package_name)
+            severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+            solution = ""
+        else:
+            name = "'{0}' not found".format(package_name)
+            description = "'{0}' is not installed in your python environment".format(package_name)
+            severity = SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+            solution = "Please install '{0}' by running 'pip install {0}".format(package_name)
+            selftest_valid = False
+
+        issue = SDKValidateIssue(
+            name=name,
+            description=description,
+            severity=severity,
+            solution=solution
+        )
+        issues.append(issue)
+        if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: selftest_valid = False
+
+        issues.sort()
+        for issue in issues:
+            LOG.log(issue.get_logging_level(output_suppressed), issue.error_str())
+
+        return issues, selftest_valid
 
     @staticmethod
     def _run_tests(args, output_suppressed):
