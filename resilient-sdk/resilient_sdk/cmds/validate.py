@@ -257,9 +257,11 @@ class CmdValidate(BaseCmd):
         
         issues = []
         setup_pass = True
+        selftest_pass = False
 
         # Get absolute path to package
         path_package = os.path.abspath(args.package)
+        package_name = path_package.split("/")[-1]
         # Ensure the package directory exists and we have READ access
         try:
             sdk_helpers.validate_dir_paths(os.R_OK, path_package)
@@ -281,6 +283,22 @@ class CmdValidate(BaseCmd):
         results = CmdValidate._validate_setup(path_package, path_setup_py_file, output_suppressed)
         issues += results[0]
         setup_pass = results[1]
+
+        #################
+        ## SEFLTEST.PY ##
+        #################
+        # Generate path to selftest.py file + validate we have permissions to read
+        path_selftest_py_file = os.path.join(path_package, package_name, package_helpers.PATH_SELFTEST_PY)
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, path_selftest_py_file)
+            LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
+                "selftest.py file found at path {0}\n".format(path_selftest_py_file))
+        except SDKException as e:
+            raise e
+
+        results = CmdValidate._validate_selftest(path_package, path_selftest_py_file, output_suppressed)
+        issues += results[0]
+        selftest_pass = results[1]
 
         return issues
         # TODO: implement other static validates
@@ -379,6 +397,31 @@ class CmdValidate(BaseCmd):
             status_str
         ), status_str))
         return issues, setup_valid
+
+    @staticmethod
+    def _validate_selftest(path_package, path_selftest_py_file, output_suppressed):
+        """
+        Validate the contents of the selftest.py file in the given package:
+        - check if the package resilient-circuits>=42.0.0 is installed on this Python environment 
+          and WARN the user that it is not installed, tell them how to get it and finish,
+          So that the user is informed correctly, we do not get any unexpected results and there 
+          is no extra dependency in the resilient-sdk
+        - verify that this package is insalled
+        - verify that a util/selftest.py file is present
+        - verify that unimplemented does not exist in the file
+        - run the selftest method
+
+        Requires that <args.package> path contains:
+        - <fn_package_name>/util/selftest.py
+
+        :param args: command line args
+        :return: Returns a list of SDKValidateIssues that describes the issues found when running this method
+        :rtype: list of SDKValidateIssues
+        """
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Validating selftest.py{0}".format(constants.LOG_DIVIDER))
+
+        
 
     @staticmethod
     def _run_tests(args, output_suppressed):

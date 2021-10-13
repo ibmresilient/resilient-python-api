@@ -66,6 +66,7 @@ PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_UTIL_DATA_DIR = os.path.join("util", "data")
+PATH_SELFTEST_PY = os.path.join("util", "selftest.py")
 PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
 PATH_SCREENSHOTS = os.path.join(BASE_NAME_DOC_DIR, "screenshots")
 PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
