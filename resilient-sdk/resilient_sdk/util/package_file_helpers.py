@@ -944,5 +944,4 @@ def get_required_python_version(python_requires_str):
 
 def color_output(s, level):
     """Uses class COLORS to color given string. 'level' maps to values in COLORS dict"""
-    # print("***", s, level)
     return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))

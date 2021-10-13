@@ -36,7 +36,7 @@ def get_main_app_parser():
     # Define main parser object
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
-        prog="resilient-sdk",
+        prog=sdk_helpers.SDK_PACKAGE_NAME,
         description="Python SDK for developing Resilient Apps",
         epilog="For support, please visit ibm.biz/resilientcommunity")
 
@@ -100,7 +100,7 @@ def main():
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
         cmd_validate = CmdValidate(sub_parser)
-        LOG.info("\n-----------------------------\nRunning SDK in Developer Mode\n-----------------------------\n")
+        LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
 
     try:
         # Parse the arguments
@@ -115,7 +115,7 @@ def main():
         main_cmd = sdk_helpers.get_main_cmd()
 
         LOG.error(err)
-        LOG.info("\n-----------------\n")
+        LOG.info("{0}".format(sdk_helpers.LOG_DIVIDER))
 
         # Print specifc usage for that cmd for these errors
         if "too few arguments" in err.message or "no subcommand provided" in err.message:

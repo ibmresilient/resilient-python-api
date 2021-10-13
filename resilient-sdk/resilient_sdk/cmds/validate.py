@@ -5,7 +5,7 @@
 """ Implementation of `resilient-sdk validate` """
 
 import logging
-import os, re
+import os, re, pkg_resources
 from xml.etree.ElementTree import parse
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -15,9 +15,10 @@ from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import sdk_validate_configs as val_configs
+from resilient_sdk.util import constants
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 SUB_CMD_VALIDATE = ("--validate", )
 SUB_CMD_TESTS = ("--tests", )
@@ -46,7 +47,7 @@ class CmdValidate(BaseCmd):
         self.parser.description = self.CMD_DESCRIPTION
 
         # Add any positional or optional arguments here
-        self.parser.add_argument(sdk_helpers.SUB_CMD_PACKAGE[1], sdk_helpers.SUB_CMD_PACKAGE[0],
+        self.parser.add_argument(constants.SUB_CMD_PACKAGE[1], constants.SUB_CMD_PACKAGE[0],
                                  type=ensure_unicode,
                                  required=True,
                                  help="(required) Path to existing package")
@@ -71,52 +72,75 @@ class CmdValidate(BaseCmd):
                                  action="store_true",
                                  help="Run a safety scan of all .py files under package directory (if 'safety' is installed")
 
-    def execute_command(self, args):
+    def execute_command(self, args, output_suppressed=False):
         """
         TODO
         """
-        LOG.info("{0}Running validate on '{1}'{0}".format(sdk_helpers.LOG_DIVIDER, args.package))
+        self.output_suppressed = output_suppressed
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running validate on '{1}'".format(constants.LOG_DIVIDER, os.path.abspath(args.package)))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed),
+                "Running with 'resilient-sdk={1}', timestamp: {2}{0}".format(constants.LOG_DIVIDER, 
+                    sdk_helpers.get_resilient_sdk_version(), sdk_helpers.get_timestamp())
+        )
 
-        self.VALIDATE_ISSUES += self._print_package_details(args)
+        self.VALIDATE_ISSUES += self._print_package_details(args, output_suppressed)
 
         sdk_helpers.is_python_min_supported_version()
 
         if not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve:
-            SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, sdk_helpers.SUB_CMD_PACKAGE[0], sdk_helpers.SUB_CMD_PACKAGE[1])
-            self._run_main_validation(args)
-            exit(0)
+            SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_PACKAGE[0], constants.SUB_CMD_PACKAGE[1])
+            self._run_main_validation(args, output_suppressed)
 
         if args.validate:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_VALIDATE[0])
-            self._validate(args)
+            self._validate(args, output_suppressed)
 
         if args.tests:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_TESTS[0])
-            self._run_tests(args)
+            self._run_tests(args, output_suppressed)
 
         if args.pylint:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_PYLINT[0])
-            self._run_pylint_scan(args)
+            self._run_pylint_scan(args, output_suppressed)
 
         if args.bandit:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_BANDIT[0])
-            self._run_bandit_scan(args)
+            self._run_bandit_scan(args, output_suppressed)
 
         if args.cve:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_CVE[0])
-            self._run_cve_scan(args)
+            self._run_cve_scan(args, output_suppressed)
+
+        self._print_summary(self.VALIDATE_ISSUES, output_suppressed)
+
+    @staticmethod
+    def _get_class_log_level(level, output_suppressed):
+        if output_suppressed:
+            return 10
+
+        if level == "ERROR":
+            return 40
+        elif level == "WARNING":
+            return 30
+        elif level == "INFO":
+            return 20
+        else:
+            return 10
 
     @classmethod
-    def _run_main_validation(cls, args):
+    def _run_main_validation(cls, args, output_suppressed):
         """
         TODO
         """
-        LOG.info("{0}Running main validation{0}".format(sdk_helpers.LOG_DIVIDER))
-        cls.VALIDATE_ISSUES += cls._validate(args)
-        cls.VALIDATE_ISSUES += cls._run_tests(args)
+        LOG.log(cls._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
+        cls.VALIDATE_ISSUES += cls._validate(args, output_suppressed)
+
+        # cls.VALIDATE_ISSUES += cls._run_tests(args, output_suppressed)
 
     @staticmethod
-    def _print_package_details(args):
+    def _print_package_details(args, output_suppressed):
         """
         Print to the console the package details of the specified package
         including:
@@ -132,15 +156,14 @@ class CmdValidate(BaseCmd):
         Requires that args.package path contains:
         - setup.py
         - util/data/export.res
-        - TODO: a file that specifies the location of proxy support??
-                if running res-circuits >= sdk_helpers.RESILIENT_LIBRARIES_VERSION
 
         :param args: command line args
         :return: Prints output to the console and returns a list of SDKValidateIssues objects if it encountered
                  issues in parsing the package details
         :rtype: list of SDKValidateIssues that describes the issues found when running this method
         """
-        LOG.info("{0}Printing details{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Printing details{0}".format(constants.LOG_DIVIDER))
 
         # empty list of SDKValidateIssues
         issues = []
@@ -150,7 +173,8 @@ class CmdValidate(BaseCmd):
         # Get absolute path to package
         path_package = os.path.abspath(args.package)
 
-        LOG.debug("Path to project: {0}".format(path_package))
+        LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
+                "Path to project: {0}".format(path_package))
 
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
@@ -173,8 +197,11 @@ class CmdValidate(BaseCmd):
             sdk_helpers.validate_file_paths(os.R_OK, path_export_res)
             import_definition = package_helpers.get_import_definition_from_local_export_res(path_export_res)
         except SDKException as e:
-            LOG.warning("WARNING: your code was generated with an older version of resilient-sdk. Please use the latest version and reload")
-
+            LOG.log(CmdValidate._get_class_log_level("WARNING", output_suppressed), 
+                "{0}: your code was generated with an older version of resilient-sdk. Please use the latest version and reload".format(
+                    package_helpers.color_output("WARNING", "WARNING")
+                ))
+        try:
             path_customize_py = os.path.join(path_package, parsed_setup_file.get("name"), package_helpers.PATH_CUSTOMIZE_PY)
             sdk_helpers.validate_file_paths(os.R_OK, path_customize_py)
             import_definition = package_helpers.get_import_definition_from_customize_py(path_customize_py)
@@ -186,15 +213,29 @@ class CmdValidate(BaseCmd):
         else:
             package_details_output.append("SOAR version: not specified in 'util/data/export.res'")
 
-        if "": #TODO: PROXY NOT SUPPORT CHECK"
-            package_details_output.append("Proxy supported: {0}".format())
+        # proxy support is determined by the version of resilient-circuits that is installed
+        # if version 42 or greater, proxies are supported
+        try:
+            for package in parsed_setup_file.get("install_requires"):
+                if "resilient_circuits" in package or "resilient-circuits" in package:
+                    circuits_version = re.findall(r"[0-9]+", package)
+                    circuits_version = tuple([int(i) for i in circuits_version])
 
-        LOG.info("\n\t".join(package_details_output))
+                    package_details_output.append("Proxy support: {0}".format(
+                        "proxies supported" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT
+                        else "proxies not fully supported"
+                    ))
+                    break
+        except Exception as e:
+            package_details_output.append("'resilient-circuits' not found in requirements")
+
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "\n\t".join(package_details_output))
 
         return issues
 
     @staticmethod
-    def _validate(args):
+    def _validate(args, output_suppressed):
         """
         Wrapper method that validates the contents of the following files in the package dir:
         - setup.py 
@@ -232,16 +273,15 @@ class CmdValidate(BaseCmd):
         path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
         try:
             sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
-            LOG.info("setup.py file found at path {0}\n".format(path_setup_py_file))
+            LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
+                "setup.py file found at path {0}\n".format(path_setup_py_file))
         except SDKException as e:
             raise e
 
-        results = CmdValidate._validate_setup(path_package, path_setup_py_file)
+        results = CmdValidate._validate_setup(path_package, path_setup_py_file, output_suppressed)
         issues += results[0]
         setup_pass = results[1]
 
-        CmdValidate._print_summary(issues)
-        exit(0)
         return issues
         # TODO: implement other static validates
         #       - fn_package/util/config.py
@@ -256,7 +296,7 @@ class CmdValidate(BaseCmd):
         #       - Dockerfile (optional but warn that should be App Host supported)
 
     @staticmethod
-    def _validate_setup(path_package, path_setup_py_file):
+    def _validate_setup(path_package, path_setup_py_file, output_suppressed):
         """
         Validate the contents of the setup.py file in the given package:
         - CRITICAL: Check the file exists
@@ -265,35 +305,36 @@ class CmdValidate(BaseCmd):
         - CRITICAL: license: check does not start with << or is none of any of the GPLs
         - CRITICAL: author: does not start with <<
         - CRITICAL: author_email: does not include "@example.com"
-        - CRITICAL: description: does start with default "Resilient Circuits Components" - give detail where in the UI this will be displayed
-        - CRITICAL: long_description: does start with default "Resilient Circuits Components" - give detail where in the UI this will be displayed
+        - CRITICAL: description: does start with default "Resilient Circuits Components"
+        - CRITICAL: long_description: does start with default "Resilient Circuits Components"
         - CRITICAL: install_requires: includes resilient_circuits or resilient-circuits at a minimum
         - WARN: checks if exists and WARNS the user if not "python_requires='>=3.6'"
         - CRITICAL: entry_points: that .configsection, .customize, .selftest
-        - WARN: entry_points: if not a least one .component exists
 
-        Requires that args.package path contains:
+        Requires that <args.package> path contains:
         - setup.py
 
         :param args: command line args
         :return: Returns a list of SDKValidateIssues that describes the issues found when running this method
         :rtype: list of SDKValidateIssues
         """
-        LOG.info("{0}Validating setup.py{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Validating setup.py{0}".format(constants.LOG_DIVIDER))
         
         # empty list of SDKValidateIssues
         issues = []
         # boolean to determine if setup passes validation
         setup_valid = True
 
-        LOG.debug("Path to project: {0}".format(path_package))
+        LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
+                "Path to project: {0}".format(path_package))
 
         attributes = val_configs.setup_py_attributes
 
         # check through setup.py file parse
         for attr in attributes:
             attr_dict = attributes.get(attr)
-            parsed_attr = package_helpers.parse_setup_py(path_setup_py_file, [attr]).get(attr)
+            parsed_attr = attr_dict.get("parse_func")(path_setup_py_file, [attr]).get(attr)
 
             fail_func = attr_dict.get("fail_func")
             severity = attr_dict.get("severity")
@@ -309,15 +350,14 @@ class CmdValidate(BaseCmd):
                 if attr_dict.get("fail_msg_lambda_supplement"):
                     formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
 
-                name = "invalid values in setup.py"
+                name = "invalid value in setup.py"
                 description = fail_msg.format(*formats)
             else:
-                # TODO: @shane thoughts on creating a SDKValidateIssue object that will LOG.debug on success?
-                # this helps us keep track for summary at the end but won't output unless the user sets log level=debug
                 name = "{0} valid in setup.py".format(attr)
-                description = "'{0}' passed".format(attr)
+                description = "'{0}' passed with value {1}".format(attr, parsed_attr)
                 severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
                 solution = ""
+
             issue = SDKValidateIssue(
                 name,
                 description,
@@ -328,50 +368,52 @@ class CmdValidate(BaseCmd):
             issues.append(issue)
             if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: setup_valid = False
 
-        # TODO: ENTRY_POINTS parse
-        # SUPPORTED_EP
-
         issues.sort()
         for issue in issues:
-            LOG.log(issue.get_logging_level(), issue.error_str())
+            LOG.log(issue.get_logging_level(output_suppressed), issue.error_str())
 
         status_str = "PASS" if setup_valid else "FAIL"
-        LOG.info(package_helpers.color_output("{0}setup.py validation {1}{0}".format(
-            sdk_helpers.LOG_DIVIDER, 
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                package_helpers.color_output("{0}setup.py validation {1}{0}".format(
+            constants.LOG_DIVIDER, 
             status_str
         ), status_str))
         return issues, setup_valid
 
     @staticmethod
-    def _run_tests(args):
+    def _run_tests(args, output_suppressed):
         """
         TODO
         """
-        LOG.info("{0}Running tests{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running tests{0}".format(constants.LOG_DIVIDER))
 
     @staticmethod
-    def _run_pylint_scan(args):
+    def _run_pylint_scan(args, output_suppressed):
         """
         TODO
         """
-        LOG.info("{0}Running pylint{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running pylint{0}".format(constants.LOG_DIVIDER))
 
     @staticmethod
-    def _run_bandit_scan(args):
+    def _run_bandit_scan(args, output_suppressed):
         """
         TODO
         """
-        LOG.info("{0}Running bandit{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running bandit{0}".format(constants.LOG_DIVIDER))
 
     @staticmethod
-    def _run_cve_scan(args):
+    def _run_cve_scan(args, output_suppressed):
         """
         TODO
         """
-        LOG.info("{0}Running safety{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Running safety{0}".format(constants.LOG_DIVIDER))
 
     @staticmethod
-    def _print_summary(issues_list):
+    def _print_summary(issues_list, output_suppressed):
         counts = {
             SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
             SDKValidateIssue.SEVERITY_LEVEL_WARN: 0,
@@ -381,16 +423,21 @@ class CmdValidate(BaseCmd):
         for issue in issues_list:
             counts[issue.severity] += 1
         
-        LOG.info("{0}Results{0}".format(sdk_helpers.LOG_DIVIDER))
-        LOG.info(sdk_helpers.LOG_DIVIDER)
-        LOG.info("Critical Issues: {0:>14}".format(
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "{0}Results{0}".format(constants.LOG_DIVIDER))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "Critical Issues: {0:>14}".format(
             package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
         ))
-        LOG.info("Warnings: {0:>21}".format(package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_WARN], "WARNING")))
-        LOG.info("Components Passed: {0:>12}".format(package_helpers.color_output(
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "Warnings: {0:>21}".format(package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_WARN], "WARNING")))
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                "Components Passed: {0:>12}".format(package_helpers.color_output(
             int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG] + counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
         ))
-        LOG.info("\nSee the detailed report at TODO: <path_to_report>") # TODO
-        LOG.info(sdk_helpers.LOG_DIVIDER)
+        # LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+        #         "\nSee the detailed report at {0}".format("TODO")) # TODO
+        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
+                constants.LOG_DIVIDER)
 
         

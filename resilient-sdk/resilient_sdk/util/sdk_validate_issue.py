@@ -18,7 +18,7 @@ class SDKValidateIssue(object):
     SEVERITY_LEVEL_CRITICAL = 1
     SEVERITY_LEVEL_WARN = 2
     SEVERITY_LEVEL_INFO = 3
-    SEVERITY_LEVEL_DEBUG = 0
+    SEVERITY_LEVEL_DEBUG = 100
 
     def __init__(self, name, description, severity=SEVERITY_LEVEL_CRITICAL, solution="UNKNOWN"):
 
@@ -55,10 +55,11 @@ class SDKValidateIssue(object):
         """Returns this class object as a dictionary"""
         return self.__dict__
 
-    def get_logging_level(self):
+    def get_logging_level(self, output_suppressed):
         """
         Returns logging level to use with logger
         
+        50=LOG.critical
         40=LOG.error
         30=LOG.warning
         20=LOG.info
@@ -66,6 +67,9 @@ class SDKValidateIssue(object):
 
         https://docs.python.org/3.5/library/logging.html#levels
         """
+        if output_suppressed:
+            return 10
+
         if self.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL:
             return 40
         elif self.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN:
@@ -77,7 +81,7 @@ class SDKValidateIssue(object):
 
     def error_str(self):
         """Returns an error string to be output to the console"""
-        return "{0:<20} {1}. {2}".format(
+        return "{0:<20} {1}. \n{3:<11} {2}".format(
             package_helpers.color_output(self._get_severity_as_str(), self._get_severity_as_str()), 
-            self.description, self.solution
+            self.description, self.solution, ""
         )
