@@ -39,7 +39,8 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve"""
     CMD_DESCRIPTION = CMD_HELP
 
-    VALIDATE_ISSUES = []
+    VALIDATE_ISSUES = {}
+    SUMMARY_LIST = []
 
     def setup(self):
         # Define codegen usage and description
@@ -74,74 +75,60 @@ class CmdValidate(BaseCmd):
 
     def execute_command(self, args, output_suppressed=False):
         """
-        TODO
+        TODO: docstring, unit tests
         """
         self.output_suppressed = output_suppressed
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running validate on '{1}'".format(constants.LOG_DIVIDER, os.path.abspath(args.package)))
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed),
-                "Running with 'resilient-sdk={1}', timestamp: {2}{0}".format(constants.LOG_DIVIDER, 
-                    sdk_helpers.get_resilient_sdk_version(), sdk_helpers.get_timestamp())
-        )
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running validate on '{1}'".format(
+            constants.LOG_DIVIDER, os.path.abspath(args.package)
+        ))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Running with '{3}={1}', timestamp: {2}{0}".format(
+            constants.LOG_DIVIDER, sdk_helpers.get_resilient_sdk_version(), 
+            sdk_helpers.get_timestamp(), constants.SDK_PACKAGE_NAME
+        ))
 
-        self.VALIDATE_ISSUES += self._print_package_details(args, output_suppressed)
+        self.VALIDATE_ISSUES["details"] = self._print_package_details(args)
 
         sdk_helpers.is_python_min_supported_version()
 
         if not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve:
             SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_PACKAGE[0], constants.SUB_CMD_PACKAGE[1])
-            self._run_main_validation(args, output_suppressed)
+            self._run_main_validation(args, )
 
         if args.validate:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_VALIDATE[0])
-            self._validate(args, output_suppressed)
+            self._validate(args, )
 
         if args.tests:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_TESTS[0])
-            self._run_tests(args, output_suppressed)
+            self._run_tests(args, )
 
         if args.pylint:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_PYLINT[0])
-            self._run_pylint_scan(args, output_suppressed)
+            self._run_pylint_scan(args, )
 
         if args.bandit:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_BANDIT[0])
-            self._run_bandit_scan(args, output_suppressed)
+            self._run_bandit_scan(args, )
 
         if args.cve:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_CVE[0])
-            self._run_cve_scan(args, output_suppressed)
+            self._run_cve_scan(args, )
 
-        self._print_summary(self.VALIDATE_ISSUES, output_suppressed)
+        self._print_summary(self.SUMMARY_LIST)
 
-    @staticmethod
-    def _get_class_log_level(level, output_suppressed):
-        if output_suppressed:
-            return 10
-
-        if level == "ERROR":
-            return 40
-        elif level == "WARNING":
-            return 30
-        elif level == "INFO":
-            return 20
-        else:
-            return 10
-
-    @classmethod
-    def _run_main_validation(cls, args, output_suppressed):
+    def _run_main_validation(self, args):
         """
-        TODO
+        TODO: docstring, unit tests
         """
-        LOG.log(cls._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
-        cls.VALIDATE_ISSUES += cls._validate(args, output_suppressed)
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
+        self.VALIDATE_ISSUES["validate"] = self._validate(args)
 
-        # cls.VALIDATE_ISSUES += cls._run_tests(args, output_suppressed)
+        # self.VALIDATE_ISSUES += self._run_tests(args)
 
-    @staticmethod
-    def _print_package_details(args, output_suppressed):
+
+    def _print_package_details(self, args):
         """
+        TODO: unit tests
         Print to the console the package details of the specified package
         including:
         - the absolute path of the package
@@ -150,31 +137,24 @@ class CmdValidate(BaseCmd):
         - version of the package
         - version of SOAR the app was developed against
         - the python dependencies the app has
+        - the description of the package
         - the name and email address of the developer
-        - whether or not a proxy is supported
-
-        Requires that args.package path contains:
-        - setup.py
-        - util/data/export.res
+        - if the package supports resilient-circuits>=42.0, indicating that it is proxy supported or not
 
         :param args: command line args
-        :return: Prints output to the console and returns a list of SDKValidateIssues objects if it encountered
-                 issues in parsing the package details
-        :rtype: list of SDKValidateIssues that describes the issues found when running this method
+        :type args: dict
+        :return: None - adds list for VALIDATE_ISSUES["details"] in format [{attr1: attr_value}, {attr2: ...}, ...]
+        :rtype: None
         """
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Printing details{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Printing details{0}".format(constants.LOG_DIVIDER))
 
-        # empty list of SDKValidateIssues
-        issues = []
         # list of string for output
-        package_details_output = [""]
+        package_details_output = []
+        skips = ("long_description", "entry_points")
 
         # Get absolute path to package
         path_package = os.path.abspath(args.package)
-
-        LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
-                "Path to project: {0}".format(path_package))
+        self._log(constants.VALIDATE_LOG_LEVEL_DEBUG, "Path to project: {0}".format(path_package))
 
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
@@ -182,107 +162,126 @@ class CmdValidate(BaseCmd):
         path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
+
+
+        # parse all supported attributes from setup.py
         parsed_setup_file = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
 
-        # check through setup.py file parse
+        # check through setup.py file parse 
+        # (including values that are in 'skips' here, though they will not be output at the end of this method)
         for attr in package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES:
-            if attr != "description" and attr != "long_description" and attr != "entry_points": 
-                attr_val = parsed_setup_file.get(attr)
-                package_details_output.append("{0}: {1}".format(attr, attr_val if attr_val else "**NOT FOUND**"))
+            attr_val = parsed_setup_file.get(attr)
+            package_details_output.append({attr: attr_val if attr_val else "**NOT FOUND**"})
+
+
 
         # parse import definition from export.res file or from customize.py (deprecated)
-        try:
-            path_export_res = os.path.join(path_package, parsed_setup_file.get("name"), 
-                                    package_helpers.PATH_UTIL_DATA_DIR, package_helpers.BASE_NAME_EXPORT_RES)
-            sdk_helpers.validate_file_paths(os.R_OK, path_export_res)
-            import_definition = package_helpers.get_import_definition_from_local_export_res(path_export_res)
-        except SDKException as e:
-            LOG.log(CmdValidate._get_class_log_level("WARNING", output_suppressed), 
-                "{0}: your code was generated with an older version of resilient-sdk. Please use the latest version and reload".format(
-                    package_helpers.color_output("WARNING", "WARNING")
-                ))
+        # package_helpers.get_import_definition_from_customize_py will raise an SDKException if there is an error
+        # getting the customize.py file or the import definition from that file
+        # we catch this error and output a message that the customize.py file was not correctly found
         try:
             path_customize_py = os.path.join(path_package, parsed_setup_file.get("name"), package_helpers.PATH_CUSTOMIZE_PY)
             sdk_helpers.validate_file_paths(os.R_OK, path_customize_py)
             import_definition = package_helpers.get_import_definition_from_customize_py(path_customize_py)
-        except Exception as e:
-            package_details_output.append("SOAR version: NOT FOUND; <path_to_package>/<package_name>/util/data/export.res not found")
-        
-        if import_definition and import_definition.get("server_version").get("version"):
-            package_details_output.append("SOAR version: {0}".format(import_definition.get("server_version").get("version")))
-        else:
-            package_details_output.append("SOAR version: not specified in 'util/data/export.res'")
+            if import_definition.get("server_version", {}).get("version"):
+                package_details_output.append({"SOAR version": import_definition.get("server_version").get("version")})
+            else:
+                package_details_output.append({"SOAR version": "Not specified in 'util/data/export.res'. Reload code to make sure server_version is set."})
+        except SDKException as e:
+            package_details_output.append({"SOAR version": "**NOT FOUND**; customize.py file not found in {0}".format(path_customize_py)})
+            
+
 
         # proxy support is determined by the version of resilient-circuits that is installed
         # if version 42 or greater, proxies are supported
-        try:
-            for package in parsed_setup_file.get("install_requires"):
-                if "resilient_circuits" in package or "resilient-circuits" in package:
-                    circuits_version = re.findall(r"[0-9]+", package)
-                    circuits_version = tuple([int(i) for i in circuits_version])
+        library_found = False
+        for package in parsed_setup_file.get("install_requires"):
+            if re.findall(r"(?:resilient[\-,\_]circuits\>\=)([0-9]+\.[0-9]+\.[0-9]+)", package):
+                circuits_version = re.findall(r"[0-9]+", package)
+                circuits_version = tuple([int(i) for i in circuits_version])
 
-                    package_details_output.append("Proxy support: {0}".format(
-                        "proxies supported" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT
-                        else "proxies not fully supported"
-                    ))
-                    break
-        except Exception as e:
-            package_details_output.append("'resilient-circuits' not found in requirements")
+                package_details_output.append({"Proxy support": "Proxies supported" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported"})
+                library_found = True
+                break
+        if not library_found:
+            package_details_output.append({"install_requires.resilient_circuits": "'resilient_circuits' not found in 'install_requires' in package's setup.py"})
 
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "\n\t".join(package_details_output))
 
-        return issues
 
-    @staticmethod
-    def _validate(args, output_suppressed):
+        # print output
+        for attr_dict in package_details_output:
+            for attr in attr_dict:
+                if attr not in skips:
+                    self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}: {1}".format(attr, attr_dict[attr]))
+
+
+        # append details to VALIDATE_ISSUES["details"]
+        self.VALIDATE_ISSUES["details"] = package_details_output
+
+    def _validate(self, args):
         """
-        Wrapper method that validates the contents of the following files in the package dir:
-        - setup.py 
-        - fn_package/util/config.py
-        - fn_package/util/customize.py
-        - fn_package/util/selftest.py
-        - fn_package/LICENSE
-        - fn_package/icons
-        - README.md
-        - MANIFEST.in
+        TODO: unit tests
+        Run static validations.
+        Wrapper method that validates the contents of the following files in the package dir (all called in separate submethods):
+        - setup.py - done in _validate_setup()
+        - fn_package/util/config.py - TBD
+        - fn_package/util/customize.py - TBD
+        - fn_package/util/selftest.py - TBD
+        - fn_package/LICENSE - TBD
+        - fn_package/icons - TBD
+        - README.md - TBD
+        - MANIFEST.in - TBD
         - apikey_permissions (optional but warn that should be App Host supported and give help/link to show how to convert to AppHost)
         - entrypoint.sh (optional but warn that should be App Host supported)
         - Dockerfile (optional but warn that should be App Host supported)
 
         :param args: list of args
-        :return: list of issues of type SDKValidateIssue 
-        :rtype: list of SDKValidateIssue
+        :type args: dict
+        :raise SDKException: if the path to the package or required file is not found
+        :return: None
+        :rtype: None
         """
-        
-        issues = []
-        setup_pass = True
 
         # Get absolute path to package
         path_package = os.path.abspath(args.package)
         # Ensure the package directory exists and we have READ access
-        try:
-            sdk_helpers.validate_dir_paths(os.R_OK, path_package)
-        except Exception as e:
-            raise e
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
+
+
 
         ##############
         ## SETUP.PY ##
         ##############
+        setup_pass = True
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating setup.py{0}".format(constants.LOG_DIVIDER))
+
         # Generate path to setup.py file + validate we have permissions to read it
         path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
-        try:
-            sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
-            LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
-                "setup.py file found at path {0}\n".format(path_setup_py_file))
-        except SDKException as e:
-            raise e
+        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+        self._log(constants.VALIDATE_LOG_LEVEL_DEBUG, "setup.py file found at path {0}\n".format(path_setup_py_file))
+        self._log(constants.VALIDATE_LOG_LEVEL_DEBUG, "Path to project: {0}".format(path_package))
 
-        results = CmdValidate._validate_setup(path_package, path_setup_py_file, output_suppressed)
-        issues += results[0]
-        setup_pass = results[1]
+        # validate setup.py file using static helper method
+        setup_pass, setup_issues = self._validate_setup(path_setup_py_file)
+        self.VALIDATE_ISSUES["setup"] = setup_issues
+        self.SUMMARY_LIST += setup_issues
 
-        return issues
+        # log output from _validate_setup
+        for issue in setup_issues:
+            self._log(issue.get_logging_level(), issue.error_str())
+
+        # log status of setup.py check (either PASS or FAIL)
+        status_str = "PASS" if setup_pass else "FAIL"
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, package_helpers.color_output("{0}setup.py validation {1}{0}".format(
+            constants.LOG_DIVIDER, 
+            status_str
+        ), status_str))
+        ##################
+        ## END SETUP.PY ##
+        ##################
+
+
+
         # TODO: implement other static validates
         #       - fn_package/util/config.py
         #       - fn_package/util/customize.py
@@ -296,9 +295,13 @@ class CmdValidate(BaseCmd):
         #       - Dockerfile (optional but warn that should be App Host supported)
 
     @staticmethod
-    def _validate_setup(path_package, path_setup_py_file, output_suppressed):
+    def _validate_setup(path_setup_py_file):
         """
-        Validate the contents of the setup.py file in the given package:
+        TODO: unit tests
+        Validate the contents of the setup.py file in the given package.
+        Builds a list of SDKValidateIssue that describes the status of setup.py
+
+        Uses the sdk_validate_configs.py util file to define the following checks:
         - CRITICAL: Check the file exists
         - CRITICAL: name: is all lowercase and only special char allowed is underscore
         - WARN: display_name: check does not start with <<
@@ -311,133 +314,181 @@ class CmdValidate(BaseCmd):
         - WARN: checks if exists and WARNS the user if not "python_requires='>=3.6'"
         - CRITICAL: entry_points: that .configsection, .customize, .selftest
 
-        Requires that <args.package> path contains:
-        - setup.py
-
-        :param args: command line args
-        :return: Returns a list of SDKValidateIssues that describes the issues found when running this method
-        :rtype: list of SDKValidateIssues
+        :param path_setup_py_file: absolute or relative path to setup.py file
+        :type path_setup_py_file: str
+        :return: Returns boolean value of whether or not the run passed and a sorted list of SDKValidateIssue
+        :rtype: (bool, list[SDKValidateIssue])
         """
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Validating setup.py{0}".format(constants.LOG_DIVIDER))
         
         # empty list of SDKValidateIssues
         issues = []
         # boolean to determine if setup passes validation
         setup_valid = True
 
-        LOG.log(CmdValidate._get_class_log_level("DEBUG", output_suppressed), 
-                "Path to project: {0}".format(path_package))
 
         attributes = val_configs.setup_py_attributes
 
         # check through setup.py file parse
         for attr in attributes:
             attr_dict = attributes.get(attr)
-            parsed_attr = attr_dict.get("parse_func")(path_setup_py_file, [attr]).get(attr)
 
+            # get output details from attr_dict (to be modified as necessary based on results)
             fail_func = attr_dict.get("fail_func")
             severity = attr_dict.get("severity")
             fail_msg = attr_dict.get("fail_msg")
             missing_msg = attr_dict.get("missing_msg")
             solution = attr_dict.get("solution")
 
+            # run given parsing function
+            parsed_attr = attr_dict.get("parse_func")(path_setup_py_file, [attr]).get(attr)
+
+            # check if attr is missing from setup.py file
             if not parsed_attr:
                 name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
-            elif fail_func(parsed_attr):
+            elif fail_func(parsed_attr): # check if it fails the 'fail_func'
                 formats = [attr, parsed_attr]
+
+                # some attr require a supplemental lambda function to properly output their failure message
                 if attr_dict.get("fail_msg_lambda_supplement"):
                     formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
 
                 name = "invalid value in setup.py"
                 description = fail_msg.format(*formats)
-            else:
+            else: # else is present and did not fail
+                # passes checks
                 name = "{0} valid in setup.py".format(attr)
                 description = "'{0}' passed with value {1}".format(attr, parsed_attr)
                 severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
                 solution = ""
 
+            # for each attr create a SDKValidateIssue to be appended to the issues list
             issue = SDKValidateIssue(
                 name,
                 description,
                 severity=severity,
-                solution=solution.format(attr)
+                solution=solution.format(attr, parsed_attr)
             )
 
             issues.append(issue)
-            if issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: setup_valid = False
 
         issues.sort()
-        for issue in issues:
-            LOG.log(issue.get_logging_level(output_suppressed), issue.error_str())
 
-        status_str = "PASS" if setup_valid else "FAIL"
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                package_helpers.color_output("{0}setup.py validation {1}{0}".format(
-            constants.LOG_DIVIDER, 
-            status_str
-        ), status_str))
-        return issues, setup_valid
+        # determine if setup validation has failed
+        # the any method will short circuit once the condition evaluates to true at least once
+        # and then flip the value to indicate whether or not the validation passed
+        setup_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+        
+        return setup_valid, issues
 
-    @staticmethod
-    def _run_tests(args, output_suppressed):
+    def _run_tests(self, args):
         """
         TODO
         """
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running tests{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running tests{0}".format(constants.LOG_DIVIDER))
 
-    @staticmethod
-    def _run_pylint_scan(args, output_suppressed):
+    def _run_pylint_scan(self, args):
         """
         TODO
         """
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running pylint{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running pylint{0}".format(constants.LOG_DIVIDER))
 
-    @staticmethod
-    def _run_bandit_scan(args, output_suppressed):
+    def _run_bandit_scan(self, args):
         """
         TODO
         """
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running bandit{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running bandit{0}".format(constants.LOG_DIVIDER))
 
-    @staticmethod
-    def _run_cve_scan(args, output_suppressed):
+    def _run_cve_scan(self, args):
         """
         TODO
         """
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Running safety{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running safety{0}".format(constants.LOG_DIVIDER))
 
-    @staticmethod
-    def _print_summary(issues_list, output_suppressed):
+    def _print_summary(self, issues_dict):
+        """
+        TODO: unit tests
+        From list of issues, generates a count of issues that are CRITICAL, WARNINGS, sum(INFO, DEBUG)
+        and outputs in the format:
+
+            ------------------------
+            Results
+            ------------------------
+
+            Critical Issues:     <counts[critical]>
+            Warnings:            <counts[warning]>
+            Components Passed:   <counts[pass]>
+
+            ------------------------
+
+        :param issues_list: list of SDKValidateIssue objects
+        :type issues_list: list[SDKValidateIssue]
+        :param output_suppressed: bool value of whether or not to suppress output - used whenever LOG is used
+        :type output_suppressed: bool
+        :return: None - prints output to console
+        :rtype: None
+        """
         counts = {
             SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
             SDKValidateIssue.SEVERITY_LEVEL_WARN: 0,
             SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
             SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0,
         }
-        for issue in issues_list:
+        for issue in issues_dict:
             counts[issue.severity] += 1
         
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "{0}Results{0}".format(constants.LOG_DIVIDER))
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "Critical Issues: {0:>14}".format(
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Results{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Critical Issues: {0:>14}".format(
             package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
         ))
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "Warnings: {0:>21}".format(package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_WARN], "WARNING")))
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                "Components Passed: {0:>12}".format(package_helpers.color_output(
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Warnings: {0:>21}".format(package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_WARN], "WARNING")))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Components Passed: {0:>12}".format(package_helpers.color_output(
             int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG] + counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
         ))
-        # LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-        #         "\nSee the detailed report at {0}".format("TODO")) # TODO
-        LOG.log(CmdValidate._get_class_log_level("INFO", output_suppressed), 
-                constants.LOG_DIVIDER)
+        # self._log(constants.VALIDATE_LOG_LEVEL_INFO, "\nSee the detailed report at {0}".format("TODO")) # TODO
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, constants.LOG_DIVIDER)
 
+
+    def _log(self, level, msg):
+        LOG.log(CmdValidate._get_log_level(level, self.output_suppressed), msg)
+
+    @staticmethod
+    def _get_log_level(level, output_suppressed):
+        """
+        TODO: unit tests
+        Returns logging level to use with logger
         
+        50=LOG.critical
+        40=LOG.error
+        30=LOG.warning
+        20=LOG.info
+        10=LOG.debug
+
+        https://docs.python.org/3.6/library/logging.html#levels
+
+        :param level: string value of DEBUG, INFO, WARNING, or ERROR; this value is used if output_suppressed==False
+        :type level: str
+        :param output_suppressed: value to suppress output; designed for use when calling validate from another sdk cmd
+                                    when output is suppressed, DEBUG level is returned
+        :type output_suppressed: bool
+        :return: value corresponding to the appropriate log level
+        :rtype: int
+        """
+        if output_suppressed:
+            return 10
+
+        if not isinstance(level, str):
+            return 10
+
+        level = level.upper()
+
+        if level == constants.VALIDATE_LOG_LEVEL_DEBUG:
+            return 10
+        elif level == constants.VALIDATE_LOG_LEVEL_INFO:
+            return 20
+        elif level == constants.VALIDATE_LOG_LEVEL_WARNING:
+            return 30
+        if level == constants.VALIDATE_LOG_LEVEL_ERROR:
+            return 40
+        if level == constants.VALIDATE_LOG_LEVEL_CRITICAL:
+            return 50

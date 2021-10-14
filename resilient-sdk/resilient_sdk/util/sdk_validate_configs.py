@@ -4,7 +4,7 @@
 
 import re
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 
 # formatted strings follow array of values: [attr, attr_value, <OPTIONAL: fail_msg_lambda_supplement>]
@@ -67,16 +67,21 @@ setup_py_attributes = {
     },
     "install_requires": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: package_helpers.get_dependency_from_install_requires(x, "install_requires"),
+        "fail_func": lambda x: False 
+        if package_helpers.get_dependency_from_install_requires(x, "resilient_circuits") is not None 
+        else False if package_helpers.get_dependency_from_install_requires(x, "resilient-circuits") is not None
+        else True,
         "fail_msg": "'resilient_circuits' must be included as a dependency in '{0}'",
         "missing_msg": "'resilient_circuits' must be included as a dependency in '{0}'",
-        "solution": "Please include 'resilient_circuits' as a requirement in '{0}'",
+        "solution": "Please include 'resilient_circuits>={0}' as a requirement in '{1}'".format(
+            constants.RESILIENT_LIBRARIES_VERSION, "{0}"
+        ),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     },
     "python_requires": {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: package_helpers.get_required_python_version(x) < sdk_helpers.MIN_SUPPORTED_PY_VERSION,
-        "fail_msg": "Given version '{2[0]}.{2[1]}' in setup.py is too low",
+        "fail_msg": "Version '{2[0]}.{2[1]}' is not officially supported",
         "fail_msg_lambda_supplement": lambda x: package_helpers.get_required_python_version(x),
         "missing_msg": "'python_requires' is a recommended attribute",
         "solution": "Suggested value is 'python_requires>={0}.{1}'".format(
