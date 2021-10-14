@@ -933,13 +933,10 @@ def get_required_python_version(python_requires_str):
     :rtype: tuple with (<major>, <minor>) version format
     """
     try:
-        i = re.search(r"\d", python_requires_str)
-        major = int(python_requires_str[i.start():].split(".")[0])
-        if len(python_requires_str[i.start():].split(".")) > 1:
-            minor = int(python_requires_str[i.start():].split(".")[1])
-        else:
-            minor = 0
-        return (major, minor)
+        version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
+        parsed_version = pkg_resources.parse_version(version_str)
+        
+        return (parsed_version.major, parsed_version.minor)
     except Exception as e:
         raise SDKException("'python_requires' version not given in correct format.")
 
@@ -959,5 +956,14 @@ def check_package_installed(package_name):
     return True
 
 def color_output(s, level):
-    """Uses class COLORS to color given string. 'level' maps to values in COLORS dict"""
+    """
+    Uses class COLORS to color given string. 'level' maps to values in COLORS dict
+    
+    :param s: value to be wrapped in color
+    :type s: str
+    :param level: map to COLORS dict defined as constant above
+    :type level: str
+    :return: colored output of 's'
+    :rtype: str
+    """
     return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
