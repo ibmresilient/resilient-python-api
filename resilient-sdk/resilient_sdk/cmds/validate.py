@@ -6,6 +6,7 @@
 
 import logging
 import os, re, pkg_resources
+from pprint import pprint
 from xml.etree.ElementTree import parse
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -86,7 +87,7 @@ class CmdValidate(BaseCmd):
             sdk_helpers.get_timestamp(), constants.SDK_PACKAGE_NAME
         ))
 
-        self.VALIDATE_ISSUES["details"] = self._print_package_details(args)
+        self._print_package_details(args)
 
         sdk_helpers.is_python_min_supported_version()
 
