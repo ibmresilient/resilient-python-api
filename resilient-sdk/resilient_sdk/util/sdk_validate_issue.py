@@ -42,7 +42,7 @@ class SDKValidateIssue(object):
     def __str__(self):
         """Returns string representation of a SDKValidateIssue obj"""
         return "'name={0}; description={1}; severity={2}; solution={3}'".format(self.name, self.description, 
-                                                                    self._get_severity_as_str(), self.solution)
+                                                                    self.get_logging_level(), self.solution)
 
     def __short_str__(self):
         """Short string representation of a SDKValidateIssue obj"""
