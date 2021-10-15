@@ -6,6 +6,7 @@
 
 import logging
 import os, re, pkg_resources
+from pprint import pprint
 from xml.etree.ElementTree import parse
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -46,6 +47,9 @@ class CmdValidate(BaseCmd):
         # Define codegen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
+        
+        # output not suppressed by default
+        self.output_suppressed = False
 
         # Add any positional or optional arguments here
         self.parser.add_argument(constants.SUB_CMD_PACKAGE[1], constants.SUB_CMD_PACKAGE[0],
@@ -86,7 +90,7 @@ class CmdValidate(BaseCmd):
             sdk_helpers.get_timestamp(), constants.SDK_PACKAGE_NAME
         ))
 
-        self.VALIDATE_ISSUES["details"] = self._print_package_details(args)
+        self._print_package_details(args)
 
         sdk_helpers.is_python_min_supported_version()
 
@@ -143,7 +147,7 @@ class CmdValidate(BaseCmd):
 
         :param args: command line args
         :type args: dict
-        :return: None - adds list for VALIDATE_ISSUES["details"] in format [{attr1: attr_value}, {attr2: ...}, ...]
+        :return: None - adds list for VALIDATE_ISSUES["details"] in format [{attr1: attr_value}, {...: ...}, ...]
         :rtype: None
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Printing details{0}".format(constants.LOG_DIVIDER))
@@ -212,10 +216,16 @@ class CmdValidate(BaseCmd):
         for attr_dict in package_details_output:
             for attr in attr_dict:
                 if attr not in skips:
-                    self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}: {1}".format(attr, attr_dict[attr]))
+                    level = constants.VALIDATE_LOG_LEVEL_INFO
+                else:
+                    level = constants.VALIDATE_LOG_LEVEL_DEBUG
+                self._log(level, "{0}: {1}".format(attr, attr_dict[attr]))
+
 
 
         # append details to VALIDATE_ISSUES["details"]
+        # details don't count toward final counts so they don't get
+        # appended to SUMMARY_LIST
         self.VALIDATE_ISSUES["details"] = package_details_output
 
     def _validate(self, args):
@@ -519,7 +529,7 @@ class CmdValidate(BaseCmd):
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running safety{0}".format(constants.LOG_DIVIDER))
 
-    def _print_summary(self, issues_dict):
+    def _print_summary(self, static_issues_list):
         """
         TODO: unit tests
         From list of issues, generates a count of issues that are CRITICAL, WARNINGS, sum(INFO, DEBUG)
@@ -548,10 +558,10 @@ class CmdValidate(BaseCmd):
             SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
             SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0,
         }
-        for issue in issues_dict:
+        for issue in static_issues_list:
             counts[issue.severity] += 1
         
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Results{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Static Validation Results{0}".format(constants.LOG_DIVIDER))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Critical Issues: {0:>14}".format(
             package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
         ))
@@ -564,6 +574,11 @@ class CmdValidate(BaseCmd):
 
 
     def _log(self, level, msg):
+        """
+        Class wrapper method for cleaner logging calls.
+        Makes use of the class variable "outputsuppressed" to calculate if validate
+        output should be output to the console (allows for silent running in other sdk commands)
+        """
         LOG.log(CmdValidate._get_log_level(level, self.output_suppressed), msg)
 
     @staticmethod
