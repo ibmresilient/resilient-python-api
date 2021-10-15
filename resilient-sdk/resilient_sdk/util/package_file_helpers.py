@@ -928,6 +928,7 @@ def get_required_python_version(python_requires_str):
     numerical value given for the version required.
 
     :param python_requires_str: str representation of the value assosciated with the 'python_requires' attr in setup.py
+    :raise SDKException: if format of python_requires is not correct (i.e. in '>=<version>' format)
     :return: return the minimum required python version or None if not found
     :rtype: tuple with (<major>, <minor>) version format
     """

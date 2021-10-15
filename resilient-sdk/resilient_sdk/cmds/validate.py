@@ -406,7 +406,7 @@ class CmdValidate(BaseCmd):
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running safety{0}".format(constants.LOG_DIVIDER))
 
-    def _print_summary(self, issues_dict):
+    def _print_summary(self, static_issues_list):
         """
         TODO: unit tests
         From list of issues, generates a count of issues that are CRITICAL, WARNINGS, sum(INFO, DEBUG)
@@ -435,10 +435,10 @@ class CmdValidate(BaseCmd):
             SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
             SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0,
         }
-        for issue in issues_dict:
+        for issue in static_issues_list:
             counts[issue.severity] += 1
         
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Results{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Static Validation Results{0}".format(constants.LOG_DIVIDER))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Critical Issues: {0:>14}".format(
             package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
         ))
