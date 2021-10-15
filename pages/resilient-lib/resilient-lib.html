@@ -1,0 +1,489 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2207 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/>
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="resilient-sdk" href="../resilient-sdk/resilient-sdk.html" />
+    <link rel="prev" title="IBM SOAR Python Libraries" href="../../index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../resilient-sdk/resilient-sdk.html" title="resilient-sdk"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="../../index.html" title="IBM SOAR Python Libraries"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2207 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="resilient-lib">
+<h1>resilient-lib<a class="headerlink" href="#resilient-lib" title="Permalink to this headline">¶</a></h1>
+<p>This Python Package contains common library calls which facilitate the development of functions for IBM SOAR</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> is now a direct dependency of <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> as of v40.0 to help make development more streamlined</p>
+<p>To use it within your App development, <strong>import</strong> it like any other Python Package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">get_file_attachment</span><span class="p">,</span> <span class="n">get_file_attachment_name</span>
+<span class="n">TODO</span> <span class="n">give</span> <span class="n">examples</span> <span class="n">of</span> <span class="n">execute</span> <span class="ow">and</span> <span class="n">tab</span> <span class="n">imports</span> <span class="n">too</span>
+</pre></div>
+</div>
+</section>
+<section id="common-request-methods">
+<h2>Common Request Methods<a class="headerlink" href="#common-request-methods" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As of version 41.1 in the Atomic Function template <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> is available
+in a class that inherits <code class="docutils literal notranslate"><span class="pre">resilient_circuits.AppFunctionComponent</span></code> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">ibm</span><span class="o">.</span><span class="n">com</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.execute">
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs and sends a request. Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<p>From the requests.requests() function, inputs are mapped to this function
+:param method: GET, HEAD, PATCH, POST, PUT, DELETE, OPTIONS
+:param url: URL for the request.
+:param params: (optional) Dictionary, list of tuples or bytes to send</p>
+<blockquote>
+<div><p>in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – (optional) Dictionary, list of tuples, bytes, or file-like
+object to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>json</strong> – (optional) A JSON serializable Python object to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>headers</strong> – (optional) Dictionary of HTTP Headers to send with the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>cookies</strong> – (optional) Dict or CookieJar object to send with the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>files</strong> – (optional) Dictionary of <code class="docutils literal notranslate"><span class="pre">'name':</span> <span class="pre">file-like-objects</span></code> (or <code class="docutils literal notranslate"><span class="pre">{'name':</span> <span class="pre">file-tuple}</span></code>) for multipart encoding upload.
+<code class="docutils literal notranslate"><span class="pre">file-tuple</span></code> can be a 2-tuple <code class="docutils literal notranslate"><span class="pre">('filename',</span> <span class="pre">fileobj)</span></code>, 3-tuple <code class="docutils literal notranslate"><span class="pre">('filename',</span> <span class="pre">fileobj,</span> <span class="pre">'content_type')</span></code>
+or a 4-tuple <code class="docutils literal notranslate"><span class="pre">('filename',</span> <span class="pre">fileobj,</span> <span class="pre">'content_type',</span> <span class="pre">custom_headers)</span></code>, where <code class="docutils literal notranslate"><span class="pre">'content-type'</span></code> is a string
+defining the content type of the given file and <code class="docutils literal notranslate"><span class="pre">custom_headers</span></code> a dict-like object containing additional headers
+to add for the file.</p></li>
+<li><p><strong>auth</strong> – (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em> or </em><em>tuple</em>) – (optional) How many seconds to wait for the server to send data
+before giving up, as a float, or a :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>(connect timeout, read timeout) timeout tuple.</p></li>
+<li><p><strong>allow_redirects</strong> (<em>bool</em>) – (optional) Boolean. Enable/disable GET/OPTIONS/POST/PUT/PATCH/DELETE/HEAD redirection. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>proxies</strong> – (optional) Dictionary mapping protocol to the URL of the proxy.</p></li>
+<li><p><strong>verify</strong> – (optional) Either a boolean, in which case it controls whether we verify
+the server’s TLS certificate, or a string, in which case it must be a path
+to a CA bundle to use. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>stream</strong> – (optional) if <code class="docutils literal notranslate"><span class="pre">False</span></code>, the response content will be immediately downloaded.</p></li>
+<li><p><strong>cert</strong> – (optional) if String, path to ssl client cert file (.pem). If Tuple, (‘cert’, ‘key’) pair.</p></li>
+<li><p><strong>callback</strong> – callback routine used to handle errors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>requests.Response</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-resilient_lib.components.resilient_common">
+<span id="common-helper-methods"></span><h2>Common Helper Methods<a class="headerlink" href="#module-resilient_lib.components.resilient_common" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
+<span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>build the url to link to an resilient incident
+:param url: base url
+:param incidentId:
+:return: full url</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_resilient_url">
+<span class="sig-name descname"><span class="pre">build_resilient_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_resilient_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>build basic url to resilient instance
+:param host: host name
+:param port: port
+:return: base url</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.clean_html">
+<span class="sig-name descname"><span class="pre">clean_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html_fragment</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.clean_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resilient textarea fields return html fragments. This routine will remove the html and insert any code within &lt;div&gt;&lt;/div&gt;
+with a linefeed
+:param html_fragment: str presenting the html to clean up
+:return: cleaned up code. This may not format well as no presentation of line feeds are preserved in the way supported by</p>
+<blockquote>
+<div><p>tags such as &lt;br&gt; or &lt;ol&gt;, &lt;ul&gt;, etc. See html2markdown for a better way to translate html input to markdown.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.close_incident">
+<span class="sig-name descname"><span class="pre">close_incident</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.close_incident" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res_client</strong> – required for communication back to resilient</p></li>
+<li><p><strong>incident_id</strong> – required</p></li>
+<li><p><strong>kwargs</strong> – required field_name:new_value pairs dict</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>response object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_file_attachment">
+<span class="sig-name descname"><span class="pre">get_file_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_file_attachment" title="Permalink to this definition">¶</a></dt>
+<dd><p>call the Resilient REST API to get the attachment or artifact data
+:param res_client: required for communication back to resilient
+:param incident_id: required
+:param artifact_id: optional
+:param task_id: optional
+:param attachment_id: optional
+:return: byte string of attachment</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_file_attachment_metadata">
+<span class="sig-name descname"><span class="pre">get_file_attachment_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_file_attachment_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>call the Resilient REST API to get the attachment or artifact attachment metadata
+:param res_client: required for communication back to resilient
+:param incident_id: required
+:param artifact_id: optional
+:param task_id: optional
+:param attachment_id: optional
+:return: file attachment metadata</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_file_attachment_name">
+<span class="sig-name descname"><span class="pre">get_file_attachment_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_file_attachment_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>call the Resilient REST API to get the attachment or artifact attachment name
+:param res_client: required for communication back to resilient
+:param incident_id: required
+:param artifact_id: optional
+:param task_id: optional
+:param attachment_id: optional
+:return: file attachment name</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.readable_datetime">
+<span class="sig-name descname"><span class="pre">readable_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">milliseconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtn_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y-%m-%dT%H:%M:%SZ'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.readable_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert an epoch timestamp to a string using a format
+:param timestamp:
+:param milliseconds: True = epoch in
+:param rtn_format: format of resulant string
+:return: string representation of timestamp</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.str_to_bool">
+<span class="sig-name descname"><span class="pre">str_to_bool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.str_to_bool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents value as boolean.
+:param value:
+:rtype: bool</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.unescape">
+<span class="sig-name descname"><span class="pre">unescape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.unescape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return unescaped data such as &amp;gt; -&gt; &gt;, &amp;quot -&gt; ‘, etc.
+:param data: text to convert</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.validate_fields">
+<span class="sig-name descname"><span class="pre">validate_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.validate_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure each mandatory field in field_list is present in kwargs.
+Throw ValueError if not.</p>
+<p>field_list can be a list/tuple of strings where each string is
+a field name or it can be a list/tuple of dicts where each item
+has the attributes ‘name’ (required) and ‘placeholder’ (optional).</p>
+<p>If the value of the item in kwargs is equal to its placeholder
+defined in field_list, a ValueError is raised.</p>
+<p>If an item in kwargs is a Resilient Select Function Input, its
+value will be a dict that has a ‘name’ attribute. This returns
+the value of ‘name’.</p>
+<p>If an item in kwargs is a Resilient Multi-Select Function Input, its
+value will be a list of dicts that have the ‘name’ attribute. This
+returns a list of the ‘name’ values for that item.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field_list</strong> – list/tuple of the mandatory fields. Can be an empty list if no mandatory fields.</p></li>
+<li><p><strong>kwargs</strong> – dict of all the fields to search.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Dictionary of all fields with Select/Multi-Select fields handled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.write_file_attachment">
+<span class="sig-name descname"><span class="pre">write_file_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datastream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.write_file_attachment" title="Permalink to this definition">¶</a></dt>
+<dd><p>call the Resilient REST API to create the attachment on incident or task</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res_client</strong> – required for communication back to resilient</p></li>
+<li><p><strong>file_name</strong> – required, name of the attachment</p></li>
+<li><p><strong>dataStream</strong> – required, stream of bytes</p></li>
+<li><p><strong>incident_id</strong> – required</p></li>
+<li><p><strong>task_id</strong> – optional</p></li>
+<li><p><strong>content_type</strong> – optional, MIME type of attachment</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>new attachment -dictionary of attachment metadata</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.write_to_tmp_file">
+<span class="sig-name descname"><span class="pre">write_to_tmp_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmp_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.write_to_tmp_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data to a file in a safely created temp directory. If no
+<cite>tmp_file_name</cite> is provided, a temp name will be given. If no <cite>path_tmp_dir</cite>
+is provided a temp directory is created with the prefix <cite>resilient-lib-tmp-</cite>.</p>
+<p>When used within a Resilient Function, ensure you safely remove the created temp
+directory in the <cite>finally</cite> block of the FunctionComponent code.</p>
+<dl>
+<dt>Example:</dt><dd><p>import os
+import shutil
+try:</p>
+<blockquote>
+<div><p>path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get(“name”))</p>
+</div></blockquote>
+<dl class="simple">
+<dt>except Exception:</dt><dd><p>yield FunctionError()</p>
+</dd>
+<dt>finally:</dt><dd><dl class="simple">
+<dt>if path_tmp_dir and os.path.isdir(path_tmp_dir):</dt><dd><p>shutil.rmtree(path_tmp_dir)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<cite>bytes</cite>) – bytes to be written to the file</p></li>
+<li><p><strong>tmp_file_name</strong> (<cite>str</cite>) – name to be given to the file.</p></li>
+<li><p><strong>path_tmp_dir</strong> (<cite>str</cite>) – path to an existing directory to use as the temp dir</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple (path_tmp_file, path_tmp_dir)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="ui-methods">
+<h2>UI Methods<a class="headerlink" href="#ui-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="resilient_lib.ui.tab.Tab">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Tab</span></span><a class="headerlink" href="#resilient_lib.ui.tab.Tab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class to be subclassed in integrations to create and update tabs related to those integrations.
+UUID, NAME, SECTION, and CONTAINS attributes have to be defined on the subclass.
+- UUID has to be a constant defined as a string to identify tab uniquely in all of the UIs.
+To generate UUID you can use python package <cite>uuid</cite> and method <cite>uuid.uuid4()</cite> in the python shell.
+- NAME is the name of the tab as it should appear in the UI
+- SECTION is integration’s section in the app.config
+Can be used to place <cite>ui_lock</cite> in it to prevent changes being made to the tab.
+- CONTAINS - array of UI Elements (Field, Datatable) with api names to be listed in the tab</p>
+<p>Example usage:</p>
+<dl>
+<dt>class QRadarTab(UITab):</dt><dd><p>UUID = “abcdefg”
+NAME = “QRadar Tab”
+SECTION = “fn_qradar_integration”</p>
+<dl class="simple">
+<dt>CONTAINS = [</dt><dd><p>Field(“api_name”),
+Datatable(“api_name”)</p>
+</dd>
+</dl>
+<p>]</p>
+</dd>
+</dl>
+<p>create_tab(QRadarTab)</p>
+</dd></dl>
+
+</section>
+<section id="change-log">
+<h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2021-10: version 42.2</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-08: version 42.1</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-08: version 42.0</strong></p>
+<ul class="simple">
+<li><p>Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables. See the App Host Deployment Guide for details.</p></li>
+<li><p>Fix to OAuth2 to avoid infinite loop in some circumstances.</p></li>
+</ul>
+<p><strong>2021-06: version 41.1</strong></p>
+<ul class="simple">
+<li><p>Added ‘execute’ as an alias for ‘execute_call_v2’</p></li>
+<li><p>Bug fixes</p></li>
+</ul>
+<p><strong>2021-05: version 41.0</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-03: version 40.2</strong></p>
+<ul class="simple">
+<li><p>Bug fix for to use setuptools_scm &lt; 6.0.0 for Python 2.7 environments</p></li>
+</ul>
+<p><strong>2021-03: version 40.1</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-02: version 40.0</strong></p>
+<ul class="simple">
+<li><p>bug fixes</p></li>
+</ul>
+<p><strong>2020-12: version 39</strong></p>
+<ul class="simple">
+<li><p>add a capability to close an incident</p></li>
+<li><p>fixes a bug where timeout defined in function section is not processed as an int</p></li>
+</ul>
+<p><strong>2020-09: version 38</strong></p>
+<ul class="simple">
+<li><p>validate_fields now handles a field if it’s type is “Text with value string”</p></li>
+</ul>
+<p><strong>2020-05: version 37</strong></p>
+<ul class="simple">
+<li><p>execute_call_v2 might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs.</p></li>
+</ul>
+<p><strong>2020-04: version 36.2.dev</strong></p>
+<ul class="simple">
+<li><p>execute_call_v2 might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs.</p></li>
+</ul>
+<p><strong>2020-01-16: version 35.0.195</strong></p>
+<ul class="simple">
+<li><p>Added OAuth2 Client Credentials workflow handler</p></li>
+<li><p>Added support for timeout argument in integrations config section</p></li>
+</ul>
+<p><strong>2019-10-07: version 34.0.194</strong></p>
+<ul class="simple">
+<li><p>Add functionality to resilient_lib to upload attachment</p></li>
+<li><p>Added support for a timeout parameter across all integrations using the execute_call_v2() function</p></li>
+</ul>
+<p><strong>2019-08-02: version 33.0.189</strong></p>
+<ul class="simple">
+<li><p>Added support for API key and API key secret, now able to authenticate
+using API keys instead of email/password</p></li>
+<li><dl class="simple">
+<dt>New functions added to resilient-lib</dt><dd><p>‘get_file_attachment_metadata()’
+‘write_to_tmp_file()’</p>
+</dd>
+</dl>
+</li>
+<li><p>Updated ‘validate_fields()’ function in resilient-lib,
+adding the ability to validate fields in app.config</p></li>
+<li><p>Other minor bug fixes.</p></li>
+</ul>
+<p><strong>2019-07-03: version 32.0.186</strong></p>
+<ul class="simple">
+<li><p>Added more flexible ‘execute_call_v2()’ method in resilient-lib</p></li>
+<li><p>Fix for deprecated log warnings</p></li>
+<li><p>Other minor bug fixes</p></li>
+</ul>
+<p><strong>2019-04-12: version 32.0.140</strong></p>
+<ul class="simple">
+<li><p>Improvements to ‘resilient-lib’</p></li>
+<li><p>Other minor bug fixes/improvements</p></li>
+</ul>
+<p><strong>2019-03-06: version 32.0.126</strong></p>
+<ul class="simple">
+<li><p>Removed selftest from function template</p></li>
+<li><p>Improvements to resilient-lib</p></li>
+</ul>
+<p><strong>2019-01-15: version 32.0</strong></p>
+<ul class="simple">
+<li><p>Added <cite>resilient-lib</cite> to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient</p></li>
+<li><p>Added Sphinx documentation builder</p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/IBM_Security.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">resilient-lib</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-request-methods">Common Request Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-resilient_lib.components.resilient_common">Common Helper Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ui-methods">UI Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#change-log">Change Log</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resilient-sdk/resilient-sdk.html">resilient-sdk</a></li>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../resilient-sdk/resilient-sdk.html" title="resilient-sdk"
+             >next</a></li>
+        <li class="right" >
+          <a href="../../index.html" title="IBM SOAR Python Libraries"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2207 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, IBM.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
