@@ -69,7 +69,7 @@ class RequestsCommon:
 
         return int(timeout)
 
-    def execute_call_v2(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
+    def execute(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
         """Constructs and sends a request. Returns :class:`Response` object.
 
             From the requests.requests() function, inputs are mapped to this function
@@ -89,8 +89,7 @@ class RequestsCommon:
                 to add for the file.
             :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
             :param timeout: (optional) How many seconds to wait for the server to send data
-                before giving up, as a float, or a :ref:`(connect timeout, read
-                timeout) <timeouts>` tuple.
+                before giving up, as a float, or a :ref:`(connect timeout, read timeout) timeout tuple.
             :type timeout: float or tuple
             :param allow_redirects: (optional) Boolean. Enable/disable GET/OPTIONS/POST/PUT/PATCH/DELETE/HEAD redirection. Defaults to ``True``.
             :type allow_redirects: bool
@@ -151,7 +150,7 @@ class RequestsCommon:
             raise IntegrationError(msg)
 
     # Create alias for execute_call_v2
-    execute = execute_call_v2
+    execute_call_v2 = execute
 
     @deprecated("Use the new method execute_call_v2()")
     def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,

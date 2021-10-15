@@ -1,5 +1,13 @@
 #!/usr/bin/env python
-__import__('pkg_resources').declare_namespace(__name__)
+
+import pkg_resources
+
+try:
+    __version__ = pkg_resources.get_distribution(__name__).version
+except pkg_resources.DistributionNotFound:
+    __version__ = None
+
+pkg_resources.declare_namespace(__name__)
 
 from resilient_lib.components.function_result import ResultPayload
 from resilient_lib.components.html2markdown import MarkdownParser

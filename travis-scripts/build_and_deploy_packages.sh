@@ -109,6 +109,6 @@ if [ "$deploy_docs" = true ] ; then
         print_msg "pip install: $p"
         pip install -e "./$p"
     done
-    make -C docs/ html
-    touch docs/_build/html/.nojekyll
+    sphinx-build -b html -a docs docs/_build
+    # touch docs/_build/html/.nojekyll
 fi

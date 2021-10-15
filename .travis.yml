@@ -3,14 +3,14 @@ python: 3.6
 os: linux
 
 stages:
-  - run tests
-  - static analysis
+  # - run tests
+  # - static analysis
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
     if: branch = master OR branch =~ ^release\/.+
-  # - name: deploy documentation
-  #   if: branch = master
+  - name: deploy documentation
+    if: branch =~ ^pages\/.+
   - name: release to pypi
     if: tag =~ ^release\/pypi\/.+
 
@@ -155,25 +155,25 @@ matrix:
         - echo "Sending notification to Slack"
         - ./travis-scripts/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
-    # - stage: deploy documentation
-    #   install:
-    #   - pip install sphinx
-    #   - pip install git+https://github.com/bashtage/sphinx-material.git
-    #   script:
-    #     - echo "Building packages in Python 3.6 and deploying Documentation"
-    #     - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
-    #   # Define a deploy step to the inbuilt git pages deployment provider
-    #   deploy:
-    #     - provider: pages:git
-    #       verbose: true
-    #       skip_cleanup: true
-    #       # The github_url for the internal git needs to be specified otherwise the deploy will fail.
-    #       github_url: github.ibm.com
-    #       # A token is needed for the deployment, this token is a Personal Access token with limited permissions
-    #       github_token: $GH_TOKEN
-    #       edge: true
-    #       local_dir: ./docs/_build/html/
-    #       keep_history: true
+    - stage: deploy documentation
+      install:
+      - pip install sphinx
+      # - pip install git+https://github.com/bashtage/sphinx-material.git
+      script:
+        - echo "Building packages in Python 3.6 and deploying Documentation"
+        - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
+      # Define a deploy step to the inbuilt git pages deployment provider
+      deploy:
+        - provider: pages:git
+          verbose: true
+          skip_cleanup: true
+          # The github_url for the internal git needs to be specified otherwise the deploy will fail.
+          github_url: github.ibm.com
+          # A token is needed for the deployment, this token is a Personal Access token with limited permissions
+          github_token: $GH_TOKEN
+          edge: true
+          local_dir: ./docs/_build/html/
+          keep_history: true
 
-after_failure:
-  - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
+# after_failure:
+#   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
