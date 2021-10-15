@@ -23,7 +23,7 @@ print_msg "\
 BRANCHES_TO_SYNC:\t$BRANCHES_TO_SYNC \n\
 "
 
-if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$REPO_TO_PUSH" == "gh-pages" ] ; then
+if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "gh-pages" ] ; then
     git clone --branch=gh-pages git@github.ibm.com:Resilient/resilient-python-api.git gh-pages-dir
     cd gh-pages-dir
     git checkout gh-pages
