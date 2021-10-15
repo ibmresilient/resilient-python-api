@@ -51,18 +51,18 @@ setup_py_attributes = {
     },
     "description": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(?!Resilient Circuits Components).+", str(x)),
-        "fail_msg": "setup.py attribute '{0}' doesn't start with 'Resilient Circuits Components'", 
+        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).+", str(x)),
+        "fail_msg": "setup.py attribute '{0}' appears to still be the default value '{1:29.29}...'", 
         "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-        "solution": "'{0}' should start with 'Resilient Circuits Components'. This will be displayed when the integration is installed",
+        "solution": "Please make sure that you write your own '{0}'. This will be displayed when the integration is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     },
     "long_description": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(?!Resilient Circuits Components).+", str(x)),
-        "fail_msg": "setup.py attribute '{0}' doesn't start with 'Resilient Circuits Components'", 
+        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).+", str(x)),
+        "fail_msg": "setup.py attribute '{0}' appears to still be the default value '{1:29.29}...'", 
         "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
-        "solution": "'{0}' should start with 'Resilient Circuits Components'. This will be displayed when the integration is installed",
+        "solution": "Please make sure that you write your own '{0}'. This will be displayed when the integration is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     },
     "install_requires": {
