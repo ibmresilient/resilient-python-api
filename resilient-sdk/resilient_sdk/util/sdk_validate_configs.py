@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2021. All Rights Reserved.
 
-import re
+import re, os, pkg_resources
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
+from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers, constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 
@@ -98,5 +99,128 @@ setup_py_attributes = {
         "missing_msg": "'{0}' is missing",
         "solution": "Please make sure that all of the following values for '{0}' are implemented: " + str(package_helpers.SUPPORTED_EP),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    }
+}
+
+def validate_selftest_file_exists(**kwargs):
+    """TODO
+    """
+    path_selftest_py_file = kwargs.pop("path_selftest_py_file")
+    attr_dict = kwargs.pop("attr_dict")
+
+    # try to read the selftest.py file in the given path
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_selftest_py_file)
+        issue = SDKValidateIssue(
+            attr_dict.get("pass_name"),
+            attr_dict.get("pass_msg").format(path_selftest_py_file),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+        return True, issue
+    except SDKException as e:
+        # if it can't be read then create the SDKValidateIssue appropriate and return False immediately
+        issue = SDKValidateIssue(
+            attr_dict.get("fail_name"),
+            attr_dict.get("fail_msg"),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("solution")
+        )
+        return False, issue
+
+def validate_resilient_circuits_installed(**kwargs):
+    """TODO
+    """
+    attr_dict = kwargs.pop("attr_dict")
+
+    try:
+        # try to parse 'resilient-circuits' version installed in env
+        res_circuits_version = sdk_helpers.get_package_version(constants.CIRCUITS_PACKAGE_NAME)
+    except pkg_resources.DistributionNotFound as e:
+        # if 'resilient-circuits' not installed
+        return False, SDKValidateIssue( 
+            name=attr_dict.get("missing_name"),
+            description=attr_dict.get("missing_msg"),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("missing_solution")
+        )
+    else:
+        if res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
+            return False, SDKValidateIssue(
+                name=attr_dict.get("fail_name"),
+                description = attr_dict.get("fail_msg").format(res_circuits_version),
+                severity = attr_dict.get("severity"),
+                solution = attr_dict.get("fail_solution").format(res_circuits_version)
+            )
+        else:
+            return True, SDKValidateIssue(
+                name=attr_dict.get("pass_name"),
+                description = attr_dict.get("pass_msg"),
+                severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+                solution = ""
+            )
+
+def validate_package_installed(**kwargs):
+    """
+    TODO
+    """
+    attr_dict = kwargs.pop("attr_dict")
+    package_name = kwargs.pop("package_name")
+    path_package = kwargs.pop("path_package")
+
+    if package_helpers.check_package_installed(package_name):
+        return True, SDKValidateIssue(
+            name = attr_dict.get("pass_name").format(package_name),
+            description = attr_dict.get("pass_msg").format(package_name),
+            severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution = ""
+        )
+    else:
+        return False, SDKValidateIssue(
+            name = attr_dict.get("fail_name").format(package_name),
+            description = attr_dict.get("fail_msg").format(package_name),
+            severity = attr_dict.get("severity"),
+            solution = attr_dict.get("solution").format(package_name, path_package)
+        )
+
+
+selftest_attributes = {
+    "validate_selftest_file_exists": {
+        "func": validate_selftest_file_exists,
+
+        "fail_name": "selftest.py not found",
+        "fail_msg": "selftest.py is a required file",
+        "solution": "Please run codegen --reload and implement the selftest function",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        
+        "pass_name": "selftest.py found",
+        "pass_msg": "selftest.py file found at path '{0}'",
+    },
+    "validate_resilient_circuits_installed": {
+        "func": validate_resilient_circuits_installed,
+
+        "fail_name": "'{0}' version is too low".format(constants.CIRCUITS_PACKAGE_NAME),
+        "fail_msg": "'{0}=={1}' is not supported".format(constants.CIRCUITS_PACKAGE_NAME, "{0}"),
+        "fail_solution": "Upgrade '{0}' by running 'pip install {0}>={1}'".format(constants.RESILIENT_LIBRARIES_VERSION, "{0}"),
+
+        "missing_name": "'{0}' not found".format(constants.CIRCUITS_PACKAGE_NAME),
+        "missing_msg": "'{0}' is not installed in your python environment".format(constants.CIRCUITS_PACKAGE_NAME),
+        "missing_solution": "Please install '{0}' by running 'pip install {0}'".format(constants.CIRCUITS_PACKAGE_NAME),
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        
+        "pass_name": "'{0}' found in env".format(constants.CIRCUITS_PACKAGE_NAME),
+        "pass_msg": "'{0}' was found in the python environment with the minimum version installed".format(constants.CIRCUITS_PACKAGE_NAME)
+    },
+    "validate_package_installed": {
+        "func": validate_package_installed,
+
+        "fail_name": "'{0}' not found",
+        "fail_msg": "'{0}' is not installed in your python environment",
+        "solution": "Please install '{0}' by running 'pip install {1}'",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        
+        "pass_name": "'{0}' found in env",
+        "pass_msg": "'{0}' is correctly installed in your python environment",
     }
 }
