@@ -52,8 +52,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'alabaster'
 html_theme = 'sphinxdoc'
 
-html_favicon = "images/IBM_Security_Shield.ico"
-html_logo = "images/IBM_Security.png"
+html_favicon = "_static/IBM_Security_Shield.ico?"
+html_logo = "_static/IBM_Security.png"
 html_use_index = False
 html_show_sourcelink = False
 html_domain_indices = False

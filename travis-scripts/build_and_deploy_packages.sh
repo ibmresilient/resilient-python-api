@@ -6,10 +6,10 @@ paths_all_sdists=()
 
 readonly package_names=(
     "resilient"
-    "resilient-circuits"
-    "resilient-sdk"
     "resilient-lib"
+    "resilient-circuits"
     "pytest-resilient-circuits"
+    "resilient-sdk"
     "rc-webserver"
     "rc-cts"
 )
@@ -73,6 +73,11 @@ for p in "${package_names[@]}"; do
         python setup.py sdist --formats=gztar
     fi
 
+    if [ "$deploy_docs" = true ] ; then
+        print_msg "Docs are required so pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
+        pip install -e .
+    fi
+
     # Append path to sdist to paths_all_sdists array
     sdist_path=$(ls $dir/dist/*.tar.gz)
     print_msg "Path to sdist: $sdist_path"
@@ -104,11 +109,9 @@ if [ "$do_release" = true ] ; then
 fi
 
 if [ "$deploy_docs" = true ] ; then
-    # Loop paths_all_sdists and build docs
-    for p in "${paths_all_sdists[@]}"; do
-        print_msg "pip install: $p"
-        pip install -e "./$p"
-    done
+    print_msg "Docs are requried so building them \n sphinx-build -b html -a docs docs/_build"
     sphinx-build -b html -a docs docs/_build
-    # touch docs/_build/html/.nojekyll
+    touch docs/_build/.nojekyll
 fi
+
+cd $TRAVIS_BUILD_DIR

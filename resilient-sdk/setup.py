@@ -12,24 +12,25 @@ import io
 this_directory = path.abspath(path.dirname(__file__))
 
 
-def gather_changes():
-    filepath = path.join(this_directory, "CHANGES")  # The file from which we will pull the changes
-    with io.open(filepath) as fp:
-        lines = fp.readlines()  # Take in all the lines as a list
-        first_section = []
-        for num, line in enumerate(lines, start=1):
-            if "ver." in lines[num] and num != 0:
-                # Get all the lines from the start of the list until num-1.
-                # This, along with the if statement above will ensure we only capture the most recent change.
-                first_section = lines[:num - 1]
-                break
-        # Return the section with a newline at the end
-        return " \n ".join(first_section)
+# def gather_changes():
+#     filepath = path.join(this_directory, "CHANGES")  # The file from which we will pull the changes
+#     with io.open(filepath) as fp:
+#         lines = fp.readlines()  # Take in all the lines as a list
+#         first_section = []
+#         for num, line in enumerate(lines, start=1):
+#             if "ver." in lines[num] and num != 0:
+#                 # Get all the lines from the start of the list until num-1.
+#                 # This, along with the if statement above will ensure we only capture the most recent change.
+#                 first_section = lines[:num - 1]
+#                 break
+#         # Return the section with a newline at the end
+#         return " \n ".join(first_section)
 
 
 with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    readme_text = f.read()
-    long_description = readme_text.replace('<!-- [[pypi_changelog]] -->', "### Recent Changes\n {}".format(gather_changes()))
+    # readme_text = f.read()
+    # long_description = readme_text.replace('<!-- [[pypi_changelog]] -->', "### Recent Changes\n {}".format(gather_changes()))
+    long_description = f.read()
 
 
 setup(
