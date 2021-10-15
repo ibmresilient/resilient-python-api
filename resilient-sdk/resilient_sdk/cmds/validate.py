@@ -451,6 +451,11 @@ class CmdValidate(BaseCmd):
 
 
     def _log(self, level, msg):
+        """
+        Class wrapper method for cleaner logging calls.
+        Makes use of the class variable "outputsuppressed" to calculate if validate
+        output should be output to the console (allows for silent running in other sdk commands)
+        """
         LOG.log(CmdValidate._get_log_level(level, self.output_suppressed), msg)
 
     @staticmethod

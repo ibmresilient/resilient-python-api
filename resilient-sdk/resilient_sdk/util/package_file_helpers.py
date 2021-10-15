@@ -113,6 +113,7 @@ REPOSITORY_NAME = "ibmresilient"
 # Color dict for printing in color
 COLORS = {
     "PASS": '\033[92m',
+    "DEBUG": '\033[92m',
     "FAIL": '\033[91m',
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',

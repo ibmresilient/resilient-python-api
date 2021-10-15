@@ -75,6 +75,9 @@ class SDKValidateIssue(object):
     def error_str(self):
         """Returns an error string to be output to the console"""
         return "{0:<20} {1}. \n{3:<11} {2}".format(
-            package_helpers.color_output(self.get_logging_level(), self.get_logging_level()), 
+            package_helpers.color_output(
+                self.get_logging_level() if self.get_logging_level() != constants.VALIDATE_LOG_LEVEL_DEBUG
+                    else "PASS", 
+                self.get_logging_level()), 
             self.description, self.solution, ""
         )
