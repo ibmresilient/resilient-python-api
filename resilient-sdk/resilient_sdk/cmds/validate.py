@@ -434,8 +434,7 @@ class CmdValidate(BaseCmd):
 
 
         # validate file exists and can be read
-        for attr in val_configs.selftest_attributes:
-            attr_dict = val_configs.selftest_attributes.get(attr)
+        for attr_dict in val_configs.selftest_attributes:
             issue_passes, issue = attr_dict.get("func")(
                 path_selftest_py_file=path_selftest_py_file, 
                 attr_dict=attr_dict, 

@@ -145,6 +145,7 @@ def validate_resilient_circuits_installed(**kwargs):
             solution=attr_dict.get("missing_solution")
         )
     else:
+        # if resilient-circuits was found, then check if version is high enough
         if res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
             return False, SDKValidateIssue(
                 name=attr_dict.get("fail_name"),
@@ -184,19 +185,11 @@ def validate_package_installed(**kwargs):
         )
 
 
-selftest_attributes = {
-    "validate_selftest_file_exists": {
-        "func": validate_selftest_file_exists,
-
-        "fail_name": "selftest.py not found",
-        "fail_msg": "selftest.py is a required file",
-        "solution": "Please run codegen --reload and implement the selftest function",
-        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        
-        "pass_name": "selftest.py found",
-        "pass_msg": "selftest.py file found at path '{0}'",
-    },
-    "validate_resilient_circuits_installed": {
+# NOTE: this needs to be a list as the order of these checks MATTERS
+# if it is a dict the order that they're pulled from in a for-loop is not
+# guaranteed; with a list, order will be guaranteed
+selftest_attributes = [
+    { # check 1: verify that resilient-circuits is installed in python env
         "func": validate_resilient_circuits_installed,
 
         "fail_name": "'{0}' version is too low".format(constants.CIRCUITS_PACKAGE_NAME),
@@ -212,7 +205,7 @@ selftest_attributes = {
         "pass_name": "'{0}' found in env".format(constants.CIRCUITS_PACKAGE_NAME),
         "pass_msg": "'{0}' was found in the python environment with the minimum version installed".format(constants.CIRCUITS_PACKAGE_NAME)
     },
-    "validate_package_installed": {
+    { # check 2: check that the given package is acutally installed in the env
         "func": validate_package_installed,
 
         "fail_name": "'{0}' not found",
@@ -222,5 +215,16 @@ selftest_attributes = {
         
         "pass_name": "'{0}' found in env",
         "pass_msg": "'{0}' is correctly installed in your python environment",
-    }
-}
+    },
+    { # check 3: validate that the selftest file exists
+        "func": validate_selftest_file_exists,
+
+        "fail_name": "selftest.py not found",
+        "fail_msg": "selftest.py is a required file",
+        "solution": "Please run codegen --reload and implement the templated selftest function",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        
+        "pass_name": "selftest.py found",
+        "pass_msg": "selftest.py file found at path '{0}'",
+    },
+]
