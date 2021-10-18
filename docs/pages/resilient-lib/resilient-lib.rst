@@ -2,7 +2,7 @@
 resilient-lib
 =============
 
-This Python Package contains common library calls which facilitate the development of functions for IBM SOAR
+This Python Package contains common library calls which facilitate the development of Apps for IBM SOAR
 
 -----
 Usage
@@ -17,6 +17,14 @@ To use it within your App development, **import** it like any other Python Packa
    from resilient_lib import get_file_attachment, get_file_attachment_name
    TODO give examples of execute and tab imports too
 
+
+---------------------
+Common Helper Methods
+---------------------
+
+.. automodule:: resilient_lib.components.resilient_common
+   :members:
+
 ----------------------
 Common Request Methods
 ----------------------
@@ -30,19 +38,6 @@ Common Request Methods
       response = self.rc.execute(method="get", url=ibm.com)
 
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
-
----------------------
-Common Helper Methods
----------------------
-
-.. automodule:: resilient_lib.components.resilient_common
-   :members:
-
-----------
-UI Methods
-----------
-.. autoclass:: resilient_lib.ui.tab::Tab
-
 
 ----------
 Change Log

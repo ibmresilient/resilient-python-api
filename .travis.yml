@@ -185,8 +185,8 @@ matrix:
       script:
         - echo "Syncing internal gh-pages branch with external gh-pages branch"
         - ./travis-scripts/sync_public_repo.sh "gh-pages"
-      after_success:
-        - ./travis-scripts/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
+      # after_success:
+      #   - ./travis-scripts/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 # after_failure:
 #   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
