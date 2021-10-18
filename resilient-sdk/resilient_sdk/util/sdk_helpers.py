@@ -15,6 +15,7 @@ import datetime
 import importlib
 import hashlib
 import uuid
+import pkg_resources
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
@@ -23,6 +24,7 @@ from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
+from resilient_sdk.util.constants import *
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -34,21 +36,10 @@ else:
     reload = importlib.reload
     from json.decoder import JSONDecodeError
 
-LOGGER_NAME = "resilient_sdk_log"
-ENV_VAR_DEV = "RES_SDK_DEV"
-RESILIENT_LIBRARIES_VERSION = "42.0.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "42.0.0"
-MIN_SUPPORTED_PY_VERSION = (3, 6)
-
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(LOGGER_NAME)
-
-# Resilient export file suffix.
-RES_EXPORT_SUFFIX = ".res"
-# Endpoint url for importing a configuration
-IMPORT_URL = "/configurations/imports"
 
 
 def get_resilient_client(path_config_file=None):
@@ -1026,6 +1017,23 @@ def get_resilient_libraries_version_to_use():
         return RESILIENT_LIBRARIES_VERSION_DEV
     else:
         return RESILIENT_LIBRARIES_VERSION
+
+
+def get_resilient_sdk_version():
+    """
+    wrapper method to call get_package_version on constant SDK_PACKAGE_NAME
+
+    :return: a Version object
+    """
+    return get_package_version(SDK_PACKAGE_NAME)
+
+def get_package_version(package_name):
+    """
+    Uses pkg_resources to parse the version.
+
+    :return: a Version object
+    """
+    return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
 
 
 def is_python_min_supported_version():
