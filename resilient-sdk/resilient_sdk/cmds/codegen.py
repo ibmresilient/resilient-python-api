@@ -13,10 +13,10 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 class CmdCodegen(BaseCmd):
@@ -351,7 +351,7 @@ class CmdCodegen(BaseCmd):
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
 
-            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+            if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
                 package_mapping_dict["payload_samples"] = {}
 
         # Get a list of function names in export.
@@ -383,7 +383,7 @@ class CmdCodegen(BaseCmd):
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
             # See if RES_SDK_DEV environment var is set
-            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+            if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
                 # Add a 'payload_samples/fn_name' directory and the files to it
                 CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 

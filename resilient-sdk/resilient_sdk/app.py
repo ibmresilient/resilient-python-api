@@ -36,7 +36,7 @@ def get_main_app_parser():
     # Define main parser object
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
-        prog="resilient-sdk",
+        prog=sdk_helpers.SDK_PACKAGE_NAME,
         description="Python SDK for developing Resilient Apps",
         epilog="For support, please visit ibm.biz/resilientcommunity")
 
@@ -95,12 +95,12 @@ def main():
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
     cmd_ext_package = CmdExtPackage(sub_parser)
-    cmd_validate = CmdValidate(sub_parser)
 
     if sdk_dev:
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
-        LOG.info("\n-----------------------------\nRunning SDK in Developer Mode\n-----------------------------\n")
+        cmd_validate = CmdValidate(sub_parser)
+        LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
 
     try:
         # Parse the arguments
@@ -115,7 +115,7 @@ def main():
         main_cmd = sdk_helpers.get_main_cmd()
 
         LOG.error(err)
-        LOG.info("\n-----------------\n")
+        LOG.info("{0}".format(sdk_helpers.LOG_DIVIDER))
 
         # Print specifc usage for that cmd for these errors
         if "too few arguments" in err.message or "no subcommand provided" in err.message:
@@ -134,7 +134,7 @@ def main():
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
 
-            elif main_cmd == cmd_validate.CMD_NAME:
+            elif sdk_dev and main_cmd == cmd_validate.CMD_NAME:
                 cmd_validate.parser.print_usage()
 
             elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
@@ -167,9 +167,10 @@ def main():
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
 
-    elif args.cmd == cmd_validate.CMD_NAME:
+    elif sdk_dev and args.cmd == cmd_validate.CMD_NAME:
+        # TODO: remove sdk_validate_enabled check once validate is ready for use
+        # functionality is currently hidden behind sdk_validate_enabled env var 
         cmd_validate.execute_command(args)
-
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)
 
