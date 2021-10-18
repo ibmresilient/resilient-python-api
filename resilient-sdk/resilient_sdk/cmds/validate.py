@@ -5,17 +5,13 @@
 """ Implementation of `resilient-sdk validate` """
 
 import logging
-import os, re, pkg_resources, sys
-from io import StringIO
-from argparse import Namespace
-from xml.etree.ElementTree import parse
+import os, re
 from resilient import ensure_unicode
-import resilient_circuits
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import package_file_helpers as package_helpers, sdk_validate_configs
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util import sdk_validate_configs as val_configs
 from resilient_sdk.util import constants
@@ -293,7 +289,7 @@ class CmdValidate(BaseCmd):
         ## SEFLTEST.PY ##
         #################
         selftest_pass = True
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py (this may take a bit...){0}".format(constants.LOG_DIVIDER))
 
         # Generate path to selftest.py file + validate we have permissions to read
         path_selftest_py_file = os.path.join(path_package, package_name, package_helpers.PATH_SELFTEST_PY)
@@ -445,28 +441,14 @@ class CmdValidate(BaseCmd):
             )
             issues.append(issue)
             if not issue_passes: 
+                issues.sort()
                 return False, issues
+
+        
 
         # sort and look for and invalid issues
         issues.sort()
         selftest_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
-
-        # run selftest in package
-        from resilient_circuits.cmds import selftest
-        from resilient_circuits import constants as rc_constants
-        package_name = package_name.replace("_", "-")
-        args = Namespace(
-            cmd='selftest', 
-            install_list=[package_name], 
-            print_env=False, 
-            verbose=False
-        )
-        
-        selftest_logger = logging.getLogger(rc_constants.CMDS_LOGGER_NAME)
-        selftest_logger.addHandler(logging.StreamHandler())
-        selftest_logger.setLevel(logging.DEBUG)
-        
-        selftest.execute_command(args)
 
         return selftest_valid, issues
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2021. All Rights Reserved.
 
-import re, os, pkg_resources
+import re, os, pkg_resources, subprocess
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers, constants
@@ -185,6 +185,51 @@ def validate_package_installed(**kwargs):
         )
 
 
+def run_selftest(**kwargs):
+    """
+    TODO
+    """
+    attr_dict = kwargs.pop("attr_dict")
+    package_name = kwargs.pop("package_name")
+
+    # run selftest in package
+    selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
+    proc = subprocess.run(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    details = proc.stderr.decode("utf-8")
+
+    if proc.returncode == 1:
+        details = details[details.rfind("{")+1:details.rfind("}")].replace("\n", " ").replace("\t", " ")
+        return False, SDKValidateIssue(
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg").format(package_name, details),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution")
+        )
+    elif proc.returncode > 1:
+        # after: Running selftest for: 'fn-utilities'
+        details = details[details.rfind("Running selftest for"):].replace("\n", " ").replace("\t", " ")
+        return False, SDKValidateIssue(
+            name=attr_dict.get("error_name"),
+            description=attr_dict.get("error_msg").format(details),
+            severity=attr_dict.get("error_severity")
+        )
+    else:
+        if details.find("unimplemented") != -1:
+            return False, SDKValidateIssue(
+                name=attr_dict.get("missing_name"),
+                description=attr_dict.get("missing_msg").format(package_name),
+                severity=attr_dict.get("missing_severity"),
+                solution=attr_dict.get("missing_solution")
+            )
+        else:
+            return True, SDKValidateIssue(
+                name=attr_dict.get("pass_name"),
+                description=attr_dict.get("pass_msg").format(package_name),
+                severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+                solution=""
+            )
+
+
 # NOTE: this needs to be a list as the order of these checks MATTERS
 # if it is a dict the order that they're pulled from in a for-loop is not
 # guaranteed; with a list, order will be guaranteed
@@ -227,4 +272,28 @@ selftest_attributes = [
         "pass_name": "selftest.py found",
         "pass_msg": "selftest.py file found at path '{0}'",
     },
+    { # check 4: execute selftest and check how it went
+        "func": run_selftest,
+
+        # if selftest returns exit code 1
+        "fail_name": "selftest.py failed",
+        "fail_msg": "selftest.py failed  for {0}. Details: {1}",
+        "fail_solution": "Please check your configuration values and make sure selftest.py is properly implemented",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+
+        # if 'unimplemented' is the return value from selftest
+        "missing_name": "selftest.py not implemented",
+        "missing_msg": "selftest.py not implemented for {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "missing_solution": "Please implement 'selftest'",
+
+        # if a returncode > 1 comes from running selftest.py
+        "error_name": "selftest.py failed",
+        "error_msg": "While running selftest.py, 'resilient-circuits' failed to connect. Details: {0}",
+        "error_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        # if selftest.py succeeds (i.e. returncode == 0)
+        "pass_name": "selftest.py success",
+        "pass_msg": "selftest.py successfully ran for {0}",
+    }
 ]
