@@ -5,10 +5,12 @@
 """ Implementation of `resilient-sdk validate` """
 
 import logging
-import os, re, pkg_resources
-from pprint import pprint
+import os, re, pkg_resources, sys
+from io import StringIO
+from argparse import Namespace
 from xml.etree.ElementTree import parse
 from resilient import ensure_unicode
+import resilient_circuits
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
@@ -433,7 +435,7 @@ class CmdValidate(BaseCmd):
         selftest_valid = True
 
 
-        # validate file exists and can be read
+        # run through validations for selftest
         for attr_dict in val_configs.selftest_attributes:
             issue_passes, issue = attr_dict.get("func")(
                 path_selftest_py_file=path_selftest_py_file, 
@@ -448,6 +450,23 @@ class CmdValidate(BaseCmd):
         # sort and look for and invalid issues
         issues.sort()
         selftest_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+
+        # run selftest in package
+        from resilient_circuits.cmds import selftest
+        from resilient_circuits import constants as rc_constants
+        package_name = package_name.replace("_", "-")
+        args = Namespace(
+            cmd='selftest', 
+            install_list=[package_name], 
+            print_env=False, 
+            verbose=False
+        )
+        
+        selftest_logger = logging.getLogger(rc_constants.CMDS_LOGGER_NAME)
+        selftest_logger.addHandler(logging.StreamHandler())
+        selftest_logger.setLevel(logging.DEBUG)
+        
+        selftest.execute_command(args)
 
         return selftest_valid, issues
 
@@ -481,15 +500,15 @@ class CmdValidate(BaseCmd):
         From list of issues, generates a count of issues that are CRITICAL, WARNINGS, sum(INFO, DEBUG)
         and outputs in the format:
 
-            ------------------------
-            Results
-            ------------------------
+        ------------------------
+        Static Validation Results
+        ------------------------
 
-            Critical Issues:     <counts[critical]>
-            Warnings:            <counts[warning]>
-            Components Passed:   <counts[pass]>
+        Critical Issues:     <counts[critical]>
+        Warnings:            <counts[warning]>
+        Components Passed:   <counts[pass]>
 
-            ------------------------
+        ------------------------
 
         :param issues_list: list of SDKValidateIssue objects
         :type issues_list: list[SDKValidateIssue]
