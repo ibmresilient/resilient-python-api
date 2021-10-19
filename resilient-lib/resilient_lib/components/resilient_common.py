@@ -28,20 +28,28 @@ LOG.addHandler(logging.StreamHandler())
 
 def build_incident_url(url, incidentId):
     """
-    build the url to link to an resilient incident
-    :param url: base url
-    :param incidentId:
-    :return: full url
+    Build the url to link to a SOAR incident
+
+    :param url: the URL of your SOAR instance
+    :type url: str
+    :param incidentId: the id of the incident
+    :type incidentId: str|int
+    :return: full URL to the incident
+    :rtype: str
     """
     return '/'.join([url, INCIDENT_FRAGMENT, str(incidentId)])
 
 
 def build_resilient_url(host, port):
     """
-    build basic url to resilient instance
+    Build basic url to resilient instance
+
     :param host: host name
+    :type host: str
     :param port: port
+    :type port: str|int
     :return: base url
+    :rtype: str
     """
     if host.lower().startswith("http"):
         return "{0}:{1}".format(host, port)
@@ -51,11 +59,18 @@ def build_resilient_url(host, port):
 
 def clean_html(html_fragment):
     """
-    Resilient textarea fields return html fragments. This routine will remove the html and insert any code within <div></div>
-    with a linefeed
-    :param html_fragment: str presenting the html to clean up
-    :return: cleaned up code. This may not format well as no presentation of line feeds are preserved in the way supported by
-       tags such as <br> or <ol>, <ul>, etc. See html2markdown for a better way to translate html input to markdown.
+    Resilient textarea fields return html fragments. This routine will remove the
+    html and insert any code within ``<div></div>`` with a linefeed
+
+    .. note::
+        The string returned from this method may not format well as no presentation of line feeds are preserved,
+        tags such as ``<br>`` or ``<ol>``, ``<ul>``, etc. are removed. See :class:`.MarkdownParser` class for a better way to translate
+        html input to markdown.
+
+    :param html_fragment: the html to clean up
+    :type html_fragment: str
+    :return: cleaned up code
+    :rtype: str
     """
 
     if not html_fragment or not isinstance(html_fragment, string_types):
@@ -67,8 +82,13 @@ def clean_html(html_fragment):
 
 
 def unescape(data):
-    """ Return unescaped data such as &gt; -> >, &quot -> ', etc.
+    """
+    Return unescaped data such as ``&gt;`` -> ``>`` and ``&quot`` -> ``'``, etc.
+
     :param data: text to convert
+    :type data: str
+    :return: the text unescaped
+    :rtype: str
     """
     if data is None:
         return None
@@ -328,19 +348,7 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
     When used within a Resilient Function, ensure you safely remove the created temp
     directory in the `finally` block of the FunctionComponent code.
 
-    Example:
-        import os
-        import shutil
-        try:
-            path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
-
-        except Exception:
-            yield FunctionError()
-
-        finally:
-            if path_tmp_dir and os.path.isdir(path_tmp_dir):
-                shutil.rmtree(path_tmp_dir)
-
+    TODO: removed some of this text to format it
     :param data: bytes to be written to the file
     :type data: `bytes`
     :param tmp_file_name: name to be given to the file.
@@ -372,12 +380,26 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
     return (path_tmp_file, path_tmp_dir)
 
 
-def close_incident(res_client, incident_id, kwargs):
+def close_incident(res_client, incident_id, kwargs, handle_names=False):
     """
+    Close an incident in SOAR.
+
+    Any **required on close (roc)** fields that
+    are needed, pass them as a ``field_name:field_value`` dict in ``kwargs``
+
+    If any **roc** select field needs to be identified as its name,
+    set ``handle_names`` to ``True``
+
     :param res_client: required for communication back to resilient
+    :type res_client: resilient_circuits.ResilientComponent.rest_client()
     :param incident_id: required
-    :param kwargs: required field_name:new_value pairs dict
-    :return: response object
+    :type incident_id: int|str
+    :param kwargs: required fields needed to close an incident in a ``field_name:field_value`` format
+    :type kwargs: dict
+    :param handle_names: if ``True``, any select field types in ``kwargs`` will take ``str`` instead of ``int`` as their value
+    :type handle_names: bool
+    :return: Response from the server indicating if the incident was closed or not
+    :rtype: requests.Response
     """
 
     if not incident_id:
@@ -396,7 +418,7 @@ def close_incident(res_client, incident_id, kwargs):
         mandatory_fields["plan_status"] = "C"
 
     # API call to the Resilient REST API to patch the incident data (close incident)
-    response = _patch_to_close_incident(res_client, incident_id, mandatory_fields)
+    response = _patch_to_close_incident(res_client, incident_id, mandatory_fields, handle_names)
 
     return response
 
@@ -427,7 +449,7 @@ def _get_incident_fields(res_client):
     return incident_fields
 
 
-def _patch_to_close_incident(res_client, incident_id, close_fields):
+def _patch_to_close_incident(res_client, incident_id, close_fields, handle_names=False):
     """
     call the Resilient REST API to patch incident
     :param res_client: required for communication back to resilient
@@ -436,6 +458,10 @@ def _patch_to_close_incident(res_client, incident_id, close_fields):
     :return: response object
     """
     uri = "/incidents/{}".format(incident_id)
+
+    if handle_names:
+        uri = "{0}?handle_format=names".format(uri)
+
     previous_object = res_client.get(uri)
     patch = resilient.Patch(previous_object)
 

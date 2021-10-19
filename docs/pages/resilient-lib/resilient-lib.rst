@@ -8,21 +8,64 @@ This Python Package contains common library calls which facilitate the developme
 Usage
 -----
 
-``resilient-lib`` is now a direct dependency of ``resilient-circuits`` as of v40.0 to help make development more streamlined
+``resilient-lib`` is now a direct dependency of ``resilient-circuits`` as of **v40.0** to help make development more streamlined
+
+It can also be installed directly with:
+
+.. code-block::
+
+   $ pip install resilient-lib
 
 To use it within your App development, **import** it like any other Python Package:
 
 .. code-block:: python
 
-   from resilient_lib import get_file_attachment, get_file_attachment_name
-   TODO give examples of execute and tab imports too
+   from resilient_lib import close_incident
 
+   close_incident(
+      res_client=self.rest_client(),
+      incident_id=fn_inputs.incident_id,
+      kwargs={"resolution_id": "Duplicate", "resolution_summary": "This ticket is a duplicate"},
+      handle_names=True
+   )
+
+^^^^^^^
+Proxies
+^^^^^^^
+
+``resilient-lib`` supports an ``[integrations]`` section in your app.config file. 
+Add this section to define proxy settings which will be used for all integrations which use this library:
+
+.. code-block::
+
+   [integrations]
+   # These proxy settings will be used by all integrations. 
+   # To override, add any parameter to your specific integration section
+   http_proxy=
+   https_proxy=
+   timeout=30
+
+
+.. note::
+   If your App is running on AppHost 1.6 or greater you can take advantage of the
+   the global proxy functionality and there is no need to add an ``[integrations]``
+   section like above. Run the following on your AppHost for more:
+
+   .. code-block::
+
+      $ manageAppHost proxy -h
 
 ---------------------
 Common Helper Methods
 ---------------------
 
 .. automodule:: resilient_lib.components.resilient_common
+   :members:
+
+.. automodule:: resilient_lib.components.html2markdown
+   :members:
+
+.. automodule:: resilient_lib.components.oauth2_client_credentials_session
    :members:
 
 ----------------------
