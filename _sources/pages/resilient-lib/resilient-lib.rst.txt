@@ -20,14 +20,9 @@ To use it within your App development, **import** it like any other Python Packa
 
 .. code-block:: python
 
-   from resilient_lib import close_incident
+   from resilient_lib import readable_datetime
 
-   close_incident(
-      res_client=self.rest_client(),
-      incident_id=fn_inputs.incident_id,
-      kwargs={"resolution_id": "Duplicate", "resolution_summary": "This ticket is a duplicate"},
-      handle_names=True
-   )
+   created_date = readable_datetime(fn_inputs.inc_create_date, rtn_format="%m-%d-%Y %H:%M:%S")
 
 ^^^^^^^
 Proxies
@@ -62,10 +57,10 @@ Common Helper Methods
 .. automodule:: resilient_lib.components.resilient_common
    :members:
 
-.. automodule:: resilient_lib.components.html2markdown
+.. .. automodule:: resilient_lib.components.html2markdown
    :members:
 
-.. automodule:: resilient_lib.components.oauth2_client_credentials_session
+.. .. automodule:: resilient_lib.components.oauth2_client_credentials_session
    :members:
 
 ----------------------
@@ -80,7 +75,7 @@ Common Request Methods
 
       response = self.rc.execute(method="get", url=ibm.com)
 
-.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
+.. .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
 
 ----------
 Change Log
