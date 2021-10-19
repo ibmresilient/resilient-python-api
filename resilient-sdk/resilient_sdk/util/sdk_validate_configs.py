@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2021. All Rights Reserved.
 
-import re, os, pkg_resources, subprocess
+import re, os, pkg_resources, subprocess, logging
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers, constants
 from resilient_sdk.util import package_file_helpers as package_helpers
+
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 # formatted strings follow array of values: [attr, attr_value, <OPTIONAL: fail_msg_lambda_supplement>]
 setup_py_attributes = {
@@ -102,36 +104,25 @@ setup_py_attributes = {
     }
 }
 
-def validate_selftest_file_exists(**kwargs):
-    """TODO
+def selftest_validate_resilient_circuits_installed(attr_dict, **kwargs):
     """
-    path_selftest_py_file = kwargs.pop("path_selftest_py_file")
-    attr_dict = kwargs.pop("attr_dict")
+    TODO: unit tests
+    selftest.py validation helper method.
+    Validates that 'resilient-circuits' is installed in the env
+    and confirms that the version is >= constants.RESILIENT_LIBRARIES_VERSION
 
-    # try to read the selftest.py file in the given path
-    try:
-        sdk_helpers.validate_file_paths(os.R_OK, path_selftest_py_file)
-        issue = SDKValidateIssue(
-            attr_dict.get("pass_name"),
-            attr_dict.get("pass_msg").format(path_selftest_py_file),
-            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-            solution=""
-        )
-        return True, issue
-    except SDKException as e:
-        # if it can't be read then create the SDKValidateIssue appropriate and return False immediately
-        issue = SDKValidateIssue(
-            attr_dict.get("fail_name"),
-            attr_dict.get("fail_msg"),
-            severity=attr_dict.get("severity"),
-            solution=attr_dict.get("solution")
-        )
-        return False, issue
-
-def validate_resilient_circuits_installed(**kwargs):
-    """TODO
+    :param attr_dict: (required) dictionary of attributes defined in ``selftest_attributes``
+    :type attr_dict: dict
+    :param path_selftest_py_file: (optional) path to selftest.py
+    :type path_selftest_py_file: str
+    :param package_name: (optional) name of package being validated
+    :type package_name: str
+    :param path_package: (optional) path to package
+    :type path_package: str
+    :return: returns a tuple with the status of the validation and an associated SDKValidateIssue
+    :rtype: (bool, SDKValidateIssue)
     """
-    attr_dict = kwargs.pop("attr_dict")
+    LOG.debug("validating that 'resilient-circuits' is installed in the env...\n")
 
     try:
         # try to parse 'resilient-circuits' version installed in env
@@ -161,14 +152,26 @@ def validate_resilient_circuits_installed(**kwargs):
                 solution = ""
             )
 
-def validate_package_installed(**kwargs):
+def selftest_validate_package_installed(attr_dict, package_name, path_package, **kwargs):
     """
-    TODO
-    """
-    attr_dict = kwargs.pop("attr_dict")
-    package_name = kwargs.pop("package_name")
-    path_package = kwargs.pop("path_package")
+    TODO: unit tests
+    selftest.py validation helper method.
+    Validates that the package being validated is installed in the python env
 
+    :param attr_dict: (required) dictionary of attributes defined in ``selftest_attributes``
+    :type attr_dict: dict
+    :param package_name: (required) name of package being validated
+    :type package_name: str
+    :param path_package: (required) path to package
+    :type path_package: str
+    :param path_selftest_py_file: (optional) path to selftest.py
+    :type path_selftest_py_file: str
+    :return: returns a tuple with the status of the validation and an associated SDKValidateIssue
+    :rtype: (bool, SDKValidateIssue)
+    """
+    LOG.debug("validating that the package is installed...\n")
+
+    # check that the package being validated is installed in the environment
     if package_helpers.check_package_installed(package_name):
         return True, SDKValidateIssue(
             name = attr_dict.get("pass_name").format(package_name),
@@ -184,21 +187,82 @@ def validate_package_installed(**kwargs):
             solution = attr_dict.get("solution").format(package_name, path_package)
         )
 
-
-def run_selftest(**kwargs):
+def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, **kwargs):
     """
-    TODO
-    """
-    attr_dict = kwargs.pop("attr_dict")
-    package_name = kwargs.pop("package_name")
+    TODO: unit tests
+    selftest.py validation helper method.
+    Validates that 'selftest.py' exists in the path given (which should be <path_package>/util/selftest.py)
 
-    # run selftest in package
+    :param attr_dict: (required) dictionary of attributes defined in ``selftest_attributes``
+    :type attr_dict: dict
+    :param path_selftest_py_file: (required) path to selftest.py
+    :type path_selftest_py_file: str
+    :param package_name: (optional) name of package being validated
+    :type package_name: str
+    :param path_package: (optional) path to package
+    :type path_package: str
+    :return: returns a tuple with the status of the validation and an associated SDKValidateIssue
+    :rtype: (bool, SDKValidateIssue)
+    """
+    LOG.debug("validating selftest.py file exists...\n")
+
+    # try to read the selftest.py file in the given path
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_selftest_py_file)
+        issue = SDKValidateIssue(
+            attr_dict.get("pass_name"),
+            attr_dict.get("pass_msg").format(path_selftest_py_file),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+        return True, issue
+    except SDKException as e:
+        # if it can't be read then create the appropriate SDKValidateIssue and return False immediately
+        issue = SDKValidateIssue(
+            attr_dict.get("fail_name"),
+            attr_dict.get("fail_msg"),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("solution")
+        )
+        return False, issue
+
+
+def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
+    """
+    TODO: unit tests
+    selftest.py validation helper method.
+    Runs selftest.py and validates the output. There are a few paths this method can take...
+    If resilient-circuits starts up successfully, then selftest is ran. The error code is then checked.
+    If the error code is 1, selftest failed. If 0, selftest either succeeded or was unimplemented.
+    These two scenarios are both checked for.
+    It is possible for there to be a connection error while starting up resilient-circuits.
+    If this is the case, the error string is parsed and output in the appropriate SDKValidateIssue object
+
+    :param attr_dict: (required) dictionary of attributes defined in ``selftest_attributes``
+    :type attr_dict: dict
+    :param package_name: (required) name of package being validated
+    :type package_name: str
+    :param path_selftest_py_file: (optional) path to selftest.py
+    :type path_selftest_py_file: str
+    :param path_package: (optional) path to package
+    :type path_package: str
+    :return: returns a tuple with the status of the validation and an associated SDKValidateIssue
+    :rtype: (bool, SDKValidateIssue)
+    """
+    # because selftest takes a while to complete we've decided to log this AWLAYS to INFO level
+    # thus the logging doesn't go through the normal check for if output should be suppressed
+    # this could be implemented as a progress bar if we choose to run selftest as a separate thread
+    LOG.info("INFO: Running selftest.py... (this may take a bit to complete)\n")
+
+
+    # run selftest in package as a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
     proc = subprocess.run(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     details = proc.stderr.decode("utf-8")
 
+    # if selftest failed (see details of the return codes @ resilient-circuits.cmds.selftest)
     if proc.returncode == 1:
-        details = details[details.rfind("{")+1:details.rfind("}")].replace("\n", " ").replace("\t", " ")
+        details = details[details.rfind("{")+1:details.rfind("}")].strip().replace("\n", ". ").replace("\t", " ")
         return False, SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(package_name, details),
@@ -206,14 +270,16 @@ def run_selftest(**kwargs):
             solution=attr_dict.get("fail_solution")
         )
     elif proc.returncode > 1:
-        # after: Running selftest for: 'fn-utilities'
-        details = details[details.rfind("Running selftest for"):].replace("\n", " ").replace("\t", " ")
+        # return code is a failure of REST or STOMP connection
+        details = details[details.rfind("ERROR"):].strip().replace("\n", ". ").replace("\t", " ")
         return False, SDKValidateIssue(
             name=attr_dict.get("error_name"),
             description=attr_dict.get("error_msg").format(details),
             severity=attr_dict.get("error_severity")
         )
     else:
+        # look to see if output has "unimplemented" in it -- that means that user hasn't
+        # implemented selftest yet. warn that they should implement selftest
         if details.find("unimplemented") != -1:
             return False, SDKValidateIssue(
                 name=attr_dict.get("missing_name"),
@@ -222,6 +288,7 @@ def run_selftest(**kwargs):
                 solution=attr_dict.get("missing_solution")
             )
         else:
+            # finally, if exit code was 0 and unimplemented was not found, the selftest passed
             return True, SDKValidateIssue(
                 name=attr_dict.get("pass_name"),
                 description=attr_dict.get("pass_msg").format(package_name),
@@ -230,12 +297,10 @@ def run_selftest(**kwargs):
             )
 
 
-# NOTE: this needs to be a list as the order of these checks MATTERS
-# if it is a dict the order that they're pulled from in a for-loop is not
-# guaranteed; with a list, order will be guaranteed
+# NOTE: selftest_attributes needs to be a list as the order of these checks MATTERS
 selftest_attributes = [
     { # check 1: verify that resilient-circuits is installed in python env
-        "func": validate_resilient_circuits_installed,
+        "func": selftest_validate_resilient_circuits_installed,
 
         "fail_name": "'{0}' version is too low".format(constants.CIRCUITS_PACKAGE_NAME),
         "fail_msg": "'{0}=={1}' is not supported".format(constants.CIRCUITS_PACKAGE_NAME, "{0}"),
@@ -251,7 +316,7 @@ selftest_attributes = [
         "pass_msg": "'{0}' was found in the python environment with the minimum version installed".format(constants.CIRCUITS_PACKAGE_NAME)
     },
     { # check 2: check that the given package is acutally installed in the env
-        "func": validate_package_installed,
+        "func": selftest_validate_package_installed,
 
         "fail_name": "'{0}' not found",
         "fail_msg": "'{0}' is not installed in your python environment",
@@ -262,7 +327,7 @@ selftest_attributes = [
         "pass_msg": "'{0}' is correctly installed in your python environment",
     },
     { # check 3: validate that the selftest file exists
-        "func": validate_selftest_file_exists,
+        "func": selftest_validate_selftestpy_file_exists,
 
         "fail_name": "selftest.py not found",
         "fail_msg": "selftest.py is a required file",
@@ -273,23 +338,23 @@ selftest_attributes = [
         "pass_msg": "selftest.py file found at path '{0}'",
     },
     { # check 4: execute selftest and check how it went
-        "func": run_selftest,
+        "func": selftest_run_selftestpy,
 
-        # if selftest returns exit code 1
+        # if selftest returncode == 1
         "fail_name": "selftest.py failed",
         "fail_msg": "selftest.py failed  for {0}. Details: {1}",
         "fail_solution": "Please check your configuration values and make sure selftest.py is properly implemented",
-        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         # if 'unimplemented' is the return value from selftest
         "missing_name": "selftest.py not implemented",
         "missing_msg": "selftest.py not implemented for {0}",
-        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
-        "missing_solution": "Please implement 'selftest'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "selftest.py is a recommended check that should be implemented. More info <TODO: LINK>", # TODO: documentation link
 
         # if a returncode > 1 comes from running selftest.py
         "error_name": "selftest.py failed",
-        "error_msg": "While running selftest.py, 'resilient-circuits' failed to connect. Details: {0}",
+        "error_msg": "While running selftest.py, 'resilient-circuits' failed to connect to server. Details: {0}",
         "error_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         # if selftest.py succeeds (i.e. returncode == 0)

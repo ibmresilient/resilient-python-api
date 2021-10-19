@@ -10,10 +10,9 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util import package_file_helpers as package_helpers, sdk_validate_configs
+from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util import sdk_validate_configs as val_configs
+from resilient_sdk.util import sdk_validate_configs as validation_configurations
 from resilient_sdk.util import constants
 
 # Get the same logger object that is used in app.py
@@ -252,60 +251,34 @@ class CmdValidate(BaseCmd):
 
         # Get absolute path to package
         path_package = os.path.abspath(args.package)
-        package_name = path_package.split("/")[-1]
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
-
-
-
-        ##############
-        ## SETUP.PY ##
-        ##############
-        setup_pass = True
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating setup.py{0}".format(constants.LOG_DIVIDER))
-
-        # Generate path to setup.py file + validate we have permissions to read it
-        path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
-        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
-        self._log(constants.VALIDATE_LOG_LEVEL_DEBUG, "setup.py file found at path {0}\n".format(path_setup_py_file))
         self._log(constants.VALIDATE_LOG_LEVEL_DEBUG, "Path to project: {0}".format(path_package))
 
-        # validate setup.py file using static helper method
-        setup_pass, setup_issues = self._validate_setup(path_setup_py_file)
-        self.VALIDATE_ISSUES["setup"] = setup_issues
-        self.SUMMARY_LIST += setup_issues
 
-        # log output from _validate_setup
-        for issue in setup_issues:
-            self._log(issue.get_logging_level(), issue.error_str())
-
-        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "setup.py", setup_pass)
-        ##################
-        ## END SETUP.PY ##
-        ##################
+        # list of ("<file_name>", <validation_function>)
+        # this list gets looped and each sub method is ran to check if file is valid
+        validations = [
+            ("setup.py", self._validate_setup),
+            ("selftest.py", self._validate_selftest)
+        ]
 
 
-        #################
-        ## SEFLTEST.PY ##
-        #################
-        selftest_pass = True
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py (this may take a bit...){0}".format(constants.LOG_DIVIDER))
+        # loop through files and their associated validation functions
+        for file_name, validation_func in validations:
+            self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
 
-        # Generate path to selftest.py file + validate we have permissions to read
-        path_selftest_py_file = os.path.join(path_package, package_name, package_helpers.PATH_SELFTEST_PY)
+            # validate setup.py file using static helper method
+            file_valid, issues = validation_func(path_package)
+            self.VALIDATE_ISSUES["setup"] = issues
+            self.SUMMARY_LIST += issues
 
-        selftest_pass, selftest_issues = CmdValidate._validate_selftest(package_name, path_selftest_py_file, path_package)
-        self.VALIDATE_ISSUES["selftest"] = selftest_issues
-        self.SUMMARY_LIST += selftest_issues
+            # log output from _validate_setup
+            for issue in issues:
+                self._log(issue.get_logging_level(), issue.error_str())
 
-        # log output from _validate_selftest
-        for issue in selftest_issues:
-            self._log(issue.get_logging_level(), issue.error_str())
+            self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, file_name, file_valid)
 
-        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "selftest.py", selftest_pass)
-        #####################
-        ## END SELFTEST.PY ##
-        #####################
 
         # TODO: implement other static validates
         #       - fn_package/util/config.py
@@ -319,7 +292,7 @@ class CmdValidate(BaseCmd):
         #       - Dockerfile (optional but warn that should be App Host supported)
 
     @staticmethod
-    def _validate_setup(path_setup_py_file):
+    def _validate_setup(path_package):
         """
         TODO: unit tests
         Validate the contents of the setup.py file in the given package.
@@ -338,8 +311,8 @@ class CmdValidate(BaseCmd):
         - WARN: checks if exists and WARNS the user if not "python_requires='>=3.6'"
         - CRITICAL: entry_points: that .configsection, .customize, .selftest
 
-        :param path_setup_py_file: absolute or relative path to setup.py file
-        :type path_setup_py_file: str
+        :param path_package: path to package
+        :type path_package: str
         :return: Returns boolean value of whether or not the run passed and a sorted list of SDKValidateIssue
         :rtype: (bool, list[SDKValidateIssue])
         """
@@ -350,7 +323,15 @@ class CmdValidate(BaseCmd):
         setup_valid = True
 
 
-        attributes = val_configs.setup_py_attributes
+
+        # Generate path to setup.py file + validate we have permissions to read it
+        path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
+        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+        LOG.debug("setup.py file found at path {0}\n".format(path_setup_py_file))
+
+
+
+        attributes = validation_configurations.setup_py_attributes
 
         # check through setup.py file parse
         for attr in attributes:
@@ -406,7 +387,7 @@ class CmdValidate(BaseCmd):
         return setup_valid, issues
 
     @staticmethod
-    def _validate_selftest(package_name, path_selftest_py_file, path_package):
+    def _validate_selftest(path_package):
         """
         TODO: unit tests
         Validate the contents of the selftest.py file in the given package:
@@ -417,10 +398,8 @@ class CmdValidate(BaseCmd):
         - verify that unimplemented does not exist in the file
         - run the selftest method
 
-        :param package_name: name of package
-        :type package_name: str
-        :param path_selftest_py_file: path to the selftest.py file
-        :type path_selftest_py_file: str
+        :param path_package: path to the package
+        :type path_package: str
         :return: Returns boolean value of whether or not the run passed and a sorted list of SDKValidateIssue
         :rtype: (bool, list[SDKValidateIssue])
         """
@@ -431,20 +410,27 @@ class CmdValidate(BaseCmd):
         selftest_valid = True
 
 
+        # Generate path to selftest.py file + validate we have permissions to read
+        # note that file validation happens in the validations list
+        package_name = path_package.split("/")[-1]
+        path_selftest_py_file = os.path.join(path_package, package_name, package_helpers.PATH_SELFTEST_PY)
+        LOG.debug("selftest.py file found at path {0}\n".format(path_selftest_py_file))
+
+
         # run through validations for selftest
-        for attr_dict in val_configs.selftest_attributes:
+        # details of each check can be found in the sdk_validate_configs.py.selftest_attributes
+        for attr_dict in validation_configurations.selftest_attributes:
             issue_passes, issue = attr_dict.get("func")(
-                path_selftest_py_file=path_selftest_py_file, 
-                attr_dict=attr_dict, 
+                attr_dict=attr_dict,
+                path_selftest_py_file=path_selftest_py_file,
                 package_name=package_name,
                 path_package=path_package
             )
             issues.append(issue)
-            if not issue_passes: 
+            if not issue_passes:
                 issues.sort()
                 return False, issues
 
-        
 
         # sort and look for and invalid issues
         issues.sort()
@@ -479,11 +465,11 @@ class CmdValidate(BaseCmd):
     def _print_summary(self, static_issues_list):
         """
         TODO: unit tests
-        From list of issues, generates a count of issues that are CRITICAL, WARNINGS, sum(INFO, DEBUG)
+        From list of issues, generates a count of issues that are CRITICAL, WARNING, PASS=sum(INFO, DEBUG)
         and outputs in the format:
 
         ------------------------
-        Static Validation Results
+        Validation Results
         ------------------------
 
         Critical Issues:     <counts[critical]>
@@ -508,13 +494,13 @@ class CmdValidate(BaseCmd):
         for issue in static_issues_list:
             counts[issue.severity] += 1
         
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Static Validation Results{0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validation Results{0}".format(constants.LOG_DIVIDER))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Critical Issues: {0:>14}".format(
             package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
         ))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Warnings: {0:>21}".format(package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_WARN], "WARNING")))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Validations Passed: {0:>11}".format(package_helpers.color_output(
-            int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG] + counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
+            int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG]) + int(counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
         ))
         # self._log(constants.VALIDATE_LOG_LEVEL_INFO, "\nSee the detailed report at {0}".format("TODO")) # TODO
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, constants.LOG_DIVIDER)
