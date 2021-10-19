@@ -8,12 +8,12 @@
 
 **2021-08: version 42.0**
 
-* Added support for HTTP_PROXY, HTTPS_PROXY and NO_PROXY environmental variables. See the App Host Deployment Guide for details.
+* Added support for ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environmental variables. See the App Host Deployment Guide for details.
 * Fix to OAuth2 to avoid infinite loop in some circumstances.
 
 **2021-06: version 41.1**
 
-* Added 'execute' as an alias for 'execute_call_v2'
+* Added ``execute`` as an alias for ``execute_call_v2``
 * Bug fixes
 
 **2021-05: version 41.0**
@@ -22,7 +22,7 @@
 
 **2021-03: version 40.2**
 
-* Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments
+* Bug fix for to use ``setuptools_scm < 6.0.0`` for Python 2.7 environments
 
 **2021-03: version 40.1**
 
@@ -39,15 +39,16 @@
 
 **2020-09: version 38**
 
-* validate_fields now handles a field if it's type is "Text with value string"
+* ``validate_fields`` now handles a field if it's type is **Text with value string**
 
 **2020-05: version 37**
 
-* execute_call_v2 might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
+* ``execute_call_v2``
+* might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
 
 **2020-04: version 36.2.dev**
 
-* execute_call_v2 might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
+* ``execute_call_v2`` might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
 
 **2020-01-16: version 35.0.195**
 
@@ -57,36 +58,36 @@
 **2019-10-07: version 34.0.194**
 
 * Add functionality to resilient_lib to upload attachment
-* Added support for a timeout parameter across all integrations using the execute_call_v2() function
+* Added support for a timeout parameter across all integrations using the ``execute_call_v2()`` function
 
 **2019-08-02: version 33.0.189**
 
 * Added support for API key and API key secret, now able to authenticate
   using API keys instead of email/password
-* New functions added to resilient-lib
-    'get_file_attachment_metadata()'
-    'write_to_tmp_file()'
-* Updated 'validate_fields()' function in resilient-lib,
+* New functions added to ``resilient-lib``
+    * ``get_file_attachment_metadata()``
+    * ``write_to_tmp_file()``
+* Updated ``validate_fields()`` function in ``resilient-lib``,
   adding the ability to validate fields in app.config
 * Other minor bug fixes.
 
 **2019-07-03: version 32.0.186**
 
-*  Added more flexible 'execute_call_v2()' method in resilient-lib
+*  Added more flexible ``execute_call_v2()`` method in ``resilient-lib``
 *  Fix for deprecated log warnings
 *  Other minor bug fixes
 
 **2019-04-12: version 32.0.140**
 
-*  Improvements to 'resilient-lib'
+*  Improvements to ``resilient-lib``
 *  Other minor bug fixes/improvements
 
 **2019-03-06: version 32.0.126**
 
-* Removed selftest from function template
-* Improvements to resilient-lib
+* Removed ``selftest`` from function template
+* Improvements to ``resilient-lib``
 
 **2019-01-15: version 32.0**
 
-* Added `resilient-lib` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
+* Added ``resilient-lib`` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
 * Added Sphinx documentation builder
