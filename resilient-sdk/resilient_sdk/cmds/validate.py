@@ -420,6 +420,8 @@ class CmdValidate(BaseCmd):
         # run through validations for selftest
         # details of each check can be found in the sdk_validate_configs.py.selftest_attributes
         for attr_dict in validation_configurations.selftest_attributes:
+            if not attr_dict.get("func"):
+                raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
             issue_passes, issue = attr_dict.get("func")(
                 attr_dict=attr_dict,
                 path_selftest_py_file=path_selftest_py_file,
@@ -474,7 +476,7 @@ class CmdValidate(BaseCmd):
 
         Critical Issues:     <counts[critical]>
         Warnings:            <counts[warning]>
-        Components Passed:   <counts[pass]>
+        Validations Passed:  <counts[pass]>
 
         ------------------------
 

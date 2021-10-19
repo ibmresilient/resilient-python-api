@@ -1031,9 +1031,15 @@ def get_package_version(package_name):
     """
     Uses pkg_resources to parse the version.
 
-    :return: a Version object
+    :param package_name: name of the packge to get version of
+    :type package_name: str
+    :return: a Version object representing the version of the given package or None
+    :rtype: Version or None
     """
-    return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
+    try:
+        return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
+    except pkg_resources.DistributionNotFound:
+        return None
 
 
 def is_python_min_supported_version():

@@ -947,12 +947,13 @@ def check_package_installed(package_name):
     Uses pkg_resources.require to certify that a package is installed
     
     :param package_name: name of package
+    :type package_name: str
     :return: boolean value whether or not package is installed in current python env
     :rtype: bool
     """
     try:
         pkg_resources.require(package_name)
-    except Exception as e:
+    except pkg_resources.DistributionNotFound:
         return False
 
     return True
