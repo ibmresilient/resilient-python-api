@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2227 documentation</title>
+    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2233 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2227 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2233 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>  
@@ -42,58 +42,133 @@
 <p>This Python Package contains common library calls which facilitate the development of Apps for IBM SOAR</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> is now a direct dependency of <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> as of v40.0 to help make development more streamlined</p>
-<p>To use it within your App development, <strong>import</strong> it like any other Python Package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">get_file_attachment</span><span class="p">,</span> <span class="n">get_file_attachment_name</span>
-<span class="n">TODO</span> <span class="n">give</span> <span class="n">examples</span> <span class="n">of</span> <span class="n">execute</span> <span class="ow">and</span> <span class="n">tab</span> <span class="n">imports</span> <span class="n">too</span>
+<p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> is now a direct dependency of <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> as of <strong>v40.0</strong> to help make development more streamlined</p>
+<p>It can also be installed directly with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install resilient-lib
 </pre></div>
 </div>
+<p>To use it within your App development, <strong>import</strong> it like any other Python Package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">close_incident</span>
+
+<span class="n">close_incident</span><span class="p">(</span>
+   <span class="n">res_client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rest_client</span><span class="p">(),</span>
+   <span class="n">incident_id</span><span class="o">=</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">incident_id</span><span class="p">,</span>
+   <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;resolution_id&quot;</span><span class="p">:</span> <span class="s2">&quot;Duplicate&quot;</span><span class="p">,</span> <span class="s2">&quot;resolution_summary&quot;</span><span class="p">:</span> <span class="s2">&quot;This ticket is a duplicate&quot;</span><span class="p">},</span>
+   <span class="n">handle_names</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="proxies">
+<h3>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> supports an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section in your app.config file.
+Add this section to define proxy settings which will be used for all integrations which use this library:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">integrations</span><span class="p">]</span>
+<span class="c1"># These proxy settings will be used by all integrations.</span>
+<span class="c1"># To override, add any parameter to your specific integration section</span>
+<span class="n">http_proxy</span><span class="o">=</span>
+<span class="n">https_proxy</span><span class="o">=</span>
+<span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your App is running on AppHost 1.6 or greater you can take advantage of the
+the global proxy functionality and there is no need to add an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
+section like above. Run the following on your AppHost for more:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ manageAppHost proxy -h
+</pre></div>
+</div>
+</div>
+</section>
 </section>
 <section id="module-resilient_lib.components.resilient_common">
 <span id="common-helper-methods"></span><h2>Common Helper Methods<a class="headerlink" href="#module-resilient_lib.components.resilient_common" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
 <span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>build the url to link to an resilient incident
-:param url: base url
-:param incidentId:
-:return: full url</p>
+<dd><p>Build the url to link to a SOAR incident</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
+<li><p><strong>incidentId</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>full URL to the incident</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_resilient_url">
 <span class="sig-name descname"><span class="pre">build_resilient_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_resilient_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>build basic url to resilient instance
-:param host: host name
-:param port: port
-:return: base url</p>
+<dd><p>Build basic url to resilient instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host</strong> (<em>str</em>) – host name</p></li>
+<li><p><strong>port</strong> (<em>str</em><em>|</em><em>int</em>) – port</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>base url</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.clean_html">
 <span class="sig-name descname"><span class="pre">clean_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html_fragment</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.clean_html" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resilient textarea fields return html fragments. This routine will remove the html and insert any code within &lt;div&gt;&lt;/div&gt;
-with a linefeed
-:param html_fragment: str presenting the html to clean up
-:return: cleaned up code. This may not format well as no presentation of line feeds are preserved in the way supported by</p>
-<blockquote>
-<div><p>tags such as &lt;br&gt; or &lt;ol&gt;, &lt;ul&gt;, etc. See html2markdown for a better way to translate html input to markdown.</p>
-</div></blockquote>
+<dd><p>Resilient textarea fields return html fragments. This routine will remove the
+html and insert any code within <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;/div&gt;</span></code> with a linefeed</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The string returned from this method may not format well as no presentation of line feeds are preserved,
+tags such as <code class="docutils literal notranslate"><span class="pre">&lt;br&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;ol&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;ul&gt;</span></code>, etc. are removed. See <a class="reference internal" href="#resilient_lib.components.html2markdown.MarkdownParser" title="resilient_lib.components.html2markdown.MarkdownParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkdownParser</span></code></a> class for a better way to translate
+html input to markdown.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>html_fragment</strong> (<em>str</em>) – the html to clean up</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cleaned up code</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.close_incident">
-<span class="sig-name descname"><span class="pre">close_incident</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.close_incident" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">close_incident</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.close_incident" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close an incident in SOAR.</p>
+<p>Any <strong>required on close (roc)</strong> fields that
+are needed, pass them as a <code class="docutils literal notranslate"><span class="pre">field_name:field_value</span></code> dict in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code></p>
+<p>If any <strong>roc</strong> select field needs to be identified as its name,
+set <code class="docutils literal notranslate"><span class="pre">handle_names</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> – required for communication back to resilient</p></li>
-<li><p><strong>incident_id</strong> – required</p></li>
-<li><p><strong>kwargs</strong> – required field_name:new_value pairs dict</p></li>
+<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to resilient</p></li>
+<li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – required</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – required fields needed to close an incident in a <code class="docutils literal notranslate"><span class="pre">field_name:field_value</span></code> format</p></li>
+<li><p><strong>handle_names</strong> (<em>bool</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, any select field types in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> will take <code class="docutils literal notranslate"><span class="pre">str</span></code> instead of <code class="docutils literal notranslate"><span class="pre">int</span></code> as their value</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>response object</p>
+<dd class="field-even"><p>Response from the server indicating if the incident was closed or not</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>requests.Response</p>
 </dd>
 </dl>
 </dd></dl>
@@ -155,8 +230,18 @@ with a linefeed
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.unescape">
 <span class="sig-name descname"><span class="pre">unescape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.unescape" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return unescaped data such as &amp;gt; -&gt; &gt;, &amp;quot -&gt; ‘, etc.
-:param data: text to convert</p>
+<dd><p>Return unescaped data such as <code class="docutils literal notranslate"><span class="pre">&amp;gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&amp;quot</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">'</span></code>, etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>str</em>) – text to convert</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the text unescaped</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -217,39 +302,167 @@ returns a list of the ‘name’ values for that item.</p>
 is provided a temp directory is created with the prefix <cite>resilient-lib-tmp-</cite>.</p>
 <p>When used within a Resilient Function, ensure you safely remove the created temp
 directory in the <cite>finally</cite> block of the FunctionComponent code.</p>
-<dl>
-<dt>Example:</dt><dd><p>import os
-import shutil
-try:</p>
-<blockquote>
-<div><p>path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get(“name”))</p>
-</div></blockquote>
-<dl class="simple">
-<dt>except Exception:</dt><dd><p>yield FunctionError()</p>
-</dd>
-<dt>finally:</dt><dd><dl class="simple">
-<dt>if path_tmp_dir and os.path.isdir(path_tmp_dir):</dt><dd><p>shutil.rmtree(path_tmp_dir)</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="field-list simple">
+<p>TODO: removed some of this text to format it
+:param data: bytes to be written to the file
+:type data: <cite>bytes</cite>
+:param tmp_file_name: name to be given to the file.
+:type tmp_file_name: <cite>str</cite>
+:param path_tmp_dir: path to an existing directory to use as the temp dir
+:type path_tmp_dir: <cite>str</cite>
+:return: a tuple (path_tmp_file, path_tmp_dir)
+:rtype: tuple</p>
+</dd></dl>
+
+<span class="target" id="module-resilient_lib.components.html2markdown"></span><dl class="py class">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">MarkdownParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'**'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">italic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">underline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strikeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'~~'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bullets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monospace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['{{',</span> <span class="pre">'}}']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['h1.',</span> <span class="pre">'h2.',</span> <span class="pre">'h3.',</span> <span class="pre">'h4.',</span> <span class="pre">'h5.',</span> <span class="pre">'h6.']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blockquote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'```'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>starting point for app, wrapper to htmlparser.feed
+:param data: html string
+:return: converted text to markdown</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.convert_rgb">
+<span class="sig-name descname"><span class="pre">convert_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.convert_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert rgb values to hexcode format
+:param rgb:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.get_attr">
+<span class="sig-name descname"><span class="pre">get_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attrs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.get_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>get an attribute from the data’s previous block
+ex. &lt;div style=’font-family: monospace’&gt;zzz&lt;/div&gt;
+:param attrs:
+:param key:
+:return: found attribute or None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.get_rgb">
+<span class="sig-name descname"><span class="pre">get_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.get_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>format of rgb information is “rgb(rrr, ggg, bbb)”
+:param str:
+:return: list of values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.get_style_attr">
+<span class="sig-name descname"><span class="pre">get_style_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">style</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.get_style_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>find css data within the style attribute
+:param style:
+:param key: css label
+:return: css data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.handle_data">
+<span class="sig-name descname"><span class="pre">handle_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.handle_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>data handler. Basically, add tagged data to the growing buffer
+:param data:
+:return: None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.handle_endtag">
+<span class="sig-name descname"><span class="pre">handle_endtag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.handle_endtag" title="Permalink to this definition">¶</a></dt>
+<dd><p>handler for end tags.
+:param tag:
+:return: None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.handle_starttag">
+<span class="sig-name descname"><span class="pre">handle_starttag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.handle_starttag" title="Permalink to this definition">¶</a></dt>
+<dd><p>handler for the start of tags. Logic is added to surround data with markdown
+:param tag:
+:param attrs:
+:return: None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.push_data">
+<span class="sig-name descname"><span class="pre">push_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.push_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>flush the data buffer and reset for next html tag
+:return: None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.toString">
+<span class="sig-name descname"><span class="pre">toString</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.toString" title="Permalink to this definition">¶</a></dt>
+<dd><p>we’re done. flush the data buffer and print entire content
+:return: markdown result</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-resilient_lib.components.oauth2_client_credentials_session"></span><dl class="py class">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">OAuth2ClientCredentialsSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around requests.Session that receives authentication tokens through
+‘client_credentials’ type of OAuth2 grant, and adds tokens to the requests made through the session,
+as well as attempts to keep track of the token and refresh it when the time comes.</p>
+<p>If proxies are defined, every request will use them.
+This session doesn’t requests authorization from the user first, the scope should be pre-authorized.</p>
+<p>Usage:
+&gt;&gt;&gt; api1 = OAuth2ClientCredentialsSession(’<a class="reference external" href="https://example1.com">https://example1.com</a>/&lt;tenant_id&gt;/oauth/v2/’,                        client_id=’xxx’, client_secret=’xxx’)
+&gt;&gt;&gt; api2 = OAuth2ClientCredentialsSession(’<a class="reference external" href="https://example2.com">https://example2.com</a>/&lt;tenant_id&gt;/oauth/v2/’,                        client_id=’xxx’, client_secret=’xxx’)
+&gt;&gt;&gt;
+&gt;&gt;&gt; api1.post(’<a class="reference external" href="https://example1.com/v4/me/messages">https://example1.com/v4/me/messages</a>’, data={}) # use as a regular requests session object
+&gt;&gt;&gt; api2.get(’<a class="reference external" href="https://example2.com/v2/me/updates">https://example2.com/v2/me/updates</a>’)
+&gt;&gt;&gt; # When writing an integration, use RequestsCommon to get the proxies defined in in your app.config file.
+&gt;&gt;&gt; rc = RequestsCommon(xxx)
+&gt;&gt;&gt; api3 = OAuth2ClientCredentialsSession(’<a class="reference external" href="https://example3.com">https://example3.com</a>/{}/test’, proxies=rc.get_proxies())</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.add_authorization_header">
+<span class="sig-name descname"><span class="pre">add_authorization_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">headers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.add_authorization_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create headers needed for authentication/authorization, overriding the default ones if needed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate">
+<span class="sig-name descname"><span class="pre">authenticate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<cite>bytes</cite>) – bytes to be written to the file</p></li>
-<li><p><strong>tmp_file_name</strong> (<cite>str</cite>) – name to be given to the file.</p></li>
-<li><p><strong>path_tmp_dir</strong> (<cite>str</cite>) – path to an existing directory to use as the temp dir</p></li>
+<li><p><strong>url</strong> – String - authorization url - end point for authentication</p></li>
+<li><p><strong>client_id</strong> – String</p></li>
+<li><p><strong>client_secret</strong> – String</p></li>
+<li><p><strong>scope</strong> – list&lt;String&gt; - list of scopes the token should provide access to</p></li>
+<li><p><strong>proxies</strong> – object with proxy data</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple (path_tmp_file, path_tmp_dir)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-even"><p>True/False - was/wasn’t able to authenticate.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token">
+<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method if there are any specific things that need to be changed.
+Such as Cloud Foundry asking grant_type to be ‘password’ and API key to be passed in ‘password’.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.request">
+<span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>, injects it with tokens, sends it
+in a new session to avoid having one session constantly open.
+Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.update_token">
+<span class="sig-name descname"><span class="pre">update_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.update_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Institutes a request for a new access token.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -446,7 +659,7 @@ adding the ability to validate fields in app.config</p></li>
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2227 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2233 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>
