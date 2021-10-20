@@ -11,7 +11,25 @@ try:
 except:
     from html.parser import HTMLParser
 
+
 class MarkdownParser(HTMLParser):
+    """
+    Convert HTML text into Markdown. A wrapper for
+    `html.parser.HTMLParser <https://docs.python.org/3.6/library/html.parser.html#html.parser.HTMLParser>`_
+
+    **Example:**
+
+    .. code-block:: python
+
+        html_text = '<div class="rte"><div><span style="font-size: 32.0px;" class="preventReplaceNode">this is a heading</span></div><div><span style="font-size: 18.0px;" class="preventReplaceNode">this is a sub heading</span></div><div>this is a paragraph</div><div><span style="font-size: 10.0px;" class="preventReplaceNode">this is  a smaller paragraph</span></div><div><strong>this is bold</strong></div><div><em>this is  italic</em></div><div><u>this is underlined</u></div><div><s>this is struck through</s></div><div><br /></div><ul><li>This is a bullet list a</li><li>This is a bullet list b</li></ul><div><br /></div><ol><li>This is a number list a</li><li>This is a number list b</li></ol></div>'
+
+        parser = MarkdownParser()
+        markdown_text = parser.convert(html_text)
+        
+        print(markdown_text)
+        >> 'this is a heading\\nthis is a sub heading\\nthis is a paragraph\\nthis is  a smaller paragraph\\n**this is bold**\\n*this is  italic*\\n__this is underlined__\\n~~this is struck through~~\\n    * This is a bullet list a\\n    * This is a bullet list b\\n    1. This is a number list a\\n    2. This is a number list b'
+    """
+
     QUILL_RTE = "rte"       # first <div> will have this class. This is part of quill
 
     HTML_STYLE_COLOR = r'rgb\(([\d]+),[\s]*([\d]+),[\s]*([\d]+)\)'
@@ -53,9 +71,13 @@ class MarkdownParser(HTMLParser):
 
     def convert(self, data):
         """
-        starting point for app, wrapper to htmlparser.feed
-        :param data: html string
+        Converts html ``data`` to markdown and
+        returns the converted string
+
+        :param data: html text to convert
+        :type data: str
         :return: converted text to markdown
+        :rtype: str
         """
 
         self.init_buffers()
