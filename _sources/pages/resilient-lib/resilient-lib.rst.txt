@@ -67,8 +67,8 @@ Common Helper Methods
 .. automodule:: resilient_lib.components.resilient_common
    :members:
 
-.. .. automodule:: resilient_lib.components.html2markdown
-   :members:
+.. autoclass:: resilient_lib.components.html2markdown::MarkdownParser
+.. autofunction:: resilient_lib.components.html2markdown::MarkdownParser.convert
 
 .. .. automodule:: resilient_lib.components.oauth2_client_credentials_session
    :members:

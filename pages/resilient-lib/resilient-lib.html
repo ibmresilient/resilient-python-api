@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2249 documentation</title>
+    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2251 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2249 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2251 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>  
@@ -136,7 +136,7 @@ html and insert any code within <code class="docutils literal notranslate"><span
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The string returned from this method may not format well as no presentation of line feeds are preserved,
-tags such as <code class="docutils literal notranslate"><span class="pre">&lt;br&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;ol&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;ul&gt;</span></code>, etc. are removed. See <code class="xref py py-class docutils literal notranslate"><span class="pre">MarkdownParser</span></code> class for a better way to translate
+tags such as <code class="docutils literal notranslate"><span class="pre">&lt;br&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;ol&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;ul&gt;</span></code>, etc. are removed. See <a class="reference internal" href="#resilient_lib.components.html2markdown.MarkdownParser" title="resilient_lib.components.html2markdown.MarkdownParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkdownParser</span></code></a> class for a better way to translate
 html input to markdown.</p>
 </div>
 <dl class="field-list simple">
@@ -453,6 +453,41 @@ in the <code class="docutils literal notranslate"><span class="pre">finally</spa
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">MarkdownParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'**'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">italic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">underline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strikeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'~~'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bullets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monospace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['{{',</span> <span class="pre">'}}']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['h1.',</span> <span class="pre">'h2.',</span> <span class="pre">'h3.',</span> <span class="pre">'h4.',</span> <span class="pre">'h5.',</span> <span class="pre">'h6.']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blockquote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'```'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert HTML text into Markdown. A wrapper for
+<a class="reference external" href="https://docs.python.org/3.6/library/html.parser.html#html.parser.HTMLParser">html.parser.HTMLParser</a></p>
+<p><strong>Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">html_text</span> <span class="o">=</span> <span class="s1">&#39;&lt;div class=&quot;rte&quot;&gt;&lt;div&gt;&lt;span style=&quot;font-size: 32.0px;&quot; class=&quot;preventReplaceNode&quot;&gt;this is a heading&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-size: 18.0px;&quot; class=&quot;preventReplaceNode&quot;&gt;this is a sub heading&lt;/span&gt;&lt;/div&gt;&lt;div&gt;this is a paragraph&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10.0px;&quot; class=&quot;preventReplaceNode&quot;&gt;this is  a smaller paragraph&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;strong&gt;this is bold&lt;/strong&gt;&lt;/div&gt;&lt;div&gt;&lt;em&gt;this is  italic&lt;/em&gt;&lt;/div&gt;&lt;div&gt;&lt;u&gt;this is underlined&lt;/u&gt;&lt;/div&gt;&lt;div&gt;&lt;s&gt;this is struck through&lt;/s&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ul&gt;&lt;li&gt;This is a bullet list a&lt;/li&gt;&lt;li&gt;This is a bullet list b&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ol&gt;&lt;li&gt;This is a number list a&lt;/li&gt;&lt;li&gt;This is a number list b&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&#39;</span>
+
+<span class="n">parser</span> <span class="o">=</span> <span class="n">MarkdownParser</span><span class="p">()</span>
+<span class="n">markdown_text</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">html_text</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">markdown_text</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="s1">&#39;this is a heading</span><span class="se">\n</span><span class="s1">this is a sub heading</span><span class="se">\n</span><span class="s1">this is a paragraph</span><span class="se">\n</span><span class="s1">this is  a smaller paragraph</span><span class="se">\n</span><span class="s1">**this is bold**</span><span class="se">\n</span><span class="s1">*this is  italic*</span><span class="se">\n</span><span class="s1">__this is underlined__</span><span class="se">\n</span><span class="s1">~~this is struck through~~</span><span class="se">\n</span><span class="s1">    * This is a bullet list a</span><span class="se">\n</span><span class="s1">    * This is a bullet list b</span><span class="se">\n</span><span class="s1">    1. This is a number list a</span><span class="se">\n</span><span class="s1">    2. This is a number list b&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser.convert">
+<span class="sig-prename descclassname"><span class="pre">MarkdownParser.</span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts html <code class="docutils literal notranslate"><span class="pre">data</span></code> to markdown and
+returns the converted string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>str</em>) – html text to convert</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted text to markdown</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="common-request-methods">
 <h2>Common Request Methods<a class="headerlink" href="#common-request-methods" title="Permalink to this headline">¶</a></h2>
@@ -667,7 +702,7 @@ adding the ability to validate fields in app.config</p></li>
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2249 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2251 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>
