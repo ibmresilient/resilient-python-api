@@ -17,14 +17,23 @@ DEFAULT_TIMEOUT = 30
 class RequestsCommon:
     """
     This class represents common functions around the use of the requests package for REST based APIs.
-    It incorporates the app.config section "integrations" which can be used to define a common set of proxies
+    It incorporates the app.config section ``[integrations]`` which can be used to define a common set of proxies
     for use by all functions using this library:
 
-    [integrations]
-    http_proxy=
-    https_proxy=
+    Similar properties may exist in the function's section which would override the ``[integrations]`` properties.
 
-    Similar properties may exist in the function's section which would override the [integrations] properties.
+    .. note::
+      As of version 41.1 in the Atomic Function template ``RequestsCommon`` has already been instantiated and
+      is available  in a class that inherits ``resilient_circuits.AppFunctionComponent`` as an ``rc`` attribute:
+
+      .. code-block:: python
+
+         response = self.rc.execute(method="get", url=ibm.com)
+
+    :param opts: all configs found in the app.config file
+    :type opts: dict
+    :param function_opts: all configs found in the ``[my_function]`` section of the app.config file
+    :type function_opts: dict
     """
     def __init__(self, opts=None, function_opts=None):
         # capture the properties for the integration as well as the global settings for all integrations for proxy urls
@@ -70,38 +79,36 @@ class RequestsCommon:
         return int(timeout)
 
     def execute(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
-        """Constructs and sends a request. Returns :class:`Response` object.
+        """
+        Constructs and sends a request. Returns a
+        `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object.
 
-            From the requests.requests() function, inputs are mapped to this function
-            :param method: GET, HEAD, PATCH, POST, PUT, DELETE, OPTIONS
-            :param url: URL for the request.
-            :param params: (optional) Dictionary, list of tuples or bytes to send
-                in the body of the :class:`Request`.
-            :param data: (optional) Dictionary, list of tuples, bytes, or file-like
-                object to send in the body of the :class:`Request`.
-            :param json: (optional) A JSON serializable Python object to send in the body of the :class:`Request`.
-            :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
-            :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
-            :param files: (optional) Dictionary of ``'name': file-like-objects`` (or ``{'name': file-tuple}``) for multipart encoding upload.
-                ``file-tuple`` can be a 2-tuple ``('filename', fileobj)``, 3-tuple ``('filename', fileobj, 'content_type')``
-                or a 4-tuple ``('filename', fileobj, 'content_type', custom_headers)``, where ``'content-type'`` is a string
-                defining the content type of the given file and ``custom_headers`` a dict-like object containing additional headers
-                to add for the file.
-            :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
-            :param timeout: (optional) How many seconds to wait for the server to send data
-                before giving up, as a float, or a :ref:`(connect timeout, read timeout) timeout tuple.
-            :type timeout: float or tuple
-            :param allow_redirects: (optional) Boolean. Enable/disable GET/OPTIONS/POST/PUT/PATCH/DELETE/HEAD redirection. Defaults to ``True``.
-            :type allow_redirects: bool
-            :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
-            :param verify: (optional) Either a boolean, in which case it controls whether we verify
-                    the server's TLS certificate, or a string, in which case it must be a path
-                    to a CA bundle to use. Defaults to ``True``.
-            :param stream: (optional) if ``False``, the response content will be immediately downloaded.
-            :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
-            :param callback: callback routine used to handle errors
-            :return: :class:`Response <Response>` object
-            :rtype: requests.Response
+        This uses the ``requests.request()`` function to
+        make a call. The inputs are mapped to this function.
+        See `requests.request() <https://docs.python-requests.org/en/latest/api/#requests.request>`_
+        for information on any parameters available, but not documented here
+
+        :param timeout: (optional) How many seconds to wait for the server to send data
+            before giving up, as a float, or a (connect timeout, read timeout) timeout tuple.
+            *See requests docs for more*. If ``None`` it will look in the ``[integrations]``
+            section of your app.config for the ``timeout`` config
+        :type timeout: float or tuple
+        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+            The mapping protocol must be in the format:
+
+            .. code-block::
+
+                {
+                    "https_proxy": "https://localhost:8080,
+                    "http_proxy": "http://localhost:8080
+                }
+        :param callback: once a response is gotten from the endpoint,
+            return this callback function passing in the ``response`` as its
+            only paramater. Can be used to specifically handle errors
+        :type callback: function
+        :return: the ``response`` from the endpoint or if return ``callback`` if defined
+        :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
+            or ``callback`` function
         """
         try:
             if method.lower() not in ('get', 'post', 'put', 'patch', 'delete', 'head', 'options'):
@@ -146,7 +153,7 @@ class RequestsCommon:
 
         except Exception as err:
             msg = str(err)
-            log and log.error(msg)
+            log.error(msg)
             raise IntegrationError(msg)
 
     # Create alias for execute_call_v2
