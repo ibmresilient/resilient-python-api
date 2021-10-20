@@ -1029,7 +1029,8 @@ def get_resilient_sdk_version():
 
 def get_package_version(package_name):
     """
-    Uses pkg_resources to parse the version.
+    Uses pkg_resources to parse the version of a package if installed in the environment.
+    If not installed, return None
 
     :param package_name: name of the packge to get version of
     :type package_name: str

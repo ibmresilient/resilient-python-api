@@ -37,17 +37,17 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **kwargs):
         # installed and correct version
         return True, SDKValidateIssue(
             name=attr_dict.get("pass_name"),
-            description = attr_dict.get("pass_msg"),
-            severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-            solution = ""
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
         )
     elif res_circuits_version and res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
         # resilient-circuits installed but version not supported 
         return False, SDKValidateIssue(
             name=attr_dict.get("fail_name"),
-            description = attr_dict.get("fail_msg").format(res_circuits_version),
-            severity = attr_dict.get("severity"),
-            solution = attr_dict.get("fail_solution")
+            description=attr_dict.get("fail_msg").format(res_circuits_version),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution")
         )
     elif not res_circuits_version:
         # if 'resilient-circuits' not installed
@@ -168,6 +168,28 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     proc = subprocess.run(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     details = proc.stderr.decode("utf-8")
 
+    LOG.debug("Details from selftest run: %s", details)
+
+    # details is grabbed from stdout and currently in different formats based on the return code.
+    #
+    # if returncode==1: details="<resilient-circuits run details>...<details on selftest run>...""
+    #                   the important part come in the section between the last two '{' '}'
+    #                   which is where the 'state' and 'reason' values are output (see below:)
+    #                   ...
+    #                   <package_name>: 
+    #                       selftest: success
+    #                       selftest output:
+    #                       {'state': 'failure', 'reason': '<some reason for failure>'}
+    #                       Elapsed time: x.xyz seconds
+    #                   ...
+    #           
+    # if returncode==0: same as if ==1, except the 'state' is 'sucess' and there is no 'reason' field
+    #                   NOTE: it is possible for there to be 'state': 'unimplemented' if which case we fail
+    #                   the validation and let the user know that they should implement selftest
+    #
+    # if returncode>1:  details=<some error about REST or STOMP connection failed to SOAR server>
+    #                   the important part occurs after "ERROR: ..." so we parse from there on to the end
+    
     # if selftest failed (see details of the return codes @ resilient-circuits.cmds.selftest)
     if proc.returncode == 1:
         details = details[details.rfind("{")+1:details.rfind("}")].strip().replace("\n", ". ").replace("\t", " ")
@@ -188,7 +210,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     elif proc.returncode == 0:
         # look to see if output has "unimplemented" in it -- that means that user hasn't
         # implemented selftest yet. warn that they should implement selftest
-        if details.find("unimplemented") != -1:
+        if details.find("'state': 'unimplemented'") != -1:
             return False, SDKValidateIssue(
                 name=attr_dict.get("missing_name"),
                 description=attr_dict.get("missing_msg").format(package_name),

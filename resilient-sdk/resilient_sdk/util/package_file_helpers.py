@@ -939,7 +939,7 @@ def get_required_python_version(python_requires_str):
         parsed_version = pkg_resources.parse_version(version_str)
         
         return (parsed_version.major, parsed_version.minor)
-    except Exception as e:
+    except Exception:
         raise SDKException("'python_requires' version not given in correct format.")
 
 def check_package_installed(package_name):
