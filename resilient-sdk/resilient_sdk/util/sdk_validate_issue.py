@@ -20,7 +20,7 @@ class SDKValidateIssue(object):
     SEVERITY_LEVEL_INFO = 3
     SEVERITY_LEVEL_DEBUG = 100
 
-    def __init__(self, name, description, severity=SEVERITY_LEVEL_CRITICAL, solution="UNKNOWN"):
+    def __init__(self, name, description, severity=SEVERITY_LEVEL_CRITICAL, solution="SOLUTION UNKNOWN"):
 
         self.name = name
         self.description = description
