@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2251 documentation</title>
+    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2252 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2251 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2252 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>  
@@ -459,13 +459,14 @@ in the <code class="docutils literal notranslate"><span class="pre">finally</spa
 <dd><p>Convert HTML text into Markdown. A wrapper for
 <a class="reference external" href="https://docs.python.org/3.6/library/html.parser.html#html.parser.HTMLParser">html.parser.HTMLParser</a></p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">html_text</span> <span class="o">=</span> <span class="s1">&#39;&lt;div class=&quot;rte&quot;&gt;&lt;div&gt;&lt;span style=&quot;font-size: 32.0px;&quot; class=&quot;preventReplaceNode&quot;&gt;this is a heading&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-size: 18.0px;&quot; class=&quot;preventReplaceNode&quot;&gt;this is a sub heading&lt;/span&gt;&lt;/div&gt;&lt;div&gt;this is a paragraph&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10.0px;&quot; class=&quot;preventReplaceNode&quot;&gt;this is  a smaller paragraph&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;strong&gt;this is bold&lt;/strong&gt;&lt;/div&gt;&lt;div&gt;&lt;em&gt;this is  italic&lt;/em&gt;&lt;/div&gt;&lt;div&gt;&lt;u&gt;this is underlined&lt;/u&gt;&lt;/div&gt;&lt;div&gt;&lt;s&gt;this is struck through&lt;/s&gt;&lt;/div&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ul&gt;&lt;li&gt;This is a bullet list a&lt;/li&gt;&lt;li&gt;This is a bullet list b&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;&lt;br /&gt;&lt;/div&gt;&lt;ol&gt;&lt;li&gt;This is a number list a&lt;/li&gt;&lt;li&gt;This is a number list b&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&#39;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">MarkdownParser</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">MarkdownParser</span><span class="p">()</span>
-<span class="n">markdown_text</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">html_text</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&lt;div class=&#39;rte&#39;&gt;&lt;div&gt;&lt;strong&gt;&lt;u&gt;underline and strong&lt;/u&gt;&lt;/strong&gt;&lt;/div&gt;&lt;/div&gt;&quot;</span>
+<span class="n">markdown</span> <span class="o">=</span> <span class="s2">&quot;*_underline and strong_*&quot;</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">markdown_text</span><span class="p">)</span>
-<span class="o">&gt;&gt;</span> <span class="s1">&#39;this is a heading</span><span class="se">\n</span><span class="s1">this is a sub heading</span><span class="se">\n</span><span class="s1">this is a paragraph</span><span class="se">\n</span><span class="s1">this is  a smaller paragraph</span><span class="se">\n</span><span class="s1">**this is bold**</span><span class="se">\n</span><span class="s1">*this is  italic*</span><span class="se">\n</span><span class="s1">__this is underlined__</span><span class="se">\n</span><span class="s1">~~this is struck through~~</span><span class="se">\n</span><span class="s1">    * This is a bullet list a</span><span class="se">\n</span><span class="s1">    * This is a bullet list b</span><span class="se">\n</span><span class="s1">    1. This is a number list a</span><span class="se">\n</span><span class="s1">    2. This is a number list b&#39;</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">MarkdownParser</span><span class="p">(</span><span class="n">bold</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">underline</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="c1"># override defaults</span>
+<span class="n">converted</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">converted</span><span class="p">,</span> <span class="n">markdown</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -486,6 +487,131 @@ returns the converted string</p>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+</dd></dl>
+
+<span class="target" id="module-resilient_lib.components.oauth2_client_credentials_session"></span><dl class="py class">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">OAuth2ClientCredentialsSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Session">requests.Session</a> 
+that receives authentication tokens through <code class="docutils literal notranslate"><span class="pre">client_credentials</span></code> type of OAuth2 grant,
+and adds tokens to the requests made through the session,
+as well as attempts to keep track of the token and refresh it when the time comes.</p>
+<ul class="simple">
+<li><p>If proxies are defined, every request will use them.</p></li>
+</ul>
+<p>This session doesn’t request authorization from the user first, the scope should be pre-authorized.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">,</span> <span class="n">RequestsCommon</span>
+
+<span class="n">api1</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example1.com/&lt;tenant_id&gt;/oauth/v2/&#39;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">)</span>
+<span class="n">api2</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example2.com/&lt;tenant_id&gt;/oauth/v2/&#39;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">)</span>
+
+<span class="n">api1</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://example1.com/v4/me/messages&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span> <span class="c1"># use as a regular requests session object</span>
+
+<span class="n">api2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://example2.com/v2/me/updates&#39;</span><span class="p">)</span>
+
+<span class="c1"># When writing an integration, use RequestsCommon to get the proxies defined in in your app.config file.</span>
+<span class="n">rc</span> <span class="o">=</span> <span class="n">RequestsCommon</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">function_opts</span><span class="p">)</span>
+<span class="n">api3</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example3.com/</span><span class="si">{}</span><span class="s1">/test&#39;</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">get_proxies</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – authorization url, with tenant_id in it, if required</p></li>
+<li><p><strong>client_id</strong> (<em>str</em>) – API key/User Id</p></li>
+<li><p><strong>client_secret</strong> (<em>str</em>) – secret for API</p></li>
+<li><p><strong>scope</strong> (<em>[</em><em>str</em><em>]</em>) – (optional) list of scopes</p></li>
+<li><p><strong>proxies</strong> (<em>dict</em>) – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
+The mapping protocol must be in the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;https_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;https://localhost:8080,</span>
+    <span class="s2">&quot;http_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:8080</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.add_authorization_header">
+<span class="sig-name descname"><span class="pre">add_authorization_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">headers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.add_authorization_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create headers needed for authentication/authorization, overriding the default ones if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>headers</strong> (<em>dict</em>) – Dictionary containing the <code class="docutils literal notranslate"><span class="pre">Authorization</span></code> header</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate">
+<span class="sig-name descname"><span class="pre">authenticate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticate with the endpoint</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token">
+<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Override this method if there are any specific things that need to be changed.</strong></p>
+<p>For example, <em>Cloud Foundry</em> asking <code class="docutils literal notranslate"><span class="pre">grant_type</span></code> to be <code class="docutils literal notranslate"><span class="pre">password</span></code> and API key to be passed in <code class="docutils literal notranslate"><span class="pre">password</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token_url</strong> (<em>str</em>) – authorization url, with tenant_id in it, if required</p></li>
+<li><p><strong>client_id</strong> (<em>str</em>) – API key/User Id</p></li>
+<li><p><strong>client_secret</strong> (<em>str</em>) – secret for API</p></li>
+<li><p><strong>scope</strong> (<em>[</em><em>str</em><em>]</em>) – (optional) list of scopes</p></li>
+<li><p><strong>proxies</strong> (<em>dict</em>) – (optional) Dictionary mapping protocol to the URL of the proxy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the <code class="docutils literal notranslate"><span class="pre">token_url</span></code></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.request">
+<span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Request">requests.Request</a>,
+injects it with tokens and sends it in a new session to avoid having one session constantly open.</p>
+<p>This uses the <code class="docutils literal notranslate"><span class="pre">requests.request()</span></code> function to
+make a call. The inputs are mapped to this function.
+See <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.request">requests.request()</a>
+for information on any parameters available</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> object</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a></p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.update_token">
+<span class="sig-name descname"><span class="pre">update_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.update_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Institutes a request for a new access token.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If it cannot update the token</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if could get a new token</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -532,7 +658,7 @@ for information on any parameters available, but not documented here</p>
 before giving up, as a float, or a (connect timeout, read timeout) timeout tuple.
 <em>See requests docs for more</em>. If <code class="docutils literal notranslate"><span class="pre">None</span></code> it will look in the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
 section of your app.config for the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> config</p></li>
-<li><p><strong>proxies</strong> – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
+<li><p><strong>proxies</strong> (<em>dict</em>) – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
 The mapping protocol must be in the format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="s2">&quot;https_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;https://localhost:8080,</span>
@@ -553,6 +679,29 @@ only paramater. Can be used to specifically handle errors</p></li>
 <dd class="field-odd"><p><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object
 or <code class="docutils literal notranslate"><span class="pre">callback</span></code> function</p>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.get_proxies">
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">get_proxies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.get_proxies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Proxies can be specified globally for all integrations or specifically per function.</p>
+<ul class="simple">
+<li><p>If the environmental variables <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code> and <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code>
+are set, this will return <code class="docutils literal notranslate"><span class="pre">None</span></code> - as if for a <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Request">requests.Request</a>,
+if <code class="docutils literal notranslate"><span class="pre">proxies</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> the environmental variables will be used</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the <strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file,
+returns a dictionary mapping protocol to the URL of the proxy</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the <strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file,
+returns a dictionary mapping protocol to the URL of the proxy</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dictionary mapping protocol to the URL of the proxy or <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict or <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -702,7 +851,7 @@ adding the ability to validate fields in app.config</p></li>
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2251 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2252 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>

@@ -70,7 +70,7 @@ Common Helper Methods
 .. autoclass:: resilient_lib.components.html2markdown::MarkdownParser
 .. autofunction:: resilient_lib.components.html2markdown::MarkdownParser.convert
 
-.. .. automodule:: resilient_lib.components.oauth2_client_credentials_session
+.. automodule:: resilient_lib.components.oauth2_client_credentials_session
    :members:
 
 ----------------------
@@ -78,8 +78,8 @@ Common Request Methods
 ----------------------
 
 .. autoclass:: resilient_lib.components.requests_common::RequestsCommon
-
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
+.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
 
 ----------
 Change Log
