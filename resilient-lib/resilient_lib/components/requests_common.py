@@ -18,7 +18,7 @@ class RequestsCommon:
     """
     This class represents common functions around the use of the requests package for REST based APIs.
     It incorporates the app.config section ``[integrations]`` which can be used to define a common set of proxies
-    for use by all functions using this library:
+    for use by all functions using this library.
 
     Similar properties may exist in the function's section which would override the ``[integrations]`` properties.
 

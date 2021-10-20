@@ -10,13 +10,13 @@ stages:
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
-    if: branch = master OR branch =~ ^release\/.+
+    if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
   - name: deploy documentation
     if: branch =~ ^pages\/.+
   - name: release to pypi
     if: tag =~ ^release\/pypi\/.+
   - name: sync public repo
-    if: branch =~ ^pages\/.+
+    if: tag =~ ^release\/pypi\/.+
 
 env:
   global:
