@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2237 documentation</title>
+    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2240 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2237 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2240 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>  
@@ -53,8 +53,9 @@
 <span class="n">created_date</span> <span class="o">=</span> <span class="n">readable_datetime</span><span class="p">(</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">inc_create_date</span><span class="p">,</span> <span class="n">rtn_format</span><span class="o">=</span><span class="s2">&quot;%m-</span><span class="si">%d</span><span class="s2">-%Y %H:%M:%S&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
 <section id="proxies">
-<h3>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h3>
+<h2>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> supports an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section in your app.config file.
 Add this section to define proxy settings which will be used for all integrations which use this library:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">integrations</span><span class="p">]</span>
@@ -73,8 +74,17 @@ section like above. Run the following on your AppHost for more:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ manageAppHost proxy -h
 </pre></div>
 </div>
+<p><em>The hierarchy of proxies is as follows:</em></p>
+<ol class="arabic simple">
+<li><p><strong>RequestsCommon.execute() Function:</strong> the <code class="docutils literal notranslate"><span class="pre">proxies</span></code> parameter</p></li>
+<li><p><strong>Environmental Variables:</strong> <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code> and <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code> set
+using the <code class="docutils literal notranslate"><span class="pre">manageAppHost</span> <span class="pre">proxy</span></code> command the on AppHost</p></li>
+<li><p><strong>Function Options:</strong> <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the
+<strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file</p></li>
+<li><p><strong>Integrations Options:</strong> <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the
+<strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file</p></li>
+</ol>
 </div>
-</section>
 </section>
 <section id="module-resilient_lib.components.resilient_common">
 <span id="common-helper-methods"></span><h2>Common Helper Methods<a class="headerlink" href="#module-resilient_lib.components.resilient_common" title="Permalink to this headline">¶</a></h2>
@@ -446,14 +456,72 @@ in the <code class="docutils literal notranslate"><span class="pre">finally</spa
 </section>
 <section id="common-request-methods">
 <h2>Common Request Methods<a class="headerlink" href="#common-request-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">RequestsCommon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_opts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents common functions around the use of the requests package for REST based APIs.
+It incorporates the app.config section <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> which can be used to define a common set of proxies
+for use by all functions using this library:</p>
+<p>Similar properties may exist in the function’s section which would override the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> properties.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>As of version 41.1 in the Atomic Function template <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> is available
-in a class that inherits <code class="docutils literal notranslate"><span class="pre">resilient_circuits.AppFunctionComponent</span></code> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
+<p>As of version 41.1 in the Atomic Function template <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> has already been instantiated and
+is available  in a class that inherits <code class="docutils literal notranslate"><span class="pre">resilient_circuits.AppFunctionComponent</span></code> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">ibm</span><span class="o">.</span><span class="n">com</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>opts</strong> (<em>dict</em>) – all configs found in the app.config file</p></li>
+<li><p><strong>function_opts</strong> (<em>dict</em>) – all configs found in the <code class="docutils literal notranslate"><span class="pre">[my_function]</span></code> section of the app.config file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.execute">
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs and sends a request. Returns a
+<a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object.</p>
+<p>This uses the <code class="docutils literal notranslate"><span class="pre">requests.request()</span></code> function to
+make a call. The inputs are mapped to this function.
+See <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.request">requests.request()</a>
+for information on any parameters available, but not documented here</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> (<em>float</em><em> or </em><em>tuple</em>) – (optional) How many seconds to wait for the server to send data
+before giving up, as a float, or a (connect timeout, read timeout) timeout tuple.
+<em>See requests docs for more</em>. If <code class="docutils literal notranslate"><span class="pre">None</span></code> it will look in the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
+section of your app.config for the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> config</p></li>
+<li><p><strong>proxies</strong> – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
+The mapping protocol must be in the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;https_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;https://localhost:8080,</span>
+    <span class="s2">&quot;http_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:8080</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>callback</strong> (<em>function</em>) – once a response is gotten from the endpoint,
+return this callback function passing in the <code class="docutils literal notranslate"><span class="pre">response</span></code> as its
+only paramater. Can be used to specifically handle errors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the endpoint or if return <code class="docutils literal notranslate"><span class="pre">callback</span></code> if defined</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object
+or <code class="docutils literal notranslate"><span class="pre">callback</span></code> function</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
@@ -573,6 +641,7 @@ adding the ability to validate fields in app.config</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">resilient-lib</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-resilient_lib.components.resilient_common">Common Helper Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-request-methods">Common Request Methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#change-log">Change Log</a></li>
@@ -594,7 +663,7 @@ adding the ability to validate fields in app.config</p></li>
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2237 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2240 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>

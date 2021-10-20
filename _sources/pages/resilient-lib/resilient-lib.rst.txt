@@ -24,9 +24,9 @@ To use it within your App development, **import** it like any other Python Packa
 
    created_date = readable_datetime(fn_inputs.inc_create_date, rtn_format="%m-%d-%Y %H:%M:%S")
 
-^^^^^^^
+-------
 Proxies
-^^^^^^^
+-------
 
 ``resilient-lib`` supports an ``[integrations]`` section in your app.config file. 
 Add this section to define proxy settings which will be used for all integrations which use this library:
@@ -50,6 +50,16 @@ Add this section to define proxy settings which will be used for all integration
 
       $ manageAppHost proxy -h
 
+   *The hierarchy of proxies is as follows:*
+
+   #. **RequestsCommon.execute() Function:** the ``proxies`` parameter
+   #. **Environmental Variables:** ``HTTPS_PROXY``, ``HTTP_PROXY`` and ``NO_PROXY`` set
+      using the ``manageAppHost proxy`` command the on AppHost
+   #. **Function Options:** ``http_proxy`` or ``https_proxy`` configs set in the
+      **Function Section** (``[my_function]``) of your app.config file
+   #. **Integrations Options:** ``http_proxy`` or ``https_proxy`` configs set in the
+      **Integrations Section** (``[integrations]``) of your app.config file
+
 ---------------------
 Common Helper Methods
 ---------------------
@@ -67,15 +77,9 @@ Common Helper Methods
 Common Request Methods
 ----------------------
 
-.. note::
-   As of version 41.1 in the Atomic Function template ``RequestsCommon`` is available 
-   in a class that inherits ``resilient_circuits.AppFunctionComponent`` as an ``rc`` attribute:
+.. autoclass:: resilient_lib.components.requests_common::RequestsCommon
 
-   .. code-block:: python
-
-      response = self.rc.execute(method="get", url=ibm.com)
-
-.. .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
+.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
 
 ----------
 Change Log
