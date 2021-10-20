@@ -41,7 +41,20 @@ class RequestsCommon:
         self.function_opts = function_opts
 
     def get_proxies(self):
-        """ proxies can be specified globally for all integrations or specifically per function """
+        """
+        Proxies can be specified globally for all integrations or specifically per function.
+
+        * If the environmental variables ``HTTPS_PROXY``, ``HTTP_PROXY`` and ``NO_PROXY``
+          are set, this will return ``None`` - as if for a `requests.Request <https://docs.python-requests.org/en/latest/api/#requests.Request>`_,
+          if ``proxies`` is ``None`` the environmental variables will be used
+        * If ``http_proxy`` or ``https_proxy`` configs set in the **Function Section** (``[my_function]``) of your app.config file,
+          returns a dictionary mapping protocol to the URL of the proxy
+        * If ``http_proxy`` or ``https_proxy`` configs set in the **Integrations Section** (``[integrations]``) of your app.config file,
+          returns a dictionary mapping protocol to the URL of the proxy
+
+        :return: A dictionary mapping protocol to the URL of the proxy or ``None``
+        :rtype: dict or ``None``
+        """
         proxies = None
 
         if is_env_proxies_set():
@@ -102,6 +115,7 @@ class RequestsCommon:
                     "https_proxy": "https://localhost:8080,
                     "http_proxy": "http://localhost:8080
                 }
+        :type proxies: dict
         :param callback: once a response is gotten from the endpoint,
             return this callback function passing in the ``response`` as its
             only paramater. Can be used to specifically handle errors
