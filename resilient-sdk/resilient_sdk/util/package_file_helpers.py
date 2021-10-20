@@ -66,6 +66,7 @@ PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_UTIL_DATA_DIR = os.path.join("util", "data")
+PATH_SELFTEST_PY = os.path.join("util", "selftest.py")
 PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
 PATH_SCREENSHOTS = os.path.join(BASE_NAME_DOC_DIR, "screenshots")
 PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
@@ -938,8 +939,24 @@ def get_required_python_version(python_requires_str):
         parsed_version = pkg_resources.parse_version(version_str)
         
         return (parsed_version.major, parsed_version.minor)
-    except Exception as e:
+    except Exception:
         raise SDKException("'python_requires' version not given in correct format.")
+
+def check_package_installed(package_name):
+    """
+    Uses pkg_resources.require to certify that a package is installed
+    
+    :param package_name: name of package
+    :type package_name: str
+    :return: boolean value whether or not package is installed in current python env
+    :rtype: bool
+    """
+    try:
+        pkg_resources.require(package_name)
+    except pkg_resources.DistributionNotFound:
+        return False
+
+    return True
 
 def color_output(s, level):
     """
