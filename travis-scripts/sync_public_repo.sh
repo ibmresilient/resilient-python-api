@@ -23,11 +23,17 @@ print_msg "\
 BRANCHES_TO_SYNC:\t$BRANCHES_TO_SYNC \n\
 "
 
+if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "master" ] ; then
+    print_msg "Syncing INTERNAL 'master' branch with PUBLIC 'master' branch"
+    git push https://$GH_TOKEN_PUBLIC@github.com:/ibmresilient/resilient-python-api.git master:master
+fi
+
 if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "gh-pages" ] ; then
     git clone --branch=gh-pages git@github.ibm.com:Resilient/resilient-python-api.git gh-pages-dir
     cd gh-pages-dir
     git checkout gh-pages
     git fetch && git pull
+    print_msg "Syncing INTERNAL 'gh-pages' branch with PUBLIC 'gh-pages' branch"
     git push https://$GH_TOKEN_PUBLIC@github.com:/ibmresilient/resilient-python-api.git gh-pages:gh-pages
     cd $TRAVIS_BUILD_DIR
 fi
