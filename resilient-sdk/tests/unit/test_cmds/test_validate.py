@@ -16,7 +16,7 @@ def test_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
-    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve"""
+    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     assert cmd_validate.CMD_DESCRIPTION == cmd_validate.CMD_HELP
 
     args = cmd_validate.parser.parse_known_args()[0]
