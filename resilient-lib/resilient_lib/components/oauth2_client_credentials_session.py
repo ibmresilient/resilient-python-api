@@ -9,14 +9,14 @@ log = logging.getLogger(__name__)
 
 class OAuth2ClientCredentialsSession(requests.Session):
     """
-    Wrapper around `requests.Session <https://docs.python-requests.org/en/latest/api/#requests.Session>`_ 
-    that receives authentication tokens through ``client_credentials`` type of OAuth2 grant,
-    and adds tokens to the requests made through the session,
-    as well as attempts to keep track of the token and refresh it when the time comes.
+    Wrapper around `requests.Session <https://docs.python-requests.org/en/latest/api/#requests.Session>`_
+    which receives authentication tokens through the ``client_credentials`` type of OAuth2 grant,
+    and adds tokens to the requests made through the session.
+    It also attempts to keep track of the token and refresh it as needed.
 
     * If proxies are defined, every request will use them.
 
-    This session doesn't request authorization from the user first, the scope should be pre-authorized.
+    This session does not request authorization from the user first. The scope should be pre-authorized.
 
     **Example:**
 
@@ -35,11 +35,11 @@ class OAuth2ClientCredentialsSession(requests.Session):
         rc = RequestsCommon(opts, function_opts)
         api3 = OAuth2ClientCredentialsSession('https://example3.com/{}/test', proxies=rc.get_proxies())
 
-    :param url: authorization url, with tenant_id in it, if required
+    :param url: Authorization URL, with tenant_id in it, if required
     :type url: str
-    :param client_id: API key/User Id
+    :param client_id: API key/User ID
     :type client_id: str
-    :param client_secret: secret for API
+    :param client_secret: secret for API key
     :type client_secret: str
     :param scope: (optional) list of scopes
     :type scope: [str]
@@ -120,15 +120,29 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
     def get_token(self, token_url, client_id, client_secret, scope=None, proxies=None):
         """
-        **Override this method if there are any specific things that need to be changed.**
+        **Override this method if the request needs specific information in the
+        body of the request**
 
         For example, *Cloud Foundry* asking ``grant_type`` to be ``password`` and API key to be passed in ``password``.
 
-        :param token_url: authorization url, with tenant_id in it, if required
+        The default is:
+
+        .. code-block:: python
+
+            post_data = {
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'grant_type': 'client_credentials'
+            }
+
+            if scope:
+                post_data['scope'] = scope
+
+        :param token_url: Authorization URL, with tenant_id in it, if required
         :type token_url: str
-        :param client_id: API key/User Id
+        :param client_id: API key/User ID
         :type client_id: str
-        :param client_secret: secret for API
+        :param client_secret: secret for API key
         :type client_secret: str
         :param scope: (optional) list of scopes
         :type scope: [str]
@@ -142,7 +156,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
             'client_secret': client_secret,
             'grant_type': 'client_credentials'
         }
-        if scope is not None:
+        if scope:
             post_data['scope'] = scope
         return self.post(token_url, data=post_data, proxies=proxies)
 

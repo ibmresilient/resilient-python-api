@@ -164,7 +164,7 @@ matrix:
       install:
       - pip install sphinx
       script:
-        - echo "Building packages in Python 3.6 and deploying Documentation internally to "
+        - echo "Building packages in Python 3.6 and deploying Documentation internally too"
         - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
       deploy:
         - provider: pages:git

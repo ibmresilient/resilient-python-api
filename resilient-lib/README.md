@@ -13,7 +13,7 @@ View our documentation for this library at: [ibm.biz/soar-python-docs](https://i
 
 
 ## Change Log
-We our continuously adding to this package and our change log can be found at [ibm.biz/resilient-lib-changes](https://ibm.biz/resilient-lib-changes)
+We are continuously adding to this package and our change log can be found at [ibm.biz/resilient-lib-changes](https://ibm.biz/resilient-lib-changes)
 
 
 ## License and Terms

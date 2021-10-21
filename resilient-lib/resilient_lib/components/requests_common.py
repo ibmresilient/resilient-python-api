@@ -20,19 +20,19 @@ class RequestsCommon:
     It incorporates the app.config section ``[integrations]`` which can be used to define a common set of proxies
     for use by all functions using this library.
 
-    Similar properties may exist in the function's section which would override the ``[integrations]`` properties.
+    Any similar properties in the function’s section would override the [integrations] properties.
 
     .. note::
-      As of version 41.1 in the Atomic Function template ``RequestsCommon`` has already been instantiated and
-      is available  in a class that inherits ``resilient_circuits.AppFunctionComponent`` as an ``rc`` attribute:
+      In the Atomic Function template, as of version 41.1, ``RequestsCommon`` is instantiated and available available
+      in a class that inherits ``resilient_circuits.AppFunctionComponent`` as an ``rc`` attribute:
 
       .. code-block:: python
 
          response = self.rc.execute(method="get", url=ibm.com)
 
-    :param opts: all configs found in the app.config file
+    :param opts: all configurations found in the app.config file
     :type opts: dict
-    :param function_opts: all configs found in the ``[my_function]`` section of the app.config file
+    :param function_opts: all configurations found in the ``[my_function]`` section of the app.config file
     :type function_opts: dict
     """
     def __init__(self, opts=None, function_opts=None):
@@ -44,13 +44,13 @@ class RequestsCommon:
         """
         Proxies can be specified globally for all integrations or specifically per function.
 
-        * If the environmental variables ``HTTPS_PROXY``, ``HTTP_PROXY`` and ``NO_PROXY``
-          are set, this will return ``None`` - as if for a `requests.Request <https://docs.python-requests.org/en/latest/api/#requests.Request>`_,
-          if ``proxies`` is ``None`` the environmental variables will be used
-        * If ``http_proxy`` or ``https_proxy`` configs set in the **Function Section** (``[my_function]``) of your app.config file,
-          returns a dictionary mapping protocol to the URL of the proxy
-        * If ``http_proxy`` or ``https_proxy`` configs set in the **Integrations Section** (``[integrations]``) of your app.config file,
-          returns a dictionary mapping protocol to the URL of the proxy
+        * If the environmental variables HTTPS_PROXY, HTTP_PROXY and NO_PROXY
+          are set, this returns ``None``, as if for a `requests.Request <https://docs.python-requests.org/en/latest/api/#requests.Request>`_.
+          If ``proxies`` are ``None``, the environmental variables are used
+        * If ``http_proxy`` or ``https_proxy`` is set in the **Function Section** (``[my_function]``) of your app.config file,
+          returns a dictionary mapping protocol to the URL of the proxy.
+        * If ``http_proxy`` or ``https_proxy`` is set in the **Integrations Section** (``[integrations]``) of your app.config file,
+          returns a dictionary mapping protocol to the URL of the proxy.
 
         :return: A dictionary mapping protocol to the URL of the proxy or ``None``
         :rtype: dict or ``None``
@@ -99,12 +99,12 @@ class RequestsCommon:
         This uses the ``requests.request()`` function to
         make a call. The inputs are mapped to this function.
         See `requests.request() <https://docs.python-requests.org/en/latest/api/#requests.request>`_
-        for information on any parameters available, but not documented here
+        for information on any parameters available, but not documented here.
 
-        :param timeout: (optional) How many seconds to wait for the server to send data
-            before giving up, as a float, or a (connect timeout, read timeout) timeout tuple.
-            *See requests docs for more*. If ``None`` it will look in the ``[integrations]``
-            section of your app.config for the ``timeout`` config
+        :param timeout: Number of seconds to wait for the server to send data
+            before sending a float or a timeout tuple (connect timeout, read timeout).
+            *See requests docs for more*. If ``None`` it looks in the ``[integrations]``
+            section of your app.config for the ``timeout`` setting.
         :type timeout: float or tuple
         :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
             The mapping protocol must be in the format:
@@ -116,13 +116,13 @@ class RequestsCommon:
                     "http_proxy": "http://localhost:8080
                 }
         :type proxies: dict
-        :param callback: once a response is gotten from the endpoint,
+        :param callback: (Optional) Once a response is received from the endpoint,
             return this callback function passing in the ``response`` as its
-            only paramater. Can be used to specifically handle errors
+            only parameter. Can be used to specifically handle errors.
         :type callback: function
-        :return: the ``response`` from the endpoint or if return ``callback`` if defined
+        :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
-            or ``callback`` function
+            or ``callback`` function.
         """
         try:
             if method.lower() not in ('get', 'post', 'put', 'patch', 'delete', 'head', 'options'):
