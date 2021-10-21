@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2253 documentation</title>
+    <title>resilient-lib &#8212; IBM SOAR Python Libraries 43.0.2254 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2253 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2254 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>  
@@ -57,7 +57,7 @@
 <section id="proxies">
 <h2>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> supports an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section in your app.config file.
-Add this section to define proxy settings which will be used for all integrations which use this library:</p>
+Add this section to define proxy settings to be used for all integrations that use this library.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">integrations</span><span class="p">]</span>
 <span class="c1"># These proxy settings will be used by all integrations.</span>
 <span class="c1"># To override, add any parameter to your specific integration section</span>
@@ -68,21 +68,21 @@ Add this section to define proxy settings which will be used for all integration
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If your App is running on AppHost 1.6 or greater you can take advantage of the
-the global proxy functionality and there is no need to add an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
-section like above. Run the following on your AppHost for more:</p>
+<p>If your app is running on App Host 1.6 or greater, you can take advantage of
+the global proxy functionality. There is no need to add an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
+section like above. Run the following on your App Host for more information:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ manageAppHost proxy -h
 </pre></div>
 </div>
 <p><em>The hierarchy of proxies is as follows:</em></p>
 <ol class="arabic simple">
-<li><p><strong>RequestsCommon.execute() Function:</strong> the <code class="docutils literal notranslate"><span class="pre">proxies</span></code> parameter</p></li>
+<li><p><strong>RequestsCommon.execute() Function:</strong> the <code class="docutils literal notranslate"><span class="pre">proxies</span></code> parameter.</p></li>
 <li><p><strong>Environmental Variables:</strong> <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code> and <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code> set
-using the <code class="docutils literal notranslate"><span class="pre">manageAppHost</span> <span class="pre">proxy</span></code> command the on AppHost</p></li>
+using the <code class="docutils literal notranslate"><span class="pre">manageAppHost</span> <span class="pre">proxy</span></code> command the on AppHost.</p></li>
 <li><p><strong>Function Options:</strong> <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the
-<strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file</p></li>
+<strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file.</p></li>
 <li><p><strong>Integrations Options:</strong> <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the
-<strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file</p></li>
+<strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file.</p></li>
 </ol>
 </div>
 </section>
@@ -492,14 +492,14 @@ returns the converted string</p>
 <span class="target" id="module-resilient_lib.components.oauth2_client_credentials_session"></span><dl class="py class">
 <dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession">
 <em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">OAuth2ClientCredentialsSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper around <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Session">requests.Session</a> 
-that receives authentication tokens through <code class="docutils literal notranslate"><span class="pre">client_credentials</span></code> type of OAuth2 grant,
-and adds tokens to the requests made through the session,
-as well as attempts to keep track of the token and refresh it when the time comes.</p>
+<dd><p>Wrapper around <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Session">requests.Session</a>
+which receives authentication tokens through the <code class="docutils literal notranslate"><span class="pre">client_credentials</span></code> type of OAuth2 grant,
+and adds tokens to the requests made through the session.
+It also attempts to keep track of the token and refresh it as needed.</p>
 <ul class="simple">
 <li><p>If proxies are defined, every request will use them.</p></li>
 </ul>
-<p>This session doesn’t request authorization from the user first, the scope should be pre-authorized.</p>
+<p>This session does not request authorization from the user first. The scope should be pre-authorized.</p>
 <p><strong>Example:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">,</span> <span class="n">RequestsCommon</span>
 
@@ -518,9 +518,9 @@ as well as attempts to keep track of the token and refresh it when the time come
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – authorization url, with tenant_id in it, if required</p></li>
-<li><p><strong>client_id</strong> (<em>str</em>) – API key/User Id</p></li>
-<li><p><strong>client_secret</strong> (<em>str</em>) – secret for API</p></li>
+<li><p><strong>url</strong> (<em>str</em>) – Authorization URL, with tenant_id in it, if required</p></li>
+<li><p><strong>client_id</strong> (<em>str</em>) – API key/User ID</p></li>
+<li><p><strong>client_secret</strong> (<em>str</em>) – secret for API key</p></li>
 <li><p><strong>scope</strong> (<em>[</em><em>str</em><em>]</em>) – (optional) list of scopes</p></li>
 <li><p><strong>proxies</strong> (<em>dict</em>) – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
 The mapping protocol must be in the format:</p>
@@ -554,14 +554,26 @@ The mapping protocol must be in the format:</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token">
 <span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>Override this method if there are any specific things that need to be changed.</strong></p>
+<dd><p><strong>Override this method if the request needs specific information in the
+body of the request</strong></p>
 <p>For example, <em>Cloud Foundry</em> asking <code class="docutils literal notranslate"><span class="pre">grant_type</span></code> to be <code class="docutils literal notranslate"><span class="pre">password</span></code> and API key to be passed in <code class="docutils literal notranslate"><span class="pre">password</span></code>.</p>
+<p>The default is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">post_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="n">client_id</span><span class="p">,</span>
+    <span class="s1">&#39;client_secret&#39;</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span>
+    <span class="s1">&#39;grant_type&#39;</span><span class="p">:</span> <span class="s1">&#39;client_credentials&#39;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="n">scope</span><span class="p">:</span>
+    <span class="n">post_data</span><span class="p">[</span><span class="s1">&#39;scope&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scope</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>token_url</strong> (<em>str</em>) – authorization url, with tenant_id in it, if required</p></li>
-<li><p><strong>client_id</strong> (<em>str</em>) – API key/User Id</p></li>
-<li><p><strong>client_secret</strong> (<em>str</em>) – secret for API</p></li>
+<li><p><strong>token_url</strong> (<em>str</em>) – Authorization URL, with tenant_id in it, if required</p></li>
+<li><p><strong>client_id</strong> (<em>str</em>) – API key/User ID</p></li>
+<li><p><strong>client_secret</strong> (<em>str</em>) – secret for API key</p></li>
 <li><p><strong>scope</strong> (<em>[</em><em>str</em><em>]</em>) – (optional) list of scopes</p></li>
 <li><p><strong>proxies</strong> (<em>dict</em>) – (optional) Dictionary mapping protocol to the URL of the proxy.</p></li>
 </ul>
@@ -623,11 +635,11 @@ for information on any parameters available</p>
 <dd><p>This class represents common functions around the use of the requests package for REST based APIs.
 It incorporates the app.config section <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> which can be used to define a common set of proxies
 for use by all functions using this library.</p>
-<p>Similar properties may exist in the function’s section which would override the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> properties.</p>
+<p>Any similar properties in the function’s section would override the [integrations] properties.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>As of version 41.1 in the Atomic Function template <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> has already been instantiated and
-is available  in a class that inherits <code class="docutils literal notranslate"><span class="pre">resilient_circuits.AppFunctionComponent</span></code> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
+<p>In the Atomic Function template, as of version 41.1, <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> is instantiated and available available
+in a class that inherits <code class="docutils literal notranslate"><span class="pre">resilient_circuits.AppFunctionComponent</span></code> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">ibm</span><span class="o">.</span><span class="n">com</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -635,8 +647,8 @@ is available  in a class that inherits <code class="docutils literal notranslate
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>opts</strong> (<em>dict</em>) – all configs found in the app.config file</p></li>
-<li><p><strong>function_opts</strong> (<em>dict</em>) – all configs found in the <code class="docutils literal notranslate"><span class="pre">[my_function]</span></code> section of the app.config file</p></li>
+<li><p><strong>opts</strong> (<em>dict</em>) – all configurations found in the app.config file</p></li>
+<li><p><strong>function_opts</strong> (<em>dict</em>) – all configurations found in the <code class="docutils literal notranslate"><span class="pre">[my_function]</span></code> section of the app.config file</p></li>
 </ul>
 </dd>
 </dl>
@@ -650,14 +662,14 @@ is available  in a class that inherits <code class="docutils literal notranslate
 <p>This uses the <code class="docutils literal notranslate"><span class="pre">requests.request()</span></code> function to
 make a call. The inputs are mapped to this function.
 See <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.request">requests.request()</a>
-for information on any parameters available, but not documented here</p>
+for information on any parameters available, but not documented here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>timeout</strong> (<em>float</em><em> or </em><em>tuple</em>) – (optional) How many seconds to wait for the server to send data
-before giving up, as a float, or a (connect timeout, read timeout) timeout tuple.
-<em>See requests docs for more</em>. If <code class="docutils literal notranslate"><span class="pre">None</span></code> it will look in the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
-section of your app.config for the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> config</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em> or </em><em>tuple</em>) – Number of seconds to wait for the server to send data
+before sending a float or a timeout tuple (connect timeout, read timeout).
+<em>See requests docs for more</em>. If <code class="docutils literal notranslate"><span class="pre">None</span></code> it looks in the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
+section of your app.config for the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> setting.</p></li>
 <li><p><strong>proxies</strong> (<em>dict</em>) – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
 The mapping protocol must be in the format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -667,17 +679,17 @@ The mapping protocol must be in the format:</p>
 </pre></div>
 </div>
 </p></li>
-<li><p><strong>callback</strong> (<em>function</em>) – once a response is gotten from the endpoint,
+<li><p><strong>callback</strong> (<em>function</em>) – (Optional) Once a response is received from the endpoint,
 return this callback function passing in the <code class="docutils literal notranslate"><span class="pre">response</span></code> as its
-only paramater. Can be used to specifically handle errors</p></li>
+only parameter. Can be used to specifically handle errors.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the endpoint or if return <code class="docutils literal notranslate"><span class="pre">callback</span></code> if defined</p>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the endpoint or return <code class="docutils literal notranslate"><span class="pre">callback</span></code> if defined.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object
-or <code class="docutils literal notranslate"><span class="pre">callback</span></code> function</p>
+or <code class="docutils literal notranslate"><span class="pre">callback</span></code> function.</p>
 </p>
 </dd>
 </dl>
@@ -688,13 +700,13 @@ or <code class="docutils literal notranslate"><span class="pre">callback</span><
 <span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">get_proxies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.get_proxies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Proxies can be specified globally for all integrations or specifically per function.</p>
 <ul class="simple">
-<li><p>If the environmental variables <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code> and <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code>
-are set, this will return <code class="docutils literal notranslate"><span class="pre">None</span></code> - as if for a <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Request">requests.Request</a>,
-if <code class="docutils literal notranslate"><span class="pre">proxies</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> the environmental variables will be used</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the <strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file,
-returns a dictionary mapping protocol to the URL of the proxy</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the <strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file,
-returns a dictionary mapping protocol to the URL of the proxy</p></li>
+<li><p>If the environmental variables HTTPS_PROXY, HTTP_PROXY and NO_PROXY
+are set, this returns <code class="docutils literal notranslate"><span class="pre">None</span></code>, as if for a <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Request">requests.Request</a>.
+If <code class="docutils literal notranslate"><span class="pre">proxies</span></code> are <code class="docutils literal notranslate"><span class="pre">None</span></code>, the environmental variables are used</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> is set in the <strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file,
+returns a dictionary mapping protocol to the URL of the proxy.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> is set in the <strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file,
+returns a dictionary mapping protocol to the URL of the proxy.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -851,7 +863,7 @@ adding the ability to validate fields in app.config</p></li>
         <li class="right" >
           <a href="../../index.html" title="IBM SOAR Python Libraries"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2253 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2254 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">resilient-lib</a></li> 
       </ul>
     </div>
