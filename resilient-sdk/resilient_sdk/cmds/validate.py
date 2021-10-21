@@ -275,12 +275,12 @@ class CmdValidate(BaseCmd):
         for file_name, validation_func in validations:
             self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
 
-            # validate setup.py file using static helper method
+            # validate given file using static helper method
             file_valid, issues = validation_func(path_package)
             self.VALIDATE_ISSUES[file_name] = issues
             self.SUMMARY_LIST += issues
 
-            # log output from _validate_setup
+            # log output from validation
             for issue in issues:
                 self._log(issue.get_logging_level(), issue.error_str())
 
