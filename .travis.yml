@@ -144,7 +144,7 @@ matrix:
         - echo "Building packages in Python 3.6 and Deploying to Artifactory"
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$NEW_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
     - stage: release to pypi
       install:

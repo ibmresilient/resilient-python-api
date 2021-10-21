@@ -164,6 +164,6 @@ selftest_attributes = [
 
         # if selftest.py succeeds (i.e. returncode == 0)
         "pass_name": "selftest.py success",
-        "pass_msg": "selftest.py successfully ran for {0}",
+        "pass_msg": "selftest.py successfully ran for '{0}'",
     }
 ]
