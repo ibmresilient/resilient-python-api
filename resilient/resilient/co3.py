@@ -123,6 +123,13 @@ def get_client(opts):
         requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
 
+    # Enable client certificate authentication
+    certauthcert = opts.get("cert_auth_cert", None)
+    certauthkey = opts.get("cert_auth_key", None)
+    certauth = (certauthcert, certauthkey)
+    if str(certauthcert).lower() == "false" or certauthcert is None or certauthkey is None:
+        certauth = False
+
     proxy = None
     if opts.get("proxy_host"):
         proxy = get_proxy_dict(opts)
@@ -133,7 +140,8 @@ def get_client(opts):
     simple_client_args = {"org_name": opts.get("org"),
                           "proxies": proxy,
                           "base_url": url,
-                          "verify": verify}
+                          "verify": verify,
+                          "certauth": certauth}
     if opts.get("log_http_responses"):
         LOG.warning("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
         simple_client = LoggingSimpleClient
@@ -215,7 +223,7 @@ def _raise_if_error(response):
 class SimpleClient(co3base.BaseClient):
     """Python helper class for using the Resilient REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None):
         """
 
         :param org_name: The name of the organization to use.
@@ -224,7 +232,7 @@ class SimpleClient(co3base.BaseClient):
         :param verify: The path to a PEM file containing the trusted CAs, or False to disable all TLS verification
         :param cache_ttl: Time to live for cached API responses
         """
-        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify)
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
