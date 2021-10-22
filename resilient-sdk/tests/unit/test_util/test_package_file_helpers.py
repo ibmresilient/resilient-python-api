@@ -224,7 +224,7 @@ def test_get_required_python_version():
     assert parsed_version == (2, 7)
 
     with pytest.raises(SDKException):
-        package_helpers.get_required_python_version("<3")
+        package_helpers.get_required_python_version("<4")
 
 def test_check_package_installed():
     

@@ -86,8 +86,16 @@ def test_sefltest_run_selftestpy_valid():
     class MockSubProcessResult:
         stderr = b"Success"
         returncode = 0
+        def __init__(*args, **kwargs):
+            pass
+        def poll(self):
+            return "Done"
+        def wait(self):
+            return
+        def communicate(self):
+            return "", self.stderr
 
-    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.run") as mock_subprocess:
+    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.Popen") as mock_subprocess:
         
         mock_subprocess.return_value = MockSubProcessResult()
 
@@ -106,8 +114,16 @@ def test_sefltest_run_selftestpy_invalid(fx_copy_fn_main_mock_integration):
     class MockSubProcessResult:
         stderr = b"failure {'state': 'failure', 'reason': 'failed for test reasons'} and more text here..."
         returncode = 1
+        def __init__(*args, **kwargs):
+            pass
+        def poll(self):
+            return "Done"
+        def wait(self):
+            return
+        def communicate(self):
+            return "", self.stderr
 
-    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.run") as mock_subprocess:
+    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.Popen") as mock_subprocess:
         
         mock_subprocess.return_value = MockSubProcessResult()
 
@@ -127,8 +143,16 @@ def test_sefltest_run_selftestpy_rest_error(fx_copy_fn_main_mock_integration):
     class MockSubProcessResult:
         stderr = b"ERROR: (fake) issue connecting to SOAR"
         returncode = 20
+        def __init__(*args, **kwargs):
+            pass
+        def poll(self):
+            return "Done"
+        def wait(self):
+            return
+        def communicate(self):
+            return "", self.stderr
 
-    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.run") as mock_subprocess:
+    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.Popen") as mock_subprocess:
         
         mock_subprocess.return_value = MockSubProcessResult()
 
