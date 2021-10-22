@@ -57,7 +57,7 @@ class SDKValidateIssue(object):
 
     def get_logging_level(self):
         """
-        Returns logging level to use with CmdValidate._get_class_log_level
+        Returns logging level to use with CmdValidate._get_log_level
         
         :return: string indicating the error level that maps severity with constants.VALIDATE_LOG_LEVEL_[level]
         :rtype: str

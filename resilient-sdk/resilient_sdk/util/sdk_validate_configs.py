@@ -51,7 +51,7 @@ setup_py_attributes = {
     },
     "description": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).+", str(x)),
+        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", str(x)),
         "fail_msg": "setup.py attribute '{0}' appears to still be the default value '{1:29.29}...'", 
         "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
         "solution": "Please make sure that you write your own '{0}'. This will be displayed when the integration is installed",
@@ -59,7 +59,7 @@ setup_py_attributes = {
     },
     "long_description": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).+", str(x)),
+        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", str(x)),
         "fail_msg": "setup.py attribute '{0}' appears to still be the default value '{1:29.29}...'", 
         "missing_msg": "setup.py file is missing attribute/or missing value for attribute '{0}'",
         "solution": "Please make sure that you write your own '{0}'. This will be displayed when the integration is installed",
@@ -164,6 +164,6 @@ selftest_attributes = [
 
         # if selftest.py succeeds (i.e. returncode == 0)
         "pass_name": "selftest.py success",
-        "pass_msg": "selftest.py successfully ran for {0}",
+        "pass_msg": "selftest.py successfully ran for '{0}'",
     }
 ]

@@ -157,10 +157,6 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     :return: returns a tuple with the status of the validation and an associated SDKValidateIssue
     :rtype: (bool, SDKValidateIssue)
     """
-    # because selftest takes a while to complete we've decided to log this AWLAYS to INFO level
-    # thus the logging doesn't go through the normal check for if output should be suppressed
-    # this could be implemented as a progress bar if we choose to run selftest as a separate thread
-    LOG.info("INFO: Running selftest.py... (this may take a bit to complete)\n")
 
 
     # run selftest in package as a subprocess
@@ -168,7 +164,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     proc = subprocess.run(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     details = proc.stderr.decode("utf-8")
 
-    LOG.debug("Details from selftest run: %s", details)
+    LOG.debug(details)
 
     # details is grabbed from stdout and currently in different formats based on the return code.
     #
@@ -182,7 +178,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     #                       {'state': 'failure', 'reason': '<some reason for failure>'}
     #                       Elapsed time: x.xyz seconds
     #                   ...
-    #           
+    #
     # if returncode==0: same as if ==1, except the 'state' is 'sucess' and there is no 'reason' field
     #                   NOTE: it is possible for there to be 'state': 'unimplemented' if which case we fail
     #                   the validation and let the user know that they should implement selftest
@@ -208,7 +204,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
             severity=attr_dict.get("error_severity")
         )
     elif proc.returncode == 0:
-        # look to see if output has "unimplemented" in it -- that means that user hasn't
+        # look to see if output has "'state': 'unimplemented'" in it -- that means that user hasn't
         # implemented selftest yet. warn that they should implement selftest
         if details.find("'state': 'unimplemented'") != -1:
             return False, SDKValidateIssue(
