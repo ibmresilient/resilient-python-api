@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2021. All Rights Reserved.
 
-import os, pkg_resources, subprocess, logging
+from __future__ import print_function
+import os, pkg_resources, subprocess, logging, time, sys
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from resilient_sdk.util import sdk_helpers, constants
@@ -161,8 +162,23 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
 
     # run selftest in package as a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
-    proc = subprocess.run(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    details = proc.stderr.decode("utf-8")
+    proc = subprocess.Popen(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+    waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
+    i = 0
+    while proc.poll() is None:
+        sys.stdout.write("\r")
+        sys.stdout.write("Running selftest... {0}       ".format(waiting_bar[i]))
+        sys.stdout.flush()
+        i = (i + 1) % len(waiting_bar)
+        time.sleep(0.2)
+
+    sys.stdout.write("\r")
+    sys.stdout.write("")
+    sys.stdout.flush()
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    details = stderr.decode("utf-8")
 
     LOG.debug("Details from selftest run: %s", details)
 
