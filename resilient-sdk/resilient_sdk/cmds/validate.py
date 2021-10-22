@@ -209,7 +209,7 @@ class CmdValidate(BaseCmd):
                 circuits_version = re.findall(r"[0-9]+", package)
                 circuits_version = tuple([int(i) for i in circuits_version])
 
-                package_details_output.append({"Proxy support": "Proxies supported" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported"})
+                package_details_output.append({"Proxy support": "Proxies supported if running on AppHost>=1.6" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"})
                 library_found = True
                 break
         if not library_found:
