@@ -23,6 +23,7 @@ SUB_CMD_TESTS = ("--tests", )
 SUB_CMD_PYLINT = ("--pylint", )
 SUB_CMD_BANDIT = ("--bandit", )
 SUB_CMD_CVE = ("--cve", )
+SUB_CMD_SELFTEST = ("--selftest", )
 
 
 class CmdValidate(BaseCmd):
@@ -34,7 +35,7 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
-    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve"""
+    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     CMD_DESCRIPTION = CMD_HELP
 
     VALIDATE_ISSUES = {}
@@ -74,6 +75,10 @@ class CmdValidate(BaseCmd):
                                  action="store_true",
                                  help="Run a safety scan of all .py files under package directory (if 'safety' is installed")
 
+        self.parser.add_argument(SUB_CMD_SELFTEST[0],
+                                 action="store_true",
+                                 help="Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment)")
+
     def execute_command(self, args, output_suppressed=False):
         """
         TODO: docstring, unit tests
@@ -91,7 +96,7 @@ class CmdValidate(BaseCmd):
 
         sdk_helpers.is_python_min_supported_version()
 
-        if not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve:
+        if not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve and not args.selftest:
             SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_PACKAGE[0], constants.SUB_CMD_PACKAGE[1])
             self._run_main_validation(args, )
 
@@ -115,6 +120,10 @@ class CmdValidate(BaseCmd):
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_CVE[0])
             self._run_cve_scan(args, )
 
+        if args.selftest:
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_SELFTEST[0])
+            self._run_selftest(args, )
+
         self._print_summary(self.SUMMARY_LIST)
 
     def _run_main_validation(self, args):
@@ -122,9 +131,8 @@ class CmdValidate(BaseCmd):
         TODO: docstring, unit tests
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
-        self.VALIDATE_ISSUES["validate"] = self._validate(args)
-
-        # self.VALIDATE_ISSUES += self._run_tests(args)
+        self._validate(args)
+        self._run_selftest(args)
 
 
     def _print_package_details(self, args):
@@ -260,7 +268,6 @@ class CmdValidate(BaseCmd):
         # this list gets looped and each sub method is ran to check if file is valid
         validations = [
             ("setup.py", self._validate_setup),
-            ("selftest.py", self._validate_selftest)
         ]
 
 
@@ -268,12 +275,12 @@ class CmdValidate(BaseCmd):
         for file_name, validation_func in validations:
             self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
 
-            # validate setup.py file using static helper method
+            # validate given file using static helper method
             file_valid, issues = validation_func(path_package)
-            self.VALIDATE_ISSUES["setup"] = issues
+            self.VALIDATE_ISSUES[file_name] = issues
             self.SUMMARY_LIST += issues
 
-            # log output from _validate_setup
+            # log output from validation
             for issue in issues:
                 self._log(issue.get_logging_level(), issue.error_str())
 
@@ -412,7 +419,7 @@ class CmdValidate(BaseCmd):
 
         # Generate path to selftest.py file + validate we have permissions to read
         # note that file validation happens in the validations list
-        package_name = path_package.split("/")[-1]
+        package_name = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"]).get("name")
         path_selftest_py_file = os.path.join(path_package, package_name, package_helpers.PATH_SELFTEST_PY)
         LOG.debug("selftest.py file found at path {0}\n".format(path_selftest_py_file))
 
@@ -463,6 +470,32 @@ class CmdValidate(BaseCmd):
         TODO
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running safety{0}".format(constants.LOG_DIVIDER))
+
+    def _run_selftest(self, args):
+        """
+        Validates and executes selftest.py
+        """
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py (this may take a bit...){0}".format(constants.LOG_DIVIDER))
+
+
+        # Get absolute path to package
+        path_package = os.path.abspath(args.package)
+        # Ensure the package directory exists and we have READ access
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
+
+        # validate setup.py file using static helper method
+        file_valid, issues = self._validate_selftest(path_package)
+        self.VALIDATE_ISSUES["selftest.py"] = issues
+        self.SUMMARY_LIST += issues
+
+        # log output from _validate_setup
+        for issue in issues:
+            self._log(issue.get_logging_level(), issue.error_str())
+
+        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "selftest.py", file_valid)
+
+
+
 
     def _print_summary(self, static_issues_list):
         """

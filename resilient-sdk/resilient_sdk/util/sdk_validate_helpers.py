@@ -157,10 +157,6 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     :return: returns a tuple with the status of the validation and an associated SDKValidateIssue
     :rtype: (bool, SDKValidateIssue)
     """
-    # because selftest takes a while to complete we've decided to log this AWLAYS to INFO level
-    # thus the logging doesn't go through the normal check for if output should be suppressed
-    # this could be implemented as a progress bar if we choose to run selftest as a separate thread
-    LOG.info("INFO: Running selftest.py... (this may take a bit to complete)\n")
 
 
     # run selftest in package as a subprocess
