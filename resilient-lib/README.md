@@ -1,11 +1,11 @@
 ![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-# IBM Resilient Common Library
+# IBM SOAR Common Library
 
 
 ## Overview
 
-This package contains common library calls which facilitate the development of Apps for IBM Resilient.
+The IBM SOAR Common Library, formerly the *IBM Resilient Common Library*, package contains common library calls which facilitate the development of Apps for IBM SOAR.
 
 
 ## Documentation
