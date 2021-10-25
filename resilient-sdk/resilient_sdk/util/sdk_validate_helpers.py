@@ -13,7 +13,6 @@ LOG = logging.getLogger(constants.LOGGER_NAME)
 
 def selftest_validate_resilient_circuits_installed(attr_dict, **kwargs):
     """
-    TODO: unit tests
     selftest.py validation helper method.
     Validates that 'resilient-circuits' is installed in the env
     and confirms that the version is >= constants.RESILIENT_LIBRARIES_VERSION
@@ -64,7 +63,6 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **kwargs):
 
 def selftest_validate_package_installed(attr_dict, package_name, path_package, **kwargs):
     """
-    TODO: unit tests
     selftest.py validation helper method.
     Validates that the package being validated is installed in the python env
 
@@ -99,7 +97,6 @@ def selftest_validate_package_installed(attr_dict, package_name, path_package, *
 
 def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, **kwargs):
     """
-    TODO: unit tests
     selftest.py validation helper method.
     Validates that 'selftest.py' exists in the path given (which should be <path_package>/util/selftest.py)
 
@@ -137,7 +134,6 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
 
 def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     """
-    TODO: unit tests
     selftest.py validation helper method.
     Runs selftest.py and validates the output. There are a few paths this method can take.
 
