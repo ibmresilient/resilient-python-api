@@ -472,7 +472,7 @@ class CmdValidate(BaseCmd):
         """
         Validates and executes selftest.py
         """
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py (this may take a bit...){0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py{0}".format(constants.LOG_DIVIDER))
 
 
         # Get absolute path to package
