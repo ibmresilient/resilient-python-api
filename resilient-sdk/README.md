@@ -64,6 +64,18 @@ $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
 $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
 ```
 
+### `validate:`
+Validate an integration before submission. Runs static code analysis as well as dynamic checks using tox, bandit, and more.
+```shell
+$ resilient-sdk validate -p <path_to_package>
+```
+```shell
+$ resilient-sdk validate -p <path_to_package> --validate # only run static validations
+```
+```shell
+$ resilient-sdk validate -p <path_to_package> --selftest # only validate and run selftest
+```
+
 ## Supported Python Versions
 
 Python 2.7+ and Python 3.6+
