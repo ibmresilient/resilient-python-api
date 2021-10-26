@@ -3,9 +3,9 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import pytest
-from resilient_sdk.util import constants, package_file_helpers, sdk_validate_configs
-from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
+from resilient_sdk.util import package_file_helpers, sdk_validate_configs
 from resilient_sdk.util.sdk_exception import SDKException
+
 
 def test_name_lambda():
 

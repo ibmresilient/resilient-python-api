@@ -5,13 +5,13 @@
 """SDKValidateIssue class that enables describes an issue"""
 
 import logging
-from resilient_sdk.util import constants, sdk_helpers
+
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
-
-# TODO: write unit tests
 
 
 class SDKValidateIssue(object):
@@ -41,12 +41,12 @@ class SDKValidateIssue(object):
 
     def __str__(self):
         """Returns string representation of a SDKValidateIssue obj"""
-        return "'name={0}; description={1}; severity={2}; solution={3}'".format(self.name, self.description, 
+        return u"'name={0}; description={1}; severity={2}; solution={3}'".format(self.name, self.description, 
                                                                     self.get_logging_level(), self.solution)
 
     def __short_str__(self):
         """Short string representation of a SDKValidateIssue obj"""
-        return "'issue={0}, severtiy={1}'".format(self.name, self.severity)
+        return u"'issue={0}, severtiy={1}'".format(self.name, self.severity)
 
     def __repr__(self):
         return self.__str__()
@@ -74,7 +74,7 @@ class SDKValidateIssue(object):
 
     def error_str(self):
         """Returns an error string to be output to the console"""
-        return "{0:<20} {1}. \n{3:<11} {2}".format(
+        return u"{0:<20} {1}. \n{3:<11} {2}".format(
             package_helpers.color_output(
                 self.get_logging_level() if self.get_logging_level() != constants.VALIDATE_LOG_LEVEL_DEBUG
                     else "PASS", 

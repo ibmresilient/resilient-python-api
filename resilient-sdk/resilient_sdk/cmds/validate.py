@@ -5,15 +5,18 @@
 """ Implementation of `resilient-sdk validate` """
 
 import logging
-import os, re
+import os
+import re
+
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util import sdk_validate_configs as validation_configurations
-from resilient_sdk.util import constants
+from resilient_sdk.util import \
+    sdk_validate_configs as validation_configurations
+from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -223,7 +226,7 @@ class CmdValidate(BaseCmd):
                     level = constants.VALIDATE_LOG_LEVEL_INFO
                 else:
                     level = constants.VALIDATE_LOG_LEVEL_DEBUG
-                self._log(level, "{0}: {1}".format(attr, attr_dict[attr]))
+                self._log(level, u"{0}: {1}".format(attr, attr_dict[attr]))
 
 
 
@@ -272,7 +275,7 @@ class CmdValidate(BaseCmd):
 
         # loop through files and their associated validation functions
         for file_name, validation_func in validations:
-            self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
+            self._log(constants.VALIDATE_LOG_LEVEL_INFO, u"{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
 
             # validate given file using static helper method
             file_valid, issues = validation_func(path_package)
@@ -368,7 +371,7 @@ class CmdValidate(BaseCmd):
             else: # else is present and did not fail
                 # passes checks
                 name = "{0} valid in setup.py".format(attr)
-                description = "'{0}' passed with value {1}".format(attr, parsed_attr)
+                description = u"'{0}' passed with value {1}".format(attr, parsed_attr)
                 severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
                 solution = ""
 

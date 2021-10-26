@@ -2,12 +2,18 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2021. All Rights Reserved.
 
-from __future__ import print_function
-import os, pkg_resources, subprocess, logging, time, sys
+import logging
+import os
+import subprocess
+import sys
+import time
+
+import pkg_resources
+from resilient_sdk.util import constants
+from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-from resilient_sdk.util import sdk_helpers, constants
-from resilient_sdk.util import package_file_helpers as package_helpers
 
 LOG = logging.getLogger(constants.LOGGER_NAME)
 

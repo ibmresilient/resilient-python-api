@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-import os, pkg_resources
+import os
+
+import pkg_resources
 from mock import patch
-from resilient_sdk.util import constants, sdk_validate_helpers, sdk_validate_configs
+from resilient_sdk.util import (constants, sdk_validate_configs,
+                                sdk_validate_helpers)
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
+
 
 def test_selftest_validate_resilient_circuits_installed():
 

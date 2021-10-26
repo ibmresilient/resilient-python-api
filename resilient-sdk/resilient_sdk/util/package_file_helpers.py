@@ -827,7 +827,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "media_type": "image/png"
             },
             "long_description": {
-                "content": "<div>{0}</div>".format(setup_py_attributes.get("long_description")),
+                "content": u"<div>{0}</div>".format(setup_py_attributes.get("long_description")),
                 "format": "html"
             },
             "minimum_resilient_version": {

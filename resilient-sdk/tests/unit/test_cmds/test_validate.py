@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
-import shutil, os, sys
+import os
+import shutil
+import sys
+
 from mock import patch
-from resilient_sdk.cmds import base_cmd, CmdValidate
+from resilient_sdk.cmds import CmdValidate, base_cmd
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
 
@@ -40,16 +43,13 @@ def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_pars
     assert "Proxy support: " in caplog.text
 
 def test_pass_validate_setup_py_file(fx_copy_fn_main_mock_integration):
+    """Test for success when calling _validate_setup()"""
 
     mock_package_path = fx_copy_fn_main_mock_integration[1]
         
     mock_data = {
         "test": {
             "fail_func": lambda x: False,
-            "fail_msg": "failed",
-            "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-            "missing_msg": "missing",
-            "solution": "solution",
             "parse_func": lambda _, attr_list: {attr: "mock_data" for attr in attr_list},
         }
     }
@@ -63,6 +63,7 @@ def test_pass_validate_setup_py_file(fx_copy_fn_main_mock_integration):
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
+    """Test for failure when calling _validate_setup()"""
 
     mock_package_path = fx_copy_fn_main_mock_integration[1]
         
@@ -194,4 +195,5 @@ def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_vali
         cmd_validate.execute_command(args)
         assert "Printing details" in caplog.text
         assert "Validation Results" in caplog.text
+        assert u"ล ฦ ว ศ ษ ส ห ฬ อ" in caplog.text
         assert "setup.py attribute 'author' appears to still be the default value" in caplog.text
