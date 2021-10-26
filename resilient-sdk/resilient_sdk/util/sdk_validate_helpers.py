@@ -88,17 +88,17 @@ def selftest_validate_package_installed(attr_dict, package_name, path_package, *
     # check that the package being validated is installed in the environment
     if package_helpers.check_package_installed(package_name):
         return True, SDKValidateIssue(
-            name = attr_dict.get("pass_name").format(package_name),
-            description = attr_dict.get("pass_msg").format(package_name),
-            severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-            solution = ""
+            name=attr_dict.get("pass_name").format(package_name),
+            description=attr_dict.get("pass_msg").format(package_name),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
         )
     else:
         return False, SDKValidateIssue(
-            name = attr_dict.get("fail_name").format(package_name),
-            description = attr_dict.get("fail_msg").format(package_name),
-            severity = attr_dict.get("severity"),
-            solution = attr_dict.get("solution").format(package_name, path_package)
+            name=attr_dict.get("fail_name").format(package_name),
+            description=attr_dict.get("fail_msg").format(package_name),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("solution").format(package_name, path_package)
         )
 
 def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, **kwargs):
@@ -123,16 +123,16 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
     try:
         sdk_helpers.validate_file_paths(os.R_OK, path_selftest_py_file)
         return True, SDKValidateIssue(
-            attr_dict.get("pass_name"),
-            attr_dict.get("pass_msg").format(path_selftest_py_file),
+            name=attr_dict.get("pass_name"),
+            description=attr_dict.get("pass_msg").format(path_selftest_py_file),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
         )
     except SDKException:
         # if it can't be read then create the appropriate SDKValidateIssue and return False immediately
         return False, SDKValidateIssue(
-            attr_dict.get("fail_name"),
-            attr_dict.get("fail_msg"),
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg"),
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("solution")
         )
@@ -166,6 +166,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
     proc = subprocess.Popen(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
+    # waiting_bar spins around while proc waits to finish
     waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
     i = 0
     while proc.poll() is None:
@@ -176,7 +177,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
         time.sleep(0.2)
 
     sys.stdout.write("\r")
-    sys.stdout.write("")
+    sys.stdout.write("selftest run complete")
     sys.stdout.flush()
     proc.wait()
     stdout, stderr = proc.communicate()
