@@ -5,6 +5,7 @@
 import os
 import stat
 import re
+import pkg_resources
 import pytest
 import jinja2
 import sys
@@ -382,6 +383,19 @@ def test_get_resilient_libraries_version_to_use():
 def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
     assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION_DEV
 
+def test_get_resilient_sdk_version():
+    parsed_version = sdk_helpers.get_resilient_sdk_version()
+    assert parsed_version is not None
+    assert parsed_version >= pkg_resources.parse_version(sdk_helpers.RESILIENT_LIBRARIES_VERSION)
+
+def test_get_package_version_found_in_env():
+    parsed_version = sdk_helpers.get_package_version("resilient-sdk")
+    assert parsed_version is not None
+    assert parsed_version >= pkg_resources.parse_version(sdk_helpers.RESILIENT_LIBRARIES_VERSION)
+
+def test_get_package_version_not_found():
+    not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
+    assert not_found is None
 
 def test_is_python_min_supported_version(caplog):
     mock_log = "WARNING: this package should only be installed on a Python Environment >="

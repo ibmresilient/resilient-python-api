@@ -5,15 +5,18 @@
 """ Implementation of `resilient-sdk validate` """
 
 import logging
-import os, re
+import os
+import re
+
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util import sdk_validate_configs as validation_configurations
-from resilient_sdk.util import constants
+from resilient_sdk.util import \
+    sdk_validate_configs as validation_configurations
+from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -137,7 +140,6 @@ class CmdValidate(BaseCmd):
 
     def _print_package_details(self, args):
         """
-        TODO: unit tests
         Print to the console the package details of the specified package
         including:
         - the absolute path of the package
@@ -224,7 +226,7 @@ class CmdValidate(BaseCmd):
                     level = constants.VALIDATE_LOG_LEVEL_INFO
                 else:
                     level = constants.VALIDATE_LOG_LEVEL_DEBUG
-                self._log(level, "{0}: {1}".format(attr, attr_dict[attr]))
+                self._log(level, u"{0}: {1}".format(attr, attr_dict[attr]))
 
 
 
@@ -235,7 +237,7 @@ class CmdValidate(BaseCmd):
 
     def _validate(self, args):
         """
-        TODO: unit tests
+        TODO: unit tests once all validations are written
         Run static validations.
         Wrapper method that validates the contents of the following files in the package dir (all called in separate submethods):
         - setup.py - done in _validate_setup()
@@ -273,7 +275,7 @@ class CmdValidate(BaseCmd):
 
         # loop through files and their associated validation functions
         for file_name, validation_func in validations:
-            self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
+            self._log(constants.VALIDATE_LOG_LEVEL_INFO, u"{0}Validating {1}{0}".format(constants.LOG_DIVIDER, file_name))
 
             # validate given file using static helper method
             file_valid, issues = validation_func(path_package)
@@ -301,7 +303,6 @@ class CmdValidate(BaseCmd):
     @staticmethod
     def _validate_setup(path_package):
         """
-        TODO: unit tests
         Validate the contents of the setup.py file in the given package.
         Builds a list of SDKValidateIssue that describes the status of setup.py
 
@@ -370,7 +371,7 @@ class CmdValidate(BaseCmd):
             else: # else is present and did not fail
                 # passes checks
                 name = "{0} valid in setup.py".format(attr)
-                description = "'{0}' passed with value {1}".format(attr, parsed_attr)
+                description = u"'{0}' passed with value {1}".format(attr, parsed_attr)
                 severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
                 solution = ""
 
@@ -396,7 +397,6 @@ class CmdValidate(BaseCmd):
     @staticmethod
     def _validate_selftest(path_package):
         """
-        TODO: unit tests
         Validate the contents of the selftest.py file in the given package:
         - check if the package resilient-circuits>=42.0.0 is installed on this Python environment 
           and WARN the user that it is not installed, tell them how to get it
@@ -475,7 +475,7 @@ class CmdValidate(BaseCmd):
         """
         Validates and executes selftest.py
         """
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py (this may take a bit...){0}".format(constants.LOG_DIVIDER))
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validating selftest.py{0}".format(constants.LOG_DIVIDER))
 
 
         # Get absolute path to package
@@ -499,7 +499,6 @@ class CmdValidate(BaseCmd):
 
     def _print_summary(self, static_issues_list):
         """
-        TODO: unit tests
         From list of issues, generates a count of issues that are CRITICAL, WARNING, PASS=sum(INFO, DEBUG)
         and outputs in the format:
 
@@ -515,8 +514,6 @@ class CmdValidate(BaseCmd):
 
         :param issues_list: list of SDKValidateIssue objects
         :type issues_list: list[SDKValidateIssue]
-        :param output_suppressed: bool value of whether or not to suppress output - used whenever LOG is used
-        :type output_suppressed: bool
         :return: None - prints output to console
         :rtype: None
         """
@@ -568,9 +565,8 @@ class CmdValidate(BaseCmd):
         LOG.log(CmdValidate._get_log_level(level, self.output_suppressed), msg)
 
     @staticmethod
-    def _get_log_level(level, output_suppressed):
+    def _get_log_level(level, output_suppressed=False):
         """
-        TODO: unit tests
         Returns logging level to use with logger
         
         50=LOG.critical
@@ -583,8 +579,8 @@ class CmdValidate(BaseCmd):
 
         :param level: string value of DEBUG, INFO, WARNING, or ERROR; this value is used if output_suppressed==False
         :type level: str
-        :param output_suppressed: value to suppress output; designed for use when calling validate from another sdk cmd
-                                    when output is suppressed, DEBUG level is returned
+        :param output_suppressed: (optional) value to suppress output; designed for use when calling validate 
+                                  from another sdk cmd when output is suppressed, DEBUG level is returned
         :type output_suppressed: bool
         :return: value corresponding to the appropriate log level
         :rtype: int
@@ -607,3 +603,6 @@ class CmdValidate(BaseCmd):
             return 40
         if level == constants.VALIDATE_LOG_LEVEL_CRITICAL:
             return 50
+        
+        # default returns 10==DEBUG
+        return 10
