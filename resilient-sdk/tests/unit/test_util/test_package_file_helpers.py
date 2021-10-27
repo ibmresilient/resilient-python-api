@@ -214,3 +214,37 @@ def test_create_extension_invalid_image_hash(fx_copy_fn_main_mock_integration):
 
     with pytest.raises(SDKException, match=r"image_hash 'xxx' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long"):
         package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir, image_hash=mock_image_hash)
+
+def test_get_required_python_version():
+
+    parsed_version = package_helpers.get_required_python_version(">=3")
+    assert parsed_version == (3, 0)
+    
+    parsed_version = package_helpers.get_required_python_version(">=2.7")
+    assert parsed_version == (2, 7)
+
+    with pytest.raises(SDKException):
+        package_helpers.get_required_python_version("<4")
+
+def test_check_package_installed():
+    
+    # positive case
+    assert package_helpers.check_package_installed("resilient-sdk") is True
+
+    # negative case
+    assert package_helpers.check_package_installed("this-is-a-fake-package") is False
+
+def test_color_output():
+
+    mock_data_to_color = [
+        ("COLOR this in GREEN for PASS", "PASS"),
+        ("COLOR this in GREEN for DEBUG", "DEBUG"),
+        ("COLOR this in RED for FAIL", "FAIL"),
+        ("COLOR this in RED for CRITICAL", "CRITICAL"),
+        ("COLOR this in YELLOW for WARNING", "WARNING"),
+        ("COLOR this in NORMAL for INFO", "INFO")
+    ]
+
+    for s, level in mock_data_to_color:
+        output = package_helpers.color_output(s, level)
+        assert output.startswith(package_helpers.COLORS[level]) and output.endswith(package_helpers.COLORS["END"]) and s in output
