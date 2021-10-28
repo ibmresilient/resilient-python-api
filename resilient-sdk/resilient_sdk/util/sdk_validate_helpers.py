@@ -180,7 +180,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
         time.sleep(0.2)
 
     sys.stdout.write("\r")
-    sys.stdout.write("selftest run complete")
+    sys.stdout.write("selftest run complete\n")
     sys.stdout.flush()
     proc.wait()
     stdout, stderr = proc.communicate()
