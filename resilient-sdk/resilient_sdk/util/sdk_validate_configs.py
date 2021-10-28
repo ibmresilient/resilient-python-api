@@ -204,16 +204,12 @@ package_files = {
 
         "pass_name": "'apikey_permissions.txt' valid",
         "pass_msg": "'apikey_permnissions.txt' is valid; it has at least the base permissions",
-        "pass_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
-        "pass_solution": "Be sure to double check this file if you think your app should have extended permissions"
     },
     "Dockerfile": {
         "func": sdk_validate_helpers.package_files_template_match,
 
-        "match_threshold": 0.95,
-
         "fail_name": "'Dockerfile' invalid",
-        "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.2}% match)",
+        "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.2}% match). Difference from template:\n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
         "fail_solution": "Please make sure that if you implement a custom 'Dockerfile' you've made all the appropriate changes and tested it well",
 
@@ -228,10 +224,8 @@ package_files = {
     "entrypoint.sh": {
         "func": sdk_validate_helpers.package_files_template_match,
 
-        "match_threshold": 1,
-
         "fail_name": "'entrypoint.sh' file invalid",
-        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.2}% match)",
+        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.2}% match). Difference from template: \n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
         "fail_solution": "Please update your 'entrypoint.sh' file to match the latest template version using 'resilient-sdk codegen --reload'",
 

@@ -265,54 +265,46 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     :param attr_dict: (required) dictionary of attributes defined in ``package_files``
     :type attr_dict: dict
     :param _: (unused) other unused named args
-    :type _: str
+    :type _: dict
     :return: a passing issue if the file exists and has the templated manifests; a warning issue if the file doesn't exist or if the manifest template lines aren't all found
     :rtype: SDKValidateIssue
     """
 
-    # instantiate Jinja2 Environment with path to Jinja2 templates
-    jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
+    # render jinja file of MANIFEST
+    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, package_name=package_name)
 
-    # Load the Jinja2 Template from filename + jinja2 ext
-    file_template = jinja_env.get_template(filename + ".jinja2")
+    # read the contents of the package's MANIFEST file
+    file_contents = sdk_helpers.read_file(path_file)
 
-    # render the MANIFEST with the required variables
-    file_rendered = file_template.render({"package_name": package_name})
+    # split template file into list of lines
+    template_contents = file_rendered.splitlines(keepends=True)
     
-    # write the MANIFEST to a temporary file so we can compare with filecmp
-    with open(path_file, 'r') as file:
-        # open package MANIFEST and split into list of 
-        file_contents = file.read().splitlines()
+    # compare given file to template
+    diffs = []
+    for line in template_contents:
+        if line == "":
+            continue
+        matches = difflib.get_close_matches(line, file_contents, cutoff=0.90)
+        if not matches:
+            diffs.append(str(line))
 
-        # split template file into list of lines
-        template_contents = file_rendered.splitlines()
-        
-        # compare given file to template
-        diffs = []
-        for line in template_contents:
-            if line == "":
-                continue
-            matches = difflib.get_close_matches(line, file_contents, cutoff=0.90)
-            if len(matches) == 0:
-                diffs.append(str(line))
-
-        if len(diffs) > 0:
-            # some lines from template weren't in the given file so this validation fails
-            # TODO: can this be a warning?
-            return SDKValidateIssue(
-                name=attr_dict.get("fail_name"),
-                description=attr_dict.get("fail_msg").format(diffs),
-                severity=attr_dict.get("fail_severity"),
-                solution=attr_dict.get("fail_solution")
-            )
-        else:
-            # all template lines were in given MANIFEST.in so this validation passes
-            return SDKValidateIssue(
-                name=attr_dict.get("pass_name"),
-                description=attr_dict.get("pass_msg"),
-                severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-                solution=""
-            )
+    if diffs:
+        # some lines from template weren't in the given file so this validation fails
+        # TODO: can this be a warning?
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg").format(diffs),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution")
+        )
+    else:
+        # all template lines were in given MANIFEST.in so this validation passes
+        return SDKValidateIssue(
+            name=attr_dict.get("pass_name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
 
 
 def package_files_apikey_pem(path_file, attr_dict, **_):
@@ -325,41 +317,39 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
     :param attr_dict: (required) dictionary of attributes defined in ``package_files``
     :type attr_dict: dict
     :param _: (unused) other unused named args
-    :type _: str
+    :type _: dict
     :return: a passing issue if the file exists and has the minimum permissions; a warning issue if the file doesn't exist or if the base permissions aren't found
     :rtype: SDKValidateIssue
     """
+    
+    # read package's apikey_permissions.txt file
+    file_contents = sdk_helpers.read_file(path_file)
 
-    # check that at least the BASE_PERMISSIONS are in the given apikey_permissions file
-    with open(path_file, 'r') as file:
-        # open apikey_permissions and split into list of 
-        file_contents = file.read().splitlines()
+    # filter out commented lines
+    file_contents = [line.strip() for line in file_contents if not line.startswith("#")]
+    
+    # compare given file to constant BASE_PERMISSIONS
+    missing_permissions = []
+    for perm in package_helpers.BASE_PERMISSIONS:
+        if perm not in file_contents:
+            missing_permissions.append(perm)
 
-        # filter out commented lines
-        file_contents = [line for line in file_contents if not line.startswith("#")]
-        
-        # compare given file to constant BASE_PERMISSIONS
-        missing_permissions = []
-        for perm in package_helpers.BASE_PERMISSIONS:
-            if perm not in file_contents:
-                missing_permissions.append(perm)
-
-        if len(missing_permissions) > 0:
-            # missing the base perimissions
-            return SDKValidateIssue(
-                name=attr_dict.get("fail_name"),
-                description=attr_dict.get("fail_msg").format(missing_permissions),
-                severity=attr_dict.get("fail_severity"),
-                solution=attr_dict.get("fail_solution")
-            )
-        else:
-            # apikey_permissions file has _at least_ all of the base permissions
-            return SDKValidateIssue(
-                name=attr_dict.get("pass_name"),
-                description=attr_dict.get("pass_msg"),
-                severity=attr_dict.get("pass_severity", SDKValidateIssue.SEVERITY_LEVEL_DEBUG),
-                solution=attr_dict.get("pass_solution", "")
-            )
+    if missing_permissions:
+        # missing the base perimissions
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg").format(missing_permissions),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution")
+        )
+    else:
+        # apikey_permissions file has _at least_ all of the base permissions
+        return SDKValidateIssue(
+            name=attr_dict.get("pass_name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
     
 
 def package_files_template_match(package_name, package_version, path_file, filename, attr_dict, **_):
@@ -367,11 +357,6 @@ def package_files_template_match(package_name, package_version, path_file, filen
     Helper method for package files to validate files against their templates.
     Designed for use with Dockerfile and entrypoint.sh, however, could be adjusted to work with 
     other jinja2 templated files.
-
-    Note that "match_threshold" taken from attr_dict is used to set the threshold above which the 
-    comparison between a given file and its template are considered a match.
-    Ex: if diff(f1, f1_template) == 0.89% and 'match_threshold' is set to 0.95%, the files would not be considered
-    a match. If the diff was 0.99%, they'd be considered a match.
 
     :param package_name: (required) the name of the package
     :type package_name: str
@@ -384,46 +369,39 @@ def package_files_template_match(package_name, package_version, path_file, filen
     :param attr_dict: (required) dictionary of attributes defined in ``package_files``
     :type attr_dict: dict
     :param _: (unused) other unused named args
-    :type _: str
+    :type _: dict
     :return: a passing issue if the file exists and matches the template; a warning issue if the file doesn't exist or if the template doesn't match the given file
     :rtype: SDKValidateIssue
     """
 
-    # instantiate Jinja2 Environment with path to Jinja2 templates
-    jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
-
-    # Load the Jinja2 Template from filename + jinja2 ext
-    file_template = jinja_env.get_template(filename + ".jinja2")
-
-    # render the template file with the required variables
-    file_rendered = file_template.render({"package_name": package_name, "version": package_version})
+    # render jinja file
+    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, 
+                                    package_name=package_name, version=package_version)
     
-    # open given file for comparison
-    with open(path_file, 'r') as file:
-        # read package file and split into list of 
-        file_contents = file.read().splitlines()
+    # read the package's file
+    file_contents = sdk_helpers.read_file(path_file)
 
-        # split template file into list of lines
-        template_contents = file_rendered.splitlines()
-        
-        # compare given file to template
-        s_diff = difflib.SequenceMatcher(None, file_contents, template_contents)
+    # split template file into list of lines
+    template_contents = file_rendered.splitlines(keepends=True)
+    
+    # compare given file to template
+    s_diff = difflib.SequenceMatcher(None, file_contents, template_contents)
 
-        # check match between the two files
-        # if less than given threshold, the match fails
-        # TODO: discuss on threshold used here
-        comp_ratio = s_diff.real_quick_ratio()
-        if comp_ratio < attr_dict.get("match_threshold"):
-            return SDKValidateIssue(
-                name=attr_dict.get("fail_name"),
-                description=attr_dict.get("fail_msg").format(comp_ratio),
-                severity=attr_dict.get("fail_severity"),
-                solution=attr_dict.get("fail_solution")
-            )
-        else:
-            return SDKValidateIssue(
-                name=attr_dict.get("pass_name"),
-                description=attr_dict.get("pass_msg"),
-                severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-                solution=""
-            )
+    # check match between the two files
+    # if less than a perfect match, the match fails
+    comp_ratio = s_diff.ratio()
+    if comp_ratio < 1.0:
+        diff = '\t\t'.join(difflib.unified_diff(template_contents, file_contents, n=0)) # n is number of context lines
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg").format(comp_ratio, diff),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution")
+        )
+    else:
+        return SDKValidateIssue(
+            name=attr_dict.get("pass_name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )

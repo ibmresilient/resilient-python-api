@@ -209,8 +209,7 @@ def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
     result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
 
     assert isinstance(result, SDKValidateIssue)
-    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
-    assert result.solution != ""
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
 
@@ -218,12 +217,10 @@ def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
     attr_dict = sdk_validate_configs.package_files.get(filename)
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
-    mock_read = "#mock_commented_permissions\nmock_non_base_permission\n"
-    mock_open = mock.mock_open(read_data=mock_read)
+    # mock the file reading
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
 
-    # mock the open class using the mock.mock_open method which mocks the builtin open method
-    # mock it to return bad data that will fail the checks
-    with patch("resilient_sdk.util.sdk_validate_helpers.open", mock_open):
+        mock_read_file.return_value = ["#mock_commented_permissions\n", "mock_non_base_permission\n"]
 
         result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
 
@@ -239,7 +236,7 @@ def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     # mock the get_close_matches method to return an empty list, which will fail the method
-    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
         mock_ratio.return_value = 0.0
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
@@ -256,9 +253,8 @@ def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     # mock the get_close_matches method to return an empty list, which will fail the method
-    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
-        assert attr_dict.get("match_threshold") is not None
-        mock_ratio.return_value = attr_dict.get("match_threshold")
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
+        mock_ratio.return_value = 1.0
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
@@ -274,7 +270,7 @@ def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     # mock the get_close_matches method to return an empty list, which will fail the method
-    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
         mock_ratio.return_value = 0.0
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
@@ -291,9 +287,8 @@ def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     # mock the get_close_matches method to return an empty list, which will fail the method
-    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
-        assert attr_dict.get("match_threshold") is not None
-        mock_ratio.return_value = attr_dict.get("match_threshold")
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
+        mock_ratio.return_value = 1.0
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 

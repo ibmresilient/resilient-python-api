@@ -242,7 +242,7 @@ class CmdValidate(BaseCmd):
         Wrapper method that validates the contents of the following files in the package dir (all called in separate submethods):
         - setup.py - done in _validate_setup()
         - MANIFEST.in - done in _validate_package_files()
-        - apikey_permissions - done in _validate_package_files()
+        - apikey_permissions.txt - done in _validate_package_files()
         - entrypoint.sh - done in _validate_package_files()
         - Dockerfile - done in _validate_package_files()
         - fn_package/util/config.py - TBD
@@ -416,8 +416,9 @@ class CmdValidate(BaseCmd):
 
 
         # get package name and package version
-        package_name = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"]).get("name")
-        package_version = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["version"]).get("version")
+        parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name", "version"])
+        package_name = parsed_setup.get("name")
+        package_version = parsed_setup.get("version")
 
         # run through validations for package files
         # details of each check can be found in the sdk_validate_configs.package_files

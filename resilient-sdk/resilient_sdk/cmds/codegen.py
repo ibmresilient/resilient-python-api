@@ -307,7 +307,7 @@ class CmdCodegen(BaseCmd):
             os.makedirs(output_base)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
-        jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
+        jinja_env = sdk_helpers.setup_jinja_env(constants.PACKAGE_TEMPLATE_PATH)
 
         # This dict maps our package file structure to  Jinja2 templates
         package_mapping_dict = {
