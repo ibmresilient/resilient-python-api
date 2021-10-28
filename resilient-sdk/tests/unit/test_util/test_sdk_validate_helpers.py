@@ -4,6 +4,7 @@
 
 import os
 
+import mock
 import pkg_resources
 from mock import patch
 from resilient_sdk.util import (constants, sdk_validate_configs,
@@ -166,3 +167,135 @@ def test_sefltest_run_selftestpy_rest_error(fx_copy_fn_main_mock_integration):
         assert result[0] is False
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
         assert MockSubProcessResult().stderr.decode("utf-8") in result[1].description
+
+def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration):
+
+    filename = "MANIFEST.in"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    package_name = fx_copy_fn_main_mock_integration[0]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    # mock the get_close_matches method to return a match, which will pass the method
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.get_close_matches") as mock_close_matches:
+        mock_close_matches.return_value = ["match"]
+
+        result = sdk_validate_helpers.package_files_manifest(package_name, path_file, filename, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration):
+
+    filename = "MANIFEST.in"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    package_name = fx_copy_fn_main_mock_integration[0]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    # mock the get_close_matches method to return an empty list, which will fail the method
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.get_close_matches") as mock_close_matches:
+        mock_close_matches.return_value = []
+
+        result = sdk_validate_helpers.package_files_manifest(package_name, path_file, filename, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
+
+    filename = "apikey_permissions.txt"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
+
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+    assert result.solution != ""
+
+def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
+
+    filename = "apikey_permissions.txt"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    mock_read = "#mock_commented_permissions\nmock_non_base_permission\n"
+    mock_open = mock.mock_open(read_data=mock_read)
+
+    # mock the open class using the mock.mock_open method which mocks the builtin open method
+    # mock it to return bad data that will fail the checks
+    with patch("resilient_sdk.util.sdk_validate_helpers.open", mock_open):
+
+        result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integration):
+
+    filename = "Dockerfile"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    package_name = fx_copy_fn_main_mock_integration[0]
+    package_version = "fake.version"
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    # mock the get_close_matches method to return an empty list, which will fail the method
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
+        mock_ratio.return_value = 0.0
+
+        result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
+
+def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integration):
+
+    filename = "Dockerfile"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    package_name = fx_copy_fn_main_mock_integration[0]
+    package_version = "fake.version"
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    # mock the get_close_matches method to return an empty list, which will fail the method
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
+        assert attr_dict.get("match_threshold") is not None
+        mock_ratio.return_value = attr_dict.get("match_threshold")
+
+        result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
+
+    filename = "entrypoint.sh"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    package_name = fx_copy_fn_main_mock_integration[0]
+    package_version = "fake.version"
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    # mock the get_close_matches method to return an empty list, which will fail the method
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
+        mock_ratio.return_value = 0.0
+
+        result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
+
+def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
+
+    filename = "entrypoint.sh"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    package_name = fx_copy_fn_main_mock_integration[0]
+    package_version = "fake.version"
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    # mock the get_close_matches method to return an empty list, which will fail the method
+    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.real_quick_ratio") as mock_ratio:
+        assert attr_dict.get("match_threshold") is not None
+        mock_ratio.return_value = attr_dict.get("match_threshold")
+
+        result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
