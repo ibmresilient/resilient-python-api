@@ -108,6 +108,9 @@ def validate_fields(field_list, kwargs):
     a field name or it can be a list/tuple of ``dicts`` where each item
     has the attributes ``name`` (**required**) and ``placeholder`` (**optional**).
 
+    ``kwargs`` can be a dict/namedtuple. If it is a namedtuple tries to call it's
+    ``kwargs._as_dict()`` method and raises a ``ValueError`` if it cannot.
+
     * If the value of the item in ``kwargs`` is equal to its ``placeholder``
       defined in ``field_list``, a ``ValueError`` is raised.
 
@@ -121,8 +124,8 @@ def validate_fields(field_list, kwargs):
 
     :param field_list: the mandatory fields. *Can be an empty list if no mandatory fields.*
     :type field_list: list|tuple
-    :param kwargs: dict of all the fields to search.
-    :type kwargs: dist
+    :param kwargs: dict or a namedtuple of all the fields to search.
+    :type kwargs: dict|namedtuple
     :raises ValueError: if a field is missing
     :return: a Dictionary of all fields with Select/Multi-Select fields handled.
     :rtype: dict
@@ -142,7 +145,10 @@ def validate_fields(field_list, kwargs):
         raise ValueError("'field_list' must be of type list/tuple, not {0}".format(type(mandatory_fields)))
 
     if not isinstance(provided_fields, dict):
-        raise ValueError("'kwargs' must be of type dict, not {0}".format(type(provided_fields)))
+        try:
+            provided_fields = provided_fields._asdict()
+        except AttributeError:
+            raise ValueError("'kwargs' must be of type dict or namedtuple, not {0}".format(type(provided_fields)))
 
     # Validate that mandatory fields exist + are not equal to their placeholder values
     for field in mandatory_fields:
@@ -178,8 +184,16 @@ def validate_fields(field_list, kwargs):
             field_value = field_value.get("content")
 
         # Handle if Multi-Select Function Input type
+        # There is a chance the list has already been "normalized", so just append as is
         elif isinstance(field_value, list):
-            field_value = [f.get("name") for f in field_value]
+            multi_select_options = []
+            for f in field_value:
+                if isinstance(f, dict):
+                    multi_select_options.append(f.get("name"))
+                else:
+                    multi_select_options.append(f)
+
+            field_value = multi_select_options
 
         return_fields[field_name] = field_value
 
