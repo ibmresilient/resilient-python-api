@@ -277,7 +277,7 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     file_contents = sdk_helpers.read_file(path_file)
 
     # split template file into list of lines
-    template_contents = file_rendered.splitlines(keepends=True)
+    template_contents = file_rendered.splitlines(True)
     
     # compare given file to template
     diffs = []
@@ -382,7 +382,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
     file_contents = sdk_helpers.read_file(path_file)
 
     # split template file into list of lines
-    template_contents = file_rendered.splitlines(keepends=True)
+    template_contents = file_rendered.splitlines(True)
     
     # compare given file to template
     s_diff = difflib.SequenceMatcher(None, file_contents, template_contents)
