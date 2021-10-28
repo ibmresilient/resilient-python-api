@@ -282,11 +282,11 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     # compare given file to template
     diffs = []
     for line in template_contents:
-        if line == "":
+        if line.strip() == "":
             continue
         matches = difflib.get_close_matches(line, file_contents, cutoff=0.90)
         if not matches:
-            diffs.append(str(line))
+            diffs.append(str(line.strip()))
 
     if diffs:
         # some lines from template weren't in the given file so this validation fails
@@ -391,10 +391,10 @@ def package_files_template_match(package_name, package_version, path_file, filen
     # if less than a perfect match, the match fails
     comp_ratio = s_diff.ratio()
     if comp_ratio < 1.0:
-        diff = '\t\t'.join(difflib.unified_diff(template_contents, file_contents, n=0)) # n is number of context lines
+        diff = difflib.unified_diff(template_contents, file_contents, n=0) # n is number of context lines
         return SDKValidateIssue(
             name=attr_dict.get("fail_name"),
-            description=attr_dict.get("fail_msg").format(comp_ratio, diff),
+            description=attr_dict.get("fail_msg").format(comp_ratio, "\t\t".join(diff)),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )
