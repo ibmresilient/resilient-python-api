@@ -250,7 +250,6 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
 
 def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     """
-    TODO: unit tests
     Helper method for package files to validate that at least the templated manifests are included in MANIFEST.in.
     Creates a list of missing template manifest lines.
 
@@ -318,7 +317,6 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
 
 def package_files_apikey_pem(path_file, attr_dict, **_):
     """
-    TODO: unit tests
     Helper method for package files to validate that at least the BASE_PERMISSIONS defined in the package helpers
     are present in the apikey_permissions.txt file.
 
@@ -366,7 +364,6 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
 
 def package_files_template_match(package_name, package_version, path_file, filename, attr_dict, **_):
     """
-    TODO: unit tests
     Helper method for package files to validate files against their templates.
     Designed for use with Dockerfile and entrypoint.sh, however, could be adjusted to work with 
     other jinja2 templated files.
