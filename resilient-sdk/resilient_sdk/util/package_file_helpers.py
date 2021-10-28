@@ -118,7 +118,7 @@ COLORS = {
     "FAIL": '\033[91m',
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',
-    "INFO": '\033[0m',
+    "INFO": '\033[94m',
     "END": '\033[0m'
 }
 
