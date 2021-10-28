@@ -394,7 +394,6 @@ class CmdValidate(BaseCmd):
     @staticmethod
     def _validate_package_files(path_package):
         """
-        TODO: unit tests
         Validate the contents of the following files:
         - apikey_permissions.txt
         - MANIFEST.in
@@ -402,7 +401,7 @@ class CmdValidate(BaseCmd):
         - entrypoint.sh
         
         It validates first that each file exists.
-        If the file doesn't exist, issue with CRITICAL is raised
+        If the file doesn't exist, issue with CRITICAL is created
         If the file exists, check the validation of that given file by running the given "func" for it
 
         :param path_package: path to package
@@ -412,17 +411,16 @@ class CmdValidate(BaseCmd):
         """
         # empty list of SDKValidateIssues
         issues = []
-        # boolean to determine if selftest passes validation
-        selftest_valid = True
+        # boolean to determine if package_files passes validation
+        package_files_valid = True
 
 
-        # Generate path to selftest.py file + validate we have permissions to read
-        # note that file validation happens in the validations list
+        # get package name and package version
         package_name = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"]).get("name")
         package_version = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["version"]).get("version")
 
-        # run through validations for selftest
-        # details of each check can be found in the sdk_validate_configs.py.selftest_attributes
+        # run through validations for package files
+        # details of each check can be found in the sdk_validate_configs.package_files
         for filename in validation_configurations.package_files:
             attr_dict = validation_configurations.package_files.get(filename)
 
@@ -459,9 +457,9 @@ class CmdValidate(BaseCmd):
 
         # sort and look for and invalid issues
         issues.sort()
-        selftest_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+        package_files_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
 
-        return selftest_valid, issues
+        return package_files_valid, issues
 
     @staticmethod
     def _validate_selftest(path_package):
