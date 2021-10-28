@@ -186,14 +186,7 @@ def validate_fields(field_list, kwargs):
         # Handle if Multi-Select Function Input type
         # There is a chance the list has already been "normalized", so just append as is
         elif isinstance(field_value, list):
-            multi_select_options = []
-            for f in field_value:
-                if isinstance(f, dict):
-                    multi_select_options.append(f.get("name"))
-                else:
-                    multi_select_options.append(f)
-
-            field_value = multi_select_options
+            field_value = [f.get("name") if isinstance(f, dict) else f for f in field_value]
 
         return_fields[field_name] = field_value
 
