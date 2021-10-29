@@ -241,16 +241,16 @@ class CmdValidate(BaseCmd):
         Run static validations.
         Wrapper method that validates the contents of the following files in the package dir (all called in separate submethods):
         - setup.py - done in _validate_setup()
+        - MANIFEST.in - done in _validate_package_files()
+        - apikey_permissions.txt - done in _validate_package_files()
+        - entrypoint.sh - done in _validate_package_files()
+        - Dockerfile - done in _validate_package_files()
         - fn_package/util/config.py - TBD
         - fn_package/util/customize.py - TBD
         - fn_package/util/selftest.py - TBD
         - fn_package/LICENSE - TBD
         - fn_package/icons - TBD
         - README.md - TBD
-        - MANIFEST.in - TBD
-        - apikey_permissions (optional but warn that should be App Host supported and give help/link to show how to convert to AppHost)
-        - entrypoint.sh (optional but warn that should be App Host supported)
-        - Dockerfile (optional but warn that should be App Host supported)
 
         :param args: list of args
         :type args: dict
@@ -270,6 +270,7 @@ class CmdValidate(BaseCmd):
         # this list gets looped and each sub method is ran to check if file is valid
         validations = [
             ("setup.py", self._validate_setup),
+            ("package files", self._validate_package_files)
         ]
 
 
@@ -295,10 +296,6 @@ class CmdValidate(BaseCmd):
         #       - fn_package/LICENSE
         #       - fn_package/icons
         #       - README.md
-        #       - MANIFEST.in
-        #       - apikey_permissions (optional but warn that should be App Host supported and give help/link to show how to convert to AppHost)
-        #       - entrypoint.sh (optional but warn that should be App Host supported)
-        #       - Dockerfile (optional but warn that should be App Host supported)
 
     @staticmethod
     def _validate_setup(path_package):
@@ -393,6 +390,77 @@ class CmdValidate(BaseCmd):
         setup_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
         
         return setup_valid, issues
+
+    @staticmethod
+    def _validate_package_files(path_package):
+        """
+        Validate the contents of the following files:
+        - apikey_permissions.txt
+        - MANIFEST.in
+        - Dockerfile
+        - entrypoint.sh
+        
+        It validates first that each file exists.
+        If the file doesn't exist, issue with CRITICAL is created
+        If the file exists, check the validation of that given file by running the given "func" for it
+
+        :param path_package: path to package
+        :type path_package: str
+        :return: Returns boolean value of whether or not the run passed and a sorted list of SDKValidateIssue
+        :rtype: (bool, list[SDKValidateIssue])
+        """
+        # empty list of SDKValidateIssues
+        issues = []
+        # boolean to determine if package_files passes validation
+        package_files_valid = True
+
+
+        # get package name and package version
+        parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name", "version"])
+        package_name = parsed_setup.get("name")
+        package_version = parsed_setup.get("version")
+
+        # run through validations for package files
+        # details of each check can be found in the sdk_validate_configs.package_files
+        for filename in validation_configurations.package_files:
+            attr_dict = validation_configurations.package_files.get(filename)
+
+            # check that the file exists
+            path_file = os.path.join(path_package, filename)
+            try: 
+                sdk_helpers.validate_file_paths(os.R_OK, path_file)
+                LOG.debug("{0} file found at path {1}\n".format(filename, path_file))
+            except SDKException:
+                # file not found: create issue with given "missing_..." info included
+                issue = SDKValidateIssue(
+                    name=attr_dict.get("missing_name"),
+                    description=attr_dict.get("missing_msg").format(path_file),
+                    severity=attr_dict.get("missing_severity"),
+                    solution=attr_dict.get("missing_solution")
+                )
+            else: # SDKException wasn't caught -- the file exists!
+
+                # make sure the "func" param is specified
+                if not attr_dict.get("func"):
+                    raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
+
+                # run given "func"
+                issue = attr_dict.get("func")(
+                    filename=filename,
+                    attr_dict=attr_dict,
+                    package_version=package_version,
+                    package_name=package_name,
+                    path_file=path_file
+                )
+
+            issues.append(issue)
+
+
+        # sort and look for and invalid issues
+        issues.sort()
+        package_files_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+
+        return package_files_valid, issues
 
     @staticmethod
     def _validate_selftest(path_package):

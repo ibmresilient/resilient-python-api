@@ -169,3 +169,72 @@ selftest_attributes = [
         "pass_msg": "selftest.py successfully ran for '{0}'",
     }
 ]
+
+
+# check package files are present
+package_files = {
+    "MANIFEST.in": {
+        "func": sdk_validate_helpers.package_files_manifest,
+
+        "fail_name": "MANIFEST.in invalid",
+        "fail_msg": "MANIFEST.in is missing the following lines: {0}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Please be sure to include all necessary files in your MANIFEST.in list",
+
+        "missing_name": "MANIFEST.in not found",
+        "missing_msg": "MANIFEST.in not found in package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+
+        "pass_name": "MANIFEST.in valid",
+        "pass_msg": "MANIFEST.in has all template lines included and thus passes"
+    },
+    "apikey_permissions.txt": {
+        "func": sdk_validate_helpers.package_files_apikey_pem,
+
+        "fail_name": "'apikey_permnissions.txt' invalid",
+        "fail_msg": "'apikey_permnissions.txt' is missing the following required permissions: {0}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Please add the required permissions to your 'apikey_permnissions.txt' file",
+
+        "missing_name": "apikey_permissions.txt not found",
+        "missing_msg": "apikey_permissions.txt not found in package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+
+        "pass_name": "'apikey_permissions.txt' valid",
+        "pass_msg": "'apikey_permnissions.txt' is valid; it has at least the base permissions",
+    },
+    "Dockerfile": {
+        "func": sdk_validate_helpers.package_files_template_match,
+
+        "fail_name": "'Dockerfile' invalid",
+        "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.2}% match). Difference from template:\n\n\t\t{1}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "fail_solution": "Ensure that the Dockerfile was generated with the lastest version of the resilient-sdk...",
+
+        "missing_name": "'Dockerfile' not found",
+        "missing_msg": "'Dockerfile' not found in package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+
+        "pass_name": "'Dockerfile' valid",
+        "pass_msg": "'Dockerfile' matches the template"
+    },
+    "entrypoint.sh": {
+        "func": sdk_validate_helpers.package_files_template_match,
+
+        "fail_name": "'entrypoint.sh' file invalid",
+        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.2}% match). Difference from template: \n\n\t\t{1}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "fail_solution": "Please update your 'entrypoint.sh' file to match the latest template version using 'resilient-sdk codegen --reload'",
+
+        "missing_name": "'entrypoint.sh' not found",
+        "missing_msg": "'entrypoint.sh' not found in package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+
+        "pass_name": "'entrypoint.sh' valid",
+        "pass_msg": "'entrypoint.sh' file matched template file"
+    }
+}

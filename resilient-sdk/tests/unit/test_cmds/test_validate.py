@@ -138,6 +138,76 @@ def test_fail_validate_selftest_py_file(fx_copy_fn_main_mock_integration):
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
         assert results[1][1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
+def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = {
+        "mock_valid_file": {"func": lambda **_: SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)}
+    }
+
+    # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.validate_file_paths") as mock_validate_file:
+        mock_validate_file.return_value = None
+
+        # mock the package_file data to mock_data
+        with patch("resilient_sdk.cmds.validate.validation_configurations.package_files", new=mock_data):
+
+            results = CmdValidate._validate_package_files(mock_path_package)
+
+            assert len(results) == 2
+            assert results[0]
+            assert len(results[1]) == 1
+            assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = {
+        "mock_valid_file": {"func": lambda **_: SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)},
+        "mock_invalid_file": {"func": lambda **_: SDKValidateIssue("fail", "fail")}
+    }
+
+    # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.validate_file_paths") as mock_validate_file:
+        mock_validate_file.return_value = None
+
+        # mock the package_file data to mock_data
+        with patch("resilient_sdk.cmds.validate.validation_configurations.package_files", new=mock_data):
+
+            results = CmdValidate._validate_package_files(mock_path_package)
+
+            assert len(results) == 2
+            assert not results[0]
+            assert len(results[1]) == 2
+
+            # note that the results should be sorted so the critical issue comes up first
+            assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+            assert results[1][1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration):
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = {
+        "mock_missing_file": {
+            "missing_name": "mock_name",
+            "missing_msg": "mock_msg {0}",
+            "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+            "missing_solution": "mock_solution"
+        }
+    }
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.package_files", new=mock_data):
+
+        results = CmdValidate._validate_package_files(mock_path_package)
+
+        assert len(results) == 2
+        assert not results[0]
+        assert len(results[1]) == 1
+        assert mock_path_package in results[1][0].description
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert results[1][0].solution == "mock_solution"
+
+
 def test_get_log_level():
     assert CmdValidate._get_log_level(int("50")) == 10 # should only work on str's (returns DEBUG when given an int)
 

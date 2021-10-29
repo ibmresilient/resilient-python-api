@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 import pytest
 from resilient_sdk.cmds import base_cmd, CmdCodegen
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from tests import helpers
@@ -110,7 +110,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         "export_data": {"server_version": {"version": "35.0.0"}}
     }
 
-    jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
+    jinja_env = sdk_helpers.setup_jinja_env(constants.PACKAGE_TEMPLATE_PATH)
 
     jinja_mapping_dict = {
         "MANIFEST.in": ("MANIFEST.in.jinja2", mock_jinja_data),

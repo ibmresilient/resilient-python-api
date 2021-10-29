@@ -82,6 +82,21 @@ def setup_jinja_env(relative_path_to_templates):
 
     return jinja_env
 
+def setup_env_and_render_jinja_file(relative_path_to_template, filename, *args, **kwargs):
+    """
+    Creates a Jinja env and returns the rendered string from a jinja template of a given filename.
+    Passes on args and kwargs to the render function
+    """
+
+    # instantiate Jinja2 Environment with path to Jinja2 templates
+    jinja_env = setup_jinja_env(relative_path_to_template)
+
+    # Load the Jinja2 Template from filename + jinja2 ext
+    file_template = jinja_env.get_template(filename + ".jinja2")
+
+    # render the template with the required variables and return the string value
+    return file_template.render(*args, **kwargs)
+
 
 def write_file(path, contents):
     """Writes the String contents to a file at path"""
