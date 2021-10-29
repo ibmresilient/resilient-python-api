@@ -36,10 +36,12 @@ class CmdValidate(BaseCmd):
     CMD_HELP = "Validate an App before packaging it"
     CMD_USAGE = """
     $ resilient-sdk validate -p <name_of_package>
+    $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     CMD_DESCRIPTION = CMD_HELP
+    CMD_ADD_PARSERS = ["app_config_parser"]
 
     VALIDATE_ISSUES = {}
     SUMMARY_LIST = []
@@ -463,7 +465,7 @@ class CmdValidate(BaseCmd):
         return package_files_valid, issues
 
     @staticmethod
-    def _validate_selftest(path_package):
+    def _validate_selftest(path_package, args):
         """
         Validate the contents of the selftest.py file in the given package:
         - check if the package resilient-circuits>=42.0.0 is installed on this Python environment 
@@ -501,7 +503,8 @@ class CmdValidate(BaseCmd):
                 attr_dict=attr_dict,
                 path_selftest_py_file=path_selftest_py_file,
                 package_name=package_name,
-                path_package=path_package
+                path_package=path_package,
+                path_app_config=args.config
             )
             issues.append(issue)
             if not issue_passes:
@@ -551,12 +554,11 @@ class CmdValidate(BaseCmd):
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        # validate setup.py file using static helper method
-        file_valid, issues = self._validate_selftest(path_package)
+        # validate selftest.py and then execute it if valid
+        file_valid, issues = self._validate_selftest(path_package, args)
         self.VALIDATE_ISSUES["selftest.py"] = issues
         self.SUMMARY_LIST += issues
 
-        # log output from _validate_setup
         for issue in issues:
             self._log(issue.get_logging_level(), issue.error_str())
 

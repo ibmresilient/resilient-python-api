@@ -15,6 +15,7 @@ def test_cmd_extract_setup(fx_get_sub_parser, fx_cmd_line_args_extract):
     assert cmd_extract.CMD_USAGE == """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk extract --script 'custom_script' --zip
+    $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     assert cmd_extract.CMD_DESCRIPTION == "Extract data in order to publish a .res export file"
     assert cmd_extract.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]
