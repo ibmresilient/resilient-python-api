@@ -554,12 +554,11 @@ class CmdValidate(BaseCmd):
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        # validate setup.py file using static helper method
+        # validate selftest.py and then execute it if valid
         file_valid, issues = self._validate_selftest(path_package, args)
         self.VALIDATE_ISSUES["selftest.py"] = issues
         self.SUMMARY_LIST += issues
 
-        # log output from _validate_setup
         for issue in issues:
             self._log(issue.get_logging_level(), issue.error_str())
 
