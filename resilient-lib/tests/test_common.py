@@ -6,6 +6,7 @@ import shutil
 import unittest
 import logging
 import pytest
+from collections import namedtuple
 
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
@@ -124,6 +125,17 @@ class TestFunctionMetrics(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,
                                     "'str_input' is mandatory and still has its placeholder value of 'some text'. You must set this value correctly to run this function"):
             validate_fields(mandatory_fields, inputs)
+
+        # Test works with a namedtuple
+        inputs_as_named_tuple = namedtuple("fn_inputs", inputs.keys())(*inputs.values())
+        self.assertEquals(validate_fields(("bool_input_true"), inputs_as_named_tuple).get("bool_input_true"), True)
+
+        validated_named_tuple_inputs_i = validate_fields([], inputs_as_named_tuple)
+        self.assertEquals(validated_named_tuple_inputs_i, expected_output)
+
+        # Test called again on a normalized dict
+        validated_named_tuple_inputs_ii = validate_fields([], validated_named_tuple_inputs_i)
+        self.assertEquals(validated_named_tuple_inputs_ii, expected_output)
 
     def test_unescape(self):
         # unescape(data)

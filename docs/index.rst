@@ -1,26 +1,11 @@
-.. resilient documentation master file, created by
-   sphinx-quickstart on Wed Aug 30 12:27:13 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+=========================
+IBM SOAR Python Libraries
+=========================
 
-Resilient Python API Library
-============================
+**Welcome to our  documentation!**
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Contents:
+   :maxdepth: 2
 
-   resilient
-   resilient_circuits
-   resilient_lib
-   pytest_resilient_circuits
-   rc-webserver
-   rc-cts
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   pages/resilient-lib/resilient-lib
+   pages/resilient-sdk/resilient-sdk
