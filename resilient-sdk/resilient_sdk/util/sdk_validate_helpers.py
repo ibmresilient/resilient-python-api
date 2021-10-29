@@ -164,6 +164,9 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     :rtype: (bool, SDKValidateIssue)
     """
 
+    # Set env var
+    LOG.debug("Setting $APP_CONFIG_FILE to '%s'", _.get("path_app_config", ""))
+    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = _.get("path_app_config", "")
 
     # run selftest in package as a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
@@ -178,6 +181,9 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
         sys.stdout.flush()
         i = (i + 1) % len(waiting_bar)
         time.sleep(0.2)
+
+    # Unset env var
+    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = ""
 
     sys.stdout.write("\r")
     sys.stdout.write("selftest run complete\n")

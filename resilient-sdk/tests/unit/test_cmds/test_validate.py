@@ -105,15 +105,17 @@ def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
         assert results[1][1].severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
         assert results[1][2].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
 
-def test_pass_validate_selftest_py_file(fx_copy_fn_main_mock_integration):
+def test_pass_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_validate, fx_copy_fn_main_mock_integration):
 
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
     mock_package_path = fx_copy_fn_main_mock_integration[1]
     mock_data = [
         { "func": lambda **x: (True, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)) }
     ]
 
     with patch("resilient_sdk.cmds.validate.validation_configurations.selftest_attributes", new=mock_data):
-        results = CmdValidate._validate_selftest(mock_package_path)
+        results = CmdValidate._validate_selftest(mock_package_path, args)
 
         assert results[0]
         assert len(results) == 2
@@ -121,8 +123,10 @@ def test_pass_validate_selftest_py_file(fx_copy_fn_main_mock_integration):
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 
-def test_fail_validate_selftest_py_file(fx_copy_fn_main_mock_integration):
+def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_validate, fx_copy_fn_main_mock_integration):
 
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
     mock_package_path = fx_copy_fn_main_mock_integration[1]
     mock_data = [
         { "func": lambda **x: (True, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)) },
@@ -130,7 +134,7 @@ def test_fail_validate_selftest_py_file(fx_copy_fn_main_mock_integration):
     ]
 
     with patch("resilient_sdk.cmds.validate.validation_configurations.selftest_attributes", new=mock_data):
-        results = CmdValidate._validate_selftest(mock_package_path)
+        results = CmdValidate._validate_selftest(mock_package_path, args)
 
         assert not results[0]
         assert len(results) == 2
