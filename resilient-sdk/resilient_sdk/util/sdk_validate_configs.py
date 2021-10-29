@@ -178,7 +178,7 @@ package_files = {
 
         "fail_name": "MANIFEST.in invalid",
         "fail_msg": "MANIFEST.in is missing the following lines: {0}",
-        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL, # TODO: maybe warning?
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "fail_solution": "Please be sure to include all necessary files in your MANIFEST.in list",
 
         "missing_name": "MANIFEST.in not found",
@@ -211,7 +211,7 @@ package_files = {
         "fail_name": "'Dockerfile' invalid",
         "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.2}% match). Difference from template:\n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
-        "fail_solution": "Please make sure that if you implement a custom 'Dockerfile' you've made all the appropriate changes and tested it well",
+        "fail_solution": "Ensure that the Dockerfile was generated with the lastest version of the resilient-sdk...",
 
         "missing_name": "'Dockerfile' not found",
         "missing_msg": "'Dockerfile' not found in package at path {0}",

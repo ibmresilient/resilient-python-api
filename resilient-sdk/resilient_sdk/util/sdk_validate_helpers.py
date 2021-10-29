@@ -290,7 +290,6 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
 
     if diffs:
         # some lines from template weren't in the given file so this validation fails
-        # TODO: can this be a warning?
         return SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(diffs),
@@ -376,7 +375,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
 
     # render jinja file
     file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, 
-                                    package_name=package_name, version=package_version)
+                    package_name=package_name, version=package_version, resilient_libraries_version=sdk_helpers.get_resilient_sdk_version())
     
     # read the package's file
     file_contents = sdk_helpers.read_file(path_file)
