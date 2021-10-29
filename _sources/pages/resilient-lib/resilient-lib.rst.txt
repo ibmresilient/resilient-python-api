@@ -54,7 +54,7 @@ Add this section to define proxy settings to be used for all integrations that u
 
    #. **RequestsCommon.execute() Function:** the ``proxies`` parameter.
    #. **Environmental Variables:** ``HTTPS_PROXY``, ``HTTP_PROXY`` and ``NO_PROXY`` set
-      using the ``manageAppHost proxy`` command the on AppHost.
+      using the ``manageAppHost proxy`` command on the App Host.
    #. **Function Options:** ``http_proxy`` or ``https_proxy`` configs set in the
       **Function Section** (``[my_function]``) of your app.config file.
    #. **Integrations Options:** ``http_proxy`` or ``https_proxy`` configs set in the
