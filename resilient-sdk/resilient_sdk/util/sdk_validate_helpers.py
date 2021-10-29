@@ -165,7 +165,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     """
 
     # Set env var
-    LOG.debug("Setting $APP_CONFIG_FILE to '%s'", _.get("path_app_config", ""))
+    LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", _.get("path_app_config", ""))
     os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = _.get("path_app_config", "")
 
     # run selftest in package as a subprocess
