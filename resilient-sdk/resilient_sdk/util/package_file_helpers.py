@@ -114,11 +114,14 @@ REPOSITORY_NAME = "ibmresilient"
 # Color dict for printing in color
 COLORS = {
     "PASS": '\033[92m',
+    "GREEN": '\033[92m',
     "DEBUG": '\033[92m',
     "FAIL": '\033[91m',
+    "RED": '\033[91m',
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',
     "INFO": '\033[94m',
+    "BLUE": '\033[94m',
     "END": '\033[0m'
 }
 
@@ -977,3 +980,30 @@ def color_output(s, level):
     :rtype: str
     """
     return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
+
+def color_diff_output(diff):
+    """
+    Colors output of a diff iterator.
+    Makes lines that are '-' red and '+' green.
+
+    :param diff: generator of diffs
+    :type diff: Iterator[str]
+    :return: colored generator of diffs
+    :rtype: Iterator[str]
+    """
+
+    key = {
+        "+++": COLORS.get("GREEN"),
+        "+": COLORS.get("GREEN"),
+        "---": COLORS.get("RED"),
+        "-": COLORS.get("RED"),
+        "^": COLORS.get("BLUE"),
+    }
+
+    for line in diff:
+        for k in key:
+            if line.startswith(k):
+                yield  key.get(k, "") + line[0:len(k)] + COLORS.get("END") + line[len(k):]
+                break
+        else:
+            yield line

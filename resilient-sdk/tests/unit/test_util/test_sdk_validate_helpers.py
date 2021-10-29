@@ -198,7 +198,7 @@ def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration):
         result = sdk_validate_helpers.package_files_manifest(package_name, path_file, filename, attr_dict)
 
         assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
 def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
 
@@ -276,7 +276,7 @@ def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
         assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
 def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
 
