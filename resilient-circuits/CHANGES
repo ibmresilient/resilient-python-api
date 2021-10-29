@@ -17,6 +17,7 @@
 * Deprecate 'test' command
 * Remove deprecated commands clone, extract and codegen
 * Increase num_workers limit to 100
+* Added dependency of resilient-lib
 * Bug fixes
 * Handle new app_function decorator
 
