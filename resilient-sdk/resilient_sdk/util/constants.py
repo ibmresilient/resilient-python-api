@@ -21,6 +21,8 @@ SUB_CMD_PACKAGE = ("--package", "-p")
 RES_EXPORT_SUFFIX = ".res"
 # Endpoint url for importing a configuration
 IMPORT_URL = "/configurations/imports"
+# Path to package templates for jinja rendering
+PACKAGE_TEMPLATE_PATH = "data/codegen/templates/package_template"
 
 VALIDATE_LOG_LEVEL_CRITICAL = "CRITICAL"
 VALIDATE_LOG_LEVEL_ERROR = VALIDATE_LOG_LEVEL_CRITICAL
