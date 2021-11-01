@@ -992,18 +992,18 @@ def color_diff_output(diff):
     :rtype: Iterator[str]
     """
 
-    key = {
-        "+++": COLORS.get("GREEN"),
-        "+": COLORS.get("GREEN"),
-        "---": COLORS.get("RED"),
-        "-": COLORS.get("RED"),
-        "^": COLORS.get("BLUE"),
-    }
+    key_pairs = [
+        ("+++", COLORS.get("GREEN")),
+        ("+", COLORS.get("GREEN")),
+        ("---", COLORS.get("RED")),
+        ("-", COLORS.get("RED")),
+        ("^", COLORS.get("BLUE")),
+    ]
 
     for line in diff:
-        for k in key:
-            if line.startswith(k):
-                yield  key.get(k, "") + line[0:len(k)] + COLORS.get("END") + line[len(k):]
+        for key, color in key_pairs:
+            if line.startswith(key):
+                yield  color + line[0:len(key)] + COLORS.get("END") + line[len(key):]
                 break
         else:
             yield line
