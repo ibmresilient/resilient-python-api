@@ -4,3 +4,4 @@ include resilient_sdk/LICENSE
 recursive-include resilient_sdk/data/* *.jinja2
 recursive-include resilient_sdk/data/* *.png
 include ./CHANGES
+recursive-exclude tests *

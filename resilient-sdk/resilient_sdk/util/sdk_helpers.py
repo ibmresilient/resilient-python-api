@@ -104,7 +104,7 @@ def write_file(path, contents):
     if sys.version_info[0] < 3 and isinstance(contents, str):
         contents = unicode(contents, "utf-8")
 
-    with io.open(path, mode="wt", encoding="utf-8") as the_file:
+    with io.open(path, mode="wt", encoding="utf-8", newline="\n") as the_file:
         the_file.write(contents)
 
 

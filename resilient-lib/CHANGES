@@ -3,6 +3,10 @@
 * Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
 * ``validate_fields`` also handles a ``namedtuple``
 
+**2021-11: version 42.3**
+
+* No major changes. Just bumping build number to coincide with other builds
+
 **2021-10: version 42.2**
 
 * No major changes. Just bumping build number to coincide with other builds
