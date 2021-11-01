@@ -1,8 +1,11 @@
 **2021-11: version 43.0**
 
 * Added examples to ``codegen`` template
-* ``codegen`` to include ``apikey_permissions.txt`` in MANIFEST.in file
 
+**2021-11: version 42.3**
+
+* Enforce unix style line endings (``\n``) when writing files
+* ``codegen`` to include ``apikey_permissions.txt`` in MANIFEST.in file
 
 **2021-10: version 42.2**
 
