@@ -34,6 +34,7 @@ class CmdExtract(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk extract --script 'custom_script' --zip
+    $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]

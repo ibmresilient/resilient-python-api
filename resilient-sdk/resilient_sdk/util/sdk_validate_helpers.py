@@ -164,6 +164,9 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     :rtype: (bool, SDKValidateIssue)
     """
 
+    # Set env var
+    LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", _.get("path_app_config", ""))
+    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = _.get("path_app_config", "")
 
     # run selftest in package as a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
@@ -178,6 +181,9 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
         sys.stdout.flush()
         i = (i + 1) % len(waiting_bar)
         time.sleep(0.2)
+
+    # Unset env var
+    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = ""
 
     sys.stdout.write("\r")
     sys.stdout.write("selftest run complete\n")
@@ -390,7 +396,9 @@ def package_files_template_match(package_name, package_version, path_file, filen
     # if less than a perfect match, the match fails
     comp_ratio = s_diff.ratio()
     if comp_ratio < 1.0:
-        diff = difflib.unified_diff(template_contents, file_contents, n=0) # n is number of context lines
+        diff = difflib.unified_diff(template_contents, file_contents, 
+                                    fromfile="template_"+filename, tofile=filename, n=0) # n is number of context lines
+        diff = package_helpers.color_diff_output(diff) # add color to diff output
         return SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(comp_ratio, "\t\t".join(diff)),
