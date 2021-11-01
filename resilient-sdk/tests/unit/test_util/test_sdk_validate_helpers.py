@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import difflib
 import os
 
 import mock
@@ -198,7 +199,7 @@ def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration):
         result = sdk_validate_helpers.package_files_manifest(package_name, path_file, filename, attr_dict)
 
         assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
 def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
 
@@ -276,7 +277,7 @@ def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
         assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
 def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
 
@@ -294,3 +295,23 @@ def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
 
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_difflib_unified_diff_used_in_template_match():
+    """A quick test to check that difflib.unified_diff works the same as when we wrote
+    code that uses it. If this test fails, make sure that all logic using this difflib output format
+    is updated to reflect that change in difflib. Specifically, check that 
+    package_file_helpers.color_diff_output is updated."""
+
+    mock_fromfile_data = ["line 2"]
+    mock_tofile_data = ["line 1"]
+    
+    diff = difflib.unified_diff(mock_fromfile_data, mock_tofile_data, n=0)
+
+    # check that the lines are still the same that we'd expect when this was originally written
+    for i, line in enumerate(diff):
+        if i == 0:
+            assert line.startswith("---")
+        if i == 1:
+            assert line.startswith("+++")
+        if i == 2:
+            assert line.startswith("@@ -1 +1 @@")

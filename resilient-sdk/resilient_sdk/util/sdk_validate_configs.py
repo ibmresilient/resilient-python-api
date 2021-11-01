@@ -178,8 +178,8 @@ package_files = {
 
         "fail_name": "MANIFEST.in invalid",
         "fail_msg": "MANIFEST.in is missing the following lines: {0}",
-        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_solution": "Please be sure to include all necessary files in your MANIFEST.in list",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "fail_solution": "The MANIFEST.in file is the list of files to be included during packaging. Please be sure it is up to date",
 
         "missing_name": "MANIFEST.in not found",
         "missing_msg": "MANIFEST.in not found in package at path {0}",
@@ -226,7 +226,7 @@ package_files = {
 
         "fail_name": "'entrypoint.sh' file invalid",
         "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.2}% match). Difference from template: \n\n\t\t{1}",
-        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "fail_solution": "Please update your 'entrypoint.sh' file to match the latest template version using 'resilient-sdk codegen --reload'",
 
         "missing_name": "'entrypoint.sh' not found",

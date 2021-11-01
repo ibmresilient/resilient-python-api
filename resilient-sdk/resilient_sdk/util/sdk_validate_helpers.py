@@ -396,7 +396,9 @@ def package_files_template_match(package_name, package_version, path_file, filen
     # if less than a perfect match, the match fails
     comp_ratio = s_diff.ratio()
     if comp_ratio < 1.0:
-        diff = difflib.unified_diff(template_contents, file_contents, n=0) # n is number of context lines
+        diff = difflib.unified_diff(template_contents, file_contents, 
+                                    fromfile="template_"+filename, tofile=filename, n=0) # n is number of context lines
+        diff = package_helpers.color_diff_output(diff) # add color to diff output
         return SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(comp_ratio, "\t\t".join(diff)),

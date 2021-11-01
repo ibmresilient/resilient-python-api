@@ -248,3 +248,35 @@ def test_color_output():
     for s, level in mock_data_to_color:
         output = package_helpers.color_output(s, level)
         assert output.startswith(package_helpers.COLORS[level]) and output.endswith(package_helpers.COLORS["END"]) and s in output
+
+def test_color_diff_output():
+
+    mock_diff_data_generator = (
+        "--- fromfile\n",
+        "+++ tofile\n",
+        "\n",
+        "@@ -1 +1 @@\n",
+        "-test\n",
+        "+Testing\n"
+    )
+
+    output = package_helpers.color_diff_output(mock_diff_data_generator)
+
+    for i, line in enumerate(output):
+        # for lines that are colored, check that they start with the right color
+        # then check that the original start of the line is still there
+        if i == 0:
+            assert line.startswith(package_helpers.COLORS["RED"])
+            assert line[len(package_helpers.COLORS["RED"]):].startswith("---" + package_helpers.COLORS["END"])
+        elif i == 1:
+            assert line.startswith(package_helpers.COLORS["GREEN"])
+            assert line[len(package_helpers.COLORS["GREEN"]):].startswith("+++" + package_helpers.COLORS["END"])
+        elif i == 4:
+            assert line.startswith(package_helpers.COLORS["RED"])
+            assert line[len(package_helpers.COLORS["RED"]):].startswith("-" + package_helpers.COLORS["END"])
+        elif i == 5:
+            assert line.startswith(package_helpers.COLORS["GREEN"])
+            assert line[len(package_helpers.COLORS["GREEN"]):].startswith("+" + package_helpers.COLORS["END"])
+        else:
+            # lines that shouldn't get any color added
+            assert line == mock_diff_data_generator[i]
