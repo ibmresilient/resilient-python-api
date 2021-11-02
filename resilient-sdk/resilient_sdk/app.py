@@ -81,7 +81,7 @@ def main():
     """
 
     # add color support for WINDOWS
-    os.system("color")
+    os.system("")
 
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV)
