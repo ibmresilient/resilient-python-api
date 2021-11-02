@@ -210,7 +210,7 @@ package_files = {
         "func": sdk_validate_helpers.package_files_template_match,
 
         "fail_name": "'Dockerfile' invalid",
-        "fail_msg": "'Dockerfile' doesn't match the templated file ({0}% match). Difference from template:\n\n\t\t{1}",
+        "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.0f}% match). Difference from template:\n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
         "fail_solution": "Ensure that the 'Dockerfile' was generated with the lastest version of the resilient-sdk...",
 
@@ -226,7 +226,7 @@ package_files = {
         "func": sdk_validate_helpers.package_files_template_match,
 
         "fail_name": "'entrypoint.sh' file invalid",
-        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0}% match). Difference from template: \n\n\t\t{1}",
+        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.0f}% match). Difference from template: \n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
         "fail_solution": "Ensure that the 'entrypoint.sh' was generated with the lastest version of the resilient-sdk...",
 

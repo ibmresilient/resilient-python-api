@@ -406,7 +406,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
         diff = package_helpers.color_diff_output(diff) # add color to diff output
         return SDKValidateIssue(
             name=attr_dict.get("fail_name"),
-            description=attr_dict.get("fail_msg").format(int(comp_ratio*100), "\t\t".join(diff)),
+            description=attr_dict.get("fail_msg").format(comp_ratio*100, "\t\t".join(diff)),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )
