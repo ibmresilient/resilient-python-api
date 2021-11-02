@@ -3,7 +3,6 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import os
-import shutil
 import sys
 
 from mock import patch
@@ -253,7 +252,7 @@ def test_print_status(fx_get_sub_parser, caplog):
     assert "testprintstatus FAIL" in caplog.text
 
 
-def test_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
+def test_custom_app_config_file(fx_pip_install_fn_main_mock_integration, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
     mock_app_config_path = mock_paths.TEST_TEMP_DIR + "/mock_app.config"
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
 
@@ -272,7 +271,7 @@ def test_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_cmd_line_ar
 
         cmd_validate.execute_command(args)
         assert "Couldn't read config file '{0}'".format(mock_app_config_path) in caplog.text
-        assert not os.environ[constants.ENV_VAR_APP_CONFIG_FILE]
+        assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
 
 def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client):
@@ -292,7 +291,7 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
 
         cmd_validate.execute_command(args)
 
-        assert not os.environ[constants.ENV_VAR_APP_CONFIG_FILE]
+        assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
 
 def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):

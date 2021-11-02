@@ -20,6 +20,8 @@ import os
 import shutil
 import pytest
 import logging
+import subprocess
+import time
 import resilient_sdk.app as app
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
@@ -121,6 +123,34 @@ def fx_copy_fn_main_mock_integration():
     shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
     yield (mock_integration_name, path_fn_main_mock_integration)
     _rm_temp_dir()
+
+
+@pytest.fixture
+def fx_pip_install_fn_main_mock_integration():
+    """
+    Before: pip installs our mock integration at mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION
+    After: pip uninstalls mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    """
+
+    install_cmd = ["pip", "install", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION]
+    proc = subprocess.Popen(install_cmd)
+
+    while proc.poll() is None:
+        sys.stdout.write("\r")
+        sys.stdout.write("pip installing: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION))
+        sys.stdout.flush()
+        time.sleep(0.2)
+
+    yield
+
+    unisntall_cmd = ["pip", "uninstall", "-y", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME]
+    proc = subprocess.Popen(unisntall_cmd)
+
+    while proc.poll() is None:
+        sys.stdout.write("\r")
+        sys.stdout.write("pip uninstalling: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME))
+        sys.stdout.flush()
+        time.sleep(0.2)
 
 
 @pytest.fixture
