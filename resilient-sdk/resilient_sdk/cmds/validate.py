@@ -370,9 +370,9 @@ class CmdValidate(BaseCmd):
             else: # else is present and did not fail
                 # passes checks
                 name = "{0} valid in setup.py".format(attr)
-                description = u"'{0}' passed with value {1}".format(attr, parsed_attr)
+                description = u"'{0}' passed".format(attr)
                 severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
-                solution = ""
+                solution = "Value found for '{0}' in setup.py: '{1}'"
 
             # for each attr create a SDKValidateIssue to be appended to the issues list
             issue = SDKValidateIssue(
@@ -427,8 +427,14 @@ class CmdValidate(BaseCmd):
         for filename in validation_configurations.package_files:
             attr_dict = validation_configurations.package_files.get(filename)
 
+            # if a specific path is required for this file, it will be specified in the "path" attribute
+            if attr_dict.get("path"):
+                path_file = os.path.join(path_package, attr_dict.get("path").format(package_name))
+            else:
+                # otherwise the file is in root package directory
+                path_file = os.path.join(path_package, filename)
+
             # check that the file exists
-            path_file = os.path.join(path_package, filename)
             try: 
                 sdk_helpers.validate_file_paths(os.R_OK, path_file)
                 LOG.debug("{0} file found at path {1}\n".format(filename, path_file))
@@ -438,7 +444,7 @@ class CmdValidate(BaseCmd):
                     name=attr_dict.get("missing_name"),
                     description=attr_dict.get("missing_msg").format(path_file),
                     severity=attr_dict.get("missing_severity"),
-                    solution=attr_dict.get("missing_solution")
+                    solution=attr_dict.get("missing_solution").format(path_package)
                 )
             else: # SDKException wasn't caught -- the file exists!
 

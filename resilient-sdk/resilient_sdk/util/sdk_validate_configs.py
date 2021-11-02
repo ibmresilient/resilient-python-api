@@ -184,10 +184,10 @@ package_files = {
         "missing_name": "MANIFEST.in not found",
         "missing_msg": "MANIFEST.in not found in package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+        "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
 
         "pass_name": "MANIFEST.in valid",
-        "pass_msg": "MANIFEST.in has all template lines included and thus passes"
+        "pass_msg": "MANIFEST.in has the minimum files included"
     },
     "apikey_permissions.txt": {
         "func": sdk_validate_helpers.package_files_apikey_pem,
@@ -200,23 +200,24 @@ package_files = {
         "missing_name": "apikey_permissions.txt not found",
         "missing_msg": "apikey_permissions.txt not found in package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+        "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
 
         "pass_name": "'apikey_permissions.txt' valid",
         "pass_msg": "'apikey_permnissions.txt' is valid; it has at least the base permissions",
+        "pass_solution": "Permissions found: {0}"
     },
     "Dockerfile": {
         "func": sdk_validate_helpers.package_files_template_match,
 
         "fail_name": "'Dockerfile' invalid",
-        "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.2}% match). Difference from template:\n\n\t\t{1}",
+        "fail_msg": "'Dockerfile' doesn't match the templated file ({0:.0f}% match). Difference from template:\n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
-        "fail_solution": "Ensure that the Dockerfile was generated with the lastest version of the resilient-sdk...",
+        "fail_solution": "Ensure that the 'Dockerfile' was generated with the lastest version of the resilient-sdk...",
 
         "missing_name": "'Dockerfile' not found",
         "missing_msg": "'Dockerfile' not found in package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+        "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
 
         "pass_name": "'Dockerfile' valid",
         "pass_msg": "'Dockerfile' matches the template"
@@ -225,16 +226,57 @@ package_files = {
         "func": sdk_validate_helpers.package_files_template_match,
 
         "fail_name": "'entrypoint.sh' file invalid",
-        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.2}% match). Difference from template: \n\n\t\t{1}",
-        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_solution": "Please update your 'entrypoint.sh' file to match the latest template version using 'resilient-sdk codegen --reload'",
+        "fail_msg": "'entrypoint.sh' file doesn't match the templated file ({0:.0f}% match). Difference from template: \n\n\t\t{1}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+        "fail_solution": "Ensure that the 'entrypoint.sh' was generated with the lastest version of the resilient-sdk...",
 
         "missing_name": "'entrypoint.sh' not found",
         "missing_msg": "'entrypoint.sh' not found in package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Reload code using 'resilient-sdk codegen --reload'", # TODO: wording
+        "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
 
         "pass_name": "'entrypoint.sh' valid",
         "pass_msg": "'entrypoint.sh' file matched template file"
+    },
+    "config.py": {
+        "func": sdk_validate_helpers.package_files_validate_config_py,
+        "path": "{0}/util/config.py",
+
+        "warn_name": "'config.py' config section empty",
+        "warn_msg": "'config.py' does not return a string value",
+        "warn_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+        "warn_solution": "The 'config.py' file specifies the structure of the app.config settings for your app",
+
+        "fail_name": "'config.py' file invalid",
+        "fail_msg": u"{0}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
+
+        "missing_name": "'config.py' not found",
+        "missing_msg": "'config.py' not found in package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
+
+        "pass_name": "'config.py' valid",
+        "pass_msg": "'config.py' returned a valid app.config value",
+        "pass_solution": u"config data: \n\t\t{0}"
+    },
+    "customize.py": {
+        "func": sdk_validate_helpers.package_files_validate_customize_py,
+        "path": "{0}/util/customize.py",
+
+        "fail_name": "'customize.py' file invalid",
+        "fail_msg": "'customize.py' ImportDefinition invalid. {0}",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
+
+        "missing_name": "'customize.py' not found",
+        "missing_msg": "'customize.py' not found in package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
+
+        "pass_name": "'customize.py' valid",
+        "pass_msg": "'customize.py' returned a valid import definition",
+        "pass_solution": u"ImportDefinition found: \n\t\t{0}"
     }
 }

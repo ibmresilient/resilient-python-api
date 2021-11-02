@@ -10,6 +10,7 @@ import pkg_resources
 from mock import patch
 from resilient_sdk.util import (constants, sdk_validate_configs,
                                 sdk_validate_helpers)
+from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
 
@@ -277,7 +278,7 @@ def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
         assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
 def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
 
@@ -315,3 +316,86 @@ def test_difflib_unified_diff_used_in_template_match():
             assert line.startswith("+++")
         if i == 2:
             assert line.startswith("@@ -1 +1 @@")
+
+def test_pass_package_files_validate_config_py(fx_copy_fn_main_mock_integration):
+    
+    filename = "config.py"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock config parsing - return valid config
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_configs_from_config_py") as mock_config:
+
+        mock_config.return_value = ("[fake_config]\nfake=fake", [{'name': 'fake', 'placeholder': 'fake'}])
+
+        result = sdk_validate_helpers.package_files_validate_config_py(path_file, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+        assert "fake=fake" in result.solution
+
+def test_warn_package_files_validate_config_py(fx_copy_fn_main_mock_integration):
+    
+    filename = "config.py"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock config parsing - return no config
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_configs_from_config_py") as mock_config:
+
+        mock_config.return_value = ("", [])
+
+        result = sdk_validate_helpers.package_files_validate_config_py(path_file, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+def test_fail_package_files_validate_config_py(fx_copy_fn_main_mock_integration):
+    
+    filename = "config.py"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock config parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_configs_from_config_py") as mock_config:
+
+        mock_config.side_effect = SDKException("failed")
+
+        result = sdk_validate_helpers.package_files_validate_config_py(path_file, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+def test_pass_package_files_validate_customize_py(fx_copy_fn_main_mock_integration):
+    
+    filename = "customize.py"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock import def parsing - given a valid dict (actual validation of the import def happens)
+    # in the get_import_definition_from_customize_py which is tested in 
+    # test_package_file_helpers.test_load_customize_py_module
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_import_definition_from_customize_py") as mock_config:
+
+        mock_config.return_value = {"action_order": [], "actions": [ {} ]}
+
+        result = sdk_validate_helpers.package_files_validate_customize_py(path_file, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integration):
+    
+    filename = "customize.py"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_import_definition_from_customize_py") as mock_import_def:
+
+        mock_import_def.side_effect = SDKException("failed")
+
+        result = sdk_validate_helpers.package_files_validate_customize_py(path_file, attr_dict)
+
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
