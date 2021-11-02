@@ -141,7 +141,7 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
         )
 
 
-def selftest_run_selftestpy(attr_dict, package_name, **_):
+def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     """
     selftest.py validation helper method.
     Runs selftest.py and validates the output. There are a few paths this method can take.
@@ -156,6 +156,8 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     :type attr_dict: dict
     :param package_name: (required) name of package being validated
     :type package_name: str
+    :param path_app_config: (optional) path of app config file; pass None if not used
+    :type path_app_config: str
     :param path_selftest_py_file: (optional) path to selftest.py
     :type path_selftest_py_file: str
     :param path_package: (optional) path to package
@@ -165,8 +167,11 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     """
 
     # Set env var
-    LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", _.get("path_app_config", ""))
-    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = _.get("path_app_config", "")
+    path_app_config = kwargs.get("path_app_config")
+    if not path_app_config:
+        path_app_config = ""
+    LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", path_app_config)
+    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = path_app_config
 
     # run selftest in package as a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
@@ -268,7 +273,7 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     :type path_file: str
     :param filename: (required) the name of the file to be validated
     :type filename: str
-    :param attr_dict: (required) dictionary of attributes defined in ``package_files``
+    :param attr_dict: (required) dictionary of attributes for the MANIFEST.in file defined in ``package_files``
     :type attr_dict: dict
     :param _: (unused) other unused named args
     :type _: dict
@@ -319,7 +324,7 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
 
     :param path_file: (required) the path to the file
     :type path_file: str
-    :param attr_dict: (required) dictionary of attributes defined in ``package_files``
+    :param attr_dict: (required) dictionary of attributes for the apikey_permissions.txt file defined in ``package_files``
     :type attr_dict: dict
     :param _: (unused) other unused named args
     :type _: dict
@@ -353,7 +358,7 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
             name=attr_dict.get("pass_name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-            solution=""
+            solution=attr_dict.get("pass_solution").format(file_contents)
         )
     
 
@@ -361,7 +366,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
     """
     Helper method for package files to validate files against their templates.
     Designed for use with Dockerfile and entrypoint.sh, however, could be adjusted to work with 
-    other jinja2 templated files.
+    other jinja2 templated files as long as the goal is to check a full match against the template.
 
     :param package_name: (required) the name of the package
     :type package_name: str
@@ -371,7 +376,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
     :type path_file: str
     :param filename: (required) the name of the file to be validated
     :type filename: str
-    :param attr_dict: (required) dictionary of attributes defined in ``package_files``
+    :param attr_dict: (required) dictionary of attributes for templated files defined in ``package_files``
     :type attr_dict: dict
     :param _: (unused) other unused named args
     :type _: dict
@@ -401,7 +406,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
         diff = package_helpers.color_diff_output(diff) # add color to diff output
         return SDKValidateIssue(
             name=attr_dict.get("fail_name"),
-            description=attr_dict.get("fail_msg").format(comp_ratio, "\t\t".join(diff)),
+            description=attr_dict.get("fail_msg").format(comp_ratio*100, "\t\t".join(diff)),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )
@@ -411,4 +416,105 @@ def package_files_template_match(package_name, package_version, path_file, filen
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
+        )
+
+
+def package_files_validate_config_py(path_file, attr_dict, **_):
+    """
+    Helper method for package files to validate the config.py file.
+    This works by using the get_configs_from_config_py from package_file_helpers.
+    That method returns either an empty string if no config data, or a config string.
+    It is also possible that the get_configs method will raise an Exception;
+    if that happens, fail the validation.
+    The validation passes with a successful parse of the config string or warns
+    if there is no string found.
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the config.py file defined in ``package_files``
+    :type attr_dict: dict
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a issue that describes the validity of the config.py file
+    :rtype: SDKValidateIssue
+    """
+
+    try:
+        # parse the config_str and config_list with helper method
+        # if the config.py file is corrupt an exception will be thrown
+        config_str = package_helpers.get_configs_from_config_py(path_file)[0]
+
+        if config_str != "":
+            # if config data was found
+            return SDKValidateIssue(
+                name=attr_dict.get("pass_name"),
+                description=attr_dict.get("pass_msg"),
+                severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+                solution=attr_dict.get("pass_solution").format("\n\t\t".join(config_str.split("\n")))
+            )
+
+        else:
+            # if there is no config data give warning
+            # it is allowed to not have any configs, just uncommon
+            return SDKValidateIssue(
+                name=attr_dict.get("warn_name"),
+                description=attr_dict.get("warn_msg"),
+                severity=attr_dict.get("warn_severity"),
+                solution=attr_dict.get("warn_solution")
+            )
+
+    except SDKException as e:
+        # if fails for some other reason output the SDKException messages
+        # the reasons here may include misformatted config data, syntax errors in the file, ...
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg").format(str(e).replace("\n", " ")),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution")
+        )
+
+def package_files_validate_customize_py(path_file, attr_dict, **_):
+    """
+    Helper method for package files to validate the import definition from customize.py.
+    This works by using the get_import_definition_from_customize_py helper method from package_file_helpers.
+    That method is designed to look first for an export.res file in <package_path>/<package_name>/<util>/<data>/<export.res>.
+    If that file exists, it returns a simple dict object from reading the JSON there. If not, it goes and looks
+    in the customize.py file and tries to read out the import definition from there. In either case, if
+    something goes wrong an SDKException is raised. This method catches that exception and fails the customize.py
+    validation. If the definition is successfully parsed, the validation passes.
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the customize.py file defined in ``package_files``
+    :type attr_dict: dict
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a passing issue if the customize.py file can yield a successful ImportDefinition; a critical issue if the parse fails
+    :rtype: SDKValidateIssue
+    """
+    
+    try:
+        # parse import definition information from customize.py file
+        # this will raise an SDKException if something goes wrong
+        import_def = package_helpers.get_import_definition_from_customize_py(path_file)
+        return SDKValidateIssue(
+            name=attr_dict.get("pass_name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=attr_dict.get("pass_solution").format(import_def)
+        )
+    except SDKException as e:
+        # something went wrong in reading the import definition.
+        # for more info on what raises an error see the pacakge_helpers
+        # method get_import_definition_from_customize_py called above.
+        
+        # parse out the exception message from "ERROR" to the end
+        message = str(e).replace("\n", " ")
+        message = message[message.index("ERROR"):]
+
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_name"),
+            description=attr_dict.get("fail_msg").format(message),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution")
         )

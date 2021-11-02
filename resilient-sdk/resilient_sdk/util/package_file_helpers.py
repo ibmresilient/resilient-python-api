@@ -940,7 +940,7 @@ def get_required_python_version(python_requires_str):
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
         parsed_version = pkg_resources.parse_version(version_str)
-        if hasattr(parsed_version, "major") and hasattr(parsed_version, "minor"): # python 3 
+        if sys.version_info[0] >= 3: # python 3 
             return (parsed_version.major, parsed_version.minor)
         else: # python 2.7
             major_minor = tuple(int(i) for i in str(parsed_version).split("."))
