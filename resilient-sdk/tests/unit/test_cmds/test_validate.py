@@ -8,6 +8,7 @@ import sys
 
 from mock import patch
 from resilient_sdk.cmds import CmdValidate, base_cmd
+from resilient_sdk.util import constants
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
 
@@ -250,6 +251,49 @@ def test_print_status(fx_get_sub_parser, caplog):
 
     cmd_validate._print_status("INFO", "testprintstatus", False)
     assert "testprintstatus FAIL" in caplog.text
+
+
+def test_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
+    mock_app_config_path = mock_paths.TEST_TEMP_DIR + "/mock_app.config"
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--selftest"])
+    sys.argv.extend(["-c", mock_app_config_path])
+
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_client") as mock_client:
+
+        mock_client.return_value = fx_mock_res_client
+        cmd_validate = CmdValidate(fx_get_sub_parser)
+        args = cmd_validate.parser.parse_known_args()[0]
+
+        cmd_validate.execute_command(args)
+        assert "Couldn't read config file '{0}'".format(mock_app_config_path) in caplog.text
+        assert not os.environ[constants.ENV_VAR_APP_CONFIG_FILE]
+
+
+def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--selftest"])
+
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_client") as mock_client:
+
+        mock_client.return_value = fx_mock_res_client
+        cmd_validate = CmdValidate(fx_get_sub_parser)
+        args = cmd_validate.parser.parse_known_args()[0]
+
+        cmd_validate.execute_command(args)
+
+        assert not os.environ[constants.ENV_VAR_APP_CONFIG_FILE]
+
 
 def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
 

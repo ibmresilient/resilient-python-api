@@ -141,7 +141,7 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
         )
 
 
-def selftest_run_selftestpy(attr_dict, package_name, **_):
+def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     """
     selftest.py validation helper method.
     Runs selftest.py and validates the output. There are a few paths this method can take.
@@ -156,6 +156,8 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     :type attr_dict: dict
     :param package_name: (required) name of package being validated
     :type package_name: str
+    :param path_app_config: (optional) path of app config file; pass None if not used
+    :type path_app_config: str
     :param path_selftest_py_file: (optional) path to selftest.py
     :type path_selftest_py_file: str
     :param path_package: (optional) path to package
@@ -165,8 +167,11 @@ def selftest_run_selftestpy(attr_dict, package_name, **_):
     """
 
     # Set env var
-    LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", _.get("path_app_config", ""))
-    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = _.get("path_app_config", "")
+    path_app_config = kwargs.get("path_app_config")
+    if not path_app_config:
+        path_app_config = ""
+    LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", path_app_config)
+    os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = path_app_config
 
     # run selftest in package as a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
