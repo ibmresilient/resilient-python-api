@@ -25,6 +25,8 @@ IMPORT_URL = "/configurations/imports"
 # Path to package templates for jinja rendering
 PACKAGE_TEMPLATE_PATH = "data/codegen/templates/package_template"
 
+DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
+
 VALIDATE_LOG_LEVEL_CRITICAL = "CRITICAL"
 VALIDATE_LOG_LEVEL_ERROR = VALIDATE_LOG_LEVEL_CRITICAL
 VALIDATE_LOG_LEVEL_WARNING = "WARNING"
