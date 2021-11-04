@@ -108,7 +108,7 @@ def get_proxy_dict(opts):
 class BaseClient(object):
     """Helper for using Resilient REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, certauth=None):
         """
         Args:
           org_name - the name of the organization to use.
@@ -144,6 +144,9 @@ class BaseClient(object):
         self.use_api_key = False
         self.api_key_handle = None      # This is the principle ID for an api key. Also called handle
 
+        # Client Cert based authentication
+        self.cert = certauth
+
     def set_api_key(self, api_key_id, api_key_secret, timeout=None):
         """
         Call this method instead of the connect method in order to use API key
@@ -162,7 +165,8 @@ class BaseClient(object):
                                     proxies=self.proxies,
                                     headers=self.make_headers(),
                                     verify=self.verify,
-                                    timeout=timeout)
+                                    timeout=timeout,
+                                    cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
@@ -232,7 +236,8 @@ class BaseClient(object):
                                      proxies=self.proxies,
                                      headers=self.make_headers(),
                                      verify=self.verify,
-                                     timeout=timeout)
+                                     timeout=timeout,
+                                     cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
@@ -298,7 +303,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
@@ -324,7 +330,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return response.content
 
@@ -354,7 +361,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
@@ -392,7 +400,8 @@ class BaseClient(object):
                                              cookies=self.cookies,
                                              headers=headers,
                                              verify=self.verify,
-                                             timeout=timeout)
+                                             timeout=timeout,
+                                             cert=self.cert)
             BasicHTTPException.raise_if_error(response)
             return json.loads(response.text)
 
@@ -438,7 +447,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         payload = json.loads(response.text)
         try:
@@ -453,7 +463,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         if response.status_code == 200:
             return json.loads(response.text)
         elif response.status_code == 409:
@@ -509,7 +520,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
@@ -532,7 +544,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         if response.status_code == 204:
             # 204 - No content is OK for a delete
             return None
