@@ -409,4 +409,4 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
     result = sdk_validate_helpers.package_files_validate_readme(fx_copy_fn_main_mock_integration[1], path_file, filename, attr_dict)
 
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    assert "screenshots that could not be found" in result.description
+    assert "Cannot find the following screenshot(s) referenced in the README" in result.description
