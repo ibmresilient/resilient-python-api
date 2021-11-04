@@ -362,7 +362,8 @@ class CmdDocgen(BaseCmd):
             "rules": jinja_rules,
             "datatables": jinja_datatables,
             "custom_fields": jinja_custom_fields,
-            "custom_artifact_types": jinja_custom_artifact_types
+            "custom_artifact_types": jinja_custom_artifact_types,
+            "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING
         })
 
         # Create a backup if needed of README
