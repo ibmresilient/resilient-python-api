@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>resilient-circuits &#8212; IBM SOAR Python Libraries 43.0.2370 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico?"/>
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="resilient-lib" href="../resilient-lib/resilient-lib.html" />
+    <link rel="prev" title="resilient" href="../resilient/resilient.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../resilient-lib/resilient-lib.html" title="resilient-lib"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="../resilient/resilient.html" title="resilient"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2370 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">resilient-circuits</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="resilient-circuits">
+<h1>resilient-circuits<a class="headerlink" href="#resilient-circuits" title="Permalink to this headline">¶</a></h1>
+<section id="change-log">
+<h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2021-11: version 42.3</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-10: version 42.2</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-08: version 42.1</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-08: version 42.0</strong></p>
+<ul class="simple">
+<li><p>Added support for <code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code> and <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code> environmental variables. See the App Host Deployment Guide for details.</p></li>
+<li><p>Enhancement to <code class="docutils literal notranslate"><span class="pre">selftest</span></code> to also check connection back to SOAR platform.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">selftest_timeout</span></code> to app.config file. It sets the value in seconds for <code class="docutils literal notranslate"><span class="pre">selftest</span></code> to wait for a response from the SOAR platform.</p></li>
+<li><p>Bug fixes.</p></li>
+</ul>
+<p><strong>2021-06: version 41.1</strong></p>
+<ul class="simple">
+<li><p>Increase <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> limit to 500</p></li>
+</ul>
+<p><strong>2021-05: version 41.0</strong></p>
+<ul class="simple">
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">test</span></code> command</p></li>
+<li><p>Remove deprecated commands <code class="docutils literal notranslate"><span class="pre">clone</span></code>, <code class="docutils literal notranslate"><span class="pre">extract</span></code> and <code class="docutils literal notranslate"><span class="pre">extract</span></code></p></li>
+<li><p>Increase <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> limit to 100</p></li>
+<li><p>Added dependency of <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code></p></li>
+<li><p>Bug fixes</p></li>
+<li><p>Handle new app_function decorator</p></li>
+</ul>
+<p><strong>2021-03: version 40.2</strong></p>
+<ul class="simple">
+<li><p>Bug fix for to use <code class="docutils literal notranslate"><span class="pre">setuptools_scm</span> <span class="pre">&lt;</span> <span class="pre">6.0.0</span></code> for Python 2.7 environments</p></li>
+</ul>
+<p><strong>2021-03: version 40.1</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2021-02: version 40.0</strong></p>
+<ul class="simple">
+<li><p>Remove need for calling <code class="docutils literal notranslate"><span class="pre">/message_destinations</span></code> endpoint</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">--print-env</span></code> flag to <code class="docutils literal notranslate"><span class="pre">selftest</span></code> command to print the environment when the test runs</p></li>
+<li><p>Python version and installed packages printed out to log at start of <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">run</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section added by default when app.config file first created with <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">config</span> <span class="pre">-c</span></code></p></li>
+<li><p>Bug fixes</p></li>
+</ul>
+<p><strong>2020-12-08: version 39.0</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> now only loads the functions that are pip installed and/or are in the components directory</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> as an app config which specifies how many functions you can run in parallel within the range 1-50 inclusive. It defaults to 10.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">selftest</span></code> now has an exit code of 1 if it fails</p></li>
+<li><p>exits circuits on <code class="docutils literal notranslate"><span class="pre">Not</span> <span class="pre">connected</span> <span class="pre">event</span></code></p></li>
+</ul>
+<p><strong>2020-08-05: version 38.0</strong></p>
+<ul class="simple">
+<li><p>Exposed timeouts and tuning parameters to API and STOMP timeouts</p></li>
+</ul>
+<p><strong>2020-07-15: version 37.2</strong></p>
+<ul class="simple">
+<li><p>Sorted output for <code class="docutils literal notranslate"><span class="pre">list</span></code> command.</p></li>
+<li><p>Bug fixes.</p></li>
+</ul>
+<p><strong>2020-04-15: version 37</strong></p>
+<ul class="simple">
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">codegen</span></code> and <code class="docutils literal notranslate"><span class="pre">extract</span></code> command-line arguments. See <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code> for moved functionality.</p></li>
+</ul>
+<p><strong>2020-04-15: version 36.2.dev</strong></p>
+<ul class="simple">
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">codegen</span></code> and <code class="docutils literal notranslate"><span class="pre">extract</span></code> command-line arguments. See <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code> for moved functionality.</p></li>
+</ul>
+<p><strong>2020-01-16: version 35.0.195</strong></p>
+<ul class="simple">
+<li><p>Moved <code class="docutils literal notranslate"><span class="pre">ImportDefinition</span></code> to <code class="docutils literal notranslate"><span class="pre">resilient</span></code> package</p></li>
+<li><p>Fixed handling of <code class="docutils literal notranslate"><span class="pre">APP_CONFIG_FILE</span></code> in different contexts</p></li>
+<li><p>Changed <code class="docutils literal notranslate"><span class="pre">resilient</span></code> dependency to be <code class="docutils literal notranslate"><span class="pre">&gt;=35</span></code></p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">run</span> <span class="pre">-r</span></code></p></li>
+<li><p>Fixed dependency issue for <code class="docutils literal notranslate"><span class="pre">watchdog</span></code></p></li>
+</ul>
+<p><strong>2019-10-07 version 34.0.194</strong></p>
+<ul class="simple">
+<li><p>Updated exception handling. Introduced <code class="docutils literal notranslate"><span class="pre">BaseFunctionError</span></code> class, ability to hide trace, and include messages.</p></li>
+<li><p>Fix <cite>cafile=false</cite> throwing <cite>AttributeError</cite></p></li>
+<li><p>Fix a bug when Python component’s <code class="docutils literal notranslate"><span class="pre">package_name</span> <span class="pre">==</span> <span class="pre">function_name</span></code></p></li>
+</ul>
+<p><strong>2019-08-02: version 33.0.189</strong></p>
+<ul class="simple">
+<li><p>Added support for API key and API key secret, now able to authenticate
+using API keys instead of email/password.</p></li>
+<li><p>Other minor bug fixes.</p></li>
+</ul>
+<p><strong>2019-07-03: version 32.0.186</strong></p>
+<ul class="simple">
+<li><p>Fix for deprecated log warnings.</p></li>
+<li><p>Other minor bug fixes.</p></li>
+</ul>
+<p><strong>2019-04-12: version 32.0.140</strong></p>
+<ul class="simple">
+<li><p>Fix for exposed Resilient passwords in <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> log when run in DEBUG mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> creates <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> files which will programmatically compute function component entry points.</p></li>
+<li><p>Added WorkflowStatus class.</p></li>
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">codegen</span></code>, <code class="docutils literal notranslate"><span class="pre">codegen</span> <span class="pre">--reload</span></code>, and <code class="docutils literal notranslate"><span class="pre">extract</span></code> now automatically creates export files in Resilient to run against. Manually export no longer needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extract</span></code> will now extract all data associated with playbooks including Tasks, Scripts, and custom Artifact Types.</p></li>
+<li><p>Support for activemq hosted externally (ISC).</p></li>
+<li><p>Improvements to <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code>.</p></li>
+<li><p>Other minor bug fixes/improvements.</p></li>
+</ul>
+<p><strong>2019-03-06: version 32.0.126</strong></p>
+<ul class="simple">
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">selftest</span></code> from function template</p></li>
+<li><p>Improvements to <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code></p></li>
+</ul>
+<p><strong>2019-01-15: version 32.0</strong></p>
+<ul class="simple">
+<li><p>Fixed an issue with <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">extract</span></code></p></li>
+</ul>
+<p><strong>2018-12-05: version 31.0</strong></p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">selftest</span></code> command to call <code class="docutils literal notranslate"><span class="pre">selftest</span></code> functions for every package and prints their return state</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">clone</span></code> Clone Resilient workflows</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">codegen</span> <span class="pre">--reload</span></code> command to reload existing package</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">extract</span></code> command to extract customization data into a single file</p></li>
+<li><p>Added support for specifying lists of packages to run <code class="docutils literal notranslate"><span class="pre">config/customize/selftest</span></code> against</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">extract</span></code> improvements</p></li>
+<li><p>Jinja template improvements</p></li>
+<li><p>Bug Fixes</p></li>
+</ul>
+<p><strong>2018-04-15: version 30.0</strong></p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">&#64;function</span></code> decorator to implement workflow functions</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">test</span></code> command to replace res-action-test</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">codegen</span></code> command to generate boilerplate functions and installable packages</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">customize</span></code> command to import customizations from installed packages</p></li>
+<li><p>Fix an issue with keyring values outside the [resilient] config section</p></li>
+<li><p>Fix various issues with <code class="docutils literal notranslate"><span class="pre">pytest-resilient-circuits</span></code> mocks and fixtures</p></li>
+<li><p>Update action message log format for greater readability</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">list</span></code> to show packages with no components</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">-v</span></code> flag to <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span> <span class="pre">list</span></code></p></li>
+</ul>
+<p><strong>2018-02-22: version 29.1.0</strong></p>
+<ul class="simple">
+<li><p>Fix an issue with performance receiving STOMP messages</p></li>
+</ul>
+<p><strong>2017-12-12: version 29.0.1</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2017-12-01: version 29.0.0</strong></p>
+<ul class="simple">
+<li><p>New package versions: Published under the MIT open-source license.</p></li>
+<li><p>New package versions: Published to pypi.</p></li>
+<li><p>change default JINJA autoescape for safety</p></li>
+</ul>
+<p><strong>2017-09-01: version 28.2.1</strong></p>
+<ul class="simple">
+<li><p>change license to MIT</p></li>
+<li><p>Add ‘docs’ for autogenerated package documentation</p></li>
+</ul>
+<p><strong>2017-08-24: version 28.1.</strong></p>
+<ul class="simple">
+<li><p>fix a problem with python3 handling unicode surrogate pairs (e.g. emoji) in action messages</p></li>
+<li><p>add ‘idna’ and ‘punycode’ JINJA filters for domain encoding</p></li>
+<li><p>add ‘–config-file’ commandline argument</p></li>
+<li><p>fix various performance and reliability issues</p></li>
+</ul>
+<p><strong>2017-06-22: version 28.0.33</strong></p>
+<ul class="simple">
+<li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
+</ul>
+<p><strong>2017-06-14: version 28.0.30</strong></p>
+<ul class="simple">
+<li><p>Change the STOMP protocol implementation from ‘stomp.py’ to ‘stompest’ library,
+with a significant refactoring, for better reliability and maintainability.</p></li>
+<li><p>Add support for STOMP connections via proxy server.</p></li>
+<li><p>Add a dependency on ‘stompest’ and ‘pysocks’ packages</p></li>
+<li><p>Remove old ‘stomp.py’-based examples</p></li>
+<li><p>Name unnamed actions, e.g. those initiated from v28 workflow, as ‘_unnamed_’</p></li>
+<li><p>Defer subscribing to queues until all components have loaded</p></li>
+<li><p>Fix a problem with international characters in ‘get_action_field_label()’</p></li>
+<li><p>Fix a problem with international characters in status messages and exceptions</p></li>
+<li><p>Change to the ‘app_restartable’ functionality to remove a memory leak and streamline.
+Instead of fully unloading and reloading components on configuration file changes,
+components are instead sent a ‘reload’ event.</p></li>
+<li><p>Update the file_lookup example to handle the reload event</p></li>
+</ul>
+<p><strong>2017-04-27: version 27.1.22</strong></p>
+<ul class="simple">
+<li><p>Remove ‘dist’, instead releases are available on <a class="reference external" href="https://github.com/Co3Systems/co3-api/releases">https://github.com/Co3Systems/co3-api/releases</a></p></li>
+<li><p>Build numbering to track the ‘co3’ module; depend where version is &gt;= major.minor</p></li>
+<li><p>Config entry ‘stomp_cafile’ to support using different TLS certificates for STOMP and REST</p></li>
+<li><p>Bugfix in ‘app_restartable’ configuration file handling</p></li>
+</ul>
+<p><strong>2017-04-21: version 27.1.13</strong></p>
+<ul class="simple">
+<li><p>Various updates for reliability</p></li>
+<li><p>New support for packaged installable application components</p></li>
+<li><p>New ‘resilient-circuits’ utility executable to configure and run applications</p></li>
+<li><p>Make ‘components’ directory optional</p></li>
+<li><p>Updated configuration file locations ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config)</p></li>
+<li><p>Log the servername at startup</p></li>
+</ul>
+<p><strong>2017-02-17: version 27.0.0</strong></p>
+<ul class="simple">
+<li><p>Licensing change to “IBM Resilient”</p></li>
+<li><p>Add documentation for reading configuration values from keystore with ‘key=^VALUE’ syntax</p></li>
+<li><p>Add an option for reading configuration values from the environment with ‘key=$VALUE’ syntax</p></li>
+<li><p>Add ‘&#64;debounce()’ decorator for event handler functions</p></li>
+<li><p>Add ‘–noload’ option to skip loading specific components</p></li>
+<li><p>Load components in a deterministic order (alphabetically)</p></li>
+<li><p>Better handle connecting to Resilient without Action Module enabled</p></li>
+<li><p>Better consistency with REST API in TLS certificate verification</p></li>
+</ul>
+<p><strong>2016-08-10: version 26.0.3</strong></p>
+<ul class="simple">
+<li><p>Add requirements.txt for easier offline downloading of Python dependencies</p></li>
+</ul>
+<p><strong>2016-08-10: version 26.0.2</strong></p>
+<ul class="simple">
+<li><p>Fix issue when unsubscribing from STOMP queues</p></li>
+</ul>
+<p><strong>2016-08-01: version 26.0.1</strong></p>
+<ul class="simple">
+<li><p>Allow override of password prompting</p></li>
+<li><p>Allow blank config values</p></li>
+<li><p>Fix an issue with ‘app-restartable’ updating too often</p></li>
+<li><p>Fix an issue with events for non-string channel ids</p></li>
+<li><p>Fix an issue with loading some action components</p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/IBM_Security.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../resilient/resilient.html">resilient</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">resilient-circuits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#change-log">Change Log</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resilient-lib/resilient-lib.html">resilient-lib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resilient-sdk/resilient-sdk.html">resilient-sdk</a></li>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../resilient-lib/resilient-lib.html" title="resilient-lib"
+             >next</a></li>
+        <li class="right" >
+          <a href="../resilient/resilient.html" title="resilient"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">IBM SOAR Python Libraries 43.0.2370 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">resilient-circuits</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, IBM.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
