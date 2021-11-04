@@ -37,7 +37,6 @@ setup(
 
     # PyPI metadata
     author="IBM SOAR",
-    author_email="support@resilientsystems.com",
     description="Common code used in development of Apps ran on the resilient-circuits framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -45,7 +44,6 @@ setup(
     project_urls={
         "Documentation": "https://ibm.biz/soar-python-docs",
         "IBM Community": "https://ibm.biz/soarcommunity",
-        "GitHub": "https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
         "Change Log": "https://ibm.biz/resilient-lib-changes"
     },
     classifiers=[

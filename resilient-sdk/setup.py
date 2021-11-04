@@ -38,30 +38,17 @@ setup(
 
     # PyPI metadata
     author="IBM SOAR",
-    author_email="support@resilientsystems.com",
     description="Python SDK for developing Apps for the IBM SOAR (Resilient) Platform",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "https://ibm.biz/soarcommunity",
-        "GitHub": "https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
         "Change Log": "https://ibm.biz/resilient-sdk-changes"
     },
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
-        "Environment :: Other Environment",
-        "Intended Audience :: Developers",
-        "Intended Audience :: System Administrators",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.6",
-        "Topic :: Security",
-        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Programming Language :: Python :: 3.6"
     ],
     keywords="ibm soar resilient circuits sdk resilient-sdk"
 )
