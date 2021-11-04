@@ -1,3 +1,6 @@
+2021-11: version 42.3
+* Enforce unix style line endings (``\n``) when writing files
+
 2021-10: version 42.2
 * Bug fix for 'clone' to support Python 2.7
 * Ability to use different app.config file per command using '-c' flag
