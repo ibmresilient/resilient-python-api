@@ -288,27 +288,27 @@ package_files = {
         "fail_codegen_solution": "Be sure that you run 'resilient-sdk docgen -p {0}' when you are done developing",
 
         "fail_todo_name": "'README.md' unfinished",
-        "fail_todo_msg": "'README.md' still has at least one \"TODO\" in it",
+        "fail_todo_msg": "'README.md' still has at least one \"TODO\"",
         "fail_todo_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_todo_solution": "Ensure that the 'README.md' is manually updated with your app's information",
+        "fail_todo_solution": "Make sure to complete the README for your app",
 
         "fail_placeholder_name": "'README.md' unfinished",
-        "fail_placeholder_msg": "'README.md' still has at least one instance of '<!-- {0} -->' in it",
+        "fail_placeholder_msg": "'README.md' still has at least one instance of '<!-- {0} -->'",
         "fail_placeholder_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_placeholder_solution": "Manually edit the README.md file and remove '<!-- {0} -->' as you go",
+        "fail_placeholder_solution": "Edit the README and make sure to remove all '<!-- {0} -->' comments",
 
         "fail_screenshots_name": "'README.md' screenshots missing",
-        "fail_screenshots_msg": "'README.md' references screenshots that could not be found: {0}",
+        "fail_screenshots_msg": "Cannot find the following screenshot(s) referenced in the README: {0}",
         "fail_screenshots_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_screenshots_solution": "Create screenshots to use in your README file and place them in the /doc/screenshots folder",
+        "fail_screenshots_solution": "Make sure all screenshots referenced in the README are placed in the /doc/screenshots folder",
 
         "missing_name": "'README.md' not found",
-        "missing_msg": "'README.md' not found in package at path {0}",
+        "missing_msg": "Cannot find README in the package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "Generate the docs using 'resilient-sdk docgen -p {0}'",
 
         "pass_name": "'README.md' valid",
         "pass_msg": "'README.md' has been implemented",
-        "pass_solution": "Make sure to check that all documentation is up to date before packaging"
+        "pass_solution": "Make sure that all documentation is up-to-date before packaging"
     }
 }

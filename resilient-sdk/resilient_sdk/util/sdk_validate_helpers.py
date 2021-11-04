@@ -572,7 +572,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
             solution=attr_dict.get("fail_placeholder_solution").format(constants.DOCGEN_PLACEHOLDER_STRING)
         )
 
-    # if the packge is not the codegen template, then check if there are any "TODO"'s remaining
+    # fail if there are any "TODO"'s remaining
     if any("TODO" in line for line in file_contents):
         return SDKValidateIssue(
             name=attr_dict.get("fail_todo_name"),
