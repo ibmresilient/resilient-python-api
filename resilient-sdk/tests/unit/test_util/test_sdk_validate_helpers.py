@@ -399,3 +399,14 @@ def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
 
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
+
+    filename = "README.md"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
+
+    result = sdk_validate_helpers.package_files_validate_readme(fx_copy_fn_main_mock_integration[1], path_file, filename, attr_dict)
+
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "Cannot find the following screenshot(s) referenced in the README" in result.description

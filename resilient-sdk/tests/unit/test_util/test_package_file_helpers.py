@@ -280,3 +280,20 @@ def test_color_diff_output():
         else:
             # lines that shouldn't get any color added
             assert line == mock_diff_data_generator[i]
+
+def test_pass_parse_file_paths_from_readme():
+
+    mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
+                    "<!-- ![a commented out link](not.png) -->", "another markdown **line**\n"]
+
+    result = package_helpers.parse_file_paths_from_readme(mock_passing_readme_data)
+
+    assert "path.png" in result
+    assert "not.png" not in result
+
+
+    # and now check that it raises an SDKException when there's an invalid link
+    mock_invalid_readme_data = ["# Header\n", "![this is not a link]\n"]
+
+    with pytest.raises(SDKException):
+        result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)

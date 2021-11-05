@@ -458,7 +458,8 @@ class CmdValidate(BaseCmd):
                     attr_dict=attr_dict,
                     package_version=package_version,
                     package_name=package_name,
-                    path_file=path_file
+                    path_file=path_file,
+                    path_package=path_package
                 )
 
             issues.append(issue)

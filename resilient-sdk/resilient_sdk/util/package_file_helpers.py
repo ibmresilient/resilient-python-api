@@ -5,21 +5,23 @@
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
 """
-import logging
-import re
-import sys
-import importlib
-import os
-import json
 import base64
+import importlib
+import json
+import logging
+import os
+import re
 import shutil
 import struct
+import sys
 import tempfile
+
 import pkg_resources
 from resilient import ImportDefinition
-from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID, ResilientObjMap
-from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
+                                                  ResilientObjMap)
+from resilient_sdk.util.sdk_exception import SDKException
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -29,6 +31,7 @@ else:
     # Handle PY 3 specific imports
     import configparser
     from io import StringIO
+
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
 
@@ -1007,3 +1010,39 @@ def color_diff_output(diff):
                 break
         else:
             yield line
+
+def parse_file_paths_from_readme(readme_line_list):
+    """
+    Takes a list of strings and looks through to find the links characters in markdown: 
+    ![<fall_back_name>](<link_to_screenshot>)
+    The method will raise an SDKException if there is a link started without the provided parenthetical
+    link in correct syntax.
+    If no exception is raised, it returns a list of filepaths for linked images in the readme.
+
+    :param readme_line_list: list of readme lines that will have the comment lines removed
+    :type readme_line_list: list[str]
+    :raises: SDKException if link given in invalid syntax
+    :return: list of paths to linked files
+    :rtype: list[str]
+    """
+
+    paths = []
+
+    # first, filter out any comments as those might contain invalid screenshot paths
+    readme_line_list = re.sub(r"(<!--.*?-->)", "", "".join(readme_line_list), flags=re.DOTALL).splitlines()
+
+    # loop through the lines of the readme
+    for line in readme_line_list:
+
+        line = line.strip() # strip any leading and trailing whitespace
+
+        # check if the line starts with the Markdown syntax for a linked file
+        if line.startswith("!["):
+            if "(" in line and ")" in line:
+                # look to find the linked file between ( )
+                paths.append(line[line.rfind("(")+1:line.rfind(")")])
+            else:
+                # incorrect syntax for line starting with "![" but not including "( ... )"
+                raise SDKException(u"Line '{0}' in README has invalid link syntax".format(line))
+
+    return paths

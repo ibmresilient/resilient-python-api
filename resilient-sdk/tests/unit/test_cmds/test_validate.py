@@ -314,4 +314,4 @@ def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_vali
         assert "Printing details" in caplog.text
         assert "Validation Results" in caplog.text
         assert u"ล ฦ ว ศ ษ ส ห ฬ อ" in caplog.text
-        assert "setup.py attribute 'author' appears to still be the default value" in caplog.text
+        assert "setup.py attribute 'author' remains unchanged from the default value" in caplog.text

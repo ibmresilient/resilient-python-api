@@ -24,6 +24,8 @@ RES_EXPORT_SUFFIX = ".res"
 IMPORT_URL = "/configurations/imports"
 # Path to package templates for jinja rendering
 PACKAGE_TEMPLATE_PATH = "data/codegen/templates/package_template"
+DOCGEN_TEMPLATE_PATH = "data/docgen/templates"
+
 
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
 
