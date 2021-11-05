@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2021. All Rights Reserved.
 
+import difflib
 import logging
 import os
 import subprocess
 import sys
 import time
-import difflib
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -17,6 +17,9 @@ from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
 LOG = logging.getLogger(constants.LOGGER_NAME)
+
+# float value in range [0, 1] that determines the cutoff at which two files are a match
+MATCH_THRESHOLD = 1.0
 
 def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     """
@@ -212,7 +215,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     #                       Elapsed time: x.xyz seconds
     #                   ...
     #
-    # if returncode==0: same as if ==1, except the 'state' is 'sucess' and there is no 'reason' field
+    # if returncode==0: same as if ==1, except the 'state' is 'success' and there is no 'reason' field
     #                   NOTE: it is possible for there to be 'state': 'unimplemented' if which case we fail
     #                   the validation and let the user know that they should implement selftest
     #
@@ -370,8 +373,8 @@ def package_files_template_match(package_name, package_version, path_file, filen
 
     :param package_name: (required) the name of the package
     :type package_name: str
-    :param package_vesrion: (required) the version of the package (required for formatting the Dockerfile template)
-    :type package_vesrion: str
+    :param package_version: (required) the version of the package (required for formatting the Dockerfile template)
+    :type package_version: str
     :param path_file: (required) the path to the file
     :type path_file: str
     :param filename: (required) the name of the file to be validated
@@ -400,7 +403,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
     # check match between the two files
     # if less than a perfect match, the match fails
     comp_ratio = s_diff.ratio()
-    if comp_ratio < 1.0:
+    if comp_ratio < MATCH_THRESHOLD:
         diff = difflib.unified_diff(template_contents, file_contents, 
                                     fromfile="template_"+filename, tofile=filename, n=0) # n is number of context lines
         diff = package_helpers.color_diff_output(diff) # add color to diff output
@@ -505,7 +508,7 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
         )
     except SDKException as e:
         # something went wrong in reading the import definition.
-        # for more info on what raises an error see the pacakge_helpers
+        # for more info on what raises an error see the package_helpers
         # method get_import_definition_from_customize_py called above.
         
         # parse out the exception message from "ERROR" to the end
@@ -518,3 +521,100 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )
+
+def package_files_validate_readme(path_package, path_file, filename, attr_dict, **_):
+    """
+    Validates a given README.md file.
+    Checks the following:
+      - Does the file match the **codegen** template? If yes, fail as that means *docgen* hasn't been run
+      - Does the file still contain the secret docgen placeholder string? If so, fail as that means the dev hasn't manually updated
+      - Does the file still have any TODO's? If so, fail as those must be manually implemented
+      - Does the file have any incorrect or ghost links to screenshot files? If so, fail as those need to be correct
+      - Else the validation passes
+
+    :param path_package: (required) the path to the package
+    :type path_package: str
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param filename: (required) the name of the file being validated
+    :type filename: str
+    :param attr_dict: (required) dictionary of attributes for the customize.py file defined in ``package_files``
+    :type attr_dict: dict
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a passing issue if the README.md passes the validations outlined above; failing issue otherwise
+    :rtype: SDKValidateIssue
+    """
+
+    # read the package's file
+    file_contents = sdk_helpers.read_file(path_file)
+    # render codegen jinja file
+    codegen_readme_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename)
+    # split template file into list of lines
+    template_contents = codegen_readme_rendered.splitlines(True)
+    # compare given file to template from codegen
+    s_diff = difflib.SequenceMatcher(None, file_contents, template_contents)
+
+    # check match between the two files
+    # if the package file matches the codegen template, fail
+    comp_ratio = s_diff.ratio()
+    if comp_ratio == MATCH_THRESHOLD:
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_codegen_name"),
+            description=attr_dict.get("fail_codegen_msg"),
+            severity=attr_dict.get("fail_codegen_severity"),
+            solution=attr_dict.get("fail_codegen_solution").format(path_package)
+        )
+
+    # if placeholder string is still in the readme
+    if any("<!-- {0} -->".format(constants.DOCGEN_PLACEHOLDER_STRING) in line for line in file_contents):
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_placeholder_name"),
+            description=attr_dict.get("fail_placeholder_msg").format(constants.DOCGEN_PLACEHOLDER_STRING),
+            severity=attr_dict.get("fail_placeholder_severity"),
+            solution=attr_dict.get("fail_placeholder_solution").format(constants.DOCGEN_PLACEHOLDER_STRING)
+        )
+
+    # fail if there are any "TODO"'s remaining
+    if any("TODO" in line for line in file_contents):
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_todo_name"),
+            description=attr_dict.get("fail_todo_msg"),
+            severity=attr_dict.get("fail_todo_severity"),
+            solution=attr_dict.get("fail_todo_solution")
+        )
+
+    # check that linked screenshots are in the /docs/screenshots folder
+
+    # gather list of screenshots in the readme file
+    try:
+        screenshot_paths = package_helpers.parse_file_paths_from_readme(file_contents)
+        invalid_paths = []
+    except SDKException as e:
+        # if links aren't properly formatted in the readme, they won't pass
+        err_msg = str(e).replace("\n", " ")
+        err_msg = err_msg[err_msg.index("ERROR: ")+len("ERROR: "):]
+        return SDKValidateIssue("README.md link syntax error", err_msg)
+
+    # for each gathered path, check if the file path is valid
+    for path in screenshot_paths:
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, os.path.join(path_package, path))
+        except SDKException:
+            invalid_paths.append(path)
+
+    if invalid_paths:
+        return SDKValidateIssue(
+            name=attr_dict.get("fail_screenshots_name"),
+            description=attr_dict.get("fail_screenshots_msg").format(invalid_paths),
+            severity=attr_dict.get("fail_screenshots_severity"),
+            solution=attr_dict.get("fail_screenshots_solution")
+        )
+
+    # the readme passes our checks -- note that this should still be manually validated for correctness!
+    return SDKValidateIssue(
+        name=attr_dict.get("pass_name"),
+        description=attr_dict.get("pass_msg"),
+        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+        solution=attr_dict.get("pass_solution")
+    )
