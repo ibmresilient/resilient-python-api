@@ -281,7 +281,7 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     :param _: (unused) other unused named args
     :type _: dict
     :return: a passing issue if the file exists and has the templated manifests; a warning issue if the file doesn't exist or if the manifest template lines aren't all found
-    :rtype: SDKValidateIssue
+    :rtype: list[SDKValidateIssue]
     """
 
     # render jinja file of MANIFEST
@@ -304,20 +304,20 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
 
     if diffs:
         # some lines from template weren't in the given file so this validation fails
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(diffs),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
-        )
+        )]
     else:
         # all template lines were in given MANIFEST.in so this validation passes
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("pass_name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
-        )
+        )]
 
 
 def package_files_apikey_pem(path_file, attr_dict, **_):
@@ -332,7 +332,7 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
     :param _: (unused) other unused named args
     :type _: dict
     :return: a passing issue if the file exists and has the minimum permissions; a warning issue if the file doesn't exist or if the base permissions aren't found
-    :rtype: SDKValidateIssue
+    :rtype: list[SDKValidateIssue]
     """
     
     # read package's apikey_permissions.txt file
@@ -349,20 +349,20 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
 
     if missing_permissions:
         # missing the base perimissions
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(missing_permissions),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
-        )
+        )]
     else:
         # apikey_permissions file has _at least_ all of the base permissions
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("pass_name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("pass_solution").format(file_contents)
-        )
+        )]
     
 
 def package_files_template_match(package_name, package_version, path_file, filename, attr_dict, **_):
@@ -384,7 +384,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
     :param _: (unused) other unused named args
     :type _: dict
     :return: a passing issue if the file exists and matches the template; a warning issue if the file doesn't exist or if the template doesn't match the given file
-    :rtype: SDKValidateIssue
+    :rtype: list[SDKValidateIssue]
     """
 
     # render jinja file
@@ -407,19 +407,19 @@ def package_files_template_match(package_name, package_version, path_file, filen
         diff = difflib.unified_diff(template_contents, file_contents, 
                                     fromfile="template_"+filename, tofile=filename, n=0) # n is number of context lines
         diff = package_helpers.color_diff_output(diff) # add color to diff output
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(comp_ratio*100, "\t\t".join(diff)),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
-        )
+        )]
     else:
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("pass_name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
-        )
+        )]
 
 
 def package_files_validate_config_py(path_file, attr_dict, **_):
@@ -439,7 +439,7 @@ def package_files_validate_config_py(path_file, attr_dict, **_):
     :param _: (unused) other unused named args
     :type _: dict
     :return: a issue that describes the validity of the config.py file
-    :rtype: SDKValidateIssue
+    :rtype: list[SDKValidateIssue]
     """
 
     try:
@@ -449,32 +449,32 @@ def package_files_validate_config_py(path_file, attr_dict, **_):
 
         if config_str != "":
             # if config data was found
-            return SDKValidateIssue(
+            return [SDKValidateIssue(
                 name=attr_dict.get("pass_name"),
                 description=attr_dict.get("pass_msg"),
                 severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
                 solution=attr_dict.get("pass_solution").format("\n\t\t".join(config_str.split("\n")))
-            )
+            )]
 
         else:
             # if there is no config data give warning
             # it is allowed to not have any configs, just uncommon
-            return SDKValidateIssue(
+            return [SDKValidateIssue(
                 name=attr_dict.get("warn_name"),
                 description=attr_dict.get("warn_msg"),
                 severity=attr_dict.get("warn_severity"),
                 solution=attr_dict.get("warn_solution")
-            )
+            )]
 
     except SDKException as e:
         # if fails for some other reason output the SDKException messages
         # the reasons here may include misformatted config data, syntax errors in the file, ...
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(str(e).replace("\n", " ")),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
-        )
+        )]
 
 def package_files_validate_customize_py(path_file, attr_dict, **_):
     """
@@ -493,19 +493,19 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
     :param _: (unused) other unused named args
     :type _: dict
     :return: a passing issue if the customize.py file can yield a successful ImportDefinition; a critical issue if the parse fails
-    :rtype: SDKValidateIssue
+    :rtype: list[SDKValidateIssue]
     """
     
     try:
         # parse import definition information from customize.py file
         # this will raise an SDKException if something goes wrong
         import_def = package_helpers.get_import_definition_from_customize_py(path_file)
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("pass_name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("pass_solution").format(import_def)
-        )
+        )]
     except SDKException as e:
         # something went wrong in reading the import definition.
         # for more info on what raises an error see the package_helpers
@@ -515,12 +515,12 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
         message = str(e).replace("\n", " ")
         message = message[message.index("ERROR"):]
 
-        return SDKValidateIssue(
+        return [SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(message),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
-        )
+        )]
 
 def package_files_validate_readme(path_package, path_file, filename, attr_dict, **_):
     """
@@ -531,6 +531,9 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
       - Does the file still have any TODO's? If so, fail as those must be manually implemented
       - Does the file have any incorrect or ghost links to screenshot files? If so, fail as those need to be correct
       - Else the validation passes
+
+    It is possible for multiple checks to fail in this validation thus the use of the 
+    list[SDKValidateIssue] return type.
 
     :param path_package: (required) the path to the package
     :type path_package: str
@@ -543,8 +546,11 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     :param _: (unused) other unused named args
     :type _: dict
     :return: a passing issue if the README.md passes the validations outlined above; failing issue otherwise
-    :rtype: SDKValidateIssue
+    :rtype: list[SDKValidateIssue]
     """
+
+    # list of issues from README
+    issues = []
 
     # read the package's file
     file_contents = sdk_helpers.read_file(path_file)
@@ -559,30 +565,31 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     # if the package file matches the codegen template, fail
     comp_ratio = s_diff.ratio()
     if comp_ratio == MATCH_THRESHOLD:
-        return SDKValidateIssue(
+        # if it matches the codegen template, we return immediately and don't run any other checks
+        return [SDKValidateIssue(
             name=attr_dict.get("fail_codegen_name"),
             description=attr_dict.get("fail_codegen_msg"),
             severity=attr_dict.get("fail_codegen_severity"),
             solution=attr_dict.get("fail_codegen_solution").format(path_package)
-        )
+        )]
 
     # if placeholder string is still in the readme
     if any("<!-- {0} -->".format(constants.DOCGEN_PLACEHOLDER_STRING) in line for line in file_contents):
-        return SDKValidateIssue(
+        issues.append(SDKValidateIssue(
             name=attr_dict.get("fail_placeholder_name"),
             description=attr_dict.get("fail_placeholder_msg").format(constants.DOCGEN_PLACEHOLDER_STRING),
             severity=attr_dict.get("fail_placeholder_severity"),
             solution=attr_dict.get("fail_placeholder_solution").format(constants.DOCGEN_PLACEHOLDER_STRING)
-        )
+        ))
 
     # fail if there are any "TODO"'s remaining
     if any("TODO" in line for line in file_contents):
-        return SDKValidateIssue(
+        issues.append(SDKValidateIssue(
             name=attr_dict.get("fail_todo_name"),
             description=attr_dict.get("fail_todo_msg"),
             severity=attr_dict.get("fail_todo_severity"),
             solution=attr_dict.get("fail_todo_solution")
-        )
+        ))
 
     # check that linked screenshots are in the /docs/screenshots folder
 
@@ -594,7 +601,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if links aren't properly formatted in the readme, they won't pass
         err_msg = str(e).replace("\n", " ")
         err_msg = err_msg[err_msg.index("ERROR: ")+len("ERROR: "):]
-        return SDKValidateIssue("README.md link syntax error", err_msg)
+        issues.append([SDKValidateIssue("README.md link syntax error", err_msg)])
 
     # for each gathered path, check if the file path is valid
     for path in screenshot_paths:
@@ -604,17 +611,22 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
             invalid_paths.append(path)
 
     if invalid_paths:
-        return SDKValidateIssue(
+        issues.append(SDKValidateIssue(
             name=attr_dict.get("fail_screenshots_name"),
             description=attr_dict.get("fail_screenshots_msg").format(invalid_paths),
             severity=attr_dict.get("fail_screenshots_severity"),
             solution=attr_dict.get("fail_screenshots_solution")
-        )
+        ))
 
-    # the readme passes our checks -- note that this should still be manually validated for correctness!
-    return SDKValidateIssue(
-        name=attr_dict.get("pass_name"),
-        description=attr_dict.get("pass_msg"),
-        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-        solution=attr_dict.get("pass_solution")
-    )
+    if not issues:
+        # if the issues list is empty
+        # the readme passes our checks -- note that this should still be manually validated for correctness!
+        return [SDKValidateIssue(
+            name=attr_dict.get("pass_name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=attr_dict.get("pass_solution")
+        )]
+    else:
+        # if there is at least one issue in the list
+        return issues

@@ -440,12 +440,12 @@ class CmdValidate(BaseCmd):
                 LOG.debug("{0} file found at path {1}\n".format(filename, path_file))
             except SDKException:
                 # file not found: create issue with given "missing_..." info included
-                issue = SDKValidateIssue(
+                issue_list = [SDKValidateIssue(
                     name=attr_dict.get("missing_name"),
                     description=attr_dict.get("missing_msg").format(path_file),
                     severity=attr_dict.get("missing_severity"),
                     solution=attr_dict.get("missing_solution").format(path_package)
-                )
+                )]
             else: # SDKException wasn't caught -- the file exists!
 
                 # make sure the "func" param is specified
@@ -453,7 +453,7 @@ class CmdValidate(BaseCmd):
                     raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
 
                 # run given "func"
-                issue = attr_dict.get("func")(
+                issue_list = attr_dict.get("func")(
                     filename=filename,
                     attr_dict=attr_dict,
                     package_version=package_version,
@@ -462,7 +462,7 @@ class CmdValidate(BaseCmd):
                     path_package=path_package
                 )
 
-            issues.append(issue)
+            issues.extend(issue_list)
 
 
         # sort and look for and invalid issues
