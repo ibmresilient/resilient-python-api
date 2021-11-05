@@ -147,7 +147,7 @@ def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
     mock_data = {
-        "mock_valid_file": {"func": lambda **_: SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)}
+        "mock_valid_file": {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]}
     }
 
     # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
@@ -168,8 +168,8 @@ def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
     mock_data = {
-        "mock_valid_file": {"func": lambda **_: SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)},
-        "mock_invalid_file": {"func": lambda **_: SDKValidateIssue("fail", "fail")}
+        "mock_valid_file": {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]},
+        "mock_invalid_file": {"func": lambda **_: [SDKValidateIssue("fail", "fail")]}
     }
 
     # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
