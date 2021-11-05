@@ -183,6 +183,8 @@ def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration):
 
         result = sdk_validate_helpers.package_files_manifest(package_name, path_file, filename, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
@@ -199,6 +201,8 @@ def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration):
 
         result = sdk_validate_helpers.package_files_manifest(package_name, path_file, filename, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
@@ -210,6 +214,8 @@ def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
 
     result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
 
+    assert len(result) == 1
+    result = result[0]
     assert isinstance(result, SDKValidateIssue)
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
@@ -226,6 +232,8 @@ def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
 
         result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
@@ -243,6 +251,8 @@ def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
@@ -260,6 +270,8 @@ def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
@@ -277,6 +289,8 @@ def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
@@ -294,6 +308,8 @@ def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
@@ -330,6 +346,8 @@ def test_pass_package_files_validate_config_py(fx_copy_fn_main_mock_integration)
 
         result = sdk_validate_helpers.package_files_validate_config_py(path_file, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
         assert "fake=fake" in result.solution
@@ -347,6 +365,8 @@ def test_warn_package_files_validate_config_py(fx_copy_fn_main_mock_integration)
 
         result = sdk_validate_helpers.package_files_validate_config_py(path_file, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
 
@@ -363,6 +383,8 @@ def test_fail_package_files_validate_config_py(fx_copy_fn_main_mock_integration)
 
         result = sdk_validate_helpers.package_files_validate_config_py(path_file, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
@@ -381,6 +403,8 @@ def test_pass_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
 
         result = sdk_validate_helpers.package_files_validate_customize_py(path_file, attr_dict)
 
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
@@ -396,7 +420,9 @@ def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
         mock_import_def.side_effect = SDKException("failed")
 
         result = sdk_validate_helpers.package_files_validate_customize_py(path_file, attr_dict)
-
+        
+        assert len(result) == 1
+        result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
@@ -408,5 +434,7 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
 
     result = sdk_validate_helpers.package_files_validate_readme(fx_copy_fn_main_mock_integration[1], path_file, filename, attr_dict)
 
+    assert len(result) == 1
+    result = result[0]
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "Cannot find the following screenshot(s) referenced in the README" in result.description
