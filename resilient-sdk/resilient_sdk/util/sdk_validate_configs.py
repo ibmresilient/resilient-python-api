@@ -271,13 +271,13 @@ package_files = {
         "fail_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
 
         "missing_name": "'customize.py' not found",
-        "missing_msg": "'customize.py' not found in package at path {0}",
+        "missing_msg": "'customize.py' not found in package at path '{0}'",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "Reload code using 'resilient-sdk codegen -p {0} --reload'",
 
         "pass_name": "'customize.py' valid",
         "pass_msg": "'customize.py' returned a valid import definition",
-        "pass_solution": u"ImportDefinition found: {0}...; See the whole contents at {1}"
+        "pass_solution": u"ImportDefinition found: {0}...; See the whole contents at '{1}'"
     },
     "README.md": {
         "func": sdk_validate_helpers.package_files_validate_readme,
