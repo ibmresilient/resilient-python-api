@@ -277,7 +277,7 @@ package_files = {
 
         "pass_name": "'customize.py' valid",
         "pass_msg": "'customize.py' returned a valid import definition",
-        "pass_solution": u"ImportDefinition found: \n\t\t{0}"
+        "pass_solution": u"ImportDefinition found: {0}...; See the whole contents at {1}"
     },
     "README.md": {
         "func": sdk_validate_helpers.package_files_validate_readme,

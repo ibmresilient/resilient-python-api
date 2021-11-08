@@ -504,7 +504,7 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
             name=attr_dict.get("pass_name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-            solution=attr_dict.get("pass_solution").format(import_def)
+            solution=attr_dict.get("pass_solution").format(str(import_def)[:75], path_file)
         )]
     except SDKException as e:
         # something went wrong in reading the import definition.
