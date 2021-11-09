@@ -14,8 +14,9 @@ import os
 import sys
 import resilient_lib
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("../resilient"))
 sys.path.insert(0, os.path.abspath("../resilient_lib"))
-sys.path.insert(0, os.path.abspath("../resilient_sdk"))
+sys.path.insert(0, os.path.abspath("../resilient_circuits"))
 
 
 # -- Project information -----------------------------------------------------
@@ -32,7 +33,8 @@ release = resilient_lib.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -46,21 +48,17 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-# html_theme = 'alabaster'
-html_theme = 'sphinxdoc'
+html_theme = 'furo'
 
-html_favicon = "_static/IBM_Security_Shield.ico?"
-html_logo = "_static/IBM_Security.png"
+html_title = "IBM SOAR Python Documentation"
+html_favicon = '_static/IBM_Security_Shield.ico?'
+html_theme_options = {
+    "light_logo": "IBM_Security_Light.png",
+    "dark_logo": "IBM_Security_Dark.png",
+}
 html_use_index = False
 html_show_sourcelink = False
 html_domain_indices = False
-
-html_sidebars = {
-    '**': ['globaltoc.html', 'sourcelink.html']
-}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

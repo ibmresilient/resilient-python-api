@@ -175,8 +175,45 @@ class ResilientComponent(BaseComponent):
                 self._function_fields = None
 
     def rest_client(self):
-        """Return a connected instance of the :class:`resilient.SimpleClient`
-        that can be used to access the Resilient REST API.
+        """
+        Return a connected instance of the :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+        that can be used to access the IBM SOAR (Resilient) REST API.
+
+        .. note::
+            An :class:`~resilient_circuits.app_function_component.AppFunctionComponent` inherits a
+            ``ResilientComponent`` so will have access to this method
+
+        **Example:**
+
+        .. code-block:: python
+
+            from resilient_circuits import AppFunctionComponent, FunctionResult, app_function
+
+            PACKAGE_NAME = "fn_mock_app"
+            FN_NAME = "mock_function"
+
+            class FunctionComponent(AppFunctionComponent):
+
+                def __init__(self, opts):
+                    super(FunctionComponent, self).__init__(opts, PACKAGE_NAME)
+
+                @app_function(FN_NAME)
+                def _app_function(self, fn_inputs):
+
+                    res_client = self.rest_client()
+                    inc = res_client.get("/incidents/{0}".format("1001"))
+                    inc_name = inc.get("name")
+
+                    results = {
+                        "inc": inc,
+                        "inc_name": inc_name
+                    }
+
+                    yield FunctionResult(results)
+
+        :return: a connected instance of :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+        :rtype: :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+
         """
         self.reset_idle_timer()
         return get_resilient_client(self.opts)

@@ -52,6 +52,7 @@ setup(
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-circuits",
     project_urls={
         "Documentation": "https://ibm.biz/soar-docs",
+        "API Docs": "https://ibm.biz/soar-python-docs",
         "IBM Community": "https://ibm.biz/soarcommunity",
         "Change Log": "https://ibm.biz/resilient-circuits-changes"
     },

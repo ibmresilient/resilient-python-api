@@ -16,7 +16,7 @@ stages:
   - name: release to pypi
     if: tag =~ ^release\/pypi\/.+
   - name: sync public repo
-    if: tag =~ ^release\/pypi\/.+
+    if: branch =~ ^pages\/.+
 
 env:
   global:
@@ -163,7 +163,7 @@ matrix:
 
     - stage: deploy documentation
       install:
-      - pip install sphinx
+      - pip install sphinx furo
       script:
         - echo "Building packages in Python 3.6 and deploying Documentation internally too"
         - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
@@ -185,7 +185,7 @@ matrix:
     - stage: sync public repo
       script:
         - echo "Syncing INTERNAL repo with PUBLIC repo"
-        - ./travis-scripts/sync_public_repo.sh "ALL"
+        - ./travis-scripts/sync_public_repo.sh "gh-pages"
       after_success:
         - ./travis-scripts/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
