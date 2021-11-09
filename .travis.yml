@@ -16,7 +16,7 @@ stages:
   - name: release to pypi
     if: tag =~ ^release\/pypi\/.+
   - name: sync public repo
-    if: branch =~ ^pages\/.+
+    if: tag =~ ^release\/pypi\/.+
 
 env:
   global:
@@ -185,7 +185,7 @@ matrix:
     - stage: sync public repo
       script:
         - echo "Syncing INTERNAL repo with PUBLIC repo"
-        - ./travis-scripts/sync_public_repo.sh "gh-pages"
+        - ./travis-scripts/sync_public_repo.sh "ALL"
       after_success:
         - ./travis-scripts/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
