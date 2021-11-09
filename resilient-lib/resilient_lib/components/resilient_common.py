@@ -431,20 +431,20 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
 
     **Example:**
 
-        .. code-block:: python
+    .. code-block:: python
 
-            import os
-            import shutil
+        import os
+        import shutil
 
-            try:
-                path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
+        try:
+            path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
 
-            except Exception:
-                yield FunctionError()
+        except Exception:
+            yield FunctionError()
 
-            finally:
-                if path_tmp_dir and os.path.isdir(path_tmp_dir):
-                    shutil.rmtree(path_tmp_dir)
+        finally:
+            if path_tmp_dir and os.path.isdir(path_tmp_dir):
+                shutil.rmtree(path_tmp_dir)
 
     :param data: bytes to be written to the file
     :type data: bytes

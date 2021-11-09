@@ -65,8 +65,9 @@ class BasicHTTPException(Exception):
 
 
 class NoChange(Exception):
-    """Exception that can be raised within a get/put handler or a patch callback
-       to indicate 'no change' (which then just bypasses the update operation).
+    """
+    Exception that can be raised within a get/put handler or a patch callback
+    to indicate 'no change' (which then just bypasses the update operation).
     """
     pass
 
