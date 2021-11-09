@@ -318,7 +318,7 @@ can include:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_circuits.actions_component.ResilientComponent.rest_client">
 <span class="sig-prename descclassname"><span class="pre">ResilientComponent.</span></span><span class="sig-name descname"><span class="pre">rest_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.actions_component.ResilientComponent.rest_client" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a connected instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code>
+<dd><p>Return a connected instance of the <a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a>
 that can be used to access the IBM SOAR (Resilient) REST API.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -353,10 +353,10 @@ that can be used to access the IBM SOAR (Resilient) REST API.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a connected instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></p>
+<dd class="field-odd"><p>a connected instance of <a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a></p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></p>
+<dd class="field-even"><p><a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -366,11 +366,11 @@ that can be used to access the IBM SOAR (Resilient) REST API.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_circuits.decorators.app_function">
 <span class="sig-prename descclassname"><span class="pre">@</span></span><span class="sig-name descname"><span class="pre">app_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.decorators.app_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates new a Next Generation Function (@app_function) Handler.</p>
-<p>This decorator can be applied to methods of classes derived from the class <cite>ResilientComponent</cite>.
-It marks the method as a handler for the events passed as arguments to the decorator.
-Specify the function’s API name as parameter to the decorator. It only accepts 1 api_name as an argument.
-The function handler will automatically be subscribed to the function’s message destination.</p>
+<dd><p>Creates new a <a class="reference internal" href="#resilient_circuits.decorators.app_function" title="resilient_circuits.decorators.app_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">@app_function</span></code></a> decorator.</p>
+<p>This decorator can be applied to methods of the <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> class.</p>
+<p>It marks the method as a handler for the events passed as arguments to the decorator.</p>
+<p>Specify the function’s API name as parameter to the decorator. <strong>It only accepts 1</strong> <code class="docutils literal notranslate"><span class="pre">api_name</span></code> <strong>as an argument.</strong></p>
+<p>The function handler will automatically be subscribed to the function’s <code class="docutils literal notranslate"><span class="pre">message</span> <span class="pre">destination</span></code>.</p>
 </dd></dl>
 </section>
 <section id="change-log">

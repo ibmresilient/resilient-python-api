@@ -191,6 +191,396 @@
         <article role="main">
           <section id="resilient">
 <h1>resilient<a class="headerlink" href="#resilient" title="Permalink to this headline">¶</a></h1>
+<p>Python client module for the IBM SOAR (Resilient) REST API</p>
+<section id="api-client">
+<h2>API Client<a class="headerlink" href="#api-client" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">SimpleClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python helper class for using the IBM SOAR (Resilient) REST API.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The full REST API Documentation for IBM SOAR (Resilient) can be
+viewed on the Platform itself by searching for the <strong>REST API Reference</strong>
+or by going to: <code class="docutils literal notranslate"><span class="pre">https://&lt;base_url&gt;/docs/rest-api/index.html</span></code></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>org_name</strong> (<em>str</em>) – The name of the organization to use.</p></li>
+<li><p><strong>base_url</strong> (<em>str</em>) – The base URL of the SOAR server, e.g. <code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/</span></code></p></li>
+<li><p><strong>proxies</strong> (<em>dict</em>) – A dictionary of <code class="docutils literal notranslate"><span class="pre">HTTP</span></code> proxies to use, if any.</p></li>
+<li><p><strong>verify</strong> (<em>str</em><em>|</em><em>bool</em>) – The path to a <code class="docutils literal notranslate"><span class="pre">PEM</span></code> file containing the trusted CAs, or <code class="docutils literal notranslate"><span class="pre">False</span></code> to disable all TLS verification</p></li>
+<li><p><strong>cache_ttl</strong> (<em>int</em>) – Time in seconds to live for cached API responses</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.cached_get">
+<span class="sig-name descname"><span class="pre">cached_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.cached_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as <a class="reference internal" href="#resilient.co3.SimpleClient.get" title="resilient.co3.SimpleClient.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a>, but checks cache first</p>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.connect">
+<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect and authenticate to the IBM SOAR (Resilient) REST API service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>email</strong> (<em>str</em>) – The email address to use for authentication.</p></li>
+<li><p><strong>password</strong> (<em>str</em>) – The password.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – optional timeout (seconds)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The IBM SOAR (Resilient) session object.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the specified URI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to delete.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the specified URI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to fetch.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary or list with the value returned by the server.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict | list</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.get_const">
+<span class="sig-name descname"><span class="pre">get_const</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get_const" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <code class="docutils literal notranslate"><span class="pre">ConstREST</span></code> endpoint.</p>
+<p>Endpoint for retrieving various constant information for this server. This information is
+useful in translating names that the user sees to IDs that other REST API endpoints accept.</p>
+<p>For example, the <code class="docutils literal notranslate"><span class="pre">incidentDTO</span></code> has a field called <code class="docutils literal notranslate"><span class="pre">"crimestatus_id"</span></code>. The valid values are stored
+in <code class="docutils literal notranslate"><span class="pre">constDTO.crime_statuses</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">ConstDTO</span></code> as a dictionary</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.get_content">
+<span class="sig-name descname"><span class="pre">get_content</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the specified URI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to fetch.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The raw value returned by the server for this resource.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.get_put">
+<span class="sig-name descname"><span class="pre">get_put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get_put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Safely performs an update operation by a GET, calls your <code class="docutils literal notranslate"><span class="pre">apply_func</span></code> callback, then PUT
+with the updated value.  If the put call returns a <code class="docutils literal notranslate"><span class="pre">409</span></code> error, these steps are retried.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to get and update.</p></li>
+<li><p><strong>apply_func</strong> (<em>func</em>) – A callback function that you implement to update the resource.  The function must be
+of the following form: <code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">my_apply_func(object_to_update)</span></code>, and update the object.
+If your callback raises <a class="reference internal" href="#resilient.co3base.NoChange" title="resilient.co3base.NoChange"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.NoChange</span></code></a>, the update is skipped.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary or list with the value returned by the PUT operation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict | list</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.patch">
+<span class="sig-name descname"><span class="pre">patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_conflict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>PATCH request to the specified URI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to patch.</p></li>
+<li><p><strong>patch</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Patch</span></code>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Patch</span></code> object to apply</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+<li><p><strong>overwrite_conflict</strong> (<em>bool</em>) – always overwrite fields in conflict. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the passed-in patch
+object will be modified if necessary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the endpoint.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception or patch conflict occurs.</p></li>
+<li><p><a class="reference internal" href="#resilient.co3.PatchConflictException" title="resilient.co3.PatchConflictException"><strong>PatchConflictException</strong></a> – If the patch failed to apply (and overwrite_conflict is False).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.patch_with_callback">
+<span class="sig-name descname"><span class="pre">patch_with_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.patch_with_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>PATCH request to the specified URI.  If the patch application fails because of field conflicts,
+the specified callback is invoked, allowing the caller to adjust the patch as necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> – Relative URI of the resource to patch.</p></li>
+<li><p><strong>patch</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Patch</span></code>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Patch</span></code> object to apply</p></li>
+<li><p><strong>callback</strong> (<em>func</em>) – Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
+of the following form: <code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">my_callback(response,</span> <span class="pre">patch_status,</span> <span class="pre">patch)</span></code>.
+If your callback raises <a class="reference internal" href="#resilient.co3base.NoChange" title="resilient.co3base.NoChange"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.NoChange</span></code></a>, the update is skipped.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the endpoint.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a></p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.post">
+<span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Posts to the specified URI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to post.</p></li>
+<li><p><strong>payload</strong> (<em>dict</em>) – A dictionary value to be posted.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary or list with the value returned by the server.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict | list</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.post_attachment">
+<span class="sig-name descname"><span class="pre">post_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mimetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.post_attachment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload a file to the specified URI
+e.g. <code class="docutils literal notranslate"><span class="pre">/incidents/&lt;id&gt;/attachments</span></code> (for incident attachments)
+or,  <code class="docutils literal notranslate"><span class="pre">/tasks/&lt;id&gt;/attachments</span></code> (for task attachments)</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Please see our updated <a class="reference internal" href="../resilient-lib/resilient-lib.html#resilient_lib.components.resilient_common.write_file_attachment" title="resilient_lib.components.resilient_common.write_file_attachment"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.write_file_attachment</span></code></a>
+as this method takes a data stream and is more reliable</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to post.</p></li>
+<li><p><strong>filepath</strong> (<em>str</em>) – the path of the file to post</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – optional name of the file when posted</p></li>
+<li><p><strong>mimetype</strong> (<em>str</em>) – optional override for the guessed MIME type</p></li>
+<li><p><strong>data</strong> (<em>dict</em>) – optional dict with additional <code class="docutils literal notranslate"><span class="pre">MIME</span></code> parts (not required for file attachments; used in artifacts)</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">response</span></code> from the endpoint.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><p><a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a></p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directly performs an update operation by PUT to the specified URI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This URI is relative to <code class="docutils literal notranslate"><span class="pre">&lt;base_url&gt;/rest/orgs/&lt;org_id&gt;</span></code>.  So for example,
+if you specify a uri of <code class="docutils literal notranslate"><span class="pre">/incidents</span></code>, the actual URL would be something like:
+<code class="docutils literal notranslate"><span class="pre">https://soar.ibm.com/rest/orgs/201/incidents</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to update.</p></li>
+<li><p><strong>payload</strong> (<em>dict</em>) – The object to update.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary or list with the value returned by the server.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict | list</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="resilient.co3.SimpleClient.search">
+<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Posts to the <code class="docutils literal notranslate"><span class="pre">SearchExREST</span></code> endpoint.</p>
+<p>Endpoint for performing full text searches through incidents and incident child objects
+(tasks, incident comments, task comments, milestones, artifacts, incident attachments,
+task attachments, and data tables).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> (<em>dict</em>) – The SearchExInputDTO parameters for performing a search.</p></li>
+<li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of results, as an array of <code class="docutils literal notranslate"><span class="pre">SearchExResultDTO</span></code></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="resilient.co3.SimpleHTTPException">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">SimpleHTTPException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleHTTPException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for HTTP errors.</p>
+</dd></dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="resilient.co3.PatchConflictException">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">PatchConflictException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.PatchConflictException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for patch conflicts.</p>
+</dd></dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="resilient.co3base.NoChange">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">NoChange</span></span><a class="headerlink" href="#resilient.co3base.NoChange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception that can be raised within a get/put handler or a patch callback
+to indicate ‘no change’ (which then just bypasses the update operation).</p>
+</dd></dl>
+</section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
 <p><strong>2021-11: version 42.3</strong></p>
@@ -397,6 +787,7 @@ must be changed to import from <code class="docutils literal notranslate"><span 
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">resilient</a><ul>
+<li><a class="reference internal" href="#api-client">API Client</a></li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
 </ul>
 </li>
