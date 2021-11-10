@@ -4,21 +4,15 @@
 
 """ TODO: module docstring """
 
+import logging
 import os
 import sys
-import logging
-from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdClone, CmdExtract
+
+from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDev, CmdDocgen,
+                                CmdExtPackage, CmdExtract, CmdValidate)
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
-
-from resilient_sdk.cmds import (CmdDocgen,
-                                CmdCodegen,
-                                CmdExtract,
-                                CmdExtPackage,
-                                CmdValidate,
-                                CmdDev)
-
+from resilient_sdk.util.sdk_exception import SDKException
 
 # Setup logging
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
@@ -37,12 +31,14 @@ def get_main_app_parser():
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
         prog=sdk_helpers.SDK_PACKAGE_NAME,
-        description="Python SDK for developing Resilient Apps",
-        epilog="For support, please visit ibm.biz/resilientcommunity")
+        description="""Python SDK for developing IBM SOAR (Resilient) Apps that
+        provides various subcommands to help with development""",
+        epilog="For support, please visit ibm.biz/soarcommunity")
 
     parser.usage = """
     $ resilient-sdk <subcommand> ...
     $ resilient-sdk -v <subcommand> ...
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk -h
     """
 

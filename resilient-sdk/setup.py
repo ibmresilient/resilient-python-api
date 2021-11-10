@@ -44,6 +44,7 @@ setup(
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "https://ibm.biz/soarcommunity",
+        "Documentation": "https://ibm.biz/soar-python-docs",
         "Change Log": "https://ibm.biz/resilient-sdk-changes"
     },
     classifiers=[

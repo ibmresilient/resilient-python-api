@@ -10,6 +10,7 @@ import pytest
 import jinja2
 import sys
 from resilient import SimpleClient
+from resilient_sdk.cmds import CmdCodegen
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_data, mock_paths
@@ -407,3 +408,10 @@ def test_is_python_min_supported_version(caplog):
 
     else:
         assert mock_log not in caplog.text
+
+def test_parse_optionals(fx_get_sub_parser):
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    optionals = cmd_codegen.parser._get_optional_actions()
+    parsed_optionals = sdk_helpers.parse_optionals(optionals)
+
+    assert """\n -re, --reload\t\t\tReload customizations and create new customize.py \n""" in parsed_optionals

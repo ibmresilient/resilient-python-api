@@ -21,7 +21,7 @@ class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "package"
-    CMD_HELP = "Package an integration into a Resilient app"
+    CMD_HELP = "Package your Python Package into a IBM SOAR app"
     CMD_USAGE = """
     $ resilient-sdk package -p <path_to_directory>
     $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"

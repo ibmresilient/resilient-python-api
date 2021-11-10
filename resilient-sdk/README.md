@@ -1,15 +1,15 @@
 ![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-# IBM Resilient SDK
+# IBM SOAR (Resilient) SDK
 
 
 ## Overview
 
-The IBM Resilient SDK provides the tools and infrastructure you need to develop Resilient Apps, which you can then post on our [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
+The IBM SOAR (Resilient) SDK provides the tools and infrastructure you need to develop IBM SOAR Apps, which you can then post on our [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
 
 ## Installation
 
-To install the IBM Resilient SDK, simply execute the following command:
+To install the IBM SOAR (Resilient) SDK, simply execute the following command:
 
 ```
 $ pip install resilient-sdk
@@ -75,6 +75,8 @@ Python 2.7+ and Python 3.6+
 
 ## Documentation
 For details on the Resilient SDK commands, use the `-h` option on the command line. For example, `resilient-sdk -h` and `resilient-sdk codegen -h`.
+
+For more examples on its usage see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs)
 
 The IBM SOAR App Developer's Guide provides information on using the Resilient SDK to develop and package apps. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the follow-on page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
 
