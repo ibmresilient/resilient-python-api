@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-circuits" href="../resilient-circuits/resilient-circuits.html" /><link rel="prev" title="IBM SOAR Python Libraries" href="../../index.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico?"/><meta name="generator" content="sphinx-4.2.0, furo 2021.10.09"/>
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico?"/><meta name="generator" content="sphinx-4.3.0, furo 2021.10.09"/>
         <title>resilient - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=0254c309f5cadf746f1a613e7677379ac9c8cdcd" />
@@ -196,7 +196,7 @@
 <h2>API Client<a class="headerlink" href="#api-client" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">SimpleClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Python helper class for using the IBM SOAR (Resilient) REST API.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -566,17 +566,17 @@ task attachments, and data tables).</p>
 </dd></dl>
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient.co3.SimpleHTTPException">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">SimpleHTTPException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleHTTPException" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleHTTPException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleHTTPException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception for HTTP errors.</p>
 </dd></dl>
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient.co3.PatchConflictException">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">PatchConflictException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.PatchConflictException" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PatchConflictException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.PatchConflictException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception for patch conflicts.</p>
 </dd></dl>
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient.co3base.NoChange">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-name descname"><span class="pre">NoChange</span></span><a class="headerlink" href="#resilient.co3base.NoChange" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoChange</span></span><a class="headerlink" href="#resilient.co3base.NoChange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception that can be raised within a get/put handler or a patch callback
 to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </dd></dl>
