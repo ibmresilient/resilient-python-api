@@ -531,7 +531,7 @@ to an Incident or a Task</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to resilient</p></li>
+<li><p><strong>res_client</strong> (<a class="reference internal" href="../resilient-circuits/resilient-circuits.html#resilient_circuits.actions_component.ResilientComponent.rest_client" title="resilient_circuits.actions_component.ResilientComponent.rest_client"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResilientComponent.rest_client()</span></code></a>) – required for communication back to resilient</p></li>
 <li><p><strong>file_name</strong> (<em>str</em>) – name of the attachment to create</p></li>
 <li><p><strong>dataStream</strong> (<em>stream of bytes</em>) – stream of bytes used to create the attachment</p></li>
 <li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident</p></li>
@@ -769,8 +769,8 @@ for use by all functions using this library.</p>
 <p>Any similar properties in the function’s section would override the [integrations] properties.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In the Atomic Function template, as of version 41.1, <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> is instantiated and available available
-in a class that inherits <code class="docutils literal notranslate"><span class="pre">resilient_circuits.AppFunctionComponent</span></code> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
+<p>In the Atomic Function template, as of version 41.1, <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> is instantiated and available available
+in a class that inherits <a class="reference internal" href="../resilient-circuits/resilient-circuits.html#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">"get"</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">ibm</span><span class="o">.</span><span class="n">com</span><span class="p">)</span>
 </pre></div>
 </div>
