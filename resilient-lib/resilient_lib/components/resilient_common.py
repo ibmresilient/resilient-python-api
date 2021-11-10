@@ -329,7 +329,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
             res = write_file_attachment(self.rest_client(), "malware.eml", data_stream, 2001)
 
     :param res_client: required for communication back to resilient
-    :type res_client: resilient_circuits.ResilientComponent.rest_client()
+    :type res_client: :class:`ResilientComponent.rest_client() <resilient_circuits.actions_component.ResilientComponent.rest_client()>`
     :param file_name: name of the attachment to create
     :type file_name: str
     :param dataStream: stream of bytes used to create the attachment
