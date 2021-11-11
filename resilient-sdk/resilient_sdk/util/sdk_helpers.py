@@ -1068,7 +1068,7 @@ def is_python_min_supported_version():
         LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
                     "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
-def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG, timeout=30):
+def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG, timeout=40):
     """
     Run a given command as a subprocess.
 
@@ -1108,13 +1108,22 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG, timeout
             LOG.log(log_level_threshold, line.decode().strip("\n"))
             details += line.decode()
 
-        proc.wait(timeout=timeout) # additional wait w/ timeout to make sure process is complete
+        proc.wait() # additional wait to make sure process is complete
     else:
         # if debugging not enabled, use communicate as that has the
         # greatest ability to deal with large buffers of output 
         # being stored in subprocess.PIPE
-        stdout, _ = proc.communicate(timeout=timeout)
-        sys.stdout.write(" done\n")
+        for _i in range(timeout):
+            time.sleep(1)
+            if proc.poll() is not None:
+                stdout, _ = proc.communicate()
+                break
+        else:
+            proc.kill()
+            sys.stdout.write(" timeout!\n\n")
+            sys.stdout.flush()
+            raise SDKException("{0} timed out".format(" ".join(args)))
+        sys.stdout.write(" done\n\n")
         sys.stdout.flush()
         time.sleep(1)
         details = stdout.decode()

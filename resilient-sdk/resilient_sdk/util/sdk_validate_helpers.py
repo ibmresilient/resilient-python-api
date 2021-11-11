@@ -5,7 +5,6 @@
 import difflib
 import logging
 import os
-from subprocess import TimeoutExpired
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -178,7 +177,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     # run resilient-circuits selftest in a subprocess
         selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
         returncode, details = sdk_helpers.run_subprocess(selftest_cmd, "selftest")
-    except TimeoutExpired:
+    except SDKException:
         return False, SDKValidateIssue(
             name=attr_dict.get("timeout_name"),
             description=attr_dict.get("timeout_msg"),
