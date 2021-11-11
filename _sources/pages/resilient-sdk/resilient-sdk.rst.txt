@@ -2,13 +2,13 @@
 resilient-sdk
 =============
 
-Python SDK for developing Apps for the IBM SOAR (Resilient) Platform
+|sdk_desc|
 
 ------------
 Installation
 ------------
 
-To install the IBM SOAR (Resilient) SDK, simply execute the following command:
+To install the IBM SOAR SDK, execute the following command:
 
 .. code-block::
 
@@ -18,7 +18,7 @@ To install the IBM SOAR (Resilient) SDK, simply execute the following command:
 Configuration
 +++++++++++++
 
-Similar to our ``resilient-circuits`` library, to configure the SDK it requires an ``app.config``
+Similar to our ``resilient-circuits`` library, the SDK it requires an ``app.config``
 created in the default location: ``~/.resilient`` with the following minimum configurations:
 
 .. code-block::
@@ -32,7 +32,7 @@ created in the default location: ``~/.resilient`` with the following minimum con
 
 
 .. note::
-    Any of our commands that interact with the Platform support a ``--config|-c`` argument that precedes the default location, for example:
+    Commands that interact with the SOAR platform support the ``--config|-c`` argument, which precedes the default location. For example:
 
     .. code-block:: 
 
@@ -42,12 +42,12 @@ created in the default location: ``~/.resilient`` with the following minimum con
 Using the SDK
 -------------
 
-|sdk_desc|
+|sdk_parser_desc|
 
 .. parsed-literal::
 
     usage:
-    |sdk_usage|
+    |sdk_parser_usage|
 
     options:
     |sdk_options|

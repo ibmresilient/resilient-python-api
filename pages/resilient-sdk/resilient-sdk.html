@@ -191,16 +191,16 @@
         <article role="main">
           <section id="resilient-sdk">
 <h1>resilient-sdk<a class="headerlink" href="#resilient-sdk" title="Permalink to this headline">¶</a></h1>
-<p>Python SDK for developing Apps for the IBM SOAR (Resilient) Platform</p>
+<p>Python SDK for developing Apps for IBM SOAR</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>To install the IBM SOAR (Resilient) SDK, simply execute the following command:</p>
+<p>To install the IBM SOAR SDK, execute the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install resilient-sdk
 </pre></div>
 </div>
 <section id="configuration">
 <h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
-<p>Similar to our <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> library, to configure the SDK it requires an <code class="docutils literal notranslate"><span class="pre">app.config</span></code>
+<p>Similar to our <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> library, the SDK it requires an <code class="docutils literal notranslate"><span class="pre">app.config</span></code>
 created in the default location: <code class="docutils literal notranslate"><span class="pre">~/.resilient</span></code> with the following minimum configurations:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">resilient</span><span class="p">]</span>
 <span class="n">host</span><span class="o">=</span><span class="n">my_soar_instance</span><span class="o">.</span><span class="n">ibm</span><span class="o">.</span><span class="n">com</span>
@@ -212,7 +212,7 @@ created in the default location: <code class="docutils literal notranslate"><spa
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Any of our commands that interact with the Platform support a <code class="docutils literal notranslate"><span class="pre">--config|-c</span></code> argument that precedes the default location, for example:</p>
+<p>Commands that interact with the SOAR platform support the <code class="docutils literal notranslate"><span class="pre">--config|-c</span></code> argument, which precedes the default location. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name" -c path/to/my/custom_file.config
 </pre></div>
 </div>
@@ -221,7 +221,7 @@ created in the default location: <code class="docutils literal notranslate"><spa
 </section>
 <section id="using-the-sdk">
 <h2>Using the SDK<a class="headerlink" href="#using-the-sdk" title="Permalink to this headline">¶</a></h2>
-<p>Python SDK for developing IBM SOAR (Resilient) Apps that
+<p>Python SDK for developing IBM SOAR Apps that
 provides various subcommands to help with development</p>
 <pre class="literal-block">usage:
 $ resilient-sdk &lt;subcommand&gt; ...
@@ -234,7 +234,7 @@ options:
 -v, --verbose			Set the log level to DEBUG</pre>
 <section id="codegen">
 <h3>codegen<a class="headerlink" href="#codegen" title="Permalink to this headline">¶</a></h3>
-<p>Generate boilerplate code to start developing an app</p>
+<p>Generates boilerplate code used to begin developing an app.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' -c '/usr/custom_app.config'
@@ -260,7 +260,7 @@ options:
 </section>
 <section id="docgen">
 <h3>docgen<a class="headerlink" href="#docgen" title="Permalink to this headline">¶</a></h3>
-<p>Generate documentation for an app</p>
+<p>Generates boilerplate documentation for an app.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk docgen -p &lt;path_to_package&gt;
 
@@ -270,7 +270,7 @@ options:
 </section>
 <section id="package">
 <h3>package<a class="headerlink" href="#package" title="Permalink to this headline">¶</a></h3>
-<p>Package your Python Package into a IBM SOAR app</p>
+<p>Package your Python Package into a SOAR app format.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk package -p &lt;path_to_directory&gt;
 $ resilient-sdk package -p &lt;path_to_directory&gt; --display-name "My Custom App"
