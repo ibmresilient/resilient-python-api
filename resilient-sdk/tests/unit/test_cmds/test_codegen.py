@@ -73,12 +73,12 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
 
     assert isinstance(cmd_codegen, base_cmd.BaseCmd)
     assert cmd_codegen.CMD_NAME == "codegen"
-    assert cmd_codegen.CMD_HELP == "Generate boilerplate code to start developing an app"
+    assert cmd_codegen.CMD_HELP == "Generates boilerplate code used to begin developing an app."
     assert cmd_codegen.CMD_USAGE == """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
-    assert cmd_codegen.CMD_DESCRIPTION == "Generate boilerplate code to start developing an app"
+    assert cmd_codegen.CMD_DESCRIPTION == cmd_codegen.CMD_HELP
     assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser"]
 
     args = cmd_codegen.parser.parse_known_args()[0]

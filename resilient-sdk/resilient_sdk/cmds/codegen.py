@@ -23,7 +23,7 @@ class CmdCodegen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "codegen"
-    CMD_HELP = "Generate boilerplate code to start developing an app"
+    CMD_HELP = "Generates boilerplate code used to begin developing an app."
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'

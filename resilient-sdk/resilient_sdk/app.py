@@ -31,7 +31,7 @@ def get_main_app_parser():
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
         prog=sdk_helpers.SDK_PACKAGE_NAME,
-        description="""Python SDK for developing IBM SOAR (Resilient) Apps that
+        description="""Python SDK for developing IBM SOAR Apps that
         provides various subcommands to help with development""",
         epilog="For support, please visit ibm.biz/soarcommunity")
 

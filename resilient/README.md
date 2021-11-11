@@ -1,13 +1,13 @@
 ![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-# IBM SOAR (Resilient) Python Library
+# IBM SOAR Python Library
 
 ## Overview
-This package is a Python client module for the IBM SOAR (Resilient) REST API.
+This package is a Python client module for the IBM SOAR REST API.
 
 
 ## Documentation
-This library is used in our [resilient-circuits](https://pypi.org/project/resilient-circuits/) and [resilient-sdk](https://pypi.org/project/resilient-sdk/) libraries to handle connections to IBM SOAR's REST API.
+This library is used in our [resilient-circuits](https://pypi.org/project/resilient-circuits/) and [resilient-sdk](https://pypi.org/project/resilient-sdk/) libraries to handle connections to IBM SOAR REST API.
 
 For more information on how to develop custom Apps for IBM SOAR see the IBM SOAR App Developer's Guide. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the follow-on page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
 

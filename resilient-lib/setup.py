@@ -37,7 +37,7 @@ setup(
 
     # PyPI metadata
     author="IBM SOAR",
-    description="Common code used in development of Apps ran on the resilient-circuits framework",
+    description="Contains common library calls which facilitate the development of Apps for IBM SOAR",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-lib",

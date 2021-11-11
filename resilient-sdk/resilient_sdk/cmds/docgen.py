@@ -31,7 +31,7 @@ class CmdDocgen(BaseCmd):
     """
 
     CMD_NAME = "docgen"
-    CMD_HELP = "Generate documentation for an app"
+    CMD_HELP = "Generates boilerplate documentation for an app."
     CMD_USAGE = """
     $ resilient-sdk docgen -p <path_to_package>"""
     CMD_DESCRIPTION = CMD_HELP

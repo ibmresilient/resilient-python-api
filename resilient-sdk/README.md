@@ -1,15 +1,15 @@
 ![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-# IBM SOAR (Resilient) SDK
+# IBM SOAR SDK
 
 
 ## Overview
 
-The IBM SOAR (Resilient) SDK provides the tools and infrastructure you need to develop IBM SOAR Apps, which you can then post on our [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
+The IBM SOAR SDK, formerly the IBM Resilient SDK, provides the tools and infrastructure you need to develop IBM SOAR Apps, which you can then post on our [App Exchange](https://exchange.xforce.ibmcloud.com/hub/?br=Resilient).
 
 ## Installation
 
-To install the IBM SOAR (Resilient) SDK, simply execute the following command:
+To install the IBM SOAR SDK, execute the following command:
 
 ```
 $ pip install resilient-sdk
@@ -18,7 +18,7 @@ $ pip install resilient-sdk
 ## Usage
 
 ### Configuration
-Similar to our `resilient-circuits` library, to configure the SDK it requires an `app.config` created in the default location: `~/.resilient` with the following minimum configs:
+Similar to our `resilient-circuits` library, the SDK it requires an `app.config` created in the default location: `~/.resilient` with the following minimum configurations:
 ```
 [resilient]
 host=my_soar_instance.ibm.com
@@ -28,13 +28,13 @@ api_key_secret=<secret>
 cafile=false
 ```
 
-> **NOTE:** any of our commands that interact with the Platform support a `--config|-c` argument that precedes the default location, for example:
+> **NOTE:** Commands that interact with the SOAR platform support the `--config|-c` argument, which precedes the default location. For example:
 > ```
 > $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name" -c path/to/my/custom_file.config
 > ```
 
 ### `codegen:`
-Generate boilerplate code to start developing an app.
+Generates boilerplate code used to begin developing an app.
 ```
 $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
@@ -42,25 +42,25 @@ $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One'
 Note: When using --incidenttype for a child custom incident type, refer instead to the parent incident type.
 
 ### `docgen:`
-Generate documentation for an app.
+Generates boilerplate documentation for an app.
 ```
 $ resilient-sdk docgen -p <path_to_package>
 ```
 
 ### `extract:`
-Extract data in order to publish a .res file.
+Extracts data needed to publish a .res file.
 ```
 $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
 ```
 
 ### `package:`
-Package an integration into a Resilient app.
+Package your Python Package into a SOAR app format.
 ```
 $ resilient-sdk package -p <path_to_directory> --display-name "My Custom app"
 ```
 
 ### `clone:`
-Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name
+Duplicates an existing Action-related object (Function, Rule, Script, Message Destination, Workflow) with a new API or display name.
 ```
 $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
 ```

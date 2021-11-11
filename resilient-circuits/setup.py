@@ -46,7 +46,7 @@ setup(
 
     # PyPI metadata
     author="IBM SOAR",
-    description="Framework used to run IBM SOAR Apps and Integrations",
+    description="Framework used to run IBM SOAR Apps and Integrations.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-circuits",

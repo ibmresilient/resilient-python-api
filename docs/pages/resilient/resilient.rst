@@ -2,7 +2,7 @@
 resilient
 =========
 
-Python client module for the IBM SOAR (Resilient) REST API
+|resilient_desc|
 
 ----------
 API Client

@@ -2,7 +2,7 @@
 resilient-circuits
 ==================
 
-Framework used to run IBM SOAR Apps and Integrations. Contains the class :class:`~resilient_circuits.app_function_component.AppFunctionComponent`
+|circuits_desc| Contains the class :class:`~resilient_circuits.app_function_component.AppFunctionComponent`
 that gets generated using the ``codegen`` command in the ``resilient-sdk``
 
 ----------

@@ -15,6 +15,7 @@ import sys
 import resilient_lib
 from resilient_sdk import app as sdk_app
 from resilient_sdk.util.sdk_helpers import parse_optionals
+from resilient_sdk.util.package_file_helpers import parse_setup_py, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES
 from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen,
                                 CmdExtPackage, CmdExtract)
 
@@ -22,6 +23,7 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath("../resilient"))
 sys.path.insert(0, os.path.abspath("../resilient_lib"))
 sys.path.insert(0, os.path.abspath("../resilient_circuits"))
+sys.path.insert(0, os.path.abspath("../resilient_sdk"))
 
 
 # -- Project information -----------------------------------------------------
@@ -74,7 +76,7 @@ html_static_path = ['_static']
 add_module_names = False
 
 
-# resilient-sdk docs
+# resilient-sdk parser
 sdk_parser = sdk_app.get_main_app_parser()
 sdk_sub_parser = sdk_app.get_main_app_sub_parser(sdk_parser)
 
@@ -84,9 +86,24 @@ cmd_ext_package = CmdExtPackage(sdk_sub_parser)
 cmd_clone = CmdClone(sdk_sub_parser)
 cmd_extract = CmdExtract(sdk_sub_parser)
 
+# parse the setup.py files
+the_globals = {
+    "__file__": "",
+    "long_description": ""
+}
+resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+lib_setup_attributes = parse_setup_py(os.path.abspath("../resilient-lib/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+sdk_setup_attributes = parse_setup_py(os.path.abspath("../resilient-sdk/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+
+# make variables available in .rst files
 rst_epilog = f"""
-.. |sdk_desc| replace:: {sdk_parser.description}
-.. |sdk_usage| replace:: {sdk_parser.usage}
+.. |resilient_desc| replace:: {resilient_setup_attributes.get("description")}
+.. |circuits_desc| replace:: {circuits_setup_attributes.get("description")}
+.. |lib_desc| replace:: {lib_setup_attributes.get("description")}
+.. |sdk_desc| replace:: {sdk_setup_attributes.get("description")}
+.. |sdk_parser_desc| replace:: {sdk_parser.description}
+.. |sdk_parser_usage| replace:: {sdk_parser.usage}
 .. |sdk_options| replace:: {parse_optionals(sdk_parser._get_optional_actions())}
 .. |cmd_codegen_desc| replace:: {cmd_codegen.parser.description}
 .. |cmd_codegen_usage| replace:: {cmd_codegen.parser.usage}

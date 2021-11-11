@@ -214,10 +214,10 @@ def _raise_if_error(response):
 
 class SimpleClient(co3base.BaseClient):
     """
-    Python helper class for using the IBM SOAR (Resilient) REST API.
+    Python helper class for using the IBM SOAR REST API.
 
     .. note::
-        The full REST API Documentation for IBM SOAR (Resilient) can be
+        The full REST API Documentation for IBM SOAR can be
         viewed on the Platform itself by searching for the **REST API Reference**
         or by going to: ``https://<base_url>/docs/rest-api/index.html``
     """
@@ -240,7 +240,7 @@ class SimpleClient(co3base.BaseClient):
 
     def connect(self, email, password, timeout=None):
         """
-        Connect and authenticate to the IBM SOAR (Resilient) REST API service.
+        Connect and authenticate to the IBM SOAR REST API service.
 
         :param email: The email address to use for authentication.
         :type email: str
@@ -248,7 +248,7 @@ class SimpleClient(co3base.BaseClient):
         :type password: str
         :param timeout: optional timeout (seconds)
         :type timeout: int
-        :return: The IBM SOAR (Resilient) session object.
+        :return: The IBM SOAR session object.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Calling connect of BaseClient. Convert the exception if there is any

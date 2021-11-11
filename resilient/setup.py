@@ -56,7 +56,7 @@ setup(
 
     # PyPI metadata
     author="IBM SOAR",
-    description="Python client module for the IBM SOAR (Resilient) REST API",
+    description="Python client module for the IBM SOAR REST API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient",

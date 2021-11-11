@@ -177,7 +177,7 @@ class ResilientComponent(BaseComponent):
     def rest_client(self):
         """
         Return a connected instance of the :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
-        that can be used to access the IBM SOAR (Resilient) REST API.
+        that can be used to access the IBM SOAR REST API.
 
         .. note::
             An :class:`~resilient_circuits.app_function_component.AppFunctionComponent` inherits a

@@ -153,11 +153,12 @@ def get_setup_callable(content):
 
     return '\n'.join(sanitized_content)
 
-def parse_setup_py(path, attribute_names):
+def parse_setup_py(path, attribute_names, the_globals={}):
     """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value
 
     :param path: Path to setup.py for a package.
     :param attribute_names: List of attribute names to extract from setup.py.
+    :param the_globals: Dict of extra variables required to invoke the setup.py file successfully.
     :return return_dict: Dict of properties from setup.py.
     """
     return_dict = {}
@@ -169,6 +170,9 @@ def parse_setup_py(path, attribute_names):
         }
     else:
         built_ins = {}
+
+    the_globals.update({"__builtins__": built_ins})
+
     # Define a dummy setup function to get the dictionary of parameters returned from evaled setup.py callable.
     def setup(*args, **kwargs):
         return kwargs
@@ -185,7 +189,7 @@ def parse_setup_py(path, attribute_names):
 
     # Run eval on callable content to retrieve attributes.
     try:
-        result = eval(setup_callable, {'__builtins__':built_ins}, {"setup": setup})
+        result = eval(setup_callable, the_globals, {"setup": setup})
     except Exception as err:
         raise SDKException(u"Failed to eval setup callable {0}".format(err))
 
