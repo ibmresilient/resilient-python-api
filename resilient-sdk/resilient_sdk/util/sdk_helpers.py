@@ -1068,22 +1068,17 @@ def is_python_min_supported_version():
         LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
                     "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
-def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG, timeout=40):
+def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     """
     Run a given command as a subprocess.
 
-    Prints a spinning 'waiting bar' if the logging level is set to anything but <log_level_threshold>.
-    Prints the details of the run if the logging level is set to <log_level_threshold>.
-
-    :raises: TimeoutExpired exception if the subprocess times out
+    :raises: SDKException if the subprocess times out
     :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
     :type args: str | list
     :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
     :type cmd_name: str
     :param log_level_threshold: (optional) the logging level at which to output the stdout/stderr for the subprocess; default is DEBUG
     :type log_level_threshold: int
-    :param timeout: the max time a process can run for (in seconds); default is 30 seconds
-    :type timeout: float
     :return: the exit code and string details of the run
     :rtype: (int, str)
     """
@@ -1113,16 +1108,7 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG, timeout
         # if debugging not enabled, use communicate as that has the
         # greatest ability to deal with large buffers of output 
         # being stored in subprocess.PIPE
-        for _i in range(timeout):
-            time.sleep(1)
-            if proc.poll() is not None:
-                stdout, _ = proc.communicate()
-                break
-        else:
-            proc.kill()
-            sys.stdout.write(" timeout!\n\n")
-            sys.stdout.flush()
-            raise SDKException("{0} timed out".format(" ".join(args)))
+        stdout, _ = proc.communicate()
         sys.stdout.write(" done\n\n")
         sys.stdout.flush()
         time.sleep(1)

@@ -172,12 +172,6 @@ selftest_attributes = [
         "error_msg": "While running selftest.py, 'resilient-circuits' failed to connect to server. Details:\n{0}",
         "error_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
-        # if a returncode > 1 comes from running selftest.py
-        "timeout_name": "selftest.py",
-        "timeout_msg": "selftest.py timed out while trying to connect to the server",
-        "timeout_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "timeout_solution": "Ensure that your SOAR instance is properly configured in the app.config and reachable within your current network configuration",
-
         # if selftest.py succeeds (i.e. returncode == 0)
         "pass_name": "selftest.py success",
         "pass_msg": "selftest.py successfully ran for '{0}'",

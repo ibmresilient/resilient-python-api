@@ -173,17 +173,9 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", path_app_config)
     os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = path_app_config
 
-    try:
     # run resilient-circuits selftest in a subprocess
-        selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
-        returncode, details = sdk_helpers.run_subprocess(selftest_cmd, "selftest")
-    except SDKException:
-        return False, SDKValidateIssue(
-            name=attr_dict.get("timeout_name"),
-            description=attr_dict.get("timeout_msg"),
-            severity=attr_dict.get("timeout_severity"),
-            solution=attr_dict.get("timeout_solution")
-        )
+    selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
+    returncode, details = sdk_helpers.run_subprocess(selftest_cmd, "selftest")
 
     # Unset env var
     os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = ""
