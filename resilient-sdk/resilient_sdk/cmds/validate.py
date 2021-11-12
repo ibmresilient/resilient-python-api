@@ -29,6 +29,10 @@ SUB_CMD_CVE = ("--cve", )
 SUB_CMD_SELFTEST = ("--selftest", )
 
 
+# optional parameters are skipped if they aren't included in the setup.py
+SETUP_OPTIONAL_ATTRS = ("python_requires", "author_email")
+
+
 class CmdValidate(BaseCmd):
     """TODO Docstring"""
 
@@ -163,6 +167,8 @@ class CmdValidate(BaseCmd):
 
         # list of string for output
         package_details_output = []
+        # skips are skipped in non-DEBUG outputs as they are all considered too
+        # long for normal output
         skips = ("long_description", "entry_points")
 
         # Get absolute path to package
@@ -184,7 +190,10 @@ class CmdValidate(BaseCmd):
         # (including values that are in 'skips' here, though they will not be output at the end of this method)
         for attr in package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES:
             attr_val = parsed_setup_file.get(attr)
-            package_details_output.append({attr: attr_val if attr_val else "**NOT FOUND**"})
+
+            # optional parameters are skipped if their values aren't found
+            if attr_val or attr not in SETUP_OPTIONAL_ATTRS:
+                package_details_output.append({attr: attr_val if attr_val else "**NOT FOUND**"})
 
 
 
@@ -356,6 +365,10 @@ class CmdValidate(BaseCmd):
 
             # check if attr is missing from setup.py file
             if not parsed_attr:
+                # if attr isn't found and it is optional, skip to the next attr
+                if attr in SETUP_OPTIONAL_ATTRS:
+                    continue
+                
                 name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
             elif fail_func(parsed_attr): # check if it fails the 'fail_func'

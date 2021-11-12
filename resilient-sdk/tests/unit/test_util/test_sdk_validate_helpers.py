@@ -90,21 +90,9 @@ def test_sefltest_run_selftestpy_valid():
 
     package_name = "fake_package_name"
 
-    class MockSubProcessResult:
-        stderr = b"Success"
-        returncode = 0
-        def __init__(*args, **kwargs):
-            pass
-        def poll(self):
-            return "Done"
-        def wait(self):
-            return
-        def communicate(self):
-            return "", self.stderr
-
-    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.Popen") as mock_subprocess:
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_subprocess:
         
-        mock_subprocess.return_value = MockSubProcessResult()
+        mock_subprocess.return_value = 0, "Success"
 
         result = sdk_validate_helpers.selftest_run_selftestpy(attr_dict, package_name)
 
@@ -118,21 +106,9 @@ def test_sefltest_run_selftestpy_invalid(fx_copy_fn_main_mock_integration):
 
     package_name = "fake_package_name"
 
-    class MockSubProcessResult:
-        stderr = b"failure {'state': 'failure', 'reason': 'failed for test reasons'} and more text here..."
-        returncode = 1
-        def __init__(*args, **kwargs):
-            pass
-        def poll(self):
-            return "Done"
-        def wait(self):
-            return
-        def communicate(self):
-            return "", self.stderr
-
-    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.Popen") as mock_subprocess:
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_subprocess:
         
-        mock_subprocess.return_value = MockSubProcessResult()
+        mock_subprocess.return_value = 1, "failure {'state': 'failure', 'reason': 'failed for test reasons'} and more text here..."
 
         result = sdk_validate_helpers.selftest_run_selftestpy(attr_dict, package_name)
 
@@ -147,28 +123,17 @@ def test_sefltest_run_selftestpy_rest_error(fx_copy_fn_main_mock_integration):
 
     package_name = "fake_package_name"
 
-    class MockSubProcessResult:
-        stderr = b"ERROR: (fake) issue connecting to SOAR"
-        returncode = 20
-        def __init__(*args, **kwargs):
-            pass
-        def poll(self):
-            return "Done"
-        def wait(self):
-            return
-        def communicate(self):
-            return "", self.stderr
-
-    with patch("resilient_sdk.util.sdk_validate_helpers.subprocess.Popen") as mock_subprocess:
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_subprocess:
         
-        mock_subprocess.return_value = MockSubProcessResult()
+        error_msg = u"ERROR: (fake) issue connecting to SOAR with some unicode: ล ฦ ว"
+        mock_subprocess.return_value = 20, error_msg
 
         result = sdk_validate_helpers.selftest_run_selftestpy(attr_dict, package_name)
 
         assert len(result) == 2
         assert result[0] is False
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-        assert MockSubProcessResult().stderr.decode("utf-8") in result[1].description
+        assert error_msg in result[1].description
 
 def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration):
 

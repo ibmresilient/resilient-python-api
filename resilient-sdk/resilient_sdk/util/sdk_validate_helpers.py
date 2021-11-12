@@ -5,9 +5,6 @@
 import difflib
 import logging
 import os
-import subprocess
-import sys
-import time
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -176,33 +173,14 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     LOG.debug("\nSetting $APP_CONFIG_FILE to '%s'\n", path_app_config)
     os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = path_app_config
 
-    # run selftest in package as a subprocess
+    # run resilient-circuits selftest in a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
-    proc = subprocess.Popen(selftest_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
-    # "waiting bar" that spins while waiting for proc to finish
-    waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
-    i = 0
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("Running selftest... {0}       ".format(waiting_bar[i]))
-        sys.stdout.flush()
-        i = (i + 1) % len(waiting_bar)
-        time.sleep(0.2)
+    returncode, details = sdk_helpers.run_subprocess(selftest_cmd, "selftest")
 
     # Unset env var
     os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = ""
 
-    sys.stdout.write("\r")
-    sys.stdout.write("selftest run complete\n")
-    sys.stdout.flush()
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    details = stderr.decode("utf-8")
-
-    LOG.debug(details)
-
-    # details is grabbed from stdout and currently in different formats based on the return code.
+    # details is grabbed from output and currently in different formats based on the return code.
     #
     # if returncode==1: details="<resilient-circuits run details>...<details on selftest run>...""
     #                   the important part come in the section between the last two '{' '}'
@@ -214,16 +192,21 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     #                       {'state': 'failure', 'reason': '<some reason for failure>'}
     #                       Elapsed time: x.xyz seconds
     #                   ...
-    #
+    # 
+    # in resilient-circuits <43.1, "unimplemented" returns a error code 0 so:
     # if returncode==0: same as if ==1, except the 'state' is 'success' and there is no 'reason' field
-    #                   NOTE: it is possible for there to be 'state': 'unimplemented' if which case we fail
+    #                   NOTE (<v43.1 only): it is possible for there to be 'state': 'unimplemented' if which case we fail
     #                   the validation and let the user know that they should implement selftest
+    # 
+    # in resilient-circuits >=43.1, "unimplemented" returns an error code 2 so:
+    # if returncode==2: "unimplemented" is the status of the selftest run so we fail and let the user know they
+    #                   should implement selftest
     #
-    # if returncode>1:  details=<some error about REST or STOMP connection failed to SOAR server>
+    # if returncode>2:  details=<some error about REST or STOMP connection failed to SOAR server>
     #                   the important part occurs after "ERROR: ..." so we parse from there on to the end
     
     # if selftest failed (see details of the return codes @ resilient-circuits.cmds.selftest)
-    if proc.returncode == 1:
+    if returncode == 1:
         details = details[details.rfind("{")+1:details.rfind("}")].strip().replace("\n", ". ").replace("\t", " ")
         return False, SDKValidateIssue(
             name=attr_dict.get("fail_name"),
@@ -231,15 +214,31 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )
-    elif proc.returncode > 1:
+    elif returncode > 2:
         # return code is a failure of REST or STOMP connection
-        details = details[details.rfind("ERROR"):].strip().replace("\n", ". ").replace("\t", " ")
+
+        # parse out the ERROR line and then take the 5 lines that came before it
+        i = [i for i, line in reversed(list(enumerate(details.splitlines()))) if "ERROR" in line]
+        i = i[0] if i else 0
+
+        details_parsed = u"\n\t\t...\n\t\t" + u"\n\t\t".join(details.splitlines()[max(0, i - 5):])
+
         return False, SDKValidateIssue(
             name=attr_dict.get("error_name"),
-            description=attr_dict.get("error_msg").format(details),
-            severity=attr_dict.get("error_severity")
+            description=attr_dict.get("error_msg").format(details_parsed),
+            severity=attr_dict.get("error_severity"),
+            solution=""
         )
-    elif proc.returncode == 0:
+    elif returncode == 2:
+        # in resilient-circuits >=v43.1 returncode == 2 means "unimplemented"
+        # NOTE: that for <43.1 we still have to check and parse the output
+        return False, SDKValidateIssue(
+                name=attr_dict.get("missing_name"),
+                description=attr_dict.get("missing_msg").format(package_name),
+                severity=attr_dict.get("missing_severity"),
+                solution=attr_dict.get("missing_solution")
+            )
+    elif returncode == 0:
         # look to see if output has "'state': 'unimplemented'" in it -- that means that user hasn't
         # implemented selftest yet. warn that they should implement selftest
         if details.find("'state': 'unimplemented'") != -1:
@@ -255,7 +254,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
                 name=attr_dict.get("pass_name"),
                 description=attr_dict.get("pass_msg").format(package_name),
                 severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
-                solution=""
+                solution=details[details.rfind("{'state"):].replace("\r", "").replace("\n", " ").replace("-", "")
             )
     else:
         raise SDKException("Unknown error while running '{0}'".format(" ".join(selftest_cmd)))
@@ -392,13 +391,15 @@ def package_files_template_match(package_name, package_version, path_file, filen
                     package_name=package_name, version=package_version, resilient_libraries_version=sdk_helpers.get_resilient_libraries_version_to_use())
     
     # read the package's file
-    file_contents = sdk_helpers.read_file(path_file)
+    # strip each line of its newline but then add it back in for consistency between this and the rendered file
+    file_contents = [line.strip("\n") + "\n" for line in sdk_helpers.read_file(path_file)]
 
     # split template file into list of lines
-    template_contents = file_rendered.splitlines(True)
+    # strip each line of its newline but then add it back in for consistency
+    template_contents = [line.strip("\n") + "\n" for line in file_rendered.splitlines()]
     
-    # compare given file to template
-    s_diff = difflib.SequenceMatcher(None, file_contents, template_contents)
+    # compare given file to template (ignoring blanks and hard tabs)
+    s_diff = difflib.SequenceMatcher(lambda x: x in " \t", file_contents, template_contents)
 
     # check match between the two files
     # if less than a perfect match, the match fails
@@ -407,6 +408,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
         diff = difflib.unified_diff(template_contents, file_contents, 
                                     fromfile="template_"+filename, tofile=filename, n=0) # n is number of context lines
         diff = package_helpers.color_diff_output(diff) # add color to diff output
+
         return [SDKValidateIssue(
             name=attr_dict.get("fail_name"),
             description=attr_dict.get("fail_msg").format(comp_ratio*100, "\t\t".join(diff)),
