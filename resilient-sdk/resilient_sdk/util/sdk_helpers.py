@@ -1072,7 +1072,6 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     """
     Run a given command as a subprocess.
 
-    :raises: SDKException if the subprocess times out
     :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
     :type args: str | list
     :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
@@ -1100,8 +1099,8 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
             line = proc.stdout.readline()
             if not line:
                 break
-            LOG.log(log_level_threshold, line.decode().strip("\n"))
-            details += line.decode()
+            LOG.log(log_level_threshold, line.decode("utf-8").strip("\n"))
+            details += line.decode("utf-8")
 
         proc.wait() # additional wait to make sure process is complete
     else:
@@ -1109,10 +1108,10 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
         # greatest ability to deal with large buffers of output 
         # being stored in subprocess.PIPE
         stdout, _ = proc.communicate()
-        sys.stdout.write(" done\n\n")
+        sys.stdout.write(" {0} complete\n\n".format(cmd_name))
         sys.stdout.flush()
-        time.sleep(1)
-        details = stdout.decode()
+        time.sleep(0.75)
+        details = stdout.decode("utf-8")
 
     return proc.returncode, details
 

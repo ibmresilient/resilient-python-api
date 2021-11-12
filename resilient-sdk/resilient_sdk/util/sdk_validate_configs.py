@@ -16,7 +16,7 @@ setup_py_attributes = {
         "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x),
         "fail_msg": u"setup.py attribute '{0}' has invalid character(s) in '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Make sure that '{0}' is all lowercase and contains only letters, numbers, or underscores",
+        "solution": u"Make sure that '{0}' is all lowercase and contains only letters, numbers or underscores",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     },
     "display_name": {
@@ -37,7 +37,7 @@ setup_py_attributes = {
     },
     "url": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: "." not in x,
+        "fail_func": lambda x: not sdk_helpers.is_valid_url(x),
         "fail_msg": u"'{1}' is not a valid '{0}'",
         "missing_msg": "'url' is a recommended attribute",
         "solution": "Include a valid URL for your organization",

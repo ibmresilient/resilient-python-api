@@ -192,12 +192,17 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     #                       {'state': 'failure', 'reason': '<some reason for failure>'}
     #                       Elapsed time: x.xyz seconds
     #                   ...
-    #
+    # 
+    # in resilient-circuits <43.1, "unimplemented" returns a error code 0 so:
     # if returncode==0: same as if ==1, except the 'state' is 'success' and there is no 'reason' field
-    #                   NOTE: it is possible for there to be 'state': 'unimplemented' if which case we fail
+    #                   NOTE (<v43.1 only): it is possible for there to be 'state': 'unimplemented' if which case we fail
     #                   the validation and let the user know that they should implement selftest
+    # 
+    # in resilient-circuits >=43.1, "unimplemented" returns an error code 2 so:
+    # if returncode==2: "unimplemented" is the status of the selftest run so we fail and let the user know they
+    #                   should implement selftest
     #
-    # if returncode>1:  details=<some error about REST or STOMP connection failed to SOAR server>
+    # if returncode>2:  details=<some error about REST or STOMP connection failed to SOAR server>
     #                   the important part occurs after "ERROR: ..." so we parse from there on to the end
     
     # if selftest failed (see details of the return codes @ resilient-circuits.cmds.selftest)
@@ -209,14 +214,14 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )
-    elif returncode > 1:
+    elif returncode > 2:
         # return code is a failure of REST or STOMP connection
 
         # parse out the ERROR line and then take the 5 lines that came before it
         i = [i for i, line in reversed(list(enumerate(details.splitlines()))) if "ERROR" in line]
         i = i[0] if i else 0
 
-        details_parsed = "\n\t\t...\n\t\t" + "\n\t\t".join(details.splitlines()[max(0, i - 5):])
+        details_parsed = u"\n\t\t...\n\t\t" + u"\n\t\t".join(details.splitlines()[max(0, i - 5):])
 
         return False, SDKValidateIssue(
             name=attr_dict.get("error_name"),
@@ -224,6 +229,15 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
             severity=attr_dict.get("error_severity"),
             solution=""
         )
+    elif returncode == 2:
+        # in resilient-circuits >=v43.1 returncode == 2 means "unimplemented"
+        # NOTE: that for <43.1 we still have to check and parse the output
+        return False, SDKValidateIssue(
+                name=attr_dict.get("missing_name"),
+                description=attr_dict.get("missing_msg").format(package_name),
+                severity=attr_dict.get("missing_severity"),
+                solution=attr_dict.get("missing_solution")
+            )
     elif returncode == 0:
         # look to see if output has "'state': 'unimplemented'" in it -- that means that user hasn't
         # implemented selftest yet. warn that they should implement selftest
