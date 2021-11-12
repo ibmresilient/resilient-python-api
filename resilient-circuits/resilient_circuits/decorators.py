@@ -187,12 +187,15 @@ class inbound_app(object):
 
 class app_function(object):
     """
-    Creates new a Next Generation Function (@app_function) Handler.
+    Creates new a :class:`@app_function <app_function>` decorator.
 
-    This decorator can be applied to methods of classes derived from the class `ResilientComponent`.
+    This decorator can be applied to methods of the :class:`~resilient_circuits.app_function_component.AppFunctionComponent` class.
+
     It marks the method as a handler for the events passed as arguments to the decorator.
-    Specify the function's API name as parameter to the decorator. It only accepts 1 api_name as an argument.
-    The function handler will automatically be subscribed to the function's message destination.
+
+    Specify the function's API name as parameter to the decorator. **It only accepts 1** ``api_name`` **as an argument.**
+
+    The function handler will automatically be subscribed to the function's ``message destination``.
     """
 
     def __init__(self, *args, **kwargs):

@@ -12,7 +12,7 @@
   ![screenshot: screenshot_1](./doc/screenshots/screenshot_1.png)
 -->
 
-# {{ display_name }}
+# Main Mock Integration Functions for IBM Resilient
 
 - [Release Notes](#release-notes)
 - [Overview](#overview)
@@ -128,6 +128,7 @@ Resilient Circuits Components for 'fn_main_mock_integration'
 
 ## Troubleshooting
 There are several ways to verify the successful operation of a function.
+Here is some unicode to test: ሰማይ
 
 ### Resilient Action Status
 * When viewing an incident, use the Actions menu to view **Action Status**.

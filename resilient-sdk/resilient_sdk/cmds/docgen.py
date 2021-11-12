@@ -10,12 +10,12 @@ import shutil
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, ResilientObjMap
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 # JINJA Constants
 README_TEMPLATE_NAME = "README.md.jinja2"
@@ -31,7 +31,7 @@ class CmdDocgen(BaseCmd):
     """
 
     CMD_NAME = "docgen"
-    CMD_HELP = "Generate documentation for an app"
+    CMD_HELP = "Generates boilerplate documentation for an app."
     CMD_USAGE = """
     $ resilient-sdk docgen -p <path_to_package>"""
     CMD_DESCRIPTION = CMD_HELP
@@ -362,7 +362,8 @@ class CmdDocgen(BaseCmd):
             "rules": jinja_rules,
             "datatables": jinja_datatables,
             "custom_fields": jinja_custom_fields,
-            "custom_artifact_types": jinja_custom_artifact_types
+            "custom_artifact_types": jinja_custom_artifact_types,
+            "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING
         })
 
         # Create a backup if needed of README

@@ -10,7 +10,11 @@ SHARED_MOCK_DATA_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTS_DIR = os.path.dirname(SHARED_MOCK_DATA_DIR)
 RESILIENT_API_DATA = os.path.join(SHARED_MOCK_DATA_DIR, "resilient_api_data")
 
+PATH_SDK_SETUP_PY = os.path.abspath(os.path.join(TESTS_DIR, "..", "setup.py"))
+
 TEST_TEMP_DIR = os.path.join(TESTS_DIR, "test_temp")
+
+MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME = "fn_main_mock_integration"
 
 MOCK_PACKAGE_FILES_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_package_files")
 MOCK_SETUP_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup.py")
@@ -27,7 +31,8 @@ MOCK_ZIP = os.path.join(SHARED_MOCK_DATA_DIR, "mock.zip")
 MOCK_EXPORT_RESZ = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.resz")
 
 MOCK_INT_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_integrations")
-MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration")
+MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
+MOCK_INT_FN_MAIN_MOCK_INTEGRATION_UTIL = os.path.join(MOCK_INT_FN_MAIN_MOCK_INTEGRATION, MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, "util")
 
 MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_files")
 MOCK_APP_ZIP_APP_JSON = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_app.json")

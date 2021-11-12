@@ -1,73 +1,88 @@
-2021-11: version 42.3
+**2021-11: version 43.0**
+
+* Added examples to ``codegen`` template
+* Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
+* A packaged App will now include additional files with additions to the MANIFEST.in file
+
+**2021-11: version 42.3**
+
 * Enforce unix style line endings (``\n``) when writing files
+* ``codegen`` to include ``apikey_permissions.txt`` in MANIFEST.in file
 
-2021-10: version 42.2
-* Bug fix for 'clone' to support Python 2.7
-* Ability to use different app.config file per command using '-c' flag
+**2021-10: version 42.2**
 
-2021-08: version 42.1
+* Bug fix for ``clone`` to support Python 2.7
+* Ability to use different app.config file per command using ``-c`` flag
+
+**2021-08: version 42.1**
+
 * No major changes. Just bumping build number to coincide with other builds
 
-2021-08: version 42.0
-* codegen now generates a template for App's to be developed to run in a Python >= 3.6 environment.
+**2021-08: version 42.0**
+
+* ``codegen`` now generates a template for App's to be developed to run in a Python >= 3.6 environment.
 * Bug fixes.
-* Support for collecting incident types in codegen and extract. See the command line parameters -i and --incidenttype.
+* Support for collecting incident types in ``codegen`` and extract. See the command line parameters ``-i`` and ``--incidenttype``.
 
-2021-06: version 41.1
-* To address a security vulnerability, the Dockerfile codegen template now assigns user 1001 to the non-root group 1001. User 1001 is used to run a container.
-* Added a new Atomic Function template generated with codegen, which is a condensed version of our Original Function template. It includes comments on best practices.
+**2021-06: version 41.1**
 
-2021-05: version 41.0
-* List all setup.py "install_requires" dependencies in docgen README template
+* To address a security vulnerability, the Dockerfile ``codegen`` template now assigns user 1001 to the non-root group 1001. User 1001 is used to run a container.
+* Added a new Atomic Function template generated with ``codegen``, which is a condensed version of our Original Function template. It includes comments on best practices.
+
+**2021-05: version 41.0**
+
+* List all setup.py ``"install_requires"`` dependencies in ``docgen`` README template
 * Bug fixes
 
-2021-03: version 40.2
-* Bug fix for to use setuptools_scm < 6.0.0 for Python 2.7 environments
+**2021-03: version 40.2**
 
-2021-03: version 40.1
-* Adjust entrypoint.sh template to ensure resilient-circuits is restarted when a fatal error occurs when running on App Host
+* Bug fix for to use ``setuptools_scm < 6.0.0`` for Python 2.7 environments
+
+**2021-03: version 40.1**
+
+* Adjust ``entrypoint.sh`` template to ensure ``resilient-circuits`` is restarted when a fatal error occurs when running on App Host
 * Added timestamp to logs on App Host
 
-2021-02: ver. 40.0
-* The function template that is produced when you run 'codegen' now includes references to the resilient-lib library.
-* When the var RES_SDK_DEV is set, 'codegen' now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server".
-* Added '--no-samples' flag to 'package' and when set do not look for the payload_samples directory or try add them to the export.res file.
-* Added '--image-hash' flag to 'package' to specify the SHA256 of an image that the app.zip refers to.
+**2021-02: version 40.0**
 
-2020-10: ver. 39.0
-* The 'docgen' command creates a single README and updated the README to include information on App Hosts.
+* The function template that is produced when you run ``codegen`` now includes references to the resilient-lib library.
+* When the var RES_SDK_DEV is set, ``codegen`` now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server".
+* Added ``--no-samples`` flag to ``package`` and when set do not look for the payload_samples directory or try add them to the export.res file.
+* Added ``--image-hash`` flag to ``package`` to specify the SHA256 of an image that the app.zip refers to.
+
+**2020-10: version 39.0**
+
+* The ``docgen`` command creates a single README and updated the README to include information on App Hosts.
 * Added the Resilient platform version to the customize.py template.
-* The 'package' command replaces tags on Resilient objects in export.res instead of extending them.
+* The ``package`` command replaces tags on Resilient objects in export.res instead of extending them.
 * Added environmental variable RES_SDK_DEV.
-* Added '--set-version' argument to the dev command.
-* Added 'display_name' attribute to the setup.py file.
-* The 'codegen', 'codegen --reload' and 'dev --set-version' commands create a /util/data/export.res file that contains the import definition which was previously base64 encoded text in customize.py.
-* Before running the 'codegen --reload' on packages created with Resilient SDK < 39.0.0, ensure the MANIFEST.in file includes the line: recursive-include <package_name>/util *
-* The 'codegen' and 'package' commands return errors if the package name contains uppercase characters.
-* Added a 'clone' command to clone an Action Object.
+* Added ``--set-version`` argument to the dev command.
+* Added ``display_name`` attribute to the setup.py file.
+* The ``codegen``, ``codegen --reload`` and ``dev --set-version`` commands create a /util/data/export.res file that contains the import definition which was previously base64 encoded text in customize.py.
+* Before running the ``codegen --reload`` on packages created with Resilient SDK < 39.0.0, ensure the MANIFEST.in file includes the line: recursive-include <package_name>/util *
+* The ``codegen`` and ``package`` commands return errors if the package name contains uppercase characters.
+* Added a ``clone`` command to clone an Action Object.
 
-2020-07: ver. 37.2
+**2020-07: version 37.2**
 
 * Updates to Dockerfile template
 * Support for newest export formats
 * Bug fixes.
 
-2020-05: ver. 37.0
+**2020-05: version 37.0**
 
 * Package created. Using 37 as original version
 * Added support for API key permissions in app.json using permissions file.
 * Added support for new apphost config section.
 * Customization and config properties files now extracted from setup.py.
-* Rename 'app:package' command to 'package'.
+* Rename ``app:package`` command to ``package``.
 * Bug fixes.
 
-2020-04: ver. 36.2.dev
+**2020-04: version 36.2.dev**
 
 * Package dev version created. Using 36.2 as original version
 * Added support for API key permissions in app.json using permissions file.
 * Added support for new apphost config section.
 * Customization and config properties files now extracted from setup.py.
-* Rename 'app:package' command to 'package'.
+* Rename ``app:package`` command to ``package``.
 * Bug fixes.
-
-2020-04. ver. 0.0

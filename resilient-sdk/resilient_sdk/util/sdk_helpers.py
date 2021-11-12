@@ -14,7 +14,10 @@ import json
 import datetime
 import importlib
 import hashlib
+import time
 import uuid
+import subprocess
+import pkg_resources
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
@@ -23,6 +26,7 @@ from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
+from resilient_sdk.util.constants import *
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -34,21 +38,10 @@ else:
     reload = importlib.reload
     from json.decoder import JSONDecodeError
 
-LOGGER_NAME = "resilient_sdk_log"
-ENV_VAR_DEV = "RES_SDK_DEV"
-RESILIENT_LIBRARIES_VERSION = "42.0.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "42.0.0"
-MIN_SUPPORTED_PY_VERSION = (3, 6)
-
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(LOGGER_NAME)
-
-# Resilient export file suffix.
-RES_EXPORT_SUFFIX = ".res"
-# Endpoint url for importing a configuration
-IMPORT_URL = "/configurations/imports"
 
 
 def get_resilient_client(path_config_file=None):
@@ -90,6 +83,21 @@ def setup_jinja_env(relative_path_to_templates):
     add_filters_to_jinja_env(jinja_env)
 
     return jinja_env
+
+def setup_env_and_render_jinja_file(relative_path_to_template, filename, *args, **kwargs):
+    """
+    Creates a Jinja env and returns the rendered string from a jinja template of a given filename.
+    Passes on args and kwargs to the render function
+    """
+
+    # instantiate Jinja2 Environment with path to Jinja2 templates
+    jinja_env = setup_jinja_env(relative_path_to_template)
+
+    # Load the Jinja2 Template from filename + jinja2 ext
+    file_template = jinja_env.get_template(filename + ".jinja2")
+
+    # render the template with the required variables and return the string value
+    return file_template.render(*args, **kwargs)
 
 
 def write_file(path, contents):
@@ -1028,6 +1036,30 @@ def get_resilient_libraries_version_to_use():
         return RESILIENT_LIBRARIES_VERSION
 
 
+def get_resilient_sdk_version():
+    """
+    wrapper method to call get_package_version on constant SDK_PACKAGE_NAME
+
+    :return: a Version object
+    """
+    return get_package_version(SDK_PACKAGE_NAME)
+
+def get_package_version(package_name):
+    """
+    Uses pkg_resources to parse the version of a package if installed in the environment.
+    If not installed, return None
+
+    :param package_name: name of the packge to get version of
+    :type package_name: str
+    :return: a Version object representing the version of the given package or None
+    :rtype: Version or None
+    """
+    try:
+        return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
+    except pkg_resources.DistributionNotFound:
+        return None
+
+
 def is_python_min_supported_version():
     """
     Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
@@ -1035,3 +1067,112 @@ def is_python_min_supported_version():
     if sys.version_info < MIN_SUPPORTED_PY_VERSION:
         LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
                     "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+
+def parse_optionals(optionals):
+    """
+    Returns all optionals as a formatted string
+    with the number of tabs used depending
+    on the length
+
+    Mainly used to help build our docs
+
+    :param optionals: List of ArgumentParser optionals
+    :type optionals: list
+    :return: Formatted string
+    :rtype: str
+    """
+    parsed_optionals = []
+
+    for option in optionals:
+
+        option_strings = ", ".join(option.option_strings)
+
+        tabs = "\t\t\t"
+
+        if len(option_strings) >= 16:
+            tabs = "\t\t"
+
+        if len(option_strings) >= 20:
+            tabs = "\t"
+
+        if len(option_strings) < 10:
+            tabs = "\t\t\t\t"
+
+        parsed_optionals.append("{0}{1}{2}".format(option_strings, tabs, option.help))
+
+    parsed_optionals = " \n ".join(parsed_optionals)
+    parsed_optionals = '{0} \n'.format(parsed_optionals)
+
+    return parsed_optionals
+
+
+def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
+    """
+    Run a given command as a subprocess.
+
+    :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
+    :type args: str | list
+    :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
+    :type cmd_name: str
+    :param log_level_threshold: (optional) the logging level at which to output the stdout/stderr for the subprocess; default is DEBUG
+    :type log_level_threshold: int
+    :return: the exit code and string details of the run
+    :rtype: (int, str)
+    """
+
+    LOG.debug("Running {0} as a subprocess".format(args))
+
+
+    # run given command as a subprocess
+    proc = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=0)
+
+    sys.stdout.write("Running {0} (this may take a while) ...".format(cmd_name))
+    sys.stdout.flush()
+
+    # if debugging enabled, capture output directly and redirect back to sys.stdout
+    # using LOG.log(log_level...)
+    if LOG.isEnabledFor(log_level_threshold):
+        details = ""
+        while proc.stdout:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            LOG.log(log_level_threshold, line.decode("utf-8").strip("\n"))
+            details += line.decode("utf-8")
+
+        proc.wait() # additional wait to make sure process is complete
+    else:
+        # if debugging not enabled, use communicate as that has the
+        # greatest ability to deal with large buffers of output 
+        # being stored in subprocess.PIPE
+        stdout, _ = proc.communicate()
+        sys.stdout.write(" {0} complete\n\n".format(cmd_name))
+        sys.stdout.flush()
+        time.sleep(0.75)
+        details = stdout.decode("utf-8")
+
+    return proc.returncode, details
+
+
+    """ OLD code with a progress bar -- keeping this here for potentially picking it back up later """
+
+    # start_time = time.time()
+
+    # # "waiting bar" that spins while waiting for proc to finish
+    # # the waiting bar is only output if the logging threshold is not met
+    # waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
+    # i = 0
+    # details = ""
+    # while proc.poll() == None and (time.time() - start_time) < timeout:
+    #     sys.stdout.write("\r")
+    #     sys.stdout.write("Running {0} ... {1}        ".format(cmd_name, waiting_bar[i]))
+    #     sys.stdout.flush()
+    #     i = (i + 1) % len(waiting_bar)
+    #     time.sleep(0.2)
+
+
+    # # overwrite the last stdout.write of "Running <cmd_name> ..."
+    # sys.stdout.write("\r")
+    # sys.stdout.write(" "*30+"\n")
+    # sys.stdout.flush()

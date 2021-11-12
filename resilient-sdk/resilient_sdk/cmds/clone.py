@@ -14,10 +14,10 @@ from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org
                                             get_object_api_names, add_configuration_import, get_res_obj)
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-
+from resilient_sdk.util import constants
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 # Mandatory keys for a configuration import
 MANDATORY_KEYS = ["incident_types", "fields"]

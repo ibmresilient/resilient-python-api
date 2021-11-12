@@ -4,20 +4,15 @@
 
 """ TODO: module docstring """
 
+import logging
 import os
 import sys
-import logging
-from resilient_sdk.cmds import CmdDocgen, CmdCodegen, CmdClone, CmdExtract
+
+from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDev, CmdDocgen,
+                                CmdExtPackage, CmdExtract, CmdValidate)
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
-
-from resilient_sdk.cmds import (CmdDocgen,
-                                CmdCodegen,
-                                CmdExtract,
-                                CmdExtPackage,
-                                CmdDev)
-
+from resilient_sdk.util.sdk_exception import SDKException
 
 # Setup logging
 LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
@@ -35,13 +30,15 @@ def get_main_app_parser():
     # Define main parser object
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
-        prog="resilient-sdk",
-        description="Python SDK for developing Resilient Apps",
-        epilog="For support, please visit ibm.biz/resilientcommunity")
+        prog=sdk_helpers.SDK_PACKAGE_NAME,
+        description="""Python SDK for developing IBM SOAR Apps that
+        provides various subcommands to help with development""",
+        epilog="For support, please visit ibm.biz/soarcommunity")
 
     parser.usage = """
     $ resilient-sdk <subcommand> ...
     $ resilient-sdk -v <subcommand> ...
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk -h
     """
 
@@ -79,6 +76,9 @@ def main():
     Main entry point for resilient-sdk
     """
 
+    # add color support for WINDOWS
+    os.system("")
+
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV)
 
@@ -98,7 +98,8 @@ def main():
     if sdk_dev:
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
-        LOG.info("\n-----------------------------\nRunning SDK in Developer Mode\n-----------------------------\n")
+        cmd_validate = CmdValidate(sub_parser)
+        LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
 
     try:
         # Parse the arguments
@@ -113,13 +114,13 @@ def main():
         main_cmd = sdk_helpers.get_main_cmd()
 
         LOG.error(err)
-        LOG.info("\n-----------------\n")
+        LOG.info("{0}".format(sdk_helpers.LOG_DIVIDER))
 
         # Print specifc usage for that cmd for these errors
         if "too few arguments" in err.message or "no subcommand provided" in err.message:
             if main_cmd == cmd_codegen.CMD_NAME:
                 cmd_codegen.parser.print_usage()
-            
+
             elif main_cmd == cmd_clone.CMD_NAME:
                 cmd_clone.parser.print_usage()
 
@@ -131,6 +132,9 @@ def main():
 
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
+
+            elif sdk_dev and main_cmd == cmd_validate.CMD_NAME:
+                cmd_validate.parser.print_usage()
 
             elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
                 cmd_dev.parser.print_usage()
@@ -162,6 +166,10 @@ def main():
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
 
+    elif sdk_dev and args.cmd == cmd_validate.CMD_NAME:
+        # TODO: remove sdk_validate_enabled check once validate is ready for use
+        # functionality is currently hidden behind sdk_validate_enabled env var 
+        cmd_validate.execute_command(args)
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)
 

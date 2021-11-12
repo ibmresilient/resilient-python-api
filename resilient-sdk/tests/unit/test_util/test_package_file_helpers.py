@@ -36,6 +36,17 @@ def test_parse_setup_py():
     assert setup_attributes.get("not_existing") is None
 
 
+def test_parse_setup_py_with_globals():
+    the_globals = {
+        "__file__": "",
+        "long_description": "mock long description"
+    }
+    sdk_proj_py_attributes = package_helpers.parse_setup_py(mock_paths.PATH_SDK_SETUP_PY, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+
+    assert sdk_proj_py_attributes.get("name") == "resilient_sdk"
+    assert sdk_proj_py_attributes.get("long_description") == "mock long description"
+
+
 def test_get_dependency_from_install_requires():
     setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, ["install_requires"])
     install_requires_str = setup_attributes.get("install_requires")
@@ -214,3 +225,86 @@ def test_create_extension_invalid_image_hash(fx_copy_fn_main_mock_integration):
 
     with pytest.raises(SDKException, match=r"image_hash 'xxx' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long"):
         package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir, image_hash=mock_image_hash)
+
+def test_get_required_python_version():
+
+    parsed_version = package_helpers.get_required_python_version(">=3")
+    assert parsed_version == (3, 0)
+    
+    parsed_version = package_helpers.get_required_python_version(">=2.7")
+    assert parsed_version == (2, 7)
+
+    with pytest.raises(SDKException):
+        package_helpers.get_required_python_version("<4")
+
+def test_check_package_installed():
+    
+    # positive case
+    assert package_helpers.check_package_installed("resilient-sdk") is True
+
+    # negative case
+    assert package_helpers.check_package_installed("this-is-a-fake-package") is False
+
+def test_color_output():
+
+    mock_data_to_color = [
+        ("COLOR this in GREEN for PASS", "PASS"),
+        ("COLOR this in GREEN for DEBUG", "DEBUG"),
+        ("COLOR this in RED for FAIL", "FAIL"),
+        ("COLOR this in RED for CRITICAL", "CRITICAL"),
+        ("COLOR this in YELLOW for WARNING", "WARNING"),
+        ("COLOR this in NORMAL for INFO", "INFO")
+    ]
+
+    for s, level in mock_data_to_color:
+        output = package_helpers.color_output(s, level)
+        assert output.startswith(package_helpers.COLORS[level]) and output.endswith(package_helpers.COLORS["END"]) and s in output
+
+def test_color_diff_output():
+
+    mock_diff_data_generator = (
+        "--- fromfile\n",
+        "+++ tofile\n",
+        "\n",
+        "@@ -1 +1 @@\n",
+        "-test\n",
+        "+Testing\n"
+    )
+
+    output = package_helpers.color_diff_output(mock_diff_data_generator)
+
+    for i, line in enumerate(output):
+        # for lines that are colored, check that they start with the right color
+        # then check that the original start of the line is still there
+        if i == 0:
+            assert line.startswith(package_helpers.COLORS["RED"])
+            assert line[len(package_helpers.COLORS["RED"]):].startswith("---" + package_helpers.COLORS["END"])
+        elif i == 1:
+            assert line.startswith(package_helpers.COLORS["GREEN"])
+            assert line[len(package_helpers.COLORS["GREEN"]):].startswith("+++" + package_helpers.COLORS["END"])
+        elif i == 4:
+            assert line.startswith(package_helpers.COLORS["RED"])
+            assert line[len(package_helpers.COLORS["RED"]):].startswith("-" + package_helpers.COLORS["END"])
+        elif i == 5:
+            assert line.startswith(package_helpers.COLORS["GREEN"])
+            assert line[len(package_helpers.COLORS["GREEN"]):].startswith("+" + package_helpers.COLORS["END"])
+        else:
+            # lines that shouldn't get any color added
+            assert line == mock_diff_data_generator[i]
+
+def test_pass_parse_file_paths_from_readme():
+
+    mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
+                    "<!-- ![a commented out link](not.png) -->", "another markdown **line**\n"]
+
+    result = package_helpers.parse_file_paths_from_readme(mock_passing_readme_data)
+
+    assert "path.png" in result
+    assert "not.png" not in result
+
+
+    # and now check that it raises an SDKException when there's an invalid link
+    mock_invalid_readme_data = ["# Header\n", "![this is not a link]\n"]
+
+    with pytest.raises(SDKException):
+        result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)

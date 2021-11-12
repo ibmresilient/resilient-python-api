@@ -20,6 +20,8 @@ import os
 import shutil
 import pytest
 import logging
+import subprocess
+import time
 import resilient_sdk.app as app
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
@@ -124,6 +126,34 @@ def fx_copy_fn_main_mock_integration():
 
 
 @pytest.fixture
+def fx_pip_install_fn_main_mock_integration():
+    """
+    Before: pip installs our mock integration at mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION
+    After: pip uninstalls mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    """
+
+    install_cmd = ["pip", "install", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION]
+    proc = subprocess.Popen(install_cmd)
+
+    while proc.poll() is None:
+        sys.stdout.write("\r")
+        sys.stdout.write("pip installing: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION))
+        sys.stdout.flush()
+        time.sleep(0.2)
+
+    yield
+
+    unisntall_cmd = ["pip", "uninstall", "-y", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME]
+    proc = subprocess.Popen(unisntall_cmd)
+
+    while proc.poll() is None:
+        sys.stdout.write("\r")
+        sys.stdout.write("pip uninstalling: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME))
+        sys.stdout.flush()
+        time.sleep(0.2)
+
+
+@pytest.fixture
 def fx_cmd_line_args_codegen_package():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
@@ -185,6 +215,26 @@ def fx_cmd_line_args_package():
 
     args_to_add = [
         "package",
+        "-p", "fn_main_mock_integration"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
+def fx_cmd_line_args_validate():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "validate",
         "-p", "fn_main_mock_integration"
     ]
 

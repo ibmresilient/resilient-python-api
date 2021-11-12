@@ -13,10 +13,10 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 class CmdExtract(BaseCmd):
@@ -30,10 +30,11 @@ class CmdExtract(BaseCmd):
     """
 
     CMD_NAME = "extract"
-    CMD_HELP = "Extract data in order to publish a .res file"
+    CMD_HELP = "Extracts data needed to publish a .res file."
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk extract --script 'custom_script' --zip
+    $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]

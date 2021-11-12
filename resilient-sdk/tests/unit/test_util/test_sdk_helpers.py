@@ -5,10 +5,12 @@
 import os
 import stat
 import re
+import pkg_resources
 import pytest
 import jinja2
 import sys
 from resilient import SimpleClient
+from resilient_sdk.cmds import CmdCodegen
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_data, mock_paths
@@ -382,6 +384,19 @@ def test_get_resilient_libraries_version_to_use():
 def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
     assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION_DEV
 
+def test_get_resilient_sdk_version():
+    parsed_version = sdk_helpers.get_resilient_sdk_version()
+    assert parsed_version is not None
+    assert parsed_version >= pkg_resources.parse_version(sdk_helpers.RESILIENT_LIBRARIES_VERSION)
+
+def test_get_package_version_found_in_env():
+    parsed_version = sdk_helpers.get_package_version("resilient-sdk")
+    assert parsed_version is not None
+    assert parsed_version >= pkg_resources.parse_version(sdk_helpers.RESILIENT_LIBRARIES_VERSION)
+
+def test_get_package_version_not_found():
+    not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
+    assert not_found is None
 
 def test_is_python_min_supported_version(caplog):
     mock_log = "WARNING: this package should only be installed on a Python Environment >="
@@ -393,3 +408,20 @@ def test_is_python_min_supported_version(caplog):
 
     else:
         assert mock_log not in caplog.text
+
+
+def test_parse_optionals(fx_get_sub_parser):
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    optionals = cmd_codegen.parser._get_optional_actions()
+    parsed_optionals = sdk_helpers.parse_optionals(optionals)
+
+    assert """\n -re, --reload\t\t\tReload customizations and create new customize.py \n""" in parsed_optionals
+
+
+def test_run_subprocess():
+
+    args = ["echo", "testing sdk_helper.subprocess"]
+    exitcode, details = sdk_helpers.run_subprocess(args)
+
+    assert exitcode == 0
+    assert args[1] in details

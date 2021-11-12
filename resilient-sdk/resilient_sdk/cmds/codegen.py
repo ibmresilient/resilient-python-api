@@ -13,19 +13,20 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 class CmdCodegen(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "codegen"
-    CMD_HELP = "Generate boilerplate code to start developing an app"
+    CMD_HELP = "Generates boilerplate code used to begin developing an app."
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
@@ -307,7 +308,7 @@ class CmdCodegen(BaseCmd):
             os.makedirs(output_base)
 
         # Instansiate Jinja2 Environment with path to Jinja2 templates
-        jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template")
+        jinja_env = sdk_helpers.setup_jinja_env(constants.PACKAGE_TEMPLATE_PATH)
 
         # This dict maps our package file structure to  Jinja2 templates
         package_mapping_dict = {
@@ -351,7 +352,7 @@ class CmdCodegen(BaseCmd):
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
 
-            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+            if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
                 package_mapping_dict["payload_samples"] = {}
 
         # Get a list of function names in export.
@@ -383,7 +384,7 @@ class CmdCodegen(BaseCmd):
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
             # See if RES_SDK_DEV environment var is set
-            if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+            if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
                 # Add a 'payload_samples/fn_name' directory and the files to it
                 CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 

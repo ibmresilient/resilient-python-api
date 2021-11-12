@@ -5,21 +5,23 @@
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
 """
-import logging
-import re
-import sys
-import importlib
-import os
-import json
 import base64
+import importlib
+import json
+import logging
+import os
+import re
 import shutil
 import struct
+import sys
 import tempfile
+
 import pkg_resources
 from resilient import ImportDefinition
-from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE_UUID, ResilientObjMap
-from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
+                                                  ResilientObjMap)
+from resilient_sdk.util.sdk_exception import SDKException
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -29,6 +31,7 @@ else:
     # Handle PY 3 specific imports
     import configparser
     from io import StringIO
+
     # reload(package) in PY2.7, importlib.reload(package) in PY3.6
     reload = importlib.reload
 
@@ -66,6 +69,7 @@ PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"
 PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_UTIL_DATA_DIR = os.path.join("util", "data")
+PATH_SELFTEST_PY = os.path.join("util", "selftest.py")
 PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
 PATH_SCREENSHOTS = os.path.join(BASE_NAME_DOC_DIR, "screenshots")
 PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
@@ -75,9 +79,9 @@ PREFIX_EXTENSION_ZIP = "app-"
 MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
-    "author", "name", "display_name", "version",
-    "description", "long_description", "url",
-    "install_requires", "entry_points"
+    "display_name", "name", "version", "author",
+    "author_email", "install_requires", "description", 
+    "long_description", "url", "entry_points", "python_requires"
 )
 
 # Tuple of all Resilient Object Names we support when packaging/converting to ext
@@ -96,8 +100,8 @@ BASE_PERMISSIONS = [
 # List of supported entry points.
 SUPPORTED_EP = [
     "resilient.circuits.customize",
-    "resilient.circuits.apphost.configsection",
-    "resilient.circuits.configsection"
+    "resilient.circuits.configsection",
+    "resilient.circuits.selftest"
 ]
 # Minimum server version for import if no customize.py defined.
 IMPORT_MIN_SERVER_VERSION = {
@@ -109,6 +113,21 @@ IMPORT_MIN_SERVER_VERSION = {
 
 # The default app container repository name.
 REPOSITORY_NAME = "ibmresilient"
+
+# Color dict for printing in color
+COLORS = {
+    "PASS": '\033[92m',
+    "GREEN": '\033[92m',
+    "DEBUG": '\033[92m',
+    "FAIL": '\033[91m',
+    "RED": '\033[91m',
+    "CRITICAL": '\033[91m',
+    "WARNING": '\033[93m',
+    "INFO": '\033[94m',
+    "BLUE": '\033[94m',
+    "END": '\033[0m'
+}
+
 
 def get_setup_callable(content):
     """ Parse the setup.py file, returning just the callable setup() section.
@@ -134,11 +153,12 @@ def get_setup_callable(content):
 
     return '\n'.join(sanitized_content)
 
-def parse_setup_py(path, attribute_names):
+def parse_setup_py(path, attribute_names, the_globals={}):
     """Parse the values of the given attribute_names and return a Dictionary attribute_name:attribute_value
 
     :param path: Path to setup.py for a package.
     :param attribute_names: List of attribute names to extract from setup.py.
+    :param the_globals: Dict of extra variables required to invoke the setup.py file successfully.
     :return return_dict: Dict of properties from setup.py.
     """
     return_dict = {}
@@ -150,6 +170,9 @@ def parse_setup_py(path, attribute_names):
         }
     else:
         built_ins = {}
+
+    the_globals.update({"__builtins__": built_ins})
+
     # Define a dummy setup function to get the dictionary of parameters returned from evaled setup.py callable.
     def setup(*args, **kwargs):
         return kwargs
@@ -166,7 +189,7 @@ def parse_setup_py(path, attribute_names):
 
     # Run eval on callable content to retrieve attributes.
     try:
-        result = eval(setup_callable, {'__builtins__':built_ins}, {"setup": setup})
+        result = eval(setup_callable, the_globals, {"setup": setup})
     except Exception as err:
         raise SDKException(u"Failed to eval setup callable {0}".format(err))
 
@@ -814,7 +837,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "media_type": "image/png"
             },
             "long_description": {
-                "content": "<div>{0}</div>".format(setup_py_attributes.get("long_description")),
+                "content": u"<div>{0}</div>".format(setup_py_attributes.get("long_description")),
                 "format": "html"
             },
             "minimum_resilient_version": {
@@ -910,3 +933,120 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
 
     # Return the path to the extension zip
     return path_the_extension_zip
+
+def get_required_python_version(python_requires_str):
+    """
+    Given a value from the 'python_requires' attribute of setup.py, parse out the
+    numerical value given for the version required.
+
+    :param python_requires_str: str representation of the value assosciated with the 'python_requires' attr in setup.py
+    :raise SDKException: if format of python_requires is not correct (i.e. in '>=<version>' format)
+    :return: return the minimum required python version or None if not found
+    :rtype: tuple with (<major>, <minor>) version format
+    """
+    try:
+        version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
+        parsed_version = pkg_resources.parse_version(version_str)
+        if sys.version_info[0] >= 3: # python 3 
+            return (parsed_version.major, parsed_version.minor)
+        else: # python 2.7
+            major_minor = tuple(int(i) for i in str(parsed_version).split("."))
+            
+            # if version is only one number (i.e. '3'), then add a 0 to the end
+            if len(major_minor) == 1:
+                major_minor = (major_minor[0], 0)
+            return major_minor
+    except AttributeError:
+        raise SDKException("'python_requires' version not given in correct format.")
+
+def check_package_installed(package_name):
+    """
+    Uses pkg_resources.require to certify that a package is installed
+    
+    :param package_name: name of package
+    :type package_name: str
+    :return: boolean value whether or not package is installed in current python env
+    :rtype: bool
+    """
+    try:
+        pkg_resources.require(package_name)
+    except pkg_resources.DistributionNotFound:
+        return False
+
+    return True
+
+def color_output(s, level):
+    """
+    Uses class COLORS to color given string. 'level' maps to values in COLORS dict
+    
+    :param s: value to be wrapped in color
+    :type s: str
+    :param level: map to COLORS dict defined as constant above
+    :type level: str
+    :return: colored output of 's'
+    :rtype: str
+    """
+    return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
+
+def color_diff_output(diff):
+    """
+    Colors output of a diff iterator.
+    Makes lines that are '-' red and '+' green.
+
+    :param diff: generator of diffs
+    :type diff: Iterator[str]
+    :return: colored generator of diffs
+    :rtype: Iterator[str]
+    """
+
+    key_pairs = [
+        ("+++", COLORS.get("GREEN")),
+        ("+", COLORS.get("GREEN")),
+        ("---", COLORS.get("RED")),
+        ("-", COLORS.get("RED")),
+        ("^", COLORS.get("BLUE")),
+    ]
+
+    for line in diff:
+        for key, color in key_pairs:
+            if line.startswith(key):
+                yield  color + line[0:len(key)] + COLORS.get("END") + line[len(key):]
+                break
+        else:
+            yield line
+
+def parse_file_paths_from_readme(readme_line_list):
+    """
+    Takes a list of strings and looks through to find the links characters in markdown: 
+    ![<fall_back_name>](<link_to_screenshot>)
+    The method will raise an SDKException if there is a link started without the provided parenthetical
+    link in correct syntax.
+    If no exception is raised, it returns a list of filepaths for linked images in the readme.
+
+    :param readme_line_list: list of readme lines that will have the comment lines removed
+    :type readme_line_list: list[str]
+    :raises: SDKException if link given in invalid syntax
+    :return: list of paths to linked files
+    :rtype: list[str]
+    """
+
+    paths = []
+
+    # first, filter out any comments as those might contain invalid screenshot paths
+    readme_line_list = re.sub(r"(<!--.*?-->)", "", "".join(readme_line_list), flags=re.DOTALL).splitlines()
+
+    # loop through the lines of the readme
+    for line in readme_line_list:
+
+        line = line.strip() # strip any leading and trailing whitespace
+
+        # check if the line starts with the Markdown syntax for a linked file
+        if line.startswith("!["):
+            if "(" in line and ")" in line:
+                # look to find the linked file between ( )
+                paths.append(line[line.rfind("(")+1:line.rfind(")")])
+            else:
+                # incorrect syntax for line starting with "![" but not including "( ... )"
+                raise SDKException(u"Line '{0}' in README has invalid link syntax".format(line))
+
+    return paths

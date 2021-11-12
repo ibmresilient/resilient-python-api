@@ -6,6 +6,8 @@
   is a good example. Checkout https://guides.github.com/features/mastering-markdown/
   for tips on writing with Markdown
 
+  All fields followed by "{{ placeholder_string }}"" should be manually edited
+
   If you make manual edits and run docgen again, a .bak file will be created
 
   Store any screenshots in the "doc/screenshots" directory and reference them like:
@@ -27,6 +29,7 @@
 {% if all_dependencies %}
   - [Python Environment](#python-environment)
 {% endif %}
+  - [Endpoint Developed With](#endpoint-developed-with)
 - [Installation](#installation)
   - [Install](#install)
   - [App Configuration](#app-configuration)
@@ -61,7 +64,7 @@
 -->
 | Version | Date | Notes |
 | ------- | ---- | ----- |
-| 1.0.0 | MM/YYYY | Initial Release |
+| 1.0.0 | MM/YYYY | Initial Release | <!-- {{ placeholder_string }} -->
 
 ---
 
@@ -72,7 +75,7 @@
 -->
 **{{ short_description }}**
 
- ![screenshot: main](./doc/screenshots/main.png)
+ ![screenshot: main](./doc/screenshots/main.png) <!-- {{ placeholder_string }} -->
 
 {{ long_description }}
 
@@ -80,16 +83,17 @@
 <!--
   List the Key Features of the Integration
 -->
-* Key Feature 1
-* Key Feature 2
-* Key Feature 3
+* Key Feature 1 <!-- {{ placeholder_string }} -->
+* Key Feature 2 <!-- {{ placeholder_string }} -->
+* Key Feature 3 <!-- {{ placeholder_string }} -->
 
 ---
 
 ## Requirements
 <!--
   List any Requirements 
--->
+--> 
+<!-- {{ placeholder_string }} -->
 This app supports the IBM Resilient SOAR Platform and the IBM Cloud Pak for Security.
 
 ### Resilient platform
@@ -108,13 +112,14 @@ If deploying to a Resilient platform with an integration server, the requirement
   | ---- | ----------- |
   | Org Data | Read |
   | Function | Read |
+  <!-- {{ placeholder_string }} -->
 
 The following Resilient platform guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. 
 * _Integration Server Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings.
 * _System Administrator Guide_: provides the procedure to install, configure and deploy apps. 
 
-The above guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
+The above guides are available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
 
 ### Cloud Pak for Security
 If you are deploying to IBM Cloud Pak for Security, the requirements are:
@@ -129,7 +134,7 @@ The following Cloud Pak guides provide additional information:
 These guides are available on the IBM Knowledge Center at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific Knowledge Center page, select Case Management and Orchestration & Automation.
 
 ### Proxy Server
-The app **does/does not** support a proxy server.
+The app **does/does not** <!-- {{ placeholder_string }} --> support a proxy server.
 
 {% if all_dependencies %}
 ### Python Environment
@@ -140,12 +145,44 @@ Additional package dependencies may exist for each of these packages:
 {% endfor %}
 {% endif %}
 
+### Endpoint Developed With
+
+This app has been implemented using:
+| Product Name | Product Version | API URL | API Version |
+| ------------ | --------------- | ------- | ----------- |
+| <!-- {{ placeholder_string }} --> | <!-- {{ placeholder_string }} --> | <!-- {{ placeholder_string }} --> | <!-- {{ placeholder_string }} --> |
+
+#### Prerequisites
+<!--
+List any prerequisites that are needed to use with this endpoint solution. Remove any section that is unnecessary.
+-->
+* Prereq A <!-- {{ placeholder_string }} -->
+* Prereq B <!-- {{ placeholder_string }} -->
+* Prereq C <!-- {{ placeholder_string }} -->
+
+#### Configuration
+<!--
+List any steps that are needed to configure the endpoint to use this app.
+-->
+* Config A <!-- {{ placeholder_string }} -->
+* Config B <!-- {{ placeholder_string }} -->
+* Config C <!-- {{ placeholder_string }} -->
+
+#### Permissions
+<!--
+List any user permissions that are needed to use this endpoint. For example, list the API key permissions.
+-->
+* Permission A <!-- {{ placeholder_string }} -->
+* Permission B <!-- {{ placeholder_string }} -->
+* Permission C <!-- {{ placeholder_string }} -->
+
+
 ---
 
 ## Installation
 
 ### Install
-* To install or uninstall an App or Integration on the _Resilient platform_, see the documentation at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs).
+* To install or uninstall an App or Integration on the _Resilient platform_, see the documentation at [ibm.biz/soar-docs](https://ibm.biz/soar-docs).
 * To install or uninstall an App on _IBM Cloud Pak for Security_, see the documentation at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs) and follow the instructions above to navigate to Orchestration and Automation.
 
 ### App Configuration
@@ -154,7 +191,7 @@ The following table provides the settings you need to configure the app. These s
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
 {% for app_config in app_configs %}
-| **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* |
+| **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* <!-- {{ placeholder_string }} --> |
 {% endfor %}
 
 {% if datatables or custom_incident_fields %}
@@ -166,7 +203,7 @@ The following table provides the settings you need to configure the app. These s
 -->
 * Import the Data Tables and Custom Fields like the screenshot below:
 
-  ![screenshot: custom_layouts](./doc/screenshots/custom_layouts.png)
+  ![screenshot: custom_layouts](./doc/screenshots/custom_layouts.png) <!-- {{ placeholder_string }} -->
 
 {% endif %}
 
@@ -176,7 +213,7 @@ The following table provides the settings you need to configure the app. These s
 ## Function - {{ fn.name }}
 {{ fn.description }}
 
- ![screenshot: fn-{{ fn.simple_name }} ](./doc/screenshots/fn-{{ fn.simple_name }}.png)
+ ![screenshot: fn-{{ fn.simple_name }} ](./doc/screenshots/fn-{{ fn.simple_name }}.png) <!-- {{ placeholder_string }} -->
 
 <details><summary>Inputs:</summary>
 <p>
@@ -193,12 +230,13 @@ The following table provides the settings you need to configure the app. These s
 <details><summary>Outputs:</summary>
 <p>
 
+<!-- {{ placeholder_string }} -->
 ```python
 results = {
     # TODO: Copy and paste an example of the Function Output within this code block.
     # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
     # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
+} 
 ```
 
 </p>
@@ -249,7 +287,7 @@ results = {
 {% for dt in datatables %}
 ## Data Table - {{ dt.name }}
 
- ![screenshot: dt-{{ dt.simple_name }}](./doc/screenshots/dt-{{ dt.simple_name }}.png)
+ ![screenshot: dt-{{ dt.simple_name }}](./doc/screenshots/dt-{{ dt.simple_name }}.png) <!-- {{ placeholder_string }} -->
 
 #### API Name:
 {{ dt.api_name }}
@@ -302,7 +340,7 @@ Refer to the documentation listed in the Requirements section for troubleshootin
 
 ### For Support
 {% if supported_app %}
-This is an IBM supported app. Please search https://ibm.com/mysupport for assistance.
+This is an IBM supported app. Please search [ibm.com/mysupport](https://ibm.com/mysupport) for assistance.
 {% else %}
-This is a IBM Community provided App. Please search the Community https://ibm.biz/resilientcommunity for assistance.
+This is a IBM Community provided App. Please search the Community [ibm.biz/soarcommunity](https://ibm.biz/soarcommunity) for assistance.
 {% endif %}
