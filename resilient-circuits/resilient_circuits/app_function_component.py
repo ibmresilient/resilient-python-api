@@ -12,12 +12,42 @@ from resilient_lib import RequestsCommon, validate_fields
 
 
 class AppFunctionComponent(ResilientComponent):
+    """
+    Each package that has been generated with the ``resilient-sdk codegen`` command
+    that contains a SOAR Function, an :class:`AppFunctionComponent` will be generated
+    in the package's ``components`` directory
+
+    Each :class:`AppFunctionComponent`, gets loaded into the ``resilient-circuits`` framework
+    and listens for messages on it's ``Message Destination``
+    """
 
     def __init__(self, opts, package_name, required_app_configs=[]):
         """
-        Set the PACKAGE_NAME and required_app_configs, validate the app_configs
-        If a required_app_config is not found in opts, raise a ValueError
-        Instansiate a new resilient_lib.RequestsCommon object 'rc'
+        Sets and exposes 4 properties:
+            #. **self.PACKAGE_NAME**: the name of this App, the parameter passed in
+            #. **self.app_configs**: a `collections.namedtuple <https://docs.python.org/3.6/library/collections.html#collections.namedtuple>`_
+               object of all associated configurations in the ``app.config`` file for this. App Configurations can be accessed like:
+
+               .. code-block:: python
+
+                     base_url = self.app_configs.base_url
+
+            #. **self.rc**: an instantiation of :class:`resilient_lib.RequestsCommon <resilient_lib.components.requests_common.RequestsCommon>`
+               which will have access to the ``execute`` method for external API calls
+            #. **self.LOG**: access to a common ``Logger`` object. Can be used like:
+
+               .. code-block:: python
+
+                     self.LOG.info("Starting '%s'", self.PACKAGE_NAME)
+
+        :param opts: all configurations from the ``app.config`` file
+        :type opts: dict
+        :param package_name: the name of this App
+        :type package_name: str
+        :param required_app_configs: a list of required ``app.config`` configurations
+            that are required to run this App
+        :type required_app_configs: [str, str, ...]
+        :raises ValueError: if a ``required_app_config`` is not found in ``opts``
         """
 
         self.PACKAGE_NAME = package_name
@@ -58,13 +88,19 @@ class AppFunctionComponent(ResilientComponent):
     def status_message(message):
         """
         Returns the message encapsulated in a
-        resilient_circuits.StatusMessage object
+        ``resilient_circuits.StatusMessage`` object
 
-        :param message: Message you want to sent to Action Status
+        **Usage:**
+
+        .. code-block:: python
+
+            yield self.status_message("Finished running App Function: '{0}'".format(FN_NAME))
+
+        :param message: Message you want to send to Action Status
         :type message: str
 
-        :return: message encapsulated as StatusMessage
-        :rtype: resilient_circuits.StatusMessage
+        :return: message encapsulated as ``StatusMessage``
+        :rtype: ``resilient_circuits.StatusMessage``
         """
         return StatusMessage(message)
 
@@ -81,10 +117,51 @@ class AppFunctionComponent(ResilientComponent):
 
     def get_fn_msg(self):
         """
-        If 'fn_msg' is defined in local Thread storage,
-        return it, else return an empty dictionary
+        Get the STOMP Message that has been sent from
+        SOAR as a dict. The contents of the Message
+        can include:
 
-        :return: Message received from SOAR
+        .. code-block:: python
+
+            'function': {
+                'creator': '',
+                'description': '',
+                'display_name': 'mock_function',
+                'id': 3,
+                'name': 'mock_function',
+                'tags': [...],
+                'uuid': '',
+                'version': None,
+                'view_items': [...],
+                ...
+            },
+            'groups': [],
+            'inputs': {
+                'mock_input_one': True,
+                'mock_input_two': 'abc',
+            },
+            'playbook_instance': None,
+            'principal': {
+                'display_name': '',
+                'id': 1,
+                'name': '',
+                'type': 'user'
+            },
+            'workflow': {
+                'actions': [...],
+                'description': '',
+                'name': '',
+                'object_type': { ... },
+                'programmatic_name': '',
+                'tags': [...],
+                'uuid': '',
+                'workflow_id': 3
+            },
+            'workflow_instance': {
+                'workflow_instance_id': 54
+            }
+
+        :return: STOMP Message received from SOAR
         :rtype: dict
         """
         fn_msg = {}

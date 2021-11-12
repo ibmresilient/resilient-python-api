@@ -329,7 +329,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
             res = write_file_attachment(self.rest_client(), "malware.eml", data_stream, 2001)
 
     :param res_client: required for communication back to resilient
-    :type res_client: resilient_circuits.ResilientComponent.rest_client()
+    :type res_client: :class:`ResilientComponent.rest_client() <resilient_circuits.actions_component.ResilientComponent.rest_client()>`
     :param file_name: name of the attachment to create
     :type file_name: str
     :param dataStream: stream of bytes used to create the attachment
@@ -431,20 +431,20 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
 
     **Example:**
 
-        .. code-block:: python
+    .. code-block:: python
 
-            import os
-            import shutil
+        import os
+        import shutil
 
-            try:
-                path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
+        try:
+            path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
 
-            except Exception:
-                yield FunctionError()
+        except Exception:
+            yield FunctionError()
 
-            finally:
-                if path_tmp_dir and os.path.isdir(path_tmp_dir):
-                    shutil.rmtree(path_tmp_dir)
+        finally:
+            if path_tmp_dir and os.path.isdir(path_tmp_dir):
+                shutil.rmtree(path_tmp_dir)
 
     :param data: bytes to be written to the file
     :type data: bytes

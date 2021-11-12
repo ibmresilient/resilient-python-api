@@ -38,12 +38,13 @@ setup(
 
     # PyPI metadata
     author="IBM SOAR",
-    description="Python SDK for developing Apps for the IBM SOAR (Resilient) Platform",
+    description="Python SDK for developing Apps for IBM SOAR",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ibmresilient/resilient-python-api/tree/master/resilient-sdk",
     project_urls={
         "IBM Community": "https://ibm.biz/soarcommunity",
+        "Documentation": "https://ibm.biz/soar-python-docs",
         "Change Log": "https://ibm.biz/resilient-sdk-changes"
     },
     classifiers=[

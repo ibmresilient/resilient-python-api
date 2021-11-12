@@ -1068,6 +1068,45 @@ def is_python_min_supported_version():
         LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
                     "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
+
+def parse_optionals(optionals):
+    """
+    Returns all optionals as a formatted string
+    with the number of tabs used depending
+    on the length
+
+    Mainly used to help build our docs
+
+    :param optionals: List of ArgumentParser optionals
+    :type optionals: list
+    :return: Formatted string
+    :rtype: str
+    """
+    parsed_optionals = []
+
+    for option in optionals:
+
+        option_strings = ", ".join(option.option_strings)
+
+        tabs = "\t\t\t"
+
+        if len(option_strings) >= 16:
+            tabs = "\t\t"
+
+        if len(option_strings) >= 20:
+            tabs = "\t"
+
+        if len(option_strings) < 10:
+            tabs = "\t\t\t\t"
+
+        parsed_optionals.append("{0}{1}{2}".format(option_strings, tabs, option.help))
+
+    parsed_optionals = " \n ".join(parsed_optionals)
+    parsed_optionals = '{0} \n'.format(parsed_optionals)
+
+    return parsed_optionals
+
+
 def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     """
     Run a given command as a subprocess.
@@ -1137,4 +1176,3 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     # sys.stdout.write("\r")
     # sys.stdout.write(" "*30+"\n")
     # sys.stdout.flush()
-    

@@ -13,8 +13,16 @@
 import os
 import sys
 import resilient_lib
+from resilient_sdk import app as sdk_app
+from resilient_sdk.util.sdk_helpers import parse_optionals
+from resilient_sdk.util.package_file_helpers import parse_setup_py, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES
+from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen,
+                                CmdExtPackage, CmdExtract)
+
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("../resilient"))
 sys.path.insert(0, os.path.abspath("../resilient_lib"))
+sys.path.insert(0, os.path.abspath("../resilient_circuits"))
 sys.path.insert(0, os.path.abspath("../resilient_sdk"))
 
 
@@ -32,7 +40,8 @@ release = resilient_lib.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -46,21 +55,17 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-# html_theme = 'alabaster'
-html_theme = 'sphinxdoc'
+html_theme = 'furo'
 
-html_favicon = "_static/IBM_Security_Shield.ico?"
-html_logo = "_static/IBM_Security.png"
+html_title = "IBM SOAR Python Documentation"
+html_favicon = '_static/IBM_Security_Shield.ico?'
+html_theme_options = {
+    "light_logo": "IBM_Security_Light.png",
+    "dark_logo": "IBM_Security_Dark.png",
+}
 html_use_index = False
 html_show_sourcelink = False
 html_domain_indices = False
-
-html_sidebars = {
-    '**': ['globaltoc.html', 'sourcelink.html']
-}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -69,3 +74,50 @@ html_static_path = ['_static']
 
 # autodoc configs
 add_module_names = False
+
+
+# resilient-sdk parser
+sdk_parser = sdk_app.get_main_app_parser()
+sdk_sub_parser = sdk_app.get_main_app_sub_parser(sdk_parser)
+
+cmd_codegen = CmdCodegen(sdk_sub_parser)
+cmd_docgen = CmdDocgen(sdk_sub_parser)
+cmd_ext_package = CmdExtPackage(sdk_sub_parser)
+cmd_clone = CmdClone(sdk_sub_parser)
+cmd_extract = CmdExtract(sdk_sub_parser)
+
+# parse the setup.py files
+the_globals = {
+    "__file__": "",
+    "long_description": ""
+}
+resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+lib_setup_attributes = parse_setup_py(os.path.abspath("../resilient-lib/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+sdk_setup_attributes = parse_setup_py(os.path.abspath("../resilient-sdk/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+
+# make variables available in .rst files
+rst_epilog = f"""
+.. |resilient_desc| replace:: {resilient_setup_attributes.get("description")}
+.. |circuits_desc| replace:: {circuits_setup_attributes.get("description")}
+.. |lib_desc| replace:: {lib_setup_attributes.get("description")}
+.. |sdk_desc| replace:: {sdk_setup_attributes.get("description")}
+.. |sdk_parser_desc| replace:: {sdk_parser.description}
+.. |sdk_parser_usage| replace:: {sdk_parser.usage}
+.. |sdk_options| replace:: {parse_optionals(sdk_parser._get_optional_actions())}
+.. |cmd_codegen_desc| replace:: {cmd_codegen.parser.description}
+.. |cmd_codegen_usage| replace:: {cmd_codegen.parser.usage}
+.. |cmd_codegen_options| replace:: {parse_optionals(cmd_codegen.parser._get_optional_actions())}
+.. |cmd_docgen_desc| replace:: {cmd_docgen.parser.description}
+.. |cmd_docgen_usage| replace:: {cmd_docgen.parser.usage}
+.. |cmd_docgen_options| replace:: {parse_optionals(cmd_docgen.parser._get_optional_actions())}
+.. |cmd_package_desc| replace:: {cmd_ext_package.parser.description}
+.. |cmd_package_usage| replace:: {cmd_ext_package.parser.usage}
+.. |cmd_package_options| replace:: {parse_optionals(cmd_ext_package.parser._get_optional_actions())}
+.. |cmd_clone_desc| replace:: {cmd_clone.parser.description}
+.. |cmd_clone_usage| replace:: {cmd_clone.parser.usage}
+.. |cmd_clone_options| replace:: {parse_optionals(cmd_clone.parser._get_optional_actions())}
+.. |cmd_extract_desc| replace:: {cmd_extract.parser.description}
+.. |cmd_extract_usage| replace:: {cmd_extract.parser.usage}
+.. |cmd_extract_options| replace:: {parse_optionals(cmd_extract.parser._get_optional_actions())}
+"""

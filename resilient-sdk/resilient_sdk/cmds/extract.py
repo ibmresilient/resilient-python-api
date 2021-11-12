@@ -30,7 +30,7 @@ class CmdExtract(BaseCmd):
     """
 
     CMD_NAME = "extract"
-    CMD_HELP = "Extract data in order to publish a .res file"
+    CMD_HELP = "Extracts data needed to publish a .res file."
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk extract --script 'custom_script' --zip

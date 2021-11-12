@@ -10,6 +10,8 @@ SHARED_MOCK_DATA_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTS_DIR = os.path.dirname(SHARED_MOCK_DATA_DIR)
 RESILIENT_API_DATA = os.path.join(SHARED_MOCK_DATA_DIR, "resilient_api_data")
 
+PATH_SDK_SETUP_PY = os.path.abspath(os.path.join(TESTS_DIR, "..", "setup.py"))
+
 TEST_TEMP_DIR = os.path.join(TESTS_DIR, "test_temp")
 
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME = "fn_main_mock_integration"
