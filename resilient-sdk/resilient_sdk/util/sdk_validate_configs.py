@@ -157,24 +157,24 @@ selftest_attributes = [
 
         # if selftest returncode == 1
         "fail_name": "selftest.py failed",
-        "fail_msg": "selftest.py failed  for {0}. Details: {1}",
+        "fail_msg": u"selftest.py failed  for {0}. Details: {1}",
         "fail_solution": "Check your configuration values and make sure selftest.py is properly implemented",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         # if 'unimplemented' is the return value from selftest
         "missing_name": "selftest.py not implemented",
-        "missing_msg": "selftest.py not implemented for {0}",
+        "missing_msg": u"selftest.py not implemented for {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "selftest.py is a recommended check that should be implemented.",
 
         # if a returncode > 1 comes from running selftest.py
         "error_name": "selftest.py failed",
-        "error_msg": "While running selftest.py, 'resilient-circuits' failed to connect to server. Details:\n{0}",
+        "error_msg": u"While running selftest.py, 'resilient-circuits' failed to connect to server. Details:\n{0}",
         "error_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         # if selftest.py succeeds (i.e. returncode == 0)
         "pass_name": "selftest.py success",
-        "pass_msg": "selftest.py successfully ran for '{0}'",
+        "pass_msg": u"selftest.py successfully ran for '{0}'",
     }
 ]
 
