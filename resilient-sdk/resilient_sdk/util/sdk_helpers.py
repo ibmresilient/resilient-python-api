@@ -14,7 +14,9 @@ import json
 import datetime
 import importlib
 import hashlib
+import time
 import uuid
+import subprocess
 import pkg_resources
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
@@ -1103,3 +1105,74 @@ def parse_optionals(optionals):
     parsed_optionals = '{0} \n'.format(parsed_optionals)
 
     return parsed_optionals
+
+
+def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
+    """
+    Run a given command as a subprocess.
+
+    :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
+    :type args: str | list
+    :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
+    :type cmd_name: str
+    :param log_level_threshold: (optional) the logging level at which to output the stdout/stderr for the subprocess; default is DEBUG
+    :type log_level_threshold: int
+    :return: the exit code and string details of the run
+    :rtype: (int, str)
+    """
+
+    LOG.debug("Running {0} as a subprocess".format(args))
+
+
+    # run given command as a subprocess
+    proc = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=0)
+
+    sys.stdout.write("Running {0} (this may take a while) ...".format(cmd_name))
+    sys.stdout.flush()
+
+    # if debugging enabled, capture output directly and redirect back to sys.stdout
+    # using LOG.log(log_level...)
+    if LOG.isEnabledFor(log_level_threshold):
+        details = ""
+        while proc.stdout:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            LOG.log(log_level_threshold, line.decode("utf-8").strip("\n"))
+            details += line.decode("utf-8")
+
+        proc.wait() # additional wait to make sure process is complete
+    else:
+        # if debugging not enabled, use communicate as that has the
+        # greatest ability to deal with large buffers of output 
+        # being stored in subprocess.PIPE
+        stdout, _ = proc.communicate()
+        sys.stdout.write(" {0} complete\n\n".format(cmd_name))
+        sys.stdout.flush()
+        time.sleep(0.75)
+        details = stdout.decode("utf-8")
+
+    return proc.returncode, details
+
+
+    """ OLD code with a progress bar -- keeping this here for potentially picking it back up later """
+
+    # start_time = time.time()
+
+    # # "waiting bar" that spins while waiting for proc to finish
+    # # the waiting bar is only output if the logging threshold is not met
+    # waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
+    # i = 0
+    # details = ""
+    # while proc.poll() == None and (time.time() - start_time) < timeout:
+    #     sys.stdout.write("\r")
+    #     sys.stdout.write("Running {0} ... {1}        ".format(cmd_name, waiting_bar[i]))
+    #     sys.stdout.flush()
+    #     i = (i + 1) % len(waiting_bar)
+    #     time.sleep(0.2)
+
+
+    # # overwrite the last stdout.write of "Running <cmd_name> ..."
+    # sys.stdout.write("\r")
+    # sys.stdout.write(" "*30+"\n")
+    # sys.stdout.flush()

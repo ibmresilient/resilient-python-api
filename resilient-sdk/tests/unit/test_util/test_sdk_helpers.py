@@ -409,9 +409,19 @@ def test_is_python_min_supported_version(caplog):
     else:
         assert mock_log not in caplog.text
 
+
 def test_parse_optionals(fx_get_sub_parser):
     cmd_codegen = CmdCodegen(fx_get_sub_parser)
     optionals = cmd_codegen.parser._get_optional_actions()
     parsed_optionals = sdk_helpers.parse_optionals(optionals)
 
     assert """\n -re, --reload\t\t\tReload customizations and create new customize.py \n""" in parsed_optionals
+
+
+def test_run_subprocess():
+
+    args = ["echo", "testing sdk_helper.subprocess"]
+    exitcode, details = sdk_helpers.run_subprocess(args)
+
+    assert exitcode == 0
+    assert args[1] in details

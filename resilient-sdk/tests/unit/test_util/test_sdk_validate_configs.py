@@ -13,8 +13,8 @@ def test_name_lambda():
     
     assert func is not None
     assert not func("test_name")
+    assert not func("name_with_n0mb3rs")
     assert func("test_name_with invalid characters")
-    assert func("mor3inval1dcharac1er7")
 
 def test_display_name_lambda():
 
