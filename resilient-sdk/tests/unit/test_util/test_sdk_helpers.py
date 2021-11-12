@@ -407,3 +407,11 @@ def test_is_python_min_supported_version(caplog):
 
     else:
         assert mock_log not in caplog.text
+
+def test_run_subprocess():
+
+    args = ["echo", "testing sdk_helper.subprocess"]
+    exitcode, details = sdk_helpers.run_subprocess(args)
+
+    assert exitcode == 0
+    assert args[1] in details

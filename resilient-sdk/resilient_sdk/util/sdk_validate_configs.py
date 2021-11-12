@@ -13,10 +13,10 @@ from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 setup_py_attributes = {
     "name": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"[^a-z_]+", x),
-        "fail_msg": u"setup.py attribute '{0}' has invalid character(s)",
+        "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x),
+        "fail_msg": u"setup.py attribute '{0}' has invalid character(s) in '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Make sure that '{0}' is all lowercase and does not include any special characters besides underscores",
+        "solution": u"Make sure that '{0}' is all lowercase and contains only letters, numbers or underscores",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     },
     "display_name": {
@@ -34,6 +34,14 @@ setup_py_attributes = {
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an valid license.",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    },
+    "url": {
+        "parse_func": package_helpers.parse_setup_py,
+        "fail_func": lambda x: not sdk_helpers.is_valid_url(x),
+        "fail_msg": u"'{1}' is not a valid '{0}'",
+        "missing_msg": "'url' is a recommended attribute",
+        "solution": "Include a valid URL for your organization",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     },
     "author": {
         "parse_func": package_helpers.parse_setup_py,
@@ -73,7 +81,7 @@ setup_py_attributes = {
             if package_helpers.get_dependency_from_install_requires(x, "resilient_circuits") is not None 
             else False if package_helpers.get_dependency_from_install_requires(x, "resilient-circuits") is not None
             else True,
-        "fail_msg": u"'resilient_circuits' must be included as a dependency in '{0}'",
+        "fail_msg": u"'resilient_circuits' must be included as a dependency in '{0}'. Found '{1}'",
         "missing_msg": u"'resilient_circuits' must be included as a dependency in '{0}'",
         "solution": u"Include 'resilient_circuits>={0}' as a requirement in '{1}'".format(
             constants.RESILIENT_LIBRARIES_VERSION, "{0}"
@@ -149,24 +157,24 @@ selftest_attributes = [
 
         # if selftest returncode == 1
         "fail_name": "selftest.py failed",
-        "fail_msg": "selftest.py failed  for {0}. Details: {1}",
+        "fail_msg": u"selftest.py failed  for {0}. Details: {1}",
         "fail_solution": "Check your configuration values and make sure selftest.py is properly implemented",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         # if 'unimplemented' is the return value from selftest
         "missing_name": "selftest.py not implemented",
-        "missing_msg": "selftest.py not implemented for {0}",
+        "missing_msg": u"selftest.py not implemented for {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "selftest.py is a recommended check that should be implemented.",
 
         # if a returncode > 1 comes from running selftest.py
         "error_name": "selftest.py failed",
-        "error_msg": "While running selftest.py, 'resilient-circuits' failed to connect to server. Details: {0}",
+        "error_msg": u"While running selftest.py, 'resilient-circuits' failed to connect to server. Details:\n{0}",
         "error_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         # if selftest.py succeeds (i.e. returncode == 0)
         "pass_name": "selftest.py success",
-        "pass_msg": "selftest.py successfully ran for '{0}'",
+        "pass_msg": u"selftest.py successfully ran for '{0}'",
     }
 ]
 
