@@ -2,7 +2,7 @@
 IBM SOAR Python Libraries
 =========================
 
-**Welcome to our documentation for version** |version|
+**Welcome to our  documentation!**
 
 .. toctree::
    :maxdepth: 2

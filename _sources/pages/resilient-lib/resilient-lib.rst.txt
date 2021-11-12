@@ -2,7 +2,7 @@
 resilient-lib
 =============
 
-|lib_desc|
+This Python Package contains common library calls which facilitate the development of Apps for IBM SOAR
 
 -----
 Usage
