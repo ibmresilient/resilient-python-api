@@ -125,13 +125,15 @@ def test_sefltest_run_selftestpy_rest_error(fx_copy_fn_main_mock_integration):
 
     with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_subprocess:
         
-        mock_subprocess.return_value = 20, "ERROR: (fake) issue connecting to SOAR"
+        error_msg = u"ERROR: (fake) issue connecting to SOAR with some unicode: ล ฦ ว"
+        mock_subprocess.return_value = 20, error_msg
 
         result = sdk_validate_helpers.selftest_run_selftestpy(attr_dict, package_name)
 
         assert len(result) == 2
         assert result[0] is False
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert error_msg in result[1].description
 
 def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration):
 
