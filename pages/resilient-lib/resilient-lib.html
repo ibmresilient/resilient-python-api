@@ -847,6 +847,20 @@ returns a dictionary mapping protocol to the URL of the proxy.</p></li>
 </dl>
 </dd></dl>
 </section>
+<section id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="resilient_lib.components.integration_errors.IntegrationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IntegrationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.integration_errors.IntegrationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class used to signal Integration Errors. It doesn’t add any specific information other than
+identifying the type of error</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">IntegrationError</span>
+
+<span class="k">raise</span> <span class="n">IntegrationError</span><span class="p">(</span><span class="s2">"Example raising custom error"</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
 <p><strong>2021-11: version 43.0</strong></p>
@@ -1012,6 +1026,7 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#proxies">Proxies</a></li>
 <li><a class="reference internal" href="#module-resilient_lib.components.resilient_common">Common Helper Methods</a></li>
 <li><a class="reference internal" href="#common-request-methods">Common Request Methods</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
 </ul>
 </li>
