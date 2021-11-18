@@ -38,4 +38,3 @@ MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_file
 MOCK_APP_ZIP_APP_JSON = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_app.json")
 MOCK_APP_ZIP_EXPORT_RES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_export.res")
 MOCK_APP_ZIP_EXPORT_RES_WITH_PAYLOAD_SAMPLES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_with_payload_samples_export.res")
-MOCK_APP_ZIP_VALIDATE_REPORT = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_validate_report.md")

@@ -120,12 +120,7 @@ def test_execute_command_with_validate_enabled(fx_pip_install_fn_main_mock_integ
     cmd_package = CmdPackage(fx_get_sub_parser, cmd_validate)
     args = cmd_package.parser.parse_known_args()[0]
 
-
-    with patch("resilient_sdk.cmds.validate.sdk_helpers.get_timestamp") as mock_timestamp:
-        with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_sdk_version") as mock_sdk_version:
-            mock_timestamp.return_value = "00000000000000" # mock timestamp so it matches mock report
-            mock_sdk_version.return_value = "0.0.0" # mock sdk version as well
-            path_the_app_zip = cmd_package.execute_command(args)
+    path_the_app_zip = cmd_package.execute_command(args)
 
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
@@ -134,9 +129,8 @@ def test_execute_command_with_validate_enabled(fx_pip_install_fn_main_mock_integ
 
 
     # Test app.zip/validate_report.md contents
-    validate_report_contents = "\n".join(sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md").split("\n")[:10])
+    validate_report_contents = sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md")
 
-    # just catch the first 10 lines because after that the difference is system dependent so we can't
-    # save the mock
-    mock_validate_report_contents = "".join(sdk_helpers.read_file(mock_paths.MOCK_APP_ZIP_VALIDATE_REPORT)[:10])
-    assert validate_report_contents == mock_validate_report_contents
+    assert "## App Details" in validate_report_contents
+    assert "## `setup.py` file validation" in validate_report_contents
+    assert "## Package files validation" in validate_report_contents
