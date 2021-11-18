@@ -134,6 +134,9 @@ def test_execute_command_with_validate_enabled(fx_pip_install_fn_main_mock_integ
 
 
     # Test app.zip/validate_report.md contents
-    validate_report_contents = sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md")
-    mock_validate_report_contents = "".join(sdk_helpers.read_file(mock_paths.MOCK_APP_ZIP_VALIDATE_REPORT))
+    validate_report_contents = "\n".join(sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md").split("\n")[:10])
+
+    # just catch the first 10 lines because after that the difference is system dependent so we can't
+    # save the mock
+    mock_validate_report_contents = "".join(sdk_helpers.read_file(mock_paths.MOCK_APP_ZIP_VALIDATE_REPORT)[:10])
     assert validate_report_contents == mock_validate_report_contents
