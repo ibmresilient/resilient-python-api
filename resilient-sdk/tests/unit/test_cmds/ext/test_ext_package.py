@@ -122,8 +122,10 @@ def test_execute_command_with_validate_enabled(fx_pip_install_fn_main_mock_integ
 
 
     with patch("resilient_sdk.cmds.validate.sdk_helpers.get_timestamp") as mock_timestamp:
-        mock_timestamp.return_value = "00000000000000" # mock timestamp so it matches mock report
-        path_the_app_zip = cmd_package.execute_command(args)
+        with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_sdk_version") as mock_sdk_version:
+            mock_timestamp.return_value = "00000000000000" # mock timestamp so it matches mock report
+            mock_sdk_version.return_value = "0.0.0" # mock sdk version as well
+            path_the_app_zip = cmd_package.execute_command(args)
 
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
