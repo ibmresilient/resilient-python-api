@@ -7,8 +7,6 @@
 import sys
 import json
 import re
-import datetime
-import pytz
 from jinja2 import Undefined
 
 if sys.version_info.major < 3:
@@ -80,7 +78,7 @@ def _render_diff(val):
     return re.sub(r"(\t\t.*)(\n+)", r"```diff\n\1\n```", val, flags=re.S).replace("\t", "")
 
 
-def timestamp(val):
+def _readable_time_from_timestamp(val):
     """Assuming val is a %Y%m%d%H%M%S timestamp, produce a readable Y-M-D H-M-S format"""
     if len(val) != 14:
         return val
@@ -96,7 +94,7 @@ JINJA_FILTERS = {
     "defaults": _defaults_to_code,
     "is_dict": lambda x: isinstance(x, dict),
     "diff": _render_diff,
-    "datetime": timestamp
+    "datetime": _readable_time_from_timestamp
 }
 
 

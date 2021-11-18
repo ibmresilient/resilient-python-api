@@ -4,10 +4,8 @@
 
 """ Implementation of `resilient-sdk package` """
 
-from copy import deepcopy
 import logging
 import os
-from resilient_sdk.cmds.validate import CmdValidate
 from setuptools import sandbox as use_setuptools
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -141,9 +139,7 @@ class CmdExtPackage(BaseCmd):
         if args.validate and sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
             LOG.info("Validation on {0} is starting. \nTo skip, run the 'package' command without the '--validate' flag.\nValidations can be executated separately by running: \n  'resilient-sdk validate -p {0}' \nto see more in-depth results.\n".format(args.package))
 
-            validate_args = deepcopy(args)
-            validate_args.cmd = self.cmd_validate.CMD_NAME
-            path_validate_report = self.cmd_validate.execute_command(args, run_from_package=True)
+            path_validate_report = self.cmd_validate.execute_command(args, output_suppressed=True, run_from_package=True)
         else:
             path_validate_report = package_helpers.check_validate_report_exists()
 

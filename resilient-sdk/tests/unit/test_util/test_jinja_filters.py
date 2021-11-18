@@ -69,7 +69,7 @@ def test_render_diff():
 def test_timestamp():
     mock_timestamp = "20211118104506"
 
-    converted_time = jinja2_filters.timestamp(mock_timestamp)
+    converted_time = jinja2_filters._readable_time_from_timestamp(mock_timestamp)
 
     assert "2021/11/18 10:45:06" == converted_time
 

@@ -301,27 +301,14 @@ def test_generate_report(fx_copy_fn_main_mock_integration, fx_get_sub_parser, ca
 
     path_package = fx_copy_fn_main_mock_integration[1]
 
-    # disable the file writing function
-    with patch("resilient_sdk.cmds.validate.sdk_helpers.write_file") as mock_file_write:
-        # disable makedir function
-        with patch("resilient_sdk.cmds.validate.os.makedirs") as dont_make_dirs:
+    cmd_validate = CmdValidate(fx_get_sub_parser)
 
-            dont_make_dirs.return_value = None
+    cmd_validate._generate_report(mock_issues_dict, path_package)
 
-            mock_file_write.return_value = None
+    assert "Creating dist directory at" in caplog.text
+    assert "Writing report to" in caplog.text
 
-            cmd_validate = CmdValidate(fx_get_sub_parser)
-
-            cmd_validate._generate_report(mock_issues_dict, path_package)
-
-            assert "Creating dist directory at" in caplog.text
-            assert "Writing report to" in caplog.text
-
-            # want to make sure that this test doesn't actually create the dist directory
-            # which is the point of the second mock above. just asserting that here so that
-            # future devs know that this should not create the dist directory.
-            # note that the actual code **should** create that directory
-            assert not os.path.exists(os.path.join(path_package, "dist"))
+    assert os.path.exists(os.path.join(path_package, "dist/validate_report.md"))
 
 
 def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):

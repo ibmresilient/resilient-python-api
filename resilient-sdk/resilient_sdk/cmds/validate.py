@@ -95,9 +95,6 @@ class CmdValidate(BaseCmd):
         returns the path to the validation report that was last generated
         """
 
-        if run_from_package:
-            output_suppressed = True
-
         self.output_suppressed = output_suppressed
 
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running validate on '{1}'".format(
@@ -612,7 +609,7 @@ class CmdValidate(BaseCmd):
         Generates a markdown report for the validation run.
 
         Uses the template markdown file at /data/validate/templates/validate_report.md.jinja2
-        to render and save a file in the package at /dist/validate_report_<timestamp>.md
+        to render and save a file in the package at /dist/validate_report.md
 
         :param validate_issues_dict: dictionary of all issues
         :type validate_issues_dict: dict
