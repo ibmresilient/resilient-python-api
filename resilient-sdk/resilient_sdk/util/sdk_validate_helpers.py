@@ -43,7 +43,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     if res_circuits_version and res_circuits_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
         # installed and correct version
         return True, SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
@@ -51,7 +51,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     elif res_circuits_version and res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
         # resilient-circuits installed but version not supported 
         return False, SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(res_circuits_version),
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("fail_solution")
@@ -59,7 +59,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     elif not res_circuits_version:
         # if 'resilient-circuits' not installed
         return False, SDKValidateIssue( 
-            name=attr_dict.get("missing_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("missing_msg"),
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("missing_solution")
@@ -90,14 +90,14 @@ def selftest_validate_package_installed(attr_dict, package_name, path_package, *
     # check that the package being validated is installed in the environment
     if package_helpers.check_package_installed(package_name):
         return True, SDKValidateIssue(
-            name=attr_dict.get("pass_name").format(package_name),
+            name=attr_dict.get("name").format(package_name),
             description=attr_dict.get("pass_msg").format(package_name),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
         )
     else:
         return False, SDKValidateIssue(
-            name=attr_dict.get("fail_name").format(package_name),
+            name=attr_dict.get("name").format(package_name),
             description=attr_dict.get("fail_msg").format(package_name),
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("solution").format(package_name, path_package)
@@ -126,7 +126,7 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
     try:
         sdk_helpers.validate_file_paths(os.R_OK, path_selftest_py_file)
         return True, SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg").format(path_selftest_py_file),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
@@ -134,7 +134,7 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
     except SDKException:
         # if it can't be read then create the appropriate SDKValidateIssue and return False immediately
         return False, SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg"),
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("solution")
@@ -209,7 +209,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     if returncode == 1:
         details = details[details.rfind("{")+1:details.rfind("}")].strip().replace("\n", ". ").replace("\t", " ")
         return False, SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(package_name, details),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
@@ -224,7 +224,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
         details_parsed = u"\n\t\t...\n\t\t" + u"\n\t\t".join(details.splitlines()[max(0, i - 5):])
 
         return False, SDKValidateIssue(
-            name=attr_dict.get("error_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("error_msg").format(details_parsed),
             severity=attr_dict.get("error_severity"),
             solution=""
@@ -243,7 +243,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
         # implemented selftest yet. warn that they should implement selftest
         if details.find("'state': 'unimplemented'") != -1:
             return False, SDKValidateIssue(
-                name=attr_dict.get("missing_name"),
+                name=attr_dict.get("name"),
                 description=attr_dict.get("missing_msg").format(package_name),
                 severity=attr_dict.get("missing_severity"),
                 solution=attr_dict.get("missing_solution")
@@ -251,7 +251,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
         else:
             # finally, if exit code was 0 and unimplemented was not found, the selftest passed
             return True, SDKValidateIssue(
-                name=attr_dict.get("pass_name"),
+                name=attr_dict.get("name"),
                 description=attr_dict.get("pass_msg").format(package_name),
                 severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
                 solution=details[details.rfind("{'state"):].replace("\r", "").replace("\n", " ").replace("-", "")
@@ -304,7 +304,7 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     if diffs:
         # some lines from template weren't in the given file so this validation fails
         return [SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(diffs),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
@@ -312,7 +312,7 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     else:
         # all template lines were in given MANIFEST.in so this validation passes
         return [SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
@@ -349,7 +349,7 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
     if missing_permissions:
         # missing the base perimissions
         return [SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(missing_permissions),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
@@ -357,7 +357,7 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
     else:
         # apikey_permissions file has _at least_ all of the base permissions
         return [SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("pass_solution").format(file_contents)
@@ -406,18 +406,18 @@ def package_files_template_match(package_name, package_version, path_file, filen
     comp_ratio = s_diff.ratio()
     if comp_ratio < MATCH_THRESHOLD:
         diff = difflib.unified_diff(template_contents, file_contents, 
-                                    fromfile="template_"+filename, tofile=filename, n=0) # n is number of context lines
+                                    fromfile=filename + " template", tofile=filename, n=0) # n is number of context lines
         diff = package_helpers.color_diff_output(diff) # add color to diff output
 
         return [SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(comp_ratio*100, "\t\t".join(diff)),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )]
     else:
         return [SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
@@ -452,7 +452,7 @@ def package_files_validate_config_py(path_file, attr_dict, **_):
         if config_str != "":
             # if config data was found
             return [SDKValidateIssue(
-                name=attr_dict.get("pass_name"),
+                name=attr_dict.get("name"),
                 description=attr_dict.get("pass_msg"),
                 severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
                 solution=attr_dict.get("pass_solution").format("\n\t\t".join(config_str.split("\n")))
@@ -462,7 +462,7 @@ def package_files_validate_config_py(path_file, attr_dict, **_):
             # if there is no config data give warning
             # it is allowed to not have any configs, just uncommon
             return [SDKValidateIssue(
-                name=attr_dict.get("warn_name"),
+                name=attr_dict.get("name"),
                 description=attr_dict.get("warn_msg"),
                 severity=attr_dict.get("warn_severity"),
                 solution=attr_dict.get("warn_solution")
@@ -472,7 +472,7 @@ def package_files_validate_config_py(path_file, attr_dict, **_):
         # if fails for some other reason output the SDKException messages
         # the reasons here may include misformatted config data, syntax errors in the file, ...
         return [SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(str(e).replace("\n", " ")),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
@@ -503,7 +503,7 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
         # this will raise an SDKException if something goes wrong
         import_def = package_helpers.get_import_definition_from_customize_py(path_file)
         return [SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("pass_solution").format(str(import_def)[:75], path_file)
@@ -518,7 +518,7 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
         message = message[message.index("ERROR"):]
 
         return [SDKValidateIssue(
-            name=attr_dict.get("fail_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(message),
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
@@ -569,7 +569,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     if comp_ratio == MATCH_THRESHOLD:
         # if it matches the codegen template, we return immediately and don't run any other checks
         return [SDKValidateIssue(
-            name=attr_dict.get("fail_codegen_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_codegen_msg"),
             severity=attr_dict.get("fail_codegen_severity"),
             solution=attr_dict.get("fail_codegen_solution").format(path_package)
@@ -578,7 +578,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     # if placeholder string is still in the readme
     if any("<!-- {0} -->".format(constants.DOCGEN_PLACEHOLDER_STRING) in line for line in file_contents):
         issues.append(SDKValidateIssue(
-            name=attr_dict.get("fail_placeholder_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_placeholder_msg").format(constants.DOCGEN_PLACEHOLDER_STRING),
             severity=attr_dict.get("fail_placeholder_severity"),
             solution=attr_dict.get("fail_placeholder_solution").format(constants.DOCGEN_PLACEHOLDER_STRING)
@@ -587,7 +587,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     # fail if there are any "TODO"'s remaining
     if any("TODO" in line for line in file_contents):
         issues.append(SDKValidateIssue(
-            name=attr_dict.get("fail_todo_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_todo_msg"),
             severity=attr_dict.get("fail_todo_severity"),
             solution=attr_dict.get("fail_todo_solution")
@@ -614,7 +614,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
 
     if invalid_paths:
         issues.append(SDKValidateIssue(
-            name=attr_dict.get("fail_screenshots_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("fail_screenshots_msg").format(invalid_paths),
             severity=attr_dict.get("fail_screenshots_severity"),
             solution=attr_dict.get("fail_screenshots_solution")
@@ -624,7 +624,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if the issues list is empty
         # the readme passes our checks -- note that this should still be manually validated for correctness!
         return [SDKValidateIssue(
-            name=attr_dict.get("pass_name"),
+            name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("pass_solution")

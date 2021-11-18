@@ -51,6 +51,7 @@ BASE_NAME_ENTRY_POINT = "entrypoint.sh"
 BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 BASE_NAME_DOC_DIR = "doc"
 BASE_NAME_README = "README.md"
+BASE_NAME_VALIDATE_REPORT = "validate_report.md"
 BASE_NAME_PAYLOAD_SAMPLES_DIR = "payload_samples"
 BASE_NAME_PAYLOAD_SAMPLES_SCHEMA = "output_json_schema.json"
 BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE = "output_json_example.json"
@@ -74,6 +75,7 @@ PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
 PATH_SCREENSHOTS = os.path.join(BASE_NAME_DOC_DIR, "screenshots")
 PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
 PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
+PATH_VALIDATE_REPORT = os.path.join(BASE_NAME_DIST_DIR, BASE_NAME_VALIDATE_REPORT)
 
 PREFIX_EXTENSION_ZIP = "app-"
 MIN_SETUP_PY_VERSION = "1.0.0"
@@ -651,7 +653,7 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
     return path_py_file
 
 def create_extension(path_setup_py_file, path_apikey_permissions_file,
-                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None, path_payload_samples=None,
+                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None, path_payload_samples=None, path_validate_report=None,
                      custom_display_name=None, repository_name=None, image_hash=None, keep_build_dir=False):
     """
     Function that creates The App.zip file from the given setup.py, customize and config files
@@ -675,6 +677,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     :type path_company_logo: str
     :param path_payload_samples: abs path to directory containing the files with a JSON schema and example output of the functions
     :type path_payload_samples: str
+    :param path_validate_report: abs path to directory containing the validation report - to be copied to the build directory that will be zipped
+    :type path_validate_report: str
     :param custom_display_name: will give the App that display name. Default: name from setup.py file
     :type custom_display_name: str
     :param repository_name: will over-ride the container repository name for the App. Default: 'ibmresilient'
@@ -907,6 +911,13 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                     json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
                     fn[json_example_key] = json.dumps(payload_samples_example_contents_dict)
 
+            # TODO: v44 release move out of SDK_DEV var check
+            if path_validate_report:
+                path_zipped_validate_report = os.path.join(path_build, os.path.basename(path_validate_report))
+                shutil.copy(path_validate_report, path_zipped_validate_report)
+            else:
+                LOG.warn("WARNING: If a validation report is not included with your submission, it will get rejected. Run this command with the '--validate' flag to include validations.")
+
         # Write the customize ImportDefinition to the app*.zip export.res file
         sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))
 
@@ -1050,3 +1061,15 @@ def parse_file_paths_from_readme(readme_line_list):
                 raise SDKException(u"Line '{0}' in README has invalid link syntax".format(line))
 
     return paths
+
+
+def check_validate_report_exists():
+    """
+    Goes into the dist directory and looks for the validate_report.md. If it exists, returns the path.
+    If it doesn't exists, returns None
+
+    :return: path of the validate_report.md if it exists else None
+    :rtype: str
+    """
+
+    return PATH_VALIDATE_REPORT if os.path.exists(PATH_VALIDATE_REPORT) else None

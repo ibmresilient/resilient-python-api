@@ -27,7 +27,7 @@ def test_selftest_validate_resilient_circuits_installed():
         assert len(result) == 2
         assert result[0]
         assert result[1].solution is ""
-        assert "'{0}' found in env".format(constants.CIRCUITS_PACKAGE_NAME) in result[1].name
+        assert "selftest" in result[1].name
 
 
 def test_valid_selftest_validate_package_installed():
@@ -58,7 +58,7 @@ def test_invalid_selftest_validate_package_installed():
     assert len(result) == 2
     assert result[0] is False
     assert mock_path_to_package in result[1].solution
-    assert "not found" in result[1].name
+    assert "is not installed" in result[1].description
 
 def test_valid_selftest_validate_selftestpy_file_exists(fx_copy_fn_main_mock_integration):
 
@@ -70,7 +70,7 @@ def test_valid_selftest_validate_selftestpy_file_exists(fx_copy_fn_main_mock_int
 
     assert len(result) == 2
     assert result[0]
-    assert "selftest.py found" in result[1].name
+    assert "selftest.py file found" in result[1].description
 
 def test_invalid_selftest_validate_selftestpy_file_exists():
 
@@ -82,7 +82,7 @@ def test_invalid_selftest_validate_selftestpy_file_exists():
 
     assert len(result) == 2
     assert result[0] is False
-    assert "selftest.py not found" in result[1].name
+    assert "selftest.py is a required file" in result[1].description
     
 def test_sefltest_run_selftestpy_valid():
 

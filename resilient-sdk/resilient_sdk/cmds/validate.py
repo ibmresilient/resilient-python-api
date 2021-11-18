@@ -13,6 +13,7 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import jinja2_filters as jinja_filters
 from resilient_sdk.util import \
     sdk_validate_configs as validation_configurations
 from resilient_sdk.util.sdk_exception import SDKException
@@ -88,11 +89,17 @@ class CmdValidate(BaseCmd):
                                  action="store_true",
                                  help="Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment)")
 
-    def execute_command(self, args, output_suppressed=False):
+    def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """
         TODO: docstring, unit tests
+        returns the path to the validation report that was last generated
         """
+
+        if run_from_package:
+            output_suppressed = True
+
         self.output_suppressed = output_suppressed
+
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running validate on '{1}'".format(
             constants.LOG_DIVIDER, os.path.abspath(args.package)
         ))
@@ -105,35 +112,44 @@ class CmdValidate(BaseCmd):
 
         sdk_helpers.is_python_min_supported_version()
 
-        if not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve and not args.selftest:
+        if run_from_package:
+            self._run_main_validation(args, )
+
+        if not run_from_package and not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve and not args.selftest:
             SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_PACKAGE[0], constants.SUB_CMD_PACKAGE[1])
             self._run_main_validation(args, )
 
-        if args.validate:
+        if not run_from_package and args.validate:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_VALIDATE[0])
             self._validate(args, )
 
-        if args.tests:
+        if not run_from_package and args.tests:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_TESTS[0])
             self._run_tests(args, )
 
-        if args.pylint:
+        if not run_from_package and args.pylint:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_PYLINT[0])
             self._run_pylint_scan(args, )
 
-        if args.bandit:
+        if not run_from_package and args.bandit:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_BANDIT[0])
             self._run_bandit_scan(args, )
 
-        if args.cve:
+        if not run_from_package and args.cve:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_CVE[0])
             self._run_cve_scan(args, )
 
-        if args.selftest:
+        if not run_from_package and args.selftest:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_SELFTEST[0])
             self._run_selftest(args, )
 
         self._print_summary(self.SUMMARY_LIST)
+        path_report = self._generate_report(self.VALIDATE_ISSUES, args.package)
+
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "\nSee the detailed report at {0}".format(path_report))
+
+
+        return path_report
 
     def _run_main_validation(self, args):
         """
@@ -165,7 +181,7 @@ class CmdValidate(BaseCmd):
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Printing details{0}".format(constants.LOG_DIVIDER))
 
-        # list of string for output
+        # list of tuples for output
         package_details_output = []
         # skips are skipped in non-DEBUG outputs as they are all considered too
         # long for normal output
@@ -193,7 +209,7 @@ class CmdValidate(BaseCmd):
 
             # optional parameters are skipped if their values aren't found
             if attr_val or attr not in SETUP_OPTIONAL_ATTRS:
-                package_details_output.append({attr: attr_val if attr_val else "**NOT FOUND**"})
+                package_details_output.append((attr, attr_val if attr_val else "**NOT FOUND**"))
 
 
 
@@ -206,12 +222,12 @@ class CmdValidate(BaseCmd):
             sdk_helpers.validate_file_paths(os.R_OK, path_customize_py)
             import_definition = package_helpers.get_import_definition_from_customize_py(path_customize_py)
             if import_definition.get("server_version", {}).get("version"):
-                package_details_output.append({"SOAR version": import_definition.get("server_version").get("version")})
+                package_details_output.append(("SOAR version", import_definition.get("server_version").get("version")))
             else:
-                package_details_output.append({"SOAR version": "Not specified in 'util/data/export.res'. Reload code to make sure server_version is set."})
-        except SDKException as e:
-            package_details_output.append({"SOAR version": "**NOT FOUND**; customize.py file not found in {0}".format(path_customize_py)})
-            
+                package_details_output.append(("SOAR version", "Not specified in 'util/data/export.res'. Reload code to make sure server_version is set."))
+        except SDKException:
+            package_details_output.append(("SOAR version", "**NOT FOUND**; customize.py file not found in {0}".format(path_customize_py)))
+
 
 
         # proxy support is determined by the version of resilient-circuits that is installed
@@ -222,22 +238,21 @@ class CmdValidate(BaseCmd):
                 circuits_version = re.findall(r"[0-9]+", package)
                 circuits_version = tuple([int(i) for i in circuits_version])
 
-                package_details_output.append({"Proxy support": "Proxies supported if running on AppHost>=1.6" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"})
+                package_details_output.append(("Proxy support", "Proxies supported if running on AppHost>=1.6" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"))
                 library_found = True
                 break
         if not library_found:
-            package_details_output.append({"install_requires.resilient_circuits": "'resilient_circuits' not found in 'install_requires' in package's setup.py"})
+            package_details_output.append(("install_requires.resilient_circuits", "'resilient_circuits' not found in 'install_requires' in package's setup.py"))
 
 
 
         # print output
-        for attr_dict in package_details_output:
-            for attr in attr_dict:
-                if attr not in skips:
-                    level = constants.VALIDATE_LOG_LEVEL_INFO
-                else:
-                    level = constants.VALIDATE_LOG_LEVEL_DEBUG
-                self._log(level, u"{0}: {1}".format(attr, attr_dict[attr]))
+        for attr, val in package_details_output:
+            if attr not in skips:
+                level = constants.VALIDATE_LOG_LEVEL_INFO
+            else:
+                level = constants.VALIDATE_LOG_LEVEL_DEBUG
+            self._log(level, u"{0}: {1}".format(attr, val))
 
 
 
@@ -454,7 +469,7 @@ class CmdValidate(BaseCmd):
             except SDKException:
                 # file not found: create issue with given "missing_..." info included
                 issue_list = [SDKValidateIssue(
-                    name=attr_dict.get("missing_name"),
+                    name=attr_dict.get("name"),
                     description=attr_dict.get("missing_msg").format(path_file),
                     severity=attr_dict.get("missing_severity"),
                     solution=attr_dict.get("missing_solution").format(path_package)
@@ -485,7 +500,7 @@ class CmdValidate(BaseCmd):
         return package_files_valid, issues
 
     @staticmethod
-    def _validate_selftest(path_package, args):
+    def _validate_selftest(path_package, path_app_config=None):
         """
         Validate the contents of the selftest.py file in the given package:
         - check if the package resilient-circuits>=42.0.0 is installed on this Python environment 
@@ -497,6 +512,8 @@ class CmdValidate(BaseCmd):
 
         :param path_package: path to the package
         :type path_package: str
+        :param path_app_config: (optional) path to app_config
+        :type path_app_config: str
         :return: Returns boolean value of whether or not the run passed and a sorted list of SDKValidateIssue
         :rtype: (bool, list[SDKValidateIssue])
         """
@@ -524,7 +541,7 @@ class CmdValidate(BaseCmd):
                 path_selftest_py_file=path_selftest_py_file,
                 package_name=package_name,
                 path_package=path_package,
-                path_app_config=args.config
+                path_app_config=path_app_config
             )
             issues.append(issue)
             if not issue_passes:
@@ -574,8 +591,11 @@ class CmdValidate(BaseCmd):
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
+        # get path to app_config if exists otherwise set to None
+        path_app_config = args.config if hasattr(args, "config") else None
+
         # validate selftest.py and then execute it if valid
-        file_valid, issues = self._validate_selftest(path_package, args)
+        file_valid, issues = self._validate_selftest(path_package, path_app_config)
         self.VALIDATE_ISSUES["selftest.py"] = issues
         self.SUMMARY_LIST += issues
 
@@ -585,6 +605,67 @@ class CmdValidate(BaseCmd):
         self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "selftest.py", file_valid)
 
 
+
+    @staticmethod
+    def _generate_report(validate_issues_dict, args_package):
+        """
+        Generates a markdown report for the validation run.
+
+        Uses the template markdown file at /data/validate/templates/validate_report.md.jinja2
+        to render and save a file in the package at /dist/validate_report_<timestamp>.md
+
+        :param validate_issues_dict: dictionary of all issues
+        :type validate_issues_dict: dict
+        :param args_package: path to package (relative or absolute)
+        :type args_package: str
+        :return: returns the path to the generated file (including the formatted timestamp)
+        :rtype: str
+        """
+
+        LOG.debug("{0}Generating report{0}".format(constants.LOG_DIVIDER))
+
+        # establish timestamp and paths
+        timestamp = sdk_helpers.get_timestamp()
+        path_package = os.path.abspath(args_package)
+        path_dist = os.path.join(path_package, package_helpers.BASE_NAME_DIST_DIR)
+        path_report = os.path.join(path_package, package_helpers.PATH_VALIDATE_REPORT)
+
+        # collect the display_name from the setup.py file
+        parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["display_name", "name"])
+        display_name = parsed_setup.get("display_name") or parsed_setup.get("name")
+
+
+        # set up jinja env
+        jinja_env = sdk_helpers.setup_jinja_env(constants.VALIDATE_TEMPLATE_PATH)
+
+        # define custom jinja filters
+        jinja_filters.add_filters_to_jinja_env(jinja_env)
+
+        # Load the Jinja2 Template
+        file_template = jinja_env.get_template(constants.VALIDATE_REPORT_TEMPLATE_NAME)
+
+
+        # render the markdown file
+        rendered_report = file_template.render(
+            display_name=display_name,
+            sdk_version=sdk_helpers.get_resilient_sdk_version(),
+            timestamp=timestamp,
+            validate_issues_dict=validate_issues_dict,
+            SEVERITY_THRESHOLD=SDKValidateIssue.SEVERITY_LEVEL_INFO
+        )
+
+
+        # if the dist directory does not exist: create it
+        if not os.path.exists(path_dist):
+            LOG.debug("Creating dist directory at {0}".format(path_dist))
+            os.makedirs(path_dist)
+
+        LOG.debug("Writing report to {0}".format(path_report))
+
+
+        sdk_helpers.write_file(path_report, rendered_report)
+
+        return path_report
 
 
     def _print_summary(self, static_issues_list):
@@ -624,7 +705,6 @@ class CmdValidate(BaseCmd):
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Validations Passed: {0:>11}".format(package_helpers.color_output(
             int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG]) + int(counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
         ))
-        # self._log(constants.VALIDATE_LOG_LEVEL_INFO, "\nSee the detailed report at {0}".format("TODO")) # TODO
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, constants.LOG_DIVIDER)
 
     def _print_status(self, level, msg, run_pass):
