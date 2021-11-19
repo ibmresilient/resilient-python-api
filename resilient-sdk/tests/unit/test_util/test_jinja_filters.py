@@ -66,7 +66,7 @@ def test_render_diff():
     assert "```diff\n--- from\n+++ to\n@@ -1 +1 @@\n-no\n+yes\n```" in filtered_text
 
 
-def test_timestamp():
+def test_readable_time_from_timestamp():
     mock_timestamp = "20211118104506"
 
     converted_time = jinja2_filters._readable_time_from_timestamp(mock_timestamp)

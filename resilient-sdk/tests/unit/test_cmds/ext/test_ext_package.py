@@ -16,7 +16,7 @@ from resilient_sdk.util.sdk_exception import SDKException
 from tests import helpers
 from tests.shared_mock_data import mock_paths
 
-EXPECTED_FILES_APP_ZIP = ['app.json', 'export.res', 'fn_main_mock_integration-1.0.0.tar.gz']
+EXPECTED_FILES_APP_ZIP = ['app.json', 'export.res', 'fn_main_mock_integration-1.0.0.tar.gz', 'validate_report.md']
 
 
 def test_setup():
@@ -42,7 +42,7 @@ def test_execute_command_no_samples(fx_copy_fn_main_mock_integration, fx_get_sub
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
     with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP[:-1], app_zip.namelist())
 
     # Test app.zip/app.json contents
     app_json_contents = sdk_helpers.read_zip_file(path_the_app_zip, "app.json")
@@ -70,7 +70,7 @@ def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_s
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
     with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP[:-1], app_zip.namelist())
 
     # Test app.zip/app.json contents
     app_json_contents = sdk_helpers.read_zip_file(path_the_app_zip, "app.json")
