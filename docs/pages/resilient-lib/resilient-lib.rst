@@ -82,6 +82,12 @@ Common Request Methods
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
 
 ----------
+Exceptions
+----------
+
+.. autoexception:: resilient_lib.components.integration_errors::IntegrationError
+
+----------
 Change Log
 ----------
 
