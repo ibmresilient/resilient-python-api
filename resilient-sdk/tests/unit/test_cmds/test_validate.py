@@ -109,14 +109,13 @@ def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
 def test_pass_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_validate, fx_copy_fn_main_mock_integration):
 
     cmd_validate = CmdValidate(fx_get_sub_parser)
-    args = cmd_validate.parser.parse_known_args()[0]
     mock_package_path = fx_copy_fn_main_mock_integration[1]
     mock_data = [
         { "func": lambda **x: (True, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)) }
     ]
 
     with patch("resilient_sdk.cmds.validate.validation_configurations.selftest_attributes", new=mock_data):
-        results = CmdValidate._validate_selftest(mock_package_path, args)
+        results = CmdValidate._validate_selftest(mock_package_path)
 
         assert results[0]
         assert len(results) == 2
@@ -127,7 +126,6 @@ def test_pass_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
 def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_validate, fx_copy_fn_main_mock_integration):
 
     cmd_validate = CmdValidate(fx_get_sub_parser)
-    args = cmd_validate.parser.parse_known_args()[0]
     mock_package_path = fx_copy_fn_main_mock_integration[1]
     mock_data = [
         { "func": lambda **x: (True, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)) },
@@ -135,7 +133,7 @@ def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
     ]
 
     with patch("resilient_sdk.cmds.validate.validation_configurations.selftest_attributes", new=mock_data):
-        results = CmdValidate._validate_selftest(mock_package_path, args)
+        results = CmdValidate._validate_selftest(mock_package_path)
 
         assert not results[0]
         assert len(results) == 2
@@ -292,6 +290,25 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
         cmd_validate.execute_command(args)
 
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
+
+
+def test_generate_report(fx_copy_fn_main_mock_integration, fx_get_sub_parser, caplog):
+    mock_issues_dict = {
+        "details": [
+            ("a", "b")
+        ]
+    }
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+
+    cmd_validate._generate_report(mock_issues_dict, path_package)
+
+    assert "Creating dist directory at" in caplog.text
+    assert "Writing report to" in caplog.text
+
+    assert os.path.exists(os.path.join(path_package, "dist/validate_report.md"))
 
 
 def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):

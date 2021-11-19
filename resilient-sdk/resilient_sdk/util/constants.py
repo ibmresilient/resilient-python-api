@@ -25,6 +25,8 @@ IMPORT_URL = "/configurations/imports"
 # Path to package templates for jinja rendering
 PACKAGE_TEMPLATE_PATH = "data/codegen/templates/package_template"
 DOCGEN_TEMPLATE_PATH = "data/docgen/templates"
+VALIDATE_TEMPLATE_PATH = "data/validate/templates"
+VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
 
 
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
