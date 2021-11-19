@@ -26,9 +26,8 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=42.0.0",
-        "jinja2~=2.0",
-        "setuptools>=44.0.0"
+        "resilient>=43.0.0",
+        "jinja2~=2.0"
     ],
 
     # Add command line: resilient-sdk

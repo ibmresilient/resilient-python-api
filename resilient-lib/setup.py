@@ -26,7 +26,7 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=42.0.0",
+        "resilient>=43.0.0",
         "bs4",
         "six"
     ],

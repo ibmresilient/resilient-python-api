@@ -35,8 +35,8 @@ setup(
         "filelock>=2.0.5",
         "watchdog>=0.9.0, <1.0.0; python_version < '3.6.0'",
         "watchdog>=0.9.0; python_version >= '3.6.0'",
-        "resilient>=42.0.0",
-        "resilient-lib>=42.0.0"
+        "resilient>=43.0.0",
+        "resilient-lib>=43.0.0"
     ],
 
     entry_points={
