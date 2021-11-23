@@ -295,3 +295,62 @@ package_files = {
         "pass_solution": "Make sure that all documentation is up-to-date before packaging"
     }
 }
+
+tests_attributes = [
+    # first check tox is installed
+    {
+        "func": sdk_validate_helpers.tox_tests_validate_tox_installed,
+        "name": "tox tests",
+
+        "fail_msg": "'{0}' is not installed in your Python environment",
+        "fail_solution": "(OPTIONAL) If you want to verify any tests you have written, install '{0}' by running '''pip install -U '{0}''''",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' was found in the Python environment"
+    },
+
+    # second check tox.ini file is present
+    {
+        "func": sdk_validate_helpers.tox_tests_validate_tox_file_exists,
+        "name": "tox tests",
+
+        "fail_msg": "'{0}' file not found in package path",
+        "fail_solution": "(OPTIONAL) If you want to validate tests you should include a {0} file",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' file was found in the package"
+    },
+
+    # third check envlist = py36 exists in the file
+    {
+        "func": sdk_validate_helpers.tox_tests_validate_py36_only,
+        "name": "tox tests",
+
+        "missing_msg": "'{0}' not found in '{1}' file",
+        "missing_solution": "Tests must be configured to run '{0}' or greater",
+
+        "fail_msg": "Unsupported tox env found in envlist in '{0}' file",
+        "fail_solution": "Tests must be configured to run only with tox envs 'py36' or greater",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+
+        "pass_msg": "Valid '{0}' was found in the '{1}' file"
+    },
+
+    # finally run the tests with tox
+    {
+        "func": sdk_validate_helpers.tox_tests_run_tox_tests,
+        "name": "tox tests",
+
+        "fail_msg": u"{0} tests failed. Details:\n\n\t\t{1}\n",
+
+        "error_msg": u"{0} error(s) occurred while running tests. Details:\n\n\t\t{1}\n",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "solution": "Run with the '-v' flag to see more information",
+
+        "pass_msg": "{0} tests passed!",
+    },
+]

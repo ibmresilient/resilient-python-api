@@ -5,6 +5,7 @@
 import argparse
 from resilient import ensure_unicode
 from resilient_sdk.util.sdk_argparse import SDKArgHelpFormatter
+from resilient_sdk.util import constants
 
 
 class BaseCmd(object):
@@ -50,6 +51,9 @@ class BaseCmd(object):
 
         if "app_config_parser" in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_app_config_parser())
+
+        if constants.SDK_SETTINGS_PARSER_NAME in self.CMD_ADD_PARSERS:
+            parser_parents.append(self._get_sdk_settings_parser())
 
         self.parser = sub_parser.add_parser(self.CMD_NAME,
                                             help=self.CMD_HELP,
@@ -182,3 +186,19 @@ class BaseCmd(object):
                                        help="Path to app.config file to use")
 
         return app_config_parser
+
+    @staticmethod
+    def _get_sdk_settings_parser():
+        """
+        Create a parser has an argument for the path to the sdk settings file
+
+        :return: A single argparse.ArgumentParser
+        :rtype: argparse.ArgumentParser
+        """
+        sdk_settings_parser = argparse.ArgumentParser(add_help=False)
+
+        sdk_settings_parser.add_argument(constants.SUB_CMD_SDK_SETTINGS[0],
+                                         type=ensure_unicode,
+                                         help="Path to sdk settings file to use")
+
+        return sdk_settings_parser

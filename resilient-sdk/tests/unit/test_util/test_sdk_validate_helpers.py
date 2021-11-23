@@ -403,3 +403,72 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
     result = result[0]
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "Cannot find the following screenshot(s) referenced in the README" in result.description
+
+def test_tox_tests_validate_tox_installed(fx_pip_install_tox):
+
+    attr_dict = sdk_validate_configs.tests_attributes[0]
+
+    result = sdk_validate_helpers.tox_tests_validate_tox_installed(attr_dict)
+
+    assert result[0] == 1
+    assert "'tox' was found in the Python environment" in result[1].description
+
+def test_tox_tests_validate_tox_file_exists(fx_copy_fn_main_mock_integration):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[1]
+
+    result = sdk_validate_helpers.tox_tests_validate_tox_file_exists(path_package, attr_dict)
+
+    assert result[0] == 1
+    assert "'tox.ini' file was found in the package" in result[1].description
+
+def test_tox_tests_validate_py36_only(fx_copy_fn_main_mock_integration):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[2]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
+
+        mock_read_file.return_value = ['[tox]\n', 'envlist = py36\n', 'skip_missing_interpreters=True\n', '\n', '\n', '[testenv:py36]\n', 'passenv=TEST_RESILIENT_*\n', 'commands = pytest -s {posargs}\n']
+
+        result = sdk_validate_helpers.tox_tests_validate_py36_only(path_package, attr_dict)
+
+        assert result[0] == 1
+        assert "Valid 'envlist=' was found in the 'tox.ini' file" in result[1].description
+
+def test_tox_tests_validate_not_py36_only(fx_copy_fn_main_mock_integration):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[2]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
+
+        mock_read_file.return_value = ['[tox]\n', 'envlist = py27,py36,py39\n', 'skip_missing_interpreters=True\n', '\n', '\n', '[testenv:py36]\n', 'passenv=TEST_RESILIENT_*\n', 'commands = pytest -s {posargs}\n']
+
+        result = sdk_validate_helpers.tox_tests_validate_py36_only(path_package, attr_dict)
+
+        assert result[0] == 1
+        assert "Unsupported tox env found in envlist in 'tox.ini' file" in result[1].description
+
+def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_fn_main_mock_integration, caplog):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[3]
+
+    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, None, None)
+
+    assert "Mock args" in caplog.text
+    assert result[0] == 1
+
+
+def test_tox_tests_parse_xml_report():
+
+    results = sdk_validate_helpers._tox_tests_parse_xml_report(mock_paths.MOCK_PYTEST_XML_REPORT_PATH)
+
+    assert len(results) == 5
+    assert results[0] == 2
+    assert results[1] == 1
+    assert results[2] == 0
+    assert results[3] == ""
+    assert results[4] != ""

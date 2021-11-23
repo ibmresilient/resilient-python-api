@@ -23,6 +23,8 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
+    $ resilient-sdk validate -p <name_of_package> --tests --tox-args myarg1="1val" myarg2="val2"
+    $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     assert cmd_validate.CMD_DESCRIPTION == cmd_validate.CMD_HELP
 
@@ -211,6 +213,58 @@ def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration)
         assert results[1][0].solution == "mock_solution"
 
 
+def test_pass_validate_tox_tests(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = [
+        {"func": lambda **_: (1, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG))}
+    ]
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.tests_attributes", new=mock_data):
+
+        results = CmdValidate._validate_tox_tests(mock_path_package)
+
+        assert len(results) == 2
+        assert results[0]
+        assert len(results[1]) == 1
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_info_validate_tox_tests(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = [
+        {"func": lambda **_: (-1, SDKValidateIssue("skip", "info: skip", SDKValidateIssue.SEVERITY_LEVEL_INFO))}
+    ]
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.tests_attributes", new=mock_data):
+
+        results = CmdValidate._validate_tox_tests(mock_path_package)
+
+        assert len(results) == 2
+        assert results[0] == -1
+        assert len(results[1]) == 1
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+def test_fail_validate_tox_tests(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = [
+        {"func": lambda **_: (0, SDKValidateIssue("fail", "fail", SDKValidateIssue.SEVERITY_LEVEL_CRITICAL))}
+    ]
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.tests_attributes", new=mock_data):
+
+        results = CmdValidate._validate_tox_tests(mock_path_package)
+
+        assert len(results) == 2
+        assert results[0] == 0
+        assert len(results[1]) == 1
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+
 def test_get_log_level():
     assert CmdValidate._get_log_level(int("50")) == 10 # should only work on str's (returns DEBUG when given an int)
 
@@ -290,6 +344,43 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
         cmd_validate.execute_command(args)
 
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
+
+
+def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--tests", "--tox-args", 'arg1="val1"', 'arg2="val2"'])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running ['tox', '--', '--junitxml'," in caplog.text
+    assert "'val2'] as a subprocess" in caplog.text
+    assert "pytest: error: unrecognized arguments: --arg1 --arg2 val2" in caplog.text
+
+
+def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--tests", "--settings", mock_paths.MOCK_SDK_SETTINGS_PATH])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running ['tox', '--', '--junitxml'," in caplog.text
+    assert "tests passed!" in caplog.text
 
 
 def test_generate_report(fx_copy_fn_main_mock_integration, fx_get_sub_parser, caplog):

@@ -11,9 +11,9 @@ import re
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
+from resilient_sdk.util import jinja2_filters as jinja_filters
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util import jinja2_filters as jinja_filters
 from resilient_sdk.util import \
     sdk_validate_configs as validation_configurations
 from resilient_sdk.util.sdk_exception import SDKException
@@ -44,9 +44,11 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
+    $ resilient-sdk validate -p <name_of_package> --tests --tox-args myarg1="1val" myarg2="val2"
+    $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser"]
+    CMD_ADD_PARSERS = ["app_config_parser", constants.SDK_SETTINGS_PARSER_NAME]
 
     VALIDATE_ISSUES = {}
     SUMMARY_LIST = []
@@ -88,6 +90,10 @@ class CmdValidate(BaseCmd):
         self.parser.add_argument(SUB_CMD_SELFTEST[0],
                                  action="store_true",
                                  help="Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment)")
+
+        self.parser.add_argument("--tox-args",
+                                 nargs="*",
+                                 help="pytest arguments to pass to tox when validating tests. Provide in the format <attr1>=\"<value>\". Example: '--tox-args my_arg1=\"value1\" my_arg2=\"value2\"'")
 
     def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """
@@ -155,6 +161,7 @@ class CmdValidate(BaseCmd):
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
         self._validate(args)
         self._run_selftest(args)
+        self._run_tests(args)
 
 
     def _print_package_details(self, args):
@@ -552,11 +559,88 @@ class CmdValidate(BaseCmd):
 
         return selftest_valid, issues
 
+    @staticmethod
+    def _validate_tox_tests(path_package, tox_args=None, path_sdk_settings=None):
+        """
+        Validate tox is installed and then run the unit tests given for the package:
+        - check if tox is installed in the python env (INFO if not, package is considered valid without tests)
+        - check that tox.ini file is present (INFO if not)
+        - check that envlist=py36 (or greater) is present in tox.ini file - py27 not allowed
+        - run tests using tox and report back results
+          - tox tests for resilient-circuits require some pytest args; these can come three different ways (ordered by precedence in our logic):
+          1. did the user pass args using --tox-args flag? if so, use them
+          2. if not, is there either a) a value for the --settings flag that gives the path to a valid sdk_settings.json file? or b) if not, does the sdk_settings.json file exist in the default location?
+          3. finally, if none of the above, use the defaults defined in constants.TOX_TESTS_DEFAULT_ARGS
+
+        This method introduced the possibility for returning a -1 from a static validation method.
+        This allows for the option that a validation was "skipped" as we deem the case when tox is not installed
+        or the tox.ini file is not present. This is the value passed to _print_status when the validation is done
+        but if the method is clearly a fail or pass, a boolean value can be returned in the first position
+
+        :param path_package: path to the package
+        :type path_package: str
+        :param tox_args: (optional) list of tox arguments in the format ["attr1='val1'", "attr2='val2'", ...]
+        :type tox_args: list[str]
+        :param path_sdk_settings: (optional) path to sdk settings file
+        :type path_sdk_settings: str
+        :return: Returns boolean value or int of whether or not the run passed and a sorted list of SDKValidateIssue
+        :rtype: (bool|int, list[SDKValidateIssue])
+        """
+
+        # empty list of SDKValidateIssues
+        issues = []
+        # boolean to determine if the tests check passes validation
+        tests_valid = True
+
+        for attr_dict in validation_configurations.tests_attributes:
+            if not attr_dict.get("func"):
+                raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
+
+            issue_pass_num, issue = attr_dict.get("func")(
+                path_package=path_package,
+                attr_dict=attr_dict,
+                tox_args=tox_args,
+                path_sdk_settings=path_sdk_settings
+            )
+
+            issues.append(issue)
+            if issue_pass_num <= 0:
+                issues.sort()
+                return issue_pass_num, issues
+            
+        # sort and look for and invalid issues
+        issues.sort()
+        tests_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+
+        return tests_valid, issues
+
     def _run_tests(self, args):
         """
-        TODO
+        Validates and executes tox tests (makes use of static validation method _validate_tox_tests)
+
+        Note that this method sets the values for path_sdk_settings and tox_args to a default if they are
+        not passed in with their respective --settings or --tox-args flags
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running tests{0}".format(constants.LOG_DIVIDER))
+
+        # Get absolute path to package
+        path_package = os.path.abspath(args.package)
+        # Ensure the package directory exists and we have READ access
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
+
+        # get path to sdk_settings.json and values for tox args if they exists otherwise set to default
+        path_sdk_settings = args.settings if hasattr(args, "settings") and args.settings else constants.SDK_SETTINGS_FILE_PATH
+        tox_args = args.tox_args if hasattr(args, "tox_args") else None # default is None
+
+        # check if tox tests installed and run tox if so
+        tox_tests_valid_or_skipped, issues = self._validate_tox_tests(path_package, tox_args, path_sdk_settings)
+        self.VALIDATE_ISSUES["tests"] = issues
+        self.SUMMARY_LIST += issues
+
+        for issue in issues:
+            self._log(issue.get_logging_level(), issue.error_str())
+
+        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "tests", tox_tests_valid_or_skipped)
 
     def _run_pylint_scan(self, args):
         """
@@ -712,12 +796,12 @@ class CmdValidate(BaseCmd):
         :type level: str
         :param msg: message to be formatted and printed
         :type msg: str
-        :param run_pass: indicates whether or not this specific validation has passed
-        :type run_pass: bool
+        :param run_pass: indicates whether or not this specific validation has passed (set to -1 for "SKIPPED")
+        :type run_pass: bool or int
         :return: None - outputs to console using self._log
         :rtype: None
         """
-        status = "PASS" if run_pass else "FAIL"
+        status = "PASS" if int(run_pass) == 1 else "FAIL" if int(run_pass) == 0 else "SKIPPED"
         msg_formatted = "{0}{1} {2}{0}".format(constants.LOG_DIVIDER, msg, status)
         msg_colored = package_helpers.color_output(msg_formatted, status)
         self._log(level, msg_colored)

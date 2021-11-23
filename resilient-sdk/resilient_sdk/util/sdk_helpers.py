@@ -16,6 +16,7 @@ import importlib
 import hashlib
 import time
 import uuid
+import shlex
 import subprocess
 import pkg_resources
 import xml.etree.ElementTree as ET
@@ -1107,12 +1108,14 @@ def parse_optionals(optionals):
     return parsed_optionals
 
 
-def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
+def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=logging.DEBUG):
     """
-    Run a given command as a subprocess.
+    Run a given command as a subprocess. Optionally change directory before running the command (use change_dir parameter)
 
     :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
-    :type args: str | list
+    :type args: str | list[str]
+    :param change_dir: (optional) path of directory to change to before running command
+    :type change_dir: str
     :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
     :type cmd_name: str
     :param log_level_threshold: (optional) the logging level at which to output the stdout/stderr for the subprocess; default is DEBUG
@@ -1123,6 +1126,16 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
 
     LOG.debug("Running {0} as a subprocess".format(args))
 
+    # save starting directory
+    current_dir = os.getcwd()
+
+    # if change_dir is set, change to that dir
+    if change_dir:
+        LOG.debug("Changing direcotyr to {0}".format(change_dir))
+        os.chdir(change_dir)
+
+    if isinstance(args, str):
+        args = shlex.split(args)
 
     # run given command as a subprocess
     proc = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=0)
@@ -1133,6 +1146,7 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     # if debugging enabled, capture output directly and redirect back to sys.stdout
     # using LOG.log(log_level...)
     if LOG.isEnabledFor(log_level_threshold):
+        LOG.debug("")
         details = ""
         while proc.stdout:
             line = proc.stdout.readline()
@@ -1151,6 +1165,13 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
         sys.stdout.flush()
         time.sleep(0.75)
         details = stdout.decode("utf-8")
+
+
+    # move back to original directory
+    # note that this just changes the working directory for the python process,
+    # — thus if the subprocess was interrupted and the program quits,
+    # the directory of the user's terminal won't be affected
+    os.chdir(current_dir)
 
     return proc.returncode, details
 

@@ -425,3 +425,13 @@ def test_run_subprocess():
 
     assert exitcode == 0
     assert args[1] in details
+
+def test_run_subprocess_with_cd():
+
+    args = ["pwd"]
+    path = os.path.expanduser("~")
+
+    exitcode, details = sdk_helpers.run_subprocess(args, change_dir=path)
+
+    assert exitcode == 0
+    assert path in details
