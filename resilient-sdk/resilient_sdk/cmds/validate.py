@@ -28,6 +28,7 @@ SUB_CMD_PYLINT = ("--pylint", )
 SUB_CMD_BANDIT = ("--bandit", )
 SUB_CMD_CVE = ("--cve", )
 SUB_CMD_SELFTEST = ("--selftest", )
+SUB_CMD_TOX_ARGS = ("--tox-args", )
 
 
 # optional parameters are skipped if they aren't included in the setup.py
@@ -44,7 +45,7 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
-    $ resilient-sdk validate -p <name_of_package> --tests --tox-args myarg1="1val" myarg2="val2"
+    $ resilient-sdk validate -p <name_of_package> --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
     $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     CMD_DESCRIPTION = CMD_HELP
@@ -73,7 +74,7 @@ class CmdValidate(BaseCmd):
 
         self.parser.add_argument(SUB_CMD_TESTS[0],
                                  action="store_true",
-                                 help="Run tests using package's tox.ini file in a Python 3.6 environment")
+                                 help="Run tests using package's tox.ini file in a Python 3.6 environment (if 'tox' is installed and tox tests are configured for the package)")
 
         self.parser.add_argument(SUB_CMD_PYLINT[0],
                                  action="store_true",
@@ -91,9 +92,9 @@ class CmdValidate(BaseCmd):
                                  action="store_true",
                                  help="Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment)")
 
-        self.parser.add_argument("--tox-args",
+        self.parser.add_argument(SUB_CMD_TOX_ARGS[0],
                                  nargs="*",
-                                 help="pytest arguments to pass to tox when validating tests. Provide in the format <attr1>=\"<value>\". Example: '--tox-args my_arg1=\"value1\" my_arg2=\"value2\"'")
+                                 help="""pytest arguments to pass to tox when validating tests. Provide in the format <attr1>="<value>". Example: '--tox-args my_arg1="value1" my_arg2="value2"'""")
 
     def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """

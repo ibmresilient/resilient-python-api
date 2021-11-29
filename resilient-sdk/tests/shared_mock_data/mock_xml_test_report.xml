@@ -15,7 +15,7 @@
                 at 0x000001A1A9EB40D0&gt;
 
                 def test_fails(record_property):
-                record_property("key", "value2")
+                record_property("key", u"value2 some unicode: Δ, Й, ק ,م, ๗, あ, 叶")
                 &gt; assert 1 == 2
                 E assert 1 == 2
 

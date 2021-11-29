@@ -153,7 +153,7 @@ selftest_attributes = [
         "name": "resilient-circuits selftest",
 
         # if selftest returncode == 1
-        "fail_msg": u"selftest.py failed  for {0}. Details: {1}",
+        "fail_msg": u"selftest.py failed  for {0}. Details:\n\n\t\t{1}\n",
         "fail_solution": "Check your configuration values and make sure selftest.py is properly implemented",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
@@ -297,13 +297,17 @@ package_files = {
 }
 
 tests_attributes = [
-    # first check tox is installed
+    # first check tox is installed and meets min version defined in constants.TOX_MIN_PACKAGE_VERSION
     {
         "func": sdk_validate_helpers.tox_tests_validate_tox_installed,
         "name": "tox tests",
 
         "fail_msg": "'{0}' is not installed in your Python environment",
-        "fail_solution": "(OPTIONAL) If you want to verify any tests you have written, install '{0}' by running '''pip install -U '{0}''''",
+        "fail_solution": "(OPTIONAL) If you want to verify any tests you have written, install '{0}' by running '''pip install -U {0}'''",
+
+        "upgrade_msg": "The version of '{0}=={1}' installed in your environment does not meet the minimum version required: '{2}'",
+        "upgrade_solution": "Install the latest version using '''pip install -U tox'''",
+        "upgrade_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
 
         "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
 
@@ -323,16 +327,16 @@ tests_attributes = [
         "pass_msg": "'{0}' file was found in the package"
     },
 
-    # third check envlist = py36 exists in the file
+    # third check envlist = TOX_MIN_ENV_VERSION exists in the file
     {
-        "func": sdk_validate_helpers.tox_tests_validate_py36_only,
+        "func": sdk_validate_helpers.tox_tests_validate_min_env_version,
         "name": "tox tests",
 
-        "missing_msg": "'{0}' not found in '{1}' file",
-        "missing_solution": "Tests must be configured to run '{0}' or greater",
+        "missing_msg": "'envlist={0}' not found in '{1}' file",
+        "missing_solution": "Tests must be configured to run 'envlist={0}' or greater",
 
         "fail_msg": "Unsupported tox env found in envlist in '{0}' file",
-        "fail_solution": "Tests must be configured to run only with tox envs 'py36' or greater",
+        "fail_solution": "Tests must be configured to run only with tox envs '{0}' or greater",
 
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
 

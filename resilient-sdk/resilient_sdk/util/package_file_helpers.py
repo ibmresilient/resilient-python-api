@@ -958,17 +958,10 @@ def get_required_python_version(python_requires_str):
     """
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
-        parsed_version = pkg_resources.parse_version(version_str)
-        if sys.version_info[0] >= 3: # python 3 
-            return (parsed_version.major, parsed_version.minor)
-        else: # python 2.7
-            major_minor = tuple(int(i) for i in str(parsed_version).split("."))
-            
-            # if version is only one number (i.e. '3'), then add a 0 to the end
-            if len(major_minor) == 1:
-                major_minor = (major_minor[0], 0)
-            return major_minor
-    except AttributeError:
+        version = pkg_resources.parse_version(version_str)
+        
+        return sdk_helpers.parse_version_object(version)
+    except AttributeError as e:
         raise SDKException("'python_requires' version not given in correct format.")
 
 def check_package_installed(package_name):

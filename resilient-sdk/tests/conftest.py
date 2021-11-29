@@ -82,26 +82,14 @@ def _pip_install(package):
     """
 
     install_cmd = ["pip", "install", package]
-    proc = subprocess.Popen(install_cmd)
-
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("pip installing: {0}".format(package))
-        sys.stdout.flush()
-        time.sleep(0.2)
+    sdk_helpers.run_subprocess(install_cmd)
 
 def _pip_uninstall(package):
     """
     pip uninstalls package
     """
     unisntall_cmd = ["pip", "uninstall", "-y", package]
-    proc = subprocess.Popen(unisntall_cmd)
-
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("pip uninstalling: {0}".format(package))
-        sys.stdout.flush()
-        time.sleep(0.2)
+    sdk_helpers.run_subprocess(unisntall_cmd)
 
 
 @pytest.fixture(scope="session")
@@ -169,15 +157,22 @@ def fx_pip_install_fn_main_mock_integration():
 @pytest.fixture
 def fx_pip_install_tox():
     """
-    Before: pip installs our mock integration at mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION
-    After: pip uninstalls mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    Before: if tox not already installed: pip installs tox
+    After: if tox wasn't already installed: pip uninstalls tox
     """
+    
+    # bool values of whether tox was already installed
+    tox_installed = False
+    if sdk_helpers.get_package_version("tox"):
+        tox_installed = True
 
-    _pip_install("tox")
+    if not tox_installed:
+        _pip_install("tox")
 
     yield
 
-    _pip_uninstall("tox")
+    if not tox_installed:
+        _pip_uninstall("tox")
 
 
 @pytest.fixture

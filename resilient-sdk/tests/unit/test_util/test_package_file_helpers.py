@@ -229,10 +229,10 @@ def test_create_extension_invalid_image_hash(fx_copy_fn_main_mock_integration):
 def test_get_required_python_version():
 
     parsed_version = package_helpers.get_required_python_version(">=3")
-    assert parsed_version == (3, 0)
+    assert parsed_version == (3, 0, 0)
     
     parsed_version = package_helpers.get_required_python_version(">=2.7")
-    assert parsed_version == (2, 7)
+    assert parsed_version == (2, 7, 0)
 
     with pytest.raises(SDKException):
         package_helpers.get_required_python_version("<4")

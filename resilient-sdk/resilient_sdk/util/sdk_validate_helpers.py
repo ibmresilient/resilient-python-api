@@ -6,8 +6,6 @@ import difflib
 import logging
 import os
 import re
-import tempfile
-import shutil
 import xml.etree.ElementTree as ET
 
 import pkg_resources
@@ -660,6 +658,13 @@ def tox_tests_validate_tox_installed(attr_dict, **__):
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("fail_solution").format(constants.TOX_PACKAGE_NAME)
         )
+    elif sdk_helpers.parse_version_object(tox_version) < constants.TOX_MIN_PACKAGE_VERSION:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("upgrade_msg").format(constants.TOX_PACKAGE_NAME, tox_version, constants.TOX_MIN_PACKAGE_VERSION),
+            severity=attr_dict.get("upgrade_severity"),
+            solution=attr_dict.get("upgrade_solution")
+        )
     else:
         return 1, SDKValidateIssue(
             name=attr_dict.get("name"),
@@ -705,11 +710,11 @@ def tox_tests_validate_tox_file_exists(path_package, attr_dict, **__):
         solution=""
     )
 
-def tox_tests_validate_py36_only(path_package, attr_dict, **__):
+def tox_tests_validate_min_env_version(path_package, attr_dict, **__):
     """
     Helper method for to validate that tox.ini file doesn't have any invalid envlist values
 
-    Here we check for any amount of ``py3[x]`` where ``x in [6, 7, 8, 9]``
+    Here we check for any amount of ``py3[x]`` where ``x in [TOX_MIN_ENV_VERSION[-1] - 9]``
     If any envlist value of py27 or other invalid value, WARN the user, however, continue the validation
     (thus the value 1 returned in the first position for each possible outcome)
 
@@ -722,10 +727,10 @@ def tox_tests_validate_py36_only(path_package, attr_dict, **__):
     :return: 1 and a SDKValidateIssue with details about the envlist found in the tox.ini file
     :rtype: int, SDKValidateIssue
     """
-    LOG.debug("Validating that envlist = py36 in {0} file".format(constants.TOX_INI_FILENAME))
+    LOG.debug("Validating that valid envlist in {0} file".format(constants.TOX_INI_FILENAME))
 
-    # this regex allows for any number of py36 envs (3.6 or greater) in the envlist
-    contents_to_check = r"(envlist\s*=\s*(py3[6-9]),*\s*(py3[6-9],*)*)$"
+    # this regex allows for any number of constants.TOX_MIN_ENV_VERSION[-1] envs (3.x or greater where x is the last character of the constant) in the envlist
+    contents_to_check = r"(envlist\s*=\s*(py3[{0}-9]),*\s*(py3[{0}-9],*)*)$".format(constants.TOX_MIN_ENV_VERSION[-1])
 
     path_tox_ini_file = os.path.join(path_package, constants.TOX_INI_FILENAME)
     tox_ini_contents = " ".join(line for line in sdk_helpers.read_file(path_tox_ini_file) if not line.startswith("#"))
@@ -735,16 +740,16 @@ def tox_tests_validate_py36_only(path_package, attr_dict, **__):
     if "envlist" not in tox_ini_contents:
         return 1, SDKValidateIssue(
             name=attr_dict.get("name"),
-            description=attr_dict.get("missing_msg").format("envlist=", constants.TOX_INI_FILENAME),
+            description=attr_dict.get("missing_msg").format(constants.TOX_MIN_ENV_VERSION, constants.TOX_INI_FILENAME),
             severity=attr_dict.get("severity"),
-            solution=attr_dict.get("missing_solution").format("envlist=py36")
+            solution=attr_dict.get("missing_solution").format(constants.TOX_MIN_ENV_VERSION)
         )
     elif not matches:
         return 1, SDKValidateIssue(
             name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(constants.TOX_INI_FILENAME),
             severity=attr_dict.get("severity"),
-            solution=attr_dict.get("fail_solution")
+            solution=attr_dict.get("fail_solution").format(constants.TOX_MIN_ENV_VERSION)
         )
     else:
         return 1, SDKValidateIssue(
@@ -831,28 +836,25 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
         LOG.debug("Reading tox args from sdk settings JSON file {0}".format(path_sdk_settings))
 
         setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
-        for arg in setting_file_contents.get("tox-args"):
-            # append attr, val at the end the args list [..., "--attr", "val", ...]
-            args.append("--{0}".format(arg))
-            args.append(setting_file_contents.get("tox-args").get(arg))
+        if setting_file_contents.get("tox-args"):
+            for arg in setting_file_contents.get("tox-args"):
+                # append attr, val at the end the args list [..., "--attr", "val", ...]
+                args.append("--{0}".format(arg))
+                args.append(setting_file_contents.get("tox-args").get(arg))
+        else:
+            # use defaults because given sdk settings file doesn't have the right format
+            LOG.warn("WARNING: Given sdk settings file at {1} doesn't contain a 'tox-args' section.\nUsing mock args: {0}. -h for more info".format(constants.TOX_TESTS_DEFAULT_ARGS, path_sdk_settings))
+            args.extend(constants.TOX_TESTS_DEFAULT_ARGS)
 
     else:
-        # defaults for SOAR apps, custom values can be passed in using the --tox flag which
+        # defaults for SOAR apps, custom values can be passed in using the --tox-args flag which
         # is parsed above
-        LOG.warn("Mock args {0} are being used for tox args. -h for more info".format(constants.TOX_TESTS_DEFAULT_ARGS))
+        LOG.warn("Using mock args: {0}. -h for more info".format(constants.TOX_TESTS_DEFAULT_ARGS))
         args.extend(constants.TOX_TESTS_DEFAULT_ARGS)
-
-    # a small class for safe use of tempfile mkdtemp() which requires cleanup on
-    # exit. better to use this context manager class to safely create the file
-    # and automatically delete on exit
-    class ContextMangerForTemporaryDirectory():
-        def __init__(self):  self.dir = tempfile.mkdtemp()
-        def __enter__(self): return self.dir
-        def __exit__(self, exc_type, exc_value, exc_traceback):  shutil.rmtree(self.dir)
 
 
     # open a temporary directory where the temp xml report file will be created
-    with ContextMangerForTemporaryDirectory() as path_temp_test_report_dir:
+    with sdk_helpers.ContextMangerForTemporaryDirectory() as path_temp_test_report_dir:
         path_temp_test_report = os.path.join(path_temp_test_report_dir, "tmp_test_report.xml")
 
         args = ["tox", "--", "--junitxml", "{0}".format(path_temp_test_report)] + args
@@ -895,7 +897,7 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
 
 
     # something else - give full log (hopefully this doesn't happen)
-    if error_count < 0 and failure_count < 0:
+    if (error_count < 0 and failure_count < 0) or (failure_str == "" and error_str == ""):
         description += u"Something went wrong... Details:\n\n\t\t{0}\n".format(details.replace("\n", "\n\t\t"))
 
     return 0, SDKValidateIssue(
@@ -908,7 +910,6 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
 
 def _tox_tests_parse_xml_report(path_xml_file):
     """
-    Assumes that the file coming in has "testsuites" at the root.
     The xml tree then should follow this format
 
     .. code-block:: xml
@@ -917,6 +918,8 @@ def _tox_tests_parse_xml_report(path_xml_file):
                 <testcase>
                     <failure>
                     <error>
+
+    If it is not in the correct format, (-1, -1, -1, "", "") will be returned as a default
 
     If there are errors, a string of [case_name]: [case_error] is created
     If there are failures, a string of the failure text (usually tracebacks and context code) 
@@ -950,6 +953,10 @@ def _tox_tests_parse_xml_report(path_xml_file):
                         failure_str += u"{0}\n\n---\n\n".format(elem.text)
                     elif elem.tag == "error":
                         error_str += u"{0}: {1}\n".format(case.attrib.get("classname"), elem.attrib.get("message"))
+    else:
+        # if the root wasn't test suites 
+        LOG.warn("WARNING: XML report generated by tox run was not readable. Consider upgrading tox and pytest to the latest versions")
+        return -1, -1, -1, "", ""
 
 
 

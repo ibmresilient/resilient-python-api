@@ -23,7 +23,7 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
-    $ resilient-sdk validate -p <name_of_package> --tests --tox-args myarg1="1val" myarg2="val2"
+    $ resilient-sdk validate -p <name_of_package> --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
     $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
     assert cmd_validate.CMD_DESCRIPTION == cmd_validate.CMD_HELP
