@@ -467,7 +467,7 @@ def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_fn_main_mock_integr
 
     result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, None, None)
 
-    assert "Mock args" in caplog.text
+    assert "Using mock args" in caplog.text
     assert result[0] == 1
 
 
