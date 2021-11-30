@@ -17,6 +17,7 @@ import hashlib
 import time
 import uuid
 import subprocess
+import ast
 import pkg_resources
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
@@ -83,6 +84,7 @@ def setup_jinja_env(relative_path_to_templates):
     add_filters_to_jinja_env(jinja_env)
 
     return jinja_env
+
 
 def setup_env_and_render_jinja_file(relative_path_to_template, filename, *args, **kwargs):
     """
@@ -1176,3 +1178,49 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     # sys.stdout.write("\r")
     # sys.stdout.write(" "*30+"\n")
     # sys.stdout.flush()
+
+
+def scrape_results_from_log_file(path_log_file):
+    """
+    Validate that path_log_file exists, reverse it and look for lines
+    containing ``[<fn_name>] Result: {'version': 2.0, 'success': True...``
+
+    Only gets the latest result for each <fn_name> in the log file
+
+    The log file must be in the format of the app.log
+
+    :param path_log_file: (required) absolute path to a app.log file
+    :type args: str
+    :return: a dictionary in the format {<fn_name>: <fn_results>}
+    :rtype: dict
+    """
+    results_scraped = {}
+
+    validate_file_paths(os.R_OK, path_log_file)
+
+    log_file_contents = read_file(path_log_file)
+
+    regex_line = re.compile(r'\[[\w]+\] Result\:')
+    regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')
+
+    for l in reversed(log_file_contents):
+        match = regex_line.search(l, endpos=120)
+
+        if match:
+            fn_name_group_index = 0
+
+            fn_name_match = match.group(fn_name_group_index)
+            fn_name_match_endpos = match.end(fn_name_group_index)
+
+            fn_name = regex_fn_name.match(fn_name_match).group(1)
+
+            results_from_l = l[fn_name_match_endpos:].strip("\\n ")
+
+            # Convert str into dict
+            results = ast.literal_eval(results_from_l)
+
+            # Check if this fn_name is already in results_scraped
+            if fn_name not in results_scraped.keys():
+                results_scraped[fn_name] = results
+
+    return results_scraped

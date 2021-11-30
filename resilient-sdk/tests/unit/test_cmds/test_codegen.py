@@ -40,8 +40,9 @@ EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR = ['export.res']
 EXPECTED_FILES_ICONS_DIR = ['app_logo.png', 'company_logo.png']
 EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_function_two.py']
 EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
-EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
-                                              'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['output_json_example.json', 'output_json_schema.json']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
+                                                  'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
 
 
 def general_test_package_structure(package_name, package_path):
@@ -65,7 +66,10 @@ def general_test_package_structure(package_name, package_path):
     assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_DIR, files_in_payload_samples)
 
     for file_name in files_in_payload_samples:
-        assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
+        if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
+            assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
+        else:
+            assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
 
 
 def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
@@ -367,6 +371,16 @@ def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
 
     with pytest.raises(SDKException, match=r"already exists. Add --reload flag to regenerate it"):
         cmd_codegen._gen_package(args)
+
+
+def test_get_results_from_log_file():
+    # TODO - set args
+    pass
+
+
+def test_get_results_from_log_file_no_payload_samples_dir():
+    # TODO
+    pass
 
 
 def test_execute_command():
