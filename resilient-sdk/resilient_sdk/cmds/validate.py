@@ -63,7 +63,7 @@ class CmdValidate(BaseCmd):
         self.output_suppressed = False
 
         # Add any positional or optional arguments here
-        self.parser.add_argument(constants.SUB_CMD_PACKAGE[1], constants.SUB_CMD_PACKAGE[0],
+        self.parser.add_argument(constants.SUB_CMD_OPT_PACKAGE[1], constants.SUB_CMD_OPT_PACKAGE[0],
                                  type=ensure_unicode,
                                  required=True,
                                  help="(required) Path to existing package")
@@ -120,7 +120,7 @@ class CmdValidate(BaseCmd):
             self._run_main_validation(args, )
 
         if not run_from_package and not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve and not args.selftest:
-            SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_PACKAGE[0], constants.SUB_CMD_PACKAGE[1])
+            SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_OPT_PACKAGE[0], constants.SUB_CMD_OPT_PACKAGE[1])
             self._run_main_validation(args, )
 
         if not run_from_package and args.validate:

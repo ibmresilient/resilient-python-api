@@ -21,7 +21,7 @@ MIN_SUPPORTED_PY_VERSION = (3, 6)
 SDK_PACKAGE_NAME = "resilient-sdk"
 CIRCUITS_PACKAGE_NAME = "resilient-circuits"
 
-SUB_CMD_PACKAGE = ("--package", "-p")
+SUB_CMD_OPT_PACKAGE = ("--package", "-p")
 SUB_CMD_OPT_SDK_SETTINGS = ("--settings", )
 
 # file for SDK settings
