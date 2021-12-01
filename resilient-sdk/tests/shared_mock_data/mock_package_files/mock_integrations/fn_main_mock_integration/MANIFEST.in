@@ -6,4 +6,4 @@ include fn_main_mock_integration/LICENSE
 include doc/*.md
 include doc/screenshots/*
 
-exclude *.bak
+global-exclude *.bak

@@ -20,6 +20,7 @@ import os
 import filelock
 from circuits import Manager, BaseComponent, Component, Debugger, Loader
 from resilient import get_config_file
+from resilient import constants as resilient_constants
 from resilient_circuits import constants, helpers
 from resilient_circuits.app_argument_parser import AppArgumentParser
 from resilient_circuits.component_loader import ComponentLoader
@@ -60,6 +61,7 @@ class App(Component):
         super(App, self).__init__()
         # Read the configuration options
         self.ALLOW_UNRECOGNIZED = ALLOW_UNRECOGNIZED
+        resilient_constants.ALLOW_UNRECOGNIZED = ALLOW_UNRECOGNIZED
         self.IS_SELFTEST = IS_SELFTEST
         self.action_component = None
         self.component_loader = None
