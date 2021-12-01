@@ -41,8 +41,12 @@ EXPECTED_FILES_ICONS_DIR = ['app_logo.png', 'company_logo.png']
 EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_function_two.py']
 EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
 EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['output_json_example.json', 'output_json_schema.json']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['output_json_example.json', 'output_json_schema.json']
+# TODO: comment back in when we have logic to use the mock_json files
+"""
 EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
                                                   'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
+"""
 
 
 def general_test_package_structure(package_name, package_path):
