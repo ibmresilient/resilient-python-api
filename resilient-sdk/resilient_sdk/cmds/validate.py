@@ -276,12 +276,11 @@ class CmdValidate(BaseCmd):
         - apikey_permissions.txt - done in _validate_package_files()
         - entrypoint.sh - done in _validate_package_files()
         - Dockerfile - done in _validate_package_files()
-        - fn_package/util/config.py - TBD
-        - fn_package/util/customize.py - TBD
-        - fn_package/util/selftest.py - TBD
+        - fn_package/util/config.py - done in _validate_package_files()
+        - fn_package/util/customize.py - done in _validate_package_files()
+        - README.md - done in _validate_package_files()
         - fn_package/LICENSE - TBD
-        - fn_package/icons - TBD
-        - README.md - TBD
+        - fn_package/icons - done in _validate_package_files()
 
         :param args: list of args
         :type args: dict
@@ -473,11 +472,15 @@ class CmdValidate(BaseCmd):
                 LOG.debug("{0} file found at path {1}\n".format(filename, path_file))
             except SDKException:
                 # file not found: create issue with given "missing_..." info included
+                # note that width and height are taken for the missing solution, however,
+                # are only used when a logo is missing; the value should be None otherwise
+                # be aware of this if a dev ever wants to add infomation to the missing 
+                # solution for other package files
                 issue_list = [SDKValidateIssue(
                     name=attr_dict.get("name"),
                     description=attr_dict.get("missing_msg").format(path_file),
                     severity=attr_dict.get("missing_severity"),
-                    solution=attr_dict.get("missing_solution").format(path_package)
+                    solution=attr_dict.get("missing_solution").format(path_package, attr_dict.get("width"), attr_dict.get("height"))
                 )]
             else: # SDKException wasn't caught -- the file exists!
 

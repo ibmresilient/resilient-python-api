@@ -18,7 +18,7 @@ import tempfile
 
 import pkg_resources
 from resilient import ImportDefinition
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
                                                   ResilientObjMap)
 from resilient_sdk.util.sdk_exception import SDKException
@@ -290,7 +290,7 @@ def load_customize_py_module(path_customize_py, warn=True):
             customize_py_module = sdk_helpers.load_py_module(temp_file.name, module_name)
 
         except IOError as ioerr:
-           raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
+            raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
 
         except Exception as err:
             # An an unexpected error trying to load the module temporary customize module.
@@ -533,7 +533,7 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
     # Raise exception if resolution is not accepted
     if icon_width != width_accepted or icon_height != height_accepted:
-        raise SDKException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File:{4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
+        raise SDKException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File: {4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
 
     # If we get here all validations have passed. Open the file in Bytes mode and encode it as base64 and decode to a utf-8 string
     with open(path_icon_to_use, "rb") as icon_file:
@@ -790,15 +790,15 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         extension_logo = get_icon(
             icon_name=os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO),
             path_to_icon=path_extension_logo,
-            width_accepted=200,
-            height_accepted=72,
+            width_accepted=constants.ICON_APP_LOGO_REQUIRED_WIDTH,
+            height_accepted=constants.ICON_APP_LOGO_REQUIRED_HEIGHT,
             default_path_to_icon=PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         company_logo = get_icon(
             icon_name=os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO),
             path_to_icon=path_company_logo,
-            width_accepted=100,
-            height_accepted=100,
+            width_accepted=constants.ICON_COMPANY_LOGO_REQUIRED_WIDTH,
+            height_accepted=constants.ICON_COMPANY_LOGO_REQUIRED_HEIGHT,
             default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
         # Get the display name

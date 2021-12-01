@@ -391,6 +391,64 @@ def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
+def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration):
+
+    filename = "app_logo.png"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_icon") as mock_icon:
+
+        # making use of side_effect to change the behavior of the two calls this way
+        # the "default" is not the same as the "icon"
+        mock_icon.side_effect = ["1", "2"]
+
+        result = sdk_validate_helpers.package_files_validate_icon(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_package_files_validate_found_default_icon(fx_copy_fn_main_mock_integration):
+
+    filename = "app_logo.png"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_icon") as mock_icon:
+
+        mock_icon.return_value = "" # this way both calls will return an empty string and thus be equal
+
+        result = sdk_validate_helpers.package_files_validate_icon(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+    assert "'{0}' is the default icon".format(filename) in result.description
+
+def test_package_files_validate_improper_icon(fx_copy_fn_main_mock_integration):
+
+    filename = "app_logo.png"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_icon") as mock_icon:
+
+        mock_icon.side_effect = SDKException("Failed for some reason")
+
+        result = sdk_validate_helpers.package_files_validate_icon(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "ERROR: Failed for some reason" == result.description
+
 def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
 
     filename = "README.md"

@@ -293,6 +293,46 @@ package_files = {
 
         "pass_msg": "'README.md' has been implemented",
         "pass_solution": "Make sure that all documentation is up-to-date before packaging"
+    },
+    "app_logo.png": {
+        "func": sdk_validate_helpers.package_files_validate_icon,
+        "path": package_helpers.PATH_ICON_EXTENSION_LOGO,
+        "default_path": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
+        "name": "'app_logo.png'",
+        "width": constants.ICON_APP_LOGO_REQUIRED_WIDTH,
+        "height": constants.ICON_APP_LOGO_REQUIRED_HEIGHT,
+
+        "missing_msg": "Cannot find 'app_logo.png' in the package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Include a logo for your app at path '{0}' with size {1}x{2}".format(package_helpers.PATH_ICON_EXTENSION_LOGO, "{1}", "{2}"),
+
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "default_icon_msg": "'{0}' is the default icon. Consider using your own logo",
+        "default_icon_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' icon found at {1}",
+        "solution": "Icons appear in SOAR when your app is installed with App Host"
+    },
+    "company_logo.png": {
+        "func": sdk_validate_helpers.package_files_validate_icon,
+        "path": package_helpers.PATH_ICON_COMPANY_LOGO,
+        "default_path": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
+        "name": "'company_logo.png'",
+        "width": constants.ICON_COMPANY_LOGO_REQUIRED_WIDTH,
+        "height": constants.ICON_COMPANY_LOGO_REQUIRED_HEIGHT,
+
+        "missing_msg": "Cannot find 'company_logo.png' in the package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Include a logo for your company at path '{0}' with size {1}x{2}".format(package_helpers.PATH_ICON_COMPANY_LOGO, "{1}", "{2}"),
+
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "default_icon_msg": "'{0}' is the default icon. Consider using your own logo",
+        "default_icon_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' icon found at {1}",
+        "solution": "Icons appear in SOAR when your app is installed with App Host"
     }
 }
 
