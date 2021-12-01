@@ -18,7 +18,7 @@ import tempfile
 
 import pkg_resources
 from resilient import ImportDefinition
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
                                                   ResilientObjMap)
 from resilient_sdk.util.sdk_exception import SDKException
@@ -790,15 +790,15 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         extension_logo = get_icon(
             icon_name=os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO),
             path_to_icon=path_extension_logo,
-            width_accepted=200,
-            height_accepted=72,
+            width_accepted=constants.ICON_APP_LOGO_REQUIRED_WIDTH,
+            height_accepted=constants.ICON_APP_LOGO_REQUIRED_HEIGHT,
             default_path_to_icon=PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         company_logo = get_icon(
             icon_name=os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO),
             path_to_icon=path_company_logo,
-            width_accepted=100,
-            height_accepted=100,
+            width_accepted=constants.ICON_COMPANY_LOGO_REQUIRED_WIDTH,
+            height_accepted=constants.ICON_COMPANY_LOGO_REQUIRED_HEIGHT,
             default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
         # Get the display name

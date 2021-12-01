@@ -299,8 +299,8 @@ package_files = {
         "path": package_helpers.PATH_ICON_EXTENSION_LOGO,
         "default_path": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
         "name": "'app_logo.png'",
-        "width": 200,
-        "height": 72,
+        "width": constants.ICON_APP_LOGO_REQUIRED_WIDTH,
+        "height": constants.ICON_APP_LOGO_REQUIRED_HEIGHT,
 
         "missing_msg": "Cannot find 'app_logo.png' in the package at path '{0}'",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
@@ -319,8 +319,8 @@ package_files = {
         "path": package_helpers.PATH_ICON_COMPANY_LOGO,
         "default_path": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
         "name": "'company_logo.png'",
-        "width": 100,
-        "height": 100,
+        "width": constants.ICON_COMPANY_LOGO_REQUIRED_WIDTH,
+        "height": constants.ICON_COMPANY_LOGO_REQUIRED_HEIGHT,
 
         "missing_msg": "Cannot find 'company_logo.png' in the package at path '{0}'",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,

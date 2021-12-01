@@ -48,6 +48,10 @@ TOX_TESTS_DEFAULT_ARGS = ['--resilient_email', '"integrations@example.org"', '--
 TOX_MIN_ENV_VERSION = "py36" # the last character here must be a number and will be used as the base value for checks of envlist
 TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 
+ICON_APP_LOGO_REQUIRED_WIDTH = 200
+ICON_APP_LOGO_REQUIRED_HEIGHT = 72
+ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100
+ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
 
