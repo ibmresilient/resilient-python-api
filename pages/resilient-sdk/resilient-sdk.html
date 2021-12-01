@@ -276,6 +276,7 @@ $ resilient-sdk package -p &lt;path_to_directory&gt;
 $ resilient-sdk package -p &lt;path_to_directory&gt; --display-name "My Custom App"
 $ resilient-sdk package -p &lt;path_to_directory&gt; --repository-name "ibmresilient" --image-hash "dd2a1678b6e0..."
 $ resilient-sdk package -p &lt;path_to_directory&gt; --keep-build-dir --display-name "My Custom App"
+$ resilient-sdk package -p &lt;path_to_directory&gt; --validate
 
 options:
 -h, --help			show this help message and exit
@@ -284,7 +285,8 @@ options:
 --display-name			Display name to give the app 
 --repository-name		Name of the repository which contains the app container 
 --image-hash			The SHA256 hash of the container image to pull for this App 
---no-samples			Do not look for the payload_samples directory or try add them to the export.res file</pre>
+--no-samples			Do not look for the payload_samples directory or try add them to the export.res file 
+--validate			Run the 'validate' command and generate the validation report to include in packaging</pre>
 </section>
 <section id="clone">
 <h3>clone<a class="headerlink" href="#clone" title="Permalink to this headline">¶</a></h3>
