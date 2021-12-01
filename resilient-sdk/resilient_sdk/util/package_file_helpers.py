@@ -126,6 +126,7 @@ COLORS = {
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',
     "INFO": '\033[94m',
+    "SKIPPED": '\033[94m',
     "BLUE": '\033[94m',
     "END": '\033[0m'
 }
@@ -289,7 +290,7 @@ def load_customize_py_module(path_customize_py, warn=True):
             customize_py_module = sdk_helpers.load_py_module(temp_file.name, module_name)
 
         except IOError as ioerr:
-           raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
+            raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
 
         except Exception as err:
             # An an unexpected error trying to load the module temporary customize module.
@@ -532,7 +533,7 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
     # Raise exception if resolution is not accepted
     if icon_width != width_accepted or icon_height != height_accepted:
-        raise SDKException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File:{4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
+        raise SDKException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File: {4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
 
     # If we get here all validations have passed. Open the file in Bytes mode and encode it as base64 and decode to a utf-8 string
     with open(path_icon_to_use, "rb") as icon_file:
@@ -957,17 +958,10 @@ def get_required_python_version(python_requires_str):
     """
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
-        parsed_version = pkg_resources.parse_version(version_str)
-        if sys.version_info[0] >= 3: # python 3 
-            return (parsed_version.major, parsed_version.minor)
-        else: # python 2.7
-            major_minor = tuple(int(i) for i in str(parsed_version).split("."))
-            
-            # if version is only one number (i.e. '3'), then add a 0 to the end
-            if len(major_minor) == 1:
-                major_minor = (major_minor[0], 0)
-            return major_minor
-    except AttributeError:
+        version = pkg_resources.parse_version(version_str)
+        
+        return sdk_helpers.parse_version_object(version)
+    except AttributeError as e:
         raise SDKException("'python_requires' version not given in correct format.")
 
 def check_package_installed(package_name):

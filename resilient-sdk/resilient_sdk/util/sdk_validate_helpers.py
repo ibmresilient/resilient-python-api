@@ -5,6 +5,8 @@
 import difflib
 import logging
 import os
+import re
+import xml.etree.ElementTree as ET
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -68,7 +70,6 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
         # unknown other error
         raise SDKException("Unknown error while checking for {0}".format(constants.CIRCUITS_PACKAGE_NAME))
 
-
 def selftest_validate_package_installed(attr_dict, package_name, path_package, **_):
     """
     selftest.py validation helper method.
@@ -102,7 +103,6 @@ def selftest_validate_package_installed(attr_dict, package_name, path_package, *
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("solution").format(package_name, path_package)
         )
-
 
 def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, **_):
     """
@@ -140,7 +140,6 @@ def selftest_validate_selftestpy_file_exists(attr_dict, path_selftest_py_file, *
             solution=attr_dict.get("solution")
         )
 
-
 def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     """
     selftest.py validation helper method.
@@ -175,7 +174,7 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
 
     # run resilient-circuits selftest in a subprocess
     selftest_cmd = ['resilient-circuits', 'selftest', '-l', package_name.replace("_", "-")]
-    returncode, details = sdk_helpers.run_subprocess(selftest_cmd, "selftest")
+    returncode, details = sdk_helpers.run_subprocess(selftest_cmd, cmd_name="selftest")
 
     # Unset env var
     os.environ[constants.ENV_VAR_APP_CONFIG_FILE] = ""
@@ -318,7 +317,6 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
             solution=""
         )]
 
-
 def package_files_apikey_pem(path_file, attr_dict, **_):
     """
     Helper method for package files to validate that at least the BASE_PERMISSIONS defined in the package helpers
@@ -362,7 +360,6 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("pass_solution").format(file_contents)
         )]
-    
 
 def package_files_template_match(package_name, package_version, path_file, filename, attr_dict, **_):
     """
@@ -422,7 +419,6 @@ def package_files_template_match(package_name, package_version, path_file, filen
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
         )]
-
 
 def package_files_validate_config_py(path_file, attr_dict, **_):
     """
@@ -523,6 +519,72 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
             severity=attr_dict.get("fail_severity"),
             solution=attr_dict.get("fail_solution")
         )]
+
+def package_files_validate_icon(path_file, attr_dict, filename, **__):
+    """
+    Helper method for package files to validate an icon
+    This works by using the get_icon helper method from package_file_helpers.
+    That method loads in a given icon, checks the contents for the correct size,
+    and returns the contents if the file is valid.
+
+    This helper method loads in the given icon and the default icon associated with it
+    and compares the two. If they are equivalent, the validation INFO's to the user that
+    the given icon is still the default.
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the customize.py file defined in ``package_files``
+    :type attr_dict: dict
+    :param filename: (required) name of the icon
+    :type filename: str
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a passing issue if the icon exists and is not the default, a info issue if the icon is the default, and a failing issue if the icon doesn't exist or is not the correct dimensions
+    :rtype: list[SDKValidateIssue]
+    """
+
+    # using the get_icon method from the package_file_helpers
+    # which throws exceptions when icon's aren't correct
+    try:
+        # load the icon
+        encoded_icon = package_helpers.get_icon(filename, path_file,
+            attr_dict.get("width"), attr_dict.get("height"), attr_dict.get("default_path"))
+
+    except SDKException as sdk_err:
+        # the get_icon method threw an exception - parse it out and use
+        # it as the message for the SDK issue
+
+        # parse out the exception message from "ERROR" to the end
+        message = str(sdk_err).replace("\n", " ")
+        message = message[message.index("ERROR"):]
+
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=message,
+            severity=attr_dict.get("fail_severity"),
+            solution=""
+        )]
+
+    # load in the default icon from the sdk data path
+    default_icon = package_helpers.get_icon(filename, attr_dict.get("default_path"),
+        attr_dict.get("width"), attr_dict.get("height"), attr_dict.get("default_path"))
+
+    # check if given icon is the default icon
+    if encoded_icon == default_icon:
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("default_icon_msg").format(filename, path_file),
+            severity=attr_dict.get("default_icon_severity"),
+            solution=attr_dict.get("solution")
+        )]
+
+    # icon was loaded with no issues and was not the default
+    return [SDKValidateIssue(
+        name=attr_dict.get("name"),
+        description=attr_dict.get("pass_msg").format(filename, path_file),
+        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+        solution=attr_dict.get("solution")
+    )]
 
 def package_files_validate_readme(path_package, path_file, filename, attr_dict, **_):
     """
@@ -632,3 +694,336 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     else:
         # if there is at least one issue in the list
         return issues
+
+
+
+def tox_tests_validate_tox_installed(attr_dict, **__):
+    """
+    Helper method for to validate that tox is installed in the python environment.
+
+    If tox is not installed, return -1 indicating that the test didn't quite "fail" but rather
+    was skipped.
+
+    :param attr_dict: dictionary of attributes for the customize.py file defined in ``tests_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: -1 or 1 and a SDKValidateIssue with details about whether tox was installed in the env
+    :rtype: int, SDKValidateIssue
+    """
+    LOG.debug("Validating that '{0}' is installed in the python env".format(constants.TOX_PACKAGE_NAME))
+    
+
+    tox_version = sdk_helpers.get_package_version(constants.TOX_PACKAGE_NAME)
+
+    # not installed
+    if not tox_version:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.TOX_PACKAGE_NAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.TOX_PACKAGE_NAME)
+        )
+    elif sdk_helpers.parse_version_object(tox_version) < constants.TOX_MIN_PACKAGE_VERSION:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("upgrade_msg").format(constants.TOX_PACKAGE_NAME, tox_version, constants.TOX_MIN_PACKAGE_VERSION),
+            severity=attr_dict.get("upgrade_severity"),
+            solution=attr_dict.get("upgrade_solution")
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format(constants.TOX_PACKAGE_NAME),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+
+def tox_tests_validate_tox_file_exists(path_package, attr_dict, **__):
+    """
+    Helper method for to validate that tox.ini file exists in the package.
+
+    If the file isn't present, return -1 as it is optional to have tests but we 
+    don't want to continue validating the tests
+
+    :param path_package: path to package
+    :type path_package: str
+    :param attr_dict: dictionary of attributes for the customize.py file defined in ``tests_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: -1 or 1 and a SDKValidateIssue with details about whether tox.ini file exists
+    :rtype: int, SDKValidateIssue
+    """
+    LOG.debug("Validating that {0} file is present in package".format(constants.TOX_INI_FILENAME))
+
+    path_tox_ini_file = os.path.join(path_package, constants.TOX_INI_FILENAME)
+
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_tox_ini_file)
+    except SDKException:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.TOX_INI_FILENAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.TOX_INI_FILENAME)
+        )
+
+    return 1, SDKValidateIssue(
+        name=attr_dict.get("name"),
+        description=attr_dict.get("pass_msg").format(constants.TOX_INI_FILENAME),
+        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+        solution=""
+    )
+
+def tox_tests_validate_min_env_version(path_package, attr_dict, **__):
+    """
+    Helper method for to validate that tox.ini file doesn't have any invalid envlist values
+
+    Here we check for any amount of ``py3[x]`` where ``x in [TOX_MIN_ENV_VERSION[-1] - 9]``
+    If any envlist value of py27 or other invalid value, WARN the user, however, continue the validation
+    (thus the value 1 returned in the first position for each possible outcome)
+
+    :param path_package: path to package
+    :type path_package: str
+    :param attr_dict: dictionary of attributes for the customize.py file defined in ``tests_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: 1 and a SDKValidateIssue with details about the envlist found in the tox.ini file
+    :rtype: int, SDKValidateIssue
+    """
+    LOG.debug("Validating that valid envlist in {0} file".format(constants.TOX_INI_FILENAME))
+
+    # this regex allows for any number of constants.TOX_MIN_ENV_VERSION[-1] envs (3.x or greater where x is the last character of the constant) in the envlist
+    contents_to_check = r"(envlist\s*=\s*(py3[{0}-9]),*\s*(py3[{0}-9],*)*)$".format(constants.TOX_MIN_ENV_VERSION[-1])
+
+    path_tox_ini_file = os.path.join(path_package, constants.TOX_INI_FILENAME)
+    tox_ini_contents = " ".join(line for line in sdk_helpers.read_file(path_tox_ini_file) if not line.startswith("#"))
+
+    matches = re.findall(contents_to_check, tox_ini_contents, flags=re.MULTILINE)
+
+    if "envlist" not in tox_ini_contents:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("missing_msg").format(constants.TOX_MIN_ENV_VERSION, constants.TOX_INI_FILENAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("missing_solution").format(constants.TOX_MIN_ENV_VERSION)
+        )
+    elif not matches:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.TOX_INI_FILENAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.TOX_MIN_ENV_VERSION)
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format("envlist=", constants.TOX_INI_FILENAME),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+
+def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_settings=None, **__):
+    """
+    Helper method for to run and parse the tox tests
+
+    This method runs tox as a subprocess and parses the results from that test run (those results are
+    written to a temporary xml file for easier parsing).
+
+    There are three ways for the tox arguemnts that are necessary for running resilient apps tests
+    to get passed in (these are checked in this order as well):
+    1. use the --tox-args (see cmds.validate for details)
+            given in the format: 
+
+    .. code-block:: bash
+        resilient-sdk validate -p . --tests --tox-args arg1="val1" arg2="val2"
+
+    2. use a sdk settings file by either passing the path to the file using --settings or by having a 
+       properly configured sdk settings file in the default ~/.resilient/.sdk_settings.json path
+            given in JSON format: 
+
+    .. code-block:: json
+        {
+            "tox-args": {
+                "resilient_email": "test@example.org",
+                "resilient_password": "pwd_from_json",
+                "resilient_host": "example.org",
+                "resilient_org": "example org json"
+            }
+        }
+
+    3. if there is no --tox-args provided and no --settings file found, the validate command will
+       provide default tox args using ``constants.TOX_TESTS_DEFAULT_ARGS`` but will warn the user that
+       default args are being used
+
+    Whichever way the args are provided, they are all parsed into the correct format that is 
+    useable in the subprocess call to tox.
+
+    :param path_package: path to package
+    :type path_package: str
+    :param attr_dict: dictionary of attributes for the customize.py file defined in ``tests_attributes``
+    :type attr_dict: dict
+    :param tox_args: (optional) list of tox_args parsed by the argparser from the command line
+    :type tox_args: list[str]
+    :param path_sdk_settings: (optional) path to a sdk settings JSON file
+    :type path_sdk_settings: str
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: 1 or 0 and a SDKValidateIssue with details about the tox tests
+    :rtype: int, SDKValidateIssue
+    """
+    LOG.debug("Running tox tests")
+
+    # figure out where to parse the args from
+    # either from 1. tox-args, 2. sdk_settings.json file, or 3. defaults (more details above)
+    args = []
+    if tox_args:
+        LOG.debug("Reading tox args from command line flag --tox-args")
+
+        # parse --tox-args flag values which come in as <attr1>="<value1>" <attr2>="<value2>" 
+        for arg in tox_args:
+            match = re.search(r"(\w+)=[\"\']?(\w+)[\"\']?", arg)
+            if not match or len(match.groups()) != 2:
+                LOG.warn("WARNING: skipping argument '{0}' given in --tox-args flag that doesn't match format attr=\"value\"".format(arg))
+                continue
+
+            # append attr, val at the end the args list [..., "--attr", "val", ...]
+            attr, val = match.group(1), match.group(2)
+            args.append("--{0}".format(attr))
+            args.append(val)
+
+    elif path_sdk_settings and os.path.exists(path_sdk_settings):
+        # if path to sdk settings JSON file was given and it exists
+        # this check for existence is necessary as validate._validate_tox_tests will
+        # call this with the default path; so we have to check
+        # that the sdk settings file exists
+        LOG.debug("Reading tox args from sdk settings JSON file {0}".format(path_sdk_settings))
+
+        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        if setting_file_contents.get("tox-args"):
+            for arg in setting_file_contents.get("tox-args"):
+                # append attr, val at the end the args list [..., "--attr", "val", ...]
+                args.append("--{0}".format(arg))
+                args.append(setting_file_contents.get("tox-args").get(arg))
+        else:
+            # use defaults because given sdk settings file doesn't have the right format
+            LOG.warn("WARNING: Given sdk settings file at {1} doesn't contain a 'tox-args' section.\nUsing mock args: {0}. -h for more info".format(constants.TOX_TESTS_DEFAULT_ARGS, path_sdk_settings))
+            args.extend(constants.TOX_TESTS_DEFAULT_ARGS)
+
+    else:
+        # defaults for SOAR apps, custom values can be passed in using the --tox-args flag which
+        # is parsed above
+        LOG.warn("Using mock args: {0}. -h for more info".format(constants.TOX_TESTS_DEFAULT_ARGS))
+        args.extend(constants.TOX_TESTS_DEFAULT_ARGS)
+
+
+    # open a temporary directory where the temp xml report file will be created
+    with sdk_helpers.ContextMangerForTemporaryDirectory() as path_temp_test_report_dir:
+        path_temp_test_report = os.path.join(path_temp_test_report_dir, "tmp_test_report.xml")
+
+        args = ["tox", "--", "--junitxml", "{0}".format(path_temp_test_report)] + args
+
+        # run tox as a subprocess 
+        _, details = sdk_helpers.run_subprocess(args, change_dir=path_package, cmd_name="tox tests")
+
+        if os.path.exists(path_temp_test_report):
+            # xml report file should still exist
+            test_count, failure_count, error_count, error_str, failure_str = _tox_tests_parse_xml_report(path_temp_test_report)
+            pass_count = test_count - failure_count
+
+        else:
+            # something went wrong during the subprocess execution such that
+            # the xml report file was never generated
+            # set "error" defaults for the test_count, failure_count, etc...
+            test_count, failure_count, error_count, error_str, failure_str = -1, -1, -1, "", ""
+
+
+    if failure_count == 0 and error_count == 0:
+        # no errors or failures, the tests succeeded!
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format(pass_count),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=""
+        )
+
+    # if the tests didn't succeed, we'll need to get the failures (and possibly errors)
+    # and construct an SDKValidateIssue with that info
+    description = ""
+
+    # gather failure info if present
+    if failure_count > 0:
+        description += attr_dict.get("fail_msg").format(failure_count, failure_str.replace("\n", "\n\t\t"))
+
+    # gather error info if present
+    if error_count > 0:
+        description += attr_dict.get("error_msg").format(error_count, error_str.replace("\n", "\n\t\t"))
+
+
+    # something else - give full log (hopefully this doesn't happen)
+    if (error_count < 0 and failure_count < 0) or (failure_str == "" and error_str == ""):
+        description += u"Something went wrong... Details:\n\n\t\t{0}\n".format(details.replace("\n", "\n\t\t"))
+
+    return 0, SDKValidateIssue(
+        name=attr_dict.get("name"),
+        description=description,
+        severity=attr_dict.get("severity"),
+        solution=attr_dict.get("solution")
+    )
+
+
+def _tox_tests_parse_xml_report(path_xml_file):
+    """
+    The xml tree then should follow this format
+
+    .. code-block:: xml
+        <testsuites>
+            <testsuite>
+                <testcase>
+                    <failure>
+                    <error>
+
+    If it is not in the correct format, (-1, -1, -1, "", "") will be returned as a default
+
+    If there are errors, a string of [case_name]: [case_error] is created
+    If there are failures, a string of the failure text (usually tracebacks and context code) 
+    is created from the xml report text
+
+    :param path_xml_file: path to a pytest xml report
+    :type path_xml_file: str
+    :return: the count of tests, failures, errors, and error and failure strings
+    :rtype: (int, int, int, str, str)
+    """
+
+    num_tests, num_failures, num_errors, failure_str, error_str = 0, 0, 0, "", ""
+
+    tree = ET.parse(path_xml_file)
+    root = tree.getroot()
+
+    # assure that root element of the xml tree is "testsuites"
+    if root.tag == "testsuites":
+        # loop over each test suite
+        for suite in root:
+            # parse out test suite info
+            attrs = suite.attrib
+            num_tests += int(attrs.get("tests", 0))
+            num_failures += int(attrs.get("failures", 0))
+            num_errors += int(attrs.get("errors", 0))
+            
+            # loop over each test case to get failure and error info
+            for case in suite:
+                for elem in case:
+                    if elem.tag == "failure":
+                        failure_str += u"{0}\n\n---\n\n".format(elem.text)
+                    elif elem.tag == "error":
+                        error_str += u"{0}: {1}\n".format(case.attrib.get("classname"), elem.attrib.get("message"))
+    else:
+        # if the root wasn't test suites 
+        LOG.warn("WARNING: XML report generated by tox run was not readable. Consider upgrading tox and pytest to the latest versions")
+        return -1, -1, -1, "", ""
+
+
+
+    return num_tests, num_failures, num_errors, error_str, failure_str

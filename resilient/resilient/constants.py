@@ -9,3 +9,5 @@ ENV_NO_PROXY = "NO_PROXY"
 # Headers
 HEADER_USR_AGENT_KEY = "User-Agent"
 HEADER_USR_AGENT_VALUE = "soar-app-1.0"
+
+ALLOW_UNRECOGNIZED = False

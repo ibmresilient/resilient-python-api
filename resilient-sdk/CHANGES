@@ -1,3 +1,7 @@
+**2022-01: version 43.1**
+
+* Added ``global-exclude *.bak`` to the MANIFEST.in file in the ``codegen`` template so ``.bak`` files are not included when packaged
+
 **2021-11: version 43.0**
 
 * Added examples to ``codegen`` template

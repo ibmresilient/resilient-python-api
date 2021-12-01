@@ -153,7 +153,7 @@ selftest_attributes = [
         "name": "resilient-circuits selftest",
 
         # if selftest returncode == 1
-        "fail_msg": u"selftest.py failed  for {0}. Details: {1}",
+        "fail_msg": u"selftest.py failed  for {0}. Details:\n\n\t\t{1}\n",
         "fail_solution": "Check your configuration values and make sure selftest.py is properly implemented",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
@@ -293,5 +293,108 @@ package_files = {
 
         "pass_msg": "'README.md' has been implemented",
         "pass_solution": "Make sure that all documentation is up-to-date before packaging"
+    },
+    "app_logo.png": {
+        "func": sdk_validate_helpers.package_files_validate_icon,
+        "path": package_helpers.PATH_ICON_EXTENSION_LOGO,
+        "default_path": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
+        "name": "'app_logo.png'",
+        "width": 200,
+        "height": 72,
+
+        "missing_msg": "Cannot find 'app_logo.png' in the package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Include a logo for your app at path '{0}' with size {1}x{2}".format(package_helpers.PATH_ICON_EXTENSION_LOGO, "{1}", "{2}"),
+
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "default_icon_msg": "'{0}' is the default icon. Consider using your own logo",
+        "default_icon_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' icon found at {1}",
+        "solution": "Icons appear in SOAR when your app is installed with App Host"
+    },
+    "company_logo.png": {
+        "func": sdk_validate_helpers.package_files_validate_icon,
+        "path": package_helpers.PATH_ICON_COMPANY_LOGO,
+        "default_path": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
+        "name": "'company_logo.png'",
+        "width": 100,
+        "height": 100,
+
+        "missing_msg": "Cannot find 'company_logo.png' in the package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Include a logo for your company at path '{0}' with size {1}x{2}".format(package_helpers.PATH_ICON_COMPANY_LOGO, "{1}", "{2}"),
+
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "default_icon_msg": "'{0}' is the default icon. Consider using your own logo",
+        "default_icon_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' icon found at {1}",
+        "solution": "Icons appear in SOAR when your app is installed with App Host"
     }
 }
+
+tests_attributes = [
+    # first check tox is installed and meets min version defined in constants.TOX_MIN_PACKAGE_VERSION
+    {
+        "func": sdk_validate_helpers.tox_tests_validate_tox_installed,
+        "name": "tox tests",
+
+        "fail_msg": "'{0}' is not installed in your Python environment",
+        "fail_solution": "(OPTIONAL) If you want to verify any tests you have written, install '{0}' by running '''pip install -U {0}'''",
+
+        "upgrade_msg": "The version of '{0}=={1}' installed in your environment does not meet the minimum version required: '{2}'",
+        "upgrade_solution": "Install the latest version using '''pip install -U tox'''",
+        "upgrade_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' was found in the Python environment"
+    },
+
+    # second check tox.ini file is present
+    {
+        "func": sdk_validate_helpers.tox_tests_validate_tox_file_exists,
+        "name": "tox tests",
+
+        "fail_msg": "'{0}' file not found in package path",
+        "fail_solution": "(OPTIONAL) If you want to validate tests you should include a {0} file",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' file was found in the package"
+    },
+
+    # third check envlist = TOX_MIN_ENV_VERSION exists in the file
+    {
+        "func": sdk_validate_helpers.tox_tests_validate_min_env_version,
+        "name": "tox tests",
+
+        "missing_msg": "'envlist={0}' not found in '{1}' file",
+        "missing_solution": "Tests must be configured to run 'envlist={0}' or greater",
+
+        "fail_msg": "Unsupported tox env found in envlist in '{0}' file",
+        "fail_solution": "Tests must be configured to run only with tox envs '{0}' or greater",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+
+        "pass_msg": "Valid '{0}' was found in the '{1}' file"
+    },
+
+    # finally run the tests with tox
+    {
+        "func": sdk_validate_helpers.tox_tests_run_tox_tests,
+        "name": "tox tests",
+
+        "fail_msg": u"{0} tests failed. Details:\n\n\t\t{1}\n",
+
+        "error_msg": u"{0} error(s) occurred while running tests. Details:\n\n\t\t{1}\n",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "solution": "Run with the '-v' flag to see more information",
+
+        "pass_msg": "{0} tests passed!",
+    },
+]

@@ -85,10 +85,32 @@
 {{ issue.solution|scrub_ansi|code|dot_py }}
 {% endif %}
 {% endfor %}
+
 {% if validate_issues_dict["selftest.py"][0].severity > SEVERITY_THRESHOLD %}
 <span style="color:green">Success</span>
 
 {% endif %}
 
 ---
+{% endif %} {# endif selftest #}
+
+
+{# tests if ran #}
+{% if "tests" in validate_issues_dict %}
+## tox tests
+{% for issue in validate_issues_dict["tests"] %}
+{% if issue.severity <= SEVERITY_THRESHOLD %}
+{{ issue.severity_to_color() }}: {{ issue.description|scrub_ansi|code|dot_py }}
+
+{{ issue.solution|scrub_ansi|code|dot_py }}
+
 {% endif %}
+{% endfor %}
+
+{% if validate_issues_dict["tests"][0].severity > SEVERITY_THRESHOLD %}
+<span style="color:green">Success</span>
+
+{% endif %}
+
+---
+{% endif %} {# endif tox tests #}
