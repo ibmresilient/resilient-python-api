@@ -238,11 +238,14 @@ class CmdCodegen(BaseCmd):
         ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
         ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
 
+        # TODO: re-enable this code when we have logic to use mock_server files
+        """
         if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
             ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = (u"{0}/mock_json_expectation_success.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
             ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
             ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = (u"{0}/mock_json_expectation_fail.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
             ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        """
 
     @staticmethod
     def _gen_function(args):
@@ -545,8 +548,8 @@ class CmdCodegen(BaseCmd):
                 LOG.info(u"An error occurred. Renaming export.res.bak to export.res")
                 sdk_helpers.rename_file(path_export_res_bak, package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
 
-    @staticmethod
-    def _get_results_from_log_file(args):
+    @classmethod
+    def _get_results_from_log_file(cls, args):
         """
         # TODO
         """
@@ -565,9 +568,14 @@ class CmdCodegen(BaseCmd):
         except SDKException as e:
 
             if "Could not find directory" in e.message:
-                raise SDKException("No '{0}' directory exists. Please run 'codegen --reload' to generate the default files".format(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR))
+                # TODO: unit test for this case
+                LOG.warning("WARNING: no '%s' found. Running 'codegen --reload' to create the default missing files\n%s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, constants.LOG_DIVIDER)
+                args.reload = True
+                cls._reload_package(args)
+                LOG.warning(constants.LOG_DIVIDER)
 
-            raise e
+            else:
+                raise e
 
         functions_that_need_payload_samples = os.listdir(path_payload_samples_dir)
 
@@ -607,4 +615,5 @@ class CmdCodegen(BaseCmd):
                     LOG.info(u"An error occurred. Renaming %s.bak to %s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
                     sdk_helpers.rename_file(path_output_json_example_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
 
+        # TODO: see if can be used with docgen
         LOG.info("'codegen %s' complete for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, args.package)

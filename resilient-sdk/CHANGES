@@ -1,3 +1,7 @@
+**2022-01: version 43.1**
+
+* Added `genson 1.2 dependency <https://pypi.org/project/genson/>`_ to generate JSON schemas
+
 **2021-11: version 43.0**
 
 * Added examples to ``codegen`` template

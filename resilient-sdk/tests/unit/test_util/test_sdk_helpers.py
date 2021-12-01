@@ -425,3 +425,8 @@ def test_run_subprocess():
 
     assert exitcode == 0
     assert args[1] in details
+
+
+def test_scrape_results_from_log_file():
+    # TODO
+    pass
