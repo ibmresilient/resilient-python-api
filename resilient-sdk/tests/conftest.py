@@ -76,6 +76,22 @@ def _add_to_cmd_line_args(args_to_add):
     sys.argv.extend(args_to_add)
 
 
+def _pip_install(package):
+    """
+    pip installs given package
+    """
+
+    install_cmd = ["pip", "install", package]
+    sdk_helpers.run_subprocess(install_cmd)
+
+def _pip_uninstall(package):
+    """
+    pip uninstalls package
+    """
+    unisntall_cmd = ["pip", "uninstall", "-y", package]
+    sdk_helpers.run_subprocess(unisntall_cmd)
+
+
 @pytest.fixture(scope="session")
 def fx_mock_res_client():
     """
@@ -132,25 +148,31 @@ def fx_pip_install_fn_main_mock_integration():
     After: pip uninstalls mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
     """
 
-    install_cmd = ["pip", "install", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION]
-    proc = subprocess.Popen(install_cmd)
-
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("pip installing: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION))
-        sys.stdout.flush()
-        time.sleep(0.2)
+    _pip_install(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION)
 
     yield
 
-    unisntall_cmd = ["pip", "uninstall", "-y", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME]
-    proc = subprocess.Popen(unisntall_cmd)
+    _pip_uninstall(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION)
 
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("pip uninstalling: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME))
-        sys.stdout.flush()
-        time.sleep(0.2)
+@pytest.fixture
+def fx_pip_install_tox():
+    """
+    Before: if tox not already installed: pip installs tox
+    After: if tox wasn't already installed: pip uninstalls tox
+    """
+    
+    # bool values of whether tox was already installed
+    tox_installed = False
+    if sdk_helpers.get_package_version("tox"):
+        tox_installed = True
+
+    if not tox_installed:
+        _pip_install("tox")
+
+    yield
+
+    if not tox_installed:
+        _pip_uninstall("tox")
 
 
 @pytest.fixture

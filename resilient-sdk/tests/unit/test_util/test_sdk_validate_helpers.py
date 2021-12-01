@@ -27,7 +27,7 @@ def test_selftest_validate_resilient_circuits_installed():
         assert len(result) == 2
         assert result[0]
         assert result[1].solution is ""
-        assert "'{0}' found in env".format(constants.CIRCUITS_PACKAGE_NAME) in result[1].name
+        assert "selftest" in result[1].name
 
 
 def test_valid_selftest_validate_package_installed():
@@ -58,7 +58,7 @@ def test_invalid_selftest_validate_package_installed():
     assert len(result) == 2
     assert result[0] is False
     assert mock_path_to_package in result[1].solution
-    assert "not found" in result[1].name
+    assert "is not installed" in result[1].description
 
 def test_valid_selftest_validate_selftestpy_file_exists(fx_copy_fn_main_mock_integration):
 
@@ -70,7 +70,7 @@ def test_valid_selftest_validate_selftestpy_file_exists(fx_copy_fn_main_mock_int
 
     assert len(result) == 2
     assert result[0]
-    assert "selftest.py found" in result[1].name
+    assert "selftest.py file found" in result[1].description
 
 def test_invalid_selftest_validate_selftestpy_file_exists():
 
@@ -82,7 +82,7 @@ def test_invalid_selftest_validate_selftestpy_file_exists():
 
     assert len(result) == 2
     assert result[0] is False
-    assert "selftest.py not found" in result[1].name
+    assert "selftest.py is a required file" in result[1].description
     
 def test_sefltest_run_selftestpy_valid():
 
@@ -403,3 +403,81 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
     result = result[0]
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "Cannot find the following screenshot(s) referenced in the README" in result.description
+
+def test_tox_tests_validate_tox_installed(fx_pip_install_tox):
+
+    attr_dict = sdk_validate_configs.tests_attributes[0]
+
+    result = sdk_validate_helpers.tox_tests_validate_tox_installed(attr_dict)
+
+    assert result[0] == 1
+    assert "'tox' was found in the Python environment" in result[1].description
+
+def test_tox_tests_validate_tox_file_exists(fx_copy_fn_main_mock_integration):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[1]
+
+    result = sdk_validate_helpers.tox_tests_validate_tox_file_exists(path_package, attr_dict)
+
+    assert result[0] == 1
+    assert "'tox.ini' file was found in the package" in result[1].description
+
+def test_TOX_MIN_ENV_VERSION_correct_format():
+    # this method should help ensure that any changes to constants.TOX_MIN_ENV_VERSION 
+    # keep the correct format: py3[x] where [x] is the minor python version
+
+    assert len(constants.TOX_MIN_ENV_VERSION) == 4
+    assert constants.TOX_MIN_ENV_VERSION[:2] == "py"
+    assert constants.TOX_MIN_ENV_VERSION[2] == "3"
+    assert constants.TOX_MIN_ENV_VERSION[-1].isdigit()
+
+def test_tox_tests_validate_min_env_version_only(fx_copy_fn_main_mock_integration):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[2]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
+
+        mock_read_file.return_value = ['[tox]\n', 'envlist = py36\n', 'skip_missing_interpreters=True\n', '\n', '\n', '[testenv:py36]\n', 'passenv=TEST_RESILIENT_*\n', 'commands = pytest -s {posargs}\n']
+
+        result = sdk_validate_helpers.tox_tests_validate_min_env_version(path_package, attr_dict)
+
+        assert result[0] == 1
+        assert "Valid 'envlist=' was found in the 'tox.ini' file" in result[1].description
+
+def test_tox_tests_validate_not_min_env_version_only(fx_copy_fn_main_mock_integration):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[2]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
+
+        mock_read_file.return_value = ['[tox]\n', 'envlist = py27,py36,py39\n', 'skip_missing_interpreters=True\n', '\n', '\n', '[testenv:py27]\n', 'passenv=TEST_RESILIENT_*\n', 'commands = pytest -s {posargs}\n']
+
+        result = sdk_validate_helpers.tox_tests_validate_min_env_version(path_package, attr_dict)
+
+        assert result[0] == 1
+        assert "Unsupported tox env found in envlist in 'tox.ini' file" in result[1].description
+
+def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_fn_main_mock_integration, caplog):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[3]
+
+    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, None, None)
+
+    assert "Using mock args" in caplog.text
+    assert result[0] == 1
+
+
+def test_tox_tests_parse_xml_report():
+
+    results = sdk_validate_helpers._tox_tests_parse_xml_report(mock_paths.MOCK_PYTEST_XML_REPORT_PATH)
+
+    assert len(results) == 5
+    assert results[0] == 2
+    assert results[1] == 1
+    assert results[2] == 0
+    assert results[3] == ""
+    assert results[4] == u'record_property = <function record_property.<locals>.append_property\n                at 0x000001A1A9EB40D0>\n\n                def test_fails(record_property):\n                record_property("key", u"value2 some unicode: Δ, Й, ק ,م, ๗, あ, 叶")\n                > assert 1 == 2\n                E assert 1 == 2\n\n                test_something.py:8: AssertionError\n            \n\n---\n\n'
