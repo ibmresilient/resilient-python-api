@@ -85,6 +85,6 @@ class SDKValidateIssue(object):
     def severity_to_color(self):
         """Returns a string representing HTML value of the severity. For Jinja2 templating"""
 
-        color = "red" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL else "orange" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN else "blue"
+        color = "red" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL else "orange" if self.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN else "teal"
 
         return '<span style="color:{0}">{1}</span>'.format(color, self.get_logging_level())
