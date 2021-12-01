@@ -317,7 +317,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException("Could not find file: {0}".format(path_to_file))
+            raise SDKException("{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -333,7 +333,7 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException("Could not find directory: {0}".format(path_to_dir))
+            raise SDKException("{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
@@ -1224,3 +1224,14 @@ def scrape_results_from_log_file(path_log_file):
                 results_scraped[fn_name] = results
 
     return results_scraped
+
+
+def handle_file_not_found_error(e, msg):
+    """
+    TODO
+    """
+    # TODO: add unit test
+    if ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in e.message:
+        LOG.warning("WARNING: %s", msg)
+    else:
+        raise e

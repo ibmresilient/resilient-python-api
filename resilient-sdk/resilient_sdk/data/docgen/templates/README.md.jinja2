@@ -230,6 +230,13 @@ The following table provides the settings you need to configure the app. These s
 <details><summary>Outputs:</summary>
 <p>
 
+> **NOTE:** this example may be in JSON format, yet on the SOAR Platform `results` will be a Python Dictionary
+
+{% if fn.results %}
+```python
+results = {{fn.results|tojson(indent=2)}}
+```
+{% else %}
 <!-- {{ placeholder_string }} -->
 ```python
 results = {
@@ -238,6 +245,7 @@ results = {
     # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
 } 
 ```
+{% endif %}
 
 </p>
 </details>
