@@ -289,7 +289,7 @@ package_files = {
 
         "missing_msg": "Cannot find README in the package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Generate the docs using 'resilient-sdk docgen -p {0}'",
+        "missing_solution": "Generate the docs using '''resilient-sdk docgen -p {0}'''",
 
         "pass_msg": "'README.md' has been implemented",
         "pass_solution": "Make sure that all documentation is up-to-date before packaging"
@@ -333,6 +333,22 @@ package_files = {
 
         "pass_msg": "'{0}' icon found at {1}",
         "solution": "Icons appear in SOAR when your app is installed with App Host"
+    },
+    "LICENSE": {
+        "func": sdk_validate_helpers.package_files_validate_license,
+        "path": "{0}/LICENSE",
+        "name": "LICENSE",
+
+        "missing_msg": "Cannot find 'LICENSE' in the package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Generate the LICENSE using '''resilient-sdk codegen -p {0} --reload'''",
+
+        "fail_msg": "'LICENSE' is the default license file",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Provide a 'LICENSE' file in your package directory. Acceptable license formats are: MIT, Apache, and BSD",
+
+        "pass_msg": "'LICENSE' file is valid",
+        "pass_solution": "Be sure to manually check that the license one of the acceptable formats: MIT, Apache, and BSD"
     }
 }
 
