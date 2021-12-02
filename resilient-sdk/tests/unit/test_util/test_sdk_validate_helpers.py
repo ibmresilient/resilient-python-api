@@ -518,12 +518,15 @@ def test_tox_tests_validate_not_min_env_version_only(fx_copy_fn_main_mock_integr
         assert result[0] == 1
         assert "Unsupported tox env found in envlist in 'tox.ini' file" in result[1].description
 
-def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_fn_main_mock_integration, caplog):
+def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
 
-    path_package = fx_copy_fn_main_mock_integration[1]
+    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.tests_attributes[3]
 
-    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, None, None)
+    # want to skip using a conftest file as that is irrelevant here
+    args = constants.TOX_TESTS_DEFAULT_ARGS.append("--noconftest")
+
+    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
 
     assert "Using mock args" in caplog.text
     assert result[0] == 1
