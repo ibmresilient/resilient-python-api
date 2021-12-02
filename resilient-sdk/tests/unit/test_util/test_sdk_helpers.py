@@ -427,6 +427,20 @@ def test_run_subprocess():
     assert args[1] in details
 
 
+def test_run_subprocess_with_cwd():
+
+    args = ["pwd"]
+    path = os.path.expanduser("~")
+
+    dir_before_cwd = os.getcwd()
+
+    exitcode, details = sdk_helpers.run_subprocess(args, change_dir=path)
+
+    assert exitcode == 0
+    assert path in details
+    assert dir_before_cwd == os.getcwd()
+
+
 def test_scrape_results_from_log_file():
     # TODO
     pass

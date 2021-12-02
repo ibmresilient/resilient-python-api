@@ -1,0 +1,8 @@
+{
+    "tox-args": {
+        "resilient_email": "test@example.org",
+        "resilient_password": "pwd_from_json",
+        "resilient_host": "example.org",
+        "resilient_org": "example org json"
+    }
+}
