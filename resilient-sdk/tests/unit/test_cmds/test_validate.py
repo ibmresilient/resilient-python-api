@@ -5,6 +5,7 @@
 import os
 import sys
 
+import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdValidate, base_cmd
 from resilient_sdk.util import constants
@@ -345,7 +346,7 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
 
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
-
+@pytest.mark.skip(reason="need to use App tests - not sdk tests")
 def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
 
@@ -365,6 +366,7 @@ def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integr
     assert "pytest: error: unrecognized arguments: --arg1 --arg2 val2" in caplog.text
 
 
+@pytest.mark.skip(reason="need to use App tests - not sdk tests")
 def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
 

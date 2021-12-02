@@ -5,8 +5,8 @@
 import difflib
 import os
 
-import mock
 import pkg_resources
+import pytest
 from mock import patch
 from resilient_sdk.util import (constants, sdk_validate_configs,
                                 sdk_validate_helpers)
@@ -460,6 +460,7 @@ def test_tox_tests_validate_not_min_env_version_only(fx_copy_fn_main_mock_integr
         assert result[0] == 1
         assert "Unsupported tox env found in envlist in 'tox.ini' file" in result[1].description
 
+@pytest.mark.skip(reason="need to use App tests - not sdk tests")
 def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_fn_main_mock_integration, caplog):
 
     path_package = fx_copy_fn_main_mock_integration[1]
