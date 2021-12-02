@@ -36,7 +36,7 @@ IMPORT_URL = "/configurations/imports"
 
 # Path to package templates for jinja rendering
 PACKAGE_TEMPLATE_PATH = os.path.join("data", "codegen", "templates", "package_template")
-PACKAGE_FOLDER_TEMPLATE_PATH = os.path.join(PACKAGE_TEMPLATE_PATH, "package")
+PACKAGE_TEMPLATE_PACKAGE_DIR = os.path.join(PACKAGE_TEMPLATE_PATH, "package")
 DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 VALIDATE_TEMPLATE_PATH = os.path.join("data", "validate", "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"

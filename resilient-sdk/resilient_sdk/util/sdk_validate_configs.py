@@ -345,10 +345,10 @@ package_files = {
 
         "fail_msg": "'LICENSE' is the default license file",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_solution": "Provide a 'LICENSE' file in your package directory. Acceptable license formats are: MIT, Apache, and BSD",
+        "fail_solution": "Provide a 'LICENSE' file in your package directory. Suggested formats: MIT, Apache, and BSD",
 
         "pass_msg": "'LICENSE' file is valid",
-        "pass_solution": "Be sure to manually check that the license one of the acceptable formats: MIT, Apache, and BSD"
+        "pass_solution": "It is recommended to manually the license. Suggested formats: MIT, Apache, and BSD"
     }
 }
 
