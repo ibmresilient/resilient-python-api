@@ -1123,7 +1123,7 @@ def parse_optionals(optionals):
         if len(option_strings) >= 16:
             tabs = "\t\t"
 
-        if len(option_strings) >= 20:
+        if len(option_strings) >= 22:
             tabs = "\t"
 
         if len(option_strings) < 10:

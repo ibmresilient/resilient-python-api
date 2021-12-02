@@ -31,7 +31,8 @@ class CmdCodegen(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
-    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log'"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
 
@@ -53,8 +54,7 @@ class CmdCodegen(BaseCmd):
                                  action="store",
                                  nargs="?",
                                  const=constants.PATH_RES_DEFAULT_LOG_FILE,
-                                 help="Uses the log file specified or the default at '{0}' to try gather results for \
-                                     each function".format(constants.PATH_RES_DEFAULT_LOG_FILE))
+                                 help="Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results")
 
     def execute_command(self, args):
         LOG.debug("called: CmdCodegen.execute_command()")
