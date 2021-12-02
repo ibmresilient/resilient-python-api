@@ -551,8 +551,17 @@ class CmdCodegen(BaseCmd):
     @classmethod
     def _get_results_from_log_file(cls, args):
         """
-        # TODO
+        - Gets all function names from the payload_samples directory
+        - Traverses the file at the path specified by args.gather_results (in a reversed order)
+        - Looks for lines containing ``[<fn_name>] Result: {'version': 2.0, 'success': True...``
+        - Parses it and generates an output_json_example.json and output_json_schema.json file for each ``Result`` found
+        - Uses the libary ``genson`` to generate the JSON schema from a Python Dictionary
+
+        :param args: (required) the cmd line arguments
+        :type args: argparse.ArgumentParser
+        :raises: an SDKException if args.package is not a valid path
         """
+
         path_package = os.path.abspath(args.package)
         path_log_file = args.gather_results
         path_payload_samples_dir = os.path.join(path_package, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
@@ -568,7 +577,6 @@ class CmdCodegen(BaseCmd):
         except SDKException as e:
 
             if "Could not find directory" in e.message:
-                # TODO: unit test for this case
                 LOG.warning("WARNING: no '%s' found. Running 'codegen --reload' to create the default missing files\n%s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, constants.LOG_DIVIDER)
                 args.reload = True
                 cls._reload_package(args)
@@ -615,5 +623,4 @@ class CmdCodegen(BaseCmd):
                     LOG.info(u"An error occurred. Renaming %s.bak to %s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
                     sdk_helpers.rename_file(path_output_json_example_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
 
-        # TODO: see if can be used with docgen
         LOG.info("'codegen %s' complete for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, args.package)

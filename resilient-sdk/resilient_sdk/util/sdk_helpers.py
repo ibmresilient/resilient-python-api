@@ -1276,9 +1276,17 @@ def scrape_results_from_log_file(path_log_file):
 
 def handle_file_not_found_error(e, msg):
     """
-    TODO
+    Looks at e's message attribute and if
+    it contains ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE
+    prints a LOG.warning message else just raises the exception
+
+    :param e: (required) an Exception
+    :type e: Exception
+    :param msg: (required) the custom error message to print as a WARNING in the logs
+    :type msg: str
+    :raises: The exception that is passed unless it contains 
+    ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
     """
-    # TODO: add unit test
     if ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in e.message:
         LOG.warning("WARNING: %s", msg)
     else:

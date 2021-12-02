@@ -360,6 +360,7 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     # Assert modification time of workflow has been updated.
     assert new_wf_modified_time > wf_modified_time
 
+
 def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     """
     This tests that it you forget the --reload flag you get an error
@@ -378,14 +379,70 @@ def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
         cmd_codegen._gen_package(args)
 
 
-def test_get_results_from_log_file():
-    # TODO - set args
-    pass
 
+def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
-def test_get_results_from_log_file_no_payload_samples_dir():
-    # TODO
-    pass
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen.execute_command(args)
+
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    # Test output_json_example.json file generated
+    output_json_example_contents = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
+    assert output_json_example_contents.get("version") == 2.1
+
+    # Test output_json_schema.json file generated
+    output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
+    output_json_example_schema_props = output_json_example_schema.get("properties")
+
+    assert output_json_example_schema_props.get("version") == {"type": "number"}
+    assert output_json_example_schema_props.get("success") == {"type": "boolean"}
+    assert output_json_example_schema_props.get("reason") == {"type": "null"}
+
+    # Test WARNING log appears
+    assert "WARNING: No results could be found for 'mock_function_two'" in caplog.text
+
+def test_get_results_from_log_file_no_payload_samples_dir(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results and a path to a mock export.res file for --reload
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+    sys.argv.extend(["-e", mock_paths.MOCK_RELOAD_EXPORT_RES])
+
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    # Remove path_payload_samples
+    shutil.rmtree(path_payload_samples)
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen.execute_command(args)
+
+    # Test output_json_example.json file generated
+    output_json_example_contents = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
+    assert output_json_example_contents.get("version") == 2.1
+
+    # Test output_json_schema.json file generated
+    output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
+    output_json_example_schema_props = output_json_example_schema.get("properties")
+    assert output_json_example_schema_props.get("version") == {"type": "number"}
+
+    # Test --reload was ran
+    assert "Running 'codegen --reload' to create the default missing files" in caplog.text
 
 
 def test_execute_command():
