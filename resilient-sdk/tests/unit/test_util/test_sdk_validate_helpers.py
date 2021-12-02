@@ -474,11 +474,11 @@ def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_inte
 
         result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
 
-    assert len(result) == 1
-    result = result[0]
-    assert isinstance(result, SDKValidateIssue)
-    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
-    assert "'LICENSE' file is valid" == result.description
+    assert len(result) == 2
+    assert isinstance(result[0], SDKValidateIssue)
+    assert result[0].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+    assert "'LICENSE' file is valid" == result[0].description
+    assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
 
