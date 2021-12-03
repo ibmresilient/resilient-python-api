@@ -520,6 +520,123 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
             solution=attr_dict.get("fail_solution")
         )]
 
+def package_files_validate_icon(path_file, attr_dict, filename, **__):
+    """
+    Helper method for package files to validate an icon
+    This works by using the get_icon helper method from package_file_helpers.
+    That method loads in a given icon, checks the contents for the correct size,
+    and returns the contents if the file is valid.
+
+    This helper method loads in the given icon and the default icon associated with it
+    and compares the two. If they are equivalent, the validation INFO's to the user that
+    the given icon is still the default.
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for each icon png defined in ``package_files``
+    :type attr_dict: dict
+    :param filename: (required) name of the icon
+    :type filename: str
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a passing issue if the icon exists and is not the default, a info issue if the icon is the default, and a failing issue if the icon doesn't exist or is not the correct dimensions
+    :rtype: list[SDKValidateIssue]
+    """
+
+    # using the get_icon method from the package_file_helpers
+    # which throws exceptions when icon's aren't correct
+    try:
+        # load the icon
+        encoded_icon = package_helpers.get_icon(filename, path_file,
+            attr_dict.get("width"), attr_dict.get("height"), attr_dict.get("default_path"))
+
+    except SDKException as sdk_err:
+        # the get_icon method threw an exception - parse it out and use
+        # it as the message for the SDK issue
+
+        # parse out the exception message from "ERROR" to the end
+        message = str(sdk_err).replace("\n", " ")
+        message = message[message.index("ERROR"):]
+
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=message,
+            severity=attr_dict.get("fail_severity"),
+            solution=""
+        )]
+
+    # load in the default icon from the sdk data path
+    default_icon = package_helpers.get_icon(filename, attr_dict.get("default_path"),
+        attr_dict.get("width"), attr_dict.get("height"), attr_dict.get("default_path"))
+
+    # check if given icon is the default icon
+    if encoded_icon == default_icon:
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("default_icon_msg").format(filename, path_file),
+            severity=attr_dict.get("default_icon_severity"),
+            solution=attr_dict.get("solution")
+        )]
+
+    # icon was loaded with no issues and was not the default
+    return [SDKValidateIssue(
+        name=attr_dict.get("name"),
+        description=attr_dict.get("pass_msg").format(filename, path_file),
+        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+        solution=attr_dict.get("solution")
+    )]
+
+def package_files_validate_license(path_file, attr_dict, filename, **__):
+    """
+    Helper method for package files to validate the LICENSE file of the app
+    This does a simple check to see if the file matches the template (which is nearly
+    blank). If it is the template, the check fails.
+    Otherwise it passes, although it will INFO out that the LICENSE file should
+    be manually checked to make sure it is one of the accepted licenses...
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the LICENSE file defined in ``package_files``
+    :type attr_dict: dict
+    :param filename: (required) name of the license file
+    :type filename: str
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a failing issue if the license is the default, a info issue otherwise telling the validator to manually check the license for correctness
+    :rtype: list[SDKValidateIssue]
+    """
+
+    # render jinja file of LICENSE
+    template_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PACKAGE_DIR, filename)
+
+    # read the contents of the package's LICENSE file
+    file_contents = "".join(sdk_helpers.read_file(path_file))
+
+    if template_rendered in file_contents:
+        # the template is still in the file
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg"),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution").format(path_file)
+        )]
+    else:
+        # the license given in the package is not the default.
+        # still infos because the validator should manually check that
+        # the license is one of the acceptable formats (MIT, apache, or BSD)
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("pass_solution")
+        ),
+        SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description="LICENSE contents:\n\t\t" + file_contents.replace("\n", "\n\t\t"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )]
+
 def package_files_validate_readme(path_package, path_file, filename, attr_dict, **_):
     """
     Validates a given README.md file.

@@ -36,6 +36,7 @@ IMPORT_URL = "/configurations/imports"
 
 # Path to package templates for jinja rendering
 PACKAGE_TEMPLATE_PATH = os.path.join("data", "codegen", "templates", "package_template")
+PACKAGE_TEMPLATE_PACKAGE_DIR = os.path.join(PACKAGE_TEMPLATE_PATH, "package")
 DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 VALIDATE_TEMPLATE_PATH = os.path.join("data", "validate", "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
@@ -48,6 +49,10 @@ TOX_TESTS_DEFAULT_ARGS = ['--resilient_email', '"integrations@example.org"', '--
 TOX_MIN_ENV_VERSION = "py36" # the last character here must be a number and will be used as the base value for checks of envlist
 TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 
+ICON_APP_LOGO_REQUIRED_WIDTH = 200
+ICON_APP_LOGO_REQUIRED_HEIGHT = 72
+ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100
+ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
 
