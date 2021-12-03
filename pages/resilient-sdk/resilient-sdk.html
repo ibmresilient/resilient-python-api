@@ -239,6 +239,8 @@ options:
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' -c '/usr/custom_app.config'
 $ resilient-sdk codegen -p &lt;path_current_package&gt; --reload --workflow 'new_wf_to_add'
+$ resilient-sdk codegen -p &lt;path_current_package&gt; --gather-results
+$ resilient-sdk codegen -p &lt;path_current_package&gt; --gather-results '/usr/custom_app.log'
 
 options:
 -h, --help			show this help message and exit
@@ -256,7 +258,8 @@ options:
 -o, --output			Path to output directory. Uses current dir by default 
 -c, --config			Path to app.config file to use 
 -p, --package			(required) Name of new or path to existing package 
--re, --reload			Reload customizations and create new customize.py</pre>
+-re, --reload			Reload customizations and create new customize.py 
+--gather-results		Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results</pre>
 </section>
 <section id="docgen">
 <h3>docgen<a class="headerlink" href="#docgen" title="Permalink to this headline">¶</a></h3>
@@ -343,6 +346,10 @@ options:
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
 <p><strong>2022-01: version 43.1</strong></p>
 <ul class="simple">
+<li><p>Added <a class="reference external" href="https://pypi.org/project/genson/">genson 1.2 dependency</a> to generate JSON schemas</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> now produces <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> and <code class="docutils literal notranslate"><span class="pre">output_json_schema.json</span></code> files for each function in the <code class="docutils literal notranslate"><span class="pre">payload_samples</span></code> directory to aid with building <strong>Playbooks</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> has a new argument <code class="docutils literal notranslate"><span class="pre">--gather-results</span></code> which will scan an <code class="docutils literal notranslate"><span class="pre">app.log</span></code> file to get the results for the <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> file</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">docgen</span></code> is now ran, it will look for an <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> file for each function and use that for the <code class="docutils literal notranslate"><span class="pre">README.md</span></code> Function Output Examples</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">global-exclude</span> <span class="pre">*.bak</span></code> to the MANIFEST.in file in the <code class="docutils literal notranslate"><span class="pre">codegen</span></code> template so <code class="docutils literal notranslate"><span class="pre">.bak</span></code> files are not included when packaged</p></li>
 </ul>
 <p><strong>2021-11: version 43.0</strong></p>
