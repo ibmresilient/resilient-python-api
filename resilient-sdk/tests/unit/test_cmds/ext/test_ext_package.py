@@ -104,9 +104,9 @@ def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_mai
             "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text
 
 
-def test_execute_command_with_validate_enabled(fx_pip_install_fn_main_mock_integration, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
-    mock_integration_name = fx_copy_fn_main_mock_integration[0]
-    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+def test_execute_command_with_validate_enabled(fx_copy_and_pip_install_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_and_pip_install_fn_main_mock_integration[1]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
     sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
