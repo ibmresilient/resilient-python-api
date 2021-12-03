@@ -320,7 +320,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException("{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
+            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -336,7 +336,7 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException("{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
+            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
@@ -1065,13 +1065,19 @@ def get_package_version(package_name):
         return None
 
 
-def is_python_min_supported_version():
+def is_python_min_supported_version(custom_warning=None):
     """
     Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
     """
     if sys.version_info < MIN_SUPPORTED_PY_VERSION:
-        LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
-                    "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+        if custom_warning:
+            LOG.warning("WARNING: %s", custom_warning)
+            return True
+
+        else:
+            LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
+                        "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
 
 def parse_version_object(version_obj):
@@ -1248,8 +1254,8 @@ def scrape_results_from_log_file(path_log_file):
 
     log_file_contents = read_file(path_log_file)
 
-    regex_line = re.compile(r'\[[\w]+\] Result\:')
-    regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')
+    regex_line = re.compile(r'\[[\w]+\] Result\:')       # Looking for line that contains [<fn_name>] Result: {'version': 2.0, 'success': True...
+    regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')  # Getting <fn_name> from [<fn_name>] Result: {'version': 2.0, 'success': True...
 
     for l in reversed(log_file_contents):
         match = regex_line.search(l, endpos=120)

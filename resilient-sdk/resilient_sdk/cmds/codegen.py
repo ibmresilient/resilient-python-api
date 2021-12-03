@@ -32,6 +32,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log'"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
@@ -562,6 +563,10 @@ class CmdCodegen(BaseCmd):
         :raises: an SDKException if args.package is not a valid path
         """
 
+        # Check if Python >= MIN_SUPPORTED_PY_VERSION
+        if sdk_helpers.is_python_min_supported_version(constants.ERROR_WRONG_PYTHON_VERSION):
+            raise SDKException(constants.ERROR_WRONG_PYTHON_VERSION)
+
         path_package = os.path.abspath(args.package)
         path_log_file = args.gather_results
         path_payload_samples_dir = os.path.join(path_package, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
@@ -576,7 +581,7 @@ class CmdCodegen(BaseCmd):
 
         except SDKException as e:
 
-            if "Could not find directory" in e.message:
+            if constants.ERROR_NOT_FIND_DIR in e.message:
                 LOG.warning("WARNING: no '%s' found. Running 'codegen --reload' to create the default missing files\n%s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, constants.LOG_DIVIDER)
                 args.reload = True
                 cls._reload_package(args)
@@ -621,6 +626,6 @@ class CmdCodegen(BaseCmd):
 
                 if not os.path.isfile(path_output_json_schema) and path_output_json_schema_bak:
                     LOG.info(u"An error occurred. Renaming %s.bak to %s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
-                    sdk_helpers.rename_file(path_output_json_example_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+                    sdk_helpers.rename_file(path_output_json_schema_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
 
         LOG.info("'codegen %s' complete for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, args.package)

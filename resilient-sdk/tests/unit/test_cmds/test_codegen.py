@@ -86,6 +86,7 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log'"""
     assert cmd_codegen.CMD_DESCRIPTION == cmd_codegen.CMD_HELP
     assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser"]
@@ -379,7 +380,7 @@ def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
         cmd_codegen._gen_package(args)
 
 
-
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
@@ -411,6 +412,8 @@ def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line
     # Test WARNING log appears
     assert "WARNING: No results could be found for 'mock_function_two'" in caplog.text
 
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_results_from_log_file_no_payload_samples_dir(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
 
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
@@ -443,6 +446,29 @@ def test_get_results_from_log_file_no_payload_samples_dir(fx_copy_fn_main_mock_i
 
     # Test --reload was ran
     assert "Running 'codegen --reload' to create the default missing files" in caplog.text
+
+
+def test_gather_results_on_py27(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results and a path to a mock export.res file for --reload
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+
+    if not sdk_helpers.is_python_min_supported_version():
+
+        with pytest.raises(SDKException, match=constants.ERROR_WRONG_PYTHON_VERSION):
+            cmd_codegen.execute_command(args)
+
+    else:
+        cmd_codegen.execute_command(args)
 
 
 def test_execute_command():

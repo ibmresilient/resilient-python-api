@@ -357,11 +357,11 @@ class CmdDocgen(BaseCmd):
                     sdk_helpers.validate_file_paths(os.R_OK, path_output_json_example)
                     f["results"] = sdk_helpers.read_json_file(path_output_json_example)
                 except SDKException as e:
-                    sdk_helpers.handle_file_not_found_error(e, "Error getting results. No '{0}' file found for '{1}'.".format(
+                    sdk_helpers.handle_file_not_found_error(e, u"Error getting results. No '{0}' file found for '{1}'.".format(
                         package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE, fn_name))
 
         except SDKException as e:
-            sdk_helpers.handle_file_not_found_error(e, "Error getting results. No '{0}' directory found.".format(
+            sdk_helpers.handle_file_not_found_error(e, u"Error getting results. No '{0}' directory found.".format(
                 package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
 
         LOG.info("Rendering README for %s", package_name_dash)
