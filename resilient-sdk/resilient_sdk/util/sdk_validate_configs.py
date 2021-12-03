@@ -289,10 +289,66 @@ package_files = {
 
         "missing_msg": "Cannot find README in the package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Generate the docs using 'resilient-sdk docgen -p {0}'",
+        "missing_solution": "Generate the docs using '''resilient-sdk docgen -p {0}'''",
 
         "pass_msg": "'README.md' has been implemented",
         "pass_solution": "Make sure that all documentation is up-to-date before packaging"
+    },
+    "app_logo.png": {
+        "func": sdk_validate_helpers.package_files_validate_icon,
+        "path": package_helpers.PATH_ICON_EXTENSION_LOGO,
+        "default_path": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
+        "name": "'app_logo.png'",
+        "width": constants.ICON_APP_LOGO_REQUIRED_WIDTH,
+        "height": constants.ICON_APP_LOGO_REQUIRED_HEIGHT,
+
+        "missing_msg": "Cannot find 'app_logo.png' in the package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Include a logo for your app at path '{0}' with size {1}x{2}".format(package_helpers.PATH_ICON_EXTENSION_LOGO, "{1}", "{2}"),
+
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "default_icon_msg": "'{0}' is the default icon. Consider using your own logo",
+        "default_icon_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' icon found at {1}",
+        "solution": "Icons appear in SOAR when your app is installed with App Host"
+    },
+    "company_logo.png": {
+        "func": sdk_validate_helpers.package_files_validate_icon,
+        "path": package_helpers.PATH_ICON_COMPANY_LOGO,
+        "default_path": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
+        "name": "'company_logo.png'",
+        "width": constants.ICON_COMPANY_LOGO_REQUIRED_WIDTH,
+        "height": constants.ICON_COMPANY_LOGO_REQUIRED_HEIGHT,
+
+        "missing_msg": "Cannot find 'company_logo.png' in the package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Include a logo for your company at path '{0}' with size {1}x{2}".format(package_helpers.PATH_ICON_COMPANY_LOGO, "{1}", "{2}"),
+
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "default_icon_msg": "'{0}' is the default icon. Consider using your own logo",
+        "default_icon_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' icon found at {1}",
+        "solution": "Icons appear in SOAR when your app is installed with App Host"
+    },
+    "LICENSE": {
+        "func": sdk_validate_helpers.package_files_validate_license,
+        "path": "{0}/LICENSE",
+        "name": "LICENSE",
+
+        "missing_msg": "Cannot find 'LICENSE' in the package at path {0}",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Generate the LICENSE using '''resilient-sdk codegen -p {0} --reload'''",
+
+        "fail_msg": "'LICENSE' is the default license file",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Provide a 'LICENSE' file in your package directory. Suggested formats: MIT, Apache, and BSD",
+
+        "pass_msg": "'LICENSE' file is valid",
+        "pass_solution": "It is recommended to manually the license. Suggested formats: MIT, Apache, and BSD"
     }
 }
 

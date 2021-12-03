@@ -38,6 +38,7 @@ IMPORT_URL = "/configurations/imports"
 
 # Path to package templates for jinja rendering
 PACKAGE_TEMPLATE_PATH = os.path.join("data", "codegen", "templates", "package_template")
+PACKAGE_TEMPLATE_PACKAGE_DIR = os.path.join(PACKAGE_TEMPLATE_PATH, "package")
 DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 VALIDATE_TEMPLATE_PATH = os.path.join("data", "validate", "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
@@ -49,6 +50,11 @@ TOX_TEMP_PATH_XML_REPORT = ".validate_tmp_dir"
 TOX_TESTS_DEFAULT_ARGS = ['--resilient_email', '"integrations@example.org"', '--resilient_password', '"supersecret"', '--resilient_host', '"example.com"', '--resilient_org', '"Test Organization"']
 TOX_MIN_ENV_VERSION = "py36" # the last character here must be a number and will be used as the base value for checks of envlist
 TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
+
+ICON_APP_LOGO_REQUIRED_WIDTH = 200
+ICON_APP_LOGO_REQUIRED_HEIGHT = 72
+ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100
+ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
@@ -62,7 +68,6 @@ VALIDATE_LOG_LEVEL_ERROR = VALIDATE_LOG_LEVEL_CRITICAL
 VALIDATE_LOG_LEVEL_WARNING = "WARNING"
 VALIDATE_LOG_LEVEL_INFO = "INFO"
 VALIDATE_LOG_LEVEL_DEBUG = "DEBUG"
-
 
 # Error Messages
 ERROR_NOT_FIND_DIR = "Could not find directory"

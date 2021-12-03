@@ -391,6 +391,96 @@ def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
+def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration):
+
+    filename = "app_logo.png"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_icon") as mock_icon:
+
+        # making use of side_effect to change the behavior of the two calls this way
+        # the "default" is not the same as the "icon"
+        mock_icon.side_effect = ["1", "2"]
+
+        result = sdk_validate_helpers.package_files_validate_icon(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_package_files_validate_found_default_icon(fx_copy_fn_main_mock_integration):
+
+    filename = "app_logo.png"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_icon") as mock_icon:
+
+        mock_icon.return_value = "" # this way both calls will return an empty string and thus be equal
+
+        result = sdk_validate_helpers.package_files_validate_icon(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+    assert "'{0}' is the default icon".format(filename) in result.description
+
+def test_package_files_validate_improper_icon(fx_copy_fn_main_mock_integration):
+
+    filename = "app_logo.png"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
+
+    # mock import definition parsing - mock raising an exception
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_icon") as mock_icon:
+
+        mock_icon.side_effect = SDKException("Failed for some reason")
+
+        result = sdk_validate_helpers.package_files_validate_icon(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "ERROR: Failed for some reason" == result.description
+
+def test_package_files_validate_license_is_default(fx_copy_fn_main_mock_integration):
+
+    filename = "LICENSE"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "'LICENSE' is the default license file" == result.description
+
+def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_integration):
+
+    filename = "LICENSE"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.setup_env_and_render_jinja_file") as mock_jinja_render:
+
+        mock_jinja_render.return_value = "A sample LICENSE\n\nThis should still be validated manually to ensure proper license type"
+
+        result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
+
+    assert len(result) == 2
+    assert isinstance(result[0], SDKValidateIssue)
+    assert result[0].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+    assert "'LICENSE' file is valid" == result[0].description
+    assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
 def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
 
     filename = "README.md"
@@ -460,13 +550,15 @@ def test_tox_tests_validate_not_min_env_version_only(fx_copy_fn_main_mock_integr
         assert result[0] == 1
         assert "Unsupported tox env found in envlist in 'tox.ini' file" in result[1].description
 
-@pytest.mark.skip(reason="need to use App tests - not sdk tests")
-def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_fn_main_mock_integration, caplog):
+def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
 
-    path_package = fx_copy_fn_main_mock_integration[1]
+    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.tests_attributes[3]
 
-    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, None, None)
+    # want to skip using a conftest file as that is irrelevant here
+    args = constants.TOX_TESTS_DEFAULT_ARGS.append("--noconftest")
+
+    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
 
     assert "Using mock args" in caplog.text
     assert result[0] == 1

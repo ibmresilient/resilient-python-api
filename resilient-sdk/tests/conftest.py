@@ -142,17 +142,24 @@ def fx_copy_fn_main_mock_integration():
 
 
 @pytest.fixture
-def fx_pip_install_fn_main_mock_integration():
+def fx_copy_and_pip_install_fn_main_mock_integration():
     """
-    Before: pip installs our mock integration at mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION
-    After: pip uninstalls mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    Before: Creates temp dir and copies fn_main_mock_integration to it AND pip installs it
+    Returns a tuple (mock_integration_name, path_fn_main_mock_integration)
+    After: Removes the temp directory AND pip uninstalls it
     """
+    _mk_temp_dir()
+    mock_integration_name = "fn_main_mock_integration"
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_integration_name)
+    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
 
-    _pip_install(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION)
+    _pip_install(path_fn_main_mock_integration)
 
-    yield
+    yield (mock_integration_name, path_fn_main_mock_integration)
 
-    _pip_uninstall(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION)
+    _pip_uninstall(path_fn_main_mock_integration)
+
+    _rm_temp_dir()
 
 @pytest.fixture
 def fx_pip_install_tox():

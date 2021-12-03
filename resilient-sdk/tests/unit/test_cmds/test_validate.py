@@ -305,12 +305,12 @@ def test_print_status(fx_get_sub_parser, caplog):
     assert "testprintstatus FAIL" in caplog.text
 
 
-def test_custom_app_config_file(fx_pip_install_fn_main_mock_integration, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
+def test_custom_app_config_file(fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
     mock_app_config_path = mock_paths.TEST_TEMP_DIR + "/mock_app.config"
-    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
 
     # Add cmd line arg
     sys.argv.extend(["--selftest"])
@@ -346,12 +346,12 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
 
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
-@pytest.mark.skip(reason="need to use App tests - not sdk tests")
-def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
-    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
 
     # Add cmd line arg
     sys.argv.extend(["--tests", "--tox-args", 'arg1="val1"', 'arg2="val2"'])
@@ -363,7 +363,6 @@ def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integr
 
     assert "Running ['tox', '--', '--junitxml'," in caplog.text
     assert "'val2'] as a subprocess" in caplog.text
-    assert "pytest: error: unrecognized arguments: --arg1 --arg2 val2" in caplog.text
 
 
 @pytest.mark.skip(reason="need to use App tests - not sdk tests")
