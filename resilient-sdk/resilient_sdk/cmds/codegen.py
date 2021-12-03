@@ -564,7 +564,7 @@ class CmdCodegen(BaseCmd):
         """
 
         # Check if Python >= MIN_SUPPORTED_PY_VERSION
-        if sdk_helpers.is_python_min_supported_version(constants.ERROR_WRONG_PYTHON_VERSION):
+        if not sdk_helpers.is_python_min_supported_version(constants.ERROR_WRONG_PYTHON_VERSION):
             raise SDKException(constants.ERROR_WRONG_PYTHON_VERSION)
 
         path_package = os.path.abspath(args.package)

@@ -1068,16 +1068,23 @@ def get_package_version(package_name):
 def is_python_min_supported_version(custom_warning=None):
     """
     Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
+    :param custom_warning: a custom message you want to log out
+    :type custom_warning: str
+    :return: a boolean to indicate if current version is supported or not
+    :rtype: bool
     """
     if sys.version_info < MIN_SUPPORTED_PY_VERSION:
 
         if custom_warning:
             LOG.warning("WARNING: %s", custom_warning)
-            return True
 
         else:
             LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
                         "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+        return False
+
+    return True
 
 
 def parse_version_object(version_obj):
