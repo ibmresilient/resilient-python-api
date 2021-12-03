@@ -6,6 +6,7 @@ import difflib
 import os
 
 import pkg_resources
+import pytest
 from mock import patch
 from resilient_sdk.util import (constants, sdk_validate_configs,
                                 sdk_validate_helpers)

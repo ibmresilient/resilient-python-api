@@ -29,6 +29,8 @@ SDK_SETTINGS_PARSER_NAME = "sdk_settings_file"
 SDK_SETTINGS_FILENAME = ".sdk_settings.json"
 SDK_SETTINGS_FILE_PATH = os.path.join(PATH_RES_DEFAULT_DIR, SDK_SETTINGS_FILENAME)
 
+SUB_CMD_OPT_GATHER_RESULTS = "--gather-results"
+
 # Resilient export file suffix.
 RES_EXPORT_SUFFIX = ".res"
 # Endpoint url for importing a configuration
@@ -54,10 +56,20 @@ ICON_APP_LOGO_REQUIRED_HEIGHT = 72
 ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100
 ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
+# resilient-sdk codegen
+CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
+
+# resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
 
+# resilient-sdk validate
 VALIDATE_LOG_LEVEL_CRITICAL = "CRITICAL"
 VALIDATE_LOG_LEVEL_ERROR = VALIDATE_LOG_LEVEL_CRITICAL
 VALIDATE_LOG_LEVEL_WARNING = "WARNING"
 VALIDATE_LOG_LEVEL_INFO = "INFO"
 VALIDATE_LOG_LEVEL_DEBUG = "DEBUG"
+
+# Error Messages
+ERROR_NOT_FIND_DIR = "Could not find directory"
+ERROR_NOT_FIND_FILE = "Could not find file"
+ERROR_WRONG_PYTHON_VERSION = "Please install Python >= 3.6 to use this functionality"

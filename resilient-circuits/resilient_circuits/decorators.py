@@ -86,6 +86,7 @@ class function(object):
                     elif isinstance(val, FunctionResult):
                         # Collect the result for return
                         LOG.debug("[%s] FunctionResult: %s", evt.name, val)
+                        val.name = evt.name
                         result_list.append(val)
                     elif isinstance(val, Event):
                         # Some other event, just fire it
@@ -276,11 +277,12 @@ class app_function(object):
                         itself.fire(StatusMessageEvent(parent=evt, message=r.text))
 
                     elif isinstance(r, FunctionResult):
+                        r.name = evt.name
                         r.value = rp.done(
                             content=r.value,
                             success=r.success,
                             reason=r.reason)
-                        LOG.info("[%s] Returning results", evt.name)
+                        LOG.info("[%s] Returning results", r.name)
                         result_list.append(r)
 
                     elif isinstance(r, Exception):

@@ -4,16 +4,20 @@
 
 """ Implementation of `resilient-sdk codegen` """
 
+import json
 import logging
 import os
 import re
 import shutil
+
+from genson import SchemaBuilder
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.resilient_objects import ResilientObjMap
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers, constants
+from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.resilient_objects import ResilientObjMap
+from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -27,7 +31,9 @@ class CmdCodegen(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
-    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --gather-results
+    $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log'"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
 
@@ -45,10 +51,23 @@ class CmdCodegen(BaseCmd):
                                  action="store_true",
                                  help="Reload customizations and create new customize.py")
 
+        self.parser.add_argument(constants.SUB_CMD_OPT_GATHER_RESULTS,
+                                 action="store",
+                                 nargs="?",
+                                 const=constants.PATH_RES_DEFAULT_LOG_FILE,
+                                 help="Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results")
+
     def execute_command(self, args):
         LOG.debug("called: CmdCodegen.execute_command()")
 
-        if args.reload:
+        if args.gather_results:
+            if not args.package:
+                raise SDKException("'-p' must be specified when using '{0}'".format(constants.SUB_CMD_OPT_GATHER_RESULTS))
+
+            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, constants.SUB_CMD_OPT_GATHER_RESULTS)
+            self._get_results_from_log_file(args)
+
+        elif args.reload:
             if not args.package:
                 raise SDKException("'-p' must be specified when using '--reload'")
 
@@ -219,10 +238,15 @@ class CmdCodegen(BaseCmd):
         # Add to that dict
         ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
         ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = (u"{0}/mock_json_expectation_success.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = (u"{0}/mock_json_expectation_fail.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
-        ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+
+        # TODO: re-enable this code when we have logic to use mock_server files
+        """
+        if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
+            ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_SUCCESS] = (u"{0}/mock_json_expectation_success.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+            ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+            ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL] = (u"{0}/mock_json_expectation_fail.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+            ps_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL] = (u"{0}/blank.json.jinja2".format(package_helpers.PATH_TEMPLATE_PAYLOAD_SAMPLES), jinja_data)
+        """
 
     @staticmethod
     def _gen_function(args):
@@ -351,9 +375,7 @@ class CmdCodegen(BaseCmd):
         # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):
             package_mapping_dict["tests"] = {}
-
-            if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
-                package_mapping_dict["payload_samples"] = {}
+            package_mapping_dict[package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR] = {}
 
         # Get a list of function names in export.
         fn_names = [f.get(ResilientObjMap.FUNCTIONS) for f in jinja_data.get("functions")]
@@ -383,10 +405,8 @@ class CmdCodegen(BaseCmd):
             # Add to 'tests' directory
             package_mapping_dict["tests"][u"test_{0}".format(file_name)] = ("tests/test_function.py.jinja2", f)
 
-            # See if RES_SDK_DEV environment var is set
-            if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
-                # Add a 'payload_samples/fn_name' directory and the files to it
-                CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
+            # Add a 'payload_samples/fn_name' directory and the files to it
+            CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
         # Get a list of workflow names in export.
         wf_names = [w.get(ResilientObjMap.WORKFLOWS) for w in jinja_data.get("workflows")]
@@ -528,3 +548,84 @@ class CmdCodegen(BaseCmd):
             if not os.path.isfile(path_export_res) and path_export_res_bak:
                 LOG.info(u"An error occurred. Renaming export.res.bak to export.res")
                 sdk_helpers.rename_file(path_export_res_bak, package_helpers.BASE_NAME_LOCAL_EXPORT_RES)
+
+    @classmethod
+    def _get_results_from_log_file(cls, args):
+        """
+        - Gets all function names from the payload_samples directory
+        - Traverses the file at the path specified by args.gather_results (in a reversed order)
+        - Looks for lines containing ``[<fn_name>] Result: {'version': 2.0, 'success': True...``
+        - Parses it and generates an output_json_example.json and output_json_schema.json file for each ``Result`` found
+        - Uses the libary ``genson`` to generate the JSON schema from a Python Dictionary
+
+        :param args: (required) the cmd line arguments
+        :type args: argparse.ArgumentParser
+        :raises: an SDKException if args.package is not a valid path
+        """
+
+        # Check if Python >= MIN_SUPPORTED_PY_VERSION
+        if not sdk_helpers.is_python_min_supported_version(constants.ERROR_WRONG_PYTHON_VERSION):
+            raise SDKException(constants.ERROR_WRONG_PYTHON_VERSION)
+
+        path_package = os.path.abspath(args.package)
+        path_log_file = args.gather_results
+        path_payload_samples_dir = os.path.join(path_package, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+        LOG.debug("\nPath to project: %s", path_package)
+
+        sdk_helpers.validate_dir_paths(os.W_OK, path_package)
+
+        try:
+
+            sdk_helpers.validate_dir_paths(os.W_OK, path_payload_samples_dir)
+
+        except SDKException as e:
+
+            if constants.ERROR_NOT_FIND_DIR in e.message:
+                LOG.warning("WARNING: no '%s' found. Running 'codegen --reload' to create the default missing files\n%s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, constants.LOG_DIVIDER)
+                args.reload = True
+                cls._reload_package(args)
+                LOG.warning(constants.LOG_DIVIDER)
+
+            else:
+                raise e
+
+        functions_that_need_payload_samples = os.listdir(path_payload_samples_dir)
+
+        results_scraped = sdk_helpers.scrape_results_from_log_file(path_log_file)
+
+        for fn_name in functions_that_need_payload_samples:
+
+            fn_results = results_scraped.get(fn_name)
+
+            if not fn_results:
+                LOG.warning("WARNING: No results could be found for '%s' in '%s'", fn_name, path_log_file)
+                continue
+
+            path_payload_samples_fn_name = os.path.join(path_payload_samples_dir, fn_name)
+            path_output_json_example = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+            path_output_json_schema = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+
+            path_output_json_example_bak = sdk_helpers.rename_to_bak_file(path_output_json_example)
+            path_output_json_schema_bak = sdk_helpers.rename_to_bak_file(path_output_json_schema)
+
+            try:
+                LOG.info("Writing JSON example file for '%s' to '%s'", fn_name, path_output_json_example)
+                sdk_helpers.write_file(path_output_json_example, json.dumps(fn_results, indent=2))
+
+                LOG.info("Writing JSON schema file for '%s' to '%s'", fn_name, path_output_json_schema)
+                builder = SchemaBuilder(schema_uri=constants.CODEGEN_JSON_SCHEMA_URI)
+                builder.add_schema({"type": "object", "properties": {}})
+                builder.add_object(fn_results)
+                sdk_helpers.write_file(path_output_json_schema, builder.to_json(indent=2))
+
+            finally:
+                if not os.path.isfile(path_output_json_example) and path_output_json_example_bak:
+                    LOG.info(u"An error occurred. Renaming %s.bak to %s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+                    sdk_helpers.rename_file(path_output_json_example_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+
+                if not os.path.isfile(path_output_json_schema) and path_output_json_schema_bak:
+                    LOG.info(u"An error occurred. Renaming %s.bak to %s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+                    sdk_helpers.rename_file(path_output_json_schema_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+
+        LOG.info("'codegen %s' complete for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, args.package)
