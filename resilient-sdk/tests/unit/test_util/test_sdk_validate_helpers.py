@@ -5,7 +5,6 @@
 import difflib
 import os
 
-import mock
 import pkg_resources
 from mock import patch
 from resilient_sdk.util import (constants, sdk_validate_configs,
@@ -448,6 +447,38 @@ def test_package_files_validate_improper_icon(fx_copy_fn_main_mock_integration):
     assert isinstance(result, SDKValidateIssue)
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "ERROR: Failed for some reason" == result.description
+
+def test_package_files_validate_license_is_default(fx_copy_fn_main_mock_integration):
+
+    filename = "LICENSE"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
+
+    assert len(result) == 1
+    result = result[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "'LICENSE' is the default license file" == result.description
+
+def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_integration):
+
+    filename = "LICENSE"
+    attr_dict = sdk_validate_configs.package_files.get(filename)
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.setup_env_and_render_jinja_file") as mock_jinja_render:
+
+        mock_jinja_render.return_value = "A sample LICENSE\n\nThis should still be validated manually to ensure proper license type"
+
+        result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
+
+    assert len(result) == 2
+    assert isinstance(result[0], SDKValidateIssue)
+    assert result[0].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+    assert "'LICENSE' file is valid" == result[0].description
+    assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
 

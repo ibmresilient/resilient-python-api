@@ -533,7 +533,7 @@ def package_files_validate_icon(path_file, attr_dict, filename, **__):
 
     :param path_file: (required) the path to the file
     :type path_file: str
-    :param attr_dict: (required) dictionary of attributes for the customize.py file defined in ``package_files``
+    :param attr_dict: (required) dictionary of attributes for each icon png defined in ``package_files``
     :type attr_dict: dict
     :param filename: (required) name of the icon
     :type filename: str
@@ -585,6 +585,57 @@ def package_files_validate_icon(path_file, attr_dict, filename, **__):
         severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
         solution=attr_dict.get("solution")
     )]
+
+def package_files_validate_license(path_file, attr_dict, filename, **__):
+    """
+    Helper method for package files to validate the LICENSE file of the app
+    This does a simple check to see if the file matches the template (which is nearly
+    blank). If it is the template, the check fails.
+    Otherwise it passes, although it will INFO out that the LICENSE file should
+    be manually checked to make sure it is one of the accepted licenses...
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the LICENSE file defined in ``package_files``
+    :type attr_dict: dict
+    :param filename: (required) name of the license file
+    :type filename: str
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a failing issue if the license is the default, a info issue otherwise telling the validator to manually check the license for correctness
+    :rtype: list[SDKValidateIssue]
+    """
+
+    # render jinja file of LICENSE
+    template_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PACKAGE_DIR, filename)
+
+    # read the contents of the package's LICENSE file
+    file_contents = "".join(sdk_helpers.read_file(path_file))
+
+    if template_rendered in file_contents:
+        # the template is still in the file
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg"),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution").format(path_file)
+        )]
+    else:
+        # the license given in the package is not the default.
+        # still infos because the validator should manually check that
+        # the license is one of the acceptable formats (MIT, apache, or BSD)
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("pass_solution")
+        ),
+        SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description="LICENSE contents:\n\t\t" + file_contents.replace("\n", "\n\t\t"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )]
 
 def package_files_validate_readme(path_package, path_file, filename, attr_dict, **_):
     """
