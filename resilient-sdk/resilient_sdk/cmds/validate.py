@@ -622,7 +622,19 @@ class CmdValidate(BaseCmd):
     @staticmethod
     def _pylint_scan(path_package, path_sdk_settings):
         """
-        TODO: docstring, unit tests
+        Validate pylint is installed and then run pylint scan:
+        - check if pylint is installed in the python env (INFO if not)
+        - run pylint report results
+
+        This method leverages the possibility of returning -1 from a static validation method.
+        This, like in validate_tox_tests, indicates a "skipped" validation
+
+        :param path_package: path to the package
+        :type path_package: str
+        :param path_sdk_settings: (optional) path to sdk settings file
+        :type path_sdk_settings: str
+        :return: Returns boolean value or int of whether or not the run passed and a sorted list of SDKValidateIssue
+        :rtype: (bool|int, list[SDKValidateIssue])
         """
 
         # empty list of SDKValidateIssues
