@@ -382,18 +382,48 @@ def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_i
     assert "tests passed!" in caplog.text
 
 
-def test_generate_report(fx_copy_fn_main_mock_integration, fx_get_sub_parser, caplog):
+def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+
+    # This test runs pylint on the fn_main_mock_integration
+    # Because tests automatically run in DEBUG mode, all levels (R,C,W,E,F)
+    # will be enabled for pylint. The integration should fail the scan with
+    # a 6.27/10 score
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--pylint"])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running pylint" in caplog.text
+    assert "--enable=R,C,W,E,F" in caplog.text
+    assert "WARNING     The Pylint score was" in caplog.text
+
+
+def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
     mock_issues_dict = {
         "details": [
             ("a", "b")
         ]
     }
 
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_package = fx_copy_fn_main_mock_integration[1]
 
-    cmd_validate = CmdValidate(fx_get_sub_parser)
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_package
 
-    cmd_validate._generate_report(mock_issues_dict, path_package)
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate._generate_report(mock_issues_dict, args)
 
     assert "Creating dist directory at" in caplog.text
     assert "Writing report to" in caplog.text

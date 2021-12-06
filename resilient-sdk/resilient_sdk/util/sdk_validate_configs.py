@@ -414,3 +414,31 @@ tests_attributes = [
         "pass_msg": "{0} tests passed!",
     },
 ]
+
+
+pylint_attributes = [
+    # first check that pylint is installed and meets minimum version
+    {
+        "func": sdk_validate_helpers.pylint_validate_pylint_installed,
+        "name": "Pylint Scan",
+
+        "fail_msg": "'{0}' is not installed in your Python environment",
+        "fail_solution": "(OPTIONAL) If you want to run a Pylint scan, install '{0}' by running '''pip install -U {0}'''",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' was found in the Python environment"
+    },
+
+    # second, run pylint and output the output
+    {
+        "func": sdk_validate_helpers.pylint_run_pylint_scan,
+        "name": "Pylint Scan",
+
+        "fail_msg": "The Pylint score was {0:.2f}/10. Details:\n\n\t\t{1}",
+        "fail_solution": "Run with '-v' to see full pylint output",
+
+        "pass_msg": "Pylint scan passed with no errors",
+        "pass_solution": "Run with '-v' to see full pylint output"
+    }
+]

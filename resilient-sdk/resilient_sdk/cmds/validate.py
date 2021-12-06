@@ -148,7 +148,7 @@ class CmdValidate(BaseCmd):
             self._run_selftest(args, )
 
         self._print_summary(self.SUMMARY_LIST)
-        path_report = self._generate_report(self.VALIDATE_ISSUES, args.package)
+        path_report = self._generate_report(self.VALIDATE_ISSUES, args)
 
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "\nSee the detailed report at {0}".format(path_report))
 
@@ -163,6 +163,7 @@ class CmdValidate(BaseCmd):
         self._validate(args)
         self._run_selftest(args)
         self._run_tests(args)
+        self._run_pylint_scan(args)
 
 
     def _print_package_details(self, args):
@@ -618,6 +619,43 @@ class CmdValidate(BaseCmd):
 
         return tests_valid, issues
 
+    @staticmethod
+    def _pylint_scan(path_package, path_sdk_settings):
+        """
+        TODO: docstring, unit tests
+        """
+
+        # empty list of SDKValidateIssues
+        issues = []
+        # boolean to determine if the tests check passes validation
+        tests_valid = True
+
+        # get package name
+        parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"])
+        package_name = parsed_setup.get("name")
+
+        for attr_dict in validation_configurations.pylint_attributes:
+            if not attr_dict.get("func"):
+                raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
+
+            issue_pass_num, issue = attr_dict.get("func")(
+                path_package=path_package,
+                attr_dict=attr_dict,
+                package_name=package_name,
+                path_sdk_settings=path_sdk_settings
+            )
+
+            issues.append(issue)
+            if issue_pass_num <= 0:
+                issues.sort()
+                return issue_pass_num, issues
+            
+        # sort and look for and invalid issues
+        issues.sort()
+        tests_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+
+        return tests_valid, issues
+
     def _run_tests(self, args):
         """
         Validates and executes tox tests (makes use of static validation method _validate_tox_tests)
@@ -648,9 +686,29 @@ class CmdValidate(BaseCmd):
 
     def _run_pylint_scan(self, args):
         """
-        TODO
+        Runs pylint scan (if pylint installed in pip env) and outputs the results
+
+        Pylint scan can be isolated by passing in the --pylint flag
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running pylint{0}".format(constants.LOG_DIVIDER))
+
+        # Get absolute path to package
+        path_package = os.path.abspath(args.package)
+        # Ensure the package directory exists and we have READ access
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
+
+        # path to sdk_settings file
+        path_sdk_settings = args.settings if hasattr(args, "settings") and args.settings else constants.SDK_SETTINGS_FILE_PATH
+
+        # check if tox tests installed and run tox if so
+        tox_tests_valid_or_skipped, issues = self._pylint_scan(path_package, path_sdk_settings)
+        self.VALIDATE_ISSUES["pylint"] = issues
+        self.SUMMARY_LIST += issues
+
+        for issue in issues:
+            self._log(issue.get_logging_level(), issue.error_str())
+
+        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "Pylint Scan", tox_tests_valid_or_skipped)
 
     def _run_bandit_scan(self, args):
         """
@@ -692,7 +750,7 @@ class CmdValidate(BaseCmd):
 
 
     @staticmethod
-    def _generate_report(validate_issues_dict, args_package):
+    def _generate_report(validate_issues_dict, args):
         """
         Generates a markdown report for the validation run.
 
@@ -701,8 +759,8 @@ class CmdValidate(BaseCmd):
 
         :param validate_issues_dict: dictionary of all issues
         :type validate_issues_dict: dict
-        :param args_package: path to package (relative or absolute)
-        :type args_package: str
+        :param args: command line args
+        :type args: list[str]
         :return: returns the path to the generated file (including the formatted timestamp)
         :rtype: str
         """
@@ -711,7 +769,7 @@ class CmdValidate(BaseCmd):
 
         # establish timestamp and paths
         timestamp = sdk_helpers.get_timestamp()
-        path_package = os.path.abspath(args_package)
+        path_package = os.path.abspath(args.package)
         path_dist = os.path.join(path_package, package_helpers.BASE_NAME_DIST_DIR)
         path_report = os.path.join(path_package, package_helpers.PATH_VALIDATE_REPORT)
 
@@ -736,7 +794,8 @@ class CmdValidate(BaseCmd):
             sdk_version=sdk_helpers.get_resilient_sdk_version(),
             timestamp=timestamp,
             validate_issues_dict=validate_issues_dict,
-            SEVERITY_THRESHOLD=SDKValidateIssue.SEVERITY_LEVEL_INFO
+            SEVERITY_THRESHOLD=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            args=", ".join(["`{0}`: {1}".format(arg, vars(args)[arg]) for arg in vars(args) if vars(args)[arg]])
         )
 
 

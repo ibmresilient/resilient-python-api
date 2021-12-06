@@ -6,7 +6,19 @@ import difflib
 import logging
 import os
 import re
+import sys
 import xml.etree.ElementTree as ET
+
+if sys.version_info.major < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
+try:
+    from pylint import lint
+    from pylint.reporters import text
+except ImportError:
+    pass
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -1078,3 +1090,164 @@ def _tox_tests_parse_xml_report(path_xml_file):
 
 
     return num_tests, num_failures, num_errors, error_str, failure_str
+
+
+
+def pylint_validate_pylint_installed(attr_dict, **__):
+    """
+    Helper method for to validate that pylint is installed in the python environment.
+
+    If pylint is not installed, return -1 indicating that the pylint scan didn't "fail" but rather
+    was skipped.
+
+    :param attr_dict: dictionary of attributes for the pylint scan defined in ``pylint_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: -1 or 1 and a SDKValidateIssue with details about whether pylint was installed in the env
+    :rtype: (int, SDKValidateIssue)
+    """
+    LOG.debug("Validating that '{0}' is installed in the python env".format(constants.PYLINT_PACKAGE_NAME))
+
+
+    pylint_version = sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME)
+
+    # not installed
+    if not pylint_version:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.PYLINT_PACKAGE_NAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.PYLINT_PACKAGE_NAME)
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format(constants.PYLINT_PACKAGE_NAME),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+
+def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_settings=None, **__):
+    """
+    TODO: unit tests
+    Run Pylint Scan on whole package using the .pylintrc file in /data/validate as the default settings.
+    Raises a SDKException if ``pylint`` isn't installed. In normal use with ``validate``, this method should 
+    only be called after successfully calling ``pylint_validate_pylint_installed``. If a call to that method
+    returns a failing SDKValidateIssue, this method shouldn't be called
+
+    The default enabled pylint levels are [E]rror and [F]atal (which combined are mapped to CRITICAL)
+
+    The user can overwrite the default settings using an SDK Settings JSON file either in the default
+    location or by using the --settings flag to pass in a path. The settings file should have a "pylint"
+    attribute which is a list of pylint command line options. Example (to enable [R]efactor and [W]arnings
+    as well as [E]rrors and [F]atals):
+    .. code-block:: json
+        {
+            "pylint": [
+                "--enable=R,W,E,F"
+            ]
+        }
+
+    NOTE: that you can include more than just the ``enable`` option in the list. Any valid pylint command
+    line args will be parsed. It is not recommended to overwrite the ``--output-format`` parameter.
+    More info here: https://pylint.pycqa.org/en/latest/user_guide/run.html#command-line-options
+
+    The user can also override the defaults by running in ``verbose`` mode using the ``-v`` flag for the SDK
+    This will enable all of R,C,W,E,F and will overwrite any custom sdk settings for ``--enable``
+
+    :param path_package: path to package
+    :type path_package: str
+    :param package_name: name of the package (i.e. fn_my_package)
+    :type package_name: str
+    :param attr_dict: dictionary of attributes for the pylint scan defined in ``pylint_attributes``
+    :type attr_dict: dict
+    :param path_sdk_settings: (optional) path to a sdk settings JSON file
+    :type path_sdk_settings: str
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: 1 or 0 and a SDKValidateIssue with details about the pylint scan
+    :rtype: (int, SDKValidateIssue)
+    """
+
+    # Because this method requires importing pylint, it must be first installed in the env. In the
+    # normal use of this method, validate will only call this if `pylint_validate_pylint_installed` passes
+    if not sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME):
+        raise SDKException("Cannot call %s without pylint installed", pylint_run_pylint_scan.__name__)
+
+    pylint_args = [os.path.join(path_package, package_name), "--rcfile={0}".format(constants.PATH_VALIDATE_PYLINT_RC_FILE)]
+
+    # grab pylint settings from sdk settings file if given and exists
+    if path_sdk_settings and os.path.exists(path_sdk_settings):
+        # if not debug, but a settings file has been passed in, check if that file
+        # has a pylint section with a pylint_log_level attribute
+
+        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+
+        if setting_file_contents.get("pylint") and isinstance(setting_file_contents.get("pylint"), list):
+            LOG.debug("Reading pylint command line args from sdk settings JSON file {0}".format(path_sdk_settings))
+            pylint_args.extend(setting_file_contents.get("pylint"))
+
+    # if debugging is enabled, overwrite any possible "enable" flag set by the settings file
+    if LOG.isEnabledFor(logging.DEBUG):
+        # if debug, then add all levels of pylint "R,C,W,E,F"
+        # more info: https://pylint.pycqa.org/en/latest/user_guide/output.html#source-code-analysis-section
+        # because pylint support multiple entries of the "--enable" flag, this will add on to what other
+        # levels are already enabled if the user is also using a SDK Settings file
+        LOG.debug("In DEBUG mode: Running with R,C,W,E,F all enabled")
+        pylint_args.append("--enable=R,C,W,E,F") # add in all levels of pylint issues if debugging is on
+
+    LOG.debug("Running pylint with args: %s", str(pylint_args))
+
+    # setup a "Text Reporter" to capture the pylint output
+    pylint_output = StringIO()
+    reporter = text.ColorizedTextReporter(pylint_output)
+
+    # RUN pylint using the Run class of the pylint module
+    run = lint.Run(pylint_args, reporter=reporter, exit=False)
+
+    # capture score and counts of issues from run
+    # error and warnings map directly to CRITICAL and WARNING
+    # everything else is treated as INFO
+    # NOTE: the value of each count will only be non-zero if the level was 
+    # included in the run and there was an issue found of that given level
+    # (default levels are just [E]rrors and [F]atals)
+
+    # unfortunately, python 3 vs python 2.7 versions are not compatible...
+    if hasattr(run.linter.stats, "global_note"):
+        # python > 3
+        score = run.linter.stats.global_note
+        info_count = run.linter.stats.info
+        refactor_count = run.linter.stats.refactor
+        convention_count = run.linter.stats.convention
+        warning_count = run.linter.stats.warning
+        error_count = run.linter.stats.error + run.linter.stats.fatal # add fatal into error count
+    else:
+        # python <= 2.7
+        score = run.linter.stats.get("global_note")
+        info_count = run.linter.stats.get("info")
+        refactor_count = run.linter.stats.get("refactor")
+        convention_count = run.linter.stats.get("convention")
+        warning_count = run.linter.stats.get("warning")
+        error_count = run.linter.stats.get("error") + run.linter.stats.get("fatal")
+
+    # capture text output
+    run_output = pylint_output.getvalue().replace("\n", "\n\t\t")
+
+    if sum([error_count, warning_count, convention_count, refactor_count, info_count]) > 0:
+        return 0, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(score, run_output),
+            # severity is based on count of errors/warnings/other
+            severity=SDKValidateIssue.SEVERITY_LEVEL_CRITICAL if error_count > 0 else 
+                     SDKValidateIssue.SEVERITY_LEVEL_WARN if warning_count > 0 else 
+                     SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("fail_solution") if not LOG.isEnabledFor(logging.DEBUG) else ""
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("pass_solution")
+        )
