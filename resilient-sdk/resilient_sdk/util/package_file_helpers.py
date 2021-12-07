@@ -876,43 +876,43 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # Write the executable.json file
         sdk_helpers.write_file(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True))
 
+        # Gather payload_samples file for each function and add to export.res file if exists
+        if not path_payload_samples:
+            LOG.warning("WARNING: No path for 'payload_samples' provided. Skipping adding them to the export.res file")
+
+        else:
+            for fn in import_definition.get("functions"):
+
+                # Get paths to payload_samples
+                fn_name = fn.get(ResilientObjMap.FUNCTIONS)
+                path_payload_samples_fn = os.path.join(path_payload_samples, fn_name)
+                path_payload_samples_schema = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+                path_payload_samples_example = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+
+                try:
+                    # Validate payload_files, add custom error message if we can't
+                    sdk_helpers.validate_file_paths(os.R_OK, path_payload_samples_schema, path_payload_samples_example)
+                except SDKException as err:
+                    err.message += ("\nWARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
+                                    "Add '--no-samples' flag to avoid looking for them and avoid this warning message.\n")
+                    LOG.warning(err.message)
+                    continue
+
+                # Read in schema payload and add to function import definition
+                payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)
+                LOG.debug("Adding JSON output schema to '%s' from file: %s", fn_name, path_payload_samples_schema)
+                json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
+                fn[json_schema_key] = json.dumps(payload_samples_schema_contents_dict)
+
+                # Read in example payload and add to function import definition
+                payload_samples_example_contents_dict = sdk_helpers.read_json_file(path_payload_samples_example)
+                LOG.debug("Adding JSON output example to '%s' from file: %s", fn_name, path_payload_samples_example)
+                json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
+                fn[json_example_key] = json.dumps(payload_samples_example_contents_dict)
+
         # See if RES_SDK_DEV environment var is set
+        # TODO: v44 release move out of SDK_DEV var check
         if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
-
-            if not path_payload_samples:
-                LOG.warning("WARNING: No path for 'payload_samples' provided. Skipping adding them to the export.res file")
-
-            else:
-                for fn in import_definition.get("functions"):
-
-                    # Get paths to payload_samples
-                    fn_name = fn.get(ResilientObjMap.FUNCTIONS)
-                    path_payload_samples_fn = os.path.join(path_payload_samples, fn_name)
-                    path_payload_samples_schema = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
-                    path_payload_samples_example = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
-
-                    try:
-                        # Validate payload_files, add custom error message if we can't
-                        sdk_helpers.validate_file_paths(os.R_OK, path_payload_samples_schema, path_payload_samples_example)
-                    except SDKException as err:
-                        err.message += ("\nWARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
-                                        "Add '--no-samples' flag to avoid looking for them and avoid this warning message.\n")
-                        LOG.warning(err.message)
-                        continue
-
-                    # Read in schema payload and add to function import definition
-                    payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)
-                    LOG.debug("Adding JSON output schema to '%s' from file: %s", fn_name, path_payload_samples_schema)
-                    json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
-                    fn[json_schema_key] = json.dumps(payload_samples_schema_contents_dict)
-
-                    # Read in example payload and add to function import definition
-                    payload_samples_example_contents_dict = sdk_helpers.read_json_file(path_payload_samples_example)
-                    LOG.debug("Adding JSON output example to '%s' from file: %s", fn_name, path_payload_samples_example)
-                    json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
-                    fn[json_example_key] = json.dumps(payload_samples_example_contents_dict)
-
-            # TODO: v44 release move out of SDK_DEV var check
             if path_validate_report:
                 path_zipped_validate_report = os.path.join(path_build, os.path.basename(path_validate_report))
                 shutil.copy(path_validate_report, path_zipped_validate_report)

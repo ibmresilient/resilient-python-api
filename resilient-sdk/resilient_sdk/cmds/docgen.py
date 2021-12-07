@@ -93,6 +93,7 @@ class CmdDocgen(BaseCmd):
             the_function["inputs"] = cls._get_fn_input_details(fn)
             the_function["message_destination"] = fn.get("destination_handle", "")
             the_function["workflows"] = fn.get("workflows", [])
+            the_function["x_api_name"] = fn.get("x_api_name", "")
 
             scripts_found = False
             pre_script = None
@@ -349,7 +350,7 @@ class CmdDocgen(BaseCmd):
             sdk_helpers.validate_dir_paths(os.R_OK, path_payload_samples_dir)
 
             for f in jinja_functions:
-                fn_name = f.get("name")
+                fn_name = f.get("x_api_name")
                 path_payload_samples_fn_name = os.path.join(path_payload_samples_dir, fn_name)
                 path_output_json_example = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
 
