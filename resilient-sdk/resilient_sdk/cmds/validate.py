@@ -646,8 +646,8 @@ class CmdValidate(BaseCmd):
 
         # empty list of SDKValidateIssues
         issues = []
-        # boolean to determine if the tests check passes validation
-        tests_valid = True
+        # boolean to determine if the scan passes validation
+        scan_valid = True
 
         # get package name
         parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"])
@@ -671,9 +671,9 @@ class CmdValidate(BaseCmd):
             
         # sort and look for and invalid issues
         issues.sort()
-        tests_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+        scan_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
 
-        return tests_valid, issues
+        return scan_valid, issues
 
     def _run_tests(self, args):
         """
