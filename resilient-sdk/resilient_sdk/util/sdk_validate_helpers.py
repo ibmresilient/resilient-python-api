@@ -9,16 +9,12 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
+# in py2 StringIO is base module for StringIO
+# in py3 io is the base module for StringIO
 if sys.version_info.major < 3:
     from StringIO import StringIO
 else:
     from io import StringIO
-
-try:
-    from pylint import lint
-    from pylint.reporters import text
-except ImportError:
-    pass
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -28,6 +24,13 @@ from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
 LOG = logging.getLogger(constants.LOGGER_NAME)
+
+try:
+    from pylint import lint
+    from pylint.reporters import text
+except ImportError as err:
+    LOG.warning("Failed to import 'pylint'")
+    LOG.debug("ERROR: %s", err)
 
 # float value in range [0, 1] that determines the cutoff at which two files are a match
 MATCH_THRESHOLD = 1.0
@@ -1130,9 +1133,8 @@ def pylint_validate_pylint_installed(attr_dict, **__):
 
 def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_settings=None, **__):
     """
-    TODO: unit tests
     Run Pylint Scan on whole package using the .pylintrc file in /data/validate as the default settings.
-    Raises a SDKException if ``pylint`` isn't installed. In normal use with ``validate``, this method should 
+    Raises a SDKException if ``pylint`` isn't installed. In use with ``validate``, this method should 
     only be called after successfully calling ``pylint_validate_pylint_installed``. If a call to that method
     returns a failing SDKValidateIssue, this method shouldn't be called
 
@@ -1182,11 +1184,11 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
         # if not debug, but a settings file has been passed in, check if that file
         # has a pylint section with a pylint_log_level attribute
 
-        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
 
-        if setting_file_contents.get("pylint") and isinstance(setting_file_contents.get("pylint"), list):
+        if settings_file_contents.get("pylint") and isinstance(settings_file_contents.get("pylint"), list):
             LOG.debug("Reading pylint command line args from sdk settings JSON file {0}".format(path_sdk_settings))
-            pylint_args.extend(setting_file_contents.get("pylint"))
+            pylint_args.extend(settings_file_contents.get("pylint"))
 
     # if debugging is enabled, overwrite any possible "enable" flag set by the settings file
     if LOG.isEnabledFor(logging.DEBUG):
@@ -1214,8 +1216,8 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
     # (default levels are just [E]rrors and [F]atals)
 
     # unfortunately, python 3 vs python 2.7 versions are not compatible...
-    if hasattr(run.linter.stats, "global_note"):
-        # python > 3
+    if sys.version_info.major >= 3:
+        # python >= 3
         score = run.linter.stats.global_note
         info_count = run.linter.stats.info
         refactor_count = run.linter.stats.refactor

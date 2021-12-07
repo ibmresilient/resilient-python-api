@@ -187,8 +187,8 @@ def fx_pip_install_pylint():
     Before: if pylint not already installed: pip installs pylint
     After: if pylint wasn't already installed: pip uninstalls pylint
     """
-    
-    # bool values of whether tox was already installed
+
+    # bool values of whether pylint was already installed
     pylint_installed = False
     if sdk_helpers.get_package_version("pylint"):
         pylint_installed = True

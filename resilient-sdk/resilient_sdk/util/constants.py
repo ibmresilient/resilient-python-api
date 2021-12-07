@@ -21,6 +21,7 @@ CURRENT_SOAR_SERVER_VERSION = 42
 
 MIN_SUPPORTED_PY_VERSION = (3, 6)
 SDK_PACKAGE_NAME = "resilient-sdk"
+SDK_RESOURCE_NAME = "resilient_sdk"
 CIRCUITS_PACKAGE_NAME = "resilient-circuits"
 
 SUB_CMD_OPT_PACKAGE = ("--package", "-p")
@@ -54,7 +55,7 @@ TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 
 # pylint constants (for validate)
 PYLINT_PACKAGE_NAME = "pylint"
-PATH_VALIDATE_PYLINT_RC_FILE = pkg_resources.resource_filename("resilient_sdk", os.path.join(BASE_PATH_VALIDATE_DATA, ".pylintrc"))
+PATH_VALIDATE_PYLINT_RC_FILE = pkg_resources.resource_filename(SDK_RESOURCE_NAME, os.path.join(BASE_PATH_VALIDATE_DATA, ".pylintrc"))
 
 ICON_APP_LOGO_REQUIRED_WIDTH = 200
 ICON_APP_LOGO_REQUIRED_HEIGHT = 72

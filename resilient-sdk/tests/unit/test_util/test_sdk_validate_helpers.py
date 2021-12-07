@@ -4,6 +4,7 @@
 
 import difflib
 import os
+import sys
 
 import pkg_resources
 from mock import patch
@@ -616,20 +617,26 @@ def test_pylint_run_pylint_scan_success(fx_copy_fn_main_mock_integration):
 
             run = mock_pylint_run.return_value
 
-            # worth noting that the behavior of the actual Run object is different
-            # in python 2.7 and python 3
-            # however, here, we're mocking it as the python 3 version
-            # this is ok because the test within test_validate.test_run_pylint_scan
-            # covers the python 2.7 section of the code and this just checks the rest
-            # of the behavior
-
-            run.linter.stats.global_note = 10
-            run.linter.stats.info = 0
-            run.linter.stats.refactor = 0
-            run.linter.stats.convention = 0
-            run.linter.stats.warning = 0
-            run.linter.stats.error = 0
-            run.linter.stats.fatal = 0
+            # because the objects are different in py2 vs py3,
+            # mocks have to be similarly different
+            if sys.version_info.major >= 3:
+                run.linter.stats.global_note = 10
+                run.linter.stats.info = 0
+                run.linter.stats.refactor = 0
+                run.linter.stats.convention = 0
+                run.linter.stats.warning = 0
+                run.linter.stats.error = 0
+                run.linter.stats.fatal = 0
+            else:
+                run.linter.stats = {
+                    "global_note": 10,
+                    "info": 0,
+                    "refactor": 0,
+                    "convention": 0,
+                    "warning": 0,
+                    "error": 0,
+                    "fatal": 0,
+                }
             mock_string_io.return_value.getvalue.return_value = "Mock pylint report"
 
             result = sdk_validate_helpers.pylint_run_pylint_scan(
@@ -652,13 +659,24 @@ def test_pylint_run_pylint_scan_failure(fx_copy_fn_main_mock_integration):
 
             run = mock_pylint_run.return_value
 
-            run.linter.stats.global_note = 3.4
-            run.linter.stats.info = 0
-            run.linter.stats.refactor = 0
-            run.linter.stats.convention = 0
-            run.linter.stats.warning = 3
-            run.linter.stats.error = 1
-            run.linter.stats.fatal = 0
+            if sys.version_info.major >= 3:
+                run.linter.stats.global_note = 3.4
+                run.linter.stats.info = 0
+                run.linter.stats.refactor = 0
+                run.linter.stats.convention = 0
+                run.linter.stats.warning = 3
+                run.linter.stats.error = 1
+                run.linter.stats.fatal = 0
+            else:
+                run.linter.stats = {
+                    "global_note": 3.4,
+                    "info": 0,
+                    "refactor": 0,
+                    "convention": 0,
+                    "warning": 3,
+                    "error": 1,
+                    "fatal": 0,
+                }
             mock_string_io.return_value.getvalue.return_value = "Mock pylint report"
 
             result = sdk_validate_helpers.pylint_run_pylint_scan(

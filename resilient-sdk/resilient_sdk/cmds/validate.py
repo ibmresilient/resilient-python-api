@@ -108,13 +108,20 @@ class CmdValidate(BaseCmd):
             constants.LOG_DIVIDER, os.path.abspath(args.package)
         ))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Running with '{3}={1}', timestamp: {2}{0}".format(
-            constants.LOG_DIVIDER, sdk_helpers.get_resilient_sdk_version(), 
+            constants.LOG_DIVIDER, sdk_helpers.get_resilient_sdk_version(),
             sdk_helpers.get_timestamp(), constants.SDK_PACKAGE_NAME
         ))
 
         self._print_package_details(args)
 
         sdk_helpers.is_python_min_supported_version()
+
+        # validate that the given path to the sdk settings is valid
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, args.settings)
+        except SDKException:
+            args.settings = None
+            self._log(constants.VALIDATE_LOG_LEVEL_WARNING, "Given path to SDK Settings is either not valid or not readable. Using defaults")
 
         if run_from_package:
             self._run_main_validation(args, )
@@ -586,7 +593,7 @@ class CmdValidate(BaseCmd):
         :type path_package: str
         :param tox_args: (optional) list of tox arguments in the format ["attr1='val1'", "attr2='val2'", ...]
         :type tox_args: list[str]
-        :param path_sdk_settings: (optional) path to sdk settings file
+        :param path_sdk_settings: (optional) path to sdk settings file or None
         :type path_sdk_settings: str
         :return: Returns boolean value or int of whether or not the run passed and a sorted list of SDKValidateIssue
         :rtype: (bool|int, list[SDKValidateIssue])
@@ -620,7 +627,7 @@ class CmdValidate(BaseCmd):
         return tests_valid, issues
 
     @staticmethod
-    def _pylint_scan(path_package, path_sdk_settings):
+    def _pylint_scan(path_package, path_sdk_settings=None):
         """
         Validate pylint is installed and then run pylint scan:
         - check if pylint is installed in the python env (INFO if not)
@@ -631,7 +638,7 @@ class CmdValidate(BaseCmd):
 
         :param path_package: path to the package
         :type path_package: str
-        :param path_sdk_settings: (optional) path to sdk settings file
+        :param path_sdk_settings: (optional) path to sdk settings file or None
         :type path_sdk_settings: str
         :return: Returns boolean value or int of whether or not the run passed and a sorted list of SDKValidateIssue
         :rtype: (bool|int, list[SDKValidateIssue])
@@ -682,12 +689,11 @@ class CmdValidate(BaseCmd):
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        # get path to sdk_settings.json and values for tox args if they exists otherwise set to default
-        path_sdk_settings = args.settings if hasattr(args, "settings") and args.settings else constants.SDK_SETTINGS_FILE_PATH
+        # get values for tox args if they exists otherwise set to default
         tox_args = args.tox_args if hasattr(args, "tox_args") else None # default is None
 
         # check if tox tests installed and run tox if so
-        tox_tests_valid_or_skipped, issues = self._validate_tox_tests(path_package, tox_args, path_sdk_settings)
+        tox_tests_valid_or_skipped, issues = self._validate_tox_tests(path_package, tox_args, args.settings)
         self.VALIDATE_ISSUES["tests"] = issues
         self.SUMMARY_LIST += issues
 
@@ -709,18 +715,15 @@ class CmdValidate(BaseCmd):
         # Ensure the package directory exists and we have READ access
         sdk_helpers.validate_dir_paths(os.R_OK, path_package)
 
-        # path to sdk_settings file
-        path_sdk_settings = args.settings if hasattr(args, "settings") and args.settings else constants.SDK_SETTINGS_FILE_PATH
-
-        # check if tox tests installed and run tox if so
-        tox_tests_valid_or_skipped, issues = self._pylint_scan(path_package, path_sdk_settings)
+        # check if pylint installed in env and run pylint scan if so
+        pylint_valid_or_skipped, issues = self._pylint_scan(path_package, args.settings)
         self.VALIDATE_ISSUES["pylint"] = issues
         self.SUMMARY_LIST += issues
 
         for issue in issues:
             self._log(issue.get_logging_level(), issue.error_str())
 
-        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "Pylint Scan", tox_tests_valid_or_skipped)
+        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "Pylint Scan", pylint_valid_or_skipped)
 
     def _run_bandit_scan(self, args):
         """
@@ -772,7 +775,7 @@ class CmdValidate(BaseCmd):
         :param validate_issues_dict: dictionary of all issues
         :type validate_issues_dict: dict
         :param args: command line args
-        :type args: list[str]
+        :type args: argparse.ArgumentParser
         :return: returns the path to the generated file (including the formatted timestamp)
         :rtype: str
         """
@@ -799,6 +802,12 @@ class CmdValidate(BaseCmd):
         # Load the Jinja2 Template
         file_template = jinja_env.get_template(constants.VALIDATE_REPORT_TEMPLATE_NAME)
 
+        # filter out any full paths in args
+        args = vars(args)
+        for arg in args:
+            if isinstance(args[arg], str) and os.path.isdir(args[arg]):
+                args[arg] = os.path.basename(args[arg])
+
 
         # render the markdown file
         rendered_report = file_template.render(
@@ -807,7 +816,7 @@ class CmdValidate(BaseCmd):
             timestamp=timestamp,
             validate_issues_dict=validate_issues_dict,
             SEVERITY_THRESHOLD=SDKValidateIssue.SEVERITY_LEVEL_INFO,
-            args=", ".join(["`{0}`: {1}".format(arg, vars(args)[arg]) for arg in vars(args) if vars(args)[arg]])
+            args=", ".join(["`{0}`: {1}".format(arg, args[arg]) for arg in args if args[arg]])
         )
 
 
