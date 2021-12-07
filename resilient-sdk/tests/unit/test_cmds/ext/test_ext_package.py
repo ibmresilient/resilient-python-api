@@ -8,6 +8,7 @@ import sys
 import tarfile
 import zipfile
 
+from mock import patch
 from resilient_sdk.cmds import CmdExtPackage as CmdPackage
 from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util import package_file_helpers as package_helpers
@@ -114,24 +115,28 @@ def test_execute_command_with_validate_enabled(fx_copy_and_pip_install_fn_main_m
     sys.argv.append("--no-samples")
     sys.argv.append("--validate")
 
-    # Package the app
-    cmd_validate = CmdValidate(fx_get_sub_parser)
-    cmd_package = CmdPackage(fx_get_sub_parser, cmd_validate)
-    args = cmd_package.parser.parse_known_args()[0]
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.run_subprocess") as mock_process:
 
-    path_the_app_zip = cmd_package.execute_command(args)
+        mock_process.return_value = (0, "Done!")
 
-    # Test app.zip contents
-    assert zipfile.is_zipfile(path_the_app_zip)
-    with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+        # Package the app
+        cmd_validate = CmdValidate(fx_get_sub_parser)
+        cmd_package = CmdPackage(fx_get_sub_parser, cmd_validate)
+        args = cmd_package.parser.parse_known_args()[0]
 
-    # Test app.zip/validate_report.md contents
-    validate_report_contents = sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md")
+        path_the_app_zip = cmd_package.execute_command(args)
 
-    assert "## App Details" in validate_report_contents
-    assert "## `setup.py` file validation" in validate_report_contents
-    assert "## Package files validation" in validate_report_contents
+        # Test app.zip contents
+        assert zipfile.is_zipfile(path_the_app_zip)
+        with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
+            assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+
+        # Test app.zip/validate_report.md contents
+        validate_report_contents = sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md")
+
+        assert "## App Details" in validate_report_contents
+        assert "## `setup.py` file validation" in validate_report_contents
+        assert "## Package files validation" in validate_report_contents
 
 
 def test_bak_files_are_not_packaged(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
