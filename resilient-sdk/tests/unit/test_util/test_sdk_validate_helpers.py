@@ -689,6 +689,7 @@ def test_pylint_run_pylint_scan_failure(fx_copy_fn_main_mock_integration):
             assert "The Pylint score was 3.40/10" in result[1].description
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_bandit_validate_bandit_is_installed():
 
     attr_dict = sdk_validate_configs.bandit_attributes[0]
@@ -703,7 +704,7 @@ def test_bandit_validate_bandit_is_installed():
         assert result[0] == 1
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_bandit_validate_bandit_not_installed():
 
     attr_dict = sdk_validate_configs.bandit_attributes[0]
@@ -719,6 +720,7 @@ def test_bandit_validate_bandit_not_installed():
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
 
     package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
@@ -735,7 +737,7 @@ def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_and_pip_i
         assert result[0] == 1
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
 
-
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_bandit_run_bandit_scan_fails(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
 
     package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]

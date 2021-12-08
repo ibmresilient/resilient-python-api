@@ -365,23 +365,25 @@ def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_and_pip_install_fn_
     assert "'val2'] as a subprocess" in caplog.text
 
 
-@pytest.mark.skip(reason="need to use App tests - not sdk tests")
-def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
-    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_mock_res_client, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
 
     # Add cmd line arg
     sys.argv.extend(["--tests", "--settings", mock_paths.MOCK_SDK_SETTINGS_PATH])
 
-    cmd_validate = CmdValidate(fx_get_sub_parser)
-    args = cmd_validate.parser.parse_known_args()[0]
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_client") as mock_client:
 
-    cmd_validate.execute_command(args)
+        mock_client.return_value = fx_mock_res_client
 
-    assert "Running ['tox', '--', '--junitxml'," in caplog.text
-    assert "tests passed!" in caplog.text
+        cmd_validate = CmdValidate(fx_get_sub_parser)
+        args = cmd_validate.parser.parse_known_args()[0]
+
+        cmd_validate.execute_command(args)
+
+        assert "tests passed!" in caplog.text
 
 
 def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
@@ -409,6 +411,7 @@ def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration
     assert "WARNING     The Pylint score was" in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_run_bandit_scan(fx_pip_install_bandit, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
 
     # This test runs bandit on the fn_main_mock_integration

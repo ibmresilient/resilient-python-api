@@ -1175,7 +1175,7 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
     # Because this method requires importing pylint, it must be first installed in the env. In the
     # normal use of this method, validate will only call this if `pylint_validate_pylint_installed` passes
     if not sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME):
-        raise SDKException("Cannot call %s without pylint installed", pylint_run_pylint_scan.__name__)
+        raise SDKException("Cannot call {0} without pylint installed".format(pylint_run_pylint_scan.__name__))
 
     pylint_args = [os.path.join(path_package, package_name), "--rcfile={0}".format(constants.PATH_VALIDATE_PYLINT_RC_FILE)]
 
@@ -1334,7 +1334,7 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
 
     # Because this method requires importing bandit, it must be installed in the env
     if not sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME):
-        raise SDKException("Cannot call %s without bandit installed", bandit_run_bandit_scan.__name__)
+        raise SDKException("Cannot call {0} without bandit installed".format(bandit_run_bandit_scan.__name__))
 
     bandit_args = [constants.BANDIT_PACKAGE_NAME, "-r", os.path.join(path_package, package_name)]
     bandit_args.extend(constants.BANDIT_DEFAULT_ARGS)

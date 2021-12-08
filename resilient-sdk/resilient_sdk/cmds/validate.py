@@ -102,6 +102,8 @@ class CmdValidate(BaseCmd):
         returns the path to the validation report that was last generated
         """
 
+        sdk_helpers.is_python_min_supported_version()
+
         self.output_suppressed = output_suppressed
 
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running validate on '{1}'".format(
@@ -113,8 +115,6 @@ class CmdValidate(BaseCmd):
         ))
 
         self._print_package_details(args)
-
-        sdk_helpers.is_python_min_supported_version()
 
         # validate that the given path to the sdk settings is valid
         try:
@@ -781,6 +781,11 @@ class CmdValidate(BaseCmd):
 
         Bandit scan can be isolated by passing in the --bandit flag
         """
+
+        # Check if Python >= MIN_SUPPORTED_PY_VERSION
+        if not sdk_helpers.is_python_min_supported_version("{0}: Bandit Scan".format(constants.ERROR_WRONG_PYTHON_VERSION)):
+            return
+
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running Bandit Scan{0}".format(constants.LOG_DIVIDER))
 
         # Get absolute path to package
