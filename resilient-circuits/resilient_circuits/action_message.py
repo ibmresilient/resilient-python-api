@@ -273,7 +273,7 @@ class StatusMessage(object):
 
 class FunctionResult(object):
     """Encapsulates the result of a function call."""
-    def __init__(self, value, success=True, reason=None):
+    def __init__(self, value, success=True, reason=None, name="Unknown"):
         super(FunctionResult, self).__init__()
         if not isinstance(value, dict):
             msg = "FunctionResult must be a dictionary. " \
@@ -283,6 +283,7 @@ class FunctionResult(object):
         self.value = value
         self.success = success
         self.reason = reason
+        self.name = name
 
 
 def FunctionError(*args, **kwargs):

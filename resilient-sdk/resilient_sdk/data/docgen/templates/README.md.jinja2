@@ -36,13 +36,13 @@
 {% if datatables or custom_incident_fields %}
   - [Custom Layouts](#custom-layouts)
 {% endif %}
-{% for fn in functions %}
+{% for fn in functions|sort(attribute="name") %}
 - [Function - {{ fn.name }}](#function---{{ fn.anchor }})
 {% endfor %}
-{% for scp in scripts %}
+{% for scp in scripts|sort(attribute="name") %}
 - [Script - {{ scp.name }}](#script---{{ scp.anchor }})
 {% endfor %}
-{% for dt in datatables %}
+{% for dt in datatables|sort(attribute="name") %}
 - [Data Table - {{ dt.name }}](#data-table---{{ dt.anchor }})
 {% endfor %}
 {% if custom_fields %}
@@ -190,7 +190,7 @@ The following table provides the settings you need to configure the app. These s
 
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
-{% for app_config in app_configs %}
+{% for app_config in app_configs|sort(attribute="name") %}
 | **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* <!-- {{ placeholder_string }} --> |
 {% endfor %}
 
@@ -209,7 +209,7 @@ The following table provides the settings you need to configure the app. These s
 
 ---
 
-{% for fn in functions %}
+{% for fn in functions|sort(attribute="name") %}
 ## Function - {{ fn.name }}
 {{ fn.description }}
 
@@ -220,7 +220,7 @@ The following table provides the settings you need to configure the app. These s
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-{% for fn_input in fn.inputs %}
+{% for fn_input in fn.inputs|sort(attribute="name") %}
 | `{{ fn_input.name }}` | `{{ fn_input.type }}` | {{ fn_input.required }} | `{{ fn_input.placeholder }}` | {{ fn_input.tooltip }} |
 {% endfor %}
 
@@ -230,6 +230,13 @@ The following table provides the settings you need to configure the app. These s
 <details><summary>Outputs:</summary>
 <p>
 
+> **NOTE:** this example may be in JSON format, yet on the SOAR Platform `results` will be a Python Dictionary
+
+{% if fn.results %}
+```python
+results = {{fn.results|tojson(indent=2)}}
+```
+{% else %}
 <!-- {{ placeholder_string }} -->
 ```python
 results = {
@@ -238,6 +245,7 @@ results = {
     # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
 } 
 ```
+{% endif %}
 
 </p>
 </details>
@@ -265,7 +273,7 @@ results = {
 ---
 {% endfor %}
 
-{% for scp in scripts %}
+{% for scp in scripts|sort(attribute="name") %}
 ## Script - {{ scp.name }}
 {{ scp.description }}
 
@@ -284,7 +292,7 @@ results = {
 ---
 {% endfor %}
 
-{% for dt in datatables %}
+{% for dt in datatables|sort(attribute="name") %}
 ## Data Table - {{ dt.name }}
 
  ![screenshot: dt-{{ dt.simple_name }}](./doc/screenshots/dt-{{ dt.simple_name }}.png) <!-- {{ placeholder_string }} -->
@@ -295,7 +303,7 @@ results = {
 #### Columns:
 | Column Name | API Access Name | Type | Tooltip |
 | ----------- | --------------- | ---- | ------- |
-{% for col in dt.columns %}
+{% for col in dt.columns|sort(attribute="name") %}
 | {{ col.name }} | `{{ col.api_name }}` | `{{ col.type }}` | {{ col.tooltip }} |
 {% endfor %}
 
@@ -306,7 +314,7 @@ results = {
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-{% for f in custom_fields %}
+{% for f in custom_fields|sort(attribute="api_name") %}
 | {{ f.label }} | `{{ f.api_name }}` | `{{ f.type }}` | `{{ f.prefix }}` | {{ f.placeholder }} | {{ f.tooltip }} |
 {% endfor %}
 
@@ -317,7 +325,7 @@ results = {
 ## Custom Artifact Types
 | Display Name | API Access Name | Description |
 | ------------ | --------------- | ----------- |
-{% for a in custom_artifact_types %}
+{% for a in custom_artifact_types|sort(attribute="api_name") %}
 | {{ a.display_name }} | `{{ a.api_name }}` | {{ a.description }} |
 {% endfor %}
 
@@ -328,7 +336,7 @@ results = {
 ## Rules
 | Rule Name | Object | Workflow Triggered |
 | --------- | ------ | ------------------ |
-{% for rule in rules %}
+{% for rule in rules|sort(attribute="name") %}
 | {{ rule.name }} | {{ rule.object_type }} | `{{ rule.workflow_triggered }}` |
 {% endfor %}
 

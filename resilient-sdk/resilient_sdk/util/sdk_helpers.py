@@ -18,6 +18,7 @@ import time
 import uuid
 import shlex
 import subprocess
+import ast
 import pkg_resources
 import tempfile
 import shutil
@@ -86,6 +87,7 @@ def setup_jinja_env(relative_path_to_templates):
     add_filters_to_jinja_env(jinja_env)
 
     return jinja_env
+
 
 def setup_env_and_render_jinja_file(relative_path_to_template, filename, *args, **kwargs):
     """
@@ -318,7 +320,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException("Could not find file: {0}".format(path_to_file))
+            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -334,7 +336,7 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException("Could not find directory: {0}".format(path_to_dir))
+            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
@@ -1063,13 +1065,26 @@ def get_package_version(package_name):
         return None
 
 
-def is_python_min_supported_version():
+def is_python_min_supported_version(custom_warning=None):
     """
     Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
+    :param custom_warning: a custom message you want to log out
+    :type custom_warning: str
+    :return: a boolean to indicate if current version is supported or not
+    :rtype: bool
     """
     if sys.version_info < MIN_SUPPORTED_PY_VERSION:
-        LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
-                    "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+        if custom_warning:
+            LOG.warning("WARNING: %s", custom_warning)
+
+        else:
+            LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
+                        "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+        return False
+
+    return True
 
 
 def parse_version_object(version_obj):
@@ -1121,7 +1136,7 @@ def parse_optionals(optionals):
         if len(option_strings) >= 16:
             tabs = "\t\t"
 
-        if len(option_strings) >= 20:
+        if len(option_strings) >= 22:
             tabs = "\t"
 
         if len(option_strings) < 10:
@@ -1225,6 +1240,70 @@ def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=loggi
     # sys.stdout.write(" "*30+"\n")
     # sys.stdout.flush()
 
+
+def scrape_results_from_log_file(path_log_file):
+    """
+    Validate that path_log_file exists, reverse it and look for lines
+    containing ``[<fn_name>] Result: {'version': 2.0, 'success': True...``
+
+    Only gets the latest result for each <fn_name> in the log file
+
+    The log file must be in the format of the app.log
+
+    :param path_log_file: (required) absolute path to a app.log file
+    :type args: str
+    :return: a dictionary in the format {<fn_name>: <fn_results>}
+    :rtype: dict
+    """
+    results_scraped = {}
+
+    validate_file_paths(os.R_OK, path_log_file)
+
+    log_file_contents = read_file(path_log_file)
+
+    regex_line = re.compile(r'\[[\w]+\] Result\:')       # Looking for line that contains [<fn_name>] Result: {'version': 2.0, 'success': True...
+    regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')  # Getting <fn_name> from [<fn_name>] Result: {'version': 2.0, 'success': True...
+
+    for l in reversed(log_file_contents):
+        match = regex_line.search(l, endpos=120)
+
+        if match:
+            fn_name_group_index = 0
+
+            fn_name_match = match.group(fn_name_group_index)
+            fn_name_match_endpos = match.end(fn_name_group_index)
+
+            fn_name = regex_fn_name.match(fn_name_match).group(1)
+
+            results_from_l = l[fn_name_match_endpos:].strip("\\n ")
+
+            # Convert str into dict
+            results = ast.literal_eval(results_from_l)
+
+            # Check if this fn_name is already in results_scraped
+            if fn_name not in results_scraped.keys():
+                results_scraped[fn_name] = results
+
+    return results_scraped
+
+
+def handle_file_not_found_error(e, msg):
+    """
+    Looks at e's message attribute and if
+    it contains ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE
+    prints a LOG.warning message else just raises the exception
+
+    :param e: (required) an Exception
+    :type e: Exception
+    :param msg: (required) the custom error message to print as a WARNING in the logs
+    :type msg: str
+    :raises: The exception that is passed unless it contains 
+    ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
+    """
+    if ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in e.message:
+        LOG.warning("WARNING: %s", msg)
+    else:
+        raise e
 
 class ContextMangerForTemporaryDirectory():
     """
