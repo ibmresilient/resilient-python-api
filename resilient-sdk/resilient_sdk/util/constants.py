@@ -31,6 +31,7 @@ SUB_CMD_OPT_SDK_SETTINGS = ("--settings", )
 SDK_SETTINGS_PARSER_NAME = "sdk_settings_file"
 SDK_SETTINGS_FILENAME = ".sdk_settings.json"
 SDK_SETTINGS_FILE_PATH = os.path.join(PATH_RES_DEFAULT_DIR, SDK_SETTINGS_FILENAME)
+SDK_SETTINGS_BANDIT_SECTION_NAME = "bandit"
 
 # Resilient export file suffix.
 RES_EXPORT_SUFFIX = ".res"
@@ -56,6 +57,12 @@ TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 # pylint constants (for validate)
 PYLINT_PACKAGE_NAME = "pylint"
 PATH_VALIDATE_PYLINT_RC_FILE = pkg_resources.resource_filename(SDK_RESOURCE_NAME, os.path.join(BASE_PATH_VALIDATE_DATA, ".pylintrc"))
+
+# bandit constants (for validate)
+BANDIT_PACKAGE_NAME = "bandit"
+BANDIT_DEFAULT_ARGS = ["--exclude", "customize.py,tests/*", "--format", "screen", "-n", "1"]
+BANDIT_DEFAULT_SEVERITY_LEVEL = ["-ll"]
+BANDIT_VERBOSE_FLAG = ["-v"]
 
 ICON_APP_LOGO_REQUIRED_WIDTH = 200
 ICON_APP_LOGO_REQUIRED_HEIGHT = 72

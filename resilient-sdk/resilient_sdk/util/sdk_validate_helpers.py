@@ -1181,8 +1181,8 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
 
     # grab pylint settings from sdk settings file if given and exists
     if path_sdk_settings and os.path.exists(path_sdk_settings):
-        # if not debug, but a settings file has been passed in, check if that file
-        # has a pylint section with a pylint_log_level attribute
+        # if a settings file exists, check if that file has a pylint
+        # section which will contain a list of custom pylint command line args
 
         settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
 
@@ -1247,6 +1247,140 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
             solution=attr_dict.get("fail_solution") if not LOG.isEnabledFor(logging.DEBUG) else ""
         )
     else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("pass_solution")
+        )
+
+
+def bandit_validate_bandit_installed(attr_dict, **__):
+    """
+    Helper method for to validate that bandit is installed in the python environment.
+
+    If bandit is not installed, return -1 indicating that the bandit scan didn't "fail" but rather
+    was skipped.
+
+    :param attr_dict: dictionary of attributes for the bandit scan defined in ``bandit_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: -1 or 1 and a SDKValidateIssue with details about whether bandit is installed in the env
+    :rtype: (int, SDKValidateIssue)
+    """
+    LOG.debug("Validating that '{0}' is installed in the python env".format(constants.BANDIT_PACKAGE_NAME))
+
+
+    bandit_version = sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME)
+
+    # not installed
+    if not bandit_version:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.BANDIT_PACKAGE_NAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.BANDIT_PACKAGE_NAME)
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format(constants.BANDIT_PACKAGE_NAME),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+
+def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_settings=None, **__):
+    """
+    Run Bandit Scan on whole package using the settings defined in ``constants.BANDIT_DEFAULT_ARGS``.
+    
+    Raises a SDKException if ``bandit`` isn't installed. In use with ``validate``, this method should 
+    only be called after successfully calling ``bandit_validate_bandit_installed``. If a call to that 
+    method returns a failing SDKValidateIssue, this method shouldn't be called
+
+    The default severity level on which the bandit scan fails is "medium" (defined as command line arg "-ll")
+
+    The user can overwrite the default settings using an SDK Settings JSON file either in the default
+    location or by using the --settings flag to pass in a path. The settings file should have a "bandit"
+    attribute which is a list of bandit command line options. Example (to change level to "low" and 
+    give 5 context lines):
+    .. code-block:: json
+        {
+            "bandit": [
+                "-l", "-n", "5"
+            ]
+        }
+
+    NOTE: that you can include more than just the severity level in the list. Any valid bandit command
+    line args will be parsed (as seen above with the "-n" arg added in).
+    More info here: https://github.com/PyCQA/bandit#readme or by running ``bandit -h``
+
+    The user can run the scan in ``verbose`` mode using the ``-v`` flag for the SDK to get output live as
+    the scan is running.
+
+    :param attr_dict: dictionary of attributes for the bandit scan defined in ``bandit_attributes``
+    :type attr_dict: dict
+    :param path_package: path to package
+    :type path_package: str
+    :param package_name: name of the package (i.e. fn_my_package)
+    :type package_name: str
+    :param path_sdk_settings: (optional) path to a sdk settings JSON file
+    :type path_sdk_settings: str
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: 1 or 0 and a SDKValidateIssue with details about the bandit scan
+    :rtype: (int, SDKValidateIssue)
+    """
+
+    # Because this method requires importing bandit, it must be installed in the env
+    if not sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME):
+        raise SDKException("Cannot call %s without bandit installed", bandit_run_bandit_scan.__name__)
+
+    bandit_args = [constants.BANDIT_PACKAGE_NAME, "-r", os.path.join(path_package, package_name)]
+    bandit_args.extend(constants.BANDIT_DEFAULT_ARGS)
+
+    if LOG.isEnabledFor(logging.DEBUG):
+        # if running validate in verbose, append verbose flag to bandit args
+        bandit_args.extend(constants.BANDIT_VERBOSE_FLAG)
+
+    # grab bandit settings from sdk settings file if given and exists
+    # if either file doesn't exist or file doesn't have "bandit" section
+    # append on default severity level
+    if path_sdk_settings and os.path.exists(path_sdk_settings):
+        # if a settings file exists, check if it has a bandit section
+
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+
+        if settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME) and \
+                isinstance(settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME), list):
+
+            LOG.debug("Reading bandit command line args from sdk settings JSON file {0}".format(path_sdk_settings))
+            bandit_args.extend(settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME))
+        else:
+            bandit_args.extend(constants.BANDIT_DEFAULT_SEVERITY_LEVEL)
+    else:
+        bandit_args.extend(constants.BANDIT_DEFAULT_SEVERITY_LEVEL)
+
+    # run bandit as a subprocess 
+    exit_code, details = sdk_helpers.run_subprocess(bandit_args, cmd_name="bandit scan")
+
+
+    # bandit will return a non-zero exit code if an issue of minimum severity level or higher
+    # is found.
+    # Example: if "-ll" (our default level which is called "medium") is passed, the process
+    #          will only return a non-zero code if there are "medium" or "high" issues.
+    #          if only "low" or "uncategorized" issues are found, it will return 0
+    if exit_code != 0:
+        details = details[details.index("Test results"):]
+        details = details.replace("\n", "\n\t\t")
+        return 0, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(details),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution") if not LOG.isEnabledFor(logging.DEBUG) else ""
+        )
+    else:
+        # success
         return 1, SDKValidateIssue(
             name=attr_dict.get("name"),
             description=attr_dict.get("pass_msg"),

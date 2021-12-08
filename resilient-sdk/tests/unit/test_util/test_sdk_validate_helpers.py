@@ -578,7 +578,7 @@ def test_tox_tests_parse_xml_report():
 
 def test_pylint_validate_pylint_is_installed():
 
-    attr_dict = sdk_validate_configs.pylint_attributes[1]
+    attr_dict = sdk_validate_configs.pylint_attributes[0]
 
     with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_pylint_version:
 
@@ -686,3 +686,67 @@ def test_pylint_run_pylint_scan_failure(fx_copy_fn_main_mock_integration):
             assert len(result) == 2
             assert result[0] == 0
             assert "The Pylint score was 3.40/10" in result[1].description
+
+
+def test_bandit_validate_bandit_is_installed():
+
+    attr_dict = sdk_validate_configs.bandit_attributes[0]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_bandit_version:
+
+        mock_bandit_version.return_value = "0.0.0"
+
+        result = sdk_validate_helpers.bandit_validate_bandit_installed(attr_dict=attr_dict)
+
+        assert len(result) == 2
+        assert result[0] == 1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+
+def test_bandit_validate_bandit_not_installed():
+
+    attr_dict = sdk_validate_configs.bandit_attributes[0]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_bandit_version:
+
+        mock_bandit_version.return_value = None
+
+        result = sdk_validate_helpers.bandit_validate_bandit_installed(attr_dict=attr_dict)
+
+        assert len(result) == 2
+        assert result[0] == -1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+
+def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+
+    package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.bandit_attributes[1]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_bandit_subprocess:
+
+        mock_bandit_subprocess.return_value = (0, "Success")
+
+        result = sdk_validate_helpers.bandit_run_bandit_scan(path_package=path_package, attr_dict=attr_dict, package_name=package_name)
+
+        assert len(result) == 2
+        assert result[0] == 1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+
+def test_bandit_run_bandit_scan_fails(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+
+    package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.bandit_attributes[1]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_bandit_subprocess:
+
+        mock_bandit_subprocess.return_value = (1, "Test results: Failed")
+
+        result = sdk_validate_helpers.bandit_run_bandit_scan(path_package=path_package, attr_dict=attr_dict, package_name=package_name)
+
+        assert len(result) == 2
+        assert result[0] == 0
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL

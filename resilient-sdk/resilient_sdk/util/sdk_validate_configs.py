@@ -442,3 +442,31 @@ pylint_attributes = [
         "pass_solution": "Run with '-v' to see full pylint output"
     }
 ]
+
+
+
+bandit_attributes = [
+    {
+        "func": sdk_validate_helpers.bandit_validate_bandit_installed,
+        "name": "Bandit Scan",
+
+        "fail_msg": "'{0}' is not installed in your Python environment",
+        "fail_solution": "(OPTIONAL) If you want to run a Bandit scan, install '{0}' by running '''pip install -U {0}'''",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' was found in the Python environment"
+    },
+    {
+        "func": sdk_validate_helpers.bandit_run_bandit_scan,
+        "name": "Bandit Scan",
+
+        "fail_msg": "Bandit scan failed. Details:\n\n\t\t{0}",
+        "fail_solution": "Run again with '-v' to see full bandit output",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "pass_msg": "Bandit scan passed with no issues",
+        "pass_solution": "Run again with '-v' to see full bandit output"
+    }
+]

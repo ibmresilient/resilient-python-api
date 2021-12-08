@@ -407,6 +407,28 @@ def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration
     assert "WARNING     The Pylint score was" in caplog.text
 
 
+def test_run_bandit_scan(fx_pip_install_bandit, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+
+    # This test runs bandit on the fn_main_mock_integration
+    # The intergration should pass the bandit scan with no issues
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--bandit"])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running Bandit Scan" in caplog.text
+    assert "Bandit scan passed" in caplog.text
+
+
 def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
     mock_issues_dict = {
         "details": [

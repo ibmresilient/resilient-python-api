@@ -61,7 +61,7 @@
 
 ### {{ issue.name|scrub_ansi|code|dot_py }}
 {% if issue.severity <= SEVERITY_THRESHOLD %}
-{{ issue.severity_to_color() }}: {{ issue.description|scrub_ansi|code|diff }}
+{{ issue.severity_to_color() }}: {{ issue.description|scrub_ansi|diff|code }}
 
 {{ issue.solution|scrub_ansi|code }}
 
@@ -115,6 +115,7 @@
 ---
 {% endif %} {# endif tox tests #}
 
+
 {# pylint if ran #}
 {% if "pylint" in validate_issues_dict %}
 ## Pylint Scan
@@ -134,3 +135,24 @@
 
 ---
 {% endif %} {# endif pylint scan #}
+
+
+{# bandit if ran #}
+{% if "bandit" in validate_issues_dict %}
+## Bandit Scan
+{% for issue in validate_issues_dict["bandit"] %}
+{% if issue.severity <= SEVERITY_THRESHOLD %}
+{{ issue.severity_to_color() }}: {{ issue.description|scrub_ansi|code }}
+
+{{ issue.solution|scrub_ansi|code }}
+
+{% endif %}
+{% endfor %}
+
+{% if validate_issues_dict["bandit"][0].severity > SEVERITY_THRESHOLD %}
+<span style="color:green">Success</span>
+
+{% endif %}
+
+---
+{% endif %} {# endif bandit scan #}

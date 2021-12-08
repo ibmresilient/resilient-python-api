@@ -201,6 +201,26 @@ def fx_pip_install_pylint():
     if not pylint_installed:
         _pip_uninstall("pylint")
 
+@pytest.fixture
+def fx_pip_install_bandit():
+    """
+    Before: if bandit not already installed: pip installs bandit
+    After: if bandit wasn't already installed: pip uninstalls bandit
+    """
+
+    # bool values of whether bandit was already installed
+    bandit_installed = False
+    if sdk_helpers.get_package_version("bandit"):
+        bandit_installed = True
+
+    if not bandit_installed:
+        _pip_install("bandit")
+
+    yield
+
+    if not bandit_installed:
+        _pip_uninstall("bandit")
+
 
 @pytest.fixture
 def fx_cmd_line_args_codegen_package():
