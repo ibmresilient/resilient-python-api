@@ -12,7 +12,7 @@ import sys
 from resilient import SimpleClient
 from resilient_sdk.cmds import CmdCodegen
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from tests.shared_mock_data import mock_data, mock_paths
 
 
@@ -401,13 +401,15 @@ def test_get_package_version_not_found():
 def test_is_python_min_supported_version(caplog):
     mock_log = "WARNING: this package should only be installed on a Python Environment >="
 
-    sdk_helpers.is_python_min_supported_version()
+    is_supported = sdk_helpers.is_python_min_supported_version()
 
     if sys.version_info < sdk_helpers.MIN_SUPPORTED_PY_VERSION:
         assert mock_log in caplog.text
+        assert is_supported is False
 
     else:
         assert mock_log not in caplog.text
+        assert is_supported is True
 
 
 def test_parse_optionals(fx_get_sub_parser):
@@ -426,6 +428,7 @@ def test_run_subprocess():
     assert exitcode == 0
     assert args[1] in details
 
+
 def test_run_subprocess_with_cwd():
 
     args = ["pwd"]
@@ -438,3 +441,38 @@ def test_run_subprocess_with_cwd():
     assert exitcode == 0
     assert path in details
     assert dir_before_cwd == os.getcwd()
+
+
+def test_scrape_results_from_log_file():
+
+    results_scraped = sdk_helpers.scrape_results_from_log_file(mock_paths.MOCK_APP_LOG_PATH)
+    mock_function_one_results = results_scraped.get("mock_function_one")
+
+    assert isinstance(mock_function_one_results, dict)
+
+    # There are two Results for mock_function_one
+    # in the mock_app.log file, so this ensures we get the latest
+    assert mock_function_one_results.get("version") == 2.1
+
+
+def test_scrape_results_from_log_file_not_found():
+    with pytest.raises(SDKException, match=constants.ERROR_NOT_FIND_FILE):
+        sdk_helpers.scrape_results_from_log_file("mock_path_non_existent")
+
+
+def test_handle_file_not_found_error(caplog):
+    error_msg = u"mock error  ล ฦ ว message"
+
+    try:
+        sdk_helpers.validate_dir_paths(os.R_OK, "mock_path_no_existing")
+    except SDKException as e:
+        sdk_helpers.handle_file_not_found_error(e, error_msg)
+
+    assert u"WARNING: {0}".format(error_msg) in caplog.text
+
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, "mock_path_no_existing")
+    except SDKException as e:
+        sdk_helpers.handle_file_not_found_error(e, error_msg)
+
+    assert u"WARNING: {0}".format(error_msg) in caplog.text

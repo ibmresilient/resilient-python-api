@@ -7,12 +7,15 @@
 import logging
 import os
 import shutil
+
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import sdk_helpers, constants
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, ResilientObjMap
+from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.resilient_objects import (IGNORED_INCIDENT_FIELDS,
+                                                  ResilientObjMap)
+from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -90,6 +93,7 @@ class CmdDocgen(BaseCmd):
             the_function["inputs"] = cls._get_fn_input_details(fn)
             the_function["message_destination"] = fn.get("destination_handle", "")
             the_function["workflows"] = fn.get("workflows", [])
+            the_function["x_api_name"] = fn.get("x_api_name", "")
 
             scripts_found = False
             pre_script = None
@@ -286,6 +290,7 @@ class CmdDocgen(BaseCmd):
         path_config_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CONFIG_PY)
         path_readme = os.path.join(path_to_src, package_helpers.BASE_NAME_README)
         path_screenshots_dir = os.path.join(path_to_src, package_helpers.PATH_SCREENSHOTS)
+        path_payload_samples_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
 
         # Ensure we have read permissions for each required file and the file exists
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_config_py_file)
@@ -339,6 +344,26 @@ class CmdDocgen(BaseCmd):
         package_name_dash = package_name.replace("_", "-")
         server_version = customize_py_import_def.get("server_version", {})
         supported_app = sdk_helpers.does_url_contain(setup_py_attributes.get("url", ""), "ibm.com/mysupport")
+
+        # See if a payload_samples dir exists and use the contents for function results
+        try:
+            sdk_helpers.validate_dir_paths(os.R_OK, path_payload_samples_dir)
+
+            for f in jinja_functions:
+                fn_name = f.get("x_api_name")
+                path_payload_samples_fn_name = os.path.join(path_payload_samples_dir, fn_name)
+                path_output_json_example = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+
+                try:
+                    sdk_helpers.validate_file_paths(os.R_OK, path_output_json_example)
+                    f["results"] = sdk_helpers.read_json_file(path_output_json_example)
+                except SDKException as e:
+                    sdk_helpers.handle_file_not_found_error(e, u"Error getting results. No '{0}' file found for '{1}'.".format(
+                        package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE, fn_name))
+
+        except SDKException as e:
+            sdk_helpers.handle_file_not_found_error(e, u"Error getting results. No '{0}' directory found.".format(
+                package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
 
         LOG.info("Rendering README for %s", package_name_dash)
 

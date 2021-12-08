@@ -3,8 +3,27 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import pytest
-from resilient_circuits.action_message import ActionMessageBase, InboundMessage
+from resilient_circuits.action_message import ActionMessageBase, InboundMessage, FunctionResult
 from tests import mock_constants
+
+
+class TestFunctionResult:
+
+    def test_basic_instantiation(self):
+
+        mock_results = {"content": u"unicode: ล ฦ ว"}
+        mock_fn_name = "mock_fn_name"
+
+        result = FunctionResult(mock_results, name=mock_fn_name)
+
+        assert result.value == mock_results
+        assert result.name == mock_fn_name
+
+    def test_results_not_dict(self, caplog):
+
+        error_msg = "FunctionResult must be a dictionary"
+        FunctionResult("")
+        assert error_msg in caplog.text
 
 
 class TestInboundMessage:

@@ -58,7 +58,13 @@ class TestAppFunctionDecorator:
     def test_handles_FunctionResult(self, circuits_app):
         mock_fn_inputs = {"input_one": u"abc", "input_two": u"unicode ઠ ડ ઢ ણ ત થ દ ધ ન પ ફ input"}
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
-        mock_results = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, mock_fn_inputs, circuits_app)
+        mock_result_obj = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, mock_fn_inputs, circuits_app, full_result_obj=True)
+
+        assert mock_result_obj.name == "app_function_mock_one"
+        assert mock_result_obj.success is True
+        assert mock_result_obj.reason is None
+
+        mock_results = mock_result_obj.value
 
         assert mock_results["version"] == 2.0
         assert mock_results["success"] is True

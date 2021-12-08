@@ -17,6 +17,7 @@ TEST_TEMP_DIR = os.path.join(TESTS_DIR, "test_temp")
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME = "fn_main_mock_integration"
 
 MOCK_SDK_SETTINGS_PATH = os.path.join(SHARED_MOCK_DATA_DIR, ".mock_sdk_settings.json")
+MOCK_APP_LOG_PATH = os.path.join(SHARED_MOCK_DATA_DIR, "mock_app.log")
 
 MOCK_PACKAGE_FILES_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_package_files")
 MOCK_SETUP_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup.py")
