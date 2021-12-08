@@ -59,7 +59,7 @@ def _convert_to_code(val):
             $ pip install -U "resilient-circuits"
             ```
     """
-    return re.sub(r"'{3}(.*)'(.*)'(.*)'{3}", r'\n\n```shell\n$ \1"\2"\3\n```\n', val).replace("'", "`")
+    return re.sub(r"'{3}(.*)'(.*)'(.*)'{3}", r'\n\n```shell\n$ \1"\2"\3\n```\n', val).replace("'", "`").replace("\t\t", "\t")
 
 
 def _defaults_to_code(val):

@@ -139,7 +139,9 @@ class CmdExtPackage(BaseCmd):
         if args.validate and sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
             LOG.info("Validation on {0} is starting. \nTo skip, run the 'package' command without the '--validate' flag.\nValidations can be executated separately by running: \n  'resilient-sdk validate -p {0}' \nto see more in-depth results.\n".format(args.package))
 
-            path_validate_report = self.cmd_validate.execute_command(args, output_suppressed=True, run_from_package=True)
+            validate_args = self.cmd_validate.parser.parse_known_args()[0]
+
+            path_validate_report = self.cmd_validate.execute_command(validate_args, output_suppressed=True, run_from_package=True)
         else:
             path_validate_report = package_helpers.check_validate_report_exists()
 
