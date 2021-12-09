@@ -15,15 +15,15 @@ Note:
 """
 
 import copy
-import sys
+import logging
 import os
 import shutil
+import sys
+
 import pytest
-import logging
-import subprocess
-import time
 import resilient_sdk.app as app
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
+
 from tests.shared_mock_data import mock_paths
 
 # Set the logging to DEBUG for tests
@@ -170,16 +170,16 @@ def fx_pip_install_tox():
     
     # bool values of whether tox was already installed
     tox_installed = False
-    if sdk_helpers.get_package_version("tox"):
+    if sdk_helpers.get_package_version(constants.TOX_PACKAGE_NAME):
         tox_installed = True
 
     if not tox_installed:
-        _pip_install("tox")
+        _pip_install(constants.TOX_PACKAGE_NAME)
 
     yield
 
     if not tox_installed:
-        _pip_uninstall("tox")
+        _pip_uninstall(constants.TOX_PACKAGE_NAME)
 
 @pytest.fixture
 def fx_pip_install_pylint():
@@ -190,16 +190,16 @@ def fx_pip_install_pylint():
 
     # bool values of whether pylint was already installed
     pylint_installed = False
-    if sdk_helpers.get_package_version("pylint"):
+    if sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME):
         pylint_installed = True
 
     if not pylint_installed:
-        _pip_install("pylint")
+        _pip_install(constants.PYLINT_PACKAGE_NAME)
 
     yield
 
     if not pylint_installed:
-        _pip_uninstall("pylint")
+        _pip_uninstall(constants.PYLINT_PACKAGE_NAME)
 
 @pytest.fixture
 def fx_pip_install_bandit():
@@ -210,16 +210,16 @@ def fx_pip_install_bandit():
 
     # bool values of whether bandit was already installed
     bandit_installed = False
-    if sdk_helpers.get_package_version("bandit"):
+    if sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME):
         bandit_installed = True
 
     if not bandit_installed:
-        _pip_install("bandit")
+        _pip_install(constants.BANDIT_PACKAGE_NAME)
 
     yield
 
     if not bandit_installed:
-        _pip_uninstall("bandit")
+        _pip_uninstall(constants.BANDIT_PACKAGE_NAME)
 
 
 @pytest.fixture

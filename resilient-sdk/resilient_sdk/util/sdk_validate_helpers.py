@@ -1351,11 +1351,13 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
 
         settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
 
-        if settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME) and \
-                isinstance(settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME), list):
+        # grab the bandit section (should be a list)
+        settings_bandit_section = settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME)
 
+        if settings_bandit_section and isinstance(settings_bandit_section, list):
             LOG.debug("Reading bandit command line args from sdk settings JSON file {0}".format(path_sdk_settings))
-            bandit_args.extend(settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME))
+            LOG.debug("Bandit settings found in settings file: {0}".format(settings_bandit_section))
+            bandit_args.extend(settings_bandit_section)
         else:
             bandit_args.extend(constants.BANDIT_DEFAULT_SEVERITY_LEVEL)
     else:
@@ -1371,7 +1373,8 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
     #          will only return a non-zero code if there are "medium" or "high" issues.
     #          if only "low" or "uncategorized" issues are found, it will return 0
     if exit_code != 0:
-        details = details[details.index("Test results"):]
+        if details.index("Test results") != -1:
+            details = details[details.index("Test results"):]
         details = details.replace("\n", "\n\t\t")
         return 0, SDKValidateIssue(
             name=attr_dict.get("name"),
