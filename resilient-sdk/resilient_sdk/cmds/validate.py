@@ -686,6 +686,8 @@ class CmdValidate(BaseCmd):
         This method leverages the possibility of returning -1 from a static validation method.
         -1, like in validate_tox_tests, indicates a "skipped" validation
 
+        NOTE: bandit scan is only available in python 3
+
         :param path_package: path to the package
         :type path_package: str
         :param path_sdk_settings: (optional) path to sdk settings file or None
@@ -780,6 +782,8 @@ class CmdValidate(BaseCmd):
         Runs bandit scan (if bandit installed in pip env) and outputs the results
 
         Bandit scan can be isolated by passing in the --bandit flag
+
+        NOTE: bandit scan is only available in python >= 3.6
         """
 
         # Check if Python >= MIN_SUPPORTED_PY_VERSION
