@@ -348,7 +348,7 @@ package_files = {
         "fail_solution": "Provide a 'LICENSE' file in your package directory. Suggested formats: MIT, Apache, and BSD",
 
         "pass_msg": "'LICENSE' file is valid",
-        "pass_solution": "It is recommended to manually the license. Suggested formats: MIT, Apache, and BSD"
+        "pass_solution": "It is recommended to manually validate the license. Suggested formats: MIT, Apache, and BSD"
     }
 }
 
