@@ -102,6 +102,8 @@ class CmdValidate(BaseCmd):
         returns the path to the validation report that was last generated
         """
 
+        sdk_helpers.is_python_min_supported_version()
+
         self.output_suppressed = output_suppressed
 
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running validate on '{1}'".format(
@@ -113,8 +115,6 @@ class CmdValidate(BaseCmd):
         ))
 
         self._print_package_details(args)
-
-        sdk_helpers.is_python_min_supported_version()
 
         # validate that the given path to the sdk settings is valid
         try:
@@ -171,6 +171,7 @@ class CmdValidate(BaseCmd):
         self._run_selftest(args)
         self._run_tests(args)
         self._run_pylint_scan(args)
+        self._run_bandit_scan(args)
 
 
     def _print_package_details(self, args):
@@ -675,6 +676,57 @@ class CmdValidate(BaseCmd):
 
         return scan_valid, issues
 
+    @staticmethod
+    def _bandit_scan(path_package, path_sdk_settings=None):
+        """
+        Validate bandit is installed and then run bandit scan:
+        - check if bandit is installed in the python env (INFO if not)
+        - run bandit; report results
+
+        This method leverages the possibility of returning -1 from a static validation method.
+        -1, like in validate_tox_tests, indicates a "skipped" validation
+
+        NOTE: bandit scan is only available in python 3
+
+        :param path_package: path to the package
+        :type path_package: str
+        :param path_sdk_settings: (optional) path to sdk settings file or None
+        :type path_sdk_settings: str
+        :return: Returns boolean value or int of whether or not the run passed and a sorted list of SDKValidateIssue
+        :rtype: (bool|int, list[SDKValidateIssue])
+        """
+
+        # empty list of SDKValidateIssues
+        issues = []
+        # boolean to determine if the bandit scan passes validation
+        scan_valid = True
+
+        # get package name
+        parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"])
+        package_name = parsed_setup.get("name")
+
+        for attr_dict in validation_configurations.bandit_attributes:
+            if not attr_dict.get("func"):
+                raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
+
+            issue_pass_num, issue = attr_dict.get("func")(
+                path_package=path_package,
+                attr_dict=attr_dict,
+                package_name=package_name,
+                path_sdk_settings=path_sdk_settings
+            )
+
+            issues.append(issue)
+            if issue_pass_num <= 0:
+                issues.sort()
+                return issue_pass_num, issues
+            
+        # sort and look for and invalid issues
+        issues.sort()
+        scan_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+
+        return scan_valid, issues
+
     def _run_tests(self, args):
         """
         Validates and executes tox tests (makes use of static validation method _validate_tox_tests)
@@ -727,9 +779,33 @@ class CmdValidate(BaseCmd):
 
     def _run_bandit_scan(self, args):
         """
-        TODO
+        Runs bandit scan (if bandit installed in pip env) and outputs the results
+
+        Bandit scan can be isolated by passing in the --bandit flag
+
+        NOTE: bandit scan is only available in python >= 3.6
         """
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running bandit{0}".format(constants.LOG_DIVIDER))
+
+        # Check if Python >= MIN_SUPPORTED_PY_VERSION
+        if not sdk_helpers.is_python_min_supported_version("{0}: Bandit Scan".format(constants.ERROR_WRONG_PYTHON_VERSION)):
+            return
+
+        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running Bandit Scan{0}".format(constants.LOG_DIVIDER))
+
+        # Get absolute path to package
+        path_package = os.path.abspath(args.package)
+        # Ensure the package directory exists and we have READ access
+        sdk_helpers.validate_dir_paths(os.R_OK, path_package)
+
+        # check if bandit installed in env and run bandit scan if so
+        bandit_valid_or_skipped, issues = self._bandit_scan(path_package, args.settings)
+        self.VALIDATE_ISSUES["bandit"] = issues
+        self.SUMMARY_LIST += issues
+
+        for issue in issues:
+            self._log(issue.get_logging_level(), issue.error_str())
+
+        self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "Bandit Scan", bandit_valid_or_skipped)
 
     def _run_cve_scan(self, args):
         """
