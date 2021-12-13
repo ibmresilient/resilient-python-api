@@ -58,6 +58,7 @@ TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 # pylint constants (for validate)
 PYLINT_PACKAGE_NAME = "pylint"
 PATH_VALIDATE_PYLINT_RC_FILE = pkg_resources.resource_filename(SDK_RESOURCE_NAME, os.path.join(BASE_PATH_VALIDATE_DATA, ".pylintrc"))
+PYLINT_MIN_VERSION = (2, 12) # minimum pylint version that has stats objs rather than stats dictionary
 
 ICON_APP_LOGO_REQUIRED_WIDTH = 200
 ICON_APP_LOGO_REQUIRED_HEIGHT = 72

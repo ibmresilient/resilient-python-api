@@ -1215,9 +1215,12 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
     # included in the run and there was an issue found of that given level
     # (default levels are just [E]rrors and [F]atals)
 
-    # unfortunately, python 3 vs python 2.7 versions are not compatible...
-    if sys.version_info.major >= 3:
-        # python >= 3
+    # unfortunately, pylint before 2.12 has a different stats object
+    # have to check python version first as Version objects (i.e. what is returned
+    # from get_pacakge_version) don't have major and minor attributes in python 2.7
+    pylint_version = sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME)
+    if sys.version_info.major >= 3 and (pylint_version.major, pylint_version.minor) >= constants.PYLINT_MIN_VERSION:
+        # python >= 3 and pylint >= 2.12
         score = run.linter.stats.global_note
         info_count = run.linter.stats.info
         refactor_count = run.linter.stats.refactor
