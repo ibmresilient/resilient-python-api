@@ -58,7 +58,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'furo'
 
 html_title = "IBM SOAR Python Documentation"
-html_favicon = '_static/IBM_Security_Shield.ico?'
+html_favicon = '_static/IBM_Security_Shield.ico'
 html_theme_options = {
     "light_logo": "IBM_Security_Light.png",
     "dark_logo": "IBM_Security_Dark.png",
