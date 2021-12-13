@@ -1373,8 +1373,11 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
     #          will only return a non-zero code if there are "medium" or "high" issues.
     #          if only "low" or "uncategorized" issues are found, it will return 0
     if exit_code != 0:
-        if details.index("Test results") != -1:
-            details = details[details.index("Test results"):]
+        # all information above the "Test results" are not really relevant
+        # but incase that string is not found, we just take the whole details
+        details_start_string = "Test results"
+        if details.index(details_start_string) != -1:
+            details = details[details.index(details_start_string):]
         details = details.replace("\n", "\n\t\t")
         return 0, SDKValidateIssue(
             name=attr_dict.get("name"),
