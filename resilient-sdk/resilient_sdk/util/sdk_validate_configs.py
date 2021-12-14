@@ -361,7 +361,7 @@ payload_samples_attributes = {
 
     # if import def doesn't have the correct "function" section
     "no_func_msg": "'ImportDefinition' is missing a 'function' section:'{0}'",
-    "no_func_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+    "no_func_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
 
     # if "function" list element section doesn't have a "name"
     "no_func_name_msg": "'ImportDefinition.function' list is missing a 'name' for function: '{0}'",

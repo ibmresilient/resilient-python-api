@@ -310,7 +310,7 @@ class CmdValidate(BaseCmd):
         validations = [
             ("setup.py", self._validate_setup),
             ("package files", self._validate_package_files),
-            ("payload samples" ,self._validate_payload_samples)
+            ("payload samples", self._validate_payload_samples)
         ]
 
 
@@ -518,7 +518,7 @@ class CmdValidate(BaseCmd):
     @staticmethod
     def _validate_payload_samples(path_package):
         """
-        Validate the contents of the following the output_json_example.json and output_json_schema.json
+        Validate the contents of the output_json_example.json and output_json_schema.json
         files for each function in a package. The payload samples are generated (empty) by codegen
         and can be populated manually or automatically with codegen --gather-samples.
 

@@ -764,13 +764,13 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
 def payload_samples_validate_payload_samples(path_package, package_name, attr_dict):
     """
     This function verifies:
-    - the customize file is readable and the import definition from it contains a "functions" section
+    - (WARNING) the customize file is readable and the import definition from it contains a "functions" section
     - for each function
-      - check it has a name, i.e. "fn_name"
-      - investigate payload_samples/fn_name/output_json_[example|schema].json with helper method
+      - (CRITICAL) check it has a name, i.e. "fn_name"
+      - (CRITICAL) investigate payload_samples/fn_name/output_json_[example|schema].json with helper method
 
     Returns a successful issue if all the above were valid.
-    Returns a failing issue if anything in the above fails.
+    Returns an issue with the noted level if anything in the above fails.
 
     The function returns a list of an issue for each payload sample.
     NOTE: this function could return a list of 1 item if the customize is unreadable...
