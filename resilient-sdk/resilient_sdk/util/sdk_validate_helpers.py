@@ -804,6 +804,7 @@ def payload_samples_validate_payload_samples(path_package, package_name, attr_di
     # grab functions list from import_def
     functions = import_def.get("functions")
 
+    # make sure that the import def has a "functions" section
     if not functions:
         return [SDKValidateIssue(
             name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
@@ -812,9 +813,16 @@ def payload_samples_validate_payload_samples(path_package, package_name, attr_di
             solution=attr_dict.get("reload_solution").format(path_package)
         )]
 
+    # loop through each function to get the name
+    # it is unlikely but possible that the name is missing from the
+    # import def so that is checked for here just in case and will
+    # create an appropriate issue for that function but will then continue on
+    # to the next function
     issues = []
     for function in functions:
         func_name = function.get("name")
+
+        # if the name is missing
         if not func_name:
             issues.append(SDKValidateIssue(
                 name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
@@ -822,8 +830,8 @@ def payload_samples_validate_payload_samples(path_package, package_name, attr_di
                 severity=attr_dict.get("no_func_name_severity"),
                 solution=attr_dict.get("reload_solution").format(path_package)
             ))
-
-        issues.append(_validate_payload_samples(path_package, func_name, attr_dict))
+        else:
+            issues.append(_validate_payload_samples(path_package, func_name, attr_dict))
 
     return issues
 
