@@ -495,6 +495,22 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "Cannot find the following screenshot(s) referenced in the README" in result.description
 
+def test_payload_samples_empty(fx_copy_fn_main_mock_integration):
+    # NOTE: if the payload samples ever change in the mock integration
+    # this will need to be revisited
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    func_name = "mock_function_two" # this one has empty JSON data
+    attr_dict = sdk_validate_configs.payload_samples_attributes
+
+    result = sdk_validate_helpers._validate_payload_samples(mock_path_package, func_name, attr_dict)
+
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "empty" in result.description
+    assert "'output_json_example.json' and 'output_json_schema.json'" in result.description
+
+
 def test_tox_tests_validate_tox_installed(fx_pip_install_tox):
 
     attr_dict = sdk_validate_configs.tests_attributes[0]

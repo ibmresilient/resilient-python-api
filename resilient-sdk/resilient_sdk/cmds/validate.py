@@ -277,7 +277,6 @@ class CmdValidate(BaseCmd):
 
     def _validate(self, args):
         """
-        TODO: unit tests once all validations are written
         Run static validations.
         Wrapper method that validates the contents of the following files in the package dir (all called in separate submethods):
         - setup.py - done in _validate_setup()
@@ -288,11 +287,12 @@ class CmdValidate(BaseCmd):
         - fn_package/util/config.py - done in _validate_package_files()
         - fn_package/util/customize.py - done in _validate_package_files()
         - README.md - done in _validate_package_files()
-        - fn_package/LICENSE - TBD
+        - fn_package/LICENSE - done in _validate_package_files()
         - fn_package/icons - done in _validate_package_files()
+        - fn_package/payload_samples/<fn_function>/... - done in _validate_payload_samples()
 
-        :param args: list of args
-        :type args: dict
+        :param args: command line args
+        :type args: argparse.ArgumentParser
         :raise SDKException: if the path to the package or required file is not found
         :return: None
         :rtype: None
@@ -309,7 +309,8 @@ class CmdValidate(BaseCmd):
         # this list gets looped and each sub method is ran to check if file is valid
         validations = [
             ("setup.py", self._validate_setup),
-            ("package files", self._validate_package_files)
+            ("package files", self._validate_package_files),
+            ("payload samples" ,self._validate_payload_samples)
         ]
 
 
@@ -328,13 +329,6 @@ class CmdValidate(BaseCmd):
 
             self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, file_name, file_valid)
 
-
-        # TODO: implement other static validates
-        #       - fn_package/util/config.py
-        #       - fn_package/util/customize.py
-        #       - fn_package/LICENSE
-        #       - fn_package/icons
-        #       - README.md
 
     @staticmethod
     def _validate_setup(path_package):
@@ -442,6 +436,11 @@ class CmdValidate(BaseCmd):
         - MANIFEST.in
         - Dockerfile
         - entrypoint.sh
+        - config.py
+        - customize.py
+        - app and company logos
+        - README
+        - LICENSE
         
         It validates first that each file exists.
         If the file doesn't exist, issue with CRITICAL is created
@@ -515,6 +514,40 @@ class CmdValidate(BaseCmd):
         package_files_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
 
         return package_files_valid, issues
+
+    @staticmethod
+    def _validate_payload_samples(path_package):
+        """
+        Validate the contents of the following the output_json_example.json and output_json_schema.json
+        files for each function in a package. The payload samples are generated (empty) by codegen
+        and can be populated manually or automatically with codegen --gather-samples.
+
+        This check is part of the --validate sub-functionality
+
+        :param path_package: path to package
+        :type path_package: str
+        :return: Returns boolean value of whether or not the payload check passed and a sorted list of SDKValidateIssue
+        :rtype: (bool, list[SDKValidateIssue])
+        """
+
+        # get package name
+        parsed_setup = package_helpers.parse_setup_py(os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY), ["name"])
+        package_name = parsed_setup.get("name")
+
+        # grab the function and run it
+        # this should return a list of issues with all information about the payload samples
+        issues = validation_configurations.payload_samples_attributes.get("func")(
+            path_package=path_package,
+            package_name=package_name,
+            attr_dict=validation_configurations.payload_samples_attributes
+        )
+
+        # sort and look for and invalid issues
+        issues.sort()
+        package_files_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
+
+        return package_files_valid, issues
+
 
     @staticmethod
     def _validate_selftest(path_package, path_app_config=None):
