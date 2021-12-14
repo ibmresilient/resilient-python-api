@@ -199,6 +199,10 @@ class BaseCmd(object):
 
         sdk_settings_parser.add_argument(constants.SUB_CMD_OPT_SDK_SETTINGS[0],
                                          type=ensure_unicode,
+                                         action="store",
+                                         nargs="?",
+                                         default=constants.SDK_SETTINGS_FILE_PATH,
+                                         const=constants.SDK_SETTINGS_FILE_PATH,
                                          help="Path to {0} file to use".format(constants.SDK_SETTINGS_FILENAME))
 
         return sdk_settings_parser

@@ -4,6 +4,7 @@
 
 import difflib
 import os
+import sys
 
 import pkg_resources
 import pytest
@@ -494,6 +495,22 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "Cannot find the following screenshot(s) referenced in the README" in result.description
 
+def test_payload_samples_empty(fx_copy_fn_main_mock_integration):
+    # NOTE: if the payload samples ever change in the mock integration
+    # this will need to be revisited
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    func_name = "mock_function_two" # this one has empty JSON data
+    attr_dict = sdk_validate_configs.payload_samples_attributes
+
+    result = sdk_validate_helpers._validate_payload_samples(mock_path_package, func_name, attr_dict)
+
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    assert "empty" in result.description
+    assert "'output_json_example.json' and 'output_json_schema.json'" in result.description
+
+
 def test_tox_tests_validate_tox_installed(fx_pip_install_tox):
 
     attr_dict = sdk_validate_configs.tests_attributes[0]
@@ -574,3 +591,181 @@ def test_tox_tests_parse_xml_report():
     assert results[2] == 0
     assert results[3] == ""
     assert results[4] == u'record_property = <function record_property.<locals>.append_property\n                at 0x000001A1A9EB40D0>\n\n                def test_fails(record_property):\n                record_property("key", u"value2 some unicode: Δ, Й, ק ,م, ๗, あ, 叶")\n                > assert 1 == 2\n                E assert 1 == 2\n\n                test_something.py:8: AssertionError\n            \n\n---\n\n'
+
+
+def test_pylint_validate_pylint_is_installed():
+
+    attr_dict = sdk_validate_configs.pylint_attributes[0]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_pylint_version:
+
+        mock_pylint_version.return_value = "0.0.0"
+
+        result = sdk_validate_helpers.pylint_validate_pylint_installed(attr_dict=attr_dict)
+
+        assert len(result) == 2
+        assert result[0] == 1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+
+def test_pylint_validate_pylint_not_installed():
+
+    attr_dict = sdk_validate_configs.pylint_attributes[0]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_pylint_version:
+
+        mock_pylint_version.return_value = None
+
+        result = sdk_validate_helpers.pylint_validate_pylint_installed(attr_dict=attr_dict)
+
+        assert len(result) == 2
+        assert result[0] == -1 # validate is skipped
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+
+def test_pylint_run_pylint_scan_success(fx_copy_fn_main_mock_integration):
+
+    package_name = fx_copy_fn_main_mock_integration[0]
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.pylint_attributes[1]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.lint.Run") as mock_pylint_run:
+        with patch("resilient_sdk.util.sdk_validate_helpers.StringIO") as mock_string_io:
+
+            run = mock_pylint_run.return_value
+
+            # because the objects are different in py2 vs py3,
+            # mocks have to be similarly different
+            if sys.version_info.major >= 3:
+                run.linter.stats.global_note = 10
+                run.linter.stats.info = 0
+                run.linter.stats.refactor = 0
+                run.linter.stats.convention = 0
+                run.linter.stats.warning = 0
+                run.linter.stats.error = 0
+                run.linter.stats.fatal = 0
+            else:
+                run.linter.stats = {
+                    "global_note": 10,
+                    "info": 0,
+                    "refactor": 0,
+                    "convention": 0,
+                    "warning": 0,
+                    "error": 0,
+                    "fatal": 0,
+                }
+            mock_string_io.return_value.getvalue.return_value = "Mock pylint report"
+
+            result = sdk_validate_helpers.pylint_run_pylint_scan(
+                path_package=path_package,package_name=package_name,
+                attr_dict=attr_dict,path_sdk_settings=None)
+
+            assert len(result) == 2
+            assert result[0] == 1
+            assert "Pylint scan passed" in result[1].description
+
+
+def test_pylint_run_pylint_scan_failure(fx_copy_fn_main_mock_integration):
+
+    package_name = fx_copy_fn_main_mock_integration[0]
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.pylint_attributes[1]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.lint.Run") as mock_pylint_run:
+        with patch("resilient_sdk.util.sdk_validate_helpers.StringIO") as mock_string_io:
+
+            run = mock_pylint_run.return_value
+
+            if sys.version_info.major >= 3:
+                run.linter.stats.global_note = 3.4
+                run.linter.stats.info = 0
+                run.linter.stats.refactor = 0
+                run.linter.stats.convention = 0
+                run.linter.stats.warning = 3
+                run.linter.stats.error = 1
+                run.linter.stats.fatal = 0
+            else:
+                run.linter.stats = {
+                    "global_note": 3.4,
+                    "info": 0,
+                    "refactor": 0,
+                    "convention": 0,
+                    "warning": 3,
+                    "error": 1,
+                    "fatal": 0,
+                }
+            mock_string_io.return_value.getvalue.return_value = "Mock pylint report"
+
+            result = sdk_validate_helpers.pylint_run_pylint_scan(
+                path_package=path_package,package_name=package_name,
+                attr_dict=attr_dict,path_sdk_settings=None)
+
+            assert len(result) == 2
+            assert result[0] == 0
+            assert "The Pylint score was 3.40/10" in result[1].description
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_bandit_validate_bandit_is_installed():
+
+    attr_dict = sdk_validate_configs.bandit_attributes[0]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_bandit_version:
+
+        mock_bandit_version.return_value = "0.0.0"
+
+        result = sdk_validate_helpers.bandit_validate_bandit_installed(attr_dict=attr_dict)
+
+        assert len(result) == 2
+        assert result[0] == 1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_bandit_validate_bandit_not_installed():
+
+    attr_dict = sdk_validate_configs.bandit_attributes[0]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_bandit_version:
+
+        mock_bandit_version.return_value = None
+
+        result = sdk_validate_helpers.bandit_validate_bandit_installed(attr_dict=attr_dict)
+
+        assert len(result) == 2
+        assert result[0] == -1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+
+    package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.bandit_attributes[1]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_bandit_subprocess:
+
+        mock_bandit_subprocess.return_value = (0, "Success")
+
+        result = sdk_validate_helpers.bandit_run_bandit_scan(path_package=path_package, attr_dict=attr_dict, package_name=package_name)
+
+        assert len(result) == 2
+        assert result[0] == 1
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_bandit_run_bandit_scan_fails(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+
+    package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.bandit_attributes[1]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_bandit_subprocess:
+
+        mock_bandit_subprocess.return_value = (1, "Test results: Failed")
+
+        result = sdk_validate_helpers.bandit_run_bandit_scan(path_package=path_package, attr_dict=attr_dict, package_name=package_name)
+
+        assert len(result) == 2
+        assert result[0] == 0
+        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL

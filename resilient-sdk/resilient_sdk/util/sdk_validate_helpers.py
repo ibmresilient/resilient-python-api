@@ -6,7 +6,15 @@ import difflib
 import logging
 import os
 import re
+import sys
 import xml.etree.ElementTree as ET
+
+# in py2 StringIO is base module for StringIO
+# in py3 io is the base module for StringIO
+if sys.version_info.major < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
 import pkg_resources
 from resilient_sdk.util import constants
@@ -16,6 +24,13 @@ from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
 LOG = logging.getLogger(constants.LOGGER_NAME)
+
+try:
+    from pylint import lint
+    from pylint.reporters import text
+except ImportError as err:
+    LOG.warning("Failed to import 'pylint'")
+    LOG.debug("ERROR: %s", err)
 
 # float value in range [0, 1] that determines the cutoff at which two files are a match
 MATCH_THRESHOLD = 1.0
@@ -746,6 +761,190 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if there is at least one issue in the list
         return issues
 
+def payload_samples_validate_payload_samples(path_package, package_name, attr_dict):
+    """
+    This function verifies:
+    - (WARNING) the customize file is readable and the import definition from it contains a "functions" section
+    - for each function
+      - (CRITICAL) check it has a name, i.e. "fn_name"
+      - (CRITICAL) investigate payload_samples/fn_name/output_json_[example|schema].json with helper method
+
+    Returns a successful issue if all the above were valid.
+    Returns an issue with the noted level if anything in the above fails.
+
+    The function returns a list of an issue for each payload sample.
+    NOTE: this function could return a list of 1 item if the customize is unreadable...
+
+    :param path_package: the path to the package
+    :type path_package: str
+    :param package_name: name of the package i.e. fn_my_app
+    :type package_name: str
+    :param attr_dict: dictionary of attributes for the payload samples defined in ``payload_samples_attributes``
+    :type attr_dict: dict
+    :return: a list (this can be a mix) of passing issues and/or a critical issues
+    :rtype: list[SDKValidateIssue]
+    """
+
+    # get function list from import definition in customize.py file
+    path_customize = os.path.join(path_package, package_name, package_helpers.PATH_CUSTOMIZE_PY)
+    try:
+        # parse import definition information from customize.py file
+        # this will raise an SDKException if something goes wrong
+        sdk_helpers.validate_file_paths(os.R_OK, path_customize)
+        import_def = package_helpers.get_import_definition_from_customize_py(path_customize)
+    except SDKException:
+        return [SDKValidateIssue(
+            name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
+            description=attr_dict.get("no_import_def_msg").format(path_customize),
+            severity=attr_dict.get("no_import_def_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )]
+
+    # if nothing went wrong in try-except above
+    # grab functions list from import_def
+    functions = import_def.get("functions")
+
+    # make sure that the import def has a "functions" section
+    if not functions:
+        return [SDKValidateIssue(
+            name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
+            description=attr_dict.get("no_func_msg").format(path_customize),
+            severity=attr_dict.get("no_func_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )]
+
+    # loop through each function to get the name
+    # it is unlikely but possible that the name is missing from the
+    # import def so that is checked for here just in case and will
+    # create an appropriate issue for that function but will then continue on
+    # to the next function
+    issues = []
+    for function in functions:
+        func_name = function.get("name")
+
+        # if the name is missing
+        if not func_name:
+            issues.append(SDKValidateIssue(
+                name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
+                description=attr_dict.get("no_func_name_msg").format(function),
+                severity=attr_dict.get("no_func_name_severity"),
+                solution=attr_dict.get("reload_solution").format(path_package)
+            ))
+        else:
+            issues.append(_validate_payload_samples(path_package, func_name, attr_dict))
+
+    return issues
+
+def _validate_payload_samples(path_package, func_name, attr_dict):
+    """
+    Helper method to validate a payload sample set for a given function.
+
+    Looks in payload_samples/func_name/output_json_[example|schema].json
+    and verifies that each file is:
+    - present
+    - valid json
+    - not empty
+
+    If all the above pass, a passing issue is given for the function and its associated payloads.
+    If one of the above fails, a critical issue is raised.
+
+    It is worth noting the implementation of this will fail once one of the two files fails
+    but it will check the second file before returning an issue. Example:
+    If the example is invalid JSON but the schema is valid, youd get a message like:
+        'output_json_example.json' for 'mock_function_one' not valid JSON
+
+    But if both were invalid JSON the message would say:
+        'output_json_example.json' and 'output_json_schema.json' for 'mock_function_one' not valid JSON
+
+    :param path_package: path to the package
+    :type path_package: str
+    :param func_name: name of the function, i.e. fn_my_func_1
+    :type func_name: str
+    :param attr_dict: dictionary of attributes for the payload samples defined in ``payload_samples_attributes``
+    :type attr_dict: dict
+    :return: one SDKValidateIssue indicating the validity of the samples for a payload
+    :rtype: SDKValidateIssue
+    """
+
+    path_samples_dir = os.path.join(path_package, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, func_name)
+    issue_name = "'{0}'".format(os.path.join(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, func_name))
+
+    path_samples_example = os.path.join(path_samples_dir, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+    path_samples_schema = os.path.join(path_samples_dir, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+
+    example_str = "'{0}'".format(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+    schema_str = "'{0}'".format(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+
+    ## check that the samples are present ##
+    # list used to generate message that might include both or just one
+    # this way we can get message that say something like 'example' and 'schema' are missing
+    # rather than just 'schema' is missing
+    samples_missing = []
+    try: 
+        sdk_helpers.validate_file_paths(os.R_OK, path_samples_example)
+    except SDKException:
+        samples_missing.append(example_str)
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_samples_schema)
+    except SDKException:
+        samples_missing.append(schema_str)
+
+    if samples_missing:
+        msg = " and ".join(samples_missing) # if just one element, it will not add the "and"
+        return SDKValidateIssue(
+            name=issue_name,
+            description=attr_dict.get("payload_file_missing_msg").format(msg, func_name),
+            severity=attr_dict.get("payload_file_missing_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )
+
+    ## check that the samples are valid JSON ##
+    # same idea as above
+    samples_invalid = []
+    try:
+        read_example_json = sdk_helpers.read_json_file(path_samples_example)
+    except SDKException:
+        samples_invalid.append(example_str)
+    try:
+        read_schema_json = sdk_helpers.read_json_file(path_samples_schema)
+    except SDKException:
+        samples_invalid.append(schema_str)
+
+    if samples_invalid:
+        msg = " and ".join(samples_invalid)
+        return SDKValidateIssue(
+            name=issue_name,
+            description=attr_dict.get("payload_file_invalid_msg").format(msg, func_name),
+            severity=attr_dict.get("payload_file_invalid_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )
+
+    ## finally make sure the samples are not empty ##
+    # (which is the codegen default before --gather-samples is run)
+    samples_empty = []
+    if not read_example_json:
+        samples_empty.append(example_str)
+    if not read_schema_json:
+        samples_empty.append(schema_str)
+    
+    if samples_empty:
+        msg = " and ".join(samples_empty)
+        return SDKValidateIssue(
+            name=issue_name,
+            description=attr_dict.get("payload_file_empty_msg").format(msg, func_name),
+            severity=attr_dict.get("payload_file_empty_severity"),
+            solution=attr_dict.get("payload_file_empty_solution").format(path_package)
+        )
+
+    ## return a passing issue here ##
+    return SDKValidateIssue(
+        name=issue_name,
+        description=attr_dict.get("pass_msg").format(func_name),
+        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+        solution=attr_dict.get("pass_solution")
+    )
+
+
 
 
 def tox_tests_validate_tox_installed(attr_dict, **__):
@@ -1078,3 +1277,306 @@ def _tox_tests_parse_xml_report(path_xml_file):
 
 
     return num_tests, num_failures, num_errors, error_str, failure_str
+
+
+
+def pylint_validate_pylint_installed(attr_dict, **__):
+    """
+    Helper method for to validate that pylint is installed in the python environment.
+
+    If pylint is not installed, return -1 indicating that the pylint scan didn't "fail" but rather
+    was skipped.
+
+    :param attr_dict: dictionary of attributes for the pylint scan defined in ``pylint_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: -1 or 1 and a SDKValidateIssue with details about whether pylint was installed in the env
+    :rtype: (int, SDKValidateIssue)
+    """
+    LOG.debug("Validating that '{0}' is installed in the python env".format(constants.PYLINT_PACKAGE_NAME))
+
+
+    pylint_version = sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME)
+
+    # not installed
+    if not pylint_version:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.PYLINT_PACKAGE_NAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.PYLINT_PACKAGE_NAME)
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format(constants.PYLINT_PACKAGE_NAME),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+
+def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_settings=None, **__):
+    """
+    Run Pylint Scan on whole package using the .pylintrc file in /data/validate as the default settings.
+    Raises a SDKException if ``pylint`` isn't installed. In use with ``validate``, this method should 
+    only be called after successfully calling ``pylint_validate_pylint_installed``. If a call to that method
+    returns a failing SDKValidateIssue, this method shouldn't be called
+
+    The default enabled pylint levels are [E]rror and [F]atal (which combined are mapped to CRITICAL)
+
+    The user can overwrite the default settings using an SDK Settings JSON file either in the default
+    location or by using the --settings flag to pass in a path. The settings file should have a "pylint"
+    attribute which is a list of pylint command line options. Example (to enable [R]efactor and [W]arnings
+    as well as [E]rrors and [F]atals):
+    .. code-block:: json
+        {
+            "pylint": [
+                "--enable=R,W,E,F"
+            ]
+        }
+
+    NOTE: that you can include more than just the ``enable`` option in the list. Any valid pylint command
+    line args will be parsed. It is not recommended to overwrite the ``--output-format`` parameter.
+    More info here: https://pylint.pycqa.org/en/latest/user_guide/run.html#command-line-options
+
+    The user can also override the defaults by running in ``verbose`` mode using the ``-v`` flag for the SDK
+    This will enable all of R,C,W,E,F and will overwrite any custom sdk settings for ``--enable``
+
+    :param path_package: path to package
+    :type path_package: str
+    :param package_name: name of the package (i.e. fn_my_package)
+    :type package_name: str
+    :param attr_dict: dictionary of attributes for the pylint scan defined in ``pylint_attributes``
+    :type attr_dict: dict
+    :param path_sdk_settings: (optional) path to a sdk settings JSON file
+    :type path_sdk_settings: str
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: 1 or 0 and a SDKValidateIssue with details about the pylint scan
+    :rtype: (int, SDKValidateIssue)
+    """
+
+    # Because this method requires importing pylint, it must be first installed in the env. In the
+    # normal use of this method, validate will only call this if `pylint_validate_pylint_installed` passes
+    if not sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME):
+        raise SDKException("Cannot call {0} without pylint installed".format(pylint_run_pylint_scan.__name__))
+
+    pylint_args = [os.path.join(path_package, package_name), "--rcfile={0}".format(constants.PATH_VALIDATE_PYLINT_RC_FILE)]
+
+    # grab pylint settings from sdk settings file if given and exists
+    if path_sdk_settings and os.path.exists(path_sdk_settings):
+        # if a settings file exists, check if that file has a pylint
+        # section which will contain a list of custom pylint command line args
+
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+
+        if settings_file_contents.get("pylint") and isinstance(settings_file_contents.get("pylint"), list):
+            LOG.debug("Reading pylint command line args from sdk settings JSON file {0}".format(path_sdk_settings))
+            pylint_args.extend(settings_file_contents.get("pylint"))
+
+    # if debugging is enabled, overwrite any possible "enable" flag set by the settings file
+    if LOG.isEnabledFor(logging.DEBUG):
+        # if debug, then add all levels of pylint "R,C,W,E,F"
+        # more info: https://pylint.pycqa.org/en/latest/user_guide/output.html#source-code-analysis-section
+        # because pylint support multiple entries of the "--enable" flag, this will add on to what other
+        # levels are already enabled if the user is also using a SDK Settings file
+        LOG.debug("In DEBUG mode: Running with R,C,W,E,F all enabled")
+        pylint_args.append("--enable=R,C,W,E,F") # add in all levels of pylint issues if debugging is on
+
+    LOG.debug("Running pylint with args: %s", str(pylint_args))
+
+    # setup a "Text Reporter" to capture the pylint output
+    pylint_output = StringIO()
+    reporter = text.ColorizedTextReporter(pylint_output)
+
+    # RUN pylint using the Run class of the pylint module
+    run = lint.Run(pylint_args, reporter=reporter, exit=False)
+
+    # capture score and counts of issues from run
+    # error and warnings map directly to CRITICAL and WARNING
+    # everything else is treated as INFO
+    # NOTE: the value of each count will only be non-zero if the level was 
+    # included in the run and there was an issue found of that given level
+    # (default levels are just [E]rrors and [F]atals)
+
+    # unfortunately, pylint before 2.12 has a different stats object
+    # have to check python version first as Version objects (i.e. what is returned
+    # from get_pacakge_version) don't have major and minor attributes in python 2.7
+    pylint_version = sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME)
+    if sys.version_info.major >= 3 and (pylint_version.major, pylint_version.minor) >= constants.PYLINT_MIN_VERSION:
+        # python >= 3 and pylint >= 2.12
+        score = run.linter.stats.global_note
+        info_count = run.linter.stats.info
+        refactor_count = run.linter.stats.refactor
+        convention_count = run.linter.stats.convention
+        warning_count = run.linter.stats.warning
+        error_count = run.linter.stats.error + run.linter.stats.fatal # add fatal into error count
+    else:
+        # python <= 2.7
+        score = run.linter.stats.get("global_note")
+        info_count = run.linter.stats.get("info")
+        refactor_count = run.linter.stats.get("refactor")
+        convention_count = run.linter.stats.get("convention")
+        warning_count = run.linter.stats.get("warning")
+        error_count = run.linter.stats.get("error") + run.linter.stats.get("fatal")
+
+    # capture text output
+    run_output = pylint_output.getvalue().replace("\n", "\n\t\t")
+
+    if sum([error_count, warning_count, convention_count, refactor_count, info_count]) > 0:
+        return 0, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(score, run_output),
+            # severity is based on count of errors/warnings/other
+            severity=SDKValidateIssue.SEVERITY_LEVEL_CRITICAL if error_count > 0 else 
+                     SDKValidateIssue.SEVERITY_LEVEL_WARN if warning_count > 0 else 
+                     SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("fail_solution") if not LOG.isEnabledFor(logging.DEBUG) else ""
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("pass_solution")
+        )
+
+
+def bandit_validate_bandit_installed(attr_dict, **__):
+    """
+    Helper method for to validate that bandit is installed in the python environment.
+
+    If bandit is not installed, return -1 indicating that the bandit scan didn't "fail" but rather
+    was skipped.
+
+    :param attr_dict: dictionary of attributes for the bandit scan defined in ``bandit_attributes``
+    :type attr_dict: dict
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: -1 or 1 and a SDKValidateIssue with details about whether bandit is installed in the env
+    :rtype: (int, SDKValidateIssue)
+    """
+    LOG.debug("Validating that '{0}' is installed in the python env".format(constants.BANDIT_PACKAGE_NAME))
+
+
+    bandit_version = sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME)
+
+    # not installed
+    if not bandit_version:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(constants.BANDIT_PACKAGE_NAME),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution").format(constants.BANDIT_PACKAGE_NAME)
+        )
+    else:
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg").format(constants.BANDIT_PACKAGE_NAME),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=""
+        )
+
+def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_settings=None, **__):
+    """
+    Run Bandit Scan on whole package using the settings defined in ``constants.BANDIT_DEFAULT_ARGS``.
+    
+    Raises a SDKException if ``bandit`` isn't installed. In use with ``validate``, this method should 
+    only be called after successfully calling ``bandit_validate_bandit_installed``. If a call to that 
+    method returns a failing SDKValidateIssue, this method shouldn't be called
+
+    The default severity level on which the bandit scan fails is "medium" (defined as command line arg "-ll")
+
+    The user can overwrite the default settings using an SDK Settings JSON file either in the default
+    location or by using the --settings flag to pass in a path. The settings file should have a "bandit"
+    attribute which is a list of bandit command line options. Example (to change level to "low" and 
+    give 5 context lines):
+    .. code-block:: json
+        {
+            "bandit": [
+                "-l", "-n", "5"
+            ]
+        }
+
+    NOTE: that you can include more than just the severity level in the list. Any valid bandit command
+    line args will be parsed (as seen above with the "-n" arg added in).
+    More info here: https://github.com/PyCQA/bandit#readme or by running ``bandit -h``
+
+    The user can run the scan in ``verbose`` mode using the ``-v`` flag for the SDK to get output live as
+    the scan is running.
+
+    :param attr_dict: dictionary of attributes for the bandit scan defined in ``bandit_attributes``
+    :type attr_dict: dict
+    :param path_package: path to package
+    :type path_package: str
+    :param package_name: name of the package (i.e. fn_my_package)
+    :type package_name: str
+    :param path_sdk_settings: (optional) path to a sdk settings JSON file
+    :type path_sdk_settings: str
+    :param __: (unused) other unused named args
+    :type __: dict
+    :return: 1 or 0 and a SDKValidateIssue with details about the bandit scan
+    :rtype: (int, SDKValidateIssue)
+    """
+
+    # Because this method requires importing bandit, it must be installed in the env
+    if not sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME):
+        raise SDKException("Cannot call {0} without bandit installed".format(bandit_run_bandit_scan.__name__))
+
+    bandit_args = [constants.BANDIT_PACKAGE_NAME, "-r", os.path.join(path_package, package_name)]
+    bandit_args.extend(constants.BANDIT_DEFAULT_ARGS)
+
+    if LOG.isEnabledFor(logging.DEBUG):
+        # if running validate in verbose, append verbose flag to bandit args
+        bandit_args.extend(constants.BANDIT_VERBOSE_FLAG)
+
+    # grab bandit settings from sdk settings file if given and exists
+    # if either file doesn't exist or file doesn't have "bandit" section
+    # append on default severity level
+    if path_sdk_settings and os.path.exists(path_sdk_settings):
+        # if a settings file exists, check if it has a bandit section
+
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+
+        # grab the bandit section (should be a list)
+        settings_bandit_section = settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME)
+
+        if settings_bandit_section and isinstance(settings_bandit_section, list):
+            LOG.debug("Reading bandit command line args from sdk settings JSON file {0}".format(path_sdk_settings))
+            LOG.debug("Bandit settings found in settings file: {0}".format(settings_bandit_section))
+            bandit_args.extend(settings_bandit_section)
+        else:
+            bandit_args.extend(constants.BANDIT_DEFAULT_SEVERITY_LEVEL)
+    else:
+        bandit_args.extend(constants.BANDIT_DEFAULT_SEVERITY_LEVEL)
+
+    # run bandit as a subprocess 
+    exit_code, details = sdk_helpers.run_subprocess(bandit_args, cmd_name="bandit scan")
+
+
+    # bandit will return a non-zero exit code if an issue of minimum severity level or higher
+    # is found.
+    # Example: if "-ll" (our default level which is called "medium") is passed, the process
+    #          will only return a non-zero code if there are "medium" or "high" issues.
+    #          if only "low" or "uncategorized" issues are found, it will return 0
+    if exit_code != 0:
+        # all information above the "Test results" are not really relevant
+        # but incase that string is not found, we just take the whole details
+        details_start_string = "Test results"
+        if details.index(details_start_string) != -1:
+            details = details[details.index(details_start_string):]
+        details = details.replace("\n", "\n\t\t")
+        return 0, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format(details),
+            severity=attr_dict.get("severity"),
+            solution=attr_dict.get("fail_solution") if not LOG.isEnabledFor(logging.DEBUG) else ""
+        )
+    else:
+        # success
+        return 1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            solution=attr_dict.get("pass_solution")
+        )

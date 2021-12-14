@@ -348,9 +348,46 @@ package_files = {
         "fail_solution": "Provide a 'LICENSE' file in your package directory. Suggested formats: MIT, Apache, and BSD",
 
         "pass_msg": "'LICENSE' file is valid",
-        "pass_solution": "It is recommended to manually the license. Suggested formats: MIT, Apache, and BSD"
+        "pass_solution": "It is recommended to manually validate the license. Suggested formats: MIT, Apache, and BSD"
     }
 }
+
+payload_samples_attributes = {
+    "func": sdk_validate_helpers.payload_samples_validate_payload_samples,
+
+    # if import definition isn't readable or is corrupt
+    "no_import_def_msg": "'ImportDefinition' is corrupt: '{0}'",
+    "no_import_def_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if import def doesn't have the correct "function" section
+    "no_func_msg": "'ImportDefinition' is missing a 'function' section:'{0}'",
+    "no_func_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+
+    # if "function" list element section doesn't have a "name"
+    "no_func_name_msg": "'ImportDefinition.function' list is missing a 'name' for function: '{0}'",
+    "no_func_name_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if payload_samples file doesn't exist
+    "payload_file_missing_msg": "{0} for '{1}' not found",
+    "payload_file_missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if payload file is not readable json
+    "payload_file_invalid_msg": "{0} for '{1}' not valid JSON",
+    "payload_file_invalid_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if payload file is readbale json but empty
+    "payload_file_empty_msg": "{0} for '{1}' empty",
+    "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-samples'''",
+    "payload_file_empty_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # generic solution that instructs user to reload using codegen
+    "reload_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
+
+    # if payload file is not readable json
+    "pass_msg": "Payload samples for '{0}' are valid",
+    "pass_solution": ""
+}
+
 
 tests_attributes = [
     # first check tox is installed and meets min version defined in constants.TOX_MIN_PACKAGE_VERSION
@@ -413,4 +450,60 @@ tests_attributes = [
 
         "pass_msg": "{0} tests passed!",
     },
+]
+
+
+pylint_attributes = [
+    # first check that pylint is installed and meets minimum version
+    {
+        "func": sdk_validate_helpers.pylint_validate_pylint_installed,
+        "name": "Pylint Scan",
+
+        "fail_msg": "'{0}' is not installed in your Python environment",
+        "fail_solution": "(OPTIONAL) If you want to run a Pylint scan, install '{0}' by running '''pip install -U {0}'''",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' was found in the Python environment"
+    },
+
+    # second, run pylint and output the output
+    {
+        "func": sdk_validate_helpers.pylint_run_pylint_scan,
+        "name": "Pylint Scan",
+
+        "fail_msg": "The Pylint score was {0:.2f}/10. Details:\n\n\t\t{1}",
+        "fail_solution": "Run with '-v' to see full pylint output",
+
+        "pass_msg": "Pylint scan passed with no errors",
+        "pass_solution": "Run with '-v' to see full pylint output"
+    }
+]
+
+
+
+bandit_attributes = [
+    {
+        "func": sdk_validate_helpers.bandit_validate_bandit_installed,
+        "name": "Bandit Scan",
+
+        "fail_msg": "'{0}' is not installed in your Python environment",
+        "fail_solution": "(OPTIONAL) If you want to run a Bandit scan, install '{0}' by running '''pip install -U {0}'''",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+
+        "pass_msg": "'{0}' was found in the Python environment"
+    },
+    {
+        "func": sdk_validate_helpers.bandit_run_bandit_scan,
+        "name": "Bandit Scan",
+
+        "fail_msg": "Bandit scan failed. Details:\n\n\t\t{0}",
+        "fail_solution": "Run again with '-v' to see full bandit output",
+
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+        "pass_msg": "Bandit scan passed with no issues",
+        "pass_solution": "Run again with '-v' to see full bandit output"
+    }
 ]
