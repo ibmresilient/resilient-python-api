@@ -761,6 +761,190 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if there is at least one issue in the list
         return issues
 
+def payload_samples_validate_payload_samples(path_package, package_name, attr_dict):
+    """
+    This function verifies:
+    - (WARNING) the customize file is readable and the import definition from it contains a "functions" section
+    - for each function
+      - (CRITICAL) check it has a name, i.e. "fn_name"
+      - (CRITICAL) investigate payload_samples/fn_name/output_json_[example|schema].json with helper method
+
+    Returns a successful issue if all the above were valid.
+    Returns an issue with the noted level if anything in the above fails.
+
+    The function returns a list of an issue for each payload sample.
+    NOTE: this function could return a list of 1 item if the customize is unreadable...
+
+    :param path_package: the path to the package
+    :type path_package: str
+    :param package_name: name of the package i.e. fn_my_app
+    :type package_name: str
+    :param attr_dict: dictionary of attributes for the payload samples defined in ``payload_samples_attributes``
+    :type attr_dict: dict
+    :return: a list (this can be a mix) of passing issues and/or a critical issues
+    :rtype: list[SDKValidateIssue]
+    """
+
+    # get function list from import definition in customize.py file
+    path_customize = os.path.join(path_package, package_name, package_helpers.PATH_CUSTOMIZE_PY)
+    try:
+        # parse import definition information from customize.py file
+        # this will raise an SDKException if something goes wrong
+        sdk_helpers.validate_file_paths(os.R_OK, path_customize)
+        import_def = package_helpers.get_import_definition_from_customize_py(path_customize)
+    except SDKException:
+        return [SDKValidateIssue(
+            name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
+            description=attr_dict.get("no_import_def_msg").format(path_customize),
+            severity=attr_dict.get("no_import_def_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )]
+
+    # if nothing went wrong in try-except above
+    # grab functions list from import_def
+    functions = import_def.get("functions")
+
+    # make sure that the import def has a "functions" section
+    if not functions:
+        return [SDKValidateIssue(
+            name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
+            description=attr_dict.get("no_func_msg").format(path_customize),
+            severity=attr_dict.get("no_func_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )]
+
+    # loop through each function to get the name
+    # it is unlikely but possible that the name is missing from the
+    # import def so that is checked for here just in case and will
+    # create an appropriate issue for that function but will then continue on
+    # to the next function
+    issues = []
+    for function in functions:
+        func_name = function.get("name")
+
+        # if the name is missing
+        if not func_name:
+            issues.append(SDKValidateIssue(
+                name=package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR,
+                description=attr_dict.get("no_func_name_msg").format(function),
+                severity=attr_dict.get("no_func_name_severity"),
+                solution=attr_dict.get("reload_solution").format(path_package)
+            ))
+        else:
+            issues.append(_validate_payload_samples(path_package, func_name, attr_dict))
+
+    return issues
+
+def _validate_payload_samples(path_package, func_name, attr_dict):
+    """
+    Helper method to validate a payload sample set for a given function.
+
+    Looks in payload_samples/func_name/output_json_[example|schema].json
+    and verifies that each file is:
+    - present
+    - valid json
+    - not empty
+
+    If all the above pass, a passing issue is given for the function and its associated payloads.
+    If one of the above fails, a critical issue is raised.
+
+    It is worth noting the implementation of this will fail once one of the two files fails
+    but it will check the second file before returning an issue. Example:
+    If the example is invalid JSON but the schema is valid, youd get a message like:
+        'output_json_example.json' for 'mock_function_one' not valid JSON
+
+    But if both were invalid JSON the message would say:
+        'output_json_example.json' and 'output_json_schema.json' for 'mock_function_one' not valid JSON
+
+    :param path_package: path to the package
+    :type path_package: str
+    :param func_name: name of the function, i.e. fn_my_func_1
+    :type func_name: str
+    :param attr_dict: dictionary of attributes for the payload samples defined in ``payload_samples_attributes``
+    :type attr_dict: dict
+    :return: one SDKValidateIssue indicating the validity of the samples for a payload
+    :rtype: SDKValidateIssue
+    """
+
+    path_samples_dir = os.path.join(path_package, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, func_name)
+    issue_name = "'{0}'".format(os.path.join(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR, func_name))
+
+    path_samples_example = os.path.join(path_samples_dir, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+    path_samples_schema = os.path.join(path_samples_dir, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+
+    example_str = "'{0}'".format(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+    schema_str = "'{0}'".format(package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+
+    ## check that the samples are present ##
+    # list used to generate message that might include both or just one
+    # this way we can get message that say something like 'example' and 'schema' are missing
+    # rather than just 'schema' is missing
+    samples_missing = []
+    try: 
+        sdk_helpers.validate_file_paths(os.R_OK, path_samples_example)
+    except SDKException:
+        samples_missing.append(example_str)
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, path_samples_schema)
+    except SDKException:
+        samples_missing.append(schema_str)
+
+    if samples_missing:
+        msg = " and ".join(samples_missing) # if just one element, it will not add the "and"
+        return SDKValidateIssue(
+            name=issue_name,
+            description=attr_dict.get("payload_file_missing_msg").format(msg, func_name),
+            severity=attr_dict.get("payload_file_missing_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )
+
+    ## check that the samples are valid JSON ##
+    # same idea as above
+    samples_invalid = []
+    try:
+        read_example_json = sdk_helpers.read_json_file(path_samples_example)
+    except SDKException:
+        samples_invalid.append(example_str)
+    try:
+        read_schema_json = sdk_helpers.read_json_file(path_samples_schema)
+    except SDKException:
+        samples_invalid.append(schema_str)
+
+    if samples_invalid:
+        msg = " and ".join(samples_invalid)
+        return SDKValidateIssue(
+            name=issue_name,
+            description=attr_dict.get("payload_file_invalid_msg").format(msg, func_name),
+            severity=attr_dict.get("payload_file_invalid_severity"),
+            solution=attr_dict.get("reload_solution").format(path_package)
+        )
+
+    ## finally make sure the samples are not empty ##
+    # (which is the codegen default before --gather-samples is run)
+    samples_empty = []
+    if not read_example_json:
+        samples_empty.append(example_str)
+    if not read_schema_json:
+        samples_empty.append(schema_str)
+    
+    if samples_empty:
+        msg = " and ".join(samples_empty)
+        return SDKValidateIssue(
+            name=issue_name,
+            description=attr_dict.get("payload_file_empty_msg").format(msg, func_name),
+            severity=attr_dict.get("payload_file_empty_severity"),
+            solution=attr_dict.get("payload_file_empty_solution").format(path_package)
+        )
+
+    ## return a passing issue here ##
+    return SDKValidateIssue(
+        name=issue_name,
+        description=attr_dict.get("pass_msg").format(func_name),
+        severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+        solution=attr_dict.get("pass_solution")
+    )
+
+
 
 
 def tox_tests_validate_tox_installed(attr_dict, **__):

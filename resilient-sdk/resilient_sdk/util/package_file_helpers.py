@@ -67,7 +67,7 @@ PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data
 
 PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"
 
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CUSTOMIZE_PY = os.path.join("util", BASE_NAME_CUSTOMIZE_PY)
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_UTIL_DATA_DIR = os.path.join("util", "data")
 PATH_SELFTEST_PY = os.path.join("util", "selftest.py")

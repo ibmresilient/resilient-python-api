@@ -75,6 +75,27 @@
 {% endif %} {# endif package files exists #}
 
 
+{# Payload Samples values if ran #}
+{% if "payload samples" in validate_issues_dict %}
+## Payload samples validation
+{% for issue in validate_issues_dict["payload samples"] %}
+
+### {{ issue.name|scrub_ansi|code|dot_py }}
+{% if issue.severity <= SEVERITY_THRESHOLD %}
+{{ issue.severity_to_color() }}: {{ issue.description|scrub_ansi|diff|code }}
+
+{{ issue.solution|scrub_ansi|code }}
+
+{% else %}
+<span style="color:green">Pass</span>
+
+{% endif %}
+{% endfor %} {# endfor all paylaod samples issues#}
+
+---
+{% endif %} {# endif payload samples exists #}
+
+
 {# SELFTEST if ran #}
 {% if "selftest.py" in validate_issues_dict %}
 ## `resilient-circuits` selftest

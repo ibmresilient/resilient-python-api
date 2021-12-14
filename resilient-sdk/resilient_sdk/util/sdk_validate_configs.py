@@ -352,6 +352,43 @@ package_files = {
     }
 }
 
+payload_samples_attributes = {
+    "func": sdk_validate_helpers.payload_samples_validate_payload_samples,
+
+    # if import definition isn't readable or is corrupt
+    "no_import_def_msg": "'ImportDefinition' is corrupt: '{0}'",
+    "no_import_def_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if import def doesn't have the correct "function" section
+    "no_func_msg": "'ImportDefinition' is missing a 'function' section:'{0}'",
+    "no_func_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
+
+    # if "function" list element section doesn't have a "name"
+    "no_func_name_msg": "'ImportDefinition.function' list is missing a 'name' for function: '{0}'",
+    "no_func_name_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if payload_samples file doesn't exist
+    "payload_file_missing_msg": "{0} for '{1}' not found",
+    "payload_file_missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if payload file is not readable json
+    "payload_file_invalid_msg": "{0} for '{1}' not valid JSON",
+    "payload_file_invalid_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # if payload file is readbale json but empty
+    "payload_file_empty_msg": "{0} for '{1}' empty",
+    "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-samples'''",
+    "payload_file_empty_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+
+    # generic solution that instructs user to reload using codegen
+    "reload_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
+
+    # if payload file is not readable json
+    "pass_msg": "Payload samples for '{0}' are valid",
+    "pass_solution": ""
+}
+
+
 tests_attributes = [
     # first check tox is installed and meets min version defined in constants.TOX_MIN_PACKAGE_VERSION
     {

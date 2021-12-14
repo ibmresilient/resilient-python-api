@@ -213,6 +213,22 @@ def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration)
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
         assert results[1][0].solution == "mock_solution"
 
+def test_payloads_validate_package_files(fx_copy_fn_main_mock_integration):
+    # this uses the payload samples in the mock integration
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+
+    results = CmdValidate._validate_payload_samples(mock_path_package)
+
+    assert len(results) == 2
+    assert not results[0]
+    assert len(results[1]) == 4
+    assert "'output_json_example.json' and 'output_json_schema.json' for 'a_mock_function_with_no_unicode_characters_in_name' empty" in results[1][0].description
+    assert "'output_json_example.json' and 'output_json_schema.json' for 'mock_function__three' empty" in results[1][1].description
+    assert "'output_json_schema.json' for 'mock_function_one' empty" in results[1][2].description
+    assert "'output_json_example.json' and 'output_json_schema.json' for 'mock_function_two' empty" in results[1][3].description
+    assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
 
 def test_pass_validate_tox_tests(fx_copy_fn_main_mock_integration):
 
