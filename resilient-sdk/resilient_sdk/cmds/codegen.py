@@ -33,7 +33,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
     $ resilient-sdk codegen -p <path_current_package> --gather-results
-    $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log'"""
+    $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
 
@@ -590,7 +590,7 @@ class CmdCodegen(BaseCmd):
             else:
                 raise e
 
-        functions_that_need_payload_samples = os.listdir(path_payload_samples_dir)
+        functions_that_need_payload_samples = args.function if args.function else os.listdir(path_payload_samples_dir)
 
         results_scraped = sdk_helpers.scrape_results_from_log_file(path_log_file)
 
