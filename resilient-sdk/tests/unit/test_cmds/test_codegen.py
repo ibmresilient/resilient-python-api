@@ -414,6 +414,40 @@ def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_get_results_from_log_file_specific_function(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+    sys.argv.extend(["-f", "mock_function_one", "mock_function_not_exist"])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen.execute_command(args)
+
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    # Test output_json_example.json file generated
+    output_json_example_contents = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
+    assert output_json_example_contents.get("version") == 2.1
+
+    # Test output_json_schema.json file generated
+    output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
+    output_json_example_schema_props = output_json_example_schema.get("properties")
+
+    assert output_json_example_schema_props.get("version") == {"type": "number"}
+    assert output_json_example_schema_props.get("success") == {"type": "boolean"}
+    assert output_json_example_schema_props.get("reason") == {"type": "null"}
+
+    # Test WARNING log appears
+    assert "WARNING: No results could be found for 'mock_function_not_exist'" in caplog.text
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_results_from_log_file_no_payload_samples_dir(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
 
     mock_integration_name = fx_copy_fn_main_mock_integration[0]

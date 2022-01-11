@@ -590,7 +590,7 @@ class CmdCodegen(BaseCmd):
             else:
                 raise e
 
-        functions_that_need_payload_samples = os.listdir(path_payload_samples_dir)
+        functions_that_need_payload_samples = args.function if args.function else os.listdir(path_payload_samples_dir)
 
         results_scraped = sdk_helpers.scrape_results_from_log_file(path_log_file)
 
