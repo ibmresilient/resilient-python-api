@@ -443,29 +443,6 @@ def test_run_subprocess_with_cwd():
     assert dir_before_cwd == os.getcwd()
 
 
-def test_replace_none_with_dict():
-    mock_dict = {
-        "value_a": None,
-        "value_b": False,
-        "value_c": {
-            "value_i": None
-        },
-        "value_d": [{"value_iii": None}, "mock_string"]
-    }
-
-    sdk_helpers.replace_none_with_dict(mock_dict)
-
-    assert mock_dict.get("value_a") == {}
-    assert mock_dict.get("value_b") is False
-    assert mock_dict.get("value_c").get("value_i") == {}
-
-    for v in mock_dict.get("value_d"):
-        if isinstance(v, dict):
-            assert v.get("value_iii") == {}
-        elif isinstance(v, str):
-            assert v == "mock_string"
-
-
 def test_scrape_results_from_log_file():
 
     results_scraped = sdk_helpers.scrape_results_from_log_file(mock_paths.MOCK_APP_LOG_PATH)
@@ -476,7 +453,7 @@ def test_scrape_results_from_log_file():
     # There are two Results for mock_function_one
     # in the mock_app.log file, so this ensures we get the latest
     assert mock_function_one_results.get("version") == 2.1
-    assert mock_function_one_results.get("reason") == {}
+    assert mock_function_one_results.get("reason") == None
 
 
 def test_scrape_results_from_log_file_not_found():
