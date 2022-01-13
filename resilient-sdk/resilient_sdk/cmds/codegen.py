@@ -18,6 +18,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util.sdk_genson_overwrites import main_genson_builder_overwrites
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -615,7 +616,7 @@ class CmdCodegen(BaseCmd):
 
                 LOG.info("Writing JSON schema file for '%s' to '%s'", fn_name, path_output_json_schema)
                 builder = SchemaBuilder(schema_uri=constants.CODEGEN_JSON_SCHEMA_URI)
-                builder.add_schema({"type": "object", "properties": {}})
+                main_genson_builder_overwrites(builder)
                 builder.add_object(fn_results)
                 sdk_helpers.write_file(path_output_json_schema, builder.to_json(indent=2))
 

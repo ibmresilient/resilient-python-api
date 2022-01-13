@@ -407,7 +407,8 @@ def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line
 
     assert output_json_example_schema_props.get("version") == {"type": "number"}
     assert output_json_example_schema_props.get("success") == {"type": "boolean"}
-    assert output_json_example_schema_props.get("reason") == {"type": "null"}
+    assert output_json_example_schema_props.get("reason") == {"type": "object"}
+    assert not output_json_example_schema.get("required")
 
     # Test WARNING log appears
     assert "WARNING: No results could be found for 'mock_function_two'" in caplog.text
@@ -441,7 +442,8 @@ def test_get_results_from_log_file_specific_function(fx_copy_fn_main_mock_integr
 
     assert output_json_example_schema_props.get("version") == {"type": "number"}
     assert output_json_example_schema_props.get("success") == {"type": "boolean"}
-    assert output_json_example_schema_props.get("reason") == {"type": "null"}
+    assert output_json_example_schema_props.get("reason") == {"type": "object"}
+    assert not output_json_example_schema.get("required")
 
     # Test WARNING log appears
     assert "WARNING: No results could be found for 'mock_function_not_exist'" in caplog.text
