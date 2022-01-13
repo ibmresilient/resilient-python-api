@@ -26,7 +26,6 @@ SUB_CMD_VALIDATE = ("--validate", )
 SUB_CMD_TESTS = ("--tests", )
 SUB_CMD_PYLINT = ("--pylint", )
 SUB_CMD_BANDIT = ("--bandit", )
-SUB_CMD_CVE = ("--cve", )
 SUB_CMD_SELFTEST = ("--selftest", )
 SUB_CMD_TOX_ARGS = ("--tox-args", )
 
@@ -47,7 +46,7 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package> --tests
     $ resilient-sdk validate -p <name_of_package> --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
     $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
-    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
+    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --selftest"""
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser", constants.SDK_SETTINGS_PARSER_NAME]
 
@@ -78,15 +77,11 @@ class CmdValidate(BaseCmd):
 
         self.parser.add_argument(SUB_CMD_PYLINT[0],
                                  action="store_true",
-                                 help="Run a pylint scan of all .py files under package directory (if 'pylint' is installed")
+                                 help="Run a pylint scan of all .py files under package directory (if 'pylint' is installed)")
 
         self.parser.add_argument(SUB_CMD_BANDIT[0],
                                  action="store_true",
-                                 help="Run a bandit scan of all .py files under package directory (if 'bandit' is installed")
-
-        self.parser.add_argument(SUB_CMD_CVE[0],
-                                 action="store_true",
-                                 help="Run a safety scan of all .py files under package directory (if 'safety' is installed")
+                                 help="Run a bandit scan of all .py files under package directory (if 'bandit' is installed)")
 
         self.parser.add_argument(SUB_CMD_SELFTEST[0],
                                  action="store_true",
@@ -126,7 +121,7 @@ class CmdValidate(BaseCmd):
         if run_from_package:
             self._run_main_validation(args, )
 
-        if not run_from_package and not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve and not args.selftest:
+        if not run_from_package and not args.validate and not args.tests and not args.pylint and not args.bandit and not args.selftest:
             SDKException.command_ran = "{0} {1} | {2}".format(self.CMD_NAME, constants.SUB_CMD_OPT_PACKAGE[0], constants.SUB_CMD_OPT_PACKAGE[1])
             self._run_main_validation(args, )
 
@@ -145,10 +140,6 @@ class CmdValidate(BaseCmd):
         if not run_from_package and args.bandit:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_BANDIT[0])
             self._run_bandit_scan(args, )
-
-        if not run_from_package and args.cve:
-            SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_CVE[0])
-            self._run_cve_scan(args, )
 
         if not run_from_package and args.selftest:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_SELFTEST[0])
@@ -839,12 +830,6 @@ class CmdValidate(BaseCmd):
             self._log(issue.get_logging_level(), issue.error_str())
 
         self._print_status(constants.VALIDATE_LOG_LEVEL_INFO, "Bandit Scan", bandit_valid_or_skipped)
-
-    def _run_cve_scan(self, args):
-        """
-        TODO
-        """
-        self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running safety{0}".format(constants.LOG_DIVIDER))
 
     def _run_selftest(self, args):
         """

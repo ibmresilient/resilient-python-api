@@ -493,7 +493,7 @@ def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
     assert len(result) == 1
     result = result[0]
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    assert "Cannot find the following screenshot(s) referenced in the README" in result.description
+    assert "Cannot find one or more screenshots referenced in the README" in result.description
 
 def test_payload_samples_empty(fx_copy_fn_main_mock_integration):
     # NOTE: if the payload samples ever change in the mock integration
@@ -565,7 +565,7 @@ def test_tox_tests_validate_not_min_env_version_only(fx_copy_fn_main_mock_integr
         result = sdk_validate_helpers.tox_tests_validate_min_env_version(path_package, attr_dict)
 
         assert result[0] == 1
-        assert "Unsupported tox env found in envlist in 'tox.ini' file" in result[1].description
+        assert "Unsupported tox environment found in envlist in 'tox.ini' file" in result[1].description
 
 def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
 

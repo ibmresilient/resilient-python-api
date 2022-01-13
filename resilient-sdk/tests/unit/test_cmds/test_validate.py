@@ -26,12 +26,12 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
     $ resilient-sdk validate -p <name_of_package> --tests
     $ resilient-sdk validate -p <name_of_package> --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
     $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
-    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
+    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --selftest"""
     assert cmd_validate.CMD_DESCRIPTION == cmd_validate.CMD_HELP
 
     args = cmd_validate.parser.parse_known_args()[0]
     assert args.package == "fn_main_mock_integration"
-    assert bool(not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve) is True
+    assert bool(not args.validate and not args.tests and not args.pylint and not args.bandit) is True
 
 def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate, caplog):
 

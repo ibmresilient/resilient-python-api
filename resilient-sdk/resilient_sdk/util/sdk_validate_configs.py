@@ -180,7 +180,7 @@ package_files = {
 
         "fail_msg": "'MANIFEST.in' is missing the following lines: {0}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
-        "fail_solution": "The 'MANIFEST.in' file is the list of files to be included during packaging. Be sure it is up to date",
+        "fail_solution": "'MANIFEST.in' file is the list of files to be included during packaging. Be sure it is up to date",
 
         "missing_msg": "'MANIFEST.in' not found in package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
@@ -200,7 +200,7 @@ package_files = {
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
-        "pass_msg": "'apikey_permnissions.txt' is valid; it has at least the base permissions",
+        "pass_msg": "'apikey_permissions.txt' is valid; it contains the base permissions",
         "pass_solution": "Permissions found: {0}"
     },
     "Dockerfile": {
@@ -221,7 +221,7 @@ package_files = {
         "func": sdk_validate_helpers.package_files_template_match,
         "name": "'entrypoint.sh'",
 
-        "fail_msg": "'entrypoint.sh' file does not match the template file ({0:.0f}% match). Difference from template: \n\n\t\t{1}",
+        "fail_msg": "'entrypoint.sh' does not match the template file ({0:.0f}% match). Difference from template: \n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
         "fail_solution": "Ensure that the 'entrypoint.sh' was generated with the latest version of the resilient-sdk...",
 
@@ -229,7 +229,7 @@ package_files = {
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
-        "pass_msg": "'entrypoint.sh' file matched template file"
+        "pass_msg": "'entrypoint.sh' matches the template file"
     },
     "config.py": {
         "func": sdk_validate_helpers.package_files_validate_config_py,
@@ -238,7 +238,7 @@ package_files = {
 
         "warn_msg": "'config.py' does not return a string value",
         "warn_severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
-        "warn_solution": "The 'config.py' file specifies the structure of the app.config settings for your app",
+        "warn_solution": "The 'config.py' file defines the contents of the app.config settings for your app",
 
         "fail_msg": u"{0}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
@@ -265,7 +265,7 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'customize.py' returned a valid import definition",
-        "pass_solution": u"ImportDefinition found: {0}...; See the whole contents at '{1}'"
+        "pass_solution": u"ImportDefinition found: {0}...; View the entire contents at '{1}'"
     },
     "README.md": {
         "func": sdk_validate_helpers.package_files_validate_readme,
@@ -283,16 +283,16 @@ package_files = {
         "fail_placeholder_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "fail_placeholder_solution": "Edit the README and make sure to remove all '<!-- {0} -->' comments",
 
-        "fail_screenshots_msg": "Cannot find the following screenshot(s) referenced in the README: {0}",
+        "fail_screenshots_msg": "Cannot find one or more screenshots referenced in the README: {0}",
         "fail_screenshots_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "fail_screenshots_solution": "Make sure all screenshots referenced in the README are placed in the /doc/screenshots folder",
 
         "missing_msg": "Cannot find README in the package at path {0}",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Generate the docs using '''resilient-sdk docgen -p {0}'''",
+        "missing_solution": "Generate the documentation using '''resilient-sdk docgen -p {0}'''",
 
         "pass_msg": "'README.md' has been implemented",
-        "pass_solution": "Make sure that all documentation is up-to-date before packaging"
+        "pass_solution": "Make sure that all documentation is up to date before packaging"
     },
     "app_logo.png": {
         "func": sdk_validate_helpers.package_files_validate_icon,
@@ -375,7 +375,7 @@ payload_samples_attributes = {
     "payload_file_invalid_msg": "{0} for '{1}' not valid JSON",
     "payload_file_invalid_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
-    # if payload file is readbale json but empty
+    # if payload file is readable json but empty
     "payload_file_empty_msg": "{0} for '{1}' empty",
     "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-samples'''",
     "payload_file_empty_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
@@ -383,7 +383,7 @@ payload_samples_attributes = {
     # generic solution that instructs user to reload using codegen
     "reload_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
-    # if payload file is not readable json
+    # if payload file is readable json
     "pass_msg": "Payload samples for '{0}' are valid",
     "pass_solution": ""
 }
@@ -413,7 +413,7 @@ tests_attributes = [
         "name": "tox tests",
 
         "fail_msg": "'{0}' file not found in package path",
-        "fail_solution": "(OPTIONAL) If you want to validate tests you should include a {0} file",
+        "fail_solution": "(OPTIONAL) If you want to validate tests, include a {0} file",
 
         "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
 
@@ -428,8 +428,8 @@ tests_attributes = [
         "missing_msg": "'envlist={0}' not found in '{1}' file",
         "missing_solution": "Tests must be configured to run 'envlist={0}' or greater",
 
-        "fail_msg": "Unsupported tox env found in envlist in '{0}' file",
-        "fail_solution": "Tests must be configured to run only with tox envs '{0}' or greater",
+        "fail_msg": "Unsupported tox environment found in envlist in '{0}' file",
+        "fail_solution": "Tests must be configured to run only with tox environments '{0}' or greater",
 
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
 
@@ -473,10 +473,10 @@ pylint_attributes = [
         "name": "Pylint Scan",
 
         "fail_msg": "The Pylint score was {0:.2f}/10. Details:\n\n\t\t{1}",
-        "fail_solution": "Run with '-v' to see full pylint output",
+        "fail_solution": "Run with '-v' to see the full pylint output",
 
         "pass_msg": "Pylint scan passed with no errors",
-        "pass_solution": "Run with '-v' to see full pylint output"
+        "pass_solution": "Run with '-v' to see the full pylint output"
     }
 ]
 
@@ -499,11 +499,11 @@ bandit_attributes = [
         "name": "Bandit Scan",
 
         "fail_msg": "Bandit scan failed. Details:\n\n\t\t{0}",
-        "fail_solution": "Run again with '-v' to see full bandit output",
+        "fail_solution": "Run again with '-v' to see the full bandit output",
 
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
         "pass_msg": "Bandit scan passed with no issues",
-        "pass_solution": "Run again with '-v' to see full bandit output"
+        "pass_solution": "Run again with '-v' to see the full bandit output"
     }
 ]
