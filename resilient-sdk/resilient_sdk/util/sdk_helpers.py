@@ -1280,9 +1280,6 @@ def scrape_results_from_log_file(path_log_file):
             # Convert str into dict
             results = ast.literal_eval(results_from_l)
 
-            # # Convert ``None``s into ``Dict``s
-            # replace_none_with_dict(results)
-
             # Check if this fn_name is already in results_scraped
             if fn_name not in results_scraped.keys():
                 results_scraped[fn_name] = results
