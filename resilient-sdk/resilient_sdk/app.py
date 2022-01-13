@@ -91,12 +91,10 @@ def main():
     if sdk_dev:
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
-        cmd_validate = CmdValidate(sub_parser)
         LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
-    else:
-        cmd_validate = None
 
     # Add any subcommands to main app parser here
+    cmd_validate = CmdValidate(sub_parser)
     cmd_codegen = CmdCodegen(sub_parser)
     cmd_clone = CmdClone(sub_parser)
     cmd_docgen = CmdDocgen(sub_parser)
@@ -135,7 +133,7 @@ def main():
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
 
-            elif sdk_dev and main_cmd == cmd_validate.CMD_NAME:
+            elif main_cmd == cmd_validate.CMD_NAME:
                 cmd_validate.parser.print_usage()
 
             elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
@@ -168,9 +166,7 @@ def main():
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
 
-    elif sdk_dev and args.cmd == cmd_validate.CMD_NAME:
-        # TODO: v44 release remove sdk_dev check once validate is ready for use
-        # functionality is currently hidden behind sdk_dev env var 
+    elif args.cmd == cmd_validate.CMD_NAME:
         cmd_validate.execute_command(args)
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)

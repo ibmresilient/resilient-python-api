@@ -135,8 +135,7 @@ class CmdExtPackage(BaseCmd):
 
         # if --validate flag is set, run validate command
         # else set the path to the file if it exists or None if doesn't exist
-        # TODO: v44 release: change this to just the first half of if stmt
-        if args.validate and sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+        if args.validate:
             LOG.info("Validation on {0} is starting. \nTo skip, run the 'package' command without the '--validate' flag.\nValidations can be executated separately by running: \n  'resilient-sdk validate -p {0}' \nto see more in-depth results.\n".format(args.package))
 
             validate_args = self.cmd_validate.parser.parse_known_args()[0]
