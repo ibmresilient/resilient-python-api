@@ -123,6 +123,20 @@ extract
     options:
     |cmd_extract_options|
 
+++++++++
+validate
+++++++++
+
+|cmd_validate_desc|
+
+.. parsed-literal::
+
+    usage:
+    |cmd_validate_usage|
+
+    options:
+    |cmd_validate_options|
+
 ----------
 Change Log
 ----------
