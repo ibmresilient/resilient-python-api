@@ -341,11 +341,36 @@ options:
 -c, --config			Path to app.config file to use 
 -n, --name			Name to prepend to generated file</pre>
 </section>
+<section id="validate">
+<h3>validate<a class="headerlink" href="#validate" title="Permalink to this headline">¶</a></h3>
+<p>Validate an App before packaging it</p>
+<pre class="literal-block">usage:
+$ resilient-sdk validate -p &lt;name_of_package&gt;
+$ resilient-sdk validate -p &lt;name_of_package&gt; -c '/usr/custom_app.config'
+$ resilient-sdk validate -p &lt;name_of_package&gt; --validate
+$ resilient-sdk validate -p &lt;name_of_package&gt; --tests
+$ resilient-sdk validate -p &lt;name_of_package&gt; --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
+$ resilient-sdk validate -p &lt;name_of_package&gt; --tests --settings &lt;path_to_custom_sdk_settings_file&gt;
+$ resilient-sdk validate -p &lt;name_of_package&gt; --pylint --bandit --selftest
+
+options:
+-h, --help			show this help message and exit
+-c, --config			Path to app.config file to use 
+--settings			Path to .sdk_settings.json file to use 
+-p, --package			(required) Path to existing package 
+--validate			Run validation of package files 
+--tests				Run tests using package's tox.ini file in a Python 3.6 environment (if 'tox' is installed and tox tests are configured for the package) 
+--pylint				Run a pylint scan of all .py files under package directory (if 'pylint' is installed) 
+--bandit				Run a bandit scan of all .py files under package directory (if 'bandit' is installed) 
+--selftest			Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment) 
+--tox-args			pytest arguments to pass to tox when validating tests. Provide in the format &lt;attr1&gt;="&lt;value&gt;". Example: '--tox-args my_arg1="value1" my_arg2="value2"'</pre>
+</section>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
 <p><strong>2022-01: version 43.1</strong></p>
 <ul class="simple">
+<li><p>Added new <code class="docutils literal notranslate"><span class="pre">validate</span></code> functionality to the SDK.</p></li>
 <li><p>Added <a class="reference external" href="https://pypi.org/project/genson/">genson 1.2 dependency</a> to generate JSON schemas</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> now produces <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> and <code class="docutils literal notranslate"><span class="pre">output_json_schema.json</span></code> files for each function in the <code class="docutils literal notranslate"><span class="pre">payload_samples</span></code> directory to aid with building <strong>Playbooks</strong></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> has a new argument <code class="docutils literal notranslate"><span class="pre">--gather-results</span></code> which will scan an <code class="docutils literal notranslate"><span class="pre">app.log</span></code> file to get the results for the <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> file</p></li>
@@ -494,6 +519,7 @@ options:
 <li><a class="reference internal" href="#package">package</a></li>
 <li><a class="reference internal" href="#clone">clone</a></li>
 <li><a class="reference internal" href="#extract">extract</a></li>
+<li><a class="reference internal" href="#validate">validate</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
