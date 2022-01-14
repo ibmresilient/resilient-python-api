@@ -38,7 +38,7 @@ class CmdValidate(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "validate"
-    CMD_HELP = "Validate an App before packaging it"
+    CMD_HELP = "Tests the content of all files associated with the app, including code, before packaging it"
     CMD_USAGE = """
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
@@ -65,11 +65,11 @@ class CmdValidate(BaseCmd):
         self.parser.add_argument(constants.SUB_CMD_OPT_PACKAGE[1], constants.SUB_CMD_OPT_PACKAGE[0],
                                  type=ensure_unicode,
                                  required=True,
-                                 help="(required) Path to existing package")
+                                 help="(Required) Path to existing package")
 
         self.parser.add_argument(SUB_CMD_VALIDATE[0],
                                  action="store_true",
-                                 help="Run validation of package files")
+                                 help="Run validation on package files. No dynamic checks.")
 
         self.parser.add_argument(SUB_CMD_TESTS[0],
                                  action="store_true",
@@ -77,19 +77,19 @@ class CmdValidate(BaseCmd):
 
         self.parser.add_argument(SUB_CMD_PYLINT[0],
                                  action="store_true",
-                                 help="Run a pylint scan of all .py files under package directory (if 'pylint' is installed)")
+                                 help="Run a pylint scan of all .py files under package directory. 'pylint' must be installed)")
 
         self.parser.add_argument(SUB_CMD_BANDIT[0],
                                  action="store_true",
-                                 help="Run a bandit scan of all .py files under package directory (if 'bandit' is installed)")
+                                 help="Run a bandit scan of all .py files under package directory. 'bandit' must be installed)")
 
         self.parser.add_argument(SUB_CMD_SELFTEST[0],
                                  action="store_true",
-                                 help="Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment)")
+                                 help="Validate and run the selftest.py file in the package directory. 'resilient-circuits' and the package must be installed in Python environment)")
 
         self.parser.add_argument(SUB_CMD_TOX_ARGS[0],
                                  nargs="*",
-                                 help="""pytest arguments to pass to tox when validating tests. Provide in the format <attr1>="<value>". Example: '--tox-args my_arg1="value1" my_arg2="value2"'""")
+                                 help="""Pytest arguments to pass to tox when validating tests. Format is <attr1>="<value>". Example: '--tox-args my_arg1="value1" my_arg2="value2"'""")
 
     def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """

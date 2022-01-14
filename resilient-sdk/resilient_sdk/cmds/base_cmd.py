@@ -183,7 +183,7 @@ class BaseCmd(object):
 
         app_config_parser.add_argument("-c", "--config",
                                        type=ensure_unicode,
-                                       help="Path to app.config file to use")
+                                       help="Path to app.config file. Default is ~/.resilient/app.config")
 
         return app_config_parser
 
@@ -203,6 +203,6 @@ class BaseCmd(object):
                                          nargs="?",
                                          default=constants.SDK_SETTINGS_FILE_PATH,
                                          const=constants.SDK_SETTINGS_FILE_PATH,
-                                         help="Path to {0} file to use".format(constants.SDK_SETTINGS_FILENAME))
+                                         help="Path to {0} file. Default is ~/.resilient/.sdk_settings.json".format(constants.SDK_SETTINGS_FILENAME))
 
         return sdk_settings_parser
