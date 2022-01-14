@@ -1241,31 +1241,6 @@ def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=loggi
     # sys.stdout.flush()
 
 
-def replace_none_with_dict(any_dict):
-    """
-    Recursively loop a dict. Any nested dicts or lists
-    that are found, expand them and set any occurrence of
-    ``None`` to an empty ``dict``
-
-    :param any_dict: a dict containing any type of elements
-    :type any_dict: dict
-    """
-    if not isinstance(any_dict, (dict, list)):
-        return
-
-    for k, v in any_dict.items():
-
-        if v is None:
-            any_dict[k] = {}
-
-        elif isinstance(v, dict):
-            replace_none_with_dict(v)
-
-        elif isinstance(v, list):
-            for v_i in v:
-                replace_none_with_dict(v_i)
-
-
 def scrape_results_from_log_file(path_log_file):
     """
     Validate that path_log_file exists, reverse it and look for lines
@@ -1304,9 +1279,6 @@ def scrape_results_from_log_file(path_log_file):
 
             # Convert str into dict
             results = ast.literal_eval(results_from_l)
-
-            # Convert ``None``s into ``Dict``s
-            replace_none_with_dict(results)
 
             # Check if this fn_name is already in results_scraped
             if fn_name not in results_scraped.keys():

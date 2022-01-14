@@ -407,7 +407,7 @@ def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line
 
     assert output_json_example_schema_props.get("version") == {"type": "number"}
     assert output_json_example_schema_props.get("success") == {"type": "boolean"}
-    assert output_json_example_schema_props.get("reason") == {"type": "object"}
+    assert output_json_example_schema_props.get("reason") == {}
     assert not output_json_example_schema.get("required")
 
     # Test WARNING log appears
@@ -442,7 +442,7 @@ def test_get_results_from_log_file_specific_function(fx_copy_fn_main_mock_integr
 
     assert output_json_example_schema_props.get("version") == {"type": "number"}
     assert output_json_example_schema_props.get("success") == {"type": "boolean"}
-    assert output_json_example_schema_props.get("reason") == {"type": "object"}
+    assert output_json_example_schema_props.get("reason") == {}
     assert not output_json_example_schema.get("required")
 
     # Test WARNING log appears
@@ -479,6 +479,7 @@ def test_get_results_from_log_file_no_payload_samples_dir(fx_copy_fn_main_mock_i
     output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
     output_json_example_schema_props = output_json_example_schema.get("properties")
     assert output_json_example_schema_props.get("version") == {"type": "number"}
+    assert output_json_example_schema_props.get("reason") == {}
 
     # Test --reload was ran
     assert "Running 'codegen --reload' to create the default missing files" in caplog.text
