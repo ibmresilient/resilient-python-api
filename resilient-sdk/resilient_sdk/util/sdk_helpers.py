@@ -1142,6 +1142,9 @@ def parse_optionals(optionals):
         if len(option_strings) < 10:
             tabs = "\t\t\t\t"
 
+        if len(option_strings) in (8, 9):
+            tabs = "\t\t\t"
+
         parsed_optionals.append("{0}{1}{2}".format(option_strings, tabs, option.help))
 
     parsed_optionals = " \n ".join(parsed_optionals)
