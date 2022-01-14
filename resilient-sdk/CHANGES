@@ -1,6 +1,6 @@
 **2022-01: version 43.1**
 
-* Added new ``validate`` functionality to the SDK.
+* Added new ``validate`` functionality to the SDK
 * Added `genson 1.2 dependency <https://pypi.org/project/genson/>`_ to generate JSON schemas
 * ``codegen`` now produces ``output_json_example.json`` and ``output_json_schema.json`` files for each function in the ``payload_samples`` directory to aid with building **Playbooks**
 * ``codegen`` has a new argument ``--gather-results`` which will scan an ``app.log`` file to get the results for the ``output_json_example.json`` file
