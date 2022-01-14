@@ -18,7 +18,7 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
 
     assert isinstance(cmd_validate, base_cmd.BaseCmd)
     assert cmd_validate.CMD_NAME == "validate"
-    assert cmd_validate.CMD_HELP == "Validate an App before packaging it"
+    assert cmd_validate.CMD_HELP == "Tests the content of all files associated with the app, including code, before packaging it"
     assert cmd_validate.CMD_USAGE == """
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
