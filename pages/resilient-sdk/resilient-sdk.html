@@ -337,7 +337,7 @@ options:
 -w, --workflow			API names of workflows to include 
 -e, --exportfile		Path to a local (.res or .resz) export file 
 -o, --output			Path to output directory. Uses current dir by default 
--z, --zip				Generate a .zip of the generated file 
+-z, --zip			Generate a .zip of the generated file 
 -c, --config			Path to app.config file to use 
 -n, --name			Name to prepend to generated file</pre>
 </section>
@@ -360,8 +360,8 @@ options:
 -p, --package			(required) Path to existing package 
 --validate			Run validation of package files 
 --tests				Run tests using package's tox.ini file in a Python 3.6 environment (if 'tox' is installed and tox tests are configured for the package) 
---pylint				Run a pylint scan of all .py files under package directory (if 'pylint' is installed) 
---bandit				Run a bandit scan of all .py files under package directory (if 'bandit' is installed) 
+--pylint			Run a pylint scan of all .py files under package directory (if 'pylint' is installed) 
+--bandit			Run a bandit scan of all .py files under package directory (if 'bandit' is installed) 
 --selftest			Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment) 
 --tox-args			pytest arguments to pass to tox when validating tests. Provide in the format &lt;attr1&gt;="&lt;value&gt;". Example: '--tox-args my_arg1="value1" my_arg2="value2"'</pre>
 </section>
