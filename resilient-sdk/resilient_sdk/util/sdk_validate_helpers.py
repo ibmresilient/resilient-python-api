@@ -1307,6 +1307,13 @@ def pylint_validate_pylint_installed(attr_dict, **__):
             severity=attr_dict.get("severity"),
             solution=attr_dict.get("fail_solution").format(constants.PYLINT_PACKAGE_NAME)
         )
+    elif sdk_helpers.parse_version_object(pylint_version) < constants.PYLINT_MIN_VERSION:
+        return -1, SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("upgrade_msg").format(constants.PYLINT_PACKAGE_NAME, pylint_version, constants.PYLINT_MIN_VERSION),
+            severity=attr_dict.get("upgrade_severity"),
+            solution=attr_dict.get("upgrade_solution")
+        )
     else:
         return 1, SDKValidateIssue(
             name=attr_dict.get("name"),
