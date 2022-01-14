@@ -597,15 +597,11 @@ def test_pylint_validate_pylint_is_installed():
 
     attr_dict = sdk_validate_configs.pylint_attributes[0]
 
-    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_pylint_version:
+    result = sdk_validate_helpers.pylint_validate_pylint_installed(attr_dict=attr_dict)
 
-        mock_pylint_version.return_value = "0.0.0"
-
-        result = sdk_validate_helpers.pylint_validate_pylint_installed(attr_dict=attr_dict)
-
-        assert len(result) == 2
-        assert result[0] == 1
-        assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+    assert len(result) == 2
+    assert result[0] == 1
+    assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 
 def test_pylint_validate_pylint_not_installed():
