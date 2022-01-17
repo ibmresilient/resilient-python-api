@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="prev" title="resilient-lib" href="../resilient-lib/resilient-lib.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><meta name="generator" content="sphinx-4.3.2, furo 2022.01.02"/>
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><meta name="generator" content="sphinx-4.4.0, furo 2022.01.02"/>
         <title>resilient-sdk - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=df49af52631e7917044a9c21a57f7b83170a6dd0" />
@@ -256,7 +256,7 @@ options:
 -w, --workflow			API names of workflows to include 
 -e, --exportfile		Path to a local (.res or .resz) export file 
 -o, --output			Path to output directory. Uses current dir by default 
--c, --config			Path to app.config file to use 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -p, --package			(required) Name of new or path to existing package 
 -re, --reload			Reload customizations and create new customize.py 
 --gather-results		Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results</pre>
@@ -305,7 +305,7 @@ $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of
 
 options:
 -h, --help			show this help message and exit
--c, --config			Path to app.config file to use 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -f, --function			API names of functions to include 
 -m, --messagedestination	API names of message destinations to include 
 -r, --rule			Display names of rules to include (surrounded by "") 
@@ -338,12 +338,12 @@ options:
 -e, --exportfile		Path to a local (.res or .resz) export file 
 -o, --output			Path to output directory. Uses current dir by default 
 -z, --zip			Generate a .zip of the generated file 
--c, --config			Path to app.config file to use 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -n, --name			Name to prepend to generated file</pre>
 </section>
 <section id="validate">
 <h3>validate<a class="headerlink" href="#validate" title="Permalink to this headline">¶</a></h3>
-<p>Validate an App before packaging it</p>
+<p>Tests the content of all files associated with the app, including code, before packaging it</p>
 <pre class="literal-block">usage:
 $ resilient-sdk validate -p &lt;name_of_package&gt;
 $ resilient-sdk validate -p &lt;name_of_package&gt; -c '/usr/custom_app.config'
@@ -355,22 +355,22 @@ $ resilient-sdk validate -p &lt;name_of_package&gt; --pylint --bandit --selftest
 
 options:
 -h, --help			show this help message and exit
--c, --config			Path to app.config file to use 
---settings			Path to .sdk_settings.json file to use 
--p, --package			(required) Path to existing package 
---validate			Run validation of package files 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
+--settings			Path to .sdk_settings.json file. Default is ~/.resilient/.sdk_settings.json 
+-p, --package			(Required) Path to existing package 
+--validate			Run validation on package files. No dynamic checks. 
 --tests				Run tests using package's tox.ini file in a Python 3.6 environment (if 'tox' is installed and tox tests are configured for the package) 
---pylint			Run a pylint scan of all .py files under package directory (if 'pylint' is installed) 
---bandit			Run a bandit scan of all .py files under package directory (if 'bandit' is installed) 
---selftest			Validate and run the selftest.py file in the package directory (if 'resilient-circuits' and the package are installed in python environment) 
---tox-args			pytest arguments to pass to tox when validating tests. Provide in the format &lt;attr1&gt;="&lt;value&gt;". Example: '--tox-args my_arg1="value1" my_arg2="value2"'</pre>
+--pylint			Run a pylint scan of all .py files under package directory. 'pylint' must be installed) 
+--bandit			Run a bandit scan of all .py files under package directory. 'bandit' must be installed) 
+--selftest			Validate and run the selftest.py file in the package directory. 'resilient-circuits' and the package must be installed in Python environment) 
+--tox-args			Pytest arguments to pass to tox when validating tests. Format is &lt;attr1&gt;="&lt;value&gt;". Example: '--tox-args my_arg1="value1" my_arg2="value2"'</pre>
 </section>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
 <p><strong>2022-01: version 43.1</strong></p>
 <ul class="simple">
-<li><p>Added new <code class="docutils literal notranslate"><span class="pre">validate</span></code> functionality to the SDK.</p></li>
+<li><p>Added new <code class="docutils literal notranslate"><span class="pre">validate</span></code> functionality to the SDK</p></li>
 <li><p>Added <a class="reference external" href="https://pypi.org/project/genson/">genson 1.2 dependency</a> to generate JSON schemas</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> now produces <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> and <code class="docutils literal notranslate"><span class="pre">output_json_schema.json</span></code> files for each function in the <code class="docutils literal notranslate"><span class="pre">payload_samples</span></code> directory to aid with building <strong>Playbooks</strong></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> has a new argument <code class="docutils literal notranslate"><span class="pre">--gather-results</span></code> which will scan an <code class="docutils literal notranslate"><span class="pre">app.log</span></code> file to get the results for the <code class="docutils literal notranslate"><span class="pre">output_json_example.json</span></code> file</p></li>
