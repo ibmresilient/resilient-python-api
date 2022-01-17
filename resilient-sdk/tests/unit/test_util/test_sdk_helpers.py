@@ -425,7 +425,7 @@ def test_parse_optionals_validate(fx_get_sub_parser):
     optionals = cmd_validate.parser._get_optional_actions()
     parsed_optionals = sdk_helpers.parse_optionals(optionals)
 
-    assert """\n --pylint\t\t\tRun a pylint scan of all .py files under package directory (if 'pylint' is installed) \n""" in parsed_optionals
+    assert """\n --pylint\t\t\tRun a pylint scan of all .py files under package directory. \'pylint\' must be installed) \n""" in parsed_optionals
 
 
 def test_run_subprocess():
