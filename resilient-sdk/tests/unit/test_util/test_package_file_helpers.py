@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import io
+import json
 import os
 import shutil
-import json
-import io
+
 import pytest
-from setuptools import sandbox as use_setuptools
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
+from setuptools import sandbox as use_setuptools
 from tests.shared_mock_data import mock_paths
 
 
@@ -45,6 +47,18 @@ def test_parse_setup_py_with_globals():
 
     assert sdk_proj_py_attributes.get("name") == "resilient_sdk"
     assert sdk_proj_py_attributes.get("long_description") == "mock long description"
+
+
+def test_get_package_name(fx_copy_fn_main_mock_integration):
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+    package_name = package_helpers.get_package_name(path_fn_main_mock_integration)
+
+    assert package_name == "fn_main_mock_integration"
+
+
+def test_get_package_name_invalid_path():
+    with pytest.raises(SDKException, match=r"ERROR: Could not find file: mock-path/setup.py"):
+        package_helpers.get_package_name("mock-path")
 
 
 def test_get_dependency_from_install_requires():
@@ -259,6 +273,14 @@ def test_color_output():
     for s, level in mock_data_to_color:
         output = package_helpers.color_output(s, level)
         assert output.startswith(package_helpers.COLORS[level]) and output.endswith(package_helpers.COLORS["END"]) and s in output
+
+
+def test_color_output_printing(caplog):
+    mock_text = u"Mock printing this out ŏ Ő ő Œ œ Ŕ ŕ Ŗ"
+    package_helpers.color_output(mock_text, constants.VALIDATE_LOG_LEVEL_INFO, do_print=True)
+
+    assert mock_text in caplog.text
+
 
 def test_color_diff_output():
 

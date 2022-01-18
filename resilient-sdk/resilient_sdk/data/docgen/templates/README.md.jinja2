@@ -230,7 +230,7 @@ The following table provides the settings you need to configure the app. These s
 <details><summary>Outputs:</summary>
 <p>
 
-> **NOTE:** this example may be in JSON format, yet on the SOAR Platform `results` will be a Python Dictionary
+> **NOTE:** This example might be in JSON format, but `results` is a Python Dictionary on the SOAR platform.
 
 {% if fn.results %}
 ```python
@@ -240,9 +240,12 @@ results = {{fn.results|tojson(indent=2)}}
 <!-- {{ placeholder_string }} -->
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    # TODO: Generate an example of the Function Output within this code block.
+    # To get the output of a Function:
+    #   1. Run resilient-circuits in DEBUG mode: $ resilient-circuits run --loglevel=DEBUG
+    #   2. Invoke the Function in SOAR
+    #   3. Gather the results using: $ resilient-sdk codegen -p {{ name_underscore }} --gather-results
+    #   4. Run docgen again: $ resilient-sdk docgen -p {{ name_underscore }}
 } 
 ```
 {% endif %}
