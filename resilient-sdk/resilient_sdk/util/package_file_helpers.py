@@ -1010,7 +1010,7 @@ def color_output(s, level, do_print=False):
     :return: colored output of 's'
     :rtype: str
     """
-    text = str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
+    text = u"{0}{1}{2}".format(COLORS.get(level), s, COLORS.get("END"))
 
     if do_print:
         LOG.info(text)
