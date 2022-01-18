@@ -996,18 +996,26 @@ def check_package_installed(package_name):
 
     return True
 
-def color_output(s, level):
+def color_output(s, level, do_print=False):
     """
-    Uses class COLORS to color given string. 'level' maps to values in COLORS dict
-    
+    Uses class COLORS to color given string. 'level' maps to values in COLORS dict.
+    If do_print is set, logs out 's'
+
     :param s: value to be wrapped in color
     :type s: str
     :param level: map to COLORS dict defined as constant above
     :type level: str
+    :param do_print: If True, logs the string to the stdout
+    :type do_print: bool
     :return: colored output of 's'
     :rtype: str
     """
-    return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
+    text = str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
+
+    if do_print:
+        LOG.info(text)
+
+    return text
 
 def color_diff_output(diff):
     """

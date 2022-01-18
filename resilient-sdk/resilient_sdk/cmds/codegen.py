@@ -597,7 +597,7 @@ class CmdCodegen(BaseCmd):
             fn_results = results_scraped.get(fn_name)
 
             if not fn_results:
-                LOG.warning("WARNING: No results could be found for '%s' in '%s'", fn_name, path_log_file)
+                package_helpers.color_output("WARNING: No results could be found for '{0}' in '{1}'".format(fn_name, path_log_file), constants.VALIDATE_LOG_LEVEL_WARNING, do_print=True)
                 continue
 
             LOG.info("Results found for '[%s]'", fn_name)

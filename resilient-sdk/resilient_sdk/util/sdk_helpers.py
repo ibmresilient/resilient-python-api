@@ -1280,11 +1280,10 @@ def scrape_results_from_log_file(path_log_file):
 
             results_from_l = l[fn_name_match_endpos:].strip("\\n ")
 
-            # Convert str into dict
-            results = ast.literal_eval(results_from_l)
-
             # Check if this fn_name is already in results_scraped
             if fn_name not in results_scraped.keys():
+                # Convert str into dict
+                results = ast.literal_eval(results_from_l)
                 results_scraped[fn_name] = results
 
     return results_scraped
