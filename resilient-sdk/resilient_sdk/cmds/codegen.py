@@ -55,7 +55,7 @@ class CmdCodegen(BaseCmd):
                                  action="store",
                                  nargs="?",
                                  const=constants.PATH_RES_DEFAULT_LOG_FILE,
-                                 help="Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results")
+                                 help="Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results. Only Python >= 3.6 supported")
 
     def execute_command(self, args):
         LOG.debug("called: CmdCodegen.execute_command()")
