@@ -459,14 +459,9 @@ class CmdCodegen(BaseCmd):
         # Ensure the package directory exists and we have WRITE access
         sdk_helpers.validate_dir_paths(os.W_OK, path_package)
 
-        # Generate path to setup.py file + validate we have permissions to read it
         path_setup_py_file = os.path.join(path_package, package_helpers.BASE_NAME_SETUP_PY)
-        sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
 
-        # Parse the setup.py file
-        setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
-
-        package_name = setup_py_attributes.get("name")
+        package_name = package_helpers.get_package_name(path_package)
 
         if not sdk_helpers.is_valid_package_name(package_name):
             raise SDKException(u"'{0}' is not a valid package name. 'name' attribute in setup.py file is not valid or not specified".format(package_name))
@@ -575,6 +570,9 @@ class CmdCodegen(BaseCmd):
 
         sdk_helpers.validate_dir_paths(os.W_OK, path_package)
 
+        package_name = package_helpers.get_package_name(path_package)
+
+        LOG.info("'codegen %s' started for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, package_name)
         try:
 
             sdk_helpers.validate_dir_paths(os.W_OK, path_payload_samples_dir)
@@ -602,6 +600,8 @@ class CmdCodegen(BaseCmd):
                 LOG.warning("WARNING: No results could be found for '%s' in '%s'", fn_name, path_log_file)
                 continue
 
+            LOG.info("Results found for '[%s]'", fn_name)
+
             path_payload_samples_fn_name = os.path.join(path_payload_samples_dir, fn_name)
             path_output_json_example = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
             path_output_json_schema = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
@@ -610,10 +610,10 @@ class CmdCodegen(BaseCmd):
             path_output_json_schema_bak = sdk_helpers.rename_to_bak_file(path_output_json_schema)
 
             try:
-                LOG.info("Writing JSON example file for '%s' to '%s'", fn_name, path_output_json_example)
+                LOG.debug("Writing JSON example file for '%s' to '%s'", fn_name, path_output_json_example)
                 sdk_helpers.write_file(path_output_json_example, json.dumps(fn_results, indent=2))
 
-                LOG.info("Writing JSON schema file for '%s' to '%s'", fn_name, path_output_json_schema)
+                LOG.debug("Writing JSON schema file for '%s' to '%s'", fn_name, path_output_json_schema)
                 builder = CustomSchemaBuilder(schema_uri=constants.CODEGEN_JSON_SCHEMA_URI)
                 main_genson_builder_overwrites(builder)
                 builder.add_object(fn_results)
@@ -628,4 +628,4 @@ class CmdCodegen(BaseCmd):
                     LOG.info(u"An error occurred. Renaming %s.bak to %s", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
                     sdk_helpers.rename_file(path_output_json_schema_bak, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
 
-        LOG.info("'codegen %s' complete for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, args.package)
+        LOG.info("'codegen %s' complete for '%s'", constants.SUB_CMD_OPT_GATHER_RESULTS, package_name)

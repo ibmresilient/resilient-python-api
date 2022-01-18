@@ -221,6 +221,25 @@ def parse_setup_py(path, attribute_names, the_globals={}):
 
     return return_dict
 
+
+def get_package_name(path_package):
+    """
+    Using the path to a package, gets the path to the setup.py file
+    and validates it. Then parses the file and returns the ``name`` attribute
+
+    :return: the ``name`` attribute in the package's setup.py file or ""
+    :rtype: str
+    """
+    # Generate path to setup.py file + validate we have permissions to read it
+    path_setup_py_file = os.path.join(path_package, BASE_NAME_SETUP_PY)
+    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+
+    # Parse the setup.py file
+    setup_py_attributes = parse_setup_py(path_setup_py_file, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+    return setup_py_attributes.get("name", "")
+
+
 def get_dependency_from_install_requires(install_requires, dependency_name):
     """Returns the String of the dependency_name specified in the setup.py file by
     using the install_requires_list parsed from the setup.py file with utils.parse_setup_py()

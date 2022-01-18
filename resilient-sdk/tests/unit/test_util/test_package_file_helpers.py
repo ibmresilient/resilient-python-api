@@ -47,6 +47,18 @@ def test_parse_setup_py_with_globals():
     assert sdk_proj_py_attributes.get("long_description") == "mock long description"
 
 
+def test_get_package_name(fx_copy_fn_main_mock_integration):
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+    package_name = package_helpers.get_package_name(path_fn_main_mock_integration)
+
+    assert package_name == "fn_main_mock_integration"
+
+
+def test_get_package_name_invalid_path():
+    with pytest.raises(SDKException, match=r"ERROR: Could not find file: mock-path/setup.py"):
+        package_helpers.get_package_name("mock-path")
+
+
 def test_get_dependency_from_install_requires():
     setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, ["install_requires"])
     install_requires_str = setup_attributes.get("install_requires")
