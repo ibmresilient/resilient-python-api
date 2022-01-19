@@ -29,7 +29,7 @@ try:
     from pylint import lint
     from pylint.reporters import text
 except ImportError as err:
-    LOG.warning("Failed to import 'pylint'")
+    LOG.debug("Failed to import 'pylint' that is needed for 'validate' to run a full validation")
     LOG.debug("ERROR: %s", err)
 
 # float value in range [0, 1] that determines the cutoff at which two files are a match
