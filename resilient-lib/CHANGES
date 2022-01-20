@@ -1,3 +1,7 @@
+**2022-01: version 43.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
 **2021-11: version 43.0**
 
 * Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
