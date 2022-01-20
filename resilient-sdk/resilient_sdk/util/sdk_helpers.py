@@ -16,8 +16,12 @@ import importlib
 import hashlib
 import time
 import uuid
+import shlex
 import subprocess
+import ast
 import pkg_resources
+import tempfile
+import shutil
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
@@ -83,6 +87,7 @@ def setup_jinja_env(relative_path_to_templates):
     add_filters_to_jinja_env(jinja_env)
 
     return jinja_env
+
 
 def setup_env_and_render_jinja_file(relative_path_to_template, filename, *args, **kwargs):
     """
@@ -315,7 +320,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException("Could not find file: {0}".format(path_to_file))
+            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -331,7 +336,7 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException("Could not find directory: {0}".format(path_to_dir))
+            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
@@ -861,11 +866,11 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
 
         # If different, rename
         if default_file_contents != current_file_contents:
-            LOG.info("Creating a backup of: %s", path_current_file)
+            LOG.debug("Creating a backup of: %s", path_current_file)
             rename_file(path_current_file, new_file_name)
 
     else:
-        LOG.info("Creating a backup of: %s", path_current_file)
+        LOG.debug("Creating a backup of: %s", path_current_file)
         rename_file(path_current_file, new_file_name)
 
     return os.path.join(os.path.dirname(path_current_file), new_file_name)
@@ -1060,14 +1065,52 @@ def get_package_version(package_name):
         return None
 
 
-def is_python_min_supported_version():
+def is_python_min_supported_version(custom_warning=None):
     """
     Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
+    :param custom_warning: a custom message you want to log out
+    :type custom_warning: str
+    :return: a boolean to indicate if current version is supported or not
+    :rtype: bool
     """
     if sys.version_info < MIN_SUPPORTED_PY_VERSION:
-        LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
-                    "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
+        if custom_warning:
+            LOG.warning("WARNING: %s", custom_warning)
+
+        else:
+            LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
+                        "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+        return False
+
+    return True
+
+
+def parse_version_object(version_obj):
+    """
+    Parses a Version object into a tuple of (major, minor, micro)
+    so that it can be compared to other tuples of versions
+
+    Mostly used because .major/.minor/.micro attributes aren't available in py27
+
+    :param version_obj: a Version object to be parsed
+    :type version_obj: Version
+    :return: (v.major, v.minor, v.micro) tuple
+    :rypte: (int, int, int)
+    """
+
+    if sys.version_info[0] >= 3: # python 3 
+        return (version_obj.major, version_obj.minor, version_obj.micro)
+    else: # python 2.7
+        major_minor_micro = tuple(int(i) for i in str(version_obj).split("."))
+        
+        # if version is only one number (i.e. '3'), then add a 0 to the end
+        if len(major_minor_micro) == 1:
+            major_minor_micro = (major_minor_micro[0], 0, 0)
+        elif len(major_minor_micro) == 2:
+            major_minor_micro = (major_minor_micro[0], major_minor_micro[1], 0)
+        return major_minor_micro
 
 def parse_optionals(optionals):
     """
@@ -1093,11 +1136,14 @@ def parse_optionals(optionals):
         if len(option_strings) >= 16:
             tabs = "\t\t"
 
-        if len(option_strings) >= 20:
+        if len(option_strings) >= 22:
             tabs = "\t"
 
         if len(option_strings) < 10:
             tabs = "\t\t\t\t"
+
+        if len(option_strings) in (8, 9):
+            tabs = "\t\t\t"
 
         parsed_optionals.append("{0}{1}{2}".format(option_strings, tabs, option.help))
 
@@ -1107,12 +1153,14 @@ def parse_optionals(optionals):
     return parsed_optionals
 
 
-def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
+def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=logging.DEBUG):
     """
-    Run a given command as a subprocess.
+    Run a given command as a subprocess. Optionally change directory before running the command (use change_dir parameter)
 
     :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
-    :type args: str | list
+    :type args: str | list[str]
+    :param change_dir: (optional) path of directory to change to before running command
+    :type change_dir: str
     :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
     :type cmd_name: str
     :param log_level_threshold: (optional) the logging level at which to output the stdout/stderr for the subprocess; default is DEBUG
@@ -1123,6 +1171,16 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
 
     LOG.debug("Running {0} as a subprocess".format(args))
 
+    # save starting directory
+    current_dir = os.getcwd()
+
+    # if change_dir is set, change to that dir
+    if change_dir:
+        LOG.debug("Changing directory to {0}".format(change_dir))
+        os.chdir(change_dir)
+
+    if isinstance(args, str):
+        args = shlex.split(args)
 
     # run given command as a subprocess
     proc = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=0)
@@ -1133,6 +1191,7 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     # if debugging enabled, capture output directly and redirect back to sys.stdout
     # using LOG.log(log_level...)
     if LOG.isEnabledFor(log_level_threshold):
+        LOG.debug("")
         details = ""
         while proc.stdout:
             line = proc.stdout.readline()
@@ -1151,6 +1210,13 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
         sys.stdout.flush()
         time.sleep(0.75)
         details = stdout.decode("utf-8")
+
+
+    # move back to original directory
+    # note that this just changes the working directory for the python process,
+    # — thus if the subprocess was interrupted and the program quits,
+    # the directory of the user's terminal won't be affected
+    os.chdir(current_dir)
 
     return proc.returncode, details
 
@@ -1176,3 +1242,100 @@ def run_subprocess(args, cmd_name="", log_level_threshold=logging.DEBUG):
     # sys.stdout.write("\r")
     # sys.stdout.write(" "*30+"\n")
     # sys.stdout.flush()
+
+
+def scrape_results_from_log_file(path_log_file):
+    """
+    Validate that path_log_file exists, reverse it and look for lines
+    containing ``[<fn_name>] Result: {'version': 2.0, 'success': True...``
+
+    Only gets the latest result for each <fn_name> in the log file
+
+    The log file must be in the format of the app.log
+
+    :param path_log_file: (required) absolute path to a app.log file
+    :type args: str
+    :return: a dictionary in the format {<fn_name>: <fn_results>}
+    :rtype: dict
+    """
+    results_scraped = {}
+
+    validate_file_paths(os.R_OK, path_log_file)
+
+    log_file_contents = read_file(path_log_file)
+
+    regex_line = re.compile(r'\[[\w]+\] Result\:')       # Looking for line that contains [<fn_name>] Result: {'version': 2.0, 'success': True...
+    regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')  # Getting <fn_name> from [<fn_name>] Result: {'version': 2.0, 'success': True...
+
+    for l in reversed(log_file_contents):
+        match = regex_line.search(l, endpos=120)
+
+        if match:
+            fn_name_group_index = 0
+
+            fn_name_match = match.group(fn_name_group_index)
+            fn_name_match_endpos = match.end(fn_name_group_index)
+
+            fn_name = regex_fn_name.match(fn_name_match).group(1)
+
+            results_from_l = l[fn_name_match_endpos:].strip("\\n ")
+
+            # Check if this fn_name is already in results_scraped
+            if fn_name not in results_scraped.keys():
+                # Convert str into dict
+                results = ast.literal_eval(results_from_l)
+                results_scraped[fn_name] = results
+
+    return results_scraped
+
+
+def handle_file_not_found_error(e, msg):
+    """
+    Looks at e's message attribute and if
+    it contains ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE
+    prints a LOG.warning message else just raises the exception
+
+    :param e: (required) an Exception
+    :type e: Exception
+    :param msg: (required) the custom error message to print as a WARNING in the logs
+    :type msg: str
+    :raises: The exception that is passed unless it contains 
+    ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
+    """
+    if ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in e.message:
+        LOG.warning("WARNING: %s", msg)
+    else:
+        raise e
+
+class ContextMangerForTemporaryDirectory():
+    """
+    This is a small class for safe use of ``tempfile.mkdtemp()`` which requires cleanup after
+    use. The class effectively is the same as ``tempfile.TemporaryDirectory``, however, 
+    that class isn't available before python 3 thus the implementation here.
+    On enter, ``tempfile.mkdtemp(*args, **kwargs)`` is called and on exit ``shutil.rmtree(path_to_dir)`` is called.
+    
+    Example:
+
+    .. code-block:: python
+        # create the context manager using the 'with ... as:' statement
+        # on creation of the 'path_to_tmp_dir' object, the ``__enter__`` method is called
+
+        with sdk_helpers.ContextMangerForTemporaryDirectory() as path_to_tmp_dir:
+            # ...
+            # do something with path_to_tmp_dir
+            # ...
+
+        # on exit of context manager, path_to_tmp_dir will be cleaned up by implicit call of the ``__exit__`` method
+    
+    :param args: any ordered args that are relevant to calling ``tempfile.mkdtemp()``
+    :param kwargs: any keyword arguments relevant to calling ``tempfile.mkdtemp()``
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.dir = tempfile.mkdtemp(*args, **kwargs)
+
+    def __enter__(self):
+        return self.dir
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        shutil.rmtree(self.dir)

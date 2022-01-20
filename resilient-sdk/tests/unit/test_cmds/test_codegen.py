@@ -40,8 +40,13 @@ EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR = ['export.res']
 EXPECTED_FILES_ICONS_DIR = ['app_logo.png', 'company_logo.png']
 EXPECTED_FILES_TESTS_DIR = ['test_funct_mock_function_one.py', 'test_funct_mock_function_two.py']
 EXPECTED_FILES_PAYLOAD_SAMPLES_DIR = ['mock_function_one', 'mock_function_two']
-EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
-                                              'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR = ['output_json_example.json', 'output_json_schema.json']
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['output_json_example.json', 'output_json_schema.json']
+# TODO: comment back in when we have logic to use the mock_json files
+"""
+EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
+                                                  'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
+"""
 
 
 def general_test_package_structure(package_name, package_path):
@@ -65,7 +70,10 @@ def general_test_package_structure(package_name, package_path):
     assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_DIR, files_in_payload_samples)
 
     for file_name in files_in_payload_samples:
-        assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
+        if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
+            assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
+        else:
+            assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
 
 
 def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
@@ -77,7 +85,9 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     assert cmd_codegen.CMD_USAGE == """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
-    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'"""
+    $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --gather-results
+    $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     assert cmd_codegen.CMD_DESCRIPTION == cmd_codegen.CMD_HELP
     assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser"]
 
@@ -351,6 +361,7 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     # Assert modification time of workflow has been updated.
     assert new_wf_modified_time > wf_modified_time
 
+
 def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     """
     This tests that it you forget the --reload flag you get an error
@@ -367,6 +378,134 @@ def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
 
     with pytest.raises(SDKException, match=r"already exists. Add --reload flag to regenerate it"):
         cmd_codegen._gen_package(args)
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_get_results_from_log_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen.execute_command(args)
+
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    # Test output_json_example.json file generated
+    output_json_example_contents = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
+    assert output_json_example_contents.get("version") == 2.1
+
+    # Test output_json_schema.json file generated
+    output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
+    output_json_example_schema_props = output_json_example_schema.get("properties")
+
+    assert output_json_example_schema_props.get("version") == {"type": "number"}
+    assert output_json_example_schema_props.get("success") == {"type": "boolean"}
+    assert output_json_example_schema_props.get("reason") == {}
+    assert not output_json_example_schema.get("required")
+
+    # Test WARNING log appears
+    assert "WARNING: No results could be found for 'mock_function_two'" in caplog.text
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_get_results_from_log_file_specific_function(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+    sys.argv.extend(["-f", "mock_function_one", "mock_function_not_exist"])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen.execute_command(args)
+
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    # Test output_json_example.json file generated
+    output_json_example_contents = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
+    assert output_json_example_contents.get("version") == 2.1
+
+    # Test output_json_schema.json file generated
+    output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
+    output_json_example_schema_props = output_json_example_schema.get("properties")
+
+    assert output_json_example_schema_props.get("version") == {"type": "number"}
+    assert output_json_example_schema_props.get("success") == {"type": "boolean"}
+    assert output_json_example_schema_props.get("reason") == {}
+    assert not output_json_example_schema.get("required")
+
+    # Test WARNING log appears
+    assert "WARNING: No results could be found for 'mock_function_not_exist'" in caplog.text
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_get_results_from_log_file_no_payload_samples_dir(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser, caplog):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results and a path to a mock export.res file for --reload
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+    sys.argv.extend(["-e", mock_paths.MOCK_RELOAD_EXPORT_RES])
+
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    # Remove path_payload_samples
+    shutil.rmtree(path_payload_samples)
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen.execute_command(args)
+
+    # Test output_json_example.json file generated
+    output_json_example_contents = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
+    assert output_json_example_contents.get("version") == 2.1
+
+    # Test output_json_schema.json file generated
+    output_json_example_schema = sdk_helpers.read_json_file(os.path.join(path_payload_samples, "mock_function_one", package_helpers.BASE_NAME_PAYLOAD_SAMPLES_SCHEMA))
+    output_json_example_schema_props = output_json_example_schema.get("properties")
+    assert output_json_example_schema_props.get("version") == {"type": "number"}
+    assert output_json_example_schema_props.get("reason") == {}
+
+    # Test --reload was ran
+    assert "Running 'codegen --reload' to create the default missing files" in caplog.text
+
+
+def test_gather_results_on_py27(fx_copy_fn_main_mock_integration, fx_cmd_line_args_codegen_base, fx_get_sub_parser):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Add arg to gather-results and a path to a mock export.res file for --reload
+    sys.argv.extend(["--gather-results", mock_paths.MOCK_APP_LOG_PATH])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+
+    if not sdk_helpers.is_python_min_supported_version():
+
+        with pytest.raises(SDKException, match=constants.ERROR_WRONG_PYTHON_VERSION):
+            cmd_codegen.execute_command(args)
+
+    else:
+        cmd_codegen.execute_command(args)
 
 
 def test_execute_command():

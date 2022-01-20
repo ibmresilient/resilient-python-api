@@ -16,6 +16,9 @@ TEST_TEMP_DIR = os.path.join(TESTS_DIR, "test_temp")
 
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME = "fn_main_mock_integration"
 
+MOCK_SDK_SETTINGS_PATH = os.path.join(SHARED_MOCK_DATA_DIR, ".mock_sdk_settings.json")
+MOCK_APP_LOG_PATH = os.path.join(SHARED_MOCK_DATA_DIR, "mock_app.log")
+
 MOCK_PACKAGE_FILES_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_package_files")
 MOCK_SETUP_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup.py")
 MOCK_SETUP_PY_LINES = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup_py_lines.py")
@@ -38,3 +41,5 @@ MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_file
 MOCK_APP_ZIP_APP_JSON = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_app.json")
 MOCK_APP_ZIP_EXPORT_RES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_export.res")
 MOCK_APP_ZIP_EXPORT_RES_WITH_PAYLOAD_SAMPLES = os.path.join(MOCK_APP_ZIP_FILES_DIR, "mock_with_payload_samples_export.res")
+
+MOCK_PYTEST_XML_REPORT_PATH = os.path.join(SHARED_MOCK_DATA_DIR, "mock_xml_test_report.xml")

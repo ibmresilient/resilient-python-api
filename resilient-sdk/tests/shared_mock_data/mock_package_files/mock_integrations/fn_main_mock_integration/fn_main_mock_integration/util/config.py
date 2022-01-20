@@ -14,7 +14,7 @@ def config_section_data():
 username = <<enter_user_email_here>>
 api_Key=dfghjFGYuy4567890nbvcghj
 password = GJ^&*(';lkjhgfd567&*()_)
-unicode_entry = ઘ ઙ ચ છ જ ઝ ઞ
+# unicode_entry = ઘ ઙ ચ છ જ ઝ ઞ
 
 # Some random comments here
 # and here

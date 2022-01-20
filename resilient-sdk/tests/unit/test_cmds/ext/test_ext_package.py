@@ -2,18 +2,21 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import json
 import os
 import sys
+import tarfile
 import zipfile
-import json
+
+from mock import patch
 from resilient_sdk.cmds import CmdExtPackage as CmdPackage
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util.sdk_exception import SDKException
+from resilient_sdk.util import sdk_helpers
 from tests import helpers
 from tests.shared_mock_data import mock_paths
 
-EXPECTED_FILES_APP_ZIP = ['app.json', 'export.res', 'fn_main_mock_integration-1.0.0.tar.gz']
+EXPECTED_FILES_APP_ZIP = ['app.json', 'export.res', 'fn_main_mock_integration-1.0.0.tar.gz', 'validate_report.md']
 
 
 def test_setup():
@@ -39,7 +42,7 @@ def test_execute_command_no_samples(fx_copy_fn_main_mock_integration, fx_get_sub
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
     with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP[:-1], app_zip.namelist())
 
     # Test app.zip/app.json contents
     app_json_contents = sdk_helpers.read_zip_file(path_the_app_zip, "app.json")
@@ -67,7 +70,7 @@ def test_execute_command_with_samples(fx_copy_fn_main_mock_integration, fx_get_s
     # Test app.zip contents
     assert zipfile.is_zipfile(path_the_app_zip)
     with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP[:-1], app_zip.namelist())
 
     # Test app.zip/app.json contents
     app_json_contents = sdk_helpers.read_zip_file(path_the_app_zip, "app.json")
@@ -100,3 +103,58 @@ def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_mai
 
     assert ("WARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
             "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text
+
+
+def test_execute_command_with_validate_enabled(fx_copy_and_pip_install_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_and_pip_install_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    sys.argv.append("--no-samples")
+    sys.argv.append("--validate")
+
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.run_subprocess") as mock_process:
+
+        mock_process.return_value = (0, "Done!")
+
+        # Package the app
+        cmd_validate = CmdValidate(fx_get_sub_parser)
+        cmd_package = CmdPackage(fx_get_sub_parser, cmd_validate)
+        args = cmd_package.parser.parse_known_args()[0]
+
+        path_the_app_zip = cmd_package.execute_command(args)
+
+        # Test app.zip contents
+        assert zipfile.is_zipfile(path_the_app_zip)
+        with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
+            assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
+
+        # Test app.zip/validate_report.md contents
+        validate_report_contents = sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md")
+
+        assert "## App Details" in validate_report_contents
+        assert "## `setup.py` file validation" in validate_report_contents
+        assert "## Package files validation" in validate_report_contents
+
+
+def test_bak_files_are_not_packaged(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    # Package the app
+    cmd_package = CmdPackage(fx_get_sub_parser)
+    args = cmd_package.parser.parse_known_args()[0]
+
+    cmd_package.execute_command(args)
+
+    tarfile_path = os.path.join(path_fn_main_mock_integration, "dist", mock_integration_name + "-1.0.0.tar.gz")
+    with tarfile.open(name=tarfile_path, mode="r:gz") as t_file:
+        t_files = t_file.getmembers()
+
+        for f in t_files:
+            assert not f.name.endswith(".bak")

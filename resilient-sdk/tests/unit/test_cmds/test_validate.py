@@ -5,6 +5,7 @@
 import os
 import sys
 
+import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdValidate, base_cmd
 from resilient_sdk.util import constants
@@ -17,18 +18,20 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
 
     assert isinstance(cmd_validate, base_cmd.BaseCmd)
     assert cmd_validate.CMD_NAME == "validate"
-    assert cmd_validate.CMD_HELP == "Validate an App before packaging it"
+    assert cmd_validate.CMD_HELP == "Tests the content of all files associated with the app, including code, before packaging it"
     assert cmd_validate.CMD_USAGE == """
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
     $ resilient-sdk validate -p <name_of_package> --validate
     $ resilient-sdk validate -p <name_of_package> --tests
-    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --cve --selftest"""
+    $ resilient-sdk validate -p <name_of_package> --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
+    $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
+    $ resilient-sdk validate -p <name_of_package> --pylint --bandit --selftest"""
     assert cmd_validate.CMD_DESCRIPTION == cmd_validate.CMD_HELP
 
     args = cmd_validate.parser.parse_known_args()[0]
     assert args.package == "fn_main_mock_integration"
-    assert bool(not args.validate and not args.tests and not args.pylint and not args.bandit and not args.cve) is True
+    assert bool(not args.validate and not args.tests and not args.pylint and not args.bandit) is True
 
 def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate, caplog):
 
@@ -109,14 +112,13 @@ def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
 def test_pass_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_validate, fx_copy_fn_main_mock_integration):
 
     cmd_validate = CmdValidate(fx_get_sub_parser)
-    args = cmd_validate.parser.parse_known_args()[0]
     mock_package_path = fx_copy_fn_main_mock_integration[1]
     mock_data = [
         { "func": lambda **x: (True, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)) }
     ]
 
     with patch("resilient_sdk.cmds.validate.validation_configurations.selftest_attributes", new=mock_data):
-        results = CmdValidate._validate_selftest(mock_package_path, args)
+        results = CmdValidate._validate_selftest(mock_package_path)
 
         assert results[0]
         assert len(results) == 2
@@ -127,7 +129,6 @@ def test_pass_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
 def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_validate, fx_copy_fn_main_mock_integration):
 
     cmd_validate = CmdValidate(fx_get_sub_parser)
-    args = cmd_validate.parser.parse_known_args()[0]
     mock_package_path = fx_copy_fn_main_mock_integration[1]
     mock_data = [
         { "func": lambda **x: (True, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)) },
@@ -135,7 +136,7 @@ def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
     ]
 
     with patch("resilient_sdk.cmds.validate.validation_configurations.selftest_attributes", new=mock_data):
-        results = CmdValidate._validate_selftest(mock_package_path, args)
+        results = CmdValidate._validate_selftest(mock_package_path)
 
         assert not results[0]
         assert len(results) == 2
@@ -212,6 +213,74 @@ def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration)
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
         assert results[1][0].solution == "mock_solution"
 
+def test_payloads_validate_package_files(fx_copy_fn_main_mock_integration):
+    # this uses the payload samples in the mock integration
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+
+    results = CmdValidate._validate_payload_samples(mock_path_package)
+
+    assert len(results) == 2
+    assert not results[0]
+    assert len(results[1]) == 4
+    assert "'output_json_example.json' and 'output_json_schema.json' for 'a_mock_function_with_no_unicode_characters_in_name' empty" in results[1][0].description
+    assert "'output_json_example.json' and 'output_json_schema.json' for 'mock_function__three' empty" in results[1][1].description
+    assert "'output_json_schema.json' for 'mock_function_one' empty" in results[1][2].description
+    assert "'output_json_example.json' and 'output_json_schema.json' for 'mock_function_two' empty" in results[1][3].description
+    assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+
+def test_pass_validate_tox_tests(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = [
+        {"func": lambda **_: (1, SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG))}
+    ]
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.tests_attributes", new=mock_data):
+
+        results = CmdValidate._validate_tox_tests(mock_path_package)
+
+        assert len(results) == 2
+        assert results[0]
+        assert len(results[1]) == 1
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_info_validate_tox_tests(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = [
+        {"func": lambda **_: (-1, SDKValidateIssue("skip", "info: skip", SDKValidateIssue.SEVERITY_LEVEL_INFO))}
+    ]
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.tests_attributes", new=mock_data):
+
+        results = CmdValidate._validate_tox_tests(mock_path_package)
+
+        assert len(results) == 2
+        assert results[0] == -1
+        assert len(results[1]) == 1
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
+
+def test_fail_validate_tox_tests(fx_copy_fn_main_mock_integration):
+
+    mock_path_package = fx_copy_fn_main_mock_integration[1]
+    mock_data = [
+        {"func": lambda **_: (0, SDKValidateIssue("fail", "fail", SDKValidateIssue.SEVERITY_LEVEL_CRITICAL))}
+    ]
+
+    # mock the package_file data to mock_data
+    with patch("resilient_sdk.cmds.validate.validation_configurations.tests_attributes", new=mock_data):
+
+        results = CmdValidate._validate_tox_tests(mock_path_package)
+
+        assert len(results) == 2
+        assert results[0] == 0
+        assert len(results[1]) == 1
+        assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
 
 def test_get_log_level():
     assert CmdValidate._get_log_level(int("50")) == 10 # should only work on str's (returns DEBUG when given an int)
@@ -252,12 +321,12 @@ def test_print_status(fx_get_sub_parser, caplog):
     assert "testprintstatus FAIL" in caplog.text
 
 
-def test_custom_app_config_file(fx_pip_install_fn_main_mock_integration, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
+def test_custom_app_config_file(fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
     mock_app_config_path = mock_paths.TEST_TEMP_DIR + "/mock_app.config"
-    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
 
     # Add cmd line arg
     sys.argv.extend(["--selftest"])
@@ -292,6 +361,117 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
         cmd_validate.execute_command(args)
 
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
+
+
+def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--tests", "--tox-args", 'arg1="val1"', 'arg2="val2"'])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running ['tox', '--', '--junitxml'," in caplog.text
+    assert "'val2'] as a subprocess" in caplog.text
+
+
+def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_mock_res_client, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--tests", "--settings", mock_paths.MOCK_SDK_SETTINGS_PATH])
+
+    with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_client") as mock_client:
+
+        mock_client.return_value = fx_mock_res_client
+
+        cmd_validate = CmdValidate(fx_get_sub_parser)
+        args = cmd_validate.parser.parse_known_args()[0]
+
+        cmd_validate.execute_command(args)
+
+        assert "tests passed!" in caplog.text
+
+
+def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+
+    # This test runs pylint on the fn_main_mock_integration
+    # Because tests automatically run in DEBUG mode, all levels (R,C,W,E,F)
+    # will be enabled for pylint. The integration should fail the scan with
+    # a 6.27/10 score
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--pylint"])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running pylint" in caplog.text
+    assert "--enable=R,C,W,E,F" in caplog.text
+    assert "WARNING     The Pylint score was" in caplog.text
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_run_bandit_scan(fx_pip_install_bandit, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+
+    # This test runs bandit on the fn_main_mock_integration
+    # The intergration should pass the bandit scan with no issues
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--bandit"])
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate.execute_command(args)
+
+    assert "Running Bandit Scan" in caplog.text
+    assert "Bandit scan passed" in caplog.text
+
+
+def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+    mock_issues_dict = {
+        "details": [
+            ("a", "b")
+        ]
+    }
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_package = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_package
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+
+    cmd_validate._generate_report(mock_issues_dict, args)
+
+    assert "Creating dist directory at" in caplog.text
+    assert "Writing report to" in caplog.text
+
+    assert os.path.exists(os.path.join(path_package, "dist/validate_report.md"))
 
 
 def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):

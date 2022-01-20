@@ -18,7 +18,7 @@ import tempfile
 
 import pkg_resources
 from resilient import ImportDefinition
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
                                                   ResilientObjMap)
 from resilient_sdk.util.sdk_exception import SDKException
@@ -51,6 +51,7 @@ BASE_NAME_ENTRY_POINT = "entrypoint.sh"
 BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 BASE_NAME_DOC_DIR = "doc"
 BASE_NAME_README = "README.md"
+BASE_NAME_VALIDATE_REPORT = "validate_report.md"
 BASE_NAME_PAYLOAD_SAMPLES_DIR = "payload_samples"
 BASE_NAME_PAYLOAD_SAMPLES_SCHEMA = "output_json_schema.json"
 BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE = "output_json_example.json"
@@ -66,7 +67,7 @@ PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data
 
 PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"
 
-PATH_CUSTOMIZE_PY = os.path.join("util", "customize.py")
+PATH_CUSTOMIZE_PY = os.path.join("util", BASE_NAME_CUSTOMIZE_PY)
 PATH_CONFIG_PY = os.path.join("util", "config.py")
 PATH_UTIL_DATA_DIR = os.path.join("util", "data")
 PATH_SELFTEST_PY = os.path.join("util", "selftest.py")
@@ -74,6 +75,7 @@ PATH_LOCAL_EXPORT_RES = os.path.join("data", BASE_NAME_LOCAL_EXPORT_RES)
 PATH_SCREENSHOTS = os.path.join(BASE_NAME_DOC_DIR, "screenshots")
 PATH_ICON_EXTENSION_LOGO = os.path.join("icons", "app_logo.png")
 PATH_ICON_COMPANY_LOGO = os.path.join("icons", "company_logo.png")
+PATH_VALIDATE_REPORT = os.path.join(BASE_NAME_DIST_DIR, BASE_NAME_VALIDATE_REPORT)
 
 PREFIX_EXTENSION_ZIP = "app-"
 MIN_SETUP_PY_VERSION = "1.0.0"
@@ -124,6 +126,7 @@ COLORS = {
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',
     "INFO": '\033[94m',
+    "SKIPPED": '\033[94m',
     "BLUE": '\033[94m',
     "END": '\033[0m'
 }
@@ -218,6 +221,25 @@ def parse_setup_py(path, attribute_names, the_globals={}):
 
     return return_dict
 
+
+def get_package_name(path_package):
+    """
+    Using the path to a package, gets the path to the setup.py file
+    and validates it. Then parses the file and returns the ``name`` attribute
+
+    :return: the ``name`` attribute in the package's setup.py file or ""
+    :rtype: str
+    """
+    # Generate path to setup.py file + validate we have permissions to read it
+    path_setup_py_file = os.path.join(path_package, BASE_NAME_SETUP_PY)
+    sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file)
+
+    # Parse the setup.py file
+    setup_py_attributes = parse_setup_py(path_setup_py_file, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
+
+    return setup_py_attributes.get("name", "")
+
+
 def get_dependency_from_install_requires(install_requires, dependency_name):
     """Returns the String of the dependency_name specified in the setup.py file by
     using the install_requires_list parsed from the setup.py file with utils.parse_setup_py()
@@ -287,7 +309,7 @@ def load_customize_py_module(path_customize_py, warn=True):
             customize_py_module = sdk_helpers.load_py_module(temp_file.name, module_name)
 
         except IOError as ioerr:
-           raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
+            raise IOError("Unexpected IO error '{0}' for file '{1}".format(ioerr, temp_file.name))
 
         except Exception as err:
             # An an unexpected error trying to load the module temporary customize module.
@@ -530,7 +552,7 @@ def get_icon(icon_name, path_to_icon, width_accepted, height_accepted, default_p
 
     # Raise exception if resolution is not accepted
     if icon_width != width_accepted or icon_height != height_accepted:
-        raise SDKException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File:{4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
+        raise SDKException("Icon resolution is {0}x{1}. Resolution must be {2}x{3}\nIcon File: {4}".format(icon_width, icon_height, width_accepted, height_accepted, path_icon_to_use))
 
     # If we get here all validations have passed. Open the file in Bytes mode and encode it as base64 and decode to a utf-8 string
     with open(path_icon_to_use, "rb") as icon_file:
@@ -651,7 +673,7 @@ def get_configuration_py_file_path(file_type, setup_py_attributes):
     return path_py_file
 
 def create_extension(path_setup_py_file, path_apikey_permissions_file,
-                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None, path_payload_samples=None,
+                     output_dir, path_built_distribution=None, path_extension_logo=None, path_company_logo=None, path_payload_samples=None, path_validate_report=None,
                      custom_display_name=None, repository_name=None, image_hash=None, keep_build_dir=False):
     """
     Function that creates The App.zip file from the given setup.py, customize and config files
@@ -675,6 +697,8 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     :type path_company_logo: str
     :param path_payload_samples: abs path to directory containing the files with a JSON schema and example output of the functions
     :type path_payload_samples: str
+    :param path_validate_report: abs path to directory containing the validation report - to be copied to the build directory that will be zipped
+    :type path_validate_report: str
     :param custom_display_name: will give the App that display name. Default: name from setup.py file
     :type custom_display_name: str
     :param repository_name: will over-ride the container repository name for the App. Default: 'ibmresilient'
@@ -785,15 +809,15 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         extension_logo = get_icon(
             icon_name=os.path.basename(PATH_DEFAULT_ICON_EXTENSION_LOGO),
             path_to_icon=path_extension_logo,
-            width_accepted=200,
-            height_accepted=72,
+            width_accepted=constants.ICON_APP_LOGO_REQUIRED_WIDTH,
+            height_accepted=constants.ICON_APP_LOGO_REQUIRED_HEIGHT,
             default_path_to_icon=PATH_DEFAULT_ICON_EXTENSION_LOGO)
 
         company_logo = get_icon(
             icon_name=os.path.basename(PATH_DEFAULT_ICON_COMPANY_LOGO),
             path_to_icon=path_company_logo,
-            width_accepted=100,
-            height_accepted=100,
+            width_accepted=constants.ICON_COMPANY_LOGO_REQUIRED_WIDTH,
+            height_accepted=constants.ICON_COMPANY_LOGO_REQUIRED_HEIGHT,
             default_path_to_icon=PATH_DEFAULT_ICON_COMPANY_LOGO)
 
         # Get the display name
@@ -871,41 +895,45 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
         # Write the executable.json file
         sdk_helpers.write_file(path_extension_json, json.dumps(the_extension_json_file_contents, sort_keys=True))
 
-        # See if RES_SDK_DEV environment var is set
-        if sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV):
+        # Gather payload_samples file for each function and add to export.res file if exists
+        if not path_payload_samples:
+            LOG.warning("WARNING: No path for 'payload_samples' provided. Skipping adding them to the export.res file")
 
-            if not path_payload_samples:
-                LOG.warning("WARNING: No path for 'payload_samples' provided. Skipping adding them to the export.res file")
+        else:
+            for fn in import_definition.get("functions"):
 
-            else:
-                for fn in import_definition.get("functions"):
+                # Get paths to payload_samples
+                fn_name = fn.get(ResilientObjMap.FUNCTIONS)
+                path_payload_samples_fn = os.path.join(path_payload_samples, fn_name)
+                path_payload_samples_schema = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
+                path_payload_samples_example = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
 
-                    # Get paths to payload_samples
-                    fn_name = fn.get(ResilientObjMap.FUNCTIONS)
-                    path_payload_samples_fn = os.path.join(path_payload_samples, fn_name)
-                    path_payload_samples_schema = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)
-                    path_payload_samples_example = os.path.join(path_payload_samples_fn, BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+                try:
+                    # Validate payload_files, add custom error message if we can't
+                    sdk_helpers.validate_file_paths(os.R_OK, path_payload_samples_schema, path_payload_samples_example)
+                except SDKException as err:
+                    err.message += ("\nWARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
+                                    "Add '--no-samples' flag to avoid looking for them and avoid this warning message.\n")
+                    LOG.warning(err.message)
+                    continue
 
-                    try:
-                        # Validate payload_files, add custom error message if we can't
-                        sdk_helpers.validate_file_paths(os.R_OK, path_payload_samples_schema, path_payload_samples_example)
-                    except SDKException as err:
-                        err.message += ("\nWARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
-                                        "Add '--no-samples' flag to avoid looking for them and avoid this warning message.\n")
-                        LOG.warning(err.message)
-                        continue
+                # Read in schema payload and add to function import definition
+                payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)
+                LOG.debug("Adding JSON output schema to '%s' from file: %s", fn_name, path_payload_samples_schema)
+                json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
+                fn[json_schema_key] = json.dumps(payload_samples_schema_contents_dict)
 
-                    # Read in schema payload and add to function import definition
-                    payload_samples_schema_contents_dict = sdk_helpers.read_json_file(path_payload_samples_schema)
-                    LOG.debug("Adding JSON output schema to '%s' from file: %s", fn_name, path_payload_samples_schema)
-                    json_schema_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_SCHEMA)[0]
-                    fn[json_schema_key] = json.dumps(payload_samples_schema_contents_dict)
+                # Read in example payload and add to function import definition
+                payload_samples_example_contents_dict = sdk_helpers.read_json_file(path_payload_samples_example)
+                LOG.debug("Adding JSON output example to '%s' from file: %s", fn_name, path_payload_samples_example)
+                json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
+                fn[json_example_key] = json.dumps(payload_samples_example_contents_dict)
 
-                    # Read in example payload and add to function import definition
-                    payload_samples_example_contents_dict = sdk_helpers.read_json_file(path_payload_samples_example)
-                    LOG.debug("Adding JSON output example to '%s' from file: %s", fn_name, path_payload_samples_example)
-                    json_example_key = os.path.splitext(BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)[0]
-                    fn[json_example_key] = json.dumps(payload_samples_example_contents_dict)
+        if path_validate_report:
+            path_zipped_validate_report = os.path.join(path_build, os.path.basename(path_validate_report))
+            shutil.copy(path_validate_report, path_zipped_validate_report)
+        else:
+            LOG.warn("WARNING: If a validation report is not included with your submission, it will get rejected. Run this command with the '--validate' flag to include validations.")
 
         # Write the customize ImportDefinition to the app*.zip export.res file
         sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))
@@ -946,17 +974,10 @@ def get_required_python_version(python_requires_str):
     """
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
-        parsed_version = pkg_resources.parse_version(version_str)
-        if sys.version_info[0] >= 3: # python 3 
-            return (parsed_version.major, parsed_version.minor)
-        else: # python 2.7
-            major_minor = tuple(int(i) for i in str(parsed_version).split("."))
-            
-            # if version is only one number (i.e. '3'), then add a 0 to the end
-            if len(major_minor) == 1:
-                major_minor = (major_minor[0], 0)
-            return major_minor
-    except AttributeError:
+        version = pkg_resources.parse_version(version_str)
+        
+        return sdk_helpers.parse_version_object(version)
+    except AttributeError as e:
         raise SDKException("'python_requires' version not given in correct format.")
 
 def check_package_installed(package_name):
@@ -975,18 +996,26 @@ def check_package_installed(package_name):
 
     return True
 
-def color_output(s, level):
+def color_output(s, level, do_print=False):
     """
-    Uses class COLORS to color given string. 'level' maps to values in COLORS dict
-    
+    Uses class COLORS to color given string. 'level' maps to values in COLORS dict.
+    If do_print is set, logs out 's'
+
     :param s: value to be wrapped in color
     :type s: str
     :param level: map to COLORS dict defined as constant above
     :type level: str
+    :param do_print: If True, logs the string to the stdout
+    :type do_print: bool
     :return: colored output of 's'
     :rtype: str
     """
-    return str(COLORS.get(level)) + str(s) + str(COLORS.get("END"))
+    text = u"{0}{1}{2}".format(COLORS.get(level), s, COLORS.get("END"))
+
+    if do_print:
+        LOG.info(text)
+
+    return text
 
 def color_diff_output(diff):
     """
@@ -1050,3 +1079,15 @@ def parse_file_paths_from_readme(readme_line_list):
                 raise SDKException(u"Line '{0}' in README has invalid link syntax".format(line))
 
     return paths
+
+
+def check_validate_report_exists():
+    """
+    Goes into the dist directory and looks for the validate_report.md. If it exists, returns the path.
+    If it doesn't exists, returns None
+
+    :return: path of the validate_report.md if it exists else None
+    :rtype: str
+    """
+
+    return PATH_VALIDATE_REPORT if os.path.exists(PATH_VALIDATE_REPORT) else None

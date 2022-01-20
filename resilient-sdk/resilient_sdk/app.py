@@ -88,18 +88,18 @@ def main():
     # Get sub_parser object, its dest is cmd
     sub_parser = get_main_app_sub_parser(parser)
 
+    if sdk_dev:
+        # Add 'dev' command if environment var set
+        cmd_dev = CmdDev(sub_parser)
+        LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
+
     # Add any subcommands to main app parser here
+    cmd_validate = CmdValidate(sub_parser)
     cmd_codegen = CmdCodegen(sub_parser)
     cmd_clone = CmdClone(sub_parser)
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
-    cmd_ext_package = CmdExtPackage(sub_parser)
-
-    if sdk_dev:
-        # Add 'dev' command if environment var set
-        cmd_dev = CmdDev(sub_parser)
-        cmd_validate = CmdValidate(sub_parser)
-        LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
+    cmd_ext_package = CmdExtPackage(sub_parser, cmd_validate=cmd_validate)
 
     try:
         # Parse the arguments
@@ -133,7 +133,7 @@ def main():
             elif main_cmd == cmd_ext_package.CMD_NAME:
                 cmd_ext_package.parser.print_usage()
 
-            elif sdk_dev and main_cmd == cmd_validate.CMD_NAME:
+            elif main_cmd == cmd_validate.CMD_NAME:
                 cmd_validate.parser.print_usage()
 
             elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
@@ -166,9 +166,7 @@ def main():
     elif args.cmd == cmd_ext_package.CMD_NAME:
         cmd_ext_package.execute_command(args)
 
-    elif sdk_dev and args.cmd == cmd_validate.CMD_NAME:
-        # TODO: remove sdk_validate_enabled check once validate is ready for use
-        # functionality is currently hidden behind sdk_validate_enabled env var 
+    elif args.cmd == cmd_validate.CMD_NAME:
         cmd_validate.execute_command(args)
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)

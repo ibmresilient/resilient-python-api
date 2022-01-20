@@ -24,5 +24,7 @@ build
 _build
 resilient-sdk/sdk_coverage_report
 *.bak
+!/resilient-sdk/tests/shared_mock_data/mock_package_files/mock_integrations/fn_main_mock_integration/fn_main_mock_integration/**/*.bak
+!/resilient-sdk/tests/shared_mock_data/*.log
 .vscode
 .env

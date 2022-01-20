@@ -15,15 +15,15 @@ Note:
 """
 
 import copy
-import sys
+import logging
 import os
 import shutil
+import sys
+
 import pytest
-import logging
-import subprocess
-import time
 import resilient_sdk.app as app
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
+
 from tests.shared_mock_data import mock_paths
 
 # Set the logging to DEBUG for tests
@@ -76,6 +76,22 @@ def _add_to_cmd_line_args(args_to_add):
     sys.argv.extend(args_to_add)
 
 
+def _pip_install(package):
+    """
+    pip installs given package
+    """
+
+    install_cmd = ["pip", "install", package]
+    sdk_helpers.run_subprocess(install_cmd)
+
+def _pip_uninstall(package):
+    """
+    pip uninstalls package
+    """
+    unisntall_cmd = ["pip", "uninstall", "-y", package]
+    sdk_helpers.run_subprocess(unisntall_cmd)
+
+
 @pytest.fixture(scope="session")
 def fx_mock_res_client():
     """
@@ -126,31 +142,104 @@ def fx_copy_fn_main_mock_integration():
 
 
 @pytest.fixture
-def fx_pip_install_fn_main_mock_integration():
+def fx_copy_and_pip_install_fn_main_mock_integration():
     """
-    Before: pip installs our mock integration at mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION
-    After: pip uninstalls mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    Before: Creates temp dir and copies fn_main_mock_integration to it AND pip installs it
+    Returns a tuple (mock_integration_name, path_fn_main_mock_integration)
+    After: Removes the temp directory AND pip uninstalls it
     """
+    _mk_temp_dir()
+    mock_integration_name = "fn_main_mock_integration"
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_integration_name)
+    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
 
-    install_cmd = ["pip", "install", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION]
-    proc = subprocess.Popen(install_cmd)
+    _pip_install(path_fn_main_mock_integration)
 
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("pip installing: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION))
-        sys.stdout.flush()
-        time.sleep(0.2)
+    yield (mock_integration_name, path_fn_main_mock_integration)
+
+    _pip_uninstall(path_fn_main_mock_integration)
+
+    _rm_temp_dir()
+
+@pytest.fixture
+def fx_pip_install_tox():
+    """
+    Before: if tox not already installed: pip installs tox
+    After: if tox wasn't already installed: pip uninstalls tox
+    """
+    
+    # bool values of whether tox was already installed
+    tox_installed = False
+    if sdk_helpers.get_package_version(constants.TOX_PACKAGE_NAME):
+        tox_installed = True
+
+    if not tox_installed:
+        _pip_install(constants.TOX_PACKAGE_NAME)
 
     yield
 
-    unisntall_cmd = ["pip", "uninstall", "-y", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME]
-    proc = subprocess.Popen(unisntall_cmd)
+    if not tox_installed:
+        _pip_uninstall(constants.TOX_PACKAGE_NAME)
 
-    while proc.poll() is None:
-        sys.stdout.write("\r")
-        sys.stdout.write("pip uninstalling: {0}".format(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME))
-        sys.stdout.flush()
-        time.sleep(0.2)
+@pytest.fixture
+def fx_pip_install_pylint():
+    """
+    Before: if pylint not already installed: pip installs pylint
+    After: if pylint wasn't already installed: pip uninstalls pylint
+    """
+
+    # bool values of whether pylint was already installed
+    pylint_installed = False
+    if sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME):
+        pylint_installed = True
+
+    if not pylint_installed:
+        _pip_install(constants.PYLINT_PACKAGE_NAME)
+
+    yield
+
+    if not pylint_installed:
+        _pip_uninstall(constants.PYLINT_PACKAGE_NAME)
+
+@pytest.fixture
+def fx_pip_install_bandit():
+    """
+    Before: if bandit not already installed: pip installs bandit
+    After: if bandit wasn't already installed: pip uninstalls bandit
+    """
+
+    # bool values of whether bandit was already installed
+    bandit_installed = False
+    if sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME):
+        bandit_installed = True
+
+    if not bandit_installed:
+        _pip_install(constants.BANDIT_PACKAGE_NAME)
+
+    yield
+
+    if not bandit_installed:
+        _pip_uninstall(constants.BANDIT_PACKAGE_NAME)
+
+
+@pytest.fixture
+def fx_cmd_line_args_codegen_base():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "codegen",
+        "-p", "fn_main_mock_integration"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
 
 
 @pytest.fixture

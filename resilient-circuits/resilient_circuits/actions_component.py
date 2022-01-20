@@ -1125,7 +1125,7 @@ class Actions(ResilientComponent):
                              "message": message,
                              "complete": True}
                 if function_result:
-                    LOG.debug("Result: %s", function_result.value)
+                    LOG.debug("[%s] Result: %s", function_result.name, function_result.value)
                     reply_dto["results"] = function_result.value
                 reply_message = json.dumps(reply_dto, indent=2)
                 if not fevent.test:

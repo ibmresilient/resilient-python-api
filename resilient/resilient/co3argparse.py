@@ -3,19 +3,25 @@
 
 """Command-line argument parser for Resilient apps"""
 
-import os
-import sys
 import argparse
 import getpass
-import keyring
 import logging
+import os
+import sys
+
+import keyring
 from six import string_types
+
+from resilient import constants
 
 if sys.version_info.major == 2:
     from io import open
-    from resilient import ensure_unicode, get_proxy_dict, get_resilient_circuits_version
+
+    from resilient import (ensure_unicode, get_proxy_dict,
+                           get_resilient_circuits_version)
 else:
-    from resilient.co3 import ensure_unicode, get_proxy_dict, get_resilient_circuits_version
+    from resilient.co3 import (ensure_unicode, get_proxy_dict,
+                               get_resilient_circuits_version)
 
 try:
     # For all python < 3.2
@@ -214,7 +220,7 @@ class ArgumentParser(argparse.ArgumentParser):
         :return: Note: the return value is a dict, not a Namespace.
         """
 
-        if ALLOW_UNRECOGNIZED:
+        if ALLOW_UNRECOGNIZED or constants.ALLOW_UNRECOGNIZED:
             return self.parse_known_args(args, namespace)[0]
 
         # (the implementation calls parse_known_args)
