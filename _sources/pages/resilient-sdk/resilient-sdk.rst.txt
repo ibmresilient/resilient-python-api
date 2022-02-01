@@ -137,6 +137,42 @@ validate
     options:
     |cmd_validate_options|
 
+^^^^^
+Usage
+^^^^^
+
+Running ``validate`` without any options will:
+
+#. Verify that App files conform to our latest standard
+#. Test that ``resilient-circuits`` starts and that the App's ``selftest`` passes
+#. Runs any unit tests found with ``tox`` (if installed)
+#. Runs a ``pylint`` scan (if installed) using our defined ``pylint`` config file
+#. Run a ``bandit`` scan (if installed)  to identify any common security issues
+
+* To ensure that all files in your App conform to our latest standard, run:
+
+.. code-block::
+
+    $ resilient-sdk validate -p <name_of_package> --validate
+
+* To perform basic testing of the App, run:
+
+.. code-block::
+
+    $ resilient-sdk validate -p <name_of_package> --selftest
+
+* ``validate`` also has the ability to accept an ``app.config`` file in any location. For example:
+
+.. code-block::
+
+    $ resilient-sdk validate -p <name_of_package> --selftest -c '/usr/custom_app.config'
+
+* Once complete a Markdown summary file will be added to the ``dist`` directory and included in the ``.zip`` file when packaged
+
+.. note::
+
+    Each validation can be ran individually by specifying its related option
+
 ----------
 Change Log
 ----------
