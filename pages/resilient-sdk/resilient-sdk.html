@@ -366,12 +366,12 @@ options:
 --tox-args			Pytest arguments to pass to tox when validating tests. Format is &lt;attr1&gt;="&lt;value&gt;". Example: '--tox-args my_arg1="value1" my_arg2="value2"'</pre>
 <section id="usage">
 <h4>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h4>
-<p>Running <code class="docutils literal notranslate"><span class="pre">validate</span></code> without any options will:</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">validate</span></code> without any options to:</p>
 <ol class="arabic simple">
 <li><p>Verify that App files conform to our latest standard</p></li>
 <li><p>Test that <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> starts and that the App’s <code class="docutils literal notranslate"><span class="pre">selftest</span></code> passes</p></li>
-<li><p>Runs any unit tests found with <code class="docutils literal notranslate"><span class="pre">tox</span></code> (if installed)</p></li>
-<li><p>Runs a <code class="docutils literal notranslate"><span class="pre">pylint</span></code> scan (if installed) using our defined <code class="docutils literal notranslate"><span class="pre">pylint</span></code> config file</p></li>
+<li><p>Run any unit tests found with <code class="docutils literal notranslate"><span class="pre">tox</span></code> (if installed)</p></li>
+<li><p>Run a <code class="docutils literal notranslate"><span class="pre">pylint</span></code> scan (if installed) using our defined <code class="docutils literal notranslate"><span class="pre">pylint</span></code> config file</p></li>
 <li><p>Run a <code class="docutils literal notranslate"><span class="pre">bandit</span></code> scan (if installed)  to identify any common security issues</p></li>
 </ol>
 <ul class="simple">
@@ -393,11 +393,11 @@ options:
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Once complete a Markdown summary file will be added to the <code class="docutils literal notranslate"><span class="pre">dist</span></code> directory and included in the <code class="docutils literal notranslate"><span class="pre">.zip</span></code> file when packaged</p></li>
+<li><p>Once completed, a Markdown summary file is added to the <code class="docutils literal notranslate"><span class="pre">dist</span></code> directory and included in the <code class="docutils literal notranslate"><span class="pre">.zip</span></code> file when packaged</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Each validation can be ran individually by specifying its related option</p>
+<p>You can run each validation individually by specifying its related option.</p>
 </div>
 </section>
 </section>
