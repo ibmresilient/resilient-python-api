@@ -29,6 +29,7 @@ setup(
         "resilient>=43.0.0",
         "bs4",
         "jinja2",
+        "pytz",
         "six"
     ],
 
