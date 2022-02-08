@@ -27,7 +27,7 @@ from resilient_sdk.util import constants, sdk_helpers
 from tests.shared_mock_data import mock_paths
 
 # Set the logging to DEBUG for tests
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 LOG.setLevel(logging.DEBUG)
 
 
@@ -483,8 +483,8 @@ def fx_add_dev_env_var():
     Before: sets RES_SDK_DEV=1
     After: sets RES_SDK_DEV=0
     """
-    os.environ[sdk_helpers.ENV_VAR_DEV] = "1"
+    os.environ[constants.ENV_VAR_DEV] = "1"
 
     yield
 
-    os.environ[sdk_helpers.ENV_VAR_DEV] = "0"
+    os.environ[constants.ENV_VAR_DEV] = "0"

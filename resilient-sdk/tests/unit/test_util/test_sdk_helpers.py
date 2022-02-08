@@ -370,29 +370,29 @@ def test_str_to_bool():
 
 
 def test_is_env_var_set(fx_add_dev_env_var):
-    assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is True
+    assert sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) is True
 
 
 def test_is_env_var_not_set():
-    assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is False
+    assert sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) is False
 
 
 def test_get_resilient_libraries_version_to_use():
-    assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION
+    assert sdk_helpers.get_resilient_libraries_version_to_use() == constants.RESILIENT_LIBRARIES_VERSION
 
 
 def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
-    assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION_DEV
+    assert sdk_helpers.get_resilient_libraries_version_to_use() == constants.RESILIENT_LIBRARIES_VERSION_DEV
 
 def test_get_resilient_sdk_version():
     parsed_version = sdk_helpers.get_resilient_sdk_version()
     assert parsed_version is not None
-    assert parsed_version >= pkg_resources.parse_version(sdk_helpers.RESILIENT_LIBRARIES_VERSION)
+    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
 
 def test_get_package_version_found_in_env():
     parsed_version = sdk_helpers.get_package_version("resilient-sdk")
     assert parsed_version is not None
-    assert parsed_version >= pkg_resources.parse_version(sdk_helpers.RESILIENT_LIBRARIES_VERSION)
+    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
 
 def test_get_package_version_not_found():
     not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
@@ -403,7 +403,7 @@ def test_is_python_min_supported_version(caplog):
 
     is_supported = sdk_helpers.is_python_min_supported_version()
 
-    if sys.version_info < sdk_helpers.MIN_SUPPORTED_PY_VERSION:
+    if sys.version_info < constants.MIN_SUPPORTED_PY_VERSION:
         assert mock_log in caplog.text
         assert is_supported is False
 

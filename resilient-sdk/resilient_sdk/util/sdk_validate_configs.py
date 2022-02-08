@@ -90,13 +90,13 @@ setup_py_attributes = {
     },
     "python_requires": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: package_helpers.get_required_python_version(x) < sdk_helpers.MIN_SUPPORTED_PY_VERSION,
+        "fail_func": lambda x: package_helpers.get_required_python_version(x) < constants.MIN_SUPPORTED_PY_VERSION,
         "fail_msg": u"'{0}' version '{2[0]}.{2[1]}' is not supported",
         "fail_msg_lambda_supplement": lambda x: package_helpers.get_required_python_version(x),
         "missing_msg": "'python_requires' is a recommended attribute",
         "solution": u"Suggested value is 'python_requires>={0}.{1}'".format(
-            sdk_helpers.MIN_SUPPORTED_PY_VERSION[0],
-            sdk_helpers.MIN_SUPPORTED_PY_VERSION[1]
+            constants.MIN_SUPPORTED_PY_VERSION[0],
+            constants.MIN_SUPPORTED_PY_VERSION[1]
         ),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     },
