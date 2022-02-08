@@ -40,6 +40,7 @@ def codegen_reload_data():
 
         "scripts": {% if scripts %}[{% for o in scripts|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[]{% endif %}
 
+        {# TODO handle playbook reload #}
     }
 
 
@@ -48,7 +49,7 @@ def customization_data(client=None):
     Returns a Generator of ImportDefinitions (Customizations).
     Install them using `resilient-circuits customize`
 
-    IBM Resilient Platform Version: {{export_data.server_version.version}}
+    IBM SOAR Platform Version: {{export_data.server_version.version}}
 
     Contents:
     {% if message_destinations %}    - Message Destinations:
@@ -61,6 +62,10 @@ def customization_data(client=None):
     {% endif %}
     {% if workflows %}    - Workflows:
     {% for o in workflows|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if playbooks %}    - Playbooks:
+    {% for o in playbooks|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
     {% endfor %}
     {% endif %}
     {% if rules %}    - Rules:

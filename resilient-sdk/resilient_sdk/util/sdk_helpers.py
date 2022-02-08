@@ -30,7 +30,7 @@ from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
-from resilient_sdk.util.constants import *
+from resilient_sdk.util import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -45,7 +45,7 @@ else:
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 def get_resilient_client(path_config_file=None):
@@ -320,7 +320,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
+            raise SDKException(u"{0}: {1}".format(constants.ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -336,11 +336,62 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
+            raise SDKException(u"{0}: {1}".format(constants.ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
             has_permissions(permissions, path_to_dir)
+
+
+def get_resilient_server_info(res_client, keys_to_get=[]):
+    """
+    Calls the const/ endpoint and returns the info specified in keys_to_get
+
+    **Example:**
+
+    .. code-block:: python
+
+        server_version = get_resilient_server_info(res_client, ["server_version"])
+
+    :param res_client: required for communication back to resilient
+    :type res_client: sdk_helpers.get_resilient_client()
+    :param keys_to_get: list of strings of the keys to return from the const/ endpoint. If ``None``
+    returns the whole response
+    :type keys_to_get: list
+    :return: response from const/
+    :rtype: dict
+    """
+    # TODO: unit test
+    LOG.debug("Getting server info")
+    server_info = res_client.get("/const/", is_uri_absolute=True)
+
+    if keys_to_get:
+        server_info = {k: server_info[k] for k in keys_to_get}
+
+    return server_info
+
+
+def get_resilient_server_version(res_client):
+    """
+    Uses get_resilient_server_info to get the "server_version"
+    and converts it into a float of ``major.minor`` and returns it
+
+    :param res_client: required for communication back to resilient
+    :type res_client: sdk_helpers.get_resilient_client()
+    :return: the server_version in the form ``major.minor``
+    :rtype: float
+    """
+    # TODO: unit test
+    LOG.debug("Getting server version")
+
+    if constants.CURRENT_SOAR_SERVER_VERSION:
+        return constants.CURRENT_SOAR_SERVER_VERSION
+
+    server_version = get_resilient_server_info(res_client, ["server_version"]).get("server_version", {})
+
+    constants.CURRENT_SOAR_SERVER_VERSION = float("{0}.{1}".format(server_version.get("major", 0), server_version.get("minor", 0)))
+
+    return constants.CURRENT_SOAR_SERVER_VERSION
 
 
 def get_latest_org_export(res_client):
@@ -350,7 +401,19 @@ def get_latest_org_export(res_client):
     """
     LOG.debug("Generating new organization export")
     latest_export_uri = "/configurations/exports/"
-    return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
+
+    customizations_to_get = {
+        "layouts": True,
+        "actions": True,
+        "phases_and_tasks": True
+    }
+    # TODO: unit test
+    server_version = get_resilient_server_version(res_client)
+
+    if server_version >= constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        customizations_to_get.update({"playbooks": True})
+
+    return res_client.post(latest_export_uri, customizations_to_get)
 
 
 def add_configuration_import(new_export_data, res_client):
@@ -370,7 +433,7 @@ def add_configuration_import(new_export_data, res_client):
     :raises SDKException: If the confirmation request fails raise an SDKException
     """
     try:
-        result = res_client.post(IMPORT_URL, new_export_data)
+        result = res_client.post(constants.IMPORT_URL, new_export_data)
     except requests.RequestException as upload_exception:
         LOG.debug(new_export_data)
         raise SDKException(upload_exception)
@@ -402,7 +465,7 @@ def confirm_configuration_import(result, import_id, res_client):
     """
 
     result["status"] = "ACCEPTED"      # Have to confirm changes
-    uri = "{}/{}".format(IMPORT_URL, import_id)
+    uri = "{}/{}".format(constants.IMPORT_URL, import_id)
     try:
         res_client.put(uri, result)
         LOG.info("Imported configuration changes successfully to the Resilient Appliance")
@@ -423,7 +486,7 @@ def read_local_exportfile(path_local_exportfile):
     # Read the export file content.
     if is_zipfile(path_local_exportfile):
         # File is a zip file get unzipped content.
-        export_content = read_zip_file(path_local_exportfile, RES_EXPORT_SUFFIX)
+        export_content = read_zip_file(path_local_exportfile, constants.RES_EXPORT_SUFFIX)
     else:
         # File is a assumed to be a text file read the export file content.
         export_content = ''.join(read_file(path_local_exportfile))
@@ -527,6 +590,7 @@ def get_from_export(export,
                     datatables=[],
                     tasks=[],
                     scripts=[],
+                    playbooks=[],
                     get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
@@ -544,6 +608,7 @@ def get_from_export(export,
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
+    :param playbooks: List of Playbook API Names
     :param get_related_objects: Whether or not to hunt for related action objects, defaults to True
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
@@ -563,6 +628,7 @@ def get_from_export(export,
     datatables = datatables if datatables else []
     tasks = tasks if tasks else []
     scripts = scripts if scripts else []
+    playbooks = playbooks if playbooks else []
 
     # Dict to return
     return_dict = {
@@ -675,6 +741,10 @@ def get_from_export(export,
     # Get Scripts
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
+    # Get Playbooks
+    # TODO: unit test
+    return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
+
     return return_dict
 
 
@@ -690,7 +760,8 @@ def minify_export(export,
                   tasks=[],
                   phases=[],
                   scripts=[],
-                  incident_types=[]):
+                  incident_types=[],
+                  playbooks=[]):
     """
     Return a 'minified' version of the export.
     All parameters are a list of api_names of objects to include in the export.
@@ -709,6 +780,7 @@ def minify_export(export,
     :param tasks: List of Phases API Names
     :param scripts: List of Script Display Names
     :param incident_types: List of Custom Incident Type Names
+    :param playbooks: List of Playbook API Names
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -739,9 +811,10 @@ def minify_export(export,
         "automatic_tasks": {"programmatic_name": tasks},
         "phases": {"name": phases},
         "scripts": {"name": scripts},
-        "incident_types": {"name": parent_child_incident_types}
+        "incident_types": {"name": parent_child_incident_types},
+        "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks}
     }
-
+    # TODO: unit test
     for key in minified_export.keys():
 
         # If we keep this one, skip
@@ -1035,10 +1108,10 @@ def get_resilient_libraries_version_to_use():
     :return: Version of resilient-circuits to use depending on ENV_VAR_DEV set
     :rtype: str
     """
-    if is_env_var_set(ENV_VAR_DEV):
-        return RESILIENT_LIBRARIES_VERSION_DEV
+    if is_env_var_set(constants.ENV_VAR_DEV):
+        return constants.RESILIENT_LIBRARIES_VERSION_DEV
     else:
-        return RESILIENT_LIBRARIES_VERSION
+        return constants.RESILIENT_LIBRARIES_VERSION
 
 
 def get_resilient_sdk_version():
@@ -1047,7 +1120,8 @@ def get_resilient_sdk_version():
 
     :return: a Version object
     """
-    return get_package_version(SDK_PACKAGE_NAME)
+    return get_package_version(constants.SDK_PACKAGE_NAME)
+
 
 def get_package_version(package_name):
     """
@@ -1073,14 +1147,14 @@ def is_python_min_supported_version(custom_warning=None):
     :return: a boolean to indicate if current version is supported or not
     :rtype: bool
     """
-    if sys.version_info < MIN_SUPPORTED_PY_VERSION:
+    if sys.version_info < constants.MIN_SUPPORTED_PY_VERSION:
 
         if custom_warning:
             LOG.warning("WARNING: %s", custom_warning)
 
         else:
             LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
-                        "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+                        "and your current version of Python is {2}.{3}".format(constants.MIN_SUPPORTED_PY_VERSION[0], constants.MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
         return False
 
@@ -1302,7 +1376,7 @@ def handle_file_not_found_error(e, msg):
     :raises: The exception that is passed unless it contains 
     ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
     """
-    if ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in e.message:
+    if constants.ERROR_NOT_FIND_DIR or constants.ERROR_NOT_FIND_FILE in e.message:
         LOG.warning("WARNING: %s", msg)
     else:
         raise e

@@ -296,8 +296,10 @@ class CmdCodegen(BaseCmd):
                                                  datatables=args.datatable,
                                                  tasks=args.task,
                                                  scripts=args.script,
-                                                 incident_types=args.incidenttype)
+                                                 incident_types=args.incidenttype,
+                                                 playbooks=args.playbook)
 
+        # TODO: unit test
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = sdk_helpers.minify_export(org_export,
                                                               message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
@@ -310,7 +312,8 @@ class CmdCodegen(BaseCmd):
                                                               tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
                                                               phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
                                                               scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")),
-                                                              incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, jinja_data.get("incident_types")))
+                                                              incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, jinja_data.get("incident_types")),
+                                                              playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, jinja_data.get("playbooks")))
 
         # Add package_name to jinja_data
         jinja_data["package_name"] = package_name
