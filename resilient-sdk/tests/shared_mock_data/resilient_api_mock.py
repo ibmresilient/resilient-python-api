@@ -8,7 +8,7 @@ from resilient.resilient_rest_mock import ResilientMock, resilient_endpoint
 from tests.helpers import read_mock_json
 
 
-class ResilientAPIMockv1(ResilientMock):
+class ResilientAPIMock(ResilientMock):
 
     @resilient_endpoint("POST", "/rest/session")
     def post_session(self, request):
@@ -34,6 +34,12 @@ class ResilientAPIMockv1(ResilientMock):
         """
         Mock POST /configurations/exports/
         """
+
+        if '"playbooks": true' in request.text:
+            return requests_mock.create_response(request,
+                                                 status_code=200,
+                                                 json=read_mock_json("export-with-playbook.JSON"))
+
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=read_mock_json("export.JSON"))
@@ -46,27 +52,3 @@ class ResilientAPIMockv1(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=read_mock_json("export.JSON"))
-
-
-class ResilientAPIMockv2(ResilientAPIMockv1):
-    """
-    A ResilientMock with an export.res file from a v43.1 server
-    """
-
-    @resilient_endpoint("POST", "/configurations/exports/")
-    def post_export(self, request):
-        """
-        Mock POST /configurations/exports/
-        """
-        return requests_mock.create_response(request,
-                                             status_code=200,
-                                             json=read_mock_json("export_v2.JSON"))
-
-    @resilient_endpoint("GET", "/const/")
-    def get_const(self, request):
-        """
-        Mock POST /const/
-        """
-        return requests_mock.create_response(request,
-                                             status_code=200,
-                                             json=read_mock_json("export_v2.JSON"))

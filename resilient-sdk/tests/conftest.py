@@ -45,7 +45,7 @@ def _rm_temp_dir():
 
 def _mk_app_config():
     write_path = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
-    resilient_mock = "{0}.{1}".format(os.path.join(mock_paths.SHARED_MOCK_DATA_DIR, "resilient_api_mock"), "ResilientAPIMockv1")
+    resilient_mock = "{0}.{1}".format(os.path.join(mock_paths.SHARED_MOCK_DATA_DIR, "resilient_api_mock"), "ResilientAPIMock")
 
     app_configs = """
 [resilient]

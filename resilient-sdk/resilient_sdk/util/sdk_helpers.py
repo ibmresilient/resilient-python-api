@@ -361,12 +361,11 @@ def get_resilient_server_info(res_client, keys_to_get=[]):
     :return: response from const/
     :rtype: dict
     """
-    # TODO: unit test
     LOG.debug("Getting server info")
     server_info = res_client.get("/const/", is_uri_absolute=True)
 
     if keys_to_get:
-        server_info = {k: server_info[k] for k in keys_to_get}
+        server_info = {k: server_info.get(k, {}) for k in keys_to_get}
 
     return server_info
 
@@ -381,7 +380,6 @@ def get_resilient_server_version(res_client):
     :return: the server_version in the form ``major.minor``
     :rtype: float
     """
-    # TODO: unit test
     LOG.debug("Getting server version")
 
     if constants.CURRENT_SOAR_SERVER_VERSION:
@@ -407,7 +405,6 @@ def get_latest_org_export(res_client):
         "actions": True,
         "phases_and_tasks": True
     }
-    # TODO: unit test
     server_version = get_resilient_server_version(res_client)
 
     if server_version >= constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
@@ -556,13 +553,13 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
             temp_obj_identifier = obj.get("identifier", "")
             obj_value = obj.get("value", "")
             full_obj = get_obj_from_list(temp_obj_identifier,
-                                         export[obj_name],
+                                         export.get(obj_name, ""),
                                          lambda wanted_obj, i=temp_obj_identifier, v=obj_value: True if wanted_obj.get(i) == v else False)
 
             wanted_list[index] = full_obj.get(obj_value).get(obj_identifer)
 
     if wanted_list:
-        ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
+        ex_obj = get_obj_from_list(obj_identifer, export.get(obj_name, ""), condition)
 
         for o in set(wanted_list):
             stripped_o = o.strip()
@@ -742,7 +739,6 @@ def get_from_export(export,
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
     # Get Playbooks
-    # TODO: unit test
     return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
     return return_dict
@@ -814,7 +810,7 @@ def minify_export(export,
         "incident_types": {"name": parent_child_incident_types},
         "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks}
     }
-    # TODO: unit test
+
     for key in minified_export.keys():
 
         # If we keep this one, skip

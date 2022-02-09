@@ -3,16 +3,19 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import os
-import stat
 import re
+import stat
+import sys
+
+import jinja2
 import pkg_resources
 import pytest
-import jinja2
-import sys
+from mock import patch
 from resilient import SimpleClient
 from resilient_sdk.cmds import CmdCodegen, CmdValidate
+from resilient_sdk.util import constants, sdk_helpers
+from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import sdk_helpers, constants
 from tests.shared_mock_data import mock_data, mock_paths
 
 
@@ -152,6 +155,20 @@ def test_validate_dir_paths(fx_mk_temp_dir):
     sdk_helpers.validate_dir_paths(None, exists_dir)
 
 
+def test_get_resilient_server_info(fx_mock_res_client):
+    server_info = sdk_helpers.get_resilient_server_info(fx_mock_res_client, ["export_format_version", "locale", "non_exist"])
+    assert len(server_info) == 3
+    assert server_info.get("export_format_version") == 2
+    assert server_info.get("locale") == "en"
+    assert server_info.get("non_exist") == {}
+
+
+def test_get_resilient_server_version(fx_mock_res_client):
+    mock_version = 39.0
+    assert sdk_helpers.get_resilient_server_version(fx_mock_res_client) == mock_version
+    assert constants.CURRENT_SOAR_SERVER_VERSION == mock_version
+
+
 def test_read_local_exportfile():
     export_data = sdk_helpers.read_local_exportfile(mock_paths.MOCK_EXPORT_RES)
     assert isinstance(export_data, dict)
@@ -243,6 +260,24 @@ def test_get_message_destination_from_export(fx_mock_res_client):
     assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
 
 
+def test_get_playbooks_from_export(fx_mock_res_client):
+    with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
+
+        mock_server_version.return_value = 43.1
+        org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+        export_data = sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
+
+        assert export_data.get("playbooks")[0].get(ResilientObjMap.PLAYBOOKS) == "main_mock_playbook"
+
+
+def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client):
+
+    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+
+    with pytest.raises(SDKException, match=r"ERROR: Playbook: 'main_mock_playbook' not found in this export."):
+        sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
+
+
 @pytest.mark.parametrize("get_related_param",
                          [(True), (False)])
 def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_related_param):
@@ -293,6 +328,16 @@ def test_minify_export(fx_mock_res_client):
 def test_minify_export_default_keys_to_keep(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
+    minifed_export = sdk_helpers.minify_export(org_export)
+
+    assert "export_date" in minifed_export
+    assert "export_format_version" in minifed_export
+    assert "id" in minifed_export
+    assert "server_version" in minifed_export
+
+
+def test_minify_export_with_playbooks(fx_mock_res_client):
+    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
     minifed_export = sdk_helpers.minify_export(org_export)
 
     assert "export_date" in minifed_export
