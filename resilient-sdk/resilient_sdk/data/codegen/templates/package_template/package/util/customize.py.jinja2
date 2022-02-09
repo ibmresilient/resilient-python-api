@@ -38,9 +38,10 @@ def codegen_reload_data():
 
         "automatic_tasks": {% if tasks %}[{% for o in tasks|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        "scripts": {% if scripts %}[{% for o in scripts|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[]{% endif %}
+        "scripts": {% if scripts %}[{% for o in scripts|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
 
-        {# TODO handle playbook reload #}
+        "playbooks": {% if playbooks %}[{% for o in playbooks|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}]{% else %}[]{% endif %}
+
     }
 
 

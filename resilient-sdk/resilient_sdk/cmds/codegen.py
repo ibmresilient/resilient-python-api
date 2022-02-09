@@ -518,7 +518,8 @@ class CmdCodegen(BaseCmd):
                 ("incidenttype", "incident_types"),
                 ("datatable", "datatables"),
                 ("task", "automatic_tasks"),
-                ("script", "scripts")
+                ("script", "scripts"),
+                ("playbook", "playbooks")
             ]
 
             # Merge old_params with new params specified on command line
