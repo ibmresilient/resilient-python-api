@@ -19,9 +19,10 @@ from resilient_sdk.util.sdk_exception import SDKException
 from tests.shared_mock_data import mock_data, mock_paths
 
 
-def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config):
+def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
     res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config)
     assert isinstance(res_client, SimpleClient)
+    assert "Connecting to IBM Security SOAR at: " in caplog.text
 
 
 def test_setup_jinja_env():

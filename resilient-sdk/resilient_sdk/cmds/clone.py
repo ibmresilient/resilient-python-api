@@ -7,14 +7,19 @@
 import logging
 import uuid
 from datetime import datetime
+
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
-                                            minify_export, get_from_export,
-                                            get_object_api_names, add_configuration_import, get_res_obj)
+from resilient_sdk.util import constants
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import constants
+from resilient_sdk.util.sdk_helpers import (add_configuration_import,
+                                            get_from_export,
+                                            get_latest_org_export,
+                                            get_object_api_names, get_res_obj,
+                                            get_resilient_client,
+                                            get_resilient_server_version,
+                                            minify_export)
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -51,6 +56,8 @@ class CmdClone(BaseCmd):
     CMD_USAGE = """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
+    $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name>
+    $ resilient-sdk clone --playbook <playbook_to_be_cloned> <new_playbook_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
@@ -73,6 +80,11 @@ class CmdClone(BaseCmd):
         self.parser.add_argument("-m", "--messagedestination",
                                  type=ensure_unicode,
                                  help="API names of message destinations to include",
+                                 nargs="*")
+
+        self.parser.add_argument("-pb", "--playbook",
+                                 type=ensure_unicode,
+                                 help="API names of playbooks to include",
                                  nargs="*")
 
         self.parser.add_argument("-r", "--rule",
@@ -136,7 +148,7 @@ class CmdClone(BaseCmd):
         new_export_data = minify_export(org_export)
 
         # If any of the supported args are provided
-        if any([args.function, args.workflow, args.rule, args.messagedestination, args.script]):
+        if any([args.function, args.workflow, args.rule, args.messagedestination, args.script, args.playbook]):
             if args.prefix:
                 self._clone_multiple_action_objects(
                     args, new_export_data, org_export)
@@ -171,6 +183,22 @@ class CmdClone(BaseCmd):
                     # add the newly cloned Message Destination to new_export_data
                     new_export_data["message_destinations"] = self._clone_action_object(
                         args.messagedestination, org_export, 'Message Destination', ResilientObjMap.MESSAGE_DESTINATIONS, 'message_destinations', CmdClone.replace_md_object_attrs)
+
+                if args.playbook:
+
+                    if get_resilient_server_version(CmdClone.res_client) < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+                        raise SDKException(u"Playbooks are only supported with IBM SOAR >= {0}".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS))
+
+                    # If a Playbook was provided, call _clone_action_object with Playbook related params and
+                    # add the newly cloned Playbook to new_export_data
+                    new_export_data[constants.CUST_PLAYBOOKS] = self._clone_action_object(
+                        input_args=args.playbook,
+                        org_export=org_export,
+                        obj_name='Playbook',
+                        obj_identifier=ResilientObjMap.PLAYBOOKS,
+                        obj_key=constants.CUST_PLAYBOOKS,
+                        replace_fn=CmdClone.replace_playbook_object_attrs,
+                        new_object_type=args.changetype)
 
             add_configuration_import(new_export_data, CmdClone.res_client)
             # If any message destinations were cloned, after creation attach a Authorised User or API Key
@@ -535,4 +563,40 @@ class CmdClone(BaseCmd):
         obj_to_modify.update({
             ResilientObjMap.MESSAGE_DESTINATIONS: new_obj_api_name
         })
+        return obj_to_modify
+
+    @staticmethod
+    def replace_playbook_object_attrs(obj_to_modify, new_obj_api_name):
+        """replace_playbook_object_attrs replace/overwrite the unique attributes of the playbook object so that
+        the provided object can be cloned with a new name and not cause a conflict on upload.
+
+        :param obj_to_modify: the object to be modified, in this case a function
+        :type obj_to_modify: dict
+        :param new_obj_api_name: the name of the function to modify
+        :type new_obj_api_name: str
+        :return: the modified object
+        :rtype: dict
+        """
+        new_uuid = str(uuid.uuid4())
+        new_field_type_uuid = u"{0}_{1}".format("playbook", new_uuid.replace("-", "_"))
+
+        obj_to_modify.update({
+            "uuid": new_uuid,
+            ResilientObjMap.PLAYBOOKS: new_obj_api_name,
+            "display_name": new_obj_api_name,
+            "name": new_obj_api_name,
+            "field_type_handle": new_field_type_uuid,
+            "status": "disabled",
+            "version": 0
+        })
+
+        obj_to_modify.get("fields_type", {}).update({
+            "display_name": new_obj_api_name,
+            "type_name": new_field_type_uuid,
+            "export_key": new_field_type_uuid,
+            "uuid": str(uuid.uuid4())
+        })
+
+        obj_to_modify.pop("id")
+
         return obj_to_modify

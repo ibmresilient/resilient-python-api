@@ -299,7 +299,6 @@ class CmdCodegen(BaseCmd):
                                                  incident_types=args.incidenttype,
                                                  playbooks=args.playbook)
 
-        # TODO: unit test
         # Get 'minified' version of the export. This is used in customize.py
         jinja_data["export_data"] = sdk_helpers.minify_export(org_export,
                                                               message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),

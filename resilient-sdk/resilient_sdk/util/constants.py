@@ -91,3 +91,6 @@ VALIDATE_LOG_LEVEL_DEBUG = "DEBUG"
 ERROR_NOT_FIND_DIR = "Could not find directory"
 ERROR_NOT_FIND_FILE = "Could not find file"
 ERROR_WRONG_PYTHON_VERSION = "Please install Python >= 3.6 to use this functionality"
+
+# Resilient Customizations
+CUST_PLAYBOOKS = "playbooks"

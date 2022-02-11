@@ -57,7 +57,6 @@ def get_resilient_client(path_config_file=None):
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
-    LOG.info("Connecting to IBM Security SOAR...")
 
     if not path_config_file:
         path_config_file = get_config_file()
@@ -67,7 +66,7 @@ def get_resilient_client(path_config_file=None):
     config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
 
-    LOG.debug("Trying to connect to '%s'", opts.get("host"))
+    LOG.info("Connecting to IBM Security SOAR at: %s", opts.get("host"))
 
     return get_client(opts)
 
@@ -294,6 +293,36 @@ def generate_uuid_from_string(the_string):
     return str(uuid.UUID(the_md5_hex_str))
 
 
+def update_uuids(obj):
+    """
+    TODO
+    """
+    # TODO: unit test
+
+    ATTRIBUTE_NAME = "uuid"
+
+    if isinstance(obj, list):
+        for i in range(len(obj)):
+            obj[i] = update_uuids(obj[i])
+
+    if hasattr(obj, ATTRIBUTE_NAME):
+        obj[ATTRIBUTE_NAME] = str(uuid.uuid4())
+        return obj
+
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+
+            if isinstance(v, (dict, list)):
+                if not v:
+                    continue
+                obj[k] = update_uuids(v)
+
+            elif k == ATTRIBUTE_NAME:
+                obj[k] = str(uuid.uuid4())
+
+    return obj
+
+
 def has_permissions(permissions, path):
     """
     Raises an exception if the user does not have the given permissions to path
@@ -388,6 +417,8 @@ def get_resilient_server_version(res_client):
     server_version = get_resilient_server_info(res_client, ["server_version"]).get("server_version", {})
 
     constants.CURRENT_SOAR_SERVER_VERSION = float("{0}.{1}".format(server_version.get("major", 0), server_version.get("minor", 0)))
+
+    LOG.info("IBM SOAR version: %s", constants.CURRENT_SOAR_SERVER_VERSION)
 
     return constants.CURRENT_SOAR_SERVER_VERSION
 
@@ -827,15 +858,18 @@ def minify_export(export,
             # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
             values = [name.strip() for name in values]
 
-            for data in list(minified_export[key]):
+            obj = minified_export.get(key)
 
-                if not data.get(attribute_name):
-                    LOG.warning("No %s in %s", attribute_name, key)
+            if obj:
+                for data in list(obj):
 
-                # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
-                # If this Resilient Object is not in our minify list, remove it
-                if not data.get(attribute_name, "").strip() in values:
-                    minified_export[key].remove(data)
+                    if not data.get(attribute_name):
+                        LOG.warning("No %s in %s", attribute_name, key)
+
+                    # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
+                    # If this Resilient Object is not in our minify list, remove it
+                    if not data.get(attribute_name, "").strip() in values:
+                        minified_export[key].remove(data)
 
         elif isinstance(minified_export[key], list):
             minified_export[key] = []

@@ -762,6 +762,10 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     # Add the tag to the import defintion
     import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, import_definition)
 
+    # Update any Playbook's UUIDs found in the import_definition
+    if import_definition.get(constants.CUST_PLAYBOOKS):
+        import_definition[constants.CUST_PLAYBOOKS] = sdk_helpers.update_uuids(import_definition[constants.CUST_PLAYBOOKS])
+
     # Parse the app.configs from the discovered config file
     if path_config_py_file:
         app_configs = get_configs_from_config_py(path_config_py_file)

@@ -45,6 +45,8 @@ def test_cmd_clone_setup(fx_get_sub_parser):
     assert cmd_clone.CMD_USAGE == """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
+    $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name>
+    $ resilient-sdk clone --playbook <playbook_to_be_cloned> <new_playbook_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
