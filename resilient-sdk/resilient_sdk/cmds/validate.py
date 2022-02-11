@@ -511,7 +511,7 @@ class CmdValidate(BaseCmd):
         """
         Validate the contents of the output_json_example.json and output_json_schema.json
         files for each function in a package. The payload samples are generated (empty) by codegen
-        and can be populated manually or automatically with codegen --gather-samples.
+        and can be populated manually or automatically with codegen --gather-results.
 
         This check is part of the --validate sub-functionality
 
