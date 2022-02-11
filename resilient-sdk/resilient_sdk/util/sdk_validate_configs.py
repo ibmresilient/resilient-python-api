@@ -377,7 +377,7 @@ payload_samples_attributes = {
 
     # if payload file is readable json but empty
     "payload_file_empty_msg": "{0} for '{1}' empty",
-    "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-samples'''",
+    "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-results'''",
     "payload_file_empty_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
     # generic solution that instructs user to reload using codegen
