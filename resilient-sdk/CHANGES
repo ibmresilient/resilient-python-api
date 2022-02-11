@@ -1,6 +1,6 @@
 **2022-02: version 44.0**
 
-* Added support to ``clone`` for Playbooks
+* Added support to ``codegen``, ``docgen``, ``package``, ``extract`` and ``clone`` for Playbooks
 
 **2022-01: version 43.1**
 
