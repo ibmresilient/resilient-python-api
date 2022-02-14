@@ -250,7 +250,6 @@ options:
 -fd, --field			API names of custom fields to include 
 -i, --incidenttype		Display names of custom incident types to include (surrounded by "") 
 -m, --messagedestination	API names of message destinations to include 
--pb, --playbook			API names of playbooks to include 
 -r, --rule			Display names of rules to include (surrounded by "") 
 -s, --script			Display names of scripts to include (surrounded by "") 
 -t, --task			API names of custom tasks to include 
@@ -298,8 +297,6 @@ options:
 <pre class="literal-block">usage:
 $ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt;
 $ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt; --changetype artifact
-$ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt;
-$ resilient-sdk clone --playbook &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --changetype artifact
 $ resilient-sdk clone -f &lt;function_to_be_cloned&gt; &lt;new_function_name&gt;
 $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
 $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
@@ -311,7 +308,6 @@ options:
 -c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -f, --function			API names of functions to include 
 -m, --messagedestination	API names of message destinations to include 
--pb, --playbook			API names of playbooks to include 
 -r, --rule			Display names of rules to include (surrounded by "") 
 -s, --script			Display names of scripts to include (surrounded by "") 
 -w, --workflow			API names of workflows to include 
@@ -335,7 +331,6 @@ options:
 -fd, --field			API names of custom fields to include 
 -i, --incidenttype		Display names of custom incident types to include (surrounded by "") 
 -m, --messagedestination	API names of message destinations to include 
--pb, --playbook			API names of playbooks to include 
 -r, --rule			Display names of rules to include (surrounded by "") 
 -s, --script			Display names of scripts to include (surrounded by "") 
 -t, --task			API names of custom tasks to include 
@@ -373,10 +368,6 @@ options:
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
-<p><strong>2022-02: version 44.0</strong></p>
-<ul class="simple">
-<li><p>Added support to <code class="docutils literal notranslate"><span class="pre">codegen</span></code>, <code class="docutils literal notranslate"><span class="pre">docgen</span></code>, <code class="docutils literal notranslate"><span class="pre">package</span></code>, <code class="docutils literal notranslate"><span class="pre">extract</span></code> and <code class="docutils literal notranslate"><span class="pre">clone</span></code> for Playbooks</p></li>
-</ul>
 <p><strong>2022-01: version 43.1</strong></p>
 <ul class="simple">
 <li><p>Added new <code class="docutils literal notranslate"><span class="pre">validate</span></code> functionality to the SDK</p></li>

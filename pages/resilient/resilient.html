@@ -269,7 +269,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_uri_absolute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the specified URI.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -283,7 +283,6 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 <li><p><strong>uri</strong> (<em>str</em>) – Relative URI of the resource to fetch.</p></li>
 <li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
-<li><p><strong>is_uri_absolute</strong> (<em>bool</em>) – if True, does not insert /org/{org_id} into the uri.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -584,11 +583,6 @@ to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
-<p><strong>2022-02: version 44.0</strong></p>
-<ul class="simple">
-<li><p>Added <code class="docutils literal notranslate"><span class="pre">is_uri_absolute</span></code> argument to <a class="reference internal" href="#resilient.co3.SimpleClient.get" title="resilient.co3.SimpleClient.get"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient.get()</span></code></a>
-that if <code class="docutils literal notranslate"><span class="pre">True</span></code>, does not insert <code class="docutils literal notranslate"><span class="pre">/org/{org_id}</span></code> into the uri</p></li>
-</ul>
 <p><strong>2022-01: version 43.1</strong></p>
 <ul class="simple">
 <li><p>Ability to globally check if <code class="docutils literal notranslate"><span class="pre">unrecognized</span> <span class="pre">arguments</span></code> are allowed</p></li>
