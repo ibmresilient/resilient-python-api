@@ -293,36 +293,6 @@ def generate_uuid_from_string(the_string):
     return str(uuid.UUID(the_md5_hex_str))
 
 
-def update_uuids(obj):
-    """
-    TODO
-    """
-    # TODO: unit test
-
-    ATTRIBUTE_NAME = "uuid"
-
-    if isinstance(obj, list):
-        for i in range(len(obj)):
-            obj[i] = update_uuids(obj[i])
-
-    if hasattr(obj, ATTRIBUTE_NAME):
-        obj[ATTRIBUTE_NAME] = str(uuid.uuid4())
-        return obj
-
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-
-            if isinstance(v, (dict, list)):
-                if not v:
-                    continue
-                obj[k] = update_uuids(v)
-
-            elif k == ATTRIBUTE_NAME:
-                obj[k] = str(uuid.uuid4())
-
-    return obj
-
-
 def has_permissions(permissions, path):
     """
     Raises an exception if the user does not have the given permissions to path
@@ -391,7 +361,7 @@ def get_resilient_server_info(res_client, keys_to_get=[]):
     :rtype: dict
     """
     LOG.debug("Getting server info")
-    server_info = res_client.get("/const/", is_uri_absolute=True)
+    server_info = res_client.get_const()
 
     if keys_to_get:
         server_info = {k: server_info.get(k, {}) for k in keys_to_get}
@@ -418,7 +388,7 @@ def get_resilient_server_version(res_client):
 
     constants.CURRENT_SOAR_SERVER_VERSION = float("{0}.{1}".format(server_version.get("major", 0), server_version.get("minor", 0)))
 
-    LOG.info("IBM SOAR version: %s", constants.CURRENT_SOAR_SERVER_VERSION)
+    LOG.info("IBM Security SOAR version: v%s", constants.CURRENT_SOAR_SERVER_VERSION)
 
     return constants.CURRENT_SOAR_SERVER_VERSION
 

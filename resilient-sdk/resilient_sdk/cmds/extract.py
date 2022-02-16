@@ -104,10 +104,6 @@ class CmdExtract(BaseCmd):
                                                      incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")),
                                                      playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, extract_data.get(constants.CUST_PLAYBOOKS)))
 
-        # Update a Playbooks UUID
-        if min_extract_data.get(constants.CUST_PLAYBOOKS):
-            min_extract_data[constants.CUST_PLAYBOOKS] = sdk_helpers.update_uuids(min_extract_data[constants.CUST_PLAYBOOKS])
-
         # Convert dict to JSON string
         if sys.version_info.major >= 3:
             res_data = json.dumps(min_extract_data, ensure_ascii=False)
