@@ -117,8 +117,8 @@ def render(template, data):
 
     try:
         jtemplate = environment().from_string(stringtemplate)
-    except jinja2.exceptions.TemplateSyntaxError:
-        LOG.error("Render failed, with template: %s", stringtemplate)
+    except jinja2.exceptions.TemplateSyntaxError as err:
+        LOG.error("Render failed: %s, with template: %s", str(err), stringtemplate)
         raise
 
     try:
@@ -185,7 +185,7 @@ def make_payload_from_template(template_override, default_template, payload, ret
         rendered_payload = render_json(template_data, payload)
     else:
         rendered_payload = render(template_data, payload)
-        rendered_payload = remove_ctl_chars(rendered_payload)
+        rendered_payload = _remove_ctl_chars(rendered_payload)
     LOG.debug(rendered_payload)
 
     return rendered_payload
