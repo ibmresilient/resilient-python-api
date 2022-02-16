@@ -361,7 +361,7 @@ def get_resilient_server_info(res_client, keys_to_get=[]):
     :rtype: dict
     """
     LOG.debug("Getting server info")
-    server_info = res_client.get_const()
+    server_info = res_client.get("/const/", is_uri_absolute=True)
 
     if keys_to_get:
         server_info = {k: server_info.get(k, {}) for k in keys_to_get}
