@@ -26,7 +26,7 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=43.0.0",
+        "resilient>=44.0.0",
         "jinja2~=2.0",
         "genson~=1.2"
     ],
