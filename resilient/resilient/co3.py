@@ -270,7 +270,7 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
         """Gets the specified URI.
 
         .. note::
@@ -284,6 +284,8 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
+        :param is_uri_absolute: if True, does not insert /org/{org_id} into the uri.
+        :type is_uri_absolute: bool
         :return: A dictionary or list with the value returned by the server.
         :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
@@ -291,7 +293,7 @@ class SimpleClient(co3base.BaseClient):
         # Call get from BaseClient, convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get(uri, co3_context_token, timeout)
+            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response

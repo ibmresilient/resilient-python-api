@@ -3,13 +3,16 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import os
-import sys
 import shutil
+import sys
 from pathlib import Path
+
 import pytest
-from resilient_sdk.cmds import base_cmd, CmdCodegen
-from resilient_sdk.util import constants, sdk_helpers
+from mock import patch
+from resilient_sdk.cmds import CmdCodegen, base_cmd
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from tests import helpers
 from tests.shared_mock_data import mock_paths
@@ -200,7 +203,8 @@ def test_merge_codegen_params():
     mapping_tuples = [
         ("function", "functions"),
         ("rule", "actions"),
-        ("script", "scripts")
+        ("script", "scripts"),
+        ("playbook", "playbooks")
     ]
 
     merged_args = CmdCodegen.merge_codegen_params(old_params, args, mapping_tuples)
@@ -210,6 +214,7 @@ def test_merge_codegen_params():
     assert "new_fn_2" in merged_args.function
     assert "rule 3" in merged_args.rule
     assert "script 1" in merged_args.script
+    assert merged_args.playbook == []
 
 
 def test_add_payload_samples():
@@ -318,7 +323,7 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     expected_workflow_files = ["wf_new_mock_workflow.md"]
     assert helpers.verify_expected_list(expected_workflow_files, os.listdir(os.path.join(path_package_reloaded, "data")))
 
-    # Remove files from generated package path and recreate without prefix or substring of 'funct_' or 'wd_'.
+    # Remove files from generated package path and recreate without prefix or substring of 'funct_' or 'wf_'.
     os.remove(os.path.join(path_package_reloaded, mock_integration_name, "components",
                            "funct_additional_mock_function.py"))
     Path(os.path.join(path_package_reloaded, mock_integration_name, "components",
@@ -360,6 +365,34 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     new_wf_modified_time = os.path.getmtime(os.path.join(path_package_reloaded, "data", "wf_mock_workflow_one.md"))
     # Assert modification time of workflow has been updated.
     assert new_wf_modified_time > wf_modified_time
+
+
+def test_reload_package_w_playbook(fx_copy_fn_main_mock_integration_w_playbooks, fx_get_sub_parser, fx_cmd_line_args_codegen_reload):
+
+    output_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path", "fn_main_mock_integration-1.1.0")
+    mock_integration_name = fx_copy_fn_main_mock_integration_w_playbooks[0]
+    shutil.move(fx_copy_fn_main_mock_integration_w_playbooks[1], output_path)
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = output_path
+
+    # Add path to a mock export.res file
+    sys.argv.extend(["-e", mock_paths.MOCK_RELOAD_EXPORT_RES_W_PLAYBOOK])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    path_package_reloaded = cmd_codegen._reload_package(args)
+
+    import_definition = package_helpers.get_import_definition_from_customize_py(os.path.join(path_package_reloaded, mock_integration_name, package_helpers.PATH_CUSTOMIZE_PY))
+
+    res_objs = sdk_helpers.get_from_export(import_definition,
+                                           rules=["Additional Mock Rule", "Mock Manual Rule"],
+                                           playbooks=["main_mock_playbook"])
+
+    general_test_package_structure(mock_integration_name, path_package_reloaded)
+
+    assert helpers.verify_expected_list(["Additional Mock Rule", "Mock Manual Rule"], [o.get("x_api_name") for o in res_objs.get("rules")])
+    assert helpers.verify_expected_list(["main_mock_playbook"], [o.get("x_api_name") for o in res_objs.get("playbooks")])
 
 
 def test_forget_reload_flag(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_codegen_package):

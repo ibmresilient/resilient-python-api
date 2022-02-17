@@ -54,6 +54,9 @@
 {% if rules %}
 - [Rules](#rules)
 {% endif %}
+{% if playbooks %}
+- [Playbooks](#playbooks)
+{% endif %}
 - [Troubleshooting & Support](#troubleshooting--support)
 ---
 
@@ -341,6 +344,17 @@ results = {
 | --------- | ------ | ------------------ |
 {% for rule in rules|sort(attribute="name") %}
 | {{ rule.name }} | {{ rule.object_type }} | `{{ rule.workflow_triggered }}` |
+{% endfor %}
+
+---
+{% endif %}
+
+{% if playbooks %}
+## Playbooks
+| Playbook Name | Description | Object | Status |
+| ------------- | ----------- | ------ | ------ |
+{% for playbook in playbooks|sort(attribute="api_name") %}
+| {{ playbook.name }} | {{ playbook.description }} | {{ playbook.object_type }} | `{{ playbook.status }}` |
 {% endfor %}
 
 ---

@@ -277,7 +277,7 @@ class BaseClient(object):
             result = operation(url, **kwargs)
         return result
 
-    def get(self, uri, co3_context_token=None, timeout=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -287,12 +287,19 @@ class BaseClient(object):
           uri
           co3_context_token
           timeout: number of seconds to wait for response
+          is_uri_absolute: if True, does not insert /org/{org_id} into the uri
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+
+        if is_uri_absolute:
+            url = u"{0}/rest{1}".format(self.base_url, ensure_unicode(uri))
+
+        else:
+            url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,

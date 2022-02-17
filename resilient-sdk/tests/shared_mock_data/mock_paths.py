@@ -26,9 +26,12 @@ MOCK_SETUP_CALLABLE = os.path.join(MOCK_PACKAGE_FILES_DIR, "setup_callable_data.
 MOCK_CONFIG_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "config.py")
 MOCK_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize.py")
 MOCK_OLD_CUSTOMIZE_PY = os.path.join(MOCK_PACKAGE_FILES_DIR, "customize_old.py")
+MOCK_CUSTOMIZE_PY_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_customize_w_playbook.py")
 
 MOCK_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.res")
 MOCK_EXPORT_RES_CORRUPT = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export_corrupt.res")
+MOCK_EXPORT_RES_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_export_w_playbook.res")
+MOCK_RELOAD_EXPORT_RES_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_reload_export_w_playbook.res")
 MOCK_RELOAD_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_reload_export.res")
 MOCK_ZIP = os.path.join(SHARED_MOCK_DATA_DIR, "mock.zip")
 MOCK_EXPORT_RESZ = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.resz")

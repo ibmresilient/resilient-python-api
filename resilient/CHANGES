@@ -1,3 +1,8 @@
+**2022-02: version 44.0**
+
+* Added ``is_uri_absolute`` argument to :class:`resilient.SimpleClient.get() <resilient.co3.SimpleClient.get>`
+  that if ``True``, does not insert ``/org/{org_id}`` into the uri
+
 **2022-01: version 43.1**
 
 * Ability to globally check if ``unrecognized arguments`` are allowed
