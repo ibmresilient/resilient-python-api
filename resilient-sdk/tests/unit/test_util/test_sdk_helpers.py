@@ -303,17 +303,23 @@ def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_re
 def test_minify_export(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
-    minifed_export = sdk_helpers.minify_export(org_export, functions=["mock_function_one"])
+    minifed_export = sdk_helpers.minify_export(org_export, functions=["mock_function_one"], phases=["Mock Custom Phase One"], scripts=["Mock Incident Script"])
     minified_functions = minifed_export.get("functions")
     minified_fields = minifed_export.get("fields")
     minified_incident_types = minifed_export.get("incident_types")
+    minified_phases = minifed_export.get("phases")
+    minified_scripts = minifed_export.get("scripts")
 
     # Test it minified given function
     assert len(minified_functions) == 1
     assert minified_functions[0].get("export_key") == "mock_function_one"
 
     # Test it set a non-mentioned object to 'empty'
-    assert minifed_export.get("phases") == []
+    assert minifed_export.get("roles") == []
+
+    # Test phases + scripts
+    assert minified_phases[0].get(ResilientObjMap.PHASES) == "Mock Custom Phase One"
+    assert minified_scripts[0].get(ResilientObjMap.SCRIPTS) == "Mock Incident Script"
 
     # Test it added the internal field
     assert len(minified_fields) == 1

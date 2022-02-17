@@ -798,17 +798,17 @@ def minify_export(export,
 
     # Setup the keys_to_minify dict
     keys_to_minify = {
-        "message_destinations": {"programmatic_name": message_destinations},
-        "functions": {"name": functions},
-        "workflows": {"programmatic_name": workflows},
-        "actions": {"name": rules},
+        "message_destinations": {ResilientObjMap.MESSAGE_DESTINATIONS: message_destinations},
+        "functions": {ResilientObjMap.FUNCTIONS: functions},
+        "workflows": {ResilientObjMap.WORKFLOWS: workflows},
+        "actions": {ResilientObjMap.RULES: rules},
         "fields": {"export_key": fields},
-        "incident_artifact_types": {"programmatic_name": artifact_types},
-        "types": {"type_name": datatables},
-        "automatic_tasks": {"programmatic_name": tasks},
-        "phases": {"name": phases},
-        "scripts": {"name": scripts},
-        "incident_types": {"name": parent_child_incident_types},
+        "incident_artifact_types": {ResilientObjMap.INCIDENT_ARTIFACT_TYPES: artifact_types},
+        "types": {ResilientObjMap.DATATABLES: datatables},
+        "automatic_tasks": {ResilientObjMap.TASKS: tasks},
+        "phases": {ResilientObjMap.PHASES: phases},
+        "scripts": {ResilientObjMap.SCRIPTS: scripts},
+        "incident_types": {ResilientObjMap.INCIDENT_TYPES: parent_child_incident_types},
         "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks}
     }
 
