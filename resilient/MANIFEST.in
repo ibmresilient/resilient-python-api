@@ -1,2 +1,3 @@
 include resilient/LICENSE
 include ./CHANGES
+recursive-exclude tests *
