@@ -1,3 +1,7 @@
+**2022-02: version 44.0**
+
+* Ensure ``tests/`` is not included in packaged code
+
 **2022-01: version 43.1**
 
 * No major changes. Just bumping build number to coincide with other builds
