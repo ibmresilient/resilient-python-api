@@ -153,19 +153,19 @@ Run ``validate`` without any options to:
 
 .. code-block::
 
-    $ resilient-sdk validate -p <name_of_package> --validate
+    $ resilient-sdk validate -p <path_to_package> --validate
 
 * To perform basic testing of the App, run:
 
 .. code-block::
 
-    $ resilient-sdk validate -p <name_of_package> --selftest
+    $ resilient-sdk validate -p <path_to_package> --selftest
 
 * ``validate`` also has the ability to accept an ``app.config`` file in any location. For example:
 
 .. code-block::
 
-    $ resilient-sdk validate -p <name_of_package> --selftest -c '/usr/custom_app.config'
+    $ resilient-sdk validate -p <path_to_package> --selftest -c '/usr/custom_app.config'
 
 * Once completed, a Markdown summary file is added to the ``dist`` directory and included in the ``.zip`` file when packaged
 
