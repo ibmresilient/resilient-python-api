@@ -216,6 +216,71 @@ class SimpleClient(co3base.BaseClient):
     """
     Python helper class for using the IBM SOAR REST API.
 
+    .. code-block::
+
+        '''
+        An example script showing how to connect and get
+        incidents with IBM Security SOAR
+
+        Example Usage:
+        $ python sample_connect.py "https://<host>", "<org_name>", "<api_key_id>", "<api_key_secret>", "<path_to_ca_file>|False"
+        '''
+
+        import sys
+        import os
+        from resilient import SimpleClient
+
+
+        def main():
+
+            args = sys.argv
+            assert len(args) == 6
+            SCRIPT_NAME = args[0]
+
+            # Get required parameters
+            HOST = args[1]
+            ORG_NAME = args[2]
+            API_KEY_ID = args[3]
+            API_KEY_SECRET = args[4]
+
+            # Check if using cafile
+            ca_file = args[5]
+            VERIFY = ca_file if os.path.isfile(ca_file) is True else False
+
+            # Instansiate SimpleClient
+            res_client = SimpleClient(
+                org_name=ORG_NAME,
+                base_url=HOST,
+                verify=VERIFY
+            )
+
+            # Set the API Key
+            res_client.set_api_key(
+                api_key_id=API_KEY_ID,
+                api_key_secret=API_KEY_SECRET
+            )
+
+            # Setup the request payload
+            payload = {
+                "filters": [
+                    {
+                        "conditions": [{"field_name": "plan_status", "method": "equals", "value": "A"}]
+                    }
+                ]
+            }
+
+            # Invoke the request
+            response = res_client.post("/incidents/query_paged?return_level=full", payload=payload)
+
+            # Print results
+            for incident in response.get("data", []):
+                print("{0}: {1}".format(incident.get("id"), incident.get("name")))
+
+
+        if __name__ == "__main__":
+            main()
+
+
     .. note::
         The full REST API Documentation for IBM SOAR can be
         viewed on the Platform itself by searching for the **REST API Reference**
