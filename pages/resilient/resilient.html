@@ -208,10 +208,9 @@
 
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+
     <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
-
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
-
     <span class="n">SCRIPT_NAME</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># Get required parameters</span>
@@ -238,15 +237,20 @@
     <span class="p">)</span>
 
     <span class="c1"># Setup the request payload</span>
-    <span class="c1"># payload = {</span>
-    <span class="c1">#     "return_level": "normal",</span>
-    <span class="c1"># }</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"filters"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"conditions"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"field_name"</span><span class="p">:</span> <span class="s2">"plan_status"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"equals"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">}]</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
 
     <span class="c1"># Invoke the request</span>
-    <span class="c1"># incidents = res_client.post("incidents/querypaged", payload=payload)</span>
-    <span class="n">incidents</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get_const</span><span class="p">()</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/incidents/query_paged?return_level=full"</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="n">incidents</span><span class="p">)</span>
+    <span class="c1"># Print results</span>
+    <span class="k">for</span> <span class="n">incident</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"data"</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span> <span class="n">incident</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)))</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
