@@ -232,10 +232,9 @@ class SimpleClient(co3base.BaseClient):
 
 
         def main():
+
             args = sys.argv
-
             assert len(args) == 6
-
             SCRIPT_NAME = args[0]
 
             # Get required parameters
@@ -262,15 +261,20 @@ class SimpleClient(co3base.BaseClient):
             )
 
             # Setup the request payload
-            # payload = {
-            #     "return_level": "normal",
-            # }
+            payload = {
+                "filters": [
+                    {
+                        "conditions": [{"field_name": "plan_status", "method": "equals", "value": "A"}]
+                    }
+                ]
+            }
 
             # Invoke the request
-            # incidents = res_client.post("incidents/querypaged", payload=payload)
-            incidents = res_client.get_const()
+            response = res_client.post("/incidents/query_paged?return_level=full", payload=payload)
 
-            print(incidents)
+            # Print results
+            for incident in response.get("data", []):
+                print("{0}: {1}".format(incident.get("id"), incident.get("name")))
 
 
         if __name__ == "__main__":
