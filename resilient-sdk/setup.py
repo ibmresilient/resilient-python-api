@@ -27,8 +27,8 @@ setup(
     # Runtime Dependencies
     install_requires=[
         "resilient>=44.0.0",
-        "jinja2 ~= 2.0;python_version<'3.9'",
-        "jinja2 ~= 3.0;python_version>='3.9'",
+        "jinja2 ~= 2.0;python_version<'3.6'",
+        "jinja2 ~= 3.0;python_version>='3.6'",
         "genson~=1.2"
     ],
 

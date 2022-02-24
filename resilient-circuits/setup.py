@@ -30,8 +30,8 @@ setup(
         "stompest>=2.3.0",
         "circuits",
         "pytz",
-        "jinja2 ~= 2.0;python_version<'3.9'",
-        "jinja2 ~= 3.0;python_version>='3.9'",
+        "jinja2 ~= 2.0;python_version<'3.6'",
+        "jinja2 ~= 3.0;python_version>='3.6'",
         "pysocks",
         "filelock>=2.0.5",
         "watchdog>=0.9.0, <1.0.0; python_version < '3.6.0'",
@@ -59,7 +59,8 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9"
     ],
     keywords="ibm soar resilient circuits resilient-circuits"
 )

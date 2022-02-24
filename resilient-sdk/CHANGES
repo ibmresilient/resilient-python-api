@@ -1,10 +1,7 @@
-**2022-04: version 45.0**
-
-* Bump ``Jinja2`` to ``~=3.0``
-
 **2022-02: version 44.0**
 
 * Added support to ``codegen``, ``docgen``, ``package``, ``extract`` and ``clone`` for Playbooks
+* Bump ``Jinja2`` to ``~=3.0`` for Python ``>=3.6``
 
 **2022-01: version 43.1**
 

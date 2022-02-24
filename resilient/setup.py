@@ -69,7 +69,8 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9"
     ],
     keywords="ibm soar resilient resilient-circuits circuits resilient-sdk sdk"
 )
