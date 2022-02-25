@@ -3,6 +3,10 @@ import json
 import os
 import pytest
 from resilient_lib import environment, render, render_json, make_payload_from_template
+from resilient_lib.components.templates_common import soar_datetimeformat, \
+                                                    soar_substitute, \
+                                                    soar_splitpart, \
+                                                    soar_trimlist
 
 TEST_DATA = data = {
     "string": "templates",
@@ -165,3 +169,49 @@ def test_make_payload_from_template(override_template, default_template, payload
                                       default_template,
                                       payload,
                                       return_json=return_json) == expected_results
+
+@pytest.mark.parametrize("str_date, date_format, split_at, expected_results", [
+    ("2022-21-02T07:36:17", "%Y-%d-%mT%H:%M:%S", None, 1645428977000),
+    ("2022-21-02T07:36:17.124Z", "%Y-%d-%mT%H:%M:%S", ".", 1645428977000),
+    ("2022-02-21T07:36:17.124Z", None, ".", 1645428977000),
+    ("2022-02-21T07:36:17", None, None, 1645428977000)
+])
+def test_soar_datetimeformat(str_date, date_format, split_at, expected_results):
+    if date_format:
+        assert soar_datetimeformat(str_date, date_format=date_format, split_at=split_at) == expected_results
+    else:
+        assert soar_datetimeformat(str_date, split_at=split_at) == expected_results
+
+
+@pytest.mark.parametrize("str_value, lookup, expected_results", [
+    ("low", '{ "low": "_low", "medium": "_medium", "high": "_high", "DEFAULT": "_nf" }', "_low"),
+    ("nf", '{ "low": "_low", "medium": "_medium", "high": "_high", "DEFAULT": "_nf" }', "_nf"),
+    ("no default", '{ "low": "_low", "medium": "_medium", "high": "_high" }', "no default")
+])
+def test_soar_substitute(str_value, lookup, expected_results):
+    assert soar_substitute(str_value, lookup) == expected_results
+
+@pytest.mark.parametrize("str_value, index, split_chars, expected_results", [
+    ("something - here", 0, None, "something"),
+    ("something - here", 1, None, "here"),
+    ("something - here", 1, None, "here")
+])
+def test_soar_splitpart(str_value, index, split_chars, expected_results):
+    if split_chars:
+        assert soar_splitpart(str_value, index, split_chars=split_chars) == expected_results
+    else:
+        assert soar_splitpart(str_value, index) == expected_results
+
+@pytest.mark.parametrize("str_list, expected_results", [
+    ("item1", ['item1']),
+    ("item1,item2", ['item1', 'item2']),
+    ("item1, item2", ['item1', 'item2']),
+    (" item1, item2 ", ['item1', 'item2']),
+    ("", ['']),
+    (None, None)
+])
+def test_soar_trimlist(str_list, expected_results):
+    if not isinstance(str_list, type(None)):
+        assert soar_trimlist(str_list.split(",")) == expected_results
+    else:
+        assert soar_trimlist(str_list) == expected_results

@@ -9,14 +9,15 @@ import io
 import mimetypes
 import logging
 import resilient
+import sys
 from bs4 import BeautifulSoup
 from six import string_types
 from cachetools import cached, TTLCache
 
-try:
+if sys.version_info.major < 3:
     from HTMLParser import HTMLParser as htmlparser
-except:
-    from html.parser import HTMLParser as htmlparser
+else:
+    import html
 
 INCIDENT_FRAGMENT = '#incidents'
 PAYLOAD_VERSION = "1.0"
@@ -95,8 +96,11 @@ def unescape(data):
     if data is None:
         return None
 
-    h = htmlparser()
-    return h.unescape(data)
+    if sys.version_info.major < 3:
+        h = htmlparser()
+        return h.unescape(data)
+    else:
+        return html.unescape(data)
 
 
 def validate_fields(field_list, kwargs):
@@ -351,7 +355,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     attachment = datastream.read()
 
     """
-    Writing to temp path so that the REST API client can use this file path 
+    Writing to temp path so that the REST API client can use this file path
     to read and POST the attachment
     """
 

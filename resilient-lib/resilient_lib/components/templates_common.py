@@ -220,7 +220,7 @@ def _get_template(specified_template, default_template):
         return definition.read()
 
 # C U S T O M   J I N J A   F I L T E R S
-def jinja_soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=None):
+def soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=None):
     """custom jinja filter to convert UTC dates to epoch format
 
     Args:
@@ -235,14 +235,13 @@ def jinja_soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=N
     if not value:
         return value
 
-    LOG.debug(date_format)
     if split_at:
         utc_time = time.strptime(value[:value.rfind(split_at)], date_format)
     else:
         utc_time = time.strptime(value, date_format)
     return calendar.timegm(utc_time)*1000
 
-def jinja_soar_substitute(value, json_str):
+def soar_substitute(value, json_str):
     """jinja custom filter to replace values based on a lookup dictionary
 
     Args:
@@ -262,7 +261,7 @@ def jinja_soar_substitute(value, json_str):
 
     return value
 
-def jinja_soar_splitpart(value, index, split_chars=' - '):
+def soar_splitpart(value, index, split_chars=' - '):
     """[split a string and return the index]
 
     Args:
@@ -279,7 +278,7 @@ def jinja_soar_splitpart(value, index, split_chars=' - '):
 
     return value
 
-def jinja_soar_trimlist(org_list):
+def soar_trimlist(org_list):
     """[trim whitespace from elements in a list]
 
     Args:
@@ -514,11 +513,11 @@ JINJA_FILTERS = {
     "sample": sample_filter,
     "camel": camel_filter,
     "base64": base64_filter,
-    "soar_datetimeformat": jinja_soar_datetimeformat,
+    "soar_datetimeformat": soar_datetimeformat,
     "soar_display_datetimeformat": readable_datetime,
-    "soar_substitute": jinja_soar_substitute,
-    "soar_splitpart": jinja_soar_splitpart,
-    "soar_trimlist": jinja_soar_trimlist
+    "soar_substitute": soar_substitute,
+    "soar_splitpart": soar_splitpart,
+    "soar_trimlist": soar_trimlist
 }
 
 # Maintain one global Environment
