@@ -2,6 +2,7 @@
 
 * Added support to ``codegen``, ``docgen``, ``package``, ``extract`` and ``clone`` for Playbooks
 * Bump ``Jinja2`` to ``~=3.0`` for Python ``>=3.6``
+* Officially support ``Python 3.9``
 
 **2022-01: version 43.1**
 

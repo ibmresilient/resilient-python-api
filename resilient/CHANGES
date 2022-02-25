@@ -3,6 +3,7 @@
 * Ensure ``tests/`` is not included in packaged code
 * Added ``is_uri_absolute`` argument to :class:`resilient.SimpleClient.get() <resilient.co3.SimpleClient.get>`
   that if ``True``, does not insert ``/org/{org_id}`` into the uri
+* Officially support ``Python 3.9``
 
 **2022-01: version 43.1**
 
