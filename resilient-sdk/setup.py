@@ -27,7 +27,8 @@ setup(
     # Runtime Dependencies
     install_requires=[
         "resilient>=44.0.0",
-        "jinja2~=2.0",
+        "jinja2 ~= 2.0;python_version<'3.6'",
+        "jinja2 ~= 3.0;python_version>='3.6'",
         "genson~=1.2"
     ],
 
@@ -49,7 +50,8 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9"
     ],
     keywords="ibm soar resilient circuits sdk resilient-sdk"
 )

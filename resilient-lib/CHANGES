@@ -1,6 +1,7 @@
 **2022-02: version 44.0**
 
 * Ensure ``tests/`` is not included in packaged code
+* Officially support ``Python 3.9``
 
 **2022-01: version 43.1**
 

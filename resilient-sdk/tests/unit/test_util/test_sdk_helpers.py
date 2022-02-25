@@ -25,7 +25,7 @@ def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
     assert "Connecting to IBM Security SOAR at: " in caplog.text
 
 
-def test_setup_jinja_env():
+def test_setup_jinja_env(fx_mk_temp_dir):
     jinja_env = sdk_helpers.setup_jinja_env(mock_paths.TEST_TEMP_DIR)
     assert isinstance(jinja_env, jinja2.Environment)
     assert jinja_env.loader.package_path == mock_paths.TEST_TEMP_DIR
