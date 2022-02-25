@@ -9,7 +9,7 @@ The IBM SOAR Common Library, formerly the *IBM Resilient Common Library*, packag
 
 
 ## Documentation
-View our documentation for this library at: [https://pages.github.ibm.com/Resilient/resilient-python-api/pages/resilient-lib/resilient-lib.html](https://pages.github.ibm.com/Resilient/resilient-python-api/pages/resilient-lib/resilient-lib.html).
+View our documentation for this library at: [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs).
 
 
 ## Change Log
