@@ -32,6 +32,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --poller
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
@@ -50,6 +51,10 @@ class CmdCodegen(BaseCmd):
         self.parser.add_argument("-re", "--reload",
                                  action="store_true",
                                  help="Reload customizations and create new customize.py")
+
+        self.parser.add_argument("-pr", "--poller",
+                                 action="store_true",
+                                 help="Build templates files for a poller")
 
         self.parser.add_argument(constants.SUB_CMD_OPT_GATHER_RESULTS,
                                  action="store",
