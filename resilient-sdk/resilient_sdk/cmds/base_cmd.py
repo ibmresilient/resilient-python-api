@@ -115,7 +115,7 @@ class BaseCmd(object):
 
         res_obj_parser.add_argument("-pb", "--playbook",
                                     type=ensure_unicode,
-                                    help="API names of playbooks to include",
+                                    help="API names of playbooks to include. Only SOAR >= v44 supported",
                                     nargs="*")
 
         res_obj_parser.add_argument("-r", "--rule",
