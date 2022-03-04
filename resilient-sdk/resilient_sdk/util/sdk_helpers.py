@@ -746,7 +746,7 @@ def get_from_export(export,
 
     # Get Playbooks
     if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
-        LOG.warning("WARNING: Playbooks are only supported in resilient-sdk for SOAR >= %s. Ignoring playbooks: %s.", str(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS), str(playbooks))
+        LOG.warning("WARNING: Playbooks are only supported in %s for SOAR >= %s. Ignoring playbooks: %s.", constants.SDK_RESOURCE_NAME, str(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS), str(playbooks))
     else:
         return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
