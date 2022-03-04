@@ -151,11 +151,14 @@ def fx_copy_fn_main_mock_integration_w_playbooks():
     """
 
     _mk_temp_dir()
+    old_version = constants.CURRENT_SOAR_SERVER_VERSION
+    constants.CURRENT_SOAR_SERVER_VERSION = None
     path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
     shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
     shutil.copyfile(mock_paths.MOCK_CUSTOMIZE_PY_W_PLAYBOOK, os.path.join(path_fn_main_mock_integration, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, package_helpers.PATH_CUSTOMIZE_PY))
     shutil.copyfile(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK, os.path.join(path_fn_main_mock_integration, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, package_helpers.PATH_UTIL_DATA_DIR, package_helpers.BASE_NAME_LOCAL_EXPORT_RES))
     yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+    constants.CURRENT_SOAR_SERVER_VERSION = old_version
     _rm_temp_dir()
 
 
