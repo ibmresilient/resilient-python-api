@@ -85,7 +85,7 @@ class CmdClone(BaseCmd):
 
         self.parser.add_argument("-pb", "--playbook",
                                  type=ensure_unicode,
-                                 help="API names of playbooks to include. Only SOAR >= v44 supported",
+                                 help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
                                  nargs="*")
 
         self.parser.add_argument("-r", "--rule",
