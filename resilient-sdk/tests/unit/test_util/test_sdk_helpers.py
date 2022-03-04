@@ -265,10 +265,12 @@ def test_get_playbooks_from_export(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
 
         mock_server_version.return_value = 44.0
+        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
         export_data = sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
 
         assert export_data.get("playbooks")[0].get(ResilientObjMap.PLAYBOOKS) == "main_mock_playbook"
+        constants.CURRENT_SOAR_SERVER_VERSION = None # reset for other tests
 
 
 def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client):

@@ -746,8 +746,7 @@ def get_from_export(export,
 
     # Get Playbooks
     if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
-        raise SDKException("Playbooks are only supported in {0} for SOAR >= {1}.".format(constants.SDK_RESOURCE_NAME, str(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS)))
-        return_dict["playbooks"] = []
+        raise SDKException("Playbooks are only supported in {0} for SOAR >= {1}. Current version: {2}.".format(constants.SDK_RESOURCE_NAME, constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS, constants.CURRENT_SOAR_SERVER_VERSION))
     else:
         return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
