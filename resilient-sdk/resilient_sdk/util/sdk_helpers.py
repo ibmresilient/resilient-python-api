@@ -499,7 +499,10 @@ def get_object_api_names(api_name, list_objs):
     """
     Return a list of object api_names from list_objs
     """
-    return [o.get(api_name) for o in list_objs]
+    if list_objs:
+        return [o.get(api_name) for o in list_objs]
+    else:
+        return []
 
 
 def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
@@ -518,7 +521,9 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    if obj_list:
+        return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    return {}
 
 
 def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
@@ -537,8 +542,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :type export: Dict
     :param condition: A lambda function to evaluate each object
     :type condition: function
-    :param export: Whether or not to return the objects API name as a field.
-    :type export: bool
+    :param include_api_name: Whether or not to return the objects API name as a field.
+    :type include_api_name: bool
     :return: List of Resilient Objects
     :rtype: List
     """
@@ -740,7 +745,10 @@ def get_from_export(export,
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
     # Get Playbooks
-    return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
+    if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        raise SDKException("Playbooks are only supported in {0} for SOAR >= {1}. Current version: {2}.".format(constants.SDK_RESOURCE_NAME, constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS, constants.CURRENT_SOAR_SERVER_VERSION))
+    else:
+        return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
     return return_dict
 
