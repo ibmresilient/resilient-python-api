@@ -271,13 +271,12 @@ def test_get_playbooks_from_export(fx_mock_res_client):
         assert export_data.get("playbooks")[0].get(ResilientObjMap.PLAYBOOKS) == "main_mock_playbook"
 
 
-def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client, caplog):
+def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client):
 
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
-    sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
-
-    assert "WARNING: Playbooks are only supported in resilient_sdk for SOAR >= 44.0" in caplog.text
+    with pytest.raises(SDKException, match=r"Playbooks are only supported in resilient_sdk for SOAR >= 44"):
+        sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
 
 
 @pytest.mark.parametrize("get_related_param",
