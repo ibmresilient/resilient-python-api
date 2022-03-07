@@ -17,7 +17,7 @@ from cachetools import cached, LRUCache
 # Helper functions:
 #  authenicate: authenticate to your endpoint solution, yielding a token for ongoing API calls
 #  _make_header: create the necessary API header for your endpoint communication
-#  _make_linkback_url: create a url for your alert, event, etc. to navigate to your endpoint console
+#  make_linkback_url: create a url for your alert, event, etc. to navigate to your endpoint console
 #  _get_uri: assemble the parts of your URL (base address, version information, command and arguments)
 #  _api_call: perform the API call, passing parameters and check the returned status code before
 #      returning the response object
@@ -118,7 +118,7 @@ class AppCommon():
 
         return header
 
-    def _make_linkback_url(self, entity_id, linkback_url=LINKBACK_URL):
+    def make_linkback_url(self, entity_id, linkback_url=LINKBACK_URL):
         """Create a url to link back to the endpoint alert, case, etc.
 
         Args:
