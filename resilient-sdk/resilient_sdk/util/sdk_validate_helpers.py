@@ -920,7 +920,7 @@ def _validate_payload_samples(path_package, func_name, attr_dict):
         )
 
     ## finally make sure the samples are not empty ##
-    # (which is the codegen default before --gather-samples is run)
+    # (which is the codegen default before --gather-results is run)
     samples_empty = []
     if not read_example_json:
         samples_empty.append(example_str)

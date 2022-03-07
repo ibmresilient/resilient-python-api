@@ -1,7 +1,7 @@
 # docker build -t ibmresilient/{{package_name}}:{{version}} -t ibmresilient/{{package_name}}:latest .
 
 # Base image using Red Hat's universal base image (rhel 8) for python
-FROM registry.access.redhat.com/ubi8/python-36:latest
+FROM registry.access.redhat.com/ubi8/python-39:latest
 
 ARG APPLICATION={{package_name}}
 ARG RESILIENT_CIRCUITS_VERSION={{resilient_libraries_version}}
@@ -36,8 +36,6 @@ RUN pip install /tmp/packages/${APPLICATION}-*.tar.gz
 #COPY /path/to/extra_package /tmp/packages/.
 #RUN pip install /tmp/packages/<extra_package>*.tar.gz
 
-# uncomment to expose port only if a custom threat feed
-#EXPOSE 9000
 ## ---- end section for changes ----
 
 # set up configuration and log locations using /etc and /var/log, the conventional locations for config and logs

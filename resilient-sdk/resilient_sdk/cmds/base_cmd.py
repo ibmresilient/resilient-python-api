@@ -113,6 +113,11 @@ class BaseCmd(object):
                                     help="API names of message destinations to include",
                                     nargs="*")
 
+        res_obj_parser.add_argument("-pb", "--playbook",
+                                    type=ensure_unicode,
+                                    help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
+                                    nargs="*")
+
         res_obj_parser.add_argument("-r", "--rule",
                                     type=ensure_unicode,
                                     help="Display names of rules to include (surrounded by \"\")",
