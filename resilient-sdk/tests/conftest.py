@@ -82,6 +82,10 @@ def _pip_install(package):
     pip installs given package
     """
 
+    # should always upgrade pip
+    install_cmd = ["pip", "install", "--upgrade", "pip"]
+    sdk_helpers.run_subprocess(install_cmd)
+
     install_cmd = ["pip", "install", package]
     sdk_helpers.run_subprocess(install_cmd)
 
