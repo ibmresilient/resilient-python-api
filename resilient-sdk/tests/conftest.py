@@ -181,7 +181,7 @@ def fx_copy_and_pip_install_fn_main_mock_integration():
 
     yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
 
-    _pip_uninstall(path_fn_main_mock_integration)
+    _pip_uninstall(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
 
     _rm_temp_dir()
 
