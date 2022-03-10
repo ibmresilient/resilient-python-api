@@ -1,6 +1,6 @@
 **2022-04: version 45.0**
 
-* Better logging of an ``Unauthorized`` request with API Keys
+* Better logging of an ``Unauthorized`` request with API Keys and exits with a code of ``21``
 
 **2022-02: version 44.0**
 
