@@ -51,7 +51,17 @@ class BasicHTTPException(Exception):
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(BasicHTTPException, self).__init__(u"{0}:  {1}".format(response.reason, response.text))
+
+        err_reason = response.reason if response.reason else u"Unknown Reason"
+        err_text = response.text if response.text else u"Unknown Error"
+
+        if response.status_code == 401:
+            err_reason = u"Unauthorized"
+            err_text = u"Credentials incorrect"
+
+        err_message = u"'resilient' API Request FAILED:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
+
+        super(BasicHTTPException, self).__init__(err_message)
 
         self.response = response
 

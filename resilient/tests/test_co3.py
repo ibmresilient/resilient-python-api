@@ -1,14 +1,18 @@
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 from __future__ import print_function
-import pytest
+
 import doctest
+import os
 import time
 import types
-import os
-import resilient
 from argparse import ArgumentParser
-from mock import patch
 from shutil import rmtree
+
+import pytest
+import requests_mock
+import resilient
+from mock import patch
+from resilient.co3base import BaseClient, BasicHTTPException
 
 DEFAULT_CONFIG_FILENAME = "app.config"
 DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join("~", ".resilient", DEFAULT_CONFIG_FILENAME))
@@ -21,6 +25,20 @@ def mock_os_path_not_exists(path):
 
 def mock_makedirs(dir):
     pass
+
+
+def test_set_api_key_unauthorized():
+
+    res_client = BaseClient("Mock Org", "https://example.com")
+
+    adapter = requests_mock.Adapter()
+    res_client.session.mount(u'https://', adapter)
+
+    adapter.register_uri('GET', '{0}/rest/session'.format(res_client.base_url), status_code=401)
+
+    with pytest.raises(BasicHTTPException, match="'resilient' API Request FAILED:\nResponse Code: 401\nReason: Unauthorized. Credentials incorrect"):
+        res_client.set_api_key("123", "456")
+
 
 class xTestCo3:
     """Basic API tests"""
