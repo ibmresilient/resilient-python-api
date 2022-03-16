@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import shutil
+import resilient_sdk
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -129,16 +130,20 @@ class CmdCodegen(BaseCmd):
                 newly_generated_files += new_files
                 files_skipped += skipped_files
 
-            elif isinstance(file_info, str) and os.path.isfile(file_info):
-                # It is just a path to a file, copy it to the target_file
-                target_file = os.path.join(target_dir, file_name)
-                if os.path.exists(target_file):
-                    # If file already exists skip copy.
-                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
-                    continue
+            elif isinstance(file_info, str):
+                full_path = os.path.join(os.path.dirname(resilient_sdk.__file__),
+                              constants.PACKAGE_TEMPLATE_PATH,
+                              file_info)
+                if os.path.isfile(full_path):
+                    # It is just a path to a file, copy it to the target_file
+                    target_file = os.path.join(target_dir, file_name)
+                    if os.path.exists(target_file):
+                        # If file already exists skip copy.
+                        files_skipped.append(os.path.relpath(target_file, start=package_dir))
+                        continue
 
-                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
-                shutil.copy(file_info, target_file)
+                    newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
+                    shutil.copy(full_path, target_file)
 
             else:
                 # Initialize variable for target file name from export.
@@ -148,6 +153,7 @@ class CmdCodegen(BaseCmd):
 
                 # Get data dict for this Jinja2 template
                 template_data = file_info[1]
+                print(os.path.join(os.path.dirname(resilient_sdk.__file__), constants.PACKAGE_TEMPLATE_PATH, path_template)) ## TODO
                 target_file = os.path.join(target_dir, file_name)
                 # Get target file extension.
                 target_ext = os.path.splitext(target_file)[1]
@@ -325,6 +331,9 @@ class CmdCodegen(BaseCmd):
 
         jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
 
+        # add poller flag
+        jinja_data["poller_flag"] = args.poller
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
@@ -376,6 +385,21 @@ class CmdCodegen(BaseCmd):
                 }
             }
         }
+
+        # poller logic if requested
+        if args.poller:
+            poller_mapping_dict = {
+                "__init__.py": "package/poller/__init__.py",
+                "app_common.py": "package/poller/app_common.py",
+                "poller_common.py": "package/poller/poller_common.py",
+                "poller.py": ("package/poller/poller.py.jinja2", jinja_data),
+                "data": {
+                    "soar_create_incident.jinja": "package/poller/data/soar_create_incident.jinja2",
+                    "soar_update_incident.jinja": "package/poller/data/soar_update_incident.jinja2",
+                    "soar_close_incident.jinja": "package/poller/data/soar_close_incident.jinja2"
+                }
+            }
+            package_mapping_dict[package_name]['poller'] = poller_mapping_dict
 
         # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):

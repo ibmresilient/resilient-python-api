@@ -32,6 +32,9 @@ setup(
     long_description="""Resilient Circuits Components for '{{package_name}}'""",
     install_requires=[
         "resilient-circuits>={{resilient_libraries_version}}"
+        {% if poller_flag %}
+        ,"simplejson"
+        {% endif %}
     ],
     python_requires='>=3.6',
     packages=find_packages(),
@@ -44,7 +47,13 @@ setup(
         "resilient.circuits.components": [
             # When setup.py is executed, loop through the .py files in the components directory and create the entry points.
             "{}FunctionComponent = {{package_name}}.components.{}:FunctionComponent".format(snake_to_camel(get_module_name(filename)), get_module_name(filename)) for filename in glob.glob("./{{package_name}}/components/[a-zA-Z]*.py")
-        ],
+        ]
+        {% if poller_flag %}
+        + [
+            "PollerComponent = {{package_name}}.poller.poller:PollerComponent"
+          ]
+        {% endif %}
+        ,
         "resilient.circuits.configsection": ["gen_config = {{package_name}}.util.config:config_section_data"],
         "resilient.circuits.customize": ["customize = {{package_name}}.util.customize:customization_data"],
         "resilient.circuits.selftest": ["selftest = {{package_name}}.util.selftest:selftest_function"]

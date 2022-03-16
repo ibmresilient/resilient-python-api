@@ -526,16 +526,16 @@ def eval_mapping(eval_value, wrapper=None):
 
     return None
 
-def get_last_poller_date(self, polling_lookback):
+def get_last_poller_date(polling_lookback):
     """get the last poller datetime based on a lookback value
     Args:
         polling_lookback ([number]): # of minutes to lookback
     Returns:
         [datetime]: [datetime to use for last poller run time]
     """
-    return self._get_timestamp() - datetime.timedelta(minutes=polling_lookback)
+    return _get_timestamp() - datetime.timedelta(minutes=polling_lookback)
 
-def _get_timestamp(self):
+def _get_timestamp():
     """get the existing timestamp
 
     Returns:

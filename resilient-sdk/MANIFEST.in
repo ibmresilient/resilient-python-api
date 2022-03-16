@@ -2,6 +2,7 @@ include resilient_sdk/LICENSE
 # This will include any .jinja2 & .png files found anywhere
 # under data/ directory when packaging
 recursive-include resilient_sdk/data/* *.jinja2
+recursive-include resilient_sdk/data/* *.py
 recursive-include resilient_sdk/data/* *.png
 include ./CHANGES
 recursive-exclude tests *

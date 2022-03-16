@@ -2,33 +2,37 @@
 # pragma pylint: disable=unused-argument, no-self-use
 
 import logging
-import time
-from datetime import datetime
-from io import BytesIO
 from urllib.parse import urljoin
-from resilient_lib import str_to_bool, readable_datetime
-from cachetools import cached, LRUCache
+from resilient_lib import str_to_bool, readable_datetime, IntegrationError
+from simplejson import JSONDecodeError
 
 #----------------------------------------------------------------------------------------
 # This module is an open template for you to develop the methods necessary to interact
-# with your endpoint solution. The only required methods are:
-#  get_entities_since_ts: get your entities (alerts, events, etc.) based on a timestamp
+# with your endpoint solution. The only required method is:
+#  query_entities_since_ts: get your entities (alerts, events, etc.) based on a timestamp
 #       since the last time the poller ran
 # Helper functions:
-#  authenicate: authenticate to your endpoint solution, yielding a token for ongoing API calls
+#  authenticate: authenticate to your endpoint solution, yielding a token for ongoing API calls
 #  _make_header: create the necessary API header for your endpoint communication
-#  make_linkback_url: create a url for your alert, event, etc. to navigate to your endpoint console
+#  make_linkback_url: create a url for your alert, event, etc. to navigate back to your endpoint console
 #  _get_uri: assemble the parts of your URL (base address, version information, command and arguments)
 #  _api_call: perform the API call, passing parameters and check the returned status code before
 #      returning the response object
+#
+# Review these functions which need modification. Currently they `raise IntegrationError("unimplemented")`
+#   authenticate,
+#   _make_header,
+#   query_entities_since_ts,
+#   make_linkback_url,
+#   _get_uri
 
 LOG = logging.getLogger(__name__)
 
 # change the header as necessary
 HEADER = { 'Content-Type': 'application/json' }
 
-# URL fragment to refer back to your console for a specific alert, event, etc.
-LINKBACK_URL = ""
+# URL prefix to refer back to your console for a specific alert, event, etc.
+LINKBACK_URL = "<- Change ->"
 
 # E N D P O I N T S
 # define the endpiont api calls your app will make to the endpoint solution. Below are expamples
@@ -36,17 +40,17 @@ LINKBACK_URL = ""
 #POLICY_URI = "policy/"
 
 class AppCommon():
-    def __init__(self, rc, options):
+    def __init__(self, rc, package_name, options):
         """initialize the parameters needed to communicate to the endpoint solution
 
         Args:
             rc (obj): object to resilient_lib.requests_common for making API calls
             options (dict): app.config parameters in order to authenticate and access the endpoint
         """
+        self.package_name = package_name
         self.api_key = options['api_key']
         self.api_secret = options['api_secret']
         self.endpoint_url = options['endpoint_url']
-        self.api_version = options['api_version']
         self.rc = rc
         self.verify = str_to_bool(options.get("cafile", "false"))
 
@@ -56,7 +60,11 @@ class AppCommon():
         self.secret = self.authenticate()
 
     def authenticate(self):
-        # modify to represent the data structure needed by the authenication API call
+        # modify to represent the data structure needed by the authentication API call
+        # Returns:
+        #    (str): token associated with the authenticated session
+        # <- change to your authentication logic ->
+        raise IntegrationError("unimplemented")
         params = {
             "secret": self.api_secret,
             "id": self.api_key
@@ -64,22 +72,25 @@ class AppCommon():
 
         response, err_msg = self._api_call("POST", 'authenticate', params, refresh_authentication=None)
         if err_msg:
-            LOG.error("{{package_name}} authenication failed: %s", err_msg)
+            LOG.error("%s authentication failed: %s", self.package_name, err_msg)
             return None
 
         # modify to the return correct token used for ongoing api calls
         return response.json().get("token")
 
-    def get_entities_since_ts(self, timestamp):
+    def query_entities_since_ts(self, timestamp, *args, **kwargs):
         """get changed entities since last poller run
 
         Args:
             timestamp (datetime): datetime when the last poller ran
+            *args: additional positional parameters needed for endpoint queries
+            **kwargs: additional key/value paris needed for endpoint queries
 
         Returns:
             list: changed entity list
         """
-        # change for the specific API calls
+        # <- change -> for the specific API calls
+        raise IntegrationError("unimplemented")
         query = {
             "query_field_name": readable_datetime(timestamp) # utc datetime format
         }
@@ -87,13 +98,14 @@ class AppCommon():
         LOG.debug(query)
         response, err_msg = self._api_call("GET", 'alerts', query, refresh_authentication=True)
         if err_msg:
-            LOG.error("{{package_name}} API call failed: %s", err_msg)
+            LOG.error("%s API call failed: %s", self.package_name, err_msg)
             return None
 
         return response.json()
 
     def _get_uri(self, cmd):
         """build API url
+           <- Change this to reflect the correct way to build an API call ->
 
         Args:
             cmd (str): portion of API: alerts, endpoints, policies
@@ -101,7 +113,8 @@ class AppCommon():
         Returns:
             str: complete URL
         """
-        return urljoin(urljoin(self.endpoint_url, self.api_version), cmd)
+        raise IntegrationError("unimplemented")
+        return urljoin(self.endpoint_url, cmd)
 
     def _make_header(self, token):
         """Build API header using authorization token
@@ -112,6 +125,7 @@ class AppCommon():
         Returns:
             dict: complete header
         """
+        raise IntegrationError("unimplemented")
         header = HEADER.copy()
         # modify to represent how to build the header
         header['Authorization'] = "Bearer {}".format(self.secret)
@@ -128,6 +142,7 @@ class AppCommon():
         Returns:
             str: completed url for linkback
         """
+        raise IntegrationError("unimplemented")
         return urljoin(self.endpoint_url, linkback_url.format(entity_id))
 
     def _api_call(self, method, url, payload, refresh_authentication=False):
@@ -165,10 +180,15 @@ def callback(response):
     """
     error_msg = None
     if response.status_code >= 300 and response.status_code < 500:
-        resp = response.json()
-        msg = resp.get('messages') or resp.get('message')
-        details = resp.get('details')
-        error_msg  = u"{{package_name}} Error: \n    status code: {0}\n    message: {1}\n    details: {2}".format(
+        try:
+            resp = response.json()
+            msg = resp.get('messages') or resp.get('message')
+            details = resp.get('details')
+        except JSONDecodeError as err:
+            msg = str(err)
+            details = response.text
+
+        error_msg  = u"Error: \n    status code: {0}\n    message: {1}\n    details: {2}".format(
             response.status_code,
             msg,
             details)
