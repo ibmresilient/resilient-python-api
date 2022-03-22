@@ -36,7 +36,7 @@ setup(
         "filelock>=2.0.5",
         "watchdog>=0.9.0, <1.0.0; python_version < '3.6.0'",
         "watchdog>=0.9.0; python_version >= '3.6.0'",
-        "resilient>=43.1.0",
+        "resilient>=44.1.0",
         "resilient-lib>=44.1.0"
     ],
 
