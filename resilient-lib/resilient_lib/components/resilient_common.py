@@ -352,31 +352,23 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
                    or mimetypes.guess_type(file_name or "")[0] \
                    or "application/octet-stream"
 
-    attachment = datastream.read()
-
     """
     Writing to temp path so that the REST API client can use this file path
     to read and POST the attachment
     """
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        try:
-            temp_file.write(attachment)
-            temp_file.close()
+    # Create a new attachment by calling resilient REST API
 
-            # Create a new attachment by calling resilient REST API
+    if task_id:
+        attachment_uri = "/tasks/{}/attachments".format(task_id)
+    else:
+        attachment_uri = "/incidents/{}/attachments".format(incident_id)
 
-            if task_id:
-                attachment_uri = "/tasks/{}/attachments".format(task_id)
-            else:
-                attachment_uri = "/incidents/{}/attachments".format(incident_id)
-
-            new_attachment = res_client.post_attachment(attachment_uri,
-                                                        temp_file.name,
-                                                        filename=file_name,
-                                                        mimetype=content_type)
-        finally:
-            os.unlink(temp_file.name)
+    new_attachment = res_client.post_attachment(attachment_uri,
+                                                None,
+                                                filename=file_name,
+                                                mimetype=content_type,
+                                                bytes_handle=datastream)
 
     if isinstance(new_attachment, list):
         new_attachment = new_attachment[0]
