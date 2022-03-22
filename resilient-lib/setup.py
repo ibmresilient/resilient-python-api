@@ -26,11 +26,12 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=43.0.0",
+        "resilient>=44.1.0",
         "bs4",
         "jinja2",
         "pytz",
-        "six"
+        "six",
+        "deprecated"
     ],
 
     entry_points={

@@ -216,7 +216,7 @@ def _get_template(specified_template, default_template):
                             )
 
     LOG.debug(u"template file used: %s", template_file_path)
-    with open(template_file_path, "r", encoding='utf-8') as definition:
+    with open(template_file_path, "r") as definition:
         return definition.read()
 
 # C U S T O M   J I N J A   F I L T E R S
