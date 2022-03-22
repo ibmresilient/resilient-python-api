@@ -30,7 +30,7 @@ from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
-from resilient_sdk.util.constants import *
+from resilient_sdk.util import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -45,7 +45,7 @@ else:
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 def get_resilient_client(path_config_file=None):
@@ -57,7 +57,6 @@ def get_resilient_client(path_config_file=None):
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
-    LOG.info("Connecting to IBM Security SOAR...")
 
     if not path_config_file:
         path_config_file = get_config_file()
@@ -67,7 +66,7 @@ def get_resilient_client(path_config_file=None):
     config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
 
-    LOG.debug("Trying to connect to '%s'", opts.get("host"))
+    LOG.info("Connecting to IBM Security SOAR at: %s", opts.get("host"))
 
     return get_client(opts)
 
@@ -320,7 +319,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_FILE, path_to_file))
+            raise SDKException(u"{0}: {1}".format(constants.ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -336,11 +335,62 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException(u"{0}: {1}".format(ERROR_NOT_FIND_DIR, path_to_dir))
+            raise SDKException(u"{0}: {1}".format(constants.ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
             has_permissions(permissions, path_to_dir)
+
+
+def get_resilient_server_info(res_client, keys_to_get=[]):
+    """
+    Calls the const/ endpoint and returns the info specified in keys_to_get
+
+    **Example:**
+
+    .. code-block:: python
+
+        server_version = get_resilient_server_info(res_client, ["server_version"])
+
+    :param res_client: required for communication back to resilient
+    :type res_client: sdk_helpers.get_resilient_client()
+    :param keys_to_get: list of strings of the keys to return from the const/ endpoint. If ``None``
+    returns the whole response
+    :type keys_to_get: list
+    :return: response from const/
+    :rtype: dict
+    """
+    LOG.debug("Getting server info")
+    server_info = res_client.get("/const/", is_uri_absolute=True)
+
+    if keys_to_get:
+        server_info = {k: server_info.get(k, {}) for k in keys_to_get}
+
+    return server_info
+
+
+def get_resilient_server_version(res_client):
+    """
+    Uses get_resilient_server_info to get the "server_version"
+    and converts it into a float of ``major.minor`` and returns it
+
+    :param res_client: required for communication back to resilient
+    :type res_client: sdk_helpers.get_resilient_client()
+    :return: the server_version in the form ``major.minor``
+    :rtype: float
+    """
+    LOG.debug("Getting server version")
+
+    if constants.CURRENT_SOAR_SERVER_VERSION:
+        return constants.CURRENT_SOAR_SERVER_VERSION
+
+    server_version = get_resilient_server_info(res_client, ["server_version"]).get("server_version", {})
+
+    constants.CURRENT_SOAR_SERVER_VERSION = float("{0}.{1}".format(server_version.get("major", 0), server_version.get("minor", 0)))
+
+    LOG.info("IBM Security SOAR version: v%s", constants.CURRENT_SOAR_SERVER_VERSION)
+
+    return constants.CURRENT_SOAR_SERVER_VERSION
 
 
 def get_latest_org_export(res_client):
@@ -350,7 +400,18 @@ def get_latest_org_export(res_client):
     """
     LOG.debug("Generating new organization export")
     latest_export_uri = "/configurations/exports/"
-    return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
+
+    customizations_to_get = {
+        "layouts": True,
+        "actions": True,
+        "phases_and_tasks": True
+    }
+    server_version = get_resilient_server_version(res_client)
+
+    if server_version >= constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        customizations_to_get.update({"playbooks": True})
+
+    return res_client.post(latest_export_uri, customizations_to_get)
 
 
 def add_configuration_import(new_export_data, res_client):
@@ -370,7 +431,7 @@ def add_configuration_import(new_export_data, res_client):
     :raises SDKException: If the confirmation request fails raise an SDKException
     """
     try:
-        result = res_client.post(IMPORT_URL, new_export_data)
+        result = res_client.post(constants.IMPORT_URL, new_export_data)
     except requests.RequestException as upload_exception:
         LOG.debug(new_export_data)
         raise SDKException(upload_exception)
@@ -402,7 +463,7 @@ def confirm_configuration_import(result, import_id, res_client):
     """
 
     result["status"] = "ACCEPTED"      # Have to confirm changes
-    uri = "{}/{}".format(IMPORT_URL, import_id)
+    uri = "{}/{}".format(constants.IMPORT_URL, import_id)
     try:
         res_client.put(uri, result)
         LOG.info("Imported configuration changes successfully to the Resilient Appliance")
@@ -423,7 +484,7 @@ def read_local_exportfile(path_local_exportfile):
     # Read the export file content.
     if is_zipfile(path_local_exportfile):
         # File is a zip file get unzipped content.
-        export_content = read_zip_file(path_local_exportfile, RES_EXPORT_SUFFIX)
+        export_content = read_zip_file(path_local_exportfile, constants.RES_EXPORT_SUFFIX)
     else:
         # File is a assumed to be a text file read the export file content.
         export_content = ''.join(read_file(path_local_exportfile))
@@ -438,7 +499,10 @@ def get_object_api_names(api_name, list_objs):
     """
     Return a list of object api_names from list_objs
     """
-    return [o.get(api_name) for o in list_objs]
+    if list_objs:
+        return [o.get(api_name) for o in list_objs]
+    else:
+        return []
 
 
 def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
@@ -457,7 +521,9 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    if obj_list:
+        return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    return {}
 
 
 def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
@@ -476,8 +542,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :type export: Dict
     :param condition: A lambda function to evaluate each object
     :type condition: function
-    :param export: Whether or not to return the objects API name as a field.
-    :type export: bool
+    :param include_api_name: Whether or not to return the objects API name as a field.
+    :type include_api_name: bool
     :return: List of Resilient Objects
     :rtype: List
     """
@@ -493,13 +559,13 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
             temp_obj_identifier = obj.get("identifier", "")
             obj_value = obj.get("value", "")
             full_obj = get_obj_from_list(temp_obj_identifier,
-                                         export[obj_name],
+                                         export.get(obj_name, ""),
                                          lambda wanted_obj, i=temp_obj_identifier, v=obj_value: True if wanted_obj.get(i) == v else False)
 
             wanted_list[index] = full_obj.get(obj_value).get(obj_identifer)
 
     if wanted_list:
-        ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
+        ex_obj = get_obj_from_list(obj_identifer, export.get(obj_name, ""), condition)
 
         for o in set(wanted_list):
             stripped_o = o.strip()
@@ -527,6 +593,7 @@ def get_from_export(export,
                     datatables=[],
                     tasks=[],
                     scripts=[],
+                    playbooks=[],
                     get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
@@ -544,6 +611,7 @@ def get_from_export(export,
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
+    :param playbooks: List of Playbook API Names
     :param get_related_objects: Whether or not to hunt for related action objects, defaults to True
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
@@ -563,6 +631,7 @@ def get_from_export(export,
     datatables = datatables if datatables else []
     tasks = tasks if tasks else []
     scripts = scripts if scripts else []
+    playbooks = playbooks if playbooks else []
 
     # Dict to return
     return_dict = {
@@ -675,6 +744,12 @@ def get_from_export(export,
     # Get Scripts
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
+    # Get Playbooks
+    if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        raise SDKException("Playbooks are only supported in {0} for SOAR >= {1}. Current version: {2}.".format(constants.SDK_RESOURCE_NAME, constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS, constants.CURRENT_SOAR_SERVER_VERSION))
+    else:
+        return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
+
     return return_dict
 
 
@@ -690,7 +765,8 @@ def minify_export(export,
                   tasks=[],
                   phases=[],
                   scripts=[],
-                  incident_types=[]):
+                  incident_types=[],
+                  playbooks=[]):
     """
     Return a 'minified' version of the export.
     All parameters are a list of api_names of objects to include in the export.
@@ -709,6 +785,7 @@ def minify_export(export,
     :param tasks: List of Phases API Names
     :param scripts: List of Script Display Names
     :param incident_types: List of Custom Incident Type Names
+    :param playbooks: List of Playbook API Names
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -729,17 +806,18 @@ def minify_export(export,
 
     # Setup the keys_to_minify dict
     keys_to_minify = {
-        "message_destinations": {"programmatic_name": message_destinations},
-        "functions": {"name": functions},
-        "workflows": {"programmatic_name": workflows},
-        "actions": {"name": rules},
+        "message_destinations": {ResilientObjMap.MESSAGE_DESTINATIONS: message_destinations},
+        "functions": {ResilientObjMap.FUNCTIONS: functions},
+        "workflows": {ResilientObjMap.WORKFLOWS: workflows},
+        "actions": {ResilientObjMap.RULES: rules},
         "fields": {"export_key": fields},
-        "incident_artifact_types": {"programmatic_name": artifact_types},
-        "types": {"type_name": datatables},
-        "automatic_tasks": {"programmatic_name": tasks},
-        "phases": {"name": phases},
-        "scripts": {"name": scripts},
-        "incident_types": {"name": parent_child_incident_types}
+        "incident_artifact_types": {ResilientObjMap.INCIDENT_ARTIFACT_TYPES: artifact_types},
+        "types": {ResilientObjMap.DATATABLES: datatables},
+        "automatic_tasks": {ResilientObjMap.TASKS: tasks},
+        "phases": {ResilientObjMap.PHASES: phases},
+        "scripts": {ResilientObjMap.SCRIPTS: scripts},
+        "incident_types": {ResilientObjMap.INCIDENT_TYPES: parent_child_incident_types},
+        "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks}
     }
 
     for key in minified_export.keys():
@@ -758,15 +836,18 @@ def minify_export(export,
             # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
             values = [name.strip() for name in values]
 
-            for data in list(minified_export[key]):
+            obj = minified_export.get(key)
 
-                if not data.get(attribute_name):
-                    LOG.warning("No %s in %s", attribute_name, key)
+            if obj:
+                for data in list(obj):
 
-                # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
-                # If this Resilient Object is not in our minify list, remove it
-                if not data.get(attribute_name, "").strip() in values:
-                    minified_export[key].remove(data)
+                    if not data.get(attribute_name):
+                        LOG.warning("No %s in %s", attribute_name, key)
+
+                    # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
+                    # If this Resilient Object is not in our minify list, remove it
+                    if not data.get(attribute_name, "").strip() in values:
+                        minified_export[key].remove(data)
 
         elif isinstance(minified_export[key], list):
             minified_export[key] = []
@@ -1035,10 +1116,10 @@ def get_resilient_libraries_version_to_use():
     :return: Version of resilient-circuits to use depending on ENV_VAR_DEV set
     :rtype: str
     """
-    if is_env_var_set(ENV_VAR_DEV):
-        return RESILIENT_LIBRARIES_VERSION_DEV
+    if is_env_var_set(constants.ENV_VAR_DEV):
+        return constants.RESILIENT_LIBRARIES_VERSION_DEV
     else:
-        return RESILIENT_LIBRARIES_VERSION
+        return constants.RESILIENT_LIBRARIES_VERSION
 
 
 def get_resilient_sdk_version():
@@ -1047,7 +1128,8 @@ def get_resilient_sdk_version():
 
     :return: a Version object
     """
-    return get_package_version(SDK_PACKAGE_NAME)
+    return get_package_version(constants.SDK_PACKAGE_NAME)
+
 
 def get_package_version(package_name):
     """
@@ -1073,14 +1155,14 @@ def is_python_min_supported_version(custom_warning=None):
     :return: a boolean to indicate if current version is supported or not
     :rtype: bool
     """
-    if sys.version_info < MIN_SUPPORTED_PY_VERSION:
+    if sys.version_info < constants.MIN_SUPPORTED_PY_VERSION:
 
         if custom_warning:
             LOG.warning("WARNING: %s", custom_warning)
 
         else:
             LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
-                        "and your current version of Python is {2}.{3}".format(MIN_SUPPORTED_PY_VERSION[0], MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+                        "and your current version of Python is {2}.{3}".format(constants.MIN_SUPPORTED_PY_VERSION[0], constants.MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
 
         return False
 
@@ -1302,7 +1384,7 @@ def handle_file_not_found_error(e, msg):
     :raises: The exception that is passed unless it contains 
     ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
     """
-    if ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in e.message:
+    if constants.ERROR_NOT_FIND_DIR or constants.ERROR_NOT_FIND_FILE in e.message:
         LOG.warning("WARNING: %s", msg)
     else:
         raise e

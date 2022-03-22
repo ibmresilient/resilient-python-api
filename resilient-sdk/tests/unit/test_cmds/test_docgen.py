@@ -188,7 +188,7 @@ def test_app_log_results_are_used(fx_copy_fn_main_mock_integration, fx_get_sub_p
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
     sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
-    
+
     cmd_docgen = CmdDocgen(fx_get_sub_parser)
     args = cmd_docgen.parser.parse_known_args()[0]
     cmd_docgen.execute_command(args)

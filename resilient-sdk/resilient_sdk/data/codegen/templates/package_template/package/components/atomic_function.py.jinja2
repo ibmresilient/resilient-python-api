@@ -38,6 +38,9 @@ class FunctionComponent(AppFunctionComponent):
         # Example validating required fn_inputs
         # validate_fields(["required_input_one", "required_input_two"], fn_inputs)
 
+        # Example accessing optional attribute in fn_inputs (this is similiar for app_configs)
+        # optional_input = fn_inputs.optional_input if hasattr(fn_inputs, "optional_input") else "Default Value"
+
         # Example getting access to self.get_fn_msg()
         # fn_msg = self.get_fn_msg()
         # self.LOG.info("fn_msg: %s", fn_msg)

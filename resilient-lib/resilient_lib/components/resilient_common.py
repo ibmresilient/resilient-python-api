@@ -3,21 +3,18 @@
 # pragma pylint: disable=unused-argument, no-self-use
 
 import datetime
-import tempfile
-import os
 import io
-import mimetypes
 import logging
+import mimetypes
+import os
+import sys
+import tempfile
+
 import resilient
 import sys
 from bs4 import BeautifulSoup
+from cachetools import TTLCache, cached
 from six import string_types
-from cachetools import cached, TTLCache
-
-if sys.version_info.major < 3:
-    from HTMLParser import HTMLParser as htmlparser
-else:
-    import html
 
 INCIDENT_FRAGMENT = '#incidents'
 PAYLOAD_VERSION = "1.0"
@@ -97,10 +94,15 @@ def unescape(data):
         return None
 
     if sys.version_info.major < 3:
-        h = htmlparser()
+        # In PY 2, unescape is part of HTMLParser
+        from HTMLParser import HTMLParser
+        h = HTMLParser()
         return h.unescape(data)
 
-    return html.unescape(data)
+    else:
+        # In PY 3, unescape is in html library
+        import html
+        return html.unescape(data)
 
 
 def validate_fields(field_list, kwargs):

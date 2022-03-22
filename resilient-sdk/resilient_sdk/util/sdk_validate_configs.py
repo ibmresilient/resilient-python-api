@@ -90,13 +90,13 @@ setup_py_attributes = {
     },
     "python_requires": {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: package_helpers.get_required_python_version(x) < sdk_helpers.MIN_SUPPORTED_PY_VERSION,
+        "fail_func": lambda x: package_helpers.get_required_python_version(x) < constants.MIN_SUPPORTED_PY_VERSION,
         "fail_msg": u"'{0}' version '{2[0]}.{2[1]}' is not supported",
         "fail_msg_lambda_supplement": lambda x: package_helpers.get_required_python_version(x),
         "missing_msg": "'python_requires' is a recommended attribute",
         "solution": u"Suggested value is 'python_requires>={0}.{1}'".format(
-            sdk_helpers.MIN_SUPPORTED_PY_VERSION[0],
-            sdk_helpers.MIN_SUPPORTED_PY_VERSION[1]
+            constants.MIN_SUPPORTED_PY_VERSION[0],
+            constants.MIN_SUPPORTED_PY_VERSION[1]
         ),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     },
@@ -377,7 +377,7 @@ payload_samples_attributes = {
 
     # if payload file is readable json but empty
     "payload_file_empty_msg": "{0} for '{1}' empty",
-    "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-samples'''",
+    "payload_file_empty_solution": "Fill in values manually or by using '''resilient-sdk codegen -p {0} --gather-results'''",
     "payload_file_empty_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
     # generic solution that instructs user to reload using codegen

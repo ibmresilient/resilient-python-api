@@ -11,11 +11,12 @@ import sys
 from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDev, CmdDocgen,
                                 CmdExtPackage, CmdExtract, CmdValidate)
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 from resilient_sdk.util.sdk_exception import SDKException
 
 # Setup logging
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
@@ -30,7 +31,7 @@ def get_main_app_parser():
     # Define main parser object
     # We use SDKArgumentParser which overwrites the 'error' method
     parser = SDKArgumentParser(
-        prog=sdk_helpers.SDK_PACKAGE_NAME,
+        prog=constants.SDK_PACKAGE_NAME,
         description="""Python SDK for developing IBM SOAR Apps that
         provides various subcommands to help with development""",
         epilog="For support, please visit ibm.biz/soarcommunity")
@@ -80,7 +81,7 @@ def main():
     os.system("")
 
     # See if RES_SDK_DEV environment var is set
-    sdk_dev = sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV)
+    sdk_dev = sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV)
 
     # Get main parser object
     parser = get_main_app_parser()
@@ -91,7 +92,7 @@ def main():
     if sdk_dev:
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
-        LOG.info("{0}Running SDK in Developer Mode{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.info("{0}Running SDK in Developer Mode{0}".format(constants.LOG_DIVIDER))
 
     # Add any subcommands to main app parser here
     cmd_validate = CmdValidate(sub_parser)
@@ -114,7 +115,7 @@ def main():
         main_cmd = sdk_helpers.get_main_cmd()
 
         LOG.error(err)
-        LOG.info("{0}".format(sdk_helpers.LOG_DIVIDER))
+        LOG.info("{0}".format(constants.LOG_DIVIDER))
 
         # Print specifc usage for that cmd for these errors
         if "too few arguments" in err.message or "no subcommand provided" in err.message:

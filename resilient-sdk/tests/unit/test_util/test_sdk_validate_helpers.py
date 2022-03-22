@@ -27,7 +27,7 @@ def test_selftest_validate_resilient_circuits_installed():
 
         assert len(result) == 2
         assert result[0]
-        assert result[1].solution is ""
+        assert result[1].solution == ""
         assert "selftest" in result[1].name
 
 
@@ -43,7 +43,7 @@ def test_valid_selftest_validate_package_installed():
 
     assert len(result) == 2
     assert result[0]
-    assert result[1].solution is ""
+    assert result[1].solution == ""
 
 
 def test_invalid_selftest_validate_package_installed():
