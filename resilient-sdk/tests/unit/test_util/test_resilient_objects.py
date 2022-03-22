@@ -17,6 +17,7 @@ def test_resilient_obj_map():
     assert ResilientObjMap.TASKS == "programmatic_name"
     assert ResilientObjMap.PHASES == "export_key"
     assert ResilientObjMap.SCRIPTS == "export_key"
+    assert ResilientObjMap.PLAYBOOKS == "export_key"
 
 
 def test_resilient_type_ids():

@@ -23,7 +23,7 @@
 - [Overview](#overview)
   - [Key Features](#key-features)
 - [Requirements](#requirements)
-  - [Resilient platform](#resilient-platform)
+  - [SOAR platform](#soar-platform)
   - [Cloud Pak for Security](#cloud-pak-for-security)
   - [Proxy Server](#proxy-server)
 {% if all_dependencies %}
@@ -53,6 +53,9 @@
 {% endif %}
 {% if rules %}
 - [Rules](#rules)
+{% endif %}
+{% if playbooks %}
+- [Playbooks](#playbooks)
 {% endif %}
 - [Troubleshooting & Support](#troubleshooting--support)
 ---
@@ -94,17 +97,17 @@
   List any Requirements 
 --> 
 <!-- {{ placeholder_string }} -->
-This app supports the IBM Resilient SOAR Platform and the IBM Cloud Pak for Security.
+This app supports the IBM Security QRadar SOAR Platform and the IBM Security QRadar SOAR for IBM Cloud Pak for Security.
 
-### Resilient platform
-The Resilient platform supports two app deployment mechanisms, App Host and integration server.
+### SOAR platform
+The SOAR platform supports two app deployment mechanisms, App Host and integration server.
 
-If deploying to a Resilient platform with an App Host, the requirements are:
-* Resilient platform >= `{{ server_version }}`.
+If deploying to a SOAR platform with an App Host, the requirements are:
+* SOAR platform >= `{{ server_version }}`.
 * The app is in a container-based format (available from the AppExchange as a `zip` file).
 
-If deploying to a Resilient platform with an integration server, the requirements are:
-* Resilient platform >= `{{ server_version }}`.
+If deploying to a SOAR platform with an integration server, the requirements are:
+* SOAR platform >= `{{ server_version }}`.
 * The app is in the older integration format (available from the AppExchange as a `zip` file which contains a `tar.gz` file).
 * Integration server is running `{{ res_circuits_dependency_str }}`.
 * If using an API key account, make sure the account provides the following minimum permissions: 
@@ -114,12 +117,12 @@ If deploying to a Resilient platform with an integration server, the requirement
   | Function | Read |
   <!-- {{ placeholder_string }} -->
 
-The following Resilient platform guides provide additional information: 
+The following SOAR platform guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. 
 * _Integration Server Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings.
 * _System Administrator Guide_: provides the procedure to install, configure and deploy apps. 
 
-The above guides are available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
+The above guides are available on the IBM Documentation website at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your SOAR platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
 
 ### Cloud Pak for Security
 If you are deploying to IBM Cloud Pak for Security, the requirements are:
@@ -129,9 +132,9 @@ If you are deploying to IBM Cloud Pak for Security, the requirements are:
 
 The following Cloud Pak guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration & Automation > **Orchestration and Automation Apps**.
-* _System Administrator Guide_: provides information to install, configure, and deploy apps. From the IBM Cloud Pak for Security Knowledge Center table of contents, select Case Management and Orchestration & Automation > **System administrator**.
+* _System Administrator Guide_: provides information to install, configure, and deploy apps. From the IBM Cloud Pak for Security IBM Documentation table of contents, select Case Management and Orchestration & Automation > **System administrator**.
 
-These guides are available on the IBM Knowledge Center at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific Knowledge Center page, select Case Management and Orchestration & Automation.
+These guides are available on the IBM Documentation website at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific IBM Documentation page, select Case Management and Orchestration & Automation.
 
 ### Proxy Server
 The app **does/does not** <!-- {{ placeholder_string }} --> support a proxy server.
@@ -182,7 +185,7 @@ List any user permissions that are needed to use this endpoint. For example, lis
 ## Installation
 
 ### Install
-* To install or uninstall an App or Integration on the _Resilient platform_, see the documentation at [ibm.biz/soar-docs](https://ibm.biz/soar-docs).
+* To install or uninstall an App or Integration on the _SOAR platform_, see the documentation at [ibm.biz/soar-docs](https://ibm.biz/soar-docs).
 * To install or uninstall an App on _IBM Cloud Pak for Security_, see the documentation at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs) and follow the instructions above to navigate to Orchestration and Automation.
 
 ### App Configuration
@@ -341,6 +344,17 @@ results = {
 | --------- | ------ | ------------------ |
 {% for rule in rules|sort(attribute="name") %}
 | {{ rule.name }} | {{ rule.object_type }} | `{{ rule.workflow_triggered }}` |
+{% endfor %}
+
+---
+{% endif %}
+
+{% if playbooks %}
+## Playbooks
+| Playbook Name | Description | Object | Status |
+| ------------- | ----------- | ------ | ------ |
+{% for playbook in playbooks|sort(attribute="api_name") %}
+| {{ playbook.name }} | {{ playbook.description }} | {{ playbook.object_type }} | `{{ playbook.status }}` |
 {% endfor %}
 
 ---

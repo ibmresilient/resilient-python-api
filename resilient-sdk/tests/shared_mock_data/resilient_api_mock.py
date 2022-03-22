@@ -34,6 +34,21 @@ class ResilientAPIMock(ResilientMock):
         """
         Mock POST /configurations/exports/
         """
+
+        if '"playbooks": true' in request.text:
+            return requests_mock.create_response(request,
+                                                 status_code=200,
+                                                 json=read_mock_json("export-with-playbook.JSON"))
+
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=read_mock_json("export.JSON"))
+
+    @resilient_endpoint("GET", "/const/")
+    def get_const(self, request):
+        """
+        Mock POST /const/
+        """
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=read_mock_json("export.JSON"))

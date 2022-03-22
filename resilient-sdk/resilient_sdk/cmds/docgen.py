@@ -181,6 +181,26 @@ class CmdDocgen(BaseCmd):
         return return_list
 
     @staticmethod
+    def _get_playbook_details(playbooks):
+        """Return a List of all Playbooks which are Dictionaries with
+        the attributes: api_name, name, object_type, status and description"""
+
+        return_list = []
+
+        for playbook in playbooks:
+            the_playbook = {}
+
+            the_playbook["api_name"] = playbook.get("x_api_name")
+            the_playbook["name"] = playbook.get("display_name")
+            the_playbook["object_type"] = playbook.get("object_type", "")
+            the_playbook["status"] = playbook.get("status", "")
+            the_playbook["description"] = playbook.get("description", {}).get("content", "")
+
+            return_list.append(the_playbook)
+
+        return return_list
+
+    @staticmethod
     def _get_datatable_details(datatables):
         """Return a List of all Data Tables which are Dictionaries with
         the attributes: name, anchor, api_name, and columns. Columns is
@@ -330,7 +350,8 @@ class CmdDocgen(BaseCmd):
                                                       artifact_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, customize_py_import_def.get("incident_artifact_types")),
                                                       datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, customize_py_import_def.get("types")),
                                                       tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, customize_py_import_def.get("automatic_tasks")),
-                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, customize_py_import_def.get("scripts")))
+                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, customize_py_import_def.get("scripts")),
+                                                      playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, customize_py_import_def.get("playbooks", [])))
 
         # Lists we use in Jinja Templates
         jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []))
@@ -339,6 +360,7 @@ class CmdDocgen(BaseCmd):
         jinja_datatables = self._get_datatable_details(import_def_data.get("datatables", []))
         jinja_custom_fields = self._get_custom_fields_details(import_def_data.get("fields", []))
         jinja_custom_artifact_types = self._get_custom_artifact_details(import_def_data.get("artifact_types", []))
+        jinja_playbooks = self._get_playbook_details(import_def_data.get("playbooks", []))
 
         # Other variables for Jinja Templates
         package_name_dash = package_name.replace("_", "-")
@@ -388,6 +410,7 @@ class CmdDocgen(BaseCmd):
             "datatables": jinja_datatables,
             "custom_fields": jinja_custom_fields,
             "custom_artifact_types": jinja_custom_artifact_types,
+            "playbooks": jinja_playbooks,
             "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING
         })
 
