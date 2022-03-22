@@ -30,7 +30,8 @@ setup(
         "bs4",
         "jinja2",
         "pytz",
-        "six"
+        "six",
+        "deprecated"
     ],
 
     entry_points={

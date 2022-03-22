@@ -99,8 +99,8 @@ def unescape(data):
     if sys.version_info.major < 3:
         h = htmlparser()
         return h.unescape(data)
-    else:
-        return html.unescape(data)
+
+    return html.unescape(data)
 
 
 def validate_fields(field_list, kwargs):
