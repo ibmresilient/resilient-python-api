@@ -11,6 +11,7 @@ import sys
 import tempfile
 
 import resilient
+import sys
 from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
 from six import string_types
@@ -101,7 +102,6 @@ def unescape(data):
     else:
         # In PY 3, unescape is in html library
         import html
-
         return html.unescape(data)
 
 
@@ -357,7 +357,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     attachment = datastream.read()
 
     """
-    Writing to temp path so that the REST API client can use this file path 
+    Writing to temp path so that the REST API client can use this file path
     to read and POST the attachment
     """
 
