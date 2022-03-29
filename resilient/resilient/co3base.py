@@ -12,6 +12,7 @@ import sys
 import logging
 import unicodedata
 import requests
+import traceback
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -46,12 +47,18 @@ class TLSHttpAdapter(HTTPAdapter):
 
 class BasicHTTPException(Exception):
     """Exception for HTTP errors."""
-    def __init__(self, response):
+    def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(BasicHTTPException, self).__init__(u"{0}:  {1}".format(response.reason, response.text))
+
+        err_reason = response.reason if response.reason else err_reason
+        err_text = response.text if response.text else err_text
+
+        err_message = u"'resilient' API Request FAILED:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
+
+        super(BasicHTTPException, self).__init__(err_message)
 
         self.response = response
 
@@ -60,7 +67,15 @@ class BasicHTTPException(Exception):
 
     @staticmethod
     def raise_if_error(response):
-        if response.status_code != 200:
+
+        if response.status_code == 401:
+            try:
+                raise BasicHTTPException(response, err_reason=u"Unauthorized", err_text=u"Credentials incorrect")
+            except BasicHTTPException:
+                traceback.print_exc()
+                sys.exit(constants.ERROR_CODE_CONNECTION_UNAUTHORIZED)
+
+        elif response.status_code != 200:
             raise BasicHTTPException(response)
 
 
