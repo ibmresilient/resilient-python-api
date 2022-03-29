@@ -1,0 +1,26 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<testsuites>
+    <testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="0.085"
+            timestamp="2021-04-12T14:25:09.900867" hostname="DESKTOP">
+        <testcase classname="test_something" name="test_passes" time="0.001">
+            <properties>
+                <property name="key" value="value1"/>
+            </properties>
+        </testcase>
+        <testcase classname="test_something" name="test_fails" time="0.001">
+            <properties>
+                <property name="key" value="value2"/>
+            </properties>
+            <failure message="assert 1 == 2">record_property = &lt;function record_property.&lt;locals&gt;.append_property
+                at 0x000001A1A9EB40D0&gt;
+
+                def test_fails(record_property):
+                record_property("key", u"value2 some unicode: Δ, Й, ק ,م, ๗, あ, 叶")
+                &gt; assert 1 == 2
+                E assert 1 == 2
+
+                test_something.py:8: AssertionError
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>

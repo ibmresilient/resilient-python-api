@@ -64,10 +64,11 @@ class ResilientObjMap(object):
     FIELDS = "name"
     INCIDENT_ARTIFACT_TYPES = "programmatic_name"
     INCIDENT_TYPES = "name"
-    DATATABLES = "type_name"
-    TASKS = "programmatic_name"
+    DATATABLES = "type_name"  # Also known as TYPES
+    TASKS = "programmatic_name"  # Also know as AUTOMATIC_TASKS
     PHASES = "export_key"
     SCRIPTS = "export_key"
+    PLAYBOOKS = "export_key"
 
 
 class ResilientTypeIds(object):

@@ -41,16 +41,18 @@ def test_cmd_clone_setup(fx_get_sub_parser):
 
     assert isinstance(cmd_clone, base_cmd.BaseCmd)
     assert cmd_clone.CMD_NAME == "clone"
-    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
     assert cmd_clone.CMD_USAGE == """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
+    $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name>
+    $ resilient-sdk clone --playbook <playbook_to_be_cloned> <new_playbook_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
-    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
     assert cmd_clone.CMD_ADD_PARSERS == ["app_config_parser"]
 
 

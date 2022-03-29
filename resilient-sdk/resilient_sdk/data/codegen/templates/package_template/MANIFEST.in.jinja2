@@ -6,6 +6,9 @@ recursive-include {{package_name}}/util *
 include {{package_name}}/LICENSE
 include doc/*.md
 include doc/screenshots/*
+include icons/*.png
 recursive-include payload_samples/*/ *.json
+include tox.ini
+recursive-include tests/ *
 
-exclude *.bak
+global-exclude *.bak

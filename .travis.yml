@@ -1,17 +1,21 @@
 language: python
-python: 3.6
+python: 3.9
 os: linux
 
 stages:
-  - run tests
-  - static analysis
+  - name: run tests
+    if: branch !~ ^pages\/.+
+  - name: static analysis
+    if: branch !~ ^pages\/.+
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
-    if: branch = master OR branch =~ ^release\/.+
-  # - name: deploy documentation
-  #   if: branch = master
+    if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
+  - name: deploy documentation
+    if: branch =~ ^pages\/.+ OR branch =~ ^release\/.+
   - name: release to pypi
+    if: tag =~ ^release\/pypi\/.+
+  - name: sync public repo
     if: tag =~ ^release\/pypi\/.+
 
 env:
@@ -19,7 +23,6 @@ env:
   - ARTIFACTORY_REPO_LINK=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local
   - TEST_RESILIENT_APPLIANCE=staging2.internal.resilientsystems.com
   - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
-  - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
   - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
   - IS_RELEASE=$([[ "$TRAVIS_BRANCH" != *"release/"* ]]; echo $?)
@@ -37,6 +40,8 @@ env:
   - FYRE_DEPLOY_TIMEOUT_SECONDS=540
   - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
+  - PAGES_INTERNAL_LINK="https://pages.github.ibm.com/Resilient/resilient-python-api/"
+  - PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
 
 # Install package deps
 before_install:
@@ -65,6 +70,15 @@ matrix:
         - echo "Starting Python 3.6 Tests"
         - ./travis-scripts/run_unit_tests.sh
 
+    - stage: run tests
+      name: Python 3.9 Unit Tests
+      python: 3.9
+      env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install: ./travis-scripts/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 3.9 Tests"
+        - ./travis-scripts/run_unit_tests.sh
+
     # Jobs that perform static analysis; code quality, security scans etc
     - stage: static analysis
       name: Python 2.7 Bandit Security Scan
@@ -78,10 +92,10 @@ matrix:
             ./travis-scripts/run_bandit_scan.sh $BANDIT_RCFILE;
           fi
     - stage: static analysis
-      name: Python 3.6 Bandit Security Scan
-      python: 3.6
+      name: Python 3.9 Bandit Security Scan
+      python: 3.9
       env:
-        - ANALYSIS_NAME="Py3.6 Bandit Security Scan"
+        - ANALYSIS_NAME="Py3.9 Bandit Security Scan"
       install:
         - pip install bandit
       script:
@@ -90,7 +104,7 @@ matrix:
           fi
     - stage: static analysis
       name: Pylint
-      python: 3.6
+      python: 3.9
       env:
         - ANALYSIS_NAME="Pylint"
       install:
@@ -101,7 +115,7 @@ matrix:
           fi
     - stage: static analysis
       name: CVE Safety Check
-      python: 3.6
+      python: 3.9
       env:
         - ANALYSIS_NAME="CVE Search against dependancies"
       install:
@@ -111,9 +125,9 @@ matrix:
             ./travis-scripts/run_cve_scan.sh $PACKAGES_TO_RUN_SCANS_ON;
           fi
     - stage: run tests
-      name: Python 3.6 Integration Tests
-      python: 3.6
-      env: RUN_TYPE=int_test TOXENV=py36
+      name: Python 3.9 Integration Tests
+      python: 3.9
+      env: RUN_TYPE=int_test TOXENV=py39
       install: ./travis-scripts/install_int_tests_deps.sh
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then
@@ -126,54 +140,56 @@ matrix:
           fi
 
     - stage: build packages
-      name: Build Packages in Python 2.7
-      python: 2.7
+      name: Build Packages in Python 3.9
+      python: 3.9
       script:
-        - echo "Building packages in Python 2.7"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
-      
-    - stage: build packages
-      name: Build Packages in Python 3.6
-      python: 3.6
-      script:
-        - echo "Building packages in Python 3.6"
+        - echo "Building packages in Python 3.9"
         - ./travis-scripts/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
       script:
-        - echo "Building packages in Python 3.6 and Deploying to Artifactory"
+        - echo "Building packages in Python 3.9 and Deploying to Artifactory"
         - ./travis-scripts/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
+        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
     - stage: release to pypi
       install:
         - pip install twine
       script:
-        - echo "Building packages in Python 3.6 and releasing to PyPi"
+        - echo "Building packages in Python 3.9 and releasing to PyPi"
         - ./travis-scripts/build_and_deploy_packages.sh no_deploy do_release
         - echo "Sending notification to Slack"
         - ./travis-scripts/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
-    # - stage: deploy documentation
-    #   install:
-    #   - pip install sphinx
-    #   - pip install git+https://github.com/bashtage/sphinx-material.git
-    #   script:
-    #     - echo "Building packages in Python 3.6 and deploying Documentation"
-    #     - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
-    #   # Define a deploy step to the inbuilt git pages deployment provider
-    #   deploy:
-    #     - provider: pages:git
-    #       verbose: true
-    #       skip_cleanup: true
-    #       # The github_url for the internal git needs to be specified otherwise the deploy will fail.
-    #       github_url: github.ibm.com
-    #       # A token is needed for the deployment, this token is a Personal Access token with limited permissions
-    #       github_token: $GH_TOKEN
-    #       edge: true
-    #       local_dir: ./docs/_build/html/
-    #       keep_history: true
+    - stage: deploy documentation
+      install:
+      - pip install sphinx furo==2022.1.2
+      script:
+        - echo "Building packages in Python 3.9 and deploying Documentation internally too"
+        - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
+      deploy:
+        - provider: pages:git
+          github_url: github.ibm.com
+          github_token: $GH_TOKEN_INTERNAL
+          target_branch: gh-pages
+          on:
+            all_branches: true
+            condition: $TRAVIS_BRANCH =~ ^(pages\/.+|release\/.+|master)
+          local_dir: ./docs/_build/
+          keep_history: true
+          verbose: true
+          edge: true
+      after_deploy:
+        - ./travis-scripts/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
+
+    - stage: sync public repo
+      script:
+        - echo "Syncing INTERNAL repo with PUBLIC repo"
+        - ./travis-scripts/sync_public_repo.sh "ALL"
+      after_success:
+        - ./travis-scripts/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 after_failure:
   - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"

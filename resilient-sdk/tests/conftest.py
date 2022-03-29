@@ -15,17 +15,20 @@ Note:
 """
 
 import copy
-import sys
+import logging
 import os
 import shutil
+import sys
+
 import pytest
-import logging
 import resilient_sdk.app as app
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers
+from resilient_sdk.util import package_file_helpers as package_helpers
+
 from tests.shared_mock_data import mock_paths
 
 # Set the logging to DEBUG for tests
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 LOG.setLevel(logging.DEBUG)
 
 
@@ -74,6 +77,26 @@ def _add_to_cmd_line_args(args_to_add):
     sys.argv.extend(args_to_add)
 
 
+def _pip_install(package):
+    """
+    pip installs given package
+    """
+
+    # should always upgrade pip
+    install_cmd = ["pip", "install", "--upgrade", "pip"]
+    sdk_helpers.run_subprocess(install_cmd)
+
+    install_cmd = ["pip", "install", package]
+    sdk_helpers.run_subprocess(install_cmd)
+
+def _pip_uninstall(package):
+    """
+    pip uninstalls package
+    """
+    unisntall_cmd = ["pip", "uninstall", "-y", package]
+    sdk_helpers.run_subprocess(unisntall_cmd)
+
+
 @pytest.fixture(scope="session")
 def fx_mock_res_client():
     """
@@ -112,15 +135,137 @@ def fx_mk_app_config():
 def fx_copy_fn_main_mock_integration():
     """
     Before: Creates temp dir and copies fn_main_mock_integration to it
-    Returns a tuple (mock_integration_name, path_fn_main_mock_integration)
+    Returns a tuple (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
     After: Removes the temp directory
     """
     _mk_temp_dir()
-    mock_integration_name = "fn_main_mock_integration"
-    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_integration_name)
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
     shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
-    yield (mock_integration_name, path_fn_main_mock_integration)
+    yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
     _rm_temp_dir()
+
+
+@pytest.fixture
+def fx_copy_fn_main_mock_integration_w_playbooks():
+    """
+    Before: Creates temp dir and copies fn_main_mock_integration to it,
+            then replaces the customize.py and data/export.res files to contain a playbook
+    Returns a tuple (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+    After: Removes the temp directory
+    """
+
+    _mk_temp_dir()
+    old_version = constants.CURRENT_SOAR_SERVER_VERSION
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
+    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
+    shutil.copyfile(mock_paths.MOCK_CUSTOMIZE_PY_W_PLAYBOOK, os.path.join(path_fn_main_mock_integration, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, package_helpers.PATH_CUSTOMIZE_PY))
+    shutil.copyfile(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK, os.path.join(path_fn_main_mock_integration, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, package_helpers.PATH_UTIL_DATA_DIR, package_helpers.BASE_NAME_LOCAL_EXPORT_RES))
+    yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+    constants.CURRENT_SOAR_SERVER_VERSION = old_version
+    _rm_temp_dir()
+
+
+@pytest.fixture
+def fx_copy_and_pip_install_fn_main_mock_integration():
+    """
+    Before: Creates temp dir and copies fn_main_mock_integration to it AND pip installs it
+    Returns a tuple (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+    After: Removes the temp directory AND pip uninstalls it
+    """
+    _mk_temp_dir()
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
+    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration)
+
+    _pip_install(path_fn_main_mock_integration)
+
+    yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+
+    _pip_uninstall(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
+
+    _rm_temp_dir()
+
+@pytest.fixture
+def fx_pip_install_tox():
+    """
+    Before: if tox not already installed: pip installs tox
+    After: if tox wasn't already installed: pip uninstalls tox
+    """
+    
+    # bool values of whether tox was already installed
+    tox_installed = False
+    if sdk_helpers.get_package_version(constants.TOX_PACKAGE_NAME):
+        tox_installed = True
+
+    if not tox_installed:
+        _pip_install(constants.TOX_PACKAGE_NAME)
+
+    yield
+
+    if not tox_installed:
+        _pip_uninstall(constants.TOX_PACKAGE_NAME)
+
+@pytest.fixture
+def fx_pip_install_pylint():
+    """
+    Before: if pylint not already installed: pip installs pylint
+    After: if pylint wasn't already installed: pip uninstalls pylint
+    """
+
+    # bool values of whether pylint was already installed
+    pylint_installed = False
+    if sdk_helpers.get_package_version(constants.PYLINT_PACKAGE_NAME):
+        pylint_installed = True
+
+    if not pylint_installed:
+        _pip_install(constants.PYLINT_PACKAGE_NAME)
+
+    yield
+
+    if not pylint_installed:
+        _pip_uninstall(constants.PYLINT_PACKAGE_NAME)
+
+@pytest.fixture
+def fx_pip_install_bandit():
+    """
+    Before: if bandit not already installed: pip installs bandit
+    After: if bandit wasn't already installed: pip uninstalls bandit
+    """
+    # TODO: once we support Python > 3.6 address this
+    FIXED_VERSION = "1.7.1"
+
+    # bool values of whether bandit was already installed
+    bandit_installed = False
+    if sdk_helpers.get_package_version(constants.BANDIT_PACKAGE_NAME):
+        bandit_installed = True
+
+    if not bandit_installed:
+        _pip_install("{0}=={1}".format(constants.BANDIT_PACKAGE_NAME, FIXED_VERSION))
+
+    yield
+
+    if not bandit_installed:
+        _pip_uninstall("{0}=={1}".format(constants.BANDIT_PACKAGE_NAME, FIXED_VERSION))
+
+
+@pytest.fixture
+def fx_cmd_line_args_codegen_base():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "codegen",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
 
 
 @pytest.fixture
@@ -133,8 +278,8 @@ def fx_cmd_line_args_codegen_package():
 
     args_to_add = [
         "codegen",
-        "-p", "fn_main_mock_integration",
-        "-m", "fn_main_mock_integration",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
+        "-m", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "-f", "mock_function_one",
         "--rule", "Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination",
         "--workflow", "mock_workflow_one", "mock_workflow_two",
@@ -163,7 +308,7 @@ def fx_cmd_line_args_codegen_reload():
 
     args_to_add = [
         "codegen",
-        "-p", "fn_main_mock_integration",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "--reload",
         "--rule", "Additional Mock Rule"
     ]
@@ -185,7 +330,27 @@ def fx_cmd_line_args_package():
 
     args_to_add = [
         "package",
-        "-p", "fn_main_mock_integration"
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
+def fx_cmd_line_args_validate():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "validate",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME
     ]
 
     _add_to_cmd_line_args(args_to_add)
@@ -205,7 +370,7 @@ def fx_cmd_line_args_docgen():
 
     args_to_add = [
         "docgen",
-        "-p", "fn_main_mock_integration",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
     ]
 
     _add_to_cmd_line_args(args_to_add)
@@ -236,6 +401,7 @@ def fx_cmd_line_args_clone_typechange():
 
     sys.argv = original_cmd_line
 
+
 @pytest.fixture
 def fx_cmd_line_args_clone_prefix():
     """
@@ -249,7 +415,7 @@ def fx_cmd_line_args_clone_prefix():
     args_to_add = [
         "clone",
         "-w", "mock_workflow_two", "mock_workflow_one",
-        "-m", "fn_main_mock_integration",
+        "-m", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "-f", "mock_function_one",
         "--rule", "Mock Manual Rule", "Mock: Auto Rule", "Mock Task Rule", "Mock Script Rule", "Mock Manual Rule Message Destination",
         "-pre", "v2"
@@ -272,7 +438,7 @@ def fx_cmd_line_args_dev_set_version():
 
     args_to_add = [
         "dev",
-        "-p", "fn_main_mock_integration",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "--set-version", "35.0.0"
     ]
 
@@ -293,7 +459,7 @@ def fx_cmd_line_args_dev_set_bad_version():
 
     args_to_add = [
         "dev",
-        "-p", "fn_main_mock_integration",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "--set-version", "35.x.0"
     ]
 
@@ -342,8 +508,8 @@ def fx_add_dev_env_var():
     Before: sets RES_SDK_DEV=1
     After: sets RES_SDK_DEV=0
     """
-    os.environ[sdk_helpers.ENV_VAR_DEV] = "1"
+    os.environ[constants.ENV_VAR_DEV] = "1"
 
     yield
 
-    os.environ[sdk_helpers.ENV_VAR_DEV] = "0"
+    os.environ[constants.ENV_VAR_DEV] = "0"

@@ -11,24 +11,36 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 class CmdExtPackage(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "package"
-    CMD_HELP = "Package an integration into a Resilient app"
+    CMD_HELP = "Package your Python Package into a SOAR app format."
     CMD_USAGE = """
     $ resilient-sdk package -p <path_to_directory>
     $ resilient-sdk package -p <path_to_directory> --display-name "My Custom App"
     $ resilient-sdk package -p <path_to_directory> --repository-name "ibmresilient" --image-hash "dd2a1678b6e0..."
     $ resilient-sdk package -p <path_to_directory> --keep-build-dir --display-name "My Custom App"
+    $ resilient-sdk package -p <path_to_directory> --validate
     """
     CMD_DESCRIPTION = CMD_HELP
+
+    def __init__(self, sub_parser, cmd_validate=None):
+        """
+        Create a constructor for the package command as it needs to save
+        the cmd_validate variable for use when creating and calling the 
+        validate command object. For use with the --validate flag
+        """
+        self.cmd_validate = cmd_validate
+
+        super(CmdExtPackage, self).__init__(sub_parser)
 
     def setup(self):
         # Define codegen usage and description
@@ -63,6 +75,10 @@ class CmdExtPackage(BaseCmd):
                                  help="Do not look for the payload_samples directory or try add them to the export.res file",
                                  action="store_true")
 
+        self.parser.add_argument("--validate",
+                                 help="Run the 'validate' command and generate the validation report to include in packaging",
+                                 action="store_true")
+
     def execute_command(self, args):
         """
         Function that creates The App.zip file from the give source path and returns
@@ -77,6 +93,7 @@ class CmdExtPackage(BaseCmd):
                                          container access.
             -  **args.keep_build_dir**: if defined, dist/build/ will not be removed.
             -  **args.no_samples**: if defined, set path_payload_samples to None.
+            -  **args.validate**: if defined, run ``validate`` and save report in packaged app.
         :type args: argparse Namespace
 
         :return: Path to new app.zip
@@ -117,6 +134,17 @@ class CmdExtPackage(BaseCmd):
         if args.no_samples:
             path_payload_samples = None
 
+        # if --validate flag is set, run validate command
+        # else set the path to the file if it exists or None if doesn't exist
+        if args.validate:
+            LOG.info("Validation on {0} is starting. \nTo skip, run the 'package' command without the '--validate' flag.\nValidations can be executated separately by running: \n  'resilient-sdk validate -p {0}' \nto see more in-depth results.\n".format(args.package))
+
+            validate_args = self.cmd_validate.parser.parse_known_args()[0]
+
+            path_validate_report = self.cmd_validate.execute_command(validate_args, output_suppressed=True, run_from_package=True)
+        else:
+            path_validate_report = package_helpers.check_validate_report_exists()
+
         # Ensure the 'Dockerfile' and 'entrypoint.sh' files exist and we have READ access
         sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
 
@@ -138,6 +166,7 @@ class CmdExtPackage(BaseCmd):
             path_extension_logo=path_extension_logo,
             path_company_logo=path_company_logo,
             path_payload_samples=path_payload_samples,
+            path_validate_report=path_validate_report,
             image_hash=args.image_hash
         )
 

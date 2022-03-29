@@ -9,7 +9,7 @@ Common place for helper functions used in tests
 from resilient_circuits import SubmitTestInboundApp, SubmitTestFunction, FunctionResult
 
 
-def call_app_function(fn_name, fn_inputs, circuits_app, status_message_only=False):
+def call_app_function(fn_name, fn_inputs, circuits_app, status_message_only=False, full_result_obj=False):
 
     assert isinstance(fn_inputs, dict)
 
@@ -34,6 +34,10 @@ def call_app_function(fn_name, fn_inputs, circuits_app, status_message_only=Fals
     event = circuits_app.watcher.wait(fn_name + u"_result", parent=evt, timeout=2)
     result = event.kwargs.get("result")
     assert isinstance(result, FunctionResult)
+
+    if full_result_obj:
+        return result
+
     return result.value
 
 

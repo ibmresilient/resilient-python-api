@@ -3,23 +3,29 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 import os
-import stat
 import re
-import pytest
-import jinja2
+import stat
 import sys
+
+import jinja2
+import pkg_resources
+import pytest
+from mock import patch
 from resilient import SimpleClient
+from resilient_sdk.cmds import CmdCodegen, CmdValidate
+from resilient_sdk.util import constants, sdk_helpers
+from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_data, mock_paths
 
 
-def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config):
+def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
     res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config)
     assert isinstance(res_client, SimpleClient)
+    assert "Connecting to IBM Security SOAR at: " in caplog.text
 
 
-def test_setup_jinja_env():
+def test_setup_jinja_env(fx_mk_temp_dir):
     jinja_env = sdk_helpers.setup_jinja_env(mock_paths.TEST_TEMP_DIR)
     assert isinstance(jinja_env, jinja2.Environment)
     assert jinja_env.loader.package_path == mock_paths.TEST_TEMP_DIR
@@ -150,6 +156,20 @@ def test_validate_dir_paths(fx_mk_temp_dir):
     sdk_helpers.validate_dir_paths(None, exists_dir)
 
 
+def test_get_resilient_server_info(fx_mock_res_client):
+    server_info = sdk_helpers.get_resilient_server_info(fx_mock_res_client, ["export_format_version", "locale", "non_exist"])
+    assert len(server_info) == 3
+    assert server_info.get("export_format_version") == 2
+    assert server_info.get("locale") == "en"
+    assert server_info.get("non_exist") == {}
+
+
+def test_get_resilient_server_version(fx_mock_res_client):
+    mock_version = 39.0
+    assert sdk_helpers.get_resilient_server_version(fx_mock_res_client) == mock_version
+    assert constants.CURRENT_SOAR_SERVER_VERSION == mock_version
+
+
 def test_read_local_exportfile():
     export_data = sdk_helpers.read_local_exportfile(mock_paths.MOCK_EXPORT_RES)
     assert isinstance(export_data, dict)
@@ -241,6 +261,26 @@ def test_get_message_destination_from_export(fx_mock_res_client):
     assert export_data.get("message_destinations")[0].get("name") == "fn_main_mock_integration"
 
 
+def test_get_playbooks_from_export(fx_mock_res_client):
+    with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
+
+        mock_server_version.return_value = 44.0
+        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+        export_data = sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
+
+        assert export_data.get("playbooks")[0].get(ResilientObjMap.PLAYBOOKS) == "main_mock_playbook"
+        constants.CURRENT_SOAR_SERVER_VERSION = None # reset for other tests
+
+
+def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client):
+
+    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+
+    with pytest.raises(SDKException, match=r"Playbooks are only supported in resilient_sdk for SOAR >= 44"):
+        sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
+
+
 @pytest.mark.parametrize("get_related_param",
                          [(True), (False)])
 def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_related_param):
@@ -265,17 +305,23 @@ def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_re
 def test_minify_export(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
-    minifed_export = sdk_helpers.minify_export(org_export, functions=["mock_function_one"])
+    minifed_export = sdk_helpers.minify_export(org_export, functions=["mock_function_one"], phases=["Mock Custom Phase One"], scripts=["Mock Incident Script"])
     minified_functions = minifed_export.get("functions")
     minified_fields = minifed_export.get("fields")
     minified_incident_types = minifed_export.get("incident_types")
+    minified_phases = minifed_export.get("phases")
+    minified_scripts = minifed_export.get("scripts")
 
     # Test it minified given function
     assert len(minified_functions) == 1
     assert minified_functions[0].get("export_key") == "mock_function_one"
 
     # Test it set a non-mentioned object to 'empty'
-    assert minifed_export.get("phases") == []
+    assert minifed_export.get("roles") == []
+
+    # Test phases + scripts
+    assert minified_phases[0].get(ResilientObjMap.PHASES) == "Mock Custom Phase One"
+    assert minified_scripts[0].get(ResilientObjMap.SCRIPTS) == "Mock Incident Script"
 
     # Test it added the internal field
     assert len(minified_fields) == 1
@@ -291,6 +337,16 @@ def test_minify_export(fx_mock_res_client):
 def test_minify_export_default_keys_to_keep(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
+    minifed_export = sdk_helpers.minify_export(org_export)
+
+    assert "export_date" in minifed_export
+    assert "export_format_version" in minifed_export
+    assert "id" in minifed_export
+    assert "server_version" in minifed_export
+
+
+def test_minify_export_with_playbooks(fx_mock_res_client):
+    org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
     minifed_export = sdk_helpers.minify_export(org_export)
 
     assert "export_date" in minifed_export
@@ -368,28 +424,118 @@ def test_str_to_bool():
 
 
 def test_is_env_var_set(fx_add_dev_env_var):
-    assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is True
+    assert sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) is True
 
 
 def test_is_env_var_not_set():
-    assert sdk_helpers.is_env_var_set(sdk_helpers.ENV_VAR_DEV) is False
+    assert sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) is False
 
 
 def test_get_resilient_libraries_version_to_use():
-    assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION
+    assert sdk_helpers.get_resilient_libraries_version_to_use() == constants.RESILIENT_LIBRARIES_VERSION
 
 
 def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
-    assert sdk_helpers.get_resilient_libraries_version_to_use() == sdk_helpers.RESILIENT_LIBRARIES_VERSION_DEV
+    assert sdk_helpers.get_resilient_libraries_version_to_use() == constants.RESILIENT_LIBRARIES_VERSION_DEV
 
+def test_get_resilient_sdk_version():
+    parsed_version = sdk_helpers.get_resilient_sdk_version()
+    assert parsed_version is not None
+    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+
+def test_get_package_version_found_in_env():
+    parsed_version = sdk_helpers.get_package_version("resilient-sdk")
+    assert parsed_version is not None
+    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+
+def test_get_package_version_not_found():
+    not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
+    assert not_found is None
 
 def test_is_python_min_supported_version(caplog):
     mock_log = "WARNING: this package should only be installed on a Python Environment >="
 
-    sdk_helpers.is_python_min_supported_version()
+    is_supported = sdk_helpers.is_python_min_supported_version()
 
-    if sys.version_info < sdk_helpers.MIN_SUPPORTED_PY_VERSION:
+    if sys.version_info < constants.MIN_SUPPORTED_PY_VERSION:
         assert mock_log in caplog.text
+        assert is_supported is False
 
     else:
         assert mock_log not in caplog.text
+        assert is_supported is True
+
+
+def test_parse_optionals_codegen(fx_get_sub_parser):
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    optionals = cmd_codegen.parser._get_optional_actions()
+    parsed_optionals = sdk_helpers.parse_optionals(optionals)
+
+    assert """\n -re, --reload\t\t\tReload customizations and create new customize.py \n""" in parsed_optionals
+
+
+def test_parse_optionals_validate(fx_get_sub_parser):
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    optionals = cmd_validate.parser._get_optional_actions()
+    parsed_optionals = sdk_helpers.parse_optionals(optionals)
+
+    assert """\n --pylint\t\t\tRun a pylint scan of all .py files under package directory. \'pylint\' must be installed) \n""" in parsed_optionals
+
+
+def test_run_subprocess():
+
+    args = ["echo", "testing sdk_helper.subprocess"]
+    exitcode, details = sdk_helpers.run_subprocess(args)
+
+    assert exitcode == 0
+    assert args[1] in details
+
+
+def test_run_subprocess_with_cwd():
+
+    args = ["pwd"]
+    path = os.path.expanduser("~")
+
+    dir_before_cwd = os.getcwd()
+
+    exitcode, details = sdk_helpers.run_subprocess(args, change_dir=path)
+
+    assert exitcode == 0
+    assert path in details
+    assert dir_before_cwd == os.getcwd()
+
+
+def test_scrape_results_from_log_file():
+
+    results_scraped = sdk_helpers.scrape_results_from_log_file(mock_paths.MOCK_APP_LOG_PATH)
+    mock_function_one_results = results_scraped.get("mock_function_one")
+
+    assert isinstance(mock_function_one_results, dict)
+
+    # There are two Results for mock_function_one
+    # in the mock_app.log file, so this ensures we get the latest
+    assert mock_function_one_results.get("version") == 2.1
+    assert mock_function_one_results.get("reason") == None
+
+
+def test_scrape_results_from_log_file_not_found():
+    with pytest.raises(SDKException, match=constants.ERROR_NOT_FIND_FILE):
+        sdk_helpers.scrape_results_from_log_file("mock_path_non_existent")
+
+
+def test_handle_file_not_found_error(caplog):
+    error_msg = u"mock error  ล ฦ ว message"
+
+    try:
+        sdk_helpers.validate_dir_paths(os.R_OK, "mock_path_no_existing")
+    except SDKException as e:
+        sdk_helpers.handle_file_not_found_error(e, error_msg)
+
+    assert u"WARNING: {0}".format(error_msg) in caplog.text
+
+    try:
+        sdk_helpers.validate_file_paths(os.R_OK, "mock_path_no_existing")
+    except SDKException as e:
+        sdk_helpers.handle_file_not_found_error(e, error_msg)
+
+    assert u"WARNING: {0}".format(error_msg) in caplog.text

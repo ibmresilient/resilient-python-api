@@ -5,6 +5,7 @@
 import argparse
 from resilient import ensure_unicode
 from resilient_sdk.util.sdk_argparse import SDKArgHelpFormatter
+from resilient_sdk.util import constants
 
 
 class BaseCmd(object):
@@ -50,6 +51,9 @@ class BaseCmd(object):
 
         if "app_config_parser" in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_app_config_parser())
+
+        if constants.SDK_SETTINGS_PARSER_NAME in self.CMD_ADD_PARSERS:
+            parser_parents.append(self._get_sdk_settings_parser())
 
         self.parser = sub_parser.add_parser(self.CMD_NAME,
                                             help=self.CMD_HELP,
@@ -107,6 +111,11 @@ class BaseCmd(object):
         res_obj_parser.add_argument("-m", "--messagedestination",
                                     type=ensure_unicode,
                                     help="API names of message destinations to include",
+                                    nargs="*")
+
+        res_obj_parser.add_argument("-pb", "--playbook",
+                                    type=ensure_unicode,
+                                    help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
                                     nargs="*")
 
         res_obj_parser.add_argument("-r", "--rule",
@@ -179,6 +188,26 @@ class BaseCmd(object):
 
         app_config_parser.add_argument("-c", "--config",
                                        type=ensure_unicode,
-                                       help="Path to app.config file to use")
+                                       help="Path to app.config file. Default is ~/.resilient/app.config")
 
         return app_config_parser
+
+    @staticmethod
+    def _get_sdk_settings_parser():
+        """
+        Create a parser has an argument for the path to the sdk settings file
+
+        :return: A single argparse.ArgumentParser
+        :rtype: argparse.ArgumentParser
+        """
+        sdk_settings_parser = argparse.ArgumentParser(add_help=False)
+
+        sdk_settings_parser.add_argument(constants.SUB_CMD_OPT_SDK_SETTINGS[0],
+                                         type=ensure_unicode,
+                                         action="store",
+                                         nargs="?",
+                                         default=constants.SDK_SETTINGS_FILE_PATH,
+                                         const=constants.SDK_SETTINGS_FILE_PATH,
+                                         help="Path to {0} file. Default is ~/.resilient/.sdk_settings.json".format(constants.SDK_SETTINGS_FILENAME))
+
+        return sdk_settings_parser

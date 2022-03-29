@@ -12,6 +12,7 @@ import sys
 import logging
 import unicodedata
 import requests
+import traceback
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -46,12 +47,18 @@ class TLSHttpAdapter(HTTPAdapter):
 
 class BasicHTTPException(Exception):
     """Exception for HTTP errors."""
-    def __init__(self, response):
+    def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(BasicHTTPException, self).__init__(u"{0}:  {1}".format(response.reason, response.text))
+
+        err_reason = response.reason if response.reason else err_reason
+        err_text = response.text if response.text else err_text
+
+        err_message = u"'resilient' API Request FAILED:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
+
+        super(BasicHTTPException, self).__init__(err_message)
 
         self.response = response
 
@@ -60,13 +67,22 @@ class BasicHTTPException(Exception):
 
     @staticmethod
     def raise_if_error(response):
-        if response.status_code != 200:
+
+        if response.status_code == 401:
+            try:
+                raise BasicHTTPException(response, err_reason=u"Unauthorized", err_text=u"Credentials incorrect")
+            except BasicHTTPException:
+                traceback.print_exc()
+                sys.exit(constants.ERROR_CODE_CONNECTION_UNAUTHORIZED)
+
+        elif response.status_code != 200:
             raise BasicHTTPException(response)
 
 
 class NoChange(Exception):
-    """Exception that can be raised within a get/put handler or a patch callback
-       to indicate 'no change' (which then just bypasses the update operation).
+    """
+    Exception that can be raised within a get/put handler or a patch callback
+    to indicate 'no change' (which then just bypasses the update operation).
     """
     pass
 
@@ -78,7 +94,7 @@ def ensure_unicode(input_value):
 
     if not isinstance(input_value, basestring):
         return input_value
-    elif isinstance(input_value, str):
+    if isinstance(input_value, str):
         input_unicode = input_value.decode('utf-8')
     else:
         input_unicode = input_value
@@ -201,7 +217,7 @@ class BaseClient(object):
         selected_org = None
         if orgs is None or len(orgs) == 0:
             raise Exception("User is a member of no orgs")
-        elif self.org_name:
+        if self.org_name:
             org_names = []
             for org in orgs:
                 org_name = org['name']
@@ -281,7 +297,7 @@ class BaseClient(object):
             result = operation(url, **kwargs)
         return result
 
-    def get(self, uri, co3_context_token=None, timeout=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -291,12 +307,19 @@ class BaseClient(object):
           uri
           co3_context_token
           timeout: number of seconds to wait for response
+          is_uri_absolute: if True, does not insert /org/{org_id} into the uri
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+
+        if is_uri_absolute:
+            url = u"{0}/rest{1}".format(self.base_url, ensure_unicode(uri))
+
+        else:
+            url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+
         response = self._execute_request(self.session.get,
                                          url,
                                          proxies=self.proxies,
@@ -367,46 +390,64 @@ class BaseClient(object):
         return json.loads(response.text)
 
     def post_attachment(self, uri, filepath,
-                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+                        filename=None,
+                        mimetype=None,
+                        data=None,
+                        co3_context_token=None,
+                        timeout=None,
+                        bytes_handle=None):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
         or,  "/tasks/<id>/attachments" (for task attachments)
 
         :param uri: The REST URI for posting
-        :param filepath: the path of the file to post
+        :param filepath: the path of the file to post or use bytes_handle
         :param filename: optional name of the file when posted
         :param mimetype: optional override for the guessed MIME type
         :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
+        :param bytes_handle: BytesIO handle for content or use filepath
         """
         filepath = ensure_unicode(filepath)
         if filename:
             filename = ensure_unicode(filename)
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
-        with open(filepath, 'rb') as filehandle:
-            attachment_name = filename or os.path.basename(filepath)
-            multipart_data = {'file': (attachment_name, filehandle, mime_type)}
-            multipart_data.update(data or {})
-            encoder = MultipartEncoder(fields=multipart_data)
-            headers = self.make_headers(co3_context_token,
-                                        additional_headers={'content-type': encoder.content_type})
-            response = self._execute_request(self.session.post,
-                                             url,
-                                             data=encoder,
-                                             proxies=self.proxies,
-                                             cookies=self.cookies,
-                                             headers=headers,
-                                             verify=self.verify,
-                                             timeout=timeout,
-                                             cert=self.cert)
-            BasicHTTPException.raise_if_error(response)
-            return json.loads(response.text)
+        if filepath:
+            with open(filepath, 'rb') as filehandle:
+                attachment_name = filename or os.path.basename(filepath)
+                multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+        elif bytes_handle:
+            attachment_name = filename
+            multipart_data = {'file': (attachment_name, bytes_handle, mime_type)}
+        else:
+            raise ValueError("Either filepath or bytes_handle are required")
+
+        multipart_data.update(data or {})
+        encoder = MultipartEncoder(fields=multipart_data)
+        headers = self.make_headers(co3_context_token,
+                                    additional_headers={'content-type': encoder.content_type})
+        response = self._execute_request(self.session.post,
+                                            url,
+                                            data=encoder,
+                                            proxies=self.proxies,
+                                            cookies=self.cookies,
+                                            headers=headers,
+                                            verify=self.verify,
+                                            timeout=timeout,
+                                            cert=self.cert)
+        BasicHTTPException.raise_if_error(response)
+        return json.loads(response.text)
 
     def post_artifact_file(self, uri, artifact_type, artifact_filepath,
-                           description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
+                          description=None,
+                          value=None,
+                          mimetype=None,
+                          co3_context_token=None,
+                          timeout=None,
+                          bytes_handle=None):
         """
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"
@@ -419,6 +460,7 @@ class BaseClient(object):
         :param mimetype: optional override for the guessed MIME type
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
+        :param bytes_handle: byte content to create as an artifact file. Use either artifact_filepath or bytes_handle
 
         """
         artifact = {
@@ -431,10 +473,12 @@ class BaseClient(object):
         }
         return self.post_attachment(uri,
                                     artifact_filepath,
+                                    filename=value if bytes_handle else None,
                                     mimetype=mimetype,
                                     data=mimedata,
                                     co3_context_token=co3_context_token,
-                                    timeout=timeout)
+                                    timeout=timeout,
+                                    bytes_handle=bytes_handle)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
@@ -467,7 +511,7 @@ class BaseClient(object):
                                          cert=self.cert)
         if response.status_code == 200:
             return json.loads(response.text)
-        elif response.status_code == 409:
+        if response.status_code == 409:
             return None
         BasicHTTPException.raise_if_error(response)
         return None

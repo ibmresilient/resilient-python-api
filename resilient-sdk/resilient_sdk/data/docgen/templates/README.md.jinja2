@@ -6,6 +6,8 @@
   is a good example. Checkout https://guides.github.com/features/mastering-markdown/
   for tips on writing with Markdown
 
+  All fields followed by "{{ placeholder_string }}"" should be manually edited
+
   If you make manual edits and run docgen again, a .bak file will be created
 
   Store any screenshots in the "doc/screenshots" directory and reference them like:
@@ -21,25 +23,26 @@
 - [Overview](#overview)
   - [Key Features](#key-features)
 - [Requirements](#requirements)
-  - [Resilient platform](#resilient-platform)
+  - [SOAR platform](#soar-platform)
   - [Cloud Pak for Security](#cloud-pak-for-security)
   - [Proxy Server](#proxy-server)
 {% if all_dependencies %}
   - [Python Environment](#python-environment)
 {% endif %}
+  - [Endpoint Developed With](#endpoint-developed-with)
 - [Installation](#installation)
   - [Install](#install)
   - [App Configuration](#app-configuration)
 {% if datatables or custom_incident_fields %}
   - [Custom Layouts](#custom-layouts)
 {% endif %}
-{% for fn in functions %}
+{% for fn in functions|sort(attribute="name") %}
 - [Function - {{ fn.name }}](#function---{{ fn.anchor }})
 {% endfor %}
-{% for scp in scripts %}
+{% for scp in scripts|sort(attribute="name") %}
 - [Script - {{ scp.name }}](#script---{{ scp.anchor }})
 {% endfor %}
-{% for dt in datatables %}
+{% for dt in datatables|sort(attribute="name") %}
 - [Data Table - {{ dt.name }}](#data-table---{{ dt.anchor }})
 {% endfor %}
 {% if custom_fields %}
@@ -51,6 +54,9 @@
 {% if rules %}
 - [Rules](#rules)
 {% endif %}
+{% if playbooks %}
+- [Playbooks](#playbooks)
+{% endif %}
 - [Troubleshooting & Support](#troubleshooting--support)
 ---
 
@@ -61,7 +67,7 @@
 -->
 | Version | Date | Notes |
 | ------- | ---- | ----- |
-| 1.0.0 | MM/YYYY | Initial Release |
+| 1.0.0 | MM/YYYY | Initial Release | <!-- {{ placeholder_string }} -->
 
 ---
 
@@ -72,7 +78,7 @@
 -->
 **{{ short_description }}**
 
- ![screenshot: main](./doc/screenshots/main.png)
+ ![screenshot: main](./doc/screenshots/main.png) <!-- {{ placeholder_string }} -->
 
 {{ long_description }}
 
@@ -80,27 +86,28 @@
 <!--
   List the Key Features of the Integration
 -->
-* Key Feature 1
-* Key Feature 2
-* Key Feature 3
+* Key Feature 1 <!-- {{ placeholder_string }} -->
+* Key Feature 2 <!-- {{ placeholder_string }} -->
+* Key Feature 3 <!-- {{ placeholder_string }} -->
 
 ---
 
 ## Requirements
 <!--
   List any Requirements 
--->
-This app supports the IBM Resilient SOAR Platform and the IBM Cloud Pak for Security.
+--> 
+<!-- {{ placeholder_string }} -->
+This app supports the IBM Security QRadar SOAR Platform and the IBM Security QRadar SOAR for IBM Cloud Pak for Security.
 
-### Resilient platform
-The Resilient platform supports two app deployment mechanisms, App Host and integration server.
+### SOAR platform
+The SOAR platform supports two app deployment mechanisms, App Host and integration server.
 
-If deploying to a Resilient platform with an App Host, the requirements are:
-* Resilient platform >= `{{ server_version }}`.
+If deploying to a SOAR platform with an App Host, the requirements are:
+* SOAR platform >= `{{ server_version }}`.
 * The app is in a container-based format (available from the AppExchange as a `zip` file).
 
-If deploying to a Resilient platform with an integration server, the requirements are:
-* Resilient platform >= `{{ server_version }}`.
+If deploying to a SOAR platform with an integration server, the requirements are:
+* SOAR platform >= `{{ server_version }}`.
 * The app is in the older integration format (available from the AppExchange as a `zip` file which contains a `tar.gz` file).
 * Integration server is running `{{ res_circuits_dependency_str }}`.
 * If using an API key account, make sure the account provides the following minimum permissions: 
@@ -108,13 +115,14 @@ If deploying to a Resilient platform with an integration server, the requirement
   | ---- | ----------- |
   | Org Data | Read |
   | Function | Read |
+  <!-- {{ placeholder_string }} -->
 
-The following Resilient platform guides provide additional information: 
+The following SOAR platform guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. 
 * _Integration Server Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings.
 * _System Administrator Guide_: provides the procedure to install, configure and deploy apps. 
 
-The above guides are available on the IBM Knowledge Center at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs). On this web page, select your Resilient platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Resilient Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
+The above guides are available on the IBM Documentation website at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your SOAR platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
 
 ### Cloud Pak for Security
 If you are deploying to IBM Cloud Pak for Security, the requirements are:
@@ -124,12 +132,12 @@ If you are deploying to IBM Cloud Pak for Security, the requirements are:
 
 The following Cloud Pak guides provide additional information: 
 * _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration & Automation > **Orchestration and Automation Apps**.
-* _System Administrator Guide_: provides information to install, configure, and deploy apps. From the IBM Cloud Pak for Security Knowledge Center table of contents, select Case Management and Orchestration & Automation > **System administrator**.
+* _System Administrator Guide_: provides information to install, configure, and deploy apps. From the IBM Cloud Pak for Security IBM Documentation table of contents, select Case Management and Orchestration & Automation > **System administrator**.
 
-These guides are available on the IBM Knowledge Center at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific Knowledge Center page, select Case Management and Orchestration & Automation.
+These guides are available on the IBM Documentation website at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific IBM Documentation page, select Case Management and Orchestration & Automation.
 
 ### Proxy Server
-The app **does/does not** support a proxy server.
+The app **does/does not** <!-- {{ placeholder_string }} --> support a proxy server.
 
 {% if all_dependencies %}
 ### Python Environment
@@ -140,12 +148,44 @@ Additional package dependencies may exist for each of these packages:
 {% endfor %}
 {% endif %}
 
+### Endpoint Developed With
+
+This app has been implemented using:
+| Product Name | Product Version | API URL | API Version |
+| ------------ | --------------- | ------- | ----------- |
+| <!-- {{ placeholder_string }} --> | <!-- {{ placeholder_string }} --> | <!-- {{ placeholder_string }} --> | <!-- {{ placeholder_string }} --> |
+
+#### Prerequisites
+<!--
+List any prerequisites that are needed to use with this endpoint solution. Remove any section that is unnecessary.
+-->
+* Prereq A <!-- {{ placeholder_string }} -->
+* Prereq B <!-- {{ placeholder_string }} -->
+* Prereq C <!-- {{ placeholder_string }} -->
+
+#### Configuration
+<!--
+List any steps that are needed to configure the endpoint to use this app.
+-->
+* Config A <!-- {{ placeholder_string }} -->
+* Config B <!-- {{ placeholder_string }} -->
+* Config C <!-- {{ placeholder_string }} -->
+
+#### Permissions
+<!--
+List any user permissions that are needed to use this endpoint. For example, list the API key permissions.
+-->
+* Permission A <!-- {{ placeholder_string }} -->
+* Permission B <!-- {{ placeholder_string }} -->
+* Permission C <!-- {{ placeholder_string }} -->
+
+
 ---
 
 ## Installation
 
 ### Install
-* To install or uninstall an App or Integration on the _Resilient platform_, see the documentation at [ibm.biz/resilient-docs](https://ibm.biz/resilient-docs).
+* To install or uninstall an App or Integration on the _SOAR platform_, see the documentation at [ibm.biz/soar-docs](https://ibm.biz/soar-docs).
 * To install or uninstall an App on _IBM Cloud Pak for Security_, see the documentation at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs) and follow the instructions above to navigate to Orchestration and Automation.
 
 ### App Configuration
@@ -153,8 +193,8 @@ The following table provides the settings you need to configure the app. These s
 
 | Config | Required | Example | Description |
 | ------ | :------: | ------- | ----------- |
-{% for app_config in app_configs %}
-| **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* |
+{% for app_config in app_configs|sort(attribute="name") %}
+| **{{ app_config.name }}** | Yes | `{{ app_config.placeholder }}` | *Enter a description of the config here.* <!-- {{ placeholder_string }} --> |
 {% endfor %}
 
 {% if datatables or custom_incident_fields %}
@@ -166,24 +206,24 @@ The following table provides the settings you need to configure the app. These s
 -->
 * Import the Data Tables and Custom Fields like the screenshot below:
 
-  ![screenshot: custom_layouts](./doc/screenshots/custom_layouts.png)
+  ![screenshot: custom_layouts](./doc/screenshots/custom_layouts.png) <!-- {{ placeholder_string }} -->
 
 {% endif %}
 
 ---
 
-{% for fn in functions %}
+{% for fn in functions|sort(attribute="name") %}
 ## Function - {{ fn.name }}
 {{ fn.description }}
 
- ![screenshot: fn-{{ fn.simple_name }} ](./doc/screenshots/fn-{{ fn.simple_name }}.png)
+ ![screenshot: fn-{{ fn.simple_name }} ](./doc/screenshots/fn-{{ fn.simple_name }}.png) <!-- {{ placeholder_string }} -->
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-{% for fn_input in fn.inputs %}
+{% for fn_input in fn.inputs|sort(attribute="name") %}
 | `{{ fn_input.name }}` | `{{ fn_input.type }}` | {{ fn_input.required }} | `{{ fn_input.placeholder }}` | {{ fn_input.tooltip }} |
 {% endfor %}
 
@@ -193,13 +233,25 @@ The following table provides the settings you need to configure the app. These s
 <details><summary>Outputs:</summary>
 <p>
 
+> **NOTE:** This example might be in JSON format, but `results` is a Python Dictionary on the SOAR platform.
+
+{% if fn.results %}
+```python
+results = {{fn.results|tojson(indent=2)}}
+```
+{% else %}
+<!-- {{ placeholder_string }} -->
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
+    # TODO: Generate an example of the Function Output within this code block.
+    # To get the output of a Function:
+    #   1. Run resilient-circuits in DEBUG mode: $ resilient-circuits run --loglevel=DEBUG
+    #   2. Invoke the Function in SOAR
+    #   3. Gather the results using: $ resilient-sdk codegen -p {{ name_underscore }} --gather-results
+    #   4. Run docgen again: $ resilient-sdk docgen -p {{ name_underscore }}
+} 
 ```
+{% endif %}
 
 </p>
 </details>
@@ -227,7 +279,7 @@ results = {
 ---
 {% endfor %}
 
-{% for scp in scripts %}
+{% for scp in scripts|sort(attribute="name") %}
 ## Script - {{ scp.name }}
 {{ scp.description }}
 
@@ -246,10 +298,10 @@ results = {
 ---
 {% endfor %}
 
-{% for dt in datatables %}
+{% for dt in datatables|sort(attribute="name") %}
 ## Data Table - {{ dt.name }}
 
- ![screenshot: dt-{{ dt.simple_name }}](./doc/screenshots/dt-{{ dt.simple_name }}.png)
+ ![screenshot: dt-{{ dt.simple_name }}](./doc/screenshots/dt-{{ dt.simple_name }}.png) <!-- {{ placeholder_string }} -->
 
 #### API Name:
 {{ dt.api_name }}
@@ -257,7 +309,7 @@ results = {
 #### Columns:
 | Column Name | API Access Name | Type | Tooltip |
 | ----------- | --------------- | ---- | ------- |
-{% for col in dt.columns %}
+{% for col in dt.columns|sort(attribute="name") %}
 | {{ col.name }} | `{{ col.api_name }}` | `{{ col.type }}` | {{ col.tooltip }} |
 {% endfor %}
 
@@ -268,7 +320,7 @@ results = {
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-{% for f in custom_fields %}
+{% for f in custom_fields|sort(attribute="api_name") %}
 | {{ f.label }} | `{{ f.api_name }}` | `{{ f.type }}` | `{{ f.prefix }}` | {{ f.placeholder }} | {{ f.tooltip }} |
 {% endfor %}
 
@@ -279,7 +331,7 @@ results = {
 ## Custom Artifact Types
 | Display Name | API Access Name | Description |
 | ------------ | --------------- | ----------- |
-{% for a in custom_artifact_types %}
+{% for a in custom_artifact_types|sort(attribute="api_name") %}
 | {{ a.display_name }} | `{{ a.api_name }}` | {{ a.description }} |
 {% endfor %}
 
@@ -290,8 +342,19 @@ results = {
 ## Rules
 | Rule Name | Object | Workflow Triggered |
 | --------- | ------ | ------------------ |
-{% for rule in rules %}
+{% for rule in rules|sort(attribute="name") %}
 | {{ rule.name }} | {{ rule.object_type }} | `{{ rule.workflow_triggered }}` |
+{% endfor %}
+
+---
+{% endif %}
+
+{% if playbooks %}
+## Playbooks
+| Playbook Name | Description | Object | Status |
+| ------------- | ----------- | ------ | ------ |
+{% for playbook in playbooks|sort(attribute="api_name") %}
+| {{ playbook.name }} | {{ playbook.description }} | {{ playbook.object_type }} | `{{ playbook.status }}` |
 {% endfor %}
 
 ---
@@ -302,7 +365,7 @@ Refer to the documentation listed in the Requirements section for troubleshootin
 
 ### For Support
 {% if supported_app %}
-This is an IBM supported app. Please search https://ibm.com/mysupport for assistance.
+This is an IBM supported app. Please search [ibm.com/mysupport](https://ibm.com/mysupport) for assistance.
 {% else %}
-This is a IBM Community provided App. Please search the Community https://ibm.biz/resilientcommunity for assistance.
+This is a IBM Community provided App. Please search the Community [ibm.biz/soarcommunity](https://ibm.biz/soarcommunity) for assistance.
 {% endif %}

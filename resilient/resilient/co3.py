@@ -221,28 +221,107 @@ def _raise_if_error(response):
 
 
 class SimpleClient(co3base.BaseClient):
-    """Python helper class for using the Resilient REST API."""
+    """
+    Python helper class for using the IBM SOAR REST API.
+
+    .. code-block::
+
+        '''
+        An example script showing how to connect and get
+        incidents with IBM Security SOAR
+
+        Example Usage:
+        $ python sample_connect.py "https://<host>", "<org_name>", "<api_key_id>", "<api_key_secret>", "<path_to_ca_file>|False"
+        '''
+
+        import sys
+        import os
+        from resilient import SimpleClient
+
+
+        def main():
+
+            args = sys.argv
+            assert len(args) == 6
+            SCRIPT_NAME = args[0]
+
+            # Get required parameters
+            HOST = args[1]
+            ORG_NAME = args[2]
+            API_KEY_ID = args[3]
+            API_KEY_SECRET = args[4]
+
+            # Check if using cafile
+            ca_file = args[5]
+            VERIFY = ca_file if os.path.isfile(ca_file) is True else False
+
+            # Instansiate SimpleClient
+            res_client = SimpleClient(
+                org_name=ORG_NAME,
+                base_url=HOST,
+                verify=VERIFY
+            )
+
+            # Set the API Key
+            res_client.set_api_key(
+                api_key_id=API_KEY_ID,
+                api_key_secret=API_KEY_SECRET
+            )
+
+            # Setup the request payload
+            payload = {
+                "filters": [
+                    {
+                        "conditions": [{"field_name": "plan_status", "method": "equals", "value": "A"}]
+                    }
+                ]
+            }
+
+            # Invoke the request
+            response = res_client.post("/incidents/query_paged?return_level=full", payload=payload)
+
+            # Print results
+            for incident in response.get("data", []):
+                print("{0}: {1}".format(incident.get("id"), incident.get("name")))
+
+
+        if __name__ == "__main__":
+            main()
+
+
+    .. note::
+        The full REST API Documentation for IBM SOAR can be
+        viewed on the Platform itself by searching for the **REST API Reference**
+        or by going to: ``https://<base_url>/docs/rest-api/index.html``
+    """
 
     def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None):
         """
-
         :param org_name: The name of the organization to use.
-        :param base_url: The base URL of the Resilient server, e.g. 'https://app.resilientsystems.com/'
-        :param proxies: A dictionary of HTTP proxies to use, if any.
-        :param verify: The path to a PEM file containing the trusted CAs, or False to disable all TLS verification
-        :param cache_ttl: Time to live for cached API responses
+        :type org_name: str
+        :param base_url: The base URL of the SOAR server, e.g. ``https://soar.ibm.com/``
+        :type base_url: str
+        :param proxies: A dictionary of ``HTTP`` proxies to use, if any.
+        :type proxies: dict
+        :param verify: The path to a ``PEM`` file containing the trusted CAs, or ``False`` to disable all TLS verification
+        :type verify: str|bool
+        :param cache_ttl: Time in seconds to live for cached API responses
+        :type cache_ttl: int
         """
         super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
         """
-        Connect and authenticate to the Resilient REST API service.
+        Connect and authenticate to the IBM SOAR REST API service.
 
         :param email: The email address to use for authentication.
+        :type email: str
         :param password: The password.
+        :type password: str
         :param timeout: optional timeout (seconds)
-        :return: The Resilient session object.
+        :type timeout: int
+        :return: The IBM SOAR session object.
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Calling connect of BaseClient. Convert the exception if there is any
@@ -264,23 +343,30 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
         """Gets the specified URI.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
 
         :param uri: Relative URI of the resource to fetch.
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: A dictionary or array with the value returned by the server.
+        :type uri: str
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :param is_uri_absolute: if True, does not insert /org/{org_id} into the uri.
+        :type is_uri_absolute: bool
+        :return: A dictionary or list with the value returned by the server.
+        :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call get from BaseClient, convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get(uri, co3_context_token, timeout)
+            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -292,15 +378,20 @@ class SimpleClient(co3base.BaseClient):
 
     def get_const(self, co3_context_token=None, timeout=None):
         """
-        Get the ConstREST endpoint.
-        Endpoint for retrieving various constant information for this server.   This information is
-        useful in translating names that the user sees to IDs that other REST API endpoints accept.
-        For example, the incidentDTO has a field called "crimestatus_id". The valid values are stored
-        in constDTO.crime_statuses.
+        Get the ``ConstREST`` endpoint.
 
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: ConstDTO as a dictionary
+        Endpoint for retrieving various constant information for this server. This information is
+        useful in translating names that the user sees to IDs that other REST API endpoints accept.
+
+        For example, the ``incidentDTO`` has a field called ``"crimestatus_id"``. The valid values are stored
+        in ``constDTO.crime_statuses``.
+
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: ``ConstDTO`` as a dictionary
+        :rtype: dict
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/const".format(self.base_url)
@@ -317,14 +408,19 @@ class SimpleClient(co3base.BaseClient):
     def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
 
         :param uri: Relative URI of the resource to fetch.
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
+        :type uri: str
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
         :return: The raw value returned by the server for this resource.
+        :rtype: dict
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call get_content from BaseClient. Convert exception if there is any
@@ -336,17 +432,24 @@ class SimpleClient(co3base.BaseClient):
         return response
 
     def post(self, uri, payload, co3_context_token=None, timeout=None):
-        """Posts to the specified URI.
+        """
+        Posts to the specified URI.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
 
         :param uri: Relative URI of the resource to post.
+        :type uri: str
         :param payload: A dictionary value to be posted.
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: A dictionary or array with the value returned by the server.
+        :type payload: dict
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: A dictionary or list with the value returned by the server.
+        :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call post of BaseClient. Convert exception if there is any
@@ -446,19 +549,26 @@ class SimpleClient(co3base.BaseClient):
         """
         PATCH request to the specified URI.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
 
         :param uri: Relative URI of the resource to patch.
-        :param patch: The :class:`Patch` object to apply
-        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :param overwrite_conflict: always overwrite fields in conflict.  Note that if True, the passed-in patch
-                object will be modified if necessary.
-        :return: The response object.
+        :type uri: str
+        :param patch: The :class:`~resilient.patch.Patch` object to apply
+        :type patch: :class:`~resilient.patch.Patch`
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :param overwrite_conflict: always overwrite fields in conflict. If ``True``, the passed-in patch
+            object will be modified if necessary.
+        :type overwrite_conflict: bool
+        :return: the ``response`` from the endpoint.
+        :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_
         :raises SimpleHTTPException: if an HTTP exception or patch conflict occurs.
-        :raises PatchStatusException: If the patch failed to apply (and overwrite_conflict is False).
+        :raises PatchConflictException: If the patch failed to apply (and overwrite_conflict is False).
         """
         if overwrite_conflict:
             # Re-issue patch with intent to overwrite conflicts.
@@ -475,13 +585,19 @@ class SimpleClient(co3base.BaseClient):
         the specified callback is invoked, allowing the caller to adjust the patch as necessary.
 
         :param uri: Relative URI of the resource to patch.
-        :param patch: The :class:`Patch` object to apply
+        :type str: Relative URI of the resource to patch.
+        :param patch: The :class:`~resilient.patch.Patch` object to apply
+        :type patch: :class:`~resilient.patch.Patch`
         :param callback: Function/lambda to invoke when a patch conflict is detected.  The function/lambda must be
-          of the following form: `def my_callback(response, patch_status, patch)`.
-          If your callback raises :class:`NoChange`, the update is skipped.
-        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: The response object.
+          of the following form: ``def my_callback(response, patch_status, patch)``.
+          If your callback raises :class:`resilient.NoChange <resilient.co3base.NoChange>`, the update is skipped.
+        :type callback: func
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: the ``response`` from the endpoint.
+        :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_
         """
         response = self._patch(uri, patch, co3_context_token, timeout)
 
@@ -490,41 +606,66 @@ class SimpleClient(co3base.BaseClient):
 
         return response
 
-    def post_attachment(self, uri, filepath,
-                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+    def post_attachment(self, uri, filepath, filename=None,
+                        mimetype=None, data=None, co3_context_token=None, timeout=None,
+                        bytes_handle=None):
         """
         Upload a file to the specified URI
-        e.g. "/incidents/<id>/attachments" (for incident attachments)
-        or,  "/tasks/<id>/attachments" (for task attachments)
+        e.g. ``/incidents/<id>/attachments`` (for incident attachments)
+        or,  ``/tasks/<id>/attachments`` (for task attachments)
+
+        .. warning::
+            Please see our updated :class:`resilient_lib.write_file_attachment <resilient_lib.components.resilient_common.write_file_attachment>`
+            as this method takes a data stream and is more reliable
 
         :param uri: Relative URI of the resource to post.
+        :type uri: str
         :param filepath: the path of the file to post
+        :type filepath: str
         :param filename: optional name of the file when posted
+        :type filename: str
         :param mimetype: optional override for the guessed MIME type
-        :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)
-        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
+        :type mimetype: str
+        :param data: optional dict with additional ``MIME`` parts (not required for file attachments; used in artifacts)
+        :type data: dict
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :param bytes_handle: BytesIO handle for content or use filepath
+        :type bytes_handle: BytesIO
+        :return: the ``response`` from the endpoint.
+        :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_
         """
         # Call BaseClient post_attachment. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).post_attachment(uri, filepath, filename, mimetype, data,
-                                                                 co3_context_token, timeout)
+            response = super(SimpleClient, self).post_attachment(uri, filepath, filename=filename,
+                                                                 mimetype=mimetype,
+                                                                 data=data,
+                                                                 co3_context_token=co3_context_token,
+                                                                 timeout=timeout,
+                                                                 bytes_handle=bytes_handle)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
     def search(self, payload, co3_context_token=None, timeout=None):
         """
-        Posts to the SearchExREST endpoint.
+        Posts to the ``SearchExREST`` endpoint.
+
         Endpoint for performing full text searches through incidents and incident child objects
         (tasks, incident comments, task comments, milestones, artifacts, incident attachments,
         task attachments, and data tables).
 
-        :param payload: The SearchExInputDTO parameters for performing a search, as a dictionary
-        :param co3_context_token: the Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: List of results, as an array of SearchExResultDTO
+        :param payload: The SearchExInputDTO parameters for performing a search.
+        :type payload: dict
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: List of results, as an array of ``SearchExResultDTO``
+        :rtype: list
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         url = u"{0}/rest/search_ex".format(self.base_url)
@@ -541,20 +682,27 @@ class SimpleClient(co3base.BaseClient):
         return json.loads(response.text)
 
     def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
-        """Safely performs an update operation by a GET, calls your `apply_func` callback, then PUT
-        with the updated value.  If the put call returns a 409 error, these steps are retried.
+        """
+        Safely performs an update operation by a GET, calls your ``apply_func`` callback, then PUT
+        with the updated value.  If the put call returns a ``409`` error, these steps are retried.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
 
         :param uri: Relative URI of the resource to get and update.
+        :type uri: str
         :param apply_func: A callback function that you implement to update the resource.  The function must be
-          of the following form: `def my_apply_func(object_to_update)`, and update the object.
-          If your callback raises :class:`NoChange`, the update is skipped.
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: A dictionary or array with the value returned by the PUT operation.
+          of the following form: ``def my_apply_func(object_to_update)``, and update the object.
+          If your callback raises :class:`resilient.NoChange <resilient.co3base.NoChange>`, the update is skipped.
+        :type apply_func: func
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: A dictionary or list with the value returned by the PUT operation.
+        :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call BaseClient get_put. Convert exception if there is any
@@ -566,17 +714,25 @@ class SimpleClient(co3base.BaseClient):
         return res
 
     def put(self, uri, payload, co3_context_token=None, timeout=None):
-        """Directly performs an update operation by PUT to the specified URI.
+        """
+        Directly performs an update operation by PUT to the specified URI.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
+
 
         :param uri: Relative URI of the resource to update.
+        :type uri: str
         :param payload: The object to update.
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
-        :return: A dictionary or array with the value returned by the server.
+        :type payload: dict
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: A dictionary or list with the value returned by the server.
+        :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call BaseClient put. Convert exception if there is any
@@ -588,15 +744,20 @@ class SimpleClient(co3base.BaseClient):
         return response
 
     def delete(self, uri, co3_context_token=None, timeout=None):
-        """Deletes the specified URI.
+        """
+        Deletes the specified URI.
 
-        Note that this URI is relative to :samp:`<base_url>/rest/orgs/<org_id>`.  So for example,
-        if you specify a uri of :samp:`/incidents`, the actual URL would be something like:
-        `https://app.resilientsystems.com/rest/orgs/201/incidents`
+        .. note::
+            This URI is relative to ``<base_url>/rest/orgs/<org_id>``.  So for example,
+            if you specify a uri of ``/incidents``, the actual URL would be something like:
+            ``https://soar.ibm.com/rest/orgs/201/incidents``
 
-        :param uri: Relative URI of the resource to update.
-        :param co3_context_token: The Co3ContextToken from an Action Module message, if available.
-        :param timeout: optional timeout (seconds)
+        :param uri: Relative URI of the resource to delete.
+        :type uri: str
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call BaseClient delete. Convert exception if there is any

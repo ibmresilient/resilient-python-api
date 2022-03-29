@@ -13,10 +13,10 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import ResilientObjMap
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 class CmdExtract(BaseCmd):
@@ -30,10 +30,11 @@ class CmdExtract(BaseCmd):
     """
 
     CMD_NAME = "extract"
-    CMD_HELP = "Extract data in order to publish a .res file"
+    CMD_HELP = "Extracts data needed to publish a .res file."
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
     $ resilient-sdk extract --script 'custom_script' --zip
+    $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
     CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]
@@ -85,7 +86,8 @@ class CmdExtract(BaseCmd):
                                                    datatables=args.datatable,
                                                    tasks=args.task,
                                                    scripts=args.script,
-                                                   incident_types=args.incidenttype)
+                                                   incident_types=args.incidenttype,
+                                                   playbooks=args.playbook)
 
         # Get 'minified' version of the export. This is used in to create export.res
         min_extract_data = sdk_helpers.minify_export(org_export,
@@ -99,7 +101,8 @@ class CmdExtract(BaseCmd):
                                                      tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, extract_data.get("tasks")),
                                                      phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, extract_data.get("phases")),
                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")),
-                                                     incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")))
+                                                     incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")),
+                                                     playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, extract_data.get(constants.CUST_PLAYBOOKS)))
 
         # Convert dict to JSON string
         if sys.version_info.major >= 3:

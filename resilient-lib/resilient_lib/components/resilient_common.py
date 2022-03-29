@@ -3,20 +3,18 @@
 # pragma pylint: disable=unused-argument, no-self-use
 
 import datetime
-import tempfile
-import os
 import io
-import mimetypes
 import logging
-import resilient
-from bs4 import BeautifulSoup
-from six import string_types
-from cachetools import cached, TTLCache
+import mimetypes
+import os
+import sys
+import tempfile
 
-try:
-    from HTMLParser import HTMLParser as htmlparser
-except:
-    from html.parser import HTMLParser as htmlparser
+import resilient
+import sys
+from bs4 import BeautifulSoup
+from cachetools import TTLCache, cached
+from six import string_types
 
 INCIDENT_FRAGMENT = '#incidents'
 PAYLOAD_VERSION = "1.0"
@@ -28,20 +26,28 @@ LOG.addHandler(logging.StreamHandler())
 
 def build_incident_url(url, incidentId):
     """
-    build the url to link to an resilient incident
-    :param url: base url
-    :param incidentId:
-    :return: full url
+    Build the url to link to a SOAR incident
+
+    :param url: the URL of your SOAR instance
+    :type url: str
+    :param incidentId: the id of the incident
+    :type incidentId: str|int
+    :return: full URL to the incident
+    :rtype: str
     """
     return '/'.join([url, INCIDENT_FRAGMENT, str(incidentId)])
 
 
 def build_resilient_url(host, port):
     """
-    build basic url to resilient instance
+    Build basic url to resilient instance
+
     :param host: host name
+    :type host: str
     :param port: port
+    :type port: str|int
     :return: base url
+    :rtype: str
     """
     if host.lower().startswith("http"):
         return "{0}:{1}".format(host, port)
@@ -51,11 +57,18 @@ def build_resilient_url(host, port):
 
 def clean_html(html_fragment):
     """
-    Resilient textarea fields return html fragments. This routine will remove the html and insert any code within <div></div>
-    with a linefeed
-    :param html_fragment: str presenting the html to clean up
-    :return: cleaned up code. This may not format well as no presentation of line feeds are preserved in the way supported by
-       tags such as <br> or <ol>, <ul>, etc. See html2markdown for a better way to translate html input to markdown.
+    Resilient textarea fields return html fragments. This routine will remove the
+    html and insert any code within ``<div></div>`` with a linefeed
+
+    .. note::
+        The string returned from this method may not format well as no presentation of line feeds are preserved,
+        tags such as ``<br>`` or ``<ol>``, ``<ul>``, etc. are removed. See :class:`.MarkdownParser` class for a better way to translate
+        html input to markdown.
+
+    :param html_fragment: the html to clean up
+    :type html_fragment: str
+    :return: cleaned up code
+    :rtype: str
     """
 
     if not html_fragment or not isinstance(html_fragment, string_types):
@@ -67,39 +80,61 @@ def clean_html(html_fragment):
 
 
 def unescape(data):
-    """ Return unescaped data such as &gt; -> >, &quot -> ', etc.
+    """
+    Return unescaped data such as:
+        * ``&gt;`` converts to ``>``
+        * ``&quot`` converts to ``'``
+
     :param data: text to convert
+    :type data: str
+    :return: the text unescaped
+    :rtype: str
     """
     if data is None:
         return None
 
-    h = htmlparser()
-    return h.unescape(data)
+    if sys.version_info.major < 3:
+        # In PY 2, unescape is part of HTMLParser
+        from HTMLParser import HTMLParser
+        h = HTMLParser()
+        return h.unescape(data)
+
+    else:
+        # In PY 3, unescape is in html library
+        import html
+        return html.unescape(data)
 
 
 def validate_fields(field_list, kwargs):
     """
-    Ensure each mandatory field in field_list is present in kwargs.
+    Ensure each mandatory field in ``field_list`` is present in ``kwargs``.
     Throw ValueError if not.
 
-    field_list can be a list/tuple of strings where each string is
-    a field name or it can be a list/tuple of dicts where each item
-    has the attributes 'name' (required) and 'placeholder' (optional).
+    ``field_list`` can be a list/tuple of ``strings`` where each string is
+    a field name or it can be a list/tuple of ``dicts`` where each item
+    has the attributes ``name`` (**required**) and ``placeholder`` (**optional**).
 
-    If the value of the item in kwargs is equal to its placeholder
-    defined in field_list, a ValueError is raised.
+    ``kwargs`` can be a dict/namedtuple. If it is a namedtuple tries to call it's
+    ``kwargs._as_dict()`` method and raises a ``ValueError`` if it cannot.
 
-    If an item in kwargs is a Resilient Select Function Input, its
-    value will be a dict that has a 'name' attribute. This returns
-    the value of 'name'.
+    * If the value of the item in ``kwargs`` is equal to its ``placeholder``
+      defined in ``field_list``, a ``ValueError`` is raised.
 
-    If an item in kwargs is a Resilient Multi-Select Function Input, its
-    value will be a list of dicts that have the 'name' attribute. This
-    returns a list of the 'name' values for that item.
+    * If an item in ``kwargs`` is a *Resilient Select Function Input*, its
+      value will be a ``dict`` that has a ``name`` attribute. This returns
+      the value of ``name``.
 
-    :param field_list: list/tuple of the mandatory fields. Can be an empty list if no mandatory fields.
-    :param kwargs: dict of all the fields to search.
+    * If an item in ``kwargs`` is a *Resilient Multi-Select Function Input*, its
+      value will be a list of ``dicts`` that have the ``name`` attribute. This
+      returns a list of the ``name`` values for that item.
+
+    :param field_list: the mandatory fields. *Can be an empty list if no mandatory fields.*
+    :type field_list: list|tuple
+    :param kwargs: dict or a namedtuple of all the fields to search.
+    :type kwargs: dict|namedtuple
+    :raises ValueError: if a field is missing
     :return: a Dictionary of all fields with Select/Multi-Select fields handled.
+    :rtype: dict
     """
 
     mandatory_fields = field_list
@@ -116,7 +151,10 @@ def validate_fields(field_list, kwargs):
         raise ValueError("'field_list' must be of type list/tuple, not {0}".format(type(mandatory_fields)))
 
     if not isinstance(provided_fields, dict):
-        raise ValueError("'kwargs' must be of type dict, not {0}".format(type(provided_fields)))
+        try:
+            provided_fields = provided_fields._asdict()
+        except AttributeError:
+            raise ValueError("'kwargs' must be of type dict or namedtuple, not {0}".format(type(provided_fields)))
 
     # Validate that mandatory fields exist + are not equal to their placeholder values
     for field in mandatory_fields:
@@ -152,8 +190,9 @@ def validate_fields(field_list, kwargs):
             field_value = field_value.get("content")
 
         # Handle if Multi-Select Function Input type
+        # There is a chance the list has already been "normalized", so just append as is
         elif isinstance(field_value, list):
-            field_value = [f.get("name") for f in field_value]
+            field_value = [f.get("name") if isinstance(f, dict) else f for f in field_value]
 
         return_fields[field_name] = field_value
 
@@ -162,13 +201,38 @@ def validate_fields(field_list, kwargs):
 
 def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
     """
-    call the Resilient REST API to get the attachment or artifact data
+    Call the Resilient REST API to get the attachment or artifact data for
+    an Incident or a Task
+
+    * If ``incident_id`` and ``artifact_id`` are defined it will get that Artifact
+    * If ``incident_id`` and ``attachment_id`` are defined it will get that Incident Attachment
+    * If ``incident_id``, ``task_id`` and ``attachment_id`` are defined it will get that Task Attachment
+
+    .. note::
+        The ``artifact_id`` must reference an Artifact that is a downloadable type or it will
+        raise a ``resilient.SimpleHTTPException``
+
+    **Example:**
+
+    .. code-block:: python
+
+        artifact_data = get_file_attachment(self.rest_client(), incident_id=2001, artifact_id=1)
+
+        with open("malware.eml", "wb") as f:
+            f.write(artifact_data)
+
     :param res_client: required for communication back to resilient
-    :param incident_id: required
-    :param artifact_id: optional
-    :param task_id: optional
-    :param attachment_id: optional
+    :type res_client: resilient_circuits.ResilientComponent.rest_client()
+    :param incident_id: id of the Incident
+    :type incident_id: int|str
+    :param artifact_id: id of the Incident's Artifact to download
+    :type artifact_id: int|str
+    :param task_id: id of the Task to download it's Attachment from
+    :type task_id: int|str
+    :param attachment_id: id of the Incident's Attachment to download
+    :type attachment_id: int|str
     :return: byte string of attachment
+    :rtype: str
     """
 
     if incident_id and artifact_id:
@@ -189,13 +253,20 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
 
 def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
     """
-    call the Resilient REST API to get the attachment or artifact attachment metadata
+    Call the Resilient REST API to get the attachment or artifact attachment metadata
+
     :param res_client: required for communication back to resilient
-    :param incident_id: required
-    :param artifact_id: optional
-    :param task_id: optional
-    :param attachment_id: optional
-    :return: file attachment metadata
+    :type res_client: resilient_circuits.ResilientComponent.rest_client()
+    :param incident_id: id of the Incident
+    :type incident_id: int|str
+    :param artifact_id: id of the Incident's Artifact
+    :type artifact_id: int|str
+    :param task_id: id of the Task to get it's Attachment metadata
+    :type task_id: int|str
+    :param attachment_id: id of the Incident's Attachment
+    :type attachment_id: int|str
+    :return: File metadata returned from endpoint
+    :rtype: dict
     """
 
     if incident_id and artifact_id:
@@ -217,13 +288,18 @@ def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task
 
 def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, task_id=None, attachment_id=None):
     """
-    call the Resilient REST API to get the attachment or artifact attachment name
+    Call the Resilient REST API to get the attachment or artifact attachment name
+
     :param res_client: required for communication back to resilient
-    :param incident_id: required
-    :param artifact_id: optional
-    :param task_id: optional
-    :param attachment_id: optional
-    :return: file attachment name
+    :type res_client: resilient_circuits.ResilientComponent.rest_client()
+    :param incident_id: id of the Incident
+    :type incident_id: int|str
+    :param task_id: id of the Task
+    :type task_id: int|str
+    :param attachment_id: id of the Incident's Attachment to get the name for
+    :type attachment_id: int|str
+    :return: name of the Attachment or Artifact
+    :rtype: str
     """
 
     name = ""
@@ -248,46 +324,53 @@ def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, tas
 
 def write_file_attachment(res_client, file_name, datastream, incident_id, task_id=None, content_type=None):
     """
-    call the Resilient REST API to create the attachment on incident or task
+    Add a file attachment to Resilient using the REST API
+    to an Incident or a Task
+
+    **Example:**
+
+    .. code-block:: python
+
+        with open("malware.eml", "rb") as data_stream:
+            res = write_file_attachment(self.rest_client(), "malware.eml", data_stream, 2001)
 
     :param res_client: required for communication back to resilient
-    :param file_name: required, name of the attachment
-    :param dataStream: required, stream of bytes
-    :param incident_id: required
-    :param task_id: optional
-    :param content_type: optional, MIME type of attachment
-    :return: new attachment -dictionary of attachment metadata
+    :type res_client: :class:`ResilientComponent.rest_client() <resilient_circuits.actions_component.ResilientComponent.rest_client()>`
+    :param file_name: name of the attachment to create
+    :type file_name: str
+    :param dataStream: stream of bytes used to create the attachment
+    :type dataStream: stream of bytes
+    :param incident_id: id of the Incident
+    :type incident_id: int|str
+    :param task_id: (optional) id of the Task
+    :type task_id: int|str
+    :param content_type: (optional) MIME type of attachment. Default is ``"application/octet-stream"``
+    :param content_type: str
+    :return: metadata of new attachment created
+    :rtype: dict
     """
 
     content_type = content_type \
                    or mimetypes.guess_type(file_name or "")[0] \
                    or "application/octet-stream"
 
-    attachment = datastream.read()
-
     """
-    Writing to temp path so that the REST API client can use this file path 
+    Writing to temp path so that the REST API client can use this file path
     to read and POST the attachment
     """
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        try:
-            temp_file.write(attachment)
-            temp_file.close()
+    # Create a new attachment by calling resilient REST API
 
-            # Create a new attachment by calling resilient REST API
+    if task_id:
+        attachment_uri = "/tasks/{}/attachments".format(task_id)
+    else:
+        attachment_uri = "/incidents/{}/attachments".format(incident_id)
 
-            if task_id:
-                attachment_uri = "/tasks/{}/attachments".format(task_id)
-            else:
-                attachment_uri = "/incidents/{}/attachments".format(incident_id)
-
-            new_attachment = res_client.post_attachment(attachment_uri,
-                                                        temp_file.name,
-                                                        filename=file_name,
-                                                        mimetype=content_type)
-        finally:
-            os.unlink(temp_file.name)
+    new_attachment = res_client.post_attachment(attachment_uri,
+                                                None,
+                                                filename=file_name,
+                                                mimetype=content_type,
+                                                bytes_handle=datastream)
 
     if isinstance(new_attachment, list):
         new_attachment = new_attachment[0]
@@ -297,11 +380,16 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
 
 def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%SZ'):
     """
-    convert an epoch timestamp to a string using a format
-    :param timestamp:
-    :param milliseconds: True = epoch in
-    :param rtn_format: format of resulant string
+    Convert an epoch timestamp to a string using a format
+
+    :param timestamp: ts of object sent from Resilient Server i.e. ``incident.create_date``
+    :type timestamp: int
+    :param milliseconds: Set to ``True`` if ts in milliseconds
+    :type milliseconds: bool
+    :param rtn_format: Format of resultant string. See https://docs.python.org/3.6/library/datetime.html#strftime-and-strptime-behavior for options
+    :type rtn_format: str
     :return: string representation of timestamp
+    :rtype: str
     """
     if milliseconds:
         ts = int(timestamp / 1000)
@@ -312,8 +400,15 @@ def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%
 
 
 def str_to_bool(value):
-    """Represents value as boolean.
-    :param value:
+    """
+    Convert value to either a ``True`` or ``False`` boolean
+
+    Returns ``False`` if ``value`` is anything
+    other than: ``'1', 'true', 'yes' or 'on'``
+
+    :param value: the value to convert
+    :type value: str
+    :return: ``True`` or ``False``
     :rtype: bool
     """
     value = str(value).lower()
@@ -321,16 +416,24 @@ def str_to_bool(value):
 
 
 def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
-    """Writes data to a file in a safely created temp directory. If no
-    `tmp_file_name` is provided, a temp name will be given. If no `path_tmp_dir`
-    is provided a temp directory is created with the prefix `resilient-lib-tmp-`.
+    """
+    Writes data to a file in a safely created temp directory.
 
-    When used within a Resilient Function, ensure you safely remove the created temp
-    directory in the `finally` block of the FunctionComponent code.
+    * If no ``tmp_file_name`` is provided, a temp name will be given
+    * If no ``path_tmp_dir`` is provided a temp directory is created with the prefix **resilient-lib-tmp-**
 
-    Example:
+    .. note::
+
+        When used, ensure you safely remove the created temp directory
+        in the ``finally`` block of the ``FunctionComponent`` code.
+
+    **Example:**
+
+    .. code-block:: python
+
         import os
         import shutil
+
         try:
             path_tmp_file, path_tmp_dir = write_to_tmp_file(attachment_contents, tmp_file_name=attachment_metadata.get("name"))
 
@@ -342,11 +445,11 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
                 shutil.rmtree(path_tmp_dir)
 
     :param data: bytes to be written to the file
-    :type data: `bytes`
-    :param tmp_file_name: name to be given to the file.
-    :type tmp_file_name: `str`
+    :type data: bytes
+    :param tmp_file_name: name to be given to the file
+    :type tmp_file_name: str
     :param path_tmp_dir: path to an existing directory to use as the temp dir
-    :type path_tmp_dir: `str`
+    :type path_tmp_dir: str
     :return: a tuple (path_tmp_file, path_tmp_dir)
     :rtype: tuple
     """
@@ -372,12 +475,37 @@ def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
     return (path_tmp_file, path_tmp_dir)
 
 
-def close_incident(res_client, incident_id, kwargs):
+def close_incident(res_client, incident_id, kwargs, handle_names=False):
     """
+    Close an incident in SOAR.
+
+    * Any **required on close (roc)** fields that
+      are needed, pass them as a ``field_name:field_value`` dict in ``kwargs``
+
+    * If any **roc** select field needs to be identified as its name,
+      set ``handle_names`` to ``True``
+
+    **Example:**
+
+    .. code-block:: python
+
+        res = close_incident(
+            res_client=self.rest_client(),
+            incident_id=fn_inputs.incident_id,
+            kwargs={"resolution_id": "Duplicate", "resolution_summary": "This ticket is a duplicate"},
+            handle_names=True
+        )
+
     :param res_client: required for communication back to resilient
-    :param incident_id: required
-    :param kwargs: required field_name:new_value pairs dict
-    :return: response object
+    :type res_client: resilient_circuits.ResilientComponent.rest_client()
+    :param incident_id: id of the incident
+    :type incident_id: int|str
+    :param kwargs: required fields needed to close an incident in a ``field_name:field_value`` format
+    :type kwargs: dict
+    :param handle_names: if ``True``, any select field types in ``kwargs`` will take ``str`` instead of ``int`` as their value
+    :type handle_names: bool
+    :return: Response from the server indicating if the incident was closed or not
+    :rtype: requests.Response
     """
 
     if not incident_id:
@@ -396,7 +524,7 @@ def close_incident(res_client, incident_id, kwargs):
         mandatory_fields["plan_status"] = "C"
 
     # API call to the Resilient REST API to patch the incident data (close incident)
-    response = _patch_to_close_incident(res_client, incident_id, mandatory_fields)
+    response = _patch_to_close_incident(res_client, incident_id, mandatory_fields, handle_names)
 
     return response
 
@@ -427,7 +555,7 @@ def _get_incident_fields(res_client):
     return incident_fields
 
 
-def _patch_to_close_incident(res_client, incident_id, close_fields):
+def _patch_to_close_incident(res_client, incident_id, close_fields, handle_names=False):
     """
     call the Resilient REST API to patch incident
     :param res_client: required for communication back to resilient
@@ -436,6 +564,10 @@ def _patch_to_close_incident(res_client, incident_id, close_fields):
     :return: response object
     """
     uri = "/incidents/{}".format(incident_id)
+
+    if handle_names:
+        uri = "{0}?handle_format=names".format(uri)
+
     previous_object = res_client.get(uri)
     patch = resilient.Patch(previous_object)
 

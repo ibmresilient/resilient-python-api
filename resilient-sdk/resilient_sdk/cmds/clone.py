@@ -7,17 +7,22 @@
 import logging
 import uuid
 from datetime import datetime
+
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_helpers import (get_resilient_client, get_latest_org_export,
-                                            minify_export, get_from_export,
-                                            get_object_api_names, add_configuration_import, get_res_obj)
+from resilient_sdk.util import constants
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-
+from resilient_sdk.util.sdk_helpers import (add_configuration_import,
+                                            get_from_export,
+                                            get_latest_org_export,
+                                            get_object_api_names, get_res_obj,
+                                            get_resilient_client,
+                                            get_resilient_server_version,
+                                            minify_export)
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger("resilient_sdk_log")
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 # Mandatory keys for a configuration import
 MANDATORY_KEYS = ["incident_types", "fields"]
@@ -25,6 +30,7 @@ SUPPORTED_ACTION_OBJECTS = ['function', 'workflow',
                             'rule', 'messagedestination', 'script']
 ACTION_OBJECT_KEYS = ['functions', 'workflows',
                       'actions', 'message_destinations', 'scripts']
+XML_UUID_REPLACE_STR = u'uuid="{0}"'
 
 resilient_export_obj_mapping = {
     'workflows': ResilientObjMap.WORKFLOWS,
@@ -47,16 +53,18 @@ class CmdClone(BaseCmd):
     and make an configuration import request to complete the cloning process"""
 
     CMD_NAME = "clone"
-    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
     CMD_USAGE = """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
+    $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name>
+    $ resilient-sdk clone --playbook <playbook_to_be_cloned> <new_playbook_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
-    CMD_DESCRIPTION = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) with a new api or display name"
+    CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = ["app_config_parser"]
 
     def setup(self):
@@ -73,6 +81,11 @@ class CmdClone(BaseCmd):
         self.parser.add_argument("-m", "--messagedestination",
                                  type=ensure_unicode,
                                  help="API names of message destinations to include",
+                                 nargs="*")
+
+        self.parser.add_argument("-pb", "--playbook",
+                                 type=ensure_unicode,
+                                 help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
                                  nargs="*")
 
         self.parser.add_argument("-r", "--rule",
@@ -136,7 +149,7 @@ class CmdClone(BaseCmd):
         new_export_data = minify_export(org_export)
 
         # If any of the supported args are provided
-        if any([args.function, args.workflow, args.rule, args.messagedestination, args.script]):
+        if any([args.function, args.workflow, args.rule, args.messagedestination, args.script, args.playbook]):
             if args.prefix:
                 self._clone_multiple_action_objects(
                     args, new_export_data, org_export)
@@ -171,6 +184,22 @@ class CmdClone(BaseCmd):
                     # add the newly cloned Message Destination to new_export_data
                     new_export_data["message_destinations"] = self._clone_action_object(
                         args.messagedestination, org_export, 'Message Destination', ResilientObjMap.MESSAGE_DESTINATIONS, 'message_destinations', CmdClone.replace_md_object_attrs)
+
+                if args.playbook:
+
+                    if get_resilient_server_version(CmdClone.res_client) < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+                        raise SDKException(u"Playbooks are only supported with IBM SOAR >= {0}".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS))
+
+                    # If a Playbook was provided, call _clone_action_object with Playbook related params and
+                    # add the newly cloned Playbook to new_export_data
+                    new_export_data[constants.CUST_PLAYBOOKS] = self._clone_action_object(
+                        input_args=args.playbook,
+                        org_export=org_export,
+                        obj_name='Playbook',
+                        obj_identifier=ResilientObjMap.PLAYBOOKS,
+                        obj_key=constants.CUST_PLAYBOOKS,
+                        replace_fn=CmdClone.replace_playbook_object_attrs,
+                        new_object_type=args.changetype)
 
             add_configuration_import(new_export_data, CmdClone.res_client)
             # If any message destinations were cloned, after creation attach a Authorised User or API Key
@@ -308,7 +337,7 @@ class CmdClone(BaseCmd):
                                                                original_object_api_name=original_obj_api_name,
                                                                export=org_export)
 
-        cloned_object = replace_fn(original_obj.copy(), new_obj_api_name)
+        cloned_object = replace_fn(original_obj.copy(), new_obj_api_name, changetype=new_object_type)
         if new_object_type:
             cloned_object['object_type'] = new_object_type
 
@@ -399,7 +428,7 @@ class CmdClone(BaseCmd):
                 "Did not receive the right amount of object names. Only expect 2 and {} were given. Only specify the original action object name and a new object name".format(len(input_args)))
 
     @staticmethod
-    def replace_common_object_attrs(obj_to_modify, new_obj_api_name):
+    def replace_common_object_attrs(obj_to_modify, new_obj_api_name, **kwargs):
         """replace_common_object_attrs A function used to update the most common fields for an Action Object.
         When cloning an Action Object, depending on the type of that object certain fields will need to be overwritten.
         In most cases the name, export_key and uuid will always need to be changed to prevent duplication errors.
@@ -423,7 +452,7 @@ class CmdClone(BaseCmd):
         return obj_to_modify
 
     @staticmethod
-    def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_api_name, old_workflow_name, changetype=None):
+    def replace_workflow_object_attrs(obj_to_modify, original_obj_api_name, new_obj_api_name, old_workflow_name, changetype=None, **kwargs):
         """replace_workflow_object_attrs replace/overwrite the unique attributes of the workflow object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
@@ -465,7 +494,7 @@ class CmdClone(BaseCmd):
         return obj_to_modify
 
     @staticmethod
-    def replace_function_object_attrs(obj_to_modify, new_obj_api_name):
+    def replace_function_object_attrs(obj_to_modify, new_obj_api_name, **kwargs):
         """replace_function_object_attrs replace/overwrite the unique attributes of the workflow object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
@@ -494,7 +523,7 @@ class CmdClone(BaseCmd):
         return obj_to_modify
 
     @staticmethod
-    def replace_rule_object_attrs(obj_to_modify, new_obj_api_name, changetype=None):
+    def replace_rule_object_attrs(obj_to_modify, new_obj_api_name, changetype=None, **kwargs):
         """replace_rule_object_attrs replace/overwrite the unique attributes of the rule object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
@@ -518,7 +547,7 @@ class CmdClone(BaseCmd):
         return obj_to_modify
 
     @staticmethod
-    def replace_md_object_attrs(obj_to_modify, new_obj_api_name):
+    def replace_md_object_attrs(obj_to_modify, new_obj_api_name, **kwargs):
         """replace_md_object_attrs replace/overwrite the unique attributes of the message destination object so that
         the provided object can be cloned with a new name and not cause a conflict on upload.
 
@@ -535,4 +564,71 @@ class CmdClone(BaseCmd):
         obj_to_modify.update({
             ResilientObjMap.MESSAGE_DESTINATIONS: new_obj_api_name
         })
+        return obj_to_modify
+
+    @staticmethod
+    def replace_playbook_object_attrs(obj_to_modify, new_obj_api_name, **kwargs):
+        """replace_playbook_object_attrs replace/overwrite the unique attributes of the playbook object so that
+        the provided object can be cloned with a new name and not cause a conflict on upload.
+
+        :param obj_to_modify: the object to be modified, in this case a function
+        :type obj_to_modify: dict
+        :param new_obj_api_name: the name of the function to modify
+        :type new_obj_api_name: str
+        :return: the modified object
+        :rtype: dict
+        """
+        pb_new_uuid = str(uuid.uuid4())
+        new_field_type_uuid = u"{0}_{1}".format("playbook", pb_new_uuid.replace("-", "_"))
+        playbook_xml = obj_to_modify.get("content", {}).get("xml", "")
+        local_scripts = obj_to_modify.get("local_scripts")
+        changetype = kwargs.get("changetype", None)
+
+        if local_scripts:
+            for s in local_scripts:
+                s_old_uuid = s.get("uuid", "")
+                s_new_uuid = str(uuid.uuid4())
+
+                playbook_xml = playbook_xml.replace(XML_UUID_REPLACE_STR.format(s_old_uuid), XML_UUID_REPLACE_STR.format(s_new_uuid))
+
+                s.update({
+                    "playbook_handle": new_obj_api_name,
+                    "programmatic_name": "{0}_{1}".format(new_obj_api_name, s.get("programmatic_name", "")),
+                    "uuid": s_new_uuid
+                })
+
+                if changetype:
+                    s.update({
+                        "object_type": changetype
+                    })
+
+                s.pop("id")
+
+        obj_to_modify.update({
+            "uuid": pb_new_uuid,
+            ResilientObjMap.PLAYBOOKS: new_obj_api_name,
+            "display_name": new_obj_api_name,
+            "name": new_obj_api_name,
+            "field_type_handle": new_field_type_uuid,
+            "status": "disabled",
+            "version": 0,
+            "content": {
+                "content_version": 0,
+                "xml": playbook_xml
+            }
+        })
+
+        obj_to_modify.get("fields_type", {}).update({
+            "display_name": new_obj_api_name,
+            "type_name": new_field_type_uuid,
+            "export_key": new_field_type_uuid,
+            "uuid": str(uuid.uuid4())
+        })
+
+        if changetype:
+            obj_to_modify.update({
+                "object_type": changetype
+            })
+        obj_to_modify.pop("id")
+
         return obj_to_modify
