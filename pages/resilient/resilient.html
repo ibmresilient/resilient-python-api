@@ -541,7 +541,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.post_attachment">
-<span class="sig-name descname"><span class="pre">post_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mimetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.post_attachment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">post_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mimetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bytes_handle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.post_attachment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Upload a file to the specified URI
 e.g. <code class="docutils literal notranslate"><span class="pre">/incidents/&lt;id&gt;/attachments</span></code> (for incident attachments)
 or,  <code class="docutils literal notranslate"><span class="pre">/tasks/&lt;id&gt;/attachments</span></code> (for task attachments)</p>
@@ -560,6 +560,7 @@ as this method takes a data stream and is more reliable</p>
 <li><p><strong>data</strong> (<em>dict</em>) – optional dict with additional <code class="docutils literal notranslate"><span class="pre">MIME</span></code> parts (not required for file attachments; used in artifacts)</p></li>
 <li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+<li><p><strong>bytes_handle</strong> (<em>BytesIO</em>) – BytesIO handle for content or use filepath</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -647,6 +648,10 @@ to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2022-04: version 45.0</strong></p>
+<ul class="simple">
+<li><p>Better logging of an <code class="docutils literal notranslate"><span class="pre">Unauthorized</span></code> request with API Keys and exits with a code of <code class="docutils literal notranslate"><span class="pre">21</span></code></p></li>
+</ul>
 <p><strong>2022-02: version 44.0</strong></p>
 <ul class="simple">
 <li><p>Ensure <code class="docutils literal notranslate"><span class="pre">tests/</span></code> is not included in packaged code</p></li>
