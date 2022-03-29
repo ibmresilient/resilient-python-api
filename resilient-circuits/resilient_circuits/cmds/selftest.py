@@ -70,7 +70,7 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
     cafile = app_configs.get("cafile") if app_configs.get("cafile") else ""
 
     if not os.path.isfile(cafile):
-        LOG.warning("- WARNING: No certificate file specified. Only allows the connections that trusted by operating system.")
+        LOG.warning("- WARNING: No certificate file specified. Only allows the connections that are trusted by operating system.")
 
     LOG.info("- Checking if we can authenticate a REST connection with '{0}' to '{1}'".format(user, host))
 
