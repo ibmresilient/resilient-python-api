@@ -14,3 +14,7 @@ ALLOW_UNRECOGNIZED = False
 
 # Error Codes
 ERROR_CODE_CONNECTION_UNAUTHORIZED = 21
+
+# Error Messages
+ERROR_MSG_CONNECTION_UNAUTHORIZED = u"Unauthorized"
+ERROR_MSG_CONNECTION_INVALID_CREDS = u"API Credentials incorrect. Note: the API Key may be blocked and need to be regenerated"
