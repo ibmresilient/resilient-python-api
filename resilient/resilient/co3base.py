@@ -70,7 +70,7 @@ class BasicHTTPException(Exception):
 
         if response.status_code == 401:
             try:
-                raise BasicHTTPException(response, err_reason=u"Unauthorized", err_text=u"Credentials incorrect")
+                raise BasicHTTPException(response, err_reason=constants.ERROR_MSG_CONNECTION_UNAUTHORIZED, err_text=constants.ERROR_MSG_CONNECTION_INVALID_CREDS)
             except BasicHTTPException:
                 traceback.print_exc()
                 sys.exit(constants.ERROR_CODE_CONNECTION_UNAUTHORIZED)
