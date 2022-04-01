@@ -873,17 +873,17 @@ def minify_export(export,
     # update this list if more items need to be scrubbed
     to_remove = ["creator", "creator_id"]
     # loops through objs. i.e.: functions, scripts, ...
-    for obj_key in set(keys_to_keep + list(keys_to_minify)):
-        # loops through list of each obj. i.e.: [func1, func2, ...]
-        # note: each item in the list for the obj is a dict
-        if obj_key in minified_export and type(minified_export[obj_key]) is list:
-            for export_obj in minified_export[obj_key]:
-                # loop through the keys to be removed and check if they're present in the current dict
-                # if so, pop them
+    for obj_key in minified_export.keys():
+        if isinstance(minified_export.get(obj_key), list):
+            # loops through list of each obj. i.e.: [func1, func2, ...]
+            # note: each item in the list for the obj is a dict
+            for export_obj in minified_export.get(obj_key):
+                # loop through the keys to be removed and check if they're present in
+                # the current dict. if so, pop them
                 for bad_key in to_remove:
                     if bad_key in export_obj:
                         bad_val = export_obj.pop(bad_key)
-                        LOG.debug("removed value '%s' for key '%s' from SOAR object '%s' because it may contain PII",
+                        LOG.debug("Removed value '%s' for key '%s' from SOAR object '%s' because it may contain PII",
                                 bad_key, bad_val, obj_key)
 
     return minified_export
