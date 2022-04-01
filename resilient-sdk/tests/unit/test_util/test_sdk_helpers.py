@@ -315,6 +315,7 @@ def test_minify_export(fx_mock_res_client):
     # Test it minified given function
     assert len(minified_functions) == 1
     assert minified_functions[0].get("export_key") == "mock_function_one"
+    assert "creator" not in minified_functions[0]
 
     # Test it set a non-mentioned object to 'empty'
     assert minifed_export.get("roles") == []
@@ -322,6 +323,7 @@ def test_minify_export(fx_mock_res_client):
     # Test phases + scripts
     assert minified_phases[0].get(ResilientObjMap.PHASES) == "Mock Custom Phase One"
     assert minified_scripts[0].get(ResilientObjMap.SCRIPTS) == "Mock Incident Script"
+    assert "creator_id" not in minified_scripts[0]
 
     # Test it added the internal field
     assert len(minified_fields) == 1
