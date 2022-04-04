@@ -869,24 +869,36 @@ def minify_export(export,
     if "incident/" not in fields:
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
-    # clean out creator info from minified_export data
-    # update this list if more items need to be scrubbed
-    to_remove = ["creator", "creator_id"]
-    # loops through objs. i.e.: functions, scripts, ...
-    for obj_key in minified_export.keys():
-        if isinstance(minified_export.get(obj_key), list):
-            # loops through list of each obj. i.e.: [func1, func2, ...]
-            # note: each item in the list for the obj is a dict
-            for export_obj in minified_export.get(obj_key):
-                # loop through the keys to be removed and check if they're present in
-                # the current dict. if so, pop them
-                for bad_key in to_remove:
-                    if bad_key in export_obj:
-                        bad_val = export_obj.pop(bad_key)
-                        LOG.debug("Removed value '%s' for key '%s' from SOAR object '%s' because it may contain PII",
-                                bad_key, bad_val, obj_key)
+    # Clean out any pii values with keys included in pii_key_list
+    pii_key_list = ["creator", "creator_id"]
+    minified_export = _rm_pii(pii_key_list, minified_export)
 
     return minified_export
+
+
+def _rm_pii(pii_key_list, export):
+    """Recursive helper function to remove any keys from 'export' that are in 'pii_key_list'"""
+
+    payload_result = export.copy()
+
+    if payload_result:
+        for key in list(payload_result.keys()):
+            content = payload_result[key]
+
+            # if key is in pii_list to remove, delete entry in payload_result
+            if key in pii_key_list:
+                del payload_result[key]
+                continue
+
+            # if key wasn't in pii_list, continue searching recursively for dictionaries and scrubbing pii
+            if isinstance(content, dict):
+                payload_result[key] = _rm_pii(pii_key_list, content)
+            elif isinstance(content, list):
+                # recreates the list where any dict elements of the list are recursively scrubbed
+                # if list item is not a dictionary, don't 
+                payload_result[key] = [_rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
+
+    return payload_result
 
 
 def find_parent_child_types(export, object_type, attribute_name, name_list):
