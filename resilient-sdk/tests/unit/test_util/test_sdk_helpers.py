@@ -357,6 +357,29 @@ def test_minify_export_with_playbooks(fx_mock_res_client):
     assert "server_version" in minifed_export
 
 
+def test_rm_pii():
+    mock_export = {
+        "actions": [{
+            "automations": [], "creator": { "email": "example@example.com", "author": "Example" } }, 
+            {"info": [], "info2": "test", "creator_id": "1234abcd5678", "good": {"creator" : ["bad", "bad2", "bad3"]} }],
+        "functions": [{ 
+            "creator": { "creator": { "test": "test"} }, "test_obj": { "creator": { "bad_info": "test"} , "test": "test_val" } }],
+        "workflows": 
+            { "workflow 1" : { "someinfo": "test", "creator_id": "1234abcd5678", "someotherinfo": "test2",
+                "a list": [ 1, 2, 3, { "creator": {"email": "example@example.com", "author": "Example" }, "line 2": "example"}]}},
+        "creator": { "creator info": "at base level" },
+        "creator_id": [ "list", "of", "ids" ]
+    }
+
+    mock_result = {
+        'workflows': {'workflow 1': {'someinfo': 'test', 'someotherinfo': 'test2', 'a list': [1, 2, 3, {'line 2': 'example'}]}},
+        'actions': [{'automations': []}, {'info': [], 'info2': 'test', 'good': {}}],
+        'functions': [{'test_obj': {'test': 'test_val'}}],
+    }
+
+    assert sdk_helpers.rm_pii(["creator", "creator_id"], mock_export) == mock_result
+
+
 def test_load_by_module():
     path_python_file = os.path.join(mock_paths.SHARED_MOCK_DATA_DIR, "mock_data.py")
     module_name = "mock_data"
