@@ -889,10 +889,10 @@ def rm_pii(pii_key_list, export):
     :rtype: Dict
     """
 
-    export_copy = export.copy()
+    if export:
+        export_copy = export.copy()
 
-    if export_copy:
-        for key in list(export_copy.keys()):
+        for key in export_copy.keys():
             content = export_copy[key]
 
             # if key is in pii_list to remove, delete entry in payload_result
@@ -908,7 +908,9 @@ def rm_pii(pii_key_list, export):
                 # if list item is not a dictionary, don't 
                 export_copy[key] = [rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
 
-    return export_copy
+        return export_copy
+    else:
+        return export
 
 
 def find_parent_child_types(export, object_type, attribute_name, name_list):
