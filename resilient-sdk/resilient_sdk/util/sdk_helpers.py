@@ -892,7 +892,7 @@ def rm_pii(pii_key_list, export):
     if export:
         export_copy = export.copy()
 
-        for key in export_copy.keys():
+        for key in list(export_copy.keys()):
             content = export_copy[key]
 
             # if key is in pii_list to remove, delete entry in payload_result
