@@ -869,7 +869,49 @@ def minify_export(export,
     if "incident/" not in fields:
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
+    # Clean out any pii values with keys included in pii_key_list
+    pii_key_list = ["creator", "creator_id"]
+    minified_export = rm_pii(pii_key_list, minified_export)
+
     return minified_export
+
+
+def rm_pii(pii_key_list, export):
+    """
+    Remove any keys from 'export' that are in 'pii_key_list'.
+    Recursively searches the export object.
+    
+    :param pii_key_list: list of str keys to be removed from 'export'. ex: ["creator", "creator_id"]
+    :type pii_key_list: [str]
+    :param export: the result of calling get_latest_org_export() or minified_export from calling minify_export()
+    :type export: Dict
+    :return: modified export with any pii keys removed
+    :rtype: Dict
+    """
+
+    if export:
+        export_copy = export.copy()
+
+        for key in list(export_copy.keys()):
+            content = export_copy[key]
+
+            # if key is in pii_list to remove, delete entry in payload_result
+            if key in pii_key_list:
+                del export_copy[key]
+                continue
+
+            # if key wasn't in pii_list, continue searching recursively for dictionaries and scrubbing pii
+            if isinstance(content, dict):
+                export_copy[key] = rm_pii(pii_key_list, content)
+            elif isinstance(content, list):
+                # recreates the list where any dict elements of the list are recursively scrubbed
+                # if list item is not a dictionary, don't 
+                export_copy[key] = [rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
+
+        return export_copy
+    else:
+        return export
+
 
 def find_parent_child_types(export, object_type, attribute_name, name_list):
     """[get all parent objects (like incident_types)]

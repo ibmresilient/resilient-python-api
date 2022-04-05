@@ -315,6 +315,7 @@ def test_minify_export(fx_mock_res_client):
     # Test it minified given function
     assert len(minified_functions) == 1
     assert minified_functions[0].get("export_key") == "mock_function_one"
+    assert "creator" not in minified_functions[0]
 
     # Test it set a non-mentioned object to 'empty'
     assert minifed_export.get("roles") == []
@@ -322,6 +323,7 @@ def test_minify_export(fx_mock_res_client):
     # Test phases + scripts
     assert minified_phases[0].get(ResilientObjMap.PHASES) == "Mock Custom Phase One"
     assert minified_scripts[0].get(ResilientObjMap.SCRIPTS) == "Mock Incident Script"
+    assert "creator_id" not in minified_scripts[0]
 
     # Test it added the internal field
     assert len(minified_fields) == 1
@@ -353,6 +355,29 @@ def test_minify_export_with_playbooks(fx_mock_res_client):
     assert "export_format_version" in minifed_export
     assert "id" in minifed_export
     assert "server_version" in minifed_export
+
+
+def test_rm_pii():
+    mock_export = {
+        "actions": [{
+            "automations": [], "creator": { "email": "example@example.com", "author": "Example" } }, 
+            {"info": [], "info2": "test", "creator_id": "1234abcd5678", "good": {"creator" : ["bad", "bad2", "bad3"]} }],
+        "functions": [{ 
+            "creator": { "creator": { "test": "test"} }, "test_obj": { "creator": { "bad_info": "test"} , "test": "test_val" } }],
+        "workflows": 
+            { "workflow 1" : { "someinfo": "test", "creator_id": "1234abcd5678", "someotherinfo": "test2",
+                "a list": [ 1, 2, 3, { "creator": {"email": "example@example.com", "author": "Example" }, "line 2": "example"}]}},
+        "creator": { "creator info": "at base level" },
+        "creator_id": [ "list", "of", "ids" ]
+    }
+
+    mock_result = {
+        'workflows': {'workflow 1': {'someinfo': 'test', 'someotherinfo': 'test2', 'a list': [1, 2, 3, {'line 2': 'example'}]}},
+        'actions': [{'automations': []}, {'info': [], 'info2': 'test', 'good': {}}],
+        'functions': [{'test_obj': {'test': 'test_val'}}],
+    }
+
+    assert sdk_helpers.rm_pii(["creator", "creator_id"], mock_export) == mock_result
 
 
 def test_load_by_module():
