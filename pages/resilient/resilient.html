@@ -332,7 +332,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_uri_absolute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_uri_absolute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_response_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the specified URI.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -347,13 +347,14 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 <li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
 <li><p><strong>is_uri_absolute</strong> (<em>bool</em>) – if True, does not insert /org/{org_id} into the uri.</p></li>
+<li><p><strong>get_response_object</strong> (<em>bool</em>) – if True, returns entire response object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A dictionary or list with the value returned by the server.</p>
+<dd class="field-even"><p>A dictionary, list, or response object with the value returned by the server.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict | list</p>
+<dd class="field-odd"><p>dict | list | Response</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#resilient.co3.SimpleHTTPException" title="resilient.co3.SimpleHTTPException"><strong>SimpleHTTPException</strong></a> – if an HTTP exception occurs.</p>
@@ -541,7 +542,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.post_attachment">
-<span class="sig-name descname"><span class="pre">post_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mimetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.post_attachment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">post_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mimetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bytes_handle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.post_attachment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Upload a file to the specified URI
 e.g. <code class="docutils literal notranslate"><span class="pre">/incidents/&lt;id&gt;/attachments</span></code> (for incident attachments)
 or,  <code class="docutils literal notranslate"><span class="pre">/tasks/&lt;id&gt;/attachments</span></code> (for task attachments)</p>
@@ -560,6 +561,7 @@ as this method takes a data stream and is more reliable</p>
 <li><p><strong>data</strong> (<em>dict</em>) – optional dict with additional <code class="docutils literal notranslate"><span class="pre">MIME</span></code> parts (not required for file attachments; used in artifacts)</p></li>
 <li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+<li><p><strong>bytes_handle</strong> (<em>BytesIO</em>) – BytesIO handle for content or use filepath</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -647,9 +649,11 @@ to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
-<p><strong>2022-04: version 45.0</strong></p>
+<p><strong>2022-04: version 44.1</strong></p>
 <ul class="simple">
 <li><p>Better logging of an <code class="docutils literal notranslate"><span class="pre">Unauthorized</span></code> request with API Keys and exits with a code of <code class="docutils literal notranslate"><span class="pre">21</span></code></p></li>
+<li><p>Added optional <code class="docutils literal notranslate"><span class="pre">get_response_object</span></code> argument to <a class="reference internal" href="#resilient.co3.SimpleClient.get" title="resilient.co3.SimpleClient.get"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient.get()</span></code></a>
+that if <code class="docutils literal notranslate"><span class="pre">True</span></code>, returns entire response object</p></li>
 </ul>
 <p><strong>2022-02: version 44.0</strong></p>
 <ul class="simple">
