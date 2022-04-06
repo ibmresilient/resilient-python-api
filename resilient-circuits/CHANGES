@@ -1,3 +1,15 @@
+**2022-05: version 45.0**
+
+* Added new config ``app_exception`` and if set to ``True`` a Function's exception will be ignored with the error sent as a Status Message
+  and a default payload returned like below, allowing the Workflow or Playbook to continue
+
+  .. code-block::
+
+    {
+      "success": False,
+      "reason": "Error message"
+    }
+
 **2022-02: version 44.0**
 
 * Ensure ``tests/`` is not included in packaged code
