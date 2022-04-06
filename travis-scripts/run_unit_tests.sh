@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-tox -c ./resilient
-tox -c ./resilient-circuits
-tox -c ./resilient-sdk -e UNIT
-tox -c ./resilient-lib
+tox -c ./resilient -- -m "not livetest"
+tox -c ./resilient-circuits -- -m "not livetest"
+tox -c ./resilient-sdk -e UNIT -- -m "not livetest"
+tox -c ./resilient-lib -- -m "not livetest"

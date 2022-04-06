@@ -395,7 +395,7 @@ def get_resilient_server_version(res_client):
 
 def get_latest_org_export(res_client):
     """
-    Generates a new Export on the Resilient Appliance.
+    Generates a new Export on SOAR.
     Returns the POST response
     """
     LOG.debug("Generating new organization export")
@@ -466,7 +466,7 @@ def confirm_configuration_import(result, import_id, res_client):
     uri = "{}/{}".format(constants.IMPORT_URL, import_id)
     try:
         res_client.put(uri, result)
-        LOG.info("Imported configuration changes successfully to the Resilient Appliance")
+        LOG.info("Imported configuration changes successfully to SOAR")
     except requests.RequestException as import_exception:
         raise SDKException(repr(import_exception))
 
