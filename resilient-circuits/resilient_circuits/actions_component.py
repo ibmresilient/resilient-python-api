@@ -103,6 +103,7 @@ class FunctionWorker(Worker):
 
                 fn_name = constants.DEFAULT_UNKNOWN_STR
 
+                # args being the parameters of the decorator
                 if isinstance(args, tuple) and hasattr(args[0], "name"):
                     fn_name = args[0].name
 
