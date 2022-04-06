@@ -8,6 +8,7 @@ import json
 import logging
 import os.path
 import ssl
+import sys
 import traceback
 from collections import Callable
 from signal import SIGINT, SIGTERM
@@ -94,6 +95,12 @@ class FunctionWorker(Worker):
             if ignore_exception:
 
                 err = str(e)
+
+                # Handle strs as unicode if Python 2
+                if sys.version_info.major == 2:
+                    err = unicode(err, "utf-8")
+                    str_traceback = unicode(str_traceback, "utf-8")
+
                 fn_name = constants.DEFAULT_UNKNOWN_STR
 
                 if isinstance(args, tuple) and hasattr(args[0], "name"):
