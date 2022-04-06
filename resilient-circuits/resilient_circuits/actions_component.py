@@ -21,7 +21,6 @@ from resilient import ensure_unicode
 from resilient_lib import IntegrationError
 from six import string_types
 
-import resilient_circuits
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
@@ -85,12 +84,11 @@ class FunctionWorker(Worker):
         try:
             yield result.get()
         except Exception as e:
-            # TODO: add unit test
             str_traceback = traceback.format_exc()
             ignore_exception = False
 
-            if isinstance(self.root, resilient_circuits.app.App):
-                app_configs = self.root.opts
+            if isinstance(self.parent, Actions):
+                app_configs = self.parent.opts
                 ignore_exception = app_configs.get(constants.APP_CONFIG_APP_EXCEPTION, False)
 
             if ignore_exception:

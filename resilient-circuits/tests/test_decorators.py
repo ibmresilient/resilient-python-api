@@ -1,14 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
 import pytest
+from resilient_circuits import (ResilientComponent, app_function, constants,
+                                inbound_app)
+from resilient_circuits.action_message import FunctionException_
 from resilient_lib import IntegrationError
-from resilient_circuits import constants, ResilientComponent, inbound_app, app_function
-from tests import helpers, mock_constants, MockInboundAppComponent, AppFunctionMockComponent
+
+from tests import (AppFunctionMockComponent, MockFunctionComponent,
+                   MockInboundAppComponent, helpers, mock_constants)
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
+
+
+class TestFunctionDecorator:
+
+    def test_runs(self, circuits_app):
+        MockFunctionComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        results = helpers.call_app_function(mock_constants.MOCK_FN_NAME_ONE, {"input_one": "abc"}, circuits_app)
+        assert results.get("content").get("malware") is True
+
+    def test_handles_StatusMessage(self, circuits_app):
+        MockFunctionComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        mock_status_message = helpers.call_app_function(mock_constants.MOCK_FN_NAME_ONE, {"input_one": "abc"}, circuits_app, status_message_only=True)
+        assert mock_status_message.text == u"Mock զ է ը թ ժ ի լ StatusMessage 1"
+
+    def test_Exception_app_exception_False(self, circuits_app):
+        MockFunctionComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+
+        with pytest.raises(FunctionException_, match=r"mock error message with unicode"):
+            helpers.call_app_function(mock_constants.MOCK_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
+
+    def test_Exception_app_exception_True(self, circuits_app):
+        circuits_app.app.opts[constants.APP_CONFIG_APP_EXCEPTION] = True
+        MockFunctionComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        results = helpers.call_app_function(mock_constants.MOCK_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
+        assert results.get("success") is False
+        assert "mock error message with unicode" in results.get("reason")
 
 
 class TestInboundAppDecorator:
@@ -78,10 +108,17 @@ class TestAppFunctionDecorator:
         mock_status_message = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, {"input_one": "abc"}, circuits_app, status_message_only=True)
         assert mock_status_message.text == u"Mock զ է ը թ ժ ի լ StatusMessage 1"
 
-    def test_handles_Exception(self, circuits_app):
+    def test_Exception_app_exception_False(self, circuits_app):
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
         with pytest.raises(IntegrationError, match=r"mock error message with unicode"):
             helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
+
+    def test_Exception_app_exception_True(self, circuits_app):
+        circuits_app.app.opts[constants.APP_CONFIG_APP_EXCEPTION] = True
+        AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        results = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
+        assert results.get("success") is False
+        assert "mock error message with unicode" in results.get("reason")
 
     def test_too_many_function_names(self):
         with pytest.raises(ValueError, match=r"Usage: @app_function\(api_name\)"):
