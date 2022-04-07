@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
+import sys
 import io
 import os
 import json
@@ -22,8 +23,13 @@ def test_post_attachment_file_path(fx_base_client, fx_mk_temp_dir):
     temp_file_name = "mock_attachment.txt"
     temp_file_path = os.path.join(mock_paths.TEST_TEMP_DIR, temp_file_name)
 
-    with open(temp_file_path, mode="w", encoding="utf-8") as temp_file:
-        temp_file.write("This is a mock file")
+    if sys.version_info.major == 2:
+        with open(temp_file_path, mode="w") as temp_file:
+            temp_file.write("This is a mock file")
+
+    else:
+        with open(temp_file_path, mode="w", encoding="utf-8") as temp_file:
+            temp_file.write("This is a mock file")
 
     r = base_client.post_attachment(
         uri=uri,
