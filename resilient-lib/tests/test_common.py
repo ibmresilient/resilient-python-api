@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 import configparser
-import os
-import sys
-import shutil
-import unittest
 import logging
-import pytest
-import resilient
+import os
+import shutil
+import sys
 import time
+import unittest
 from collections import namedtuple
 from io import BytesIO
-from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
-    unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, write_to_tmp_file, close_incident, write_file_attachment
+
+import pytest
+import resilient
+from resilient_lib.components.resilient_common import (
+    build_incident_url, build_resilient_url, build_task_url, clean_html,
+    close_incident, get_file_attachment, get_file_attachment_metadata,
+    get_file_attachment_name, readable_datetime, str_to_bool, unescape,
+    validate_fields, write_file_attachment, write_to_tmp_file)
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -160,6 +163,19 @@ class TestFunctionMetrics(unittest.TestCase):
 
         url = build_incident_url(build_resilient_url("localhost", 8443), 12345)
         self.assertEqual(url, "https://localhost:8443/#incidents/12345")
+
+        url = build_incident_url(build_resilient_url("https://cases-rest.cp4s.ibm.com", 443), 101)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101")
+
+        url = build_incident_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101)
+        self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101")
+
+    def test_build_task_url(self):
+        url = build_task_url(build_resilient_url("https://localhost", 8443), 12345, 12346)
+        self.assertEqual(url, "https://localhost:8443/#incidents/12345?taskId=12346&tabName=details")
+
+        url = build_task_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101, 102)
+        self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101?taskId=102&tabName=details")
 
     def test_file_attachment(self):
         with self.assertRaises(ValueError):
