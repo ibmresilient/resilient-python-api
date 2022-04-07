@@ -412,30 +412,46 @@ class BaseClient(object):
             filename = ensure_unicode(filename)
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
+
         if filepath:
             with open(filepath, 'rb') as filehandle:
                 attachment_name = filename or os.path.basename(filepath)
                 multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+                multipart_data.update(data or {})
+                encoder = MultipartEncoder(fields=multipart_data)
+                headers = self.make_headers(co3_context_token,
+                                            additional_headers={'content-type': encoder.content_type})
+                response = self._execute_request(self.session.post,
+                                                 url,
+                                                 data=encoder,
+                                                 proxies=self.proxies,
+                                                 cookies=self.cookies,
+                                                 headers=headers,
+                                                 verify=self.verify,
+                                                 timeout=timeout)
+                BasicHTTPException.raise_if_error(response)
+                return json.loads(response.text)
+
         elif bytes_handle:
-            attachment_name = filename
+            attachment_name = filename if filename else "Unknown"
             multipart_data = {'file': (attachment_name, bytes_handle, mime_type)}
+            multipart_data.update(data or {})
+            encoder = MultipartEncoder(fields=multipart_data)
+            headers = self.make_headers(co3_context_token,
+                                        additional_headers={'content-type': encoder.content_type})
+            response = self._execute_request(self.session.post,
+                                             url,
+                                             data=encoder,
+                                             proxies=self.proxies,
+                                             cookies=self.cookies,
+                                             headers=headers,
+                                             verify=self.verify,
+                                             timeout=timeout)
+            BasicHTTPException.raise_if_error(response)
+            return json.loads(response.text)
+
         else:
             raise ValueError("Either filepath or bytes_handle are required")
-
-        multipart_data.update(data or {})
-        encoder = MultipartEncoder(fields=multipart_data)
-        headers = self.make_headers(co3_context_token,
-                                    additional_headers={'content-type': encoder.content_type})
-        response = self._execute_request(self.session.post,
-                                            url,
-                                            data=encoder,
-                                            proxies=self.proxies,
-                                            cookies=self.cookies,
-                                            headers=headers,
-                                            verify=self.verify,
-                                            timeout=timeout)
-        BasicHTTPException.raise_if_error(response)
-        return json.loads(response.text)
 
     def post_artifact_file(self, uri, artifact_type, artifact_filepath,
                           description=None,
