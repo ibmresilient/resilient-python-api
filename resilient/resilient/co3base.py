@@ -205,10 +205,22 @@ class BaseClient(object):
 
     def _extract_org_id(self, response):
         """
-        TODO
-        Extract org id from server response
+        Extract the org's id from server response. Loops the orgs
+        in the response and checks each ``cloud_account``, ``uuid``
+        or ``name`` against the ``org_name`` attribute in the 
+        app.config file to see if it matches any of the 3.
+
+        If found, sets ``self.org_id`` equal to the ``id`` of the org
+
+        Also sets ``self.all_orgs`` equal to the full list of orgs
+        that are ``enabled`` for that user
+
         :param response: server response from session endpoint
-        :return:
+        :type response: dict
+        :raises Exception: if user is not a member of any orgs
+        :raises Exception: if ``org_name`` value in app.config is not set
+        :raises Exception: if the user is not a member of the org specified in the app.config
+        :raises Exception: if the org specified has an ``enabled`` state set to ``False``
         """
         app_config_org_value = self.org_name
         selected_org = None
