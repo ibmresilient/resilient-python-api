@@ -45,7 +45,7 @@ selftest_timeout=10
 
 # If set to True a Function's exception will be ignored with the error sent as a Status Message
 # and a default payload returned with 'success=False', allowing the Workflow or Playbook to continue
-app_exception=False
+trap_exception=False
 
 # If your Resilient server uses a self-signed TLS certificate, or some
 # other certificate that is not automatically trusted by your machine,

@@ -90,7 +90,7 @@ class FunctionWorker(Worker):
 
             if isinstance(self.parent, Actions):
                 app_configs = self.parent.opts
-                ignore_exception = app_configs.get(constants.APP_CONFIG_APP_EXCEPTION, False)
+                ignore_exception = app_configs.get(constants.APP_CONFIG_TRAP_EXCEPTION, False)
 
             if ignore_exception:
 
@@ -107,7 +107,7 @@ class FunctionWorker(Worker):
                 if isinstance(args, tuple) and hasattr(args[0], "name"):
                     fn_name = args[0].name
 
-                status_message = u"Error running '{0}'. Config '{1}' set to 'True' so ignoring exception\nERROR:\n{2}".format(fn_name, constants.APP_CONFIG_APP_EXCEPTION, err)
+                status_message = u"Error running '{0}'. Config '{1}' set to 'True' so ignoring exception\nERROR:\n{2}".format(fn_name, constants.APP_CONFIG_TRAP_EXCEPTION, err)
 
                 # If the loglevel is DEBUG, the full stacktrace will be added to the StatusMessage
                 if logging.getLogger().getEffectiveLevel() == logging.DEBUG:

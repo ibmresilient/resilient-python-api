@@ -25,5 +25,5 @@ ERROR_INVALID_USR = "Invalid user name or password"
 
 # app configs
 INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
-APP_CONFIG_APP_EXCEPTION = "app_exception"
+APP_CONFIG_TRAP_EXCEPTION = "trap_exception"
 APP_CONFIG_SELFTEST_TIMEOUT = "selftest_timeout"

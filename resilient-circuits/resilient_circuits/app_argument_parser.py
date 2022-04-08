@@ -63,8 +63,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                                             "log_http_responses") or ""
         default_resource_prefix = self.getopt(self.DEFAULT_APP_SECTION, "resource_prefix") or None
         default_num_workers = self.getopt(self.DEFAULT_APP_SECTION, "num_workers") or self.DEFAULT_NUM_WORKERS
-        default_app_exception = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_APP_EXCEPTION) or self.DEFAULT_APP_EXCEPTION
-        default_app_exception = self._is_true(default_app_exception)
+        default_trap_exception = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_TRAP_EXCEPTION) or self.DEFAULT_APP_EXCEPTION
+        default_trap_exception = self._is_true(default_trap_exception)
 
         logging.getLogger().removeHandler(temp_handler)
 
@@ -151,9 +151,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           default=default_num_workers,
                           help=("Number of FunctionWorkers to use. "
                                 "Number of Functions that can run in parallel"))
-        self.add_argument("--app-exception",
+        self.add_argument("--trap-exception",
                           type=bool,
-                          default=default_app_exception,
+                          default=default_trap_exception,
                           help=("If set to 'True' a Function's exception will be ignored"))
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
