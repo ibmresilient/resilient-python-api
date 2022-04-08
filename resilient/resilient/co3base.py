@@ -127,7 +127,7 @@ class BaseClient(object):
     def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
         """
         Args:
-          org_name - the name of the organization to use.
+          org_name - the cloud_account/uuid/name of the organization to use.
           base_url - the base URL to use.
           proxies - HTTP proxies to use, if any.
           verify - The name of a PEM file to use as the list of trusted CAs.
@@ -203,30 +203,44 @@ class BaseClient(object):
         }
         return self._connect(timeout=timeout)
 
-    def _extract_org_id(self, resp):
+    def _extract_org_id(self, response):
         """
-        Extract org id from server resp
-        :param resp: server response from session endpoint
+        TODO
+        Extract org id from server response
+        :param response: server response from session endpoint
         :return:
         """
-        orgs = resp['orgs']
+        app_config_org_value = self.org_name
         selected_org = None
-        if orgs is None or len(orgs) == 0:
-            raise Exception("User is a member of no orgs")
-        if self.org_name:
-            org_names = []
-            for org in orgs:
-                org_name = org['name']
-                org_names.append(org_name)
-                if ensure_unicode(org_name) == self.org_name:
-                    selected_org = org
-        else:
-            org_names = [org['name'] for org in orgs]
-            msg = u"Please specify the organization name to which you want to connect.  " + \
+        orgs = response.get("orgs", [])
+
+        if not orgs:
+            raise Exception("User is not a member of any orgs")
+
+        if not app_config_org_value:
+            org_names = [org.get("name") for org in orgs]
+            msg = u"Please specify the organization name to which you want to connect.\n" + \
                   u"The user is a member of the following organizations: '{0}'"
             raise Exception(msg.format(u"', '".join(org_names)))
 
-        if selected_org is None:
+        for o in orgs:
+
+            if app_config_org_value == o.get("cloud_account", ""):
+                LOG.info("Using cloud account id: %s", app_config_org_value)
+                selected_org = o
+                break
+
+            if app_config_org_value == o.get("uuid", ""):
+                LOG.info("Using org uuid: %s", app_config_org_value)
+                selected_org = o
+                break
+
+            if ensure_unicode(app_config_org_value) == o.get("name", ""):
+                LOG.info("Using org name: %s", app_config_org_value)
+                selected_org = o
+                break
+
+        if not selected_org:
             msg = u"The user is not a member of the specified organization '{0}'."
             raise Exception(msg.format(self.org_name))
 
@@ -236,10 +250,10 @@ class BaseClient(object):
                   "The organization does not allow access from your current IP address.\n" \
                   "The organization requires authentication with a different provider than you are currently using.\n" \
                   "Your IP address is {0}"
-            raise Exception(msg.format(resp["session_ip"]))
+            raise Exception(msg.format(response.get("session_ip", "Unknown")))
 
         self.all_orgs = [org for org in orgs if org.get("enabled")]
-        self.org_id = selected_org['id']
+        self.org_id = selected_org.get("id", None)
 
     def _connect(self, timeout=None):
         """Establish a session"""
