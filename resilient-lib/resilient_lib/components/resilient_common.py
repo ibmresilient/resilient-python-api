@@ -16,7 +16,12 @@ from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
 from six import string_types
 
-INCIDENT_FRAGMENT = '#incidents'
+CP4S_PREFIX = "cases-rest."
+CP4S_RESOURCE_PREFIX = "app/respond"
+INCIDENT_FRAGMENT = "#incidents"
+CASE_FRAGMENT = "#cases"
+TASK_FRAGMENT = "taskId="
+TASK_DETAILS_FRAGMENT = "tabName=details"
 PAYLOAD_VERSION = "1.0"
 
 LOG = logging.getLogger(__name__)
@@ -26,7 +31,9 @@ LOG.addHandler(logging.StreamHandler())
 
 def build_incident_url(url, incidentId):
     """
-    Build the url to link to a SOAR incident
+    Build the url to link to a SOAR incident or CP4S case
+
+    Returns a url of the format https://<url>/#<incident_id>
 
     :param url: the URL of your SOAR instance
     :type url: str
@@ -35,12 +42,39 @@ def build_incident_url(url, incidentId):
     :return: full URL to the incident
     :rtype: str
     """
+    if CP4S_PREFIX in url:
+        url = url.replace(CP4S_PREFIX, "")
+
+        if CP4S_RESOURCE_PREFIX not in url:
+            '/'.join([url, CP4S_RESOURCE_PREFIX])
+
+    if CP4S_RESOURCE_PREFIX in url:
+        return '/'.join([url, CASE_FRAGMENT, str(incidentId)])
+
     return '/'.join([url, INCIDENT_FRAGMENT, str(incidentId)])
+
+
+def build_task_url(url, incident_id, task_id):
+    """
+    Build the url to link to a SOAR/CP4S task
+
+    Returns a url of the format https://<url>/#<incident_id>?taskId=<task_id>&tabName=details
+
+    :param url: the URL of your SOAR instance
+    :type url: str
+    :param incident_id: the id of the incident
+    :type incident_id: str|int
+    :param task_is: the id of the task
+    :type task_is: str|int
+    :return: full URL to the task's details tab
+    :rtype: str
+    """
+    return "{0}?{1}{2}&{3}".format(build_incident_url(url, incident_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
 
 
 def build_resilient_url(host, port):
     """
-    Build basic url to resilient instance
+    Build basic url to SOAR/CP4S instance
 
     :param host: host name
     :type host: str
@@ -49,10 +83,18 @@ def build_resilient_url(host, port):
     :return: base url
     :rtype: str
     """
-    if host.lower().startswith("http"):
-        return "{0}:{1}".format(host, port)
 
-    return "https://{0}:{1}".format(host, port)
+    # determine if host url needs http/s prefix
+    # if not given, assumes https
+    if not host.lower().startswith("http"):
+        host = "https://{0}".format(host)
+
+    # check if host is CP4S host
+    if CP4S_PREFIX in host:
+        host = host.replace(CP4S_PREFIX, "")
+        return "{0}:{1}/{2}".format(host, port, CP4S_RESOURCE_PREFIX)
+
+    return "{0}:{1}".format(host, port)
 
 
 def clean_html(html_fragment):
