@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*
 
-import time
-from resilient_circuits import AppFunctionComponent, app_function, FunctionResult
-from resilient_lib import ResultPayload, RequestsCommon, IntegrationError, validate_fields
+from resilient_circuits import (AppFunctionComponent, FunctionResult,
+                                app_function)
+from resilient_lib import IntegrationError
 from tests import mock_constants
 
 PACKAGE_NAME = mock_constants.MOCK_PACKAGE_NAME
