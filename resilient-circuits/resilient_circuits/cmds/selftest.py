@@ -167,7 +167,7 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
             LOG.parent.info("- Waiting for subscription to message destination. Sleeping for 2 seconds")
             time.sleep(2)
 
-            if helpers.should_timeout(start_time, app_configs.get(constants.DEFAULT_SELFTEST_TIMEOUT_KEY, constants.DEFAULT_SELFTEST_TIMEOUT_VALUE)):
+            if helpers.should_timeout(start_time, app_configs.get(constants.APP_CONFIG_SELFTEST_TIMEOUT, constants.DEFAULT_SELFTEST_TIMEOUT_VALUE)):
                 resilient_circuits_instance.action_component.fire(SelftestTerminateEvent())
                 error_connecting_to_soar(host, "Could not subscribe to any message destinations", 33)
 
