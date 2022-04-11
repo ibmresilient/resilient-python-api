@@ -243,8 +243,7 @@ using the <code class="docutils literal notranslate"><span class="pre">manageApp
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
 <span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the url to link to a SOAR incident or CP4S case</p>
-<p>Returns a url of the format <a class="reference external" href="https:/">https:/</a>/&lt;url&gt;/#&lt;incident_id&gt;</p>
+<dd><p>Build the url to link to a SOAR incident</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -263,7 +262,7 @@ using the <code class="docutils literal notranslate"><span class="pre">manageApp
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_resilient_url">
 <span class="sig-name descname"><span class="pre">build_resilient_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_resilient_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build basic url to SOAR/CP4S instance</p>
+<dd><p>Build basic url to resilient instance</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -273,27 +272,6 @@ using the <code class="docutils literal notranslate"><span class="pre">manageApp
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>base url</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_task_url">
-<span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the url to link to a SOAR/CP4S task</p>
-<p>Returns a url of the format <a class="reference external" href="https:/">https:/</a>/&lt;url&gt;/#&lt;incident_id&gt;?taskId=&lt;task_id&gt;&amp;tabName=details</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
-<li><p><strong>incident_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
-<li><p><strong>task_is</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the task</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>full URL to the task’s details tab</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>str</p>
@@ -869,6 +847,416 @@ returns a dictionary mapping protocol to the URL of the proxy.</p></li>
 </dl>
 </dd></dl>
 </section>
+<section id="module-resilient_lib.components.templates_common">
+<span id="common-jinja-methods"></span><h2>Common Jinja Methods<a class="headerlink" href="#module-resilient_lib.components.templates_common" title="Permalink to this headline">¶</a></h2>
+<p>Common methods and filters used to process 
+<a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/">Jinja Templates</a></p>
+<p><strong>Usage:</strong></p>
+<ol class="arabic simple">
+<li><p>Create a Jinja template in the <code class="docutils literal notranslate"><span class="pre">/util/templates</span></code> directory</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Normally a template is in JSON format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">"incident_name"</span><span class="p">:</span> <span class="s2">"{{ alert_name }}"</span><span class="p">,</span>
+    <span class="s2">"severity"</span><span class="p">:</span> <span class="p">{{</span><span class="n">alert_severity</span><span class="p">}}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>(<em>Optional</em>) Add an option to your <code class="docutils literal notranslate"><span class="pre">app.config</span></code> file to specify an absolute path to a custom Jinja template called: <code class="docutils literal notranslate"><span class="pre">custom_template_path</span></code></p></li>
+</ol>
+<ol class="arabic simple" start="2">
+<li><p>Add the following code to your <strong>Function</strong>:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">from</span> <span class="nn">resilient_circuits</span> <span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">,</span> <span class="n">app_function</span>
+<span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">make_payload_from_template</span>
+
+<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">"my_app"</span>
+<span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">"my_function_using_jinja"</span>
+<span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">,</span> <span class="s2">"util/templates/&lt;default_name&gt;.jinja2"</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionComponent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">PACKAGE_NAME</span><span class="p">)</span>
+
+    <span class="nd">@app_function</span><span class="p">(</span><span class="n">FN_NAME</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_app_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_inputs</span><span class="p">):</span>
+        <span class="sd">'''</span>
+<span class="sd">        Function: A function showing how to use Jinja templates</span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            -   fn_inputs.alert_severity</span>
+<span class="sd">            -   fn_inputs.device_id</span>
+<span class="sd">        '''</span>
+
+        <span class="n">custom_template_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="o">.</span><span class="n">custom_template_path</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="p">,</span> <span class="s2">"custom_template_path"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+
+        <span class="n">template_rendered</span> <span class="o">=</span> <span class="n">make_payload_from_template</span><span class="p">(</span>
+            <span class="n">template_override</span><span class="o">=</span><span class="n">custom_template_path</span><span class="p">,</span>
+            <span class="n">default_template</span><span class="o">=</span><span class="n">DEFAULT_TEMPLATE_PATH</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"alert_name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Malware found on device </span><span class="si">{</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">device_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"alert_severity"</span><span class="p">:</span> <span class="n">fn_inputs</span><span class="o">.</span><span class="n">alert_severity</span>
+            <span class="p">},</span>
+            <span class="n">return_json</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">template_rendered</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"template_rendered"</span><span class="p">:</span> <span class="n">template_rendered</span><span class="p">}</span>
+
+        <span class="k">yield</span> <span class="n">FunctionResult</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Output:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span> <span class="p">[</span><span class="n">my_function_using_jinja</span><span class="p">]</span> <span class="p">{</span><span class="s1">'incident_name'</span><span class="p">:</span> <span class="s1">'Malware found on device 303'</span><span class="p">,</span> <span class="s1">'severity'</span><span class="p">:</span> <span class="s1">'High'</span><span class="p">}</span>
+</pre></div>
+</div>
+<hr class="docutils"/>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.base64_filter">
+<span class="sig-name descname"><span class="pre">base64_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.base64_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>base64</strong></p>
+<p>Breaks text into fixed-width blocks. You can specify the
+indent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val</strong> (<em>str</em>) – The string to convert</p></li>
+<li><p><strong>indent</strong> (<em>int</em>) – Number of tabs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Converted string</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.camel_filter">
+<span class="sig-name descname"><span class="pre">camel_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.camel_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>camel</strong></p>
+<p>Convert text to CamelCase</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to convert</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Converted string</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">in</span> <span class="n">camel</span> <span class="n">case</span><span class="p">:</span> <span class="p">{{</span> <span class="n">a</span><span class="c1">#bc_def | camel }}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'ABcDef'</span>
+</pre></div>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.global_jinja_env">
+<span class="sig-name descname"><span class="pre">global_jinja_env</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.global_jinja_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Jinja environment with our resilient-lib custom filters.
+This environment can be expanded upon to add additional custom filters</p>
+<p>See <a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/api/#custom-filters">Jinja Custom Filters</a> for more</p>
+<p>Current custom filters available:</p>
+<pre class="literal-block">json, js, html, url, idna, punycode, ldap, ps, sh, pretty, timestamp, iso8601, uniq, sample, camel, base64, soar_datetimeformat, soar_display_datetimeformat, soar_substitute, soar_splitpart, soar_trimlist</pre>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The Jinja environment</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/api/#jinja2.Environment">jinja2.Environment</a></p>
+</dd>
+</dl>
+<p><strong>Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span> <span class="nn">environment</span>
+
+<span class="n">addl_custom_filters</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"filter_name"</span><span class="p">:</span> <span class="n">method_name</span>
+<span class="p">}</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">environment</span><span class="p">()</span>
+<span class="n">env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.html_filter">
+<span class="sig-name descname"><span class="pre">html_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.html_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘html’ produces HTML-encoded string of the value</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.idna_filter">
+<span class="sig-name descname"><span class="pre">idna_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.idna_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘idna’ encodes the value per RFC 3490</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.iso8601">
+<span class="sig-name descname"><span class="pre">iso8601</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.iso8601" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assuming val is an epoch milliseconds timestamp, produce ISO8601 datetime</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.js_filter">
+<span class="sig-name descname"><span class="pre">js_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.js_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘js’ produces JSONified string of the value, without surrounding quotes</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.json_filter">
+<span class="sig-name descname"><span class="pre">json_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.json_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘json’ produces JSONified string of the value</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.ldap_filter">
+<span class="sig-name descname"><span class="pre">ldap_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.ldap_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘ldap’ produces LDAP-encoded string of the value</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.make_payload_from_template">
+<span class="sig-name descname"><span class="pre">make_payload_from_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_override</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_json</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.make_payload_from_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a payload into a new format based on a specified template</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>template_override</strong> (<em>str</em>) – Path to the specified template (<em>usually
+taken from the app.config file. See the Usage example above</em>)</p></li>
+<li><p><strong>default_template</strong> (<em>str</em>) – Path to the default template (<em>usually in
+the ‘/util/templates’ directory. See the Usage example above</em>)</p></li>
+<li><p><strong>payload</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">dict</span></code> of payload that will be passed to Jinja template</p></li>
+<li><p><strong>return_json</strong> (<em>bool</em>) – False if template should be render as a <code class="docutils literal notranslate"><span class="pre">str</span></code>
+and results returned as a <code class="docutils literal notranslate"><span class="pre">str</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If the Jinja template is valid JSON and <code class="docutils literal notranslate"><span class="pre">return_json</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> the result will
+be returned as a <code class="docutils literal notranslate"><span class="pre">dict</span></code> else it will return the rendered template as a <code class="docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str|dict</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if <code class="docutils literal notranslate"><span class="pre">return_json</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and the Jinja template is not
+valid JSON</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.pretty_filter">
+<span class="sig-name descname"><span class="pre">pretty_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.pretty_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘pretty’ produces pretty-printed string of the value</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.ps_filter">
+<span class="sig-name descname"><span class="pre">ps_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.ps_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘ps’ escapes for use in a PowerShell commandline</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.punycode_filter">
+<span class="sig-name descname"><span class="pre">punycode_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.punycode_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘punycode’ encodes the value per RFC 3492</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render data into a template, producing a string result. All the additional custom filters are available</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>template</strong> (<em>str</em><em> or </em><em>dict</em>) – Path to or a dict of the Jinja template</p></li>
+<li><p><strong>data</strong> (<em>dict</em>) – JSON data to apply to the template</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>result from the rendering of the template. The template is usually a string, but can be a dict.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str or dict</p>
+</dd>
+</dl>
+<p><strong>Examples:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">"template {{value}}"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s2">"123"</span><span class="p">})</span>
+<span class="go">u'template 123'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">({</span><span class="s2">"template"</span><span class="p">:</span> <span class="s2">"{{value}}"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s2">"123"</span><span class="p">})</span>
+<span class="go">u'{"template": "123"}'</span>
+
+<span class="go">You can escape values using the 'json' filter,</span>
+<span class="go">or the 'url' or 'html' or 'ldap' filters.</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": {{value|json}} }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1"23'</span><span class="p">})</span>
+<span class="go">u'{"template": "1\\"23" }'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": "{{value|js}}" }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1"23'</span><span class="p">})</span>
+<span class="go">u'{"template": "1\\"23" }'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": {{value|ldap}} }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1*23'</span><span class="p">})</span>
+<span class="go">u'{"template": 1\\2a23 }'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'shell "{{value|ps}}"'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'$"foo"'</span><span class="p">})</span>
+<span class="go">u'shell "`$`"foo`""'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'shell "{{value|sh}}"'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'$"foo"'</span><span class="p">})</span>
+<span class="go">u'shell "\\$\\"foo\\""'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="mi">0</span><span class="p">})</span>
+<span class="go">u'template=0'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{})</span>
+<span class="go">u'template=null'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:{</span><span class="s2">"year"</span><span class="p">:</span><span class="mi">2015</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">:</span><span class="mi">15</span><span class="p">}})</span>
+<span class="go">u'template=1436918400000'</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">15</span><span class="p">)})</span>
+<span class="go">u'template=1436918400000'</span>
+</pre></div>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.render_json">
+<span class="sig-name descname"><span class="pre">render_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.render_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render data into a template, producing a JSON result.
+Also clean up any “really bad” control characters to avoid failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>template</strong> (<em>str</em><em> or </em><em>dict</em>) – Path to or a dict of the Jinja template</p></li>
+<li><p><strong>data</strong> (<em>dict</em>) – dict to apply to the template</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>result from the rendering of the template as a dictionary</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p><strong>Examples:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="s2">"the"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"new"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"thing"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">'{"result":"{{value}}"}'</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">{u'result': u'the new thing'}</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="s2">"the"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"new"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"thing"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">'{"result":"{{value}}"}'</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">{u'result': u'the new thing'}</span>
+</pre></div>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.sample_filter">
+<span class="sig-name descname"><span class="pre">sample_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.sample_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random sample from a list</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.sh_filter">
+<span class="sig-name descname"><span class="pre">sh_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.sh_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘sh’ escapes for use in a Unix shell commandline</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_datetimeformat">
+<span class="sig-name descname"><span class="pre">soar_datetimeformat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y-%m-%dT%H:%M:%S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_datetimeformat" title="Permalink to this definition">¶</a></dt>
+<dd><p>custom jinja filter to convert UTC dates to epoch format</p>
+<dl>
+<dt>Args:</dt><dd><p>value ([str]): [jinja provided field value]
+date_format (str, optional): [conversion format]. Defaults to “%Y-%m-%dT%H:%M:%S”.
+split_at (str, optional): [character to split the date field to scope the date field.]</p>
+<blockquote>
+<div><dl class="simple">
+<dt>examples: split_at=’.’ to remove milliseconds for “2021-10-22T20:53:53.913Z”,</dt><dd><p>split_at=’+’ tp remove tz information “2021-10-22T20:53:53+00:00”,</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>[int]: [epoch value of datetime, in milliseconds]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_splitpart">
+<span class="sig-name descname"><span class="pre">soar_splitpart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">-</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_splitpart" title="Permalink to this definition">¶</a></dt>
+<dd><p>[split a string and return the index]</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>value ([str]): [string to split]
+index ([int]): [index to return]
+split_chars (str, optional): [split characters]. Defaults to ‘ - ‘.</p>
+</dd>
+<dt>Returns:</dt><dd><p>[str]: [index of string. if index is out of bounds, the original string is returned]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_substitute">
+<span class="sig-name descname"><span class="pre">soar_substitute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>jinja custom filter to replace values based on a lookup dictionary</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>value ([str]): [original value]
+json_str ([str]): [string encoded json lookup values]</p>
+</dd>
+<dt>Returns:</dt><dd><p>[str]: [replacement value or original value if no replacement found]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_trimlist">
+<span class="sig-name descname"><span class="pre">soar_trimlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_trimlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>[trim whitespace from elements in a list]</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>list ([type]): [description]</p>
+</dd>
+<dt>Returns:</dt><dd><p>[list]: [list with elements trimmed of whitespace]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try convert non-timestamp values to a timestamp</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">({</span><span class="s2">"year"</span><span class="p">:</span> <span class="mi">2018</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"timezoneID"</span><span class="p">:</span> <span class="s2">"CET"</span><span class="p">})</span>
+<span class="go">1533078000000</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="n">Undefined</span><span class="p">())</span>
+<span class="go">'null'</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">"now"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1530000000000</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">"now"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2000000000000</span> <span class="c1"># 2033</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.uniq">
+<span class="sig-name descname"><span class="pre">uniq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.uniq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce the unique list.  If val is a dict, produce unique of key values.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]))</span>
+<span class="go">[1, 2, 3]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">}]))</span>
+<span class="go">[{'a': 1}, {'a': 2}, {'a': 3}]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="ne">Exception</span><span class="p">()],</span> <span class="s2">"a"</span><span class="p">))</span>
+<span class="go">[{'a': 1}, {'a': 2}, {'a': 3}, Exception()]</span>
+</pre></div>
+</div>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.templates_common.url_filter">
+<span class="sig-name descname"><span class="pre">url_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.url_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jinja2 filter function ‘url’ produces URL-encoded string of the value</p>
+</dd></dl>
+</section>
 <section id="exceptions">
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
@@ -1057,6 +1445,7 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#proxies">Proxies</a></li>
 <li><a class="reference internal" href="#module-resilient_lib.components.resilient_common">Common Helper Methods</a></li>
 <li><a class="reference internal" href="#common-request-methods">Common Request Methods</a></li>
+<li><a class="reference internal" href="#module-resilient_lib.components.templates_common">Common Jinja Methods</a></li>
 <li><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
 </ul>
