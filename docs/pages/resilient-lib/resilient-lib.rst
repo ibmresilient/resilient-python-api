@@ -82,12 +82,13 @@ Common Request Methods
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
 
 
-----------------------
-Common JINJA Templates
-----------------------
+--------------------
+Common Jinja Methods
+--------------------
 
 .. automodule:: resilient_lib.components.templates_common
    :members:
+   :exclude-members: environment
 
 ----------
 Exceptions

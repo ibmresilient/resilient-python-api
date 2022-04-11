@@ -2,24 +2,95 @@
 # pragma pylint: disable=unused-argument, no-self-use
 # (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
-"""Template processing"""
+"""
+Common methods and filters used to process 
+`Jinja Templates <https://jinja.palletsprojects.com/en/3.1.x/>`_ 
 
-# Jinja template functions
+**Usage:**
 
-from __future__ import print_function
+1. Create a Jinja template in the ``/util/templates`` directory
+
+.. note::
+
+    Normally a template is in JSON format:
+
+    .. code-block::
+
+        {
+            "incident_name": "{{ alert_name }}",
+            "severity": {{alert_severity}}
+        }
+
+3. (*Optional*) Add an option to your ``app.config`` file to specify an absolute path to a custom Jinja template called: ``custom_template_path``
+
+2. Add the following code to your **Function**:
+
+.. code-block:: python
+
+    import pkg_resources
+    from resilient_circuits import AppFunctionComponent, FunctionResult, app_function
+    from resilient_lib import make_payload_from_template
+
+    PACKAGE_NAME = "my_app"
+    FN_NAME = "my_function_using_jinja"
+    DEFAULT_TEMPLATE_PATH = pkg_resources.resource_filename(PACKAGE_NAME, "util/templates/<default_name>.jinja2")
+
+    class FunctionComponent(AppFunctionComponent):
+
+        def __init__(self, opts):
+            super(FunctionComponent, self).__init__(opts, PACKAGE_NAME)
+
+        @app_function(FN_NAME)
+        def _app_function(self, fn_inputs):
+            '''
+            Function: A function showing how to use Jinja templates
+            Inputs:
+                -   fn_inputs.alert_severity
+                -   fn_inputs.device_id
+            '''
+
+            custom_template_path = self.app_configs.custom_template_path if hasattr(self.app_configs, "custom_template_path") else ""
+
+            template_rendered = make_payload_from_template(
+                template_override=custom_template_path,
+                default_template=DEFAULT_TEMPLATE_PATH,
+                payload={
+                    "alert_name": f"Malware found on device {fn_inputs.device_id}",
+                    "alert_severity": fn_inputs.alert_severity
+                },
+                return_json=True
+            )
+
+            self.LOG.info(template_rendered)
+
+            results = {"template_rendered": template_rendered}
+
+            yield FunctionResult(results)
+
+**Output:**
+
+.. code-block:: python
+
+    INFO [my_function_using_jinja] {'incident_name': 'Malware found on device 303', 'severity': 'High'}
+
+======
+
+"""
+
 import calendar
 import datetime
-from jinja2 import Environment, select_autoescape, Undefined
-from jinja2.exceptions import TemplateSyntaxError, TemplateError
 import json
 import logging
 import os
 import pprint
-import pytz
 import random
 import re
 import sys
 import time
+
+import pytz
+from jinja2 import Environment, Undefined, select_autoescape
+from jinja2.exceptions import TemplateError, TemplateSyntaxError
 from resilient_lib import readable_datetime
 
 if sys.version_info.major < 3:
@@ -44,19 +115,22 @@ LOG = logging.getLogger(__name__)
 
 UNDEFINED_LABEL = "[undefined]"
 
+
 def render(template, data):
-    """Render data into a template, producing a string result. All the additional custom filters are available
-
-        Inputs:
-            template [str or dict]: Jinja template to use
-            data [dict]: JSON data to apply to the template
-
-        Returns:
-            [str] - result from the rendering of the template
-                    The template is usually a string, but can be a dict.
     """
+    Render data into a template, producing a string result. All the additional custom filters are available
 
-    """
+    :param template: Path to or a dict of the Jinja template
+    :type template: str or dict
+    :param data: JSON data to apply to the template
+    :type data: dict
+    :return: result from the rendering of the template. The template is usually a string, but can be a dict.
+    :rtype: str or dict
+
+    **Examples:**
+
+    .. code-block:: python
+
         >>> render("template {{value}}", {"value":"123"})
         u'template 123'
 
@@ -92,26 +166,6 @@ def render(template, data):
 
         >>> render('template={{value|timestamp}}', {"value":datetime.datetime(2015, 7, 15)})
         u'template=1436918400000'
-
-        >>> d = json.loads('{"attributes": \
-                {"cn": ["Albert Einstein"], "createTimestamp": "2014-02-21 16:51:33+00:00", \
-                 "creatorsName": "cn=admin,dc=example,dc=com", \
-                 "entryCSN": ["20150720185447.990131Z#000000#000#000000"], \
-                 "entryDN": "uid=einstein,dc=example,dc=com", \
-                 "entryUUID": "29f6dc28-2f64-1033-898b-a53eb149a944", \
-                 "hasSubordinates": false, \
-                 "mail": ["einstein@ldap.forumsys.com"], \
-                 "modifiersName": "cn=admin,dc=example,dc=com", \
-                 "modifyTimestamp": "2015-07-20 18:54:47+00:00", \
-                 "objectClass": ["inetOrgPerson", "organizationalPerson", "person", "top"], \
-                 "sn": ["Einstein"], \
-                 "structuralObjectClass": "inetOrgPerson", \
-                 "subschemaSubentry": "cn=Subschema", \
-                 "telephoneNumber": ["314-159-2653"], \
-                 "uid": ["einstein"]}, \
-                "dn": "uid=einstein,dc=example,dc=com"}')
-        >>> render('{"description": "DN={{dn}}, mail={{attributes.mail[0]}}"}',d)
-        u'{"description": "DN=uid=einstein,dc=example,dc=com, mail=einstein@ldap.forumsys.com"}'
     """
 
     stringtemplate = template
@@ -131,19 +185,23 @@ def render(template, data):
         raise
     return stringvalue
 
+
 def render_json(template, data):
-    """Render data into a template, producing a JSON result
-       Also clean up any "really bad" control characters to avoid failure.
-
-        Args:
-            template [str or dict]: Jinja template to use
-            data [dict]: JSON data to apply to the template
-
-        Returns:
-            [dict] - JSON entresult from the rendering of the template
     """
+    Render data into a template, producing a JSON result.
+    Also clean up any "really bad" control characters to avoid failure.
 
-    """
+    :param template: Path to or a dict of the Jinja template
+    :type template: str or dict
+    :param data: dict to apply to the template
+    :type data: dict
+    :return: result from the rendering of the template as a dictionary
+    :rtype: dict
+
+    **Examples:**
+
+    .. code-block:: python
+
        >>> d = {"value": "the" + chr(10) + "new" + chr(10) + "thing"}
        >>> render_json('{"result":"{{value}}"}', d)
        {u'result': u'the new thing'}
@@ -156,30 +214,41 @@ def render_json(template, data):
     result = _remove_ctl_chars(result)
     return _convert_to_json(result)
 
+
 def _remove_ctl_chars(result):
     # replace any control characters with spaces
     for n in range(1, 32):
         result = result.replace(chr(n), " ")
     return result
 
+
 def _convert_to_json(result):
     try:
         return json.loads(result)
     except:
-        LOG.error("invalid json result: %s", result)
-        raise
+        raise ValueError(u"It is expected that the rendered template is a JSON Object\nInvalid JSON result: {0}".format(result))
+
 
 def make_payload_from_template(template_override, default_template, payload, return_json=True):
-    """convert a payload into a newformat based on a specified template
+    """
+    Convert a payload into a new format based on a specified template
 
-    Args:
-        template_override ([str]): [/path/to/customer/supplied/template.jinja]
-        default_template ([str]): [/path/to/template.jinja]
-        payload ([dict]): [data to convert]
-        return_json ([bool]): [True if results should be returned as JSON]
-
-    Returns:
-        [dict/str]: [result of rendered template]
+    :param template_override: Path to the specified template (*usually
+        taken from the app.config file. See the Usage example above*)
+    :type template_override: str
+    :param default_template: Path to the default template (*usually in
+        the '/util/templates' directory. See the Usage example above*)
+    :type default_template: str
+    :param payload: ``dict`` of payload that will be passed to Jinja template
+    :type payload: dict
+    :param return_json: False if template should be render as a ``str``
+        and results returned as a ``str``
+    :type return_json: bool
+    :return: If the Jinja template is valid JSON and ``return_json`` is ``True`` the result will
+        be returned as a ``dict`` else it will return the rendered template as a ``str``
+    :rtype: str|dict
+    :raises ValueError: if ``return_json`` is ``True`` and the Jinja template is not
+        valid JSON
     """
     template_data = _get_template(template_override, default_template)
 
@@ -482,17 +551,41 @@ def sample_filter(val, count=None):
         except ValueError:
             return []
 
-def camel_filter(val):
-    """Return CamelCase
 
-       >>> camel_filter("a#bc_def")
-       'ABcDef'
+def camel_filter(val):
+    """
+    **camel**
+
+    Convert text to CamelCase
+
+    :param val: The string to convert
+    :type val: str
+    :return: Converted string
+    :rtype: str
+
+    .. code-block::
+
+        This value is in camel case: {{ a#bc_def | camel }}
+        >>> 'ABcDef'
     """
     titlecase = val.title()
     return re.sub(r"[\W^_]", "", titlecase)
 
+
 def base64_filter(val, indent=2):
-    """Jinja2 filter function 'base64' breaks text into fixed-width blocks"""
+    """
+    **base64**
+
+    Breaks text into fixed-width blocks. You can specify the
+    indent
+
+    :param val: The string to convert
+    :type val: str
+    :param indent: Number of tabs
+    :type indent: int
+    :return: Converted string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return ""
     s = json.dumps(val).encode("utf-8")
@@ -528,15 +621,38 @@ _ENV = Environment(autoescape=select_autoescape(default_for_string=False))
 _ENV.globals.update(JINJA_FILTERS)
 _ENV.filters.update(JINJA_FILTERS)
 
-def environment():
-    """ return the jinja environment. This environment can be expanded upon to add additional custom filters:
-        Ex:
-            addl_custom_filters = {
-                "filter_name": method_name
-            }
-            env = environment()
-            env.globals.update(addl_custom_filters)
-            env.filters.update(addl_custom_filters)
 
+def global_jinja_env():
+    """
+    Return the Jinja environment with our resilient-lib custom filters.
+    This environment can be expanded upon to add additional custom filters
+
+    See `Jinja Custom Filters <https://jinja.palletsprojects.com/en/3.1.x/api/#custom-filters>`_ for more
+
+    Current custom filters available:
+
+    .. parsed-literal::
+
+        |lib_jinja_filters|
+
+
+    :return: The Jinja environment
+    :rtype: `jinja2.Environment <https://jinja.palletsprojects.com/en/3.1.x/api/#jinja2.Environment>`_
+
+    **Example:**
+
+    .. code-block:: python
+
+        from resilient-lib import environment
+
+        addl_custom_filters = {
+            "filter_name": method_name
+        }
+        env = environment()
+        env.globals.update(addl_custom_filters)
+        env.filters.update(addl_custom_filters)
     """
     return _ENV
+
+
+environment = global_jinja_env

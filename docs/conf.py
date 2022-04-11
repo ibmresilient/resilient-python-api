@@ -97,12 +97,14 @@ resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.
 circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 lib_setup_attributes = parse_setup_py(os.path.abspath("../resilient-lib/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 sdk_setup_attributes = parse_setup_py(os.path.abspath("../resilient-sdk/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+jinja_filters = ", ".join(list(resilient_lib.components.templates_common.JINJA_FILTERS.keys()))
 
 # make variables available in .rst files
 rst_epilog = f"""
 .. |resilient_desc| replace:: {resilient_setup_attributes.get("description")}
 .. |circuits_desc| replace:: {circuits_setup_attributes.get("description")}
 .. |lib_desc| replace:: {lib_setup_attributes.get("description")}
+.. |lib_jinja_filters| replace:: {jinja_filters}
 .. |sdk_desc| replace:: {sdk_setup_attributes.get("description")}
 .. |sdk_parser_desc| replace:: {sdk_parser.description}
 .. |sdk_parser_usage| replace:: {sdk_parser.usage}
