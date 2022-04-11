@@ -1,6 +1,7 @@
 **2022-05: version 45.0**
 
-* We now support if the ``org_name`` config is set to the org's ``cloud_account``, ``uuid`` or ``name``
+* The ``org_name`` config can now specify any of the organization's
+  ``cloud_account``, ``uuid`` or ``name``
 
 **2022-04: version 44.1**
 
