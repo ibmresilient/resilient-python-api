@@ -278,7 +278,7 @@ def run_apps_selftest(cmd_line_args, app_configs):
         LOG.info("\nERROR: running selftest for App.\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(1, 1)))
         exit(ERROR_EXIT_CODES_MAP.get(1, 1))
     elif selftest_unimplemented_count:
-        LOG.info("\nERROR: selftest unimplemented for App.\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(2, 2)))
+        LOG.info("\nERROR: selftest is unimplemented for this App. Note: the App may still continue to work...\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(2, 2)))
         exit(ERROR_EXIT_CODES_MAP.get(2, 2))
 
     LOG.info("{0}Successfully ran App's selftest!{0}".format(constants.LOG_DIVIDER))
