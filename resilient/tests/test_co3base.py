@@ -2,11 +2,118 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
-import sys
 import io
-import os
 import json
+import os
+import sys
+
+import pytest
+from resilient import constants
+
 from tests.shared_mock_data import mock_paths
+from tests import helpers
+
+
+def test_set_api_key_authorized(fx_base_client):
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    mock_uri = "{0}/rest/session".format(base_client.base_url)
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(helpers.get_mock_response("session")))
+
+    base_client.org_name = "Test Organization"
+    base_client.set_api_key("123", "456")
+
+    assert base_client.api_key_handle == 4
+    assert base_client.org_id == 201
+
+
+def test_set_api_key_unauthorized(fx_base_client):
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    mock_uri = "{0}/rest/session".format(base_client.base_url)
+    requests_adapter.register_uri('GET', mock_uri, status_code=401)
+
+    with pytest.raises(SystemExit) as sys_exit:
+        base_client.set_api_key("123", "456")
+
+    assert sys_exit.type == SystemExit
+    assert sys_exit.value.code == constants.ERROR_CODE_CONNECTION_UNAUTHORIZED
+
+
+def test_extract_org_id_cloud_account(fx_base_client):
+    base_client = fx_base_client[0]
+    base_client.org_name = "73c78395-470f-46a8-af7d-5e7d999a5707"
+
+    mock_response = helpers.get_mock_response("session")
+
+    base_client._extract_org_id(mock_response)
+
+    assert base_client.org_id == 201
+    assert len(base_client.all_orgs) == 2
+
+
+def test_extract_org_id_uuid(fx_base_client):
+    base_client = fx_base_client[0]
+    base_client.org_name = "61d7ae97-450b-4258-baa3-99b02308b52e"
+
+    mock_response = helpers.get_mock_response("session")
+
+    base_client._extract_org_id(mock_response)
+
+    assert base_client.org_id == 202
+    assert len(base_client.all_orgs) == 2
+
+
+def test_extract_org_id_org_name(fx_base_client):
+    base_client = fx_base_client[0]
+    base_client.org_name = "Test Organization"
+
+    mock_response = helpers.get_mock_response("session")
+    base_client._extract_org_id(mock_response)
+
+    assert base_client.org_id == 201
+    assert len(base_client.all_orgs) == 2
+
+
+def test_extract_org_id_no_orgs(fx_base_client):
+    base_client = fx_base_client[0]
+
+    with pytest.raises(Exception, match=r"User is not a member of any orgs"):
+        base_client._extract_org_id({"orgs": []})
+
+
+def test_extract_org_id_no_app_config_value(fx_base_client):
+    base_client = fx_base_client[0]
+    base_client.org_name = ""
+
+    mock_response = helpers.get_mock_response("session")
+
+    with pytest.raises(Exception, match=r"The user is a member of the following organizations: 'Test Organization'"):
+        base_client._extract_org_id(mock_response)
+
+
+def test_extract_org_id_not_member(fx_base_client):
+    base_client = fx_base_client[0]
+    base_client.org_name = "Not a Member of this Org"
+
+    mock_response = helpers.get_mock_response("session")
+
+    with pytest.raises(Exception, match=r"The user is not a member of the specified organization"):
+        base_client._extract_org_id(mock_response)
+
+
+def test_extract_org_id_disabled_org(fx_base_client):
+    base_client = fx_base_client[0]
+    base_client.org_name = "Disabled Org"
+
+    mock_response = helpers.get_mock_response("session")
+
+    with pytest.raises(Exception, match=r"This organization is not accessible to you"):
+        base_client._extract_org_id(mock_response)
 
 
 def test_post_attachment_file_path(fx_base_client, fx_mk_temp_dir):
