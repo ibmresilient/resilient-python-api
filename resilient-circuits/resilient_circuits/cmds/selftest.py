@@ -20,6 +20,7 @@ LOG = logging.getLogger(constants.CMDS_LOGGER_NAME)
 
 ERROR_EXIT_CODES_MAP = {
     1: 1,       # Error running App's selftest
+    2: 2,       # selftest was unimplemented
     20: 20,     # REST: Generic connection error
     401: 21,    # REST: Connection unauthorized
     22: 22,     # REST: OSError (Could not find Certificate file)
@@ -221,6 +222,8 @@ def run_apps_selftest(cmd_line_args, app_configs):
 
     # Prepare a count of exceptions found with selftests.
     selftest_failure_count = 0
+    selftest_unimplemented_count = 0
+    selftest_unknown_count = 0
 
     for dist, component_list in components.items():
         if cmd_line_args.install_list is None or dist.project_name in install_list:
@@ -251,8 +254,12 @@ def run_apps_selftest(cmd_line_args, app_configs):
                     if isinstance(state, str):
                         LOG.info("\t%s: %s\n\tselftest output:\n\t%s\n\tElapsed time: %f seconds", ep.name, state, status, delta_seconds)
 
-                        if state.lower() == "failure":
+                        if state.lower() == constants.SELFTEST_FAILURE_STATE:
                             selftest_failure_count += 1
+                        elif state.lower() == constants.SELFTEST_UNIMPLEMENTED_STATE:
+                            selftest_unimplemented_count += 1
+                        elif state.lower() != constants.SELFTEST_SUCCESS_STATE:
+                            selftest_unknown_count += 1
 
                     else:
                         LOG.info("\t%s:\n\tUnsupported dictionary returned:\n\t%s\n\tElapsed time: %f seconds", ep.name, status, delta_seconds)
@@ -267,9 +274,12 @@ def run_apps_selftest(cmd_line_args, app_configs):
         LOG.warning("%s not found. Check package name(s)", install_list)
 
     # Check if any failures were found and printed to the console
-    if selftest_failure_count:
+    if selftest_failure_count or selftest_unknown_count:
         LOG.info("\nERROR: running selftest for App.\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(1, 1)))
         exit(ERROR_EXIT_CODES_MAP.get(1, 1))
+    elif selftest_unimplemented_count:
+        LOG.info("\nERROR: selftest unimplemented for App.\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(2, 2)))
+        exit(ERROR_EXIT_CODES_MAP.get(2, 2))
 
     LOG.info("{0}Successfully ran App's selftest!{0}".format(constants.LOG_DIVIDER))
 
