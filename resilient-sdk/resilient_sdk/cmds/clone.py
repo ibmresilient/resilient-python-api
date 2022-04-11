@@ -140,7 +140,7 @@ class CmdClone(BaseCmd):
         LOG.debug("Called clone with %s", args)
         start = datetime.now()
 
-        # Instansiate connection to the Resilient Appliance
+        # Instansiate connection to SOAR
         CmdClone.res_client = get_resilient_client(path_config_file=args.config)
 
         org_export = get_latest_org_export(CmdClone.res_client)
