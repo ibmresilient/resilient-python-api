@@ -8,7 +8,7 @@ Common methods and filters used to process
 
 **Usage:**
 
-1. Create a Jinja template in the ``/util/templates`` directory
+1. Create a Jinja template in the ``/util/templates`` directory of the App
 
 .. note::
 
@@ -18,12 +18,14 @@ Common methods and filters used to process
 
         {
             "incident_name": "{{ alert_name }}",
-            "severity": {{alert_severity}}
+            "severity": "{{ alert_severity }}"
         }
 
-3. (*Optional*) Add an option to your ``app.config`` file to specify an absolute path to a custom Jinja template called: ``custom_template_path``
+2. (*Optional*) Add an option to your ``app.config`` file to specify an absolute
+path to a custom Jinja template called: ``custom_template_path`` - if not provided the
+value of ``DEFAULT_TEMPLATE_PATH`` will be used
 
-2. Add the following code to your **Function**:
+3. Add the following code to your **Function**:
 
 .. code-block:: python
 
@@ -67,11 +69,29 @@ Common methods and filters used to process
 
             yield FunctionResult(results)
 
-**Output:**
+Output:
 
 .. code-block:: python
 
     INFO [my_function_using_jinja] {'incident_name': 'Malware found on device 303', 'severity': 'High'}
+
+4. Update your ``README.md`` documentation file to include relevant information about the templates,
+for example:
+
+.. code-block::
+
+    ## Templates for SOAR Cases
+    It may necessary to modify the templates used to create SOAR cases based on a customer's required custom fields.
+    Below are the default templates used which can be copied, modified and used with app.config's
+    `custom_template_path` setting to override the default template.
+
+    ### custom_template.jinja
+    ```
+    {
+        "incident_name": "{{ alert_name }}",
+        "severity": "{{ alert_severity }}"
+    }
+    ```
 
 ======
 
@@ -292,17 +312,29 @@ def _get_template(specified_template, default_template):
         return definition.read()
 
 # C U S T O M   J I N J A   F I L T E R S
-def soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=None):
-    """custom jinja filter to convert UTC dates to epoch format
 
-    Args:
-        value ([str]): [jinja provided field value]
-        date_format (str, optional): [conversion format]. Defaults to "%Y-%m-%dT%H:%M:%S".
-        split_at (str, optional): [character to split the date field to scope the date field.]
-            examples: split_at='.' to remove milliseconds for "2021-10-22T20:53:53.913Z",
-                      split_at='+' tp remove tz information "2021-10-22T20:53:53+00:00",
-    Returns:
-        [int]: [epoch value of datetime, in milliseconds]
+
+def soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=None):
+    """
+    **soar_datetimeformat**
+
+    Convert UTC dates to epoch format
+
+    :param value: The UTC date string
+    :type value: str
+    :param date_format: *(optional)* Conversion format. Defaults to ``"%Y-%m-%dT%H:%M:%S"``
+    :type date_format: str
+    :param split_at: *(optional)* Character to split the date field to scope the date field.
+
+        .. code-block::
+
+            split_at='.' to remove milliseconds for "2021-10-22T20:53:53.913Z"
+            split_at='+' to remove tz information "2021-10-22T20:53:53+00:00"
+
+    :type split_at: str
+
+    :return: Epoch value of datetime, in milliseconds
+    :rtype: int
     """
     if not value:
         return value
@@ -311,17 +343,21 @@ def soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=None):
         utc_time = time.strptime(value[:value.rfind(split_at)], date_format)
     else:
         utc_time = time.strptime(value, date_format)
-    return calendar.timegm(utc_time)*1000
+    return calendar.timegm(utc_time) * 1000
+
 
 def soar_substitute(value, json_str):
-    """jinja custom filter to replace values based on a lookup dictionary
+    """
+    **soar_substitute**
 
-    Args:
-        value ([str]): [original value]
-        json_str ([str]): [string encoded json lookup values]
+    Replace values based on a lookup dictionary
 
-    Returns:
-        [str]: [replacement value or original value if no replacement found]
+    :param value: original value to lookup
+    :type value: str
+    :param json_str: JSON encoded string with key/value pairs of lookup values
+    :type json_str: JSON encoded str
+    :return: replacement value or original value if no replacement found
+    :rtype: str | int
     """
     replace_dict = json.loads(json_str)
     if value in replace_dict:
@@ -333,16 +369,21 @@ def soar_substitute(value, json_str):
 
     return value
 
+
 def soar_splitpart(value, index, split_chars=' - '):
-    """[split a string and return the index]
+    """
+    **soar_splitpart**
 
-    Args:
-        value ([str]): [string to split]
-        index ([int]): [index to return]
-        split_chars (str, optional): [split characters]. Defaults to ' - '.
+    Split a string and return the index
 
-    Returns:
-        [str]: [index of string. if index is out of bounds, the original string is returned]
+    :param value: string to split
+    :type value: str
+    :param index: index of split to return
+    :type index: int
+    :param split_chars: *(optional)* split characters.  Defaults to ``' - '``
+    :type split_chars: str
+    :return: value of split. If ``index`` is out of bounds, the original ``value`` is returned
+    :rtype: str
     """
     splits = value.split(split_chars)
     if len(splits) > index:
@@ -350,57 +391,132 @@ def soar_splitpart(value, index, split_chars=' - '):
 
     return value
 
-def soar_trimlist(org_list):
-    """[trim whitespace from elements in a list]
 
-    Args:
-        list ([type]): [description]
-    Returns:
-        [list]: [list with elements trimmed of whitespace]
+def soar_trimlist(org_list):
+    """
+    **soar_trimlist**
+
+    Trim whitespace from elements in a list
+
+    :param org_list: list of elements to trim whitespace from
+    :type org_list: list of strings
+    :return: list with elements trimmed of whitespace
+    :rtype: list
     """
     if not isinstance(org_list, list):
         return org_list
     return [element.strip() for element in org_list]
 
+
 def js_filter(val):
-    """Jinja2 filter function 'js' produces JSONified string of the value, without surrounding quotes"""
+    """
+    **js**
+
+    Produces JSONified string of the value,
+    without surrounding quotes
+
+    :param val: The string to convert
+    :type val: str
+    :return: JSONified string of the value, without surrounding quotes
+    :rtype: str
+    """
     if val is None or isinstance(val, Undefined):
         return "null"
     js = json_filter(val)
     return js[1:-1]
 
+
 def json_filter(val, indent=0):
-    """Jinja2 filter function 'json' produces JSONified string of the value"""
+    """
+    **json**
+
+    Produces JSONified string of the value
+
+    :param val: The string to convert
+    :type val: str
+    :return: JSONified string of the value
+    :rtype: str
+    """
     if val is None or isinstance(val, Undefined):
         return "null"
     return json.dumps(val, indent=indent, sort_keys=True)
 
+
 def html_filter(val):
-    """Jinja2 filter function 'html' produces HTML-encoded string of the value"""
+    """
+    **html**
+
+    Produces HTML-encoded string of the value
+
+    :param val: The string to encode
+    :type val: str
+    :return: Encoded string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     return html_escape(val)
 
+
 def url_filter(val):
-    """Jinja2 filter function 'url' produces URL-encoded string of the value"""
+    """
+    **url**
+
+    Produces URL-encoded string of the value
+
+    :param val: The string to encoded
+    :type val: str
+    :return: Encoded string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     return quote(str(val))
 
+
 def idna_filter(val):
-    """Jinja2 filter function 'idna' encodes the value per RFC 3490"""
+    """
+    **idna**
+
+    Encodes the value per RFC 3490
+
+    :param val: The string to encode
+    :type val: str
+    :return: Encoded string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     return val.encode("idna").decode("utf-8")
 
+
 def punycode_filter(val):
-    """Jinja2 filter function 'punycode' encodes the value per RFC 3492"""
+    """
+    **punycode**
+
+    Encodes the value per RFC 3492
+
+    :param val: The string to encode
+    :type val: str
+    :return: Encoded string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     return val.encode("punycode").decode("utf-8")
 
+
 def ldap_filter(val):
-    """Jinja2 filter function 'ldap' produces LDAP-encoded string of the value"""
+    """
+    **ldap**
+
+    Produces LDAP-encoded string of the value
+
+    :param val: The string to encode
+    :type val: str
+    :return: Encoded string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     escaped = []
@@ -410,8 +526,18 @@ def ldap_filter(val):
         escaped.append(char)
     return ''.join(escaped)
 
+
 def ps_filter(val):
-    """Jinja2 filter function 'ps' escapes for use in a PowerShell commandline"""
+    """
+    **ps**
+
+    Escapes characters in ``val`` for use in a PowerShell commandline
+
+    :param val: The string to escaped
+    :type val: str
+    :return: Escaped string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     escaped = []
@@ -437,8 +563,18 @@ def ps_filter(val):
         escaped.append(char)
     return ''.join(escaped)
 
+
 def sh_filter(val):
-    """Jinja2 filter function 'sh' escapes for use in a Unix shell commandline"""
+    """
+    **sh**
+
+    Escapes characters in ``val`` for use in a Unix shell commandline
+
+    :param val: The string to escaped
+    :type val: str
+    :return: Escaped string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
     escaped = []
@@ -450,8 +586,20 @@ def sh_filter(val):
         escaped.append(char)
     return ''.join(escaped)
 
+
 def pretty_filter(val, indent=2):
-    """Jinja2 filter function 'pretty' produces pretty-printed string of the value"""
+    """
+    **pretty**
+
+    Produces pretty-printed string of the value
+
+    :param val: The string to format
+    :type val: str
+    :param indent: Number of tabs to use when formatting
+    :type indent: int
+    :return: The formatted string
+    :rtype: str
+    """
     if isinstance(val, Undefined):
         return UNDEFINED_LABEL
 
@@ -466,25 +614,46 @@ def pretty_filter(val, indent=2):
     printer.format = nice_repr
     return printer.pformat(val)
 
+
 def iso8601(val):
-    """Assuming val is an epoch milliseconds timestamp, produce ISO8601 datetime"""
+    """
+    **iso8601**
+
+    Assuming ``val`` is an epoch milliseconds timestamp, produce ISO8601 datetime
+
+    :param val: An epoch milliseconds timestamp
+    :type val: str|int
+    :return: ISO8601 datetime
+    :rtype: str
+    """
     dt = datetime.datetime.utcfromtimestamp(int(int(val)/1000))
     return pytz.UTC.localize(dt).isoformat()
 
+
 def timestamp(val):
-    """Try convert non-timestamp values to a timestamp
+    """
+    **timestamp**
 
-       >>> timestamp({"year": 2018, "month": 8, "day": 1, "timezoneID": "CET"})
-       1533078000000
+    Try convert non-timestamp values to a timestamp
 
-       >>> timestamp(Undefined())
-       'null'
+    :param val: Either ``"now"`` or a dict containing year / month / day etc.
+    :type val: str | dict
+    :return: An epoch milliseconds timestamp
+    :rtype: int
 
-       >>> timestamp("now") > 1530000000000
-       True
+    .. code-block::
 
-       >>> timestamp("now") > 2000000000000 # 2033
-       False
+        >>> timestamp({"year": 2018, "month": 8, "day": 1, "timezoneID": "CET"})
+        1533078000000
+
+        >>> timestamp(Undefined())
+        'null'
+
+        >>> timestamp("now") > 1530000000000
+        True
+
+        >>> timestamp("now") > 2000000000000 # 2033
+        False
     """
     if isinstance(val, dict):
         y = val.get("year", 1970)
@@ -505,8 +674,21 @@ def timestamp(val):
         return int(calendar.timegm(datetime.datetime.now().utctimetuple()) * 1000)
     return val
 
+
 def uniq(val, key=None):
-    """Produce the unique list.  If val is a dict, produce unique of key values.
+    """
+    **uniq**
+
+    Produce the unique list.  If ``val`` is a dict, produce unique list of key values
+
+    :param val: The original list
+    :type val: [str | int | obj]
+    :param key: If ``val`` is a dict return a list with dicts with just that ``key``
+    :type key: str
+    :return: Original list of items with duplicates removed
+    :rtype: list
+
+    .. code-block::
 
        >>> sorted(uniq([1,2,3,2]))
        [1, 2, 3]
@@ -536,8 +718,21 @@ def uniq(val, key=None):
             values.append(value)
     return values
 
+
 def sample_filter(val, count=None):
-    """Return a random sample from a list"""
+    """
+    **sample**
+
+    Return a random sample from a list
+
+    :param val: List of str | obj | int
+    :type val: list
+    :param count: Number of times to repeat items in ``val`` to
+        increase its *random* probability
+    :type count: int | ``None``
+    :return: The random item
+    :rtype: str | obj | int
+    """
     if count is None:
         # Return a single value
         try:
