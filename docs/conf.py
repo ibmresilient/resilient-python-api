@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.abspath("../resilient_sdk"))
 # -- Project information -----------------------------------------------------
 
 project = 'IBM SOAR Python Libraries'
-copyright = '2021, IBM'
+copyright = '2022, IBM'
 author = 'IBM SOAR'
 version = resilient_lib.__version__
 release = resilient_lib.__version__

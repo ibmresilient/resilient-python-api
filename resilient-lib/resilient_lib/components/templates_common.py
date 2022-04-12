@@ -8,7 +8,7 @@ Common methods and filters used to process
 
 **Usage:**
 
-1. Create a Jinja template in the ``/util/templates`` directory of the App
+1. Create a Jinja template in the ``/util/templates`` directory of the App.
 
 .. note::
 
@@ -17,13 +17,13 @@ Common methods and filters used to process
     .. code-block::
 
         {
-            "incident_name": "{{ alert_name }}",
+            "name": "{{ alert_name }}",
             "severity": "{{ alert_severity }}"
         }
 
 2. (*Optional*) Add an option to your ``app.config`` file to specify an absolute
 path to a custom Jinja template called: ``custom_template_path`` - if not provided the
-value of ``DEFAULT_TEMPLATE_PATH`` will be used
+value of ``DEFAULT_TEMPLATE_PATH`` is used.
 
 3. Add the following code to your **Function**:
 
@@ -73,7 +73,7 @@ Output:
 
 .. code-block:: python
 
-    INFO [my_function_using_jinja] {'incident_name': 'Malware found on device 303', 'severity': 'High'}
+    INFO [my_function_using_jinja] {'name': 'Malware found on device 303', 'severity': 'High'}
 
 4. Update your ``README.md`` documentation file to include relevant information about the templates,
 for example:
@@ -88,7 +88,7 @@ for example:
     ### custom_template.jinja
     ```
     {
-        "incident_name": "{{ alert_name }}",
+        "name": "{{ alert_name }}",
         "severity": "{{ alert_severity }}"
     }
     ```
@@ -138,13 +138,13 @@ UNDEFINED_LABEL = "[undefined]"
 
 def render(template, data):
     """
-    Render data into a template, producing a string result. All the additional custom filters are available
+    Render data into a template, producing a string result. All the additional custom filters are available.
 
     :param template: Path to or a dict of the Jinja template
     :type template: str or dict
     :param data: JSON data to apply to the template
     :type data: dict
-    :return: result from the rendering of the template. The template is usually a string, but can be a dict.
+    :return: result from the rendering of the template. The template is usually a string, but can be a dict
     :rtype: str or dict
 
     **Examples:**
@@ -251,7 +251,7 @@ def _convert_to_json(result):
 
 def make_payload_from_template(template_override, default_template, payload, return_json=True):
     """
-    Convert a payload into a new format based on a specified template
+    Convert a payload into a new format based on a specified template.
 
     :param template_override: Path to the specified template (*usually
         taken from the app.config file. See the Usage example above*)
@@ -259,13 +259,13 @@ def make_payload_from_template(template_override, default_template, payload, ret
     :param default_template: Path to the default template (*usually in
         the '/util/templates' directory. See the Usage example above*)
     :type default_template: str
-    :param payload: ``dict`` of payload that will be passed to Jinja template
+    :param payload: ``dict`` of payload that is passed to Jinja template
     :type payload: dict
     :param return_json: False if template should be render as a ``str``
         and results returned as a ``str``
     :type return_json: bool
-    :return: If the Jinja template is valid JSON and ``return_json`` is ``True`` the result will
-        be returned as a ``dict`` else it will return the rendered template as a ``str``
+    :return: If the Jinja template is valid JSON and ``return_json`` is ``True`` the result is
+        returned as a ``dict`` else it returns the rendered template as a ``str``
     :rtype: str|dict
     :raises ValueError: if ``return_json`` is ``True`` and the Jinja template is not
         valid JSON
@@ -318,13 +318,13 @@ def soar_datetimeformat(value, date_format="%Y-%m-%dT%H:%M:%S", split_at=None):
     """
     **soar_datetimeformat**
 
-    Convert UTC dates to epoch format
+    Convert UTC dates to epoch format.
 
     :param value: The UTC date string
     :type value: str
     :param date_format: *(optional)* Conversion format. Defaults to ``"%Y-%m-%dT%H:%M:%S"``
     :type date_format: str
-    :param split_at: *(optional)* Character to split the date field to scope the date field.
+    :param split_at: *(optional)* Character to split the date field to scope the date field
 
         .. code-block::
 
@@ -350,7 +350,7 @@ def soar_substitute(value, json_str):
     """
     **soar_substitute**
 
-    Replace values based on a lookup dictionary
+    Replace values based on a lookup dictionary.
 
     :param value: original value to lookup
     :type value: str
@@ -374,7 +374,7 @@ def soar_splitpart(value, index, split_chars=' - '):
     """
     **soar_splitpart**
 
-    Split a string and return the index
+    Split a string and return the index.
 
     :param value: string to split
     :type value: str
@@ -396,7 +396,7 @@ def soar_trimlist(org_list):
     """
     **soar_trimlist**
 
-    Trim whitespace from elements in a list
+    Trim whitespace from elements in a list.
 
     :param org_list: list of elements to trim whitespace from
     :type org_list: list of strings
@@ -413,7 +413,7 @@ def js_filter(val):
     **js**
 
     Produces JSONified string of the value,
-    without surrounding quotes
+    without surrounding quotes.
 
     :param val: The string to convert
     :type val: str
@@ -430,7 +430,7 @@ def json_filter(val, indent=0):
     """
     **json**
 
-    Produces JSONified string of the value
+    Produces JSONified string of the value.
 
     :param val: The string to convert
     :type val: str
@@ -446,7 +446,7 @@ def html_filter(val):
     """
     **html**
 
-    Produces HTML-encoded string of the value
+    Produces HTML-encoded string of the value.
 
     :param val: The string to encode
     :type val: str
@@ -462,7 +462,7 @@ def url_filter(val):
     """
     **url**
 
-    Produces URL-encoded string of the value
+    Produces URL-encoded string of the value.
 
     :param val: The string to encoded
     :type val: str
@@ -478,7 +478,7 @@ def idna_filter(val):
     """
     **idna**
 
-    Encodes the value per RFC 3490
+    Encodes the value per RFC 3490.
 
     :param val: The string to encode
     :type val: str
@@ -494,7 +494,7 @@ def punycode_filter(val):
     """
     **punycode**
 
-    Encodes the value per RFC 3492
+    Encodes the value per RFC 3492.
 
     :param val: The string to encode
     :type val: str
@@ -510,7 +510,7 @@ def ldap_filter(val):
     """
     **ldap**
 
-    Produces LDAP-encoded string of the value
+    Produces LDAP-encoded string of the value.
 
     :param val: The string to encode
     :type val: str
@@ -531,7 +531,7 @@ def ps_filter(val):
     """
     **ps**
 
-    Escapes characters in ``val`` for use in a PowerShell commandline
+    Escapes characters in ``val`` for use in a PowerShell command line.
 
     :param val: The string to escaped
     :type val: str
@@ -568,7 +568,7 @@ def sh_filter(val):
     """
     **sh**
 
-    Escapes characters in ``val`` for use in a Unix shell commandline
+    Escapes characters in ``val`` for use in a Unix shell command line.
 
     :param val: The string to escaped
     :type val: str
@@ -591,7 +591,7 @@ def pretty_filter(val, indent=2):
     """
     **pretty**
 
-    Produces pretty-printed string of the value
+    Produces pretty-printed string of the value.
 
     :param val: The string to format
     :type val: str
@@ -619,7 +619,7 @@ def iso8601(val):
     """
     **iso8601**
 
-    Assuming ``val`` is an epoch milliseconds timestamp, produce ISO8601 datetime
+    Assuming ``val`` is an epoch milliseconds timestamp, produce ISO8601 datetime.
 
     :param val: An epoch milliseconds timestamp
     :type val: str|int
@@ -634,7 +634,7 @@ def timestamp(val):
     """
     **timestamp**
 
-    Try convert non-timestamp values to a timestamp
+    Try convert non-timestamp values to a timestamp.
 
     :param val: Either ``"now"`` or a dict containing year / month / day etc.
     :type val: str | dict
@@ -679,7 +679,7 @@ def uniq(val, key=None):
     """
     **uniq**
 
-    Produce the unique list.  If ``val`` is a dict, produce unique list of key values
+    Produce the unique list.  If ``val`` is a dict, produce unique list of key values.
 
     :param val: The original list
     :type val: [str | int | obj]
@@ -723,7 +723,7 @@ def sample_filter(val, count=None):
     """
     **sample**
 
-    Return a random sample from a list
+    Return a random sample from a list.
 
     :param val: List of str | obj | int
     :type val: list
@@ -751,7 +751,7 @@ def camel_filter(val):
     """
     **camel**
 
-    Convert text to CamelCase
+    Convert text to CamelCase.
 
     :param val: The string to convert
     :type val: str
@@ -772,7 +772,7 @@ def base64_filter(val, indent=2):
     **base64**
 
     Breaks text into fixed-width blocks. You can specify the
-    indent
+    ``indent``.
 
     :param val: The string to convert
     :type val: str
@@ -820,9 +820,9 @@ _ENV.filters.update(JINJA_FILTERS)
 def global_jinja_env():
     """
     Return the Jinja environment with our resilient-lib custom filters.
-    This environment can be expanded upon to add additional custom filters
+    This environment can be expanded upon to add additional custom filters.
 
-    See `Jinja Custom Filters <https://jinja.palletsprojects.com/en/3.1.x/api/#custom-filters>`_ for more
+    See `Jinja Custom Filters <https://jinja.palletsprojects.com/en/3.1.x/api/#custom-filters>`_ for more.
 
     Current custom filters available:
 

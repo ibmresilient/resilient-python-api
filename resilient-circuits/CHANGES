@@ -1,3 +1,8 @@
+**2022-04: version 44.1**
+
+* Move Jinja template management functions to ``resilient`` while
+  keeping backward compatibility here
+
 **2022-02: version 44.0**
 
 * Ensure ``tests/`` is not included in packaged code
