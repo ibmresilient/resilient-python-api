@@ -37,20 +37,22 @@ setup(
         "requests-toolbelt ~= 0.9",
         "requests-mock     ~= 1.9",
         "six               ~= 1.16",
-        "cachetools        ~= 2.1",
 
         # Python >= 3.9
         "setuptools        ~= 62.1;   python_version >= '3.9'",
         "keyring           ~= 23.5;   python_version >= '3.9'",
+        "cachetools        ~= 5.0;    python_version >= '3.9'",
 
         # Python 3.6
         "setuptools        ~= 59.6;   python_version == '3.6'",
         "keyring           ~= 23.4;   python_version == '3.6'",
+        "cachetools        ~= 2.1;    python_version == '3.6'",
 
         # Python 2.7
         # configparser is only required for py 2.7 as it is packaged with python in > 3.2
         "configparser      ~= 4.0;    python_version == '2.7'", 
         "setuptools        ~= 44.0;   python_version == '2.7'",
+        "cachetools        ~= 2.1;    python_version == '2.7'",
         "keyring           == 18.0.1; python_version == '2.7'",
     ],
 

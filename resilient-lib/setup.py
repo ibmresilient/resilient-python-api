@@ -39,7 +39,7 @@ setup(
         "pytz           ~= 2022.1",
         "six            ~= 1.16",
         "deprecated     ~= 1.2",
-        "beautifulsoup4 ~= 4.9;",
+        "beautifulsoup4 ~= 4.9",
 
         # Python 3.6 and 3.9
         "jinja2         ~= 3.0; python_version >= '3.6'",
