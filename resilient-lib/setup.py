@@ -4,9 +4,15 @@
 
 """ setup.py for resilient-lib Python Module """
 
-from os import path
 import io
-from setuptools import setup, find_packages
+from os import path
+
+from setuptools import find_packages, setup
+
+
+# We only support 2.7, 3.6, and 3.9. Following PEP 440
+# this is the string format that allows for that restriction
+python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in [0,1,2,3,4,5,7,8])
 
 this_directory = path.abspath(path.dirname(__file__))
 
@@ -26,13 +32,24 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "resilient>=44.1.0",
-        "bs4",
-        "jinja2",
-        "pytz",
-        "six",
-        "deprecated"
+        # Our libraries
+        "resilient      >= 44.1",
+
+        # 3rd party dependencies for all python versions
+        "pytz           ~= 2022.1",
+        "six            ~= 1.16",
+        "deprecated     ~= 1.2",
+        "beautifulsoup4 ~= 4.9;",
+
+        # Python 3.6 and 3.9
+        "jinja2         ~= 3.0; python_version >= '3.6'",
+
+        # Python 2.7
+        "jinja2         ~= 2.0; python_version == '2.7'",
     ],
+
+    # restrict supported python versions
+    python_requires=python_requires,
 
     entry_points={
         "resilient.lib.configsection": ["gen_config = resilient_lib.util.config:config_section_data"]
