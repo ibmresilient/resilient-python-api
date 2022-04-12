@@ -35,6 +35,8 @@ value of ``DEFAULT_TEMPLATE_PATH`` is used.
 
     PACKAGE_NAME = "my_app"
     FN_NAME = "my_function_using_jinja"
+
+    # Creating an absolute path to the template
     DEFAULT_TEMPLATE_PATH = pkg_resources.resource_filename(PACKAGE_NAME, "util/templates/<default_name>.jinja2")
 
     class FunctionComponent(AppFunctionComponent):
