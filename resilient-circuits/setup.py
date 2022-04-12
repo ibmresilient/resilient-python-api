@@ -9,6 +9,12 @@ from os import path
 
 from setuptools import find_packages, setup
 
+
+# We only support 2.7, 3.6, and 3.9. Following PEP 440
+# this is the string format that allows for that restriction
+python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in [0,1,2,3,4,5,7,8])
+
+
 this_directory = path.abspath(path.dirname(__file__))
 
 with io.open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
@@ -27,19 +33,25 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "stompest>=2.3.0",
-        "circuits",
-        "deprecated",
-        "pytz",
-        "jinja2 ~= 2.0;python_version<'3.6'",
-        "jinja2 ~= 3.0;python_version>='3.6'",
-        "pysocks",
-        "filelock>=2.0.5",
-        "watchdog>=0.9.0, <1.0.0; python_version < '3.6.0'",
-        "watchdog>=0.9.0; python_version >= '3.6.0'",
-        "resilient>=44.1.0",
-        "resilient-lib>=44.1.0"
+        # Our libraries
+        "resilient     >= 44.1",
+        "resilient-lib >= 44.1",
+
+        # 3rd party dependencies for all python versions
+        "stompest      ~= 2.3",
+        "circuits      ~= 3.2",
+        "pysocks       ~= 1.7",
+        "filelock      ~= 3.2",
+
+        # Python 3.6 and 3.9
+        "watchdog      ~= 2.1;  python_version >= '3.6'",
+
+        # Python 2.7
+        "watchdog      ~= 0.10; python_version == '2.7'",
     ],
+
+    # restrict supported python versions
+    python_requires=python_requires,
 
     entry_points={
         "console_scripts": ["res-action-test = resilient_circuits.bin.res_action_test:main",
