@@ -874,6 +874,8 @@ value of <code class="docutils literal notranslate"><span class="pre">DEFAULT_TE
 
 <span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">"my_app"</span>
 <span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">"my_function_using_jinja"</span>
+
+<span class="c1"># Creating an absolute path to the template</span>
 <span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">,</span> <span class="s2">"util/templates/&lt;default_name&gt;.jinja2"</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
