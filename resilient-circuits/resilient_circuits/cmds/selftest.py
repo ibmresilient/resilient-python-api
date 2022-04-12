@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import logging
+from modulefinder import Module
 import os
 from threading import Thread
 import time
@@ -223,6 +224,7 @@ def run_apps_selftest(cmd_line_args, app_configs):
     # Prepare a count of exceptions found with selftests.
     selftest_failure_count = 0
     selftest_unimplemented_count = 0
+    selftest_not_found_count = 0
     selftest_unknown_count = 0
 
     for dist, component_list in components.items():
@@ -236,7 +238,11 @@ def run_apps_selftest(cmd_line_args, app_configs):
             LOG.info("\n%s: ", dist.project_name)
             for ep in component_list:
                 # load the entry point
-                f_selftest = ep.load()
+                try:
+                    f_selftest = ep.load()
+                except ModuleNotFoundError:
+                    selftest_not_found_count += 1
+                    continue
 
                 try:
                     # f_selftest is the selftest function, we pass the selftest resilient options in case it wants to use it
@@ -279,6 +285,9 @@ def run_apps_selftest(cmd_line_args, app_configs):
         exit(ERROR_EXIT_CODES_MAP.get(1, 1))
     elif selftest_unimplemented_count:
         LOG.info("\nERROR: selftest is unimplemented for this App. Note: the App may still continue to work...\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(2, 2)))
+        exit(ERROR_EXIT_CODES_MAP.get(2, 2))
+    elif selftest_not_found_count:
+        LOG.info("\nERROR: selftest not found for this App. Note: the App may still continue to work...\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(2, 2)))
         exit(ERROR_EXIT_CODES_MAP.get(2, 2))
 
     LOG.info("{0}Successfully ran App's selftest!{0}".format(constants.LOG_DIVIDER))
