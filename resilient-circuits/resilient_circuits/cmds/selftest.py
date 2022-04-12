@@ -3,18 +3,20 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import logging
-from modulefinder import Module
 import os
-from threading import Thread
 import time
 from collections import defaultdict
+from threading import Thread
+
 import pkg_resources
 from requests.exceptions import ConnectionError, SSLError
+from resilient import BasicHTTPException, SimpleClient, SimpleHTTPException
 from resilient import constants as res_constants
-from resilient import BasicHTTPException, SimpleHTTPException, SimpleClient, is_env_proxies_set, get_and_parse_proxy_env_var
-from resilient_circuits.actions_component import SELFTEST_ERRORS, SELFTEST_SUBSCRIPTIONS
+from resilient import get_and_parse_proxy_env_var, is_env_proxies_set
+from resilient_circuits import app, constants, helpers
+from resilient_circuits.actions_component import (SELFTEST_ERRORS,
+                                                  SELFTEST_SUBSCRIPTIONS)
 from resilient_circuits.stomp_events import SelftestTerminateEvent
-from resilient_circuits import constants, helpers, app
 
 # Get the same logger object that is used for resilient_circuits commands
 LOG = logging.getLogger(constants.CMDS_LOGGER_NAME)
