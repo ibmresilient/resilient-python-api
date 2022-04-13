@@ -29,6 +29,7 @@ setup(
     install_requires=[
         "stompest>=2.3.0",
         "circuits",
+        "deprecated",
         "pytz",
         "jinja2 ~= 2.0;python_version<'3.6'",
         "jinja2 ~= 3.0;python_version>='3.6'",
@@ -36,8 +37,8 @@ setup(
         "filelock>=2.0.5",
         "watchdog>=0.9.0, <1.0.0; python_version < '3.6.0'",
         "watchdog>=0.9.0; python_version >= '3.6.0'",
-        "resilient>=43.1.0",
-        "resilient-lib>=43.0.0"
+        "resilient>=44.1.0",
+        "resilient-lib>=44.1.0"
     ],
 
     entry_points={

@@ -18,7 +18,7 @@ We are continuously adding to this package and our change log can be found at [i
 
 ## License and Terms
 
-Copyright © IBM Corporation 2021
+Copyright © IBM Corporation 2022
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

@@ -6,10 +6,10 @@ import requests
 import logging
 from resilient import is_env_proxies_set, get_and_parse_proxy_env_var, constants as res_constants
 from resilient_lib.components.integration_errors import IntegrationError
-from resilient_lib.util.lib_common import deprecated
+from deprecated import deprecated
 
 
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 30
 
@@ -23,7 +23,7 @@ class RequestsCommon:
     Any similar properties in the function’s section would override the [integrations] properties.
 
     .. note::
-      In the Atomic Function template, as of version 41.1, :class:`RequestsCommon` is instantiated and available available
+      In the Atomic Function template, as of version 41.1, :class:`RequestsCommon` is instantiated and available
       in a class that inherits :class:`~resilient_circuits.app_function_component.AppFunctionComponent` as an ``rc`` attribute:
 
       .. code-block:: python
@@ -64,7 +64,7 @@ class RequestsCommon:
                 proxy_details = get_and_parse_proxy_env_var(res_constants.ENV_HTTP_PROXY)
 
             if proxy_details:
-                log.debug(u"Sending request through proxy: '{0}://{1}:{2}'".format(proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port")))
+                LOG.debug(u"Sending request through proxy: '%s://%s:%s'", proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port"))
 
             return proxies
 
@@ -144,14 +144,14 @@ class RequestsCommon:
             args = args_dict.keys()
             for k in args:
                 if k != "self" and k != "kwargs" and args_dict[k] is not None:
-                    log.debug("  {}: {}".format(k, args_dict[k]))
+                    LOG.debug("  %s: %s", k, args_dict[k])
 
             # Pass request to requests.request() function
             response = requests.request(method, url, timeout=timeout, proxies=proxies, **kwargs)
 
             # Debug logging
-            log.debug(response.status_code)
-            log.debug(response.content)
+            LOG.debug(response.status_code)
+            LOG.debug(response.content)
 
             # custom handler for response handling
             # set callback to be the name of the method you would like to call
@@ -167,13 +167,13 @@ class RequestsCommon:
 
         except Exception as err:
             msg = str(err)
-            log.error(msg)
+            LOG.error(msg)
             raise IntegrationError(msg)
 
     # Create alias for execute_call_v2
     execute_call_v2 = execute
 
-    @deprecated("Use the new method execute_call_v2()")
+    @deprecated(version="v34.0", reason="Use the new method execute()")
     def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """
@@ -221,7 +221,7 @@ class RequestsCommon:
                 resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
                                         auth=basicauth, timeout=timeout, proxies=proxies)
 
-            if resp is None:
+            if not resp:
                 raise IntegrationError('no response returned')
 
             # custom handler for response handling?

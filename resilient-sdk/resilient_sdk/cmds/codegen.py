@@ -279,7 +279,7 @@ class CmdCodegen(BaseCmd):
             org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
         else:
-            # Instantiate connection to the Resilient Appliance
+            # Instantiate connection to SOAR
             res_client = sdk_helpers.get_resilient_client(path_config_file=args.config)
 
             # Generate + get latest export from Resilient Server

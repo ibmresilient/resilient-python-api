@@ -1,3 +1,9 @@
+**2022-04: version 44.1**
+
+* Better logging of an ``Unauthorized`` request with API Keys and exits with a code of ``21``
+* Added optional ``get_response_object`` argument to :class:`resilient.SimpleClient.get() <resilient.co3.SimpleClient.get>`
+  that if ``True``, returns entire response object
+
 **2022-02: version 44.0**
 
 * Ensure ``tests/`` is not included in packaged code

@@ -188,7 +188,7 @@ class inbound_app(object):
 
 class app_function(object):
     """
-    Creates new a :class:`@app_function <app_function>` decorator.
+    Creates a new :class:`@app_function <app_function>` decorator.
 
     This decorator can be applied to methods of the :class:`~resilient_circuits.app_function_component.AppFunctionComponent` class.
 

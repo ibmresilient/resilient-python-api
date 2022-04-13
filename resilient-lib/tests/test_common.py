@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-
+import configparser
 import os
 import sys
 import shutil
 import unittest
 import logging
 import pytest
+import resilient
+import time
 from collections import namedtuple
-
+from io import BytesIO
 from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
     unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, write_to_tmp_file, close_incident
+    get_file_attachment_metadata, write_to_tmp_file, close_incident, write_file_attachment
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -304,3 +306,35 @@ class TestFunctionMetrics(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             close_incident(mock_api, incident_id, kwargs_missing)
+
+class TestWriteAttachments:
+    def _create_incident(self, client, incident_dict):
+        """create a test incident to use for patching"""
+        incident = {"name": __name__,
+                    "discovered_date": int(time.time() * 1000)
+        }
+        incident.update(incident_dict)
+        inc = client.post("/incidents", incident)
+        return inc
+
+    @pytest.mark.livetest
+    def test_write_file_attachment(self):
+        config = configparser.ConfigParser()
+        with open(resilient.get_config_file(), 'r') as f:
+            config.read_file(f)
+
+        LOG.info(config)
+        # Connect to Resilient
+        client = resilient.get_client(dict(config['resilient']))
+
+        inc = self._create_incident(client, {"name": "test for attachment"})
+
+        file_name = "test-for-attachment.txt"
+        file_content = b"this is test data"
+        bytes_content = BytesIO(file_content)
+
+        # Post file to Resilient
+        response = write_file_attachment(client, file_name, bytes_content, inc['id'])
+
+        assert response
+        assert response['name'] == file_name
