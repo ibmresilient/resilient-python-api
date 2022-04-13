@@ -425,13 +425,13 @@ class BaseClient(object):
         or,  "/tasks/<id>/attachments" (for task attachments)
 
         :param uri: The REST URI for posting
-        :param filepath: the path of the file to post or use bytes_handle
+        :param filepath:the path of the file to post or if ``None``, use ``bytes_handle``
         :param filename: optional name of the file when posted
         :param mimetype: optional override for the guessed MIME type
         :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
-        :param bytes_handle: BytesIO handle for content or use filepath
+        :param bytes_handle: BytesIO handle for content, used if ``filepath`` is None
         """
         filepath = ensure_unicode(filepath)
         if filename:
@@ -492,13 +492,13 @@ class BaseClient(object):
 
         :param uri: The REST URI for posting
         :param artifact_type: the artifact type name ("IP Address", etc) or type ID
-        :param artifact_filepath: the path of the file to post
+        :param artifact_filepath: the path of the file to post or ``None`` if using ``bytes_handle``
         :param description: optional description for the artifact
         :param value: optional value for the artifact
         :param mimetype: optional override for the guessed MIME type
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
-        :param bytes_handle: byte content to create as an artifact file. Use either artifact_filepath or bytes_handle
+        :param bytes_handle: byte content to create as an artifact file, used if ``artifact_filepath`` is ``None``
 
         """
         artifact = {

@@ -23,7 +23,7 @@ class RequestsCommon:
     Any similar properties in the function’s section would override the [integrations] properties.
 
     .. note::
-      In the Atomic Function template, as of version 41.1, :class:`RequestsCommon` is instantiated and available available
+      In the Atomic Function template, as of version 41.1, :class:`RequestsCommon` is instantiated and available
       in a class that inherits :class:`~resilient_circuits.app_function_component.AppFunctionComponent` as an ``rc`` attribute:
 
       .. code-block:: python
