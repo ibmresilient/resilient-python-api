@@ -991,12 +991,12 @@ This environment can be expanded upon to add additional custom filters.</p>
 </dd>
 </dl>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span> <span class="nn">environment</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span> <span class="nn">global_jinja_env</span>
 
 <span class="n">addl_custom_filters</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"filter_name"</span><span class="p">:</span> <span class="n">method_name</span>
 <span class="p">}</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">environment</span><span class="p">()</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">global_jinja_env</span><span class="p">()</span>
 <span class="n">env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
 <span class="n">env</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
 </pre></div>
