@@ -840,12 +840,12 @@ def global_jinja_env():
 
     .. code-block:: python
 
-        from resilient-lib import environment
+        from resilient-lib import global_jinja_env
 
         addl_custom_filters = {
             "filter_name": method_name
         }
-        env = environment()
+        env = global_jinja_env()
         env.globals.update(addl_custom_filters)
         env.filters.update(addl_custom_filters)
     """
