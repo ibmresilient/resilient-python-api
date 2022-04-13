@@ -42,7 +42,7 @@ def test_parse_setup_py_with_globals():
     the_globals = {
         "__file__": "",
         "long_description": "mock long description",
-        "python_requires": ">=2.7"
+        "_python_requires": ">=2.7"
     }
     sdk_proj_py_attributes = package_helpers.parse_setup_py(mock_paths.PATH_SDK_SETUP_PY, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 
