@@ -240,7 +240,8 @@ Add this section to define proxy settings to be used for all integrations that u
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
 <span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the URL to link to a SOAR incident</p>
+<dd><p>Build the URL to link to a SOAR incident or CP4S case.</p>
+<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -259,7 +260,7 @@ Add this section to define proxy settings to be used for all integrations that u
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_resilient_url">
 <span class="sig-name descname"><span class="pre">build_resilient_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_resilient_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build basic URL to SOAR instance</p>
+<dd><p>Build basic URL to SOAR/CP4S instance</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -269,6 +270,27 @@ Add this section to define proxy settings to be used for all integrations that u
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>base url</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_task_url">
+<span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the url to link to a SOAR/CP4S task.</p>
+<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
+<li><p><strong>incident_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
+<li><p><strong>task_is</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the task</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>full URL to the task’s details tab</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>str</p>

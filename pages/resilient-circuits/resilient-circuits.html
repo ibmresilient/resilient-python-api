@@ -375,6 +375,18 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2022-05: version 45.0</strong></p>
+<ul>
+<li><p>Added new config <code class="docutils literal notranslate"><span class="pre">trap_exception</span></code> and if set to <code class="docutils literal notranslate"><span class="pre">True</span></code> a Function’s exception will be ignored with the error sent as a Status Message
+and a default payload returned like below, allowing the Workflow or Playbook to continue</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">"success"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+  <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"Error message"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
 <p><strong>2022-04: version 44.1</strong></p>
 <ul class="simple">
 <li><p>Move Jinja template management functions to <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> while
