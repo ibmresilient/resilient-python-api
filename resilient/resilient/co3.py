@@ -606,7 +606,7 @@ class SimpleClient(co3base.BaseClient):
         """
         Upload a file to the specified URI
         e.g. ``/incidents/<id>/attachments`` (for incident attachments)
-        or,  ``/tasks/<id>/attachments`` (for task attachments)
+        or ``/tasks/<id>/attachments`` (for task attachments)
 
         .. warning::
             Please see our updated :class:`resilient_lib.write_file_attachment <resilient_lib.components.resilient_common.write_file_attachment>`
