@@ -1,12 +1,14 @@
 import datetime
-import json
 import os
+
+import jinja2
 import pytest
-from resilient_lib import environment, render, render_json, make_payload_from_template
-from resilient_lib.components.templates_common import soar_datetimeformat, \
-                                                    soar_substitute, \
-                                                    soar_splitpart, \
-                                                    soar_trimlist
+from resilient_lib import (global_jinja_env, make_payload_from_template,
+                           render, render_json)
+from resilient_lib.components.templates_common import (soar_datetimeformat,
+                                                       soar_splitpart,
+                                                       soar_substitute,
+                                                       soar_trimlist)
 
 TEST_DATA = data = {
     "string": "templates",
@@ -215,3 +217,10 @@ def test_soar_trimlist(str_list, expected_results):
         assert soar_trimlist(str_list.split(",")) == expected_results
     else:
         assert soar_trimlist(str_list) == expected_results
+
+
+def test_global_jinja_env():
+    env = global_jinja_env()
+
+    assert isinstance(env, jinja2.environment.Environment)
+    assert env.filters.get("soar_trimlist")
