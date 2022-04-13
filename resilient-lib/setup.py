@@ -10,9 +10,10 @@ from os import path
 from setuptools import find_packages, setup
 
 
-# We only support 2.7, 3.6, and 3.9. Following PEP 440
-# this is the string format that allows for that restriction
-python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in [0,1,2,3,4,5,7,8])
+# We only officially support 2.7, 3.6, 3.9. Following PEP 440
+# this is the string format that allows for that restriction.
+# This allows for >=3.6 but we recommend working with 3.9 or 3.6
+_python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in range(6)) # note range() is non-inclusive of upper limit
 
 this_directory = path.abspath(path.dirname(__file__))
 
@@ -37,11 +38,10 @@ setup(
 
         # 3rd party dependencies for all python versions
         "pytz           ~= 2022.1",
-        "six            ~= 1.16",
         "deprecated     ~= 1.2",
         "beautifulsoup4 ~= 4.9",
 
-        # Python 3.6 and 3.9
+        # Python >= 3.6
         "jinja2         ~= 3.0; python_version >= '3.6'",
 
         # Python 2.7
@@ -49,7 +49,7 @@ setup(
     ],
 
     # restrict supported python versions
-    python_requires=python_requires,
+    python_requires=_python_requires,
 
     entry_points={
         "resilient.lib.configsection": ["gen_config = resilient_lib.util.config:config_section_data"]

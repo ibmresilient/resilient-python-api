@@ -10,9 +10,10 @@ from os import path
 from setuptools import find_packages, setup
 
 
-# We only support 2.7, 3.6, and 3.9. Following PEP 440
-# this is the string format that allows for that restriction
-python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in [0,1,2,3,4,5,7,8])
+# We only officially support 2.7, 3.6, 3.9. Following PEP 440
+# this is the string format that allows for that restriction.
+# This allows for >=3.6 but we recommend working with 3.9 or 3.6
+_python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in range(6)) # note range() is non-inclusive of upper limit
 
 this_directory = path.abspath(path.dirname(__file__))
 
@@ -35,13 +36,12 @@ setup(
         # General dependencies applicable to all python versions
         "requests          ~= 2.27",
         "requests-toolbelt ~= 0.9",
-        "requests-mock     ~= 1.9",
         "six               ~= 1.16",
 
         # Python >= 3.9
-        "setuptools        ~= 62.1;   python_version >= '3.9'",
-        "keyring           ~= 23.5;   python_version >= '3.9'",
-        "cachetools        ~= 5.0;    python_version >= '3.9'",
+        "setuptools        ~= 62.1;   python_version > '3.6'",
+        "keyring           ~= 23.5;   python_version > '3.6'",
+        "cachetools        ~= 5.0;    python_version > '3.6'",
 
         # Python 3.6
         "setuptools        ~= 59.6;   python_version == '3.6'",
@@ -57,7 +57,7 @@ setup(
     ],
 
     # restrict supported python versions
-    python_requires=python_requires,
+    python_requires=_python_requires,
 
     entry_points={
         "console_scripts": ["finfo = resilient.bin.finfo:main",

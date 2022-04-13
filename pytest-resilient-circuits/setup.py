@@ -9,14 +9,15 @@ from setuptools import setup
 from os import path
 import io
 
-requires_resilient_version = "29.0"
+requires_resilient_version = "41.1"
 major, minor = requires_resilient_version.split('.', 2)[:2]
 
 requirements = [
     'pytest >= 4.1.0',
     'resilient>={}.{}'.format(major, minor),
     'resilient-circuits>={}.{}'.format(major, minor),
-    'ConfigParser'
+    'ConfigParser',
+    'requests-mock ~= 1.9'
 ]
 
 this_directory = path.abspath(path.dirname(__file__))

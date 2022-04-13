@@ -7,7 +7,6 @@ try:
 except pkg_resources.DistributionNotFound:
     __version__ = None
 
-from .resilient_rest_mock import ResilientMock
 from .co3 import SimpleClient, \
     SimpleHTTPException, \
     PatchConflictException, \

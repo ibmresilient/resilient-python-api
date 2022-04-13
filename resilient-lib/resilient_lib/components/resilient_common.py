@@ -46,7 +46,7 @@ def build_incident_url(url, incidentId):
         url = url.replace(CP4S_PREFIX, "")
 
         if CP4S_RESOURCE_PREFIX not in url:
-            '/'.join([url, CP4S_RESOURCE_PREFIX])
+            url = '/'.join([url, CP4S_RESOURCE_PREFIX])
 
     if CP4S_RESOURCE_PREFIX in url:
         return '/'.join([url, CASE_FRAGMENT, str(incidentId)])
