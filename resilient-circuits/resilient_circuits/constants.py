@@ -23,7 +23,14 @@ ERROR_CA_FILE_NOT_FOUND = "Could not find a suitable TLS CA certificate bundle"
 ERROR_USR_NOT_MEMBER_ORG = "The user is not a member of the specified organization"
 ERROR_INVALID_USR = "Invalid user name or password"
 
+
+# Selftest
+SELFTEST_SUCCESS_STATE = "success"
+SELFTEST_FAILURE_STATE = "failure"
+SELFTEST_UNIMPLEMENTED_STATE = "unimplemented"
+
 # app configs
 INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_CONFIG_TRAP_EXCEPTION = "trap_exception"
 APP_CONFIG_SELFTEST_TIMEOUT = "selftest_timeout"
+
