@@ -42,9 +42,18 @@ def build_incident_url(url, incidentId):
     :return: full URL to the incident
     :rtype: str
     """
+    # determine if host url needs http/s prefix
+    # if not given, assumes https
+    if not url.lower().startswith("http"):
+        url = "https://{0}".format(url)
+
+    # remove cp4s prefix if still present
     if CP4S_PREFIX in url:
         url = url.replace(CP4S_PREFIX, "")
 
+        # unfortunately we can't insert app/respond unless we know the cp4s prefix was there
+        # so we insert if missing
+        # otherwise we have to assume this is a standalone instance link
         if CP4S_RESOURCE_PREFIX not in url:
             url = '/'.join([url, CP4S_RESOURCE_PREFIX])
 

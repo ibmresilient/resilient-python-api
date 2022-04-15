@@ -38,7 +38,7 @@ setup(
         "requests-toolbelt ~= 0.9",
         "six               ~= 1.16",
 
-        # Python >= 3.9
+        # Python > 3.6
         "setuptools        ~= 62.1;   python_version > '3.6'",
         "keyring           ~= 23.5;   python_version > '3.6'",
         "cachetools        ~= 5.0;    python_version > '3.6'",

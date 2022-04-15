@@ -170,12 +170,20 @@ class TestFunctionMetrics(unittest.TestCase):
         url = build_incident_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101)
         self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101")
 
+        # test inserts app/respond and clear cases-rest
+        url = build_incident_url("https://cases-rest.cp4s.ibm.com:443", 101)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101")
+
     def test_build_task_url(self):
         url = build_task_url(build_resilient_url("https://localhost", 8443), 12345, 12346)
         self.assertEqual(url, "https://localhost:8443/#incidents/12345?taskId=12346&tabName=details")
 
         url = build_task_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101, 102)
         self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101?taskId=102&tabName=details")
+
+        # test inserts app/respond and clear cases-rest
+        url = build_task_url("https://cases-rest.cp4s.ibm.com:443", 101, 102)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?taskId=102&tabName=details")
 
     def test_file_attachment(self):
         with self.assertRaises(ValueError):
