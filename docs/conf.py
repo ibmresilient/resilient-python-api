@@ -91,7 +91,8 @@ cmd_validate = CmdValidate(sdk_sub_parser)
 # parse the setup.py files
 the_globals = {
     "__file__": "",
-    "long_description": ""
+    "long_description": "",
+    "_python_requires": ""
 }
 resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
