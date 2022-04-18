@@ -10,7 +10,10 @@ import os.path
 import ssl
 import sys
 import traceback
-from collections import Callable
+try:
+    from collections.abc import Callable
+except ImportError:
+    from collections import Callable
 from signal import SIGINT, SIGTERM
 
 import resilient

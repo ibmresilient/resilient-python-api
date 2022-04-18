@@ -4,20 +4,11 @@
 
 """ Setup for pytest_resilient_circuits module """
 
-import os
-from setuptools import setup
-from os import path
 import io
+import os
+from os import path
 
-requires_resilient_version = "29.0"
-major, minor = requires_resilient_version.split('.', 2)[:2]
-
-requirements = [
-    'pytest >= 4.1.0',
-    'resilient>={}.{}'.format(major, minor),
-    'resilient-circuits>={}.{}'.format(major, minor),
-    'ConfigParser'
-]
+from setuptools import setup
 
 this_directory = path.abspath(path.dirname(__file__))
 
@@ -57,10 +48,25 @@ setup(
     long_description_content_type='text/markdown',
     packages=['pytest_resilient_circuits'],
     package_data={'pytest_resilient_circuits': ['version.txt']},
-    install_requires=requirements,
+    install_requires=[
+        # Our libraries
+        'resilient-circuits >= 44.1',
+
+        # 3rd party dependencies for all python versions
+        'requests-mock ~= 1.9',
+
+        # Python >= 3.6
+        'ConfigParser ~= 5.2; python_version >= "3.6"',
+        'pytest ~= 7.0; python_version >= "3.6"',
+
+        # Python 2.7
+        'ConfigParser ~= 4.0; python_version == "2.7"',
+        'pytest ~= 4.6; python_version == "2.7"',
+    ],
     include_package_data=True,
     entry_points={
         'pytest11': [
             'pytest_resilient_circuits = pytest_resilient_circuits.plugin'
-        ]},
+        ]
+    },
 )
