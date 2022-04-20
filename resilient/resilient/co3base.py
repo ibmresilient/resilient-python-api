@@ -291,7 +291,7 @@ class BaseClient(object):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
 
-        headers[constants.HEADER_USR_AGENT_KEY] = constants.HEADER_USR_AGENT_VALUE
+        headers[constants.HEADER_MODULE_VER_KEY] = constants.HEADER_MODULE_VER_VALUE
 
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token

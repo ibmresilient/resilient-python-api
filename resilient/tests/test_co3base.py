@@ -6,12 +6,14 @@ import io
 import json
 import os
 import sys
+from unittest.mock import patch
 
 import pytest
 from resilient import constants
+from resilient.co3base import BasicHTTPException
 
-from tests.shared_mock_data import mock_paths
 from tests import helpers
+from tests.shared_mock_data import mock_paths
 
 
 def test_set_api_key_authorized(fx_base_client):
@@ -114,6 +116,20 @@ def test_extract_org_id_disabled_org(fx_base_client):
 
     with pytest.raises(Exception, match=r"This organization is not accessible to you"):
         base_client._extract_org_id(mock_response)
+
+
+def test_execute_request_has_custom_header(fx_base_client):
+    base_client = fx_base_client[0]
+
+    with patch("resilient.co3base.BaseClient._execute_request") as mock_execute_request:
+
+        with pytest.raises(BasicHTTPException):
+            base_client.get("/orgs/{0}/apikeys".format(base_client.org_id), is_uri_absolute=True)
+
+        kwargs = mock_execute_request.call_args.kwargs
+        custom_header = kwargs.get("headers", {}).get(constants.HEADER_MODULE_VER_KEY)
+
+        assert custom_header == constants.HEADER_MODULE_VER_VALUE
 
 
 def test_post_attachment_file_path(fx_base_client, fx_mk_temp_dir):

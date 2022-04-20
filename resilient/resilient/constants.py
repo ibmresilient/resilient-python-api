@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
+import pkg_resources
+
+PACKAGE_NAME = "resilient"
+
 ENV_HTTP_PROXY = "HTTP_PROXY"
 ENV_HTTPS_PROXY = "HTTPS_PROXY"
 ENV_NO_PROXY = "NO_PROXY"
 
 # Headers
-HEADER_USR_AGENT_KEY = "User-Agent"
-HEADER_USR_AGENT_VALUE = "soar-app-1.0"
+HEADER_MODULE_VER_KEY = "Resilient-Module-Version"
+HEADER_MODULE_VER_VALUE = pkg_resources.get_distribution(PACKAGE_NAME).version
 
 ALLOW_UNRECOGNIZED = False
 
