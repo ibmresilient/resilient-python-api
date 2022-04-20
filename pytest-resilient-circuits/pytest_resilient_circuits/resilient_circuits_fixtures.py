@@ -19,8 +19,7 @@ from resilient_circuits import rest_helper
 from resilient import SimpleHTTPException
 
 from pytest_resilient_circuits.circuits_fixtures import manager, watcher
-from pytest_resilient_circuits.shared_mock_data import (mock_constants,
-                                                        mock_paths)
+from pytest_resilient_circuits.shared_mock_data import mock_constants
 
 """
 Depending on which version of python we are on
@@ -470,10 +469,9 @@ Note:
 @pytest.fixture(scope="session")
 def fx_mock_resilient_client():
     """
-    Before: Creates a mock instance of res_client
-    After: Removes temp directory used to store temp app.config
+    Before: Creates a mock instance of get_resilient_client
+    After: N/A
     """
-
     yield rest_helper.get_resilient_client(opts=mock_constants.MOCK_APP_CONFIGS)
 
 
