@@ -124,15 +124,26 @@ def get_proxy_dict(opts):
 class BaseClient(object):
     """Helper for using Resilient REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, custom_headers=None):
         """
+        # TODO
         Args:
           org_name - the cloud_account/uuid/name of the organization to use.
           base_url - the base URL to use.
           proxies - HTTP proxies to use, if any.
           verify - The name of a PEM file to use as the list of trusted CAs.
         """
-        self.headers = {'content-type': 'application/json'}
+
+        base_headers = {
+            "content-type": "application/json",
+            constants.HEADER_MODULE_VER_KEY: constants.HEADER_MODULE_VER_VALUE
+        }
+
+        if custom_headers and isinstance(custom_headers, dict):
+            base_headers.update(custom_headers)
+
+        self.headers = base_headers
+
         self.cookies = None
         self.org_id = None
         self.user_id = None
@@ -290,8 +301,6 @@ class BaseClient(object):
     def make_headers(self, co3_context_token=None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
-
-        headers[constants.HEADER_MODULE_VER_KEY] = constants.HEADER_MODULE_VER_VALUE
 
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token

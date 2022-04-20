@@ -3,26 +3,22 @@
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Simple client for Resilient REST API"""
-from __future__ import print_function
-
+import datetime
+import importlib
 import json
-import ssl
-import mimetypes
+import logging
 import os
 import sys
-import logging
-import datetime
-import unicodedata
-import requests
-import importlib
-from . import co3base
-from .patch import PatchStatus
 from argparse import Namespace
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
-from requests_toolbelt.multipart.encoder import MultipartEncoder
-from cachetools import cachedmethod, TTLCache
-from .co3base import ensure_unicode, get_proxy_dict, NoChange
+
+import requests
+from cachetools import TTLCache, cachedmethod
+
+from resilient import constants
+
+from . import co3base
+from .co3base import NoChange, ensure_unicode, get_proxy_dict
+from .patch import PatchStatus
 
 try:
     # Python 3
@@ -96,7 +92,7 @@ def get_config_file(filename=None, generate_filename=False):
     return config_file
 
 
-def get_client(opts):
+def get_client(opts, custom_headers=None):
     """
     Helper: get a SimpleClient for Resilient REST API.
 
@@ -132,7 +128,8 @@ def get_client(opts):
     simple_client_args = {"org_name": opts.get("org"),
                           "proxies": proxy,
                           "base_url": url,
-                          "verify": verify}
+                          "verify": verify,
+                          "custom_headers": custom_headers}
     if opts.get("log_http_responses"):
         LOG.warning("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
         simple_client = LoggingSimpleClient
@@ -286,8 +283,9 @@ class SimpleClient(co3base.BaseClient):
         or by going to: ``https://<base_url>/docs/rest-api/index.html``
     """
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, custom_headers=None):
         """
+        TODO
         :param org_name: The name of the organization to use.
         :type org_name: str
         :param base_url: The base URL of the SOAR server, e.g. ``https://soar.ibm.com/``
@@ -299,7 +297,7 @@ class SimpleClient(co3base.BaseClient):
         :param cache_ttl: Time in seconds to live for cached API responses
         :type cache_ttl: int
         """
-        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify)
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, custom_headers=custom_headers)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
