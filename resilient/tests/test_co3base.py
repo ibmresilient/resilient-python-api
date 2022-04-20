@@ -6,7 +6,6 @@ import io
 import json
 import os
 import sys
-from unittest.mock import patch
 
 import pytest
 from resilient import constants
@@ -14,6 +13,15 @@ from resilient.co3base import BasicHTTPException
 
 from tests import helpers
 from tests.shared_mock_data import mock_paths
+
+# Python 2 specific imports
+if sys.version_info.major < 3:
+    # patch is in external library mock in PY2
+    from mock import patch
+
+else:
+    # Patch is part of standard library in PY3
+    from unittest.mock import patch
 
 
 def test_set_api_key_authorized(fx_base_client):
@@ -126,7 +134,7 @@ def test_execute_request_has_custom_header(fx_base_client):
         with pytest.raises(BasicHTTPException):
             base_client.get("/orgs/{0}/apikeys".format(base_client.org_id), is_uri_absolute=True)
 
-        kwargs = mock_execute_request.call_args.kwargs
+        kwargs = mock_execute_request.call_args_list[0][1]
         custom_header = kwargs.get("headers", {}).get(constants.HEADER_MODULE_VER_KEY)
 
         assert custom_header == constants.HEADER_MODULE_VER_VALUE
