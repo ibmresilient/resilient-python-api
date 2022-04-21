@@ -10,21 +10,22 @@ import os.path
 import ssl
 import sys
 import traceback
-try:
-    from collections.abc import Callable
-except ImportError:
-    from collections import Callable
 from signal import SIGINT, SIGTERM
 
-import resilient
+if sys.version_info.major < 3:
+    from collections import Callable
+else:
+    from collections.abc import Callable
+
 from circuits import BaseComponent, Worker
 from circuits.core.handlers import handler
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-from resilient import ensure_unicode
-from resilient_lib import IntegrationError
 from six import string_types
 
+import resilient
+from resilient import ensure_unicode
+from resilient_lib import IntegrationError
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,

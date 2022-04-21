@@ -31,7 +31,9 @@ LOG.addHandler(logging.StreamHandler())
 
 def build_incident_url(url, incidentId):
     """
-    Build the URL to link to a SOAR incident or CP4S case.
+    Build the url to link to a SOAR incident or CP4S case.
+    Add 'https' if http/https is not provided at the start.
+    If ``url`` is not a string, returns back the value given.
 
     Returns a URL of the format ``https://<url>/#<incident_id>``.
 
@@ -42,6 +44,11 @@ def build_incident_url(url, incidentId):
     :return: full URL to the incident
     :rtype: str
     """
+
+    if not isinstance(url, str):
+        LOG.warning("Called 'build_incident_url' without a str URL value. Returning original value.")
+        return url
+
     # determine if host url needs http/s prefix
     # if not given, assumes https
     if not url.lower().startswith("http"):
@@ -66,6 +73,8 @@ def build_incident_url(url, incidentId):
 def build_task_url(url, incident_id, task_id):
     """
     Build the url to link to a SOAR/CP4S task.
+    Add 'https' if http/https is not provided at the start.
+    If ``url`` is not a string, returns back the value given.
 
     Returns a URL of the format ``https://<url>/#<incident_id>?taskId=<task_id>&tabName=details``.
 
@@ -78,12 +87,19 @@ def build_task_url(url, incident_id, task_id):
     :return: full URL to the task's details tab
     :rtype: str
     """
+
+    if not isinstance(url, str):
+        LOG.warning("Called 'build_task_url' without a str url value. Returning original value.")
+        return url
+
     return "{0}?{1}{2}&{3}".format(build_incident_url(url, incident_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
 
 
 def build_resilient_url(host, port):
     """
-    Build basic URL to SOAR/CP4S instance
+    Build basic url to SOAR/CP4S instance.
+    Add 'https' if http/https is not provided at the start.
+    If ``host`` is not a string, returns back the value given.
 
     :param host: host name
     :type host: str
@@ -92,6 +108,10 @@ def build_resilient_url(host, port):
     :return: base url
     :rtype: str
     """
+
+    if not isinstance(host, str):
+        LOG.warning("Called 'build_resilient_url' without a str host value. Returning original value.")
+        return host
 
     # determine if host url needs http/s prefix
     # if not given, assumes https
