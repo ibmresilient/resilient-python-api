@@ -46,7 +46,7 @@ def build_incident_url(url, incidentId):
     """
 
     if not isinstance(url, str):
-        LOG.warning("Called 'build_incident_url' without a str URL value. Returning original value.")
+        LOG.warning("Called 'build_incident_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
         return url
 
     # determine if host url needs http/s prefix
@@ -89,7 +89,7 @@ def build_task_url(url, incident_id, task_id):
     """
 
     if not isinstance(url, str):
-        LOG.warning("Called 'build_task_url' without a str url value. Returning original value.")
+        LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
         return url
 
     return "{0}?{1}{2}&{3}".format(build_incident_url(url, incident_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
@@ -110,7 +110,7 @@ def build_resilient_url(host, port):
     """
 
     if not isinstance(host, str):
-        LOG.warning("Called 'build_resilient_url' without a str host value. Returning original value.")
+        LOG.warning("Called 'build_resilient_url' with a '{0}'  but was expecting a 'str' host value. Returning original value.".format(type(host)))
         return host
 
     # determine if host url needs http/s prefix
