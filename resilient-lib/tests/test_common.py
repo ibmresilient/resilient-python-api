@@ -174,9 +174,13 @@ class TestFunctionMetrics(unittest.TestCase):
         url = build_incident_url("https://cases-rest.cp4s.ibm.com:443", 101)
         self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101")
 
+        # ensure non-string values are simply returned
+        url = build_incident_url(build_resilient_url(["my_fake_list"], 443), 100)
+        self.assertEqual(url, ["my_fake_list"])
+
     def test_build_task_url(self):
-        url = build_task_url(build_resilient_url("https://localhost", 8443), 12345, 12346)
-        self.assertEqual(url, "https://localhost:8443/#incidents/12345?taskId=12346&tabName=details")
+        url = build_task_url(build_resilient_url("http://localhost", 8443), 12345, 12346)
+        self.assertEqual(url, "http://localhost:8443/#incidents/12345?taskId=12346&tabName=details")
 
         url = build_task_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101, 102)
         self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101?taskId=102&tabName=details")
@@ -184,6 +188,13 @@ class TestFunctionMetrics(unittest.TestCase):
         # test inserts app/respond and clear cases-rest
         url = build_task_url("https://cases-rest.cp4s.ibm.com:443", 101, 102)
         self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?taskId=102&tabName=details")
+
+        url = build_task_url("cases-rest.cp4s.ibm.com:443", 101, 102)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?taskId=102&tabName=details")
+
+        # ensure non-string values are simply returned
+        url = build_task_url(["my_fake_list"], 100, 101)
+        self.assertEqual(url, ["my_fake_list"])
 
     def test_file_attachment(self):
         with self.assertRaises(ValueError):
