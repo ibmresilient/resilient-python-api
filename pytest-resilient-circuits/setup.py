@@ -5,32 +5,20 @@
 """ Setup for pytest_resilient_circuits module """
 
 import io
-import os
 from os import path
 
-from setuptools import setup
+from setuptools import find_packages, setup
+
+
+# We only officially support 2.7, 3.6, 3.9. Following PEP 440
+# this is the string format that allows for that restriction.
+# This allows for >=3.6 but we recommend working with 3.9 or 3.6
+_python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in range(6)) # note range() is non-inclusive of upper limit
 
 this_directory = path.abspath(path.dirname(__file__))
 
-
-def gather_changes():
-    filepath = './CHANGES'  # The file from which we will pull the changes
-    with io.open(filepath) as fp:
-        lines = fp.readlines()  # Take in all the lines as a list
-        first_section = []
-        for num, line in enumerate(lines, start=1):
-            if "version" in lines[num] and num != 0:
-                # Get all the lines from the start of the list until num-1.
-                # This, along with the if statement above will ensure we only capture the most recent change.
-                first_section = lines[:num-1]
-                break
-        # Return the section with a newline at the end
-        return " \n ".join(first_section)
-
-
 with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    readme_text = f.read()
-    long_description = readme_text.replace('### Changelog', "### Recent Changes\n {}".format(gather_changes()))
+    long_description = f.read()
 
 setup(
     name='pytest_resilient_circuits',
@@ -39,34 +27,53 @@ setup(
         "setuptools_scm < 6.0.0;python_version<'3.0'",
         "setuptools_scm >= 6.0.0;python_version>='3.0'"
     ],
-    url='https://developer.ibm.com/resilient',
-    license='MIT',
-    author='IBM Resilient',
-    author_email='support@resilientsystems.com',
-    description='Resilient Circuits fixtures for PyTest.',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    packages=['pytest_resilient_circuits'],
+
+    packages=find_packages(),
     package_data={'pytest_resilient_circuits': ['version.txt']},
+    include_package_data=True,
+
+    # Runtime dependencies
     install_requires=[
         # Our libraries
         'resilient-circuits >= 44.1',
 
         # 3rd party dependencies for all python versions
-        'requests-mock ~= 1.9',
+        'requests-mock      ~= 1.9',
 
         # Python >= 3.6
-        'ConfigParser ~= 5.2; python_version >= "3.6"',
-        'pytest ~= 7.0; python_version >= "3.6"',
+        'ConfigParser       ~= 5.2; python_version >= "3.6"',
+        'pytest             ~= 7.0; python_version >= "3.6"',
 
         # Python 2.7
-        'ConfigParser ~= 4.0; python_version == "2.7"',
-        'pytest ~= 4.6; python_version == "2.7"',
+        'ConfigParser       ~= 4.0; python_version == "2.7"',
+        'pytest             ~= 4.6; python_version == "2.7"',
     ],
-    include_package_data=True,
+
+    # restrict supported python versions
+    python_requires=_python_requires,
+
     entry_points={
         'pytest11': [
             'pytest_resilient_circuits = pytest_resilient_circuits.plugin'
         ]
     },
+
+    # PyPI metadata
+    author='IBM SOAR',
+    description='Resilient Circuits fixtures for PyTest.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    url='https://github.com/ibmresilient/resilient-python-api/tree/master/pytest-resilient-circuits',
+    project_urls={
+        "Documentation": "https://ibm.biz/soar-docs",
+        "API Docs": "https://ibm.biz/soar-python-docs",
+        "IBM Community": "https://ibm.biz/soarcommunity"
+    },
+    license='MIT',
+    classifiers=[
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9"
+    ],
+    keywords="ibm soar pytest resilient circuits resilient-circuits"
 )
