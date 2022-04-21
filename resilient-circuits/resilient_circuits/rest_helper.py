@@ -70,7 +70,18 @@ def retry(func):
 
 @retry
 def get_resilient_client(opts):
-    """Get a connected instance of SimpleClient for Resilient REST API"""
+    """
+    Get a connected instance of :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+    for the SOAR REST API
+
+    Passes the custom header of ``Resilient-Circuits-Version: 45.0.0`` to the
+    :class:`resilient.SimpleClient <resilient.co3.SimpleClient>` instantiation
+
+    :param opts: the connection options - usually the contents of the app.config file
+    :type opts: dict
+
+    :return: a connected and verified instance of :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+    """
     global resilient_client
     global connection_opts
 

@@ -9,6 +9,7 @@
       "success": False,
       "reason": "Error message"
     }
+* Added a custom header for all requests from ``resilient-circuits`` that will include the current version of the library: ``Resilient-Circuits-Version: 45.0.0``
 
 **2022-04: version 44.1**
 

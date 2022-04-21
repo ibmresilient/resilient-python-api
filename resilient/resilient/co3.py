@@ -14,8 +14,6 @@ from argparse import Namespace
 import requests
 from cachetools import TTLCache, cachedmethod
 
-from resilient import constants
-
 from . import co3base
 from .co3base import NoChange, ensure_unicode, get_proxy_dict
 from .patch import PatchStatus
@@ -94,11 +92,15 @@ def get_config_file(filename=None, generate_filename=False):
 
 def get_client(opts, custom_headers=None):
     """
-    Helper: get a SimpleClient for Resilient REST API.
+    This is a helper method to get an instance of
+    :class:`SimpleClient` for the SOAR REST API.
 
-    :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`
+    :param opts: the connection options - usually the contents of the app.config file
+    :type opts: dict
+    :param custom_headers: A dictionary of any headers you want to send in **every** request
+    :type custom_headers: dict
 
-    A standard way to initialize a SimpleClient with default configuration is,
+    A standard way to initialize a :class:`SimpleClient` with default configuration is:
 
     .. code-block:: python
 
@@ -106,7 +108,7 @@ def get_client(opts, custom_headers=None):
         opts = parser.parse_args()
         client = resilient.get_client(opts)
 
-    Returns: a connected and verified instance of SimpleClient.
+    :return: a connected and verified instance of :class:`SimpleClient`
     """
     if isinstance(opts, Namespace):
         opts = vars(opts)
@@ -285,7 +287,6 @@ class SimpleClient(co3base.BaseClient):
 
     def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, custom_headers=None):
         """
-        TODO
         :param org_name: The name of the organization to use.
         :type org_name: str
         :param base_url: The base URL of the SOAR server, e.g. ``https://soar.ibm.com/``
@@ -296,6 +297,8 @@ class SimpleClient(co3base.BaseClient):
         :type verify: str|bool
         :param cache_ttl: Time in seconds to live for cached API responses
         :type cache_ttl: int
+        :param custom_headers: A dictionary of any headers you want to send in **every** request
+        :type custom_headers: dict
         """
         super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, custom_headers=custom_headers)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
