@@ -1,4 +1,4 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
 """Pytest Fixture for Testing Resilient Circuits Components"""
 
