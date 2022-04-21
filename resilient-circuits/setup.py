@@ -41,7 +41,7 @@ setup(
         # 3rd party dependencies for all python versions
         "stompest      ~= 2.3",
         "circuits      ~= 3.2",
-        "pysocks       ~= 1.7",
+        "pysocks       ~= 1.6",
         "filelock      ~= 3.2",
 
         # Python >= 3.6
