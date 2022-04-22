@@ -366,7 +366,7 @@ that can be used to access the IBM SOAR REST API.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_circuits.decorators.app_function">
 <span class="sig-prename descclassname"><span class="pre">@</span></span><span class="sig-name descname"><span class="pre">app_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.decorators.app_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new <a class="reference internal" href="#resilient_circuits.decorators.app_function" title="resilient_circuits.decorators.app_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">@app_function</span></code></a> decorator.</p>
+<dd><p>Creates new a <a class="reference internal" href="#resilient_circuits.decorators.app_function" title="resilient_circuits.decorators.app_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">@app_function</span></code></a> decorator.</p>
 <p>This decorator can be applied to methods of the <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> class.</p>
 <p>It marks the method as a handler for the events passed as arguments to the decorator.</p>
 <p>Specify the function’s API name as parameter to the decorator. <strong>It only accepts 1</strong> <code class="docutils literal notranslate"><span class="pre">api_name</span></code> <strong>as an argument.</strong></p>
@@ -375,23 +375,6 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
-<p><strong>2022-05: version 45.0</strong></p>
-<ul>
-<li><p>Added new config <code class="docutils literal notranslate"><span class="pre">trap_exception</span></code> and if set to <code class="docutils literal notranslate"><span class="pre">True</span></code> a Function’s exception will be ignored with the error sent as a Status Message
-and a default payload returned like below, allowing the Workflow or Playbook to continue</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s2">"success"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-  <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"Error message"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</li>
-</ul>
-<p><strong>2022-04: version 44.1</strong></p>
-<ul class="simple">
-<li><p>Move Jinja template management functions to <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> while
-keeping backward compatibility here</p></li>
-</ul>
 <p><strong>2022-02: version 44.0</strong></p>
 <ul class="simple">
 <li><p>Ensure <code class="docutils literal notranslate"><span class="pre">tests/</span></code> is not included in packaged code</p></li>
@@ -666,7 +649,7 @@ components are instead sent a ‘reload’ event.</p></li>
         </div>
 
         <div class="related-information">
-              Copyright &#169; 2022, IBM |
+              Copyright &#169; 2021, IBM |
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
         </div>

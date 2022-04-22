@@ -208,9 +208,21 @@
 </section>
 <section id="proxies">
 <h2>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h2>
-<p>You can now take advantage of the global proxy functionality.
-There is no need to add an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section like below.
-Run the following on your App Host for more information:</p>
+<p><code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> supports an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section in your app.config file.
+Add this section to define proxy settings to be used for all integrations that use this library.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">integrations</span><span class="p">]</span>
+<span class="c1"># These proxy settings will be used by all integrations.</span>
+<span class="c1"># To override, add any parameter to your specific integration section</span>
+<span class="n">http_proxy</span><span class="o">=</span>
+<span class="n">https_proxy</span><span class="o">=</span>
+<span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your app is running on App Host 1.6 or greater, you can take advantage of
+the global proxy functionality. There is no need to add an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
+section like above. Run the following on your App Host for more information:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ manageAppHost proxy -h
 </pre></div>
 </div>
@@ -224,15 +236,6 @@ using the <code class="docutils literal notranslate"><span class="pre">manageApp
 <li><p><strong>Integrations Options:</strong> <code class="docutils literal notranslate"><span class="pre">http_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">https_proxy</span></code> configs set in the
 <strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file.</p></li>
 </ol>
-<p>If using a version of App Host earlier than 1.6, <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> supports an <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section in your app.config file.
-Add this section to define proxy settings to be used for all integrations that use this library.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">integrations</span><span class="p">]</span>
-<span class="c1"># These proxy settings will be used by all integrations.</span>
-<span class="c1"># To override, add any parameter to your specific integration section</span>
-<span class="n">http_proxy</span><span class="o">=</span>
-<span class="n">https_proxy</span><span class="o">=</span>
-<span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
-</pre></div>
 </div>
 </section>
 <section id="module-resilient_lib.components.resilient_common">
@@ -240,10 +243,7 @@ Add this section to define proxy settings to be used for all integrations that u
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
 <span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the url to link to a SOAR incident or CP4S case.
-Add ‘https’ if http/https is not provided at the start.
-If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
-<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;</span></code>.</p>
+<dd><p>Build the url to link to a SOAR incident</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -262,9 +262,7 @@ If <code class="docutils literal notranslate"><span class="pre">url</span></code
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_resilient_url">
 <span class="sig-name descname"><span class="pre">build_resilient_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_resilient_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build basic url to SOAR/CP4S instance.
-Add ‘https’ if http/https is not provided at the start.
-If <code class="docutils literal notranslate"><span class="pre">host</span></code> is not a string, returns back the value given.</p>
+<dd><p>Build basic url to resilient instance</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -281,33 +279,10 @@ If <code class="docutils literal notranslate"><span class="pre">host</span></cod
 </dl>
 </dd></dl>
 <dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_task_url">
-<span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the url to link to a SOAR/CP4S task.
-Add ‘https’ if http/https is not provided at the start.
-If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
-<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
-<li><p><strong>incident_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
-<li><p><strong>task_is</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the task</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>full URL to the task’s details tab</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.clean_html">
 <span class="sig-name descname"><span class="pre">clean_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html_fragment</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.clean_html" title="Permalink to this definition">¶</a></dt>
-<dd><p>SOAR textarea fields return HTML fragments. This routine removes the
-HTML and inserts any code within <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;/div&gt;</span></code> with a linefeed.</p>
+<dd><p>Resilient textarea fields return html fragments. This routine will remove the
+html and insert any code within <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;/div&gt;</span></code> with a linefeed</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The string returned from this method may not format well as no presentation of line feeds are preserved,
@@ -348,7 +323,7 @@ set <code class="docutils literal notranslate"><span class="pre">handle_names</s
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to SOAR</p></li>
+<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to resilient</p></li>
 <li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the incident</p></li>
 <li><p><strong>kwargs</strong> (<em>dict</em>) – required fields needed to close an incident in a <code class="docutils literal notranslate"><span class="pre">field_name:field_value</span></code> format</p></li>
 <li><p><strong>handle_names</strong> (<em>bool</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, any select field types in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> will take <code class="docutils literal notranslate"><span class="pre">str</span></code> instead of <code class="docutils literal notranslate"><span class="pre">int</span></code> as their value</p></li>
@@ -365,7 +340,7 @@ set <code class="docutils literal notranslate"><span class="pre">handle_names</s
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_file_attachment">
 <span class="sig-name descname"><span class="pre">get_file_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_file_attachment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call the SOAR REST API to get the attachment or artifact data for
+<dd><p>Call the Resilient REST API to get the attachment or artifact data for
 an Incident or a Task</p>
 <ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">incident_id</span></code> and <code class="docutils literal notranslate"><span class="pre">artifact_id</span></code> are defined it will get that Artifact</p></li>
@@ -387,7 +362,7 @@ raise a <code class="docutils literal notranslate"><span class="pre">resilient.S
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to SOAR</p></li>
+<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to resilient</p></li>
 <li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident</p></li>
 <li><p><strong>artifact_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident’s Artifact to download</p></li>
 <li><p><strong>task_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Task to download it’s Attachment from</p></li>
@@ -405,11 +380,11 @@ raise a <code class="docutils literal notranslate"><span class="pre">resilient.S
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_file_attachment_metadata">
 <span class="sig-name descname"><span class="pre">get_file_attachment_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_file_attachment_metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call the SOAR REST API to get the attachment or artifact attachment metadata</p>
+<dd><p>Call the Resilient REST API to get the attachment or artifact attachment metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to SOAR</p></li>
+<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to resilient</p></li>
 <li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident</p></li>
 <li><p><strong>artifact_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident’s Artifact</p></li>
 <li><p><strong>task_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Task to get it’s Attachment metadata</p></li>
@@ -427,11 +402,11 @@ raise a <code class="docutils literal notranslate"><span class="pre">resilient.S
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_file_attachment_name">
 <span class="sig-name descname"><span class="pre">get_file_attachment_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attachment_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_file_attachment_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call the SOAR REST API to get the attachment or artifact attachment name</p>
+<dd><p>Call the Resilient REST API to get the attachment or artifact attachment name</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to SOAR</p></li>
+<li><p><strong>res_client</strong> (<em>resilient_circuits.ResilientComponent.rest_client</em><em>(</em><em>)</em>) – required for communication back to resilient</p></li>
 <li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident</p></li>
 <li><p><strong>task_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Task</p></li>
 <li><p><strong>attachment_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident’s Attachment to get the name for</p></li>
@@ -452,7 +427,7 @@ raise a <code class="docutils literal notranslate"><span class="pre">resilient.S
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>timestamp</strong> (<em>int</em>) – ts of object sent from SOAR Server i.e. <code class="docutils literal notranslate"><span class="pre">incident.create_date</span></code></p></li>
+<li><p><strong>timestamp</strong> (<em>int</em>) – ts of object sent from Resilient Server i.e. <code class="docutils literal notranslate"><span class="pre">incident.create_date</span></code></p></li>
 <li><p><strong>milliseconds</strong> (<em>bool</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if ts in milliseconds</p></li>
 <li><p><strong>rtn_format</strong> (<em>str</em>) – Format of resultant string. See <a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#strftime-and-strptime-behavior">https://docs.python.org/3.6/library/datetime.html#strftime-and-strptime-behavior</a> for options</p></li>
 </ul>
@@ -513,8 +488,8 @@ Throw ValueError if not.</p>
 <p><code class="docutils literal notranslate"><span class="pre">field_list</span></code> can be a list/tuple of <code class="docutils literal notranslate"><span class="pre">strings</span></code> where each string is
 a field name or it can be a list/tuple of <code class="docutils literal notranslate"><span class="pre">dicts</span></code> where each item
 has the attributes <code class="docutils literal notranslate"><span class="pre">name</span></code> (<strong>required</strong>) and <code class="docutils literal notranslate"><span class="pre">placeholder</span></code> (<strong>optional</strong>).</p>
-<p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code> can be a dict or namedtuple. If a namedtuple, it calls its
-<code class="docutils literal notranslate"><span class="pre">kwargs._as_dict()</span></code> method and raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if it does not succeed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code> can be a dict/namedtuple. If it is a namedtuple tries to call it’s
+<code class="docutils literal notranslate"><span class="pre">kwargs._as_dict()</span></code> method and raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if it cannot.</p>
 <ul class="simple">
 <li><p>If the value of the item in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> is equal to its <code class="docutils literal notranslate"><span class="pre">placeholder</span></code>
 defined in <code class="docutils literal notranslate"><span class="pre">field_list</span></code>, a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised.</p></li>
@@ -546,7 +521,7 @@ returns a list of the <code class="docutils literal notranslate"><span class="pr
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.write_file_attachment">
 <span class="sig-name descname"><span class="pre">write_file_attachment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datastream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.write_file_attachment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a file attachment to SOAR using the REST API
+<dd><p>Add a file attachment to Resilient using the REST API
 to an Incident or a Task</p>
 <p><strong>Example:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"malware.eml"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">data_stream</span><span class="p">:</span>
@@ -556,7 +531,7 @@ to an Incident or a Task</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>res_client</strong> (<a class="reference internal" href="../resilient-circuits/resilient-circuits.html#resilient_circuits.actions_component.ResilientComponent.rest_client" title="resilient_circuits.actions_component.ResilientComponent.rest_client"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResilientComponent.rest_client()</span></code></a>) – required for communication back to SOAR</p></li>
+<li><p><strong>res_client</strong> (<a class="reference internal" href="../resilient-circuits/resilient-circuits.html#resilient_circuits.actions_component.ResilientComponent.rest_client" title="resilient_circuits.actions_component.ResilientComponent.rest_client"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResilientComponent.rest_client()</span></code></a>) – required for communication back to resilient</p></li>
 <li><p><strong>file_name</strong> (<em>str</em>) – name of the attachment to create</p></li>
 <li><p><strong>dataStream</strong> (<em>stream of bytes</em>) – stream of bytes used to create the attachment</p></li>
 <li><p><strong>incident_id</strong> (<em>int</em><em>|</em><em>str</em>) – id of the Incident</p></li>
@@ -794,7 +769,7 @@ for use by all functions using this library.</p>
 <p>Any similar properties in the function’s section would override the [integrations] properties.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In the Atomic Function template, as of version 41.1, <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> is instantiated and available
+<p>In the Atomic Function template, as of version 41.1, <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> is instantiated and available available
 in a class that inherits <a class="reference internal" href="../resilient-circuits/resilient-circuits.html#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">"get"</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">ibm</span><span class="o">.</span><span class="n">com</span><span class="p">)</span>
 </pre></div>
@@ -872,637 +847,6 @@ returns a dictionary mapping protocol to the URL of the proxy.</p></li>
 </dl>
 </dd></dl>
 </section>
-<section id="module-resilient_lib.components.templates_common">
-<span id="common-jinja-methods"></span><h2>Common Jinja Methods<a class="headerlink" href="#module-resilient_lib.components.templates_common" title="Permalink to this headline">¶</a></h2>
-<p>Common methods and filters used to process 
-<a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/">Jinja Templates</a></p>
-<p><strong>Usage:</strong></p>
-<ol class="arabic simple">
-<li><p>Create a Jinja template in the <code class="docutils literal notranslate"><span class="pre">/util/templates</span></code> directory of the App.</p></li>
-</ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Normally a template is in JSON format:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"{{ alert_name }}"</span><span class="p">,</span>
-    <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"{{ alert_severity }}"</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<p>2. (<em>Optional</em>) Add an option to your <code class="docutils literal notranslate"><span class="pre">app.config</span></code> file to specify an absolute
-path to a custom Jinja template called: <code class="docutils literal notranslate"><span class="pre">custom_template_path</span></code> - if not provided the
-value of <code class="docutils literal notranslate"><span class="pre">DEFAULT_TEMPLATE_PATH</span></code> is used.</p>
-<ol class="arabic simple" start="3">
-<li><p>Add the following code to your <strong>Function</strong>:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pkg_resources</span>
-<span class="kn">from</span> <span class="nn">resilient_circuits</span> <span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">,</span> <span class="n">app_function</span>
-<span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">make_payload_from_template</span>
-
-<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">"my_app"</span>
-<span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">"my_function_using_jinja"</span>
-
-<span class="c1"># Creating an absolute path to the template</span>
-<span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">,</span> <span class="s2">"util/templates/&lt;default_name&gt;.jinja2"</span><span class="p">)</span>
-
-<span class="k">class</span> <span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionComponent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">PACKAGE_NAME</span><span class="p">)</span>
-
-    <span class="nd">@app_function</span><span class="p">(</span><span class="n">FN_NAME</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_app_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_inputs</span><span class="p">):</span>
-        <span class="sd">'''</span>
-<span class="sd">        Function: A function showing how to use Jinja templates</span>
-<span class="sd">        Inputs:</span>
-<span class="sd">            -   fn_inputs.alert_severity</span>
-<span class="sd">            -   fn_inputs.device_id</span>
-<span class="sd">        '''</span>
-
-        <span class="n">custom_template_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="o">.</span><span class="n">custom_template_path</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="p">,</span> <span class="s2">"custom_template_path"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
-
-        <span class="n">template_rendered</span> <span class="o">=</span> <span class="n">make_payload_from_template</span><span class="p">(</span>
-            <span class="n">template_override</span><span class="o">=</span><span class="n">custom_template_path</span><span class="p">,</span>
-            <span class="n">default_template</span><span class="o">=</span><span class="n">DEFAULT_TEMPLATE_PATH</span><span class="p">,</span>
-            <span class="n">payload</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"alert_name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Malware found on device </span><span class="si">{</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">device_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-                <span class="s2">"alert_severity"</span><span class="p">:</span> <span class="n">fn_inputs</span><span class="o">.</span><span class="n">alert_severity</span>
-            <span class="p">},</span>
-            <span class="n">return_json</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">template_rendered</span><span class="p">)</span>
-
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"template_rendered"</span><span class="p">:</span> <span class="n">template_rendered</span><span class="p">}</span>
-
-        <span class="k">yield</span> <span class="n">FunctionResult</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span> <span class="p">[</span><span class="n">my_function_using_jinja</span><span class="p">]</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Malware found on device 303'</span><span class="p">,</span> <span class="s1">'severity'</span><span class="p">:</span> <span class="s1">'High'</span><span class="p">}</span>
-</pre></div>
-</div>
-<p>4. Update your <code class="docutils literal notranslate"><span class="pre">README.md</span></code> documentation file to include relevant information about the templates,
-for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>## Templates for SOAR Cases
-It may necessary to modify the templates used to create SOAR cases based on a customer's required custom fields.
-Below are the default templates used which can be copied, modified and used with app.config's
-`custom_template_path` setting to override the default template.
-
-### custom_template.jinja
-```
-{
-    "name": "{{ alert_name }}",
-    "severity": "{{ alert_severity }}"
-}
-```
-</pre></div>
-</div>
-<hr class="docutils"/>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.base64_filter">
-<span class="sig-name descname"><span class="pre">base64_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.base64_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>base64</strong></p>
-<p>Breaks text into fixed-width blocks. You can specify the
-<code class="docutils literal notranslate"><span class="pre">indent</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>val</strong> (<em>str</em>) – The string to convert</p></li>
-<li><p><strong>indent</strong> (<em>int</em>) – Number of tabs</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Converted string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.camel_filter">
-<span class="sig-name descname"><span class="pre">camel_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.camel_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>camel</strong></p>
-<p>Convert text to CamelCase.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to convert</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Converted string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">in</span> <span class="n">camel</span> <span class="n">case</span><span class="p">:</span> <span class="p">{{</span> <span class="n">a</span><span class="c1">#bc_def | camel }}</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">'ABcDef'</span>
-</pre></div>
-</div>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.global_jinja_env">
-<span class="sig-name descname"><span class="pre">global_jinja_env</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.global_jinja_env" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the Jinja environment with our resilient-lib custom filters.
-This environment can be expanded upon to add additional custom filters.</p>
-<p>See <a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/api/#custom-filters">Jinja Custom Filters</a> for more.</p>
-<p>Current custom filters available:</p>
-<pre class="literal-block">json, js, html, url, idna, punycode, ldap, ps, sh, pretty, timestamp, iso8601, uniq, sample, camel, base64, soar_datetimeformat, soar_display_datetimeformat, soar_substitute, soar_splitpart, soar_trimlist</pre>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The Jinja environment</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://jinja.palletsprojects.com/en/3.1.x/api/#jinja2.Environment">jinja2.Environment</a></p>
-</dd>
-</dl>
-<p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span> <span class="nn">global_jinja_env</span>
-
-<span class="n">addl_custom_filters</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"filter_name"</span><span class="p">:</span> <span class="n">method_name</span>
-<span class="p">}</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">global_jinja_env</span><span class="p">()</span>
-<span class="n">env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
-<span class="n">env</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.html_filter">
-<span class="sig-name descname"><span class="pre">html_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.html_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>html</strong></p>
-<p>Produces HTML-encoded string of the value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to encode</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Encoded string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.idna_filter">
-<span class="sig-name descname"><span class="pre">idna_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.idna_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>idna</strong></p>
-<p>Encodes the value per RFC 3490.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to encode</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Encoded string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.iso8601">
-<span class="sig-name descname"><span class="pre">iso8601</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.iso8601" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>iso8601</strong></p>
-<p>Assuming <code class="docutils literal notranslate"><span class="pre">val</span></code> is an epoch milliseconds timestamp, produce ISO8601 datetime.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em><em>|</em><em>int</em>) – An epoch milliseconds timestamp</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ISO8601 datetime</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.js_filter">
-<span class="sig-name descname"><span class="pre">js_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.js_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>js</strong></p>
-<p>Produces JSONified string of the value,
-without surrounding quotes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to convert</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>JSONified string of the value, without surrounding quotes</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.json_filter">
-<span class="sig-name descname"><span class="pre">json_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.json_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>json</strong></p>
-<p>Produces JSONified string of the value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to convert</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>JSONified string of the value</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.ldap_filter">
-<span class="sig-name descname"><span class="pre">ldap_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.ldap_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>ldap</strong></p>
-<p>Produces LDAP-encoded string of the value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to encode</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Encoded string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.make_payload_from_template">
-<span class="sig-name descname"><span class="pre">make_payload_from_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_override</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_json</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.make_payload_from_template" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a payload into a new format based on a specified template.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>template_override</strong> (<em>str</em>) – Path to the specified template (<em>usually
-taken from the app.config file. See the Usage example above</em>)</p></li>
-<li><p><strong>default_template</strong> (<em>str</em>) – Path to the default template (<em>usually in
-the ‘/util/templates’ directory. See the Usage example above</em>)</p></li>
-<li><p><strong>payload</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">dict</span></code> of payload that is passed to Jinja template</p></li>
-<li><p><strong>return_json</strong> (<em>bool</em>) – False if template should be render as a <code class="docutils literal notranslate"><span class="pre">str</span></code>
-and results returned as a <code class="docutils literal notranslate"><span class="pre">str</span></code></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>If the Jinja template is valid JSON and <code class="docutils literal notranslate"><span class="pre">return_json</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> the result is
-returned as a <code class="docutils literal notranslate"><span class="pre">dict</span></code> else it returns the rendered template as a <code class="docutils literal notranslate"><span class="pre">str</span></code></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str|dict</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – if <code class="docutils literal notranslate"><span class="pre">return_json</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> and the Jinja template is not
-valid JSON</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.pretty_filter">
-<span class="sig-name descname"><span class="pre">pretty_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.pretty_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>pretty</strong></p>
-<p>Produces pretty-printed string of the value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>val</strong> (<em>str</em>) – The string to format</p></li>
-<li><p><strong>indent</strong> (<em>int</em>) – Number of tabs to use when formatting</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The formatted string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.ps_filter">
-<span class="sig-name descname"><span class="pre">ps_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.ps_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>ps</strong></p>
-<p>Escapes characters in <code class="docutils literal notranslate"><span class="pre">val</span></code> for use in a PowerShell command line.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to escaped</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Escaped string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.punycode_filter">
-<span class="sig-name descname"><span class="pre">punycode_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.punycode_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>punycode</strong></p>
-<p>Encodes the value per RFC 3492.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to encode</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Encoded string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.render">
-<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.render" title="Permalink to this definition">¶</a></dt>
-<dd><p>Render data into a template, producing a string result. All the additional custom filters are available.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>template</strong> (<em>str</em><em> or </em><em>dict</em>) – Path to or a dict of the Jinja template</p></li>
-<li><p><strong>data</strong> (<em>dict</em>) – JSON data to apply to the template</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>result from the rendering of the template. The template is usually a string, but can be a dict</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str or dict</p>
-</dd>
-</dl>
-<p><strong>Examples:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">"template {{value}}"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s2">"123"</span><span class="p">})</span>
-<span class="go">u'template 123'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">({</span><span class="s2">"template"</span><span class="p">:</span> <span class="s2">"{{value}}"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s2">"123"</span><span class="p">})</span>
-<span class="go">u'{"template": "123"}'</span>
-
-<span class="go">You can escape values using the 'json' filter,</span>
-<span class="go">or the 'url' or 'html' or 'ldap' filters.</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": {{value|json}} }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1"23'</span><span class="p">})</span>
-<span class="go">u'{"template": "1\\"23" }'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": "{{value|js}}" }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1"23'</span><span class="p">})</span>
-<span class="go">u'{"template": "1\\"23" }'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": {{value|ldap}} }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1*23'</span><span class="p">})</span>
-<span class="go">u'{"template": 1\\2a23 }'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'shell "{{value|ps}}"'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'$"foo"'</span><span class="p">})</span>
-<span class="go">u'shell "`$`"foo`""'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'shell "{{value|sh}}"'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'$"foo"'</span><span class="p">})</span>
-<span class="go">u'shell "\\$\\"foo\\""'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="mi">0</span><span class="p">})</span>
-<span class="go">u'template=0'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{})</span>
-<span class="go">u'template=null'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:{</span><span class="s2">"year"</span><span class="p">:</span><span class="mi">2015</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">:</span><span class="mi">15</span><span class="p">}})</span>
-<span class="go">u'template=1436918400000'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">15</span><span class="p">)})</span>
-<span class="go">u'template=1436918400000'</span>
-</pre></div>
-</div>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.render_json">
-<span class="sig-name descname"><span class="pre">render_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.render_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Render data into a template, producing a JSON result.
-Also clean up any “really bad” control characters to avoid failure.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>template</strong> (<em>str</em><em> or </em><em>dict</em>) – Path to or a dict of the Jinja template</p></li>
-<li><p><strong>data</strong> (<em>dict</em>) – dict to apply to the template</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>result from the rendering of the template as a dictionary</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-<p><strong>Examples:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="s2">"the"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"new"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"thing"</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">'{"result":"{{value}}"}'</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="go">{u'result': u'the new thing'}</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="s2">"the"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"new"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"thing"</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">'{"result":"{{value}}"}'</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="go">{u'result': u'the new thing'}</span>
-</pre></div>
-</div>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.sample_filter">
-<span class="sig-name descname"><span class="pre">sample_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.sample_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>sample</strong></p>
-<p>Return a random sample from a list.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>val</strong> (<em>list</em>) – List of str | obj | int</p></li>
-<li><p><strong>count</strong> (int | <code class="docutils literal notranslate"><span class="pre">None</span></code>) – Number of times to repeat items in <code class="docutils literal notranslate"><span class="pre">val</span></code> to
-increase its <em>random</em> probability</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The random item</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str | obj | int</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.sh_filter">
-<span class="sig-name descname"><span class="pre">sh_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.sh_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>sh</strong></p>
-<p>Escapes characters in <code class="docutils literal notranslate"><span class="pre">val</span></code> for use in a Unix shell command line.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to escaped</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Escaped string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_datetimeformat">
-<span class="sig-name descname"><span class="pre">soar_datetimeformat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y-%m-%dT%H:%M:%S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_datetimeformat" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>soar_datetimeformat</strong></p>
-<p>Convert UTC dates to epoch format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>str</em>) – The UTC date string</p></li>
-<li><p><strong>date_format</strong> (<em>str</em>) – <em>(optional)</em> Conversion format. Defaults to <code class="docutils literal notranslate"><span class="pre">"%Y-%m-%dT%H:%M:%S"</span></code></p></li>
-<li><p><strong>split_at</strong> (<em>str</em>) – <p><em>(optional)</em> Character to split the date field to scope the date field</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">split_at</span><span class="o">=</span><span class="s1">'.'</span> <span class="n">to</span> <span class="n">remove</span> <span class="n">milliseconds</span> <span class="k">for</span> <span class="s2">"2021-10-22T20:53:53.913Z"</span>
-<span class="n">split_at</span><span class="o">=</span><span class="s1">'+'</span> <span class="n">to</span> <span class="n">remove</span> <span class="n">tz</span> <span class="n">information</span> <span class="s2">"2021-10-22T20:53:53+00:00"</span>
-</pre></div>
-</div>
-</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Epoch value of datetime, in milliseconds</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_splitpart">
-<span class="sig-name descname"><span class="pre">soar_splitpart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">-</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_splitpart" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>soar_splitpart</strong></p>
-<p>Split a string and return the index.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>str</em>) – string to split</p></li>
-<li><p><strong>index</strong> (<em>int</em>) – index of split to return</p></li>
-<li><p><strong>split_chars</strong> (<em>str</em>) – <em>(optional)</em> split characters.  Defaults to <code class="docutils literal notranslate"><span class="pre">'</span> <span class="pre">-</span> <span class="pre">'</span></code></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>value of split. If <code class="docutils literal notranslate"><span class="pre">index</span></code> is out of bounds, the original <code class="docutils literal notranslate"><span class="pre">value</span></code> is returned</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_substitute">
-<span class="sig-name descname"><span class="pre">soar_substitute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_substitute" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>soar_substitute</strong></p>
-<p>Replace values based on a lookup dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>str</em>) – original value to lookup</p></li>
-<li><p><strong>json_str</strong> (<em>JSON encoded str</em>) – JSON encoded string with key/value pairs of lookup values</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>replacement value or original value if no replacement found</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str | int</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.soar_trimlist">
-<span class="sig-name descname"><span class="pre">soar_trimlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.soar_trimlist" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>soar_trimlist</strong></p>
-<p>Trim whitespace from elements in a list.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>org_list</strong> (<em>list of strings</em>) – list of elements to trim whitespace from</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list with elements trimmed of whitespace</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.timestamp">
-<span class="sig-name descname"><span class="pre">timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.timestamp" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>timestamp</strong></p>
-<p>Try convert non-timestamp values to a timestamp.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em><em> | </em><em>dict</em>) – Either <code class="docutils literal notranslate"><span class="pre">"now"</span></code> or a dict containing year / month / day etc.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An epoch milliseconds timestamp</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">({</span><span class="s2">"year"</span><span class="p">:</span> <span class="mi">2018</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"timezoneID"</span><span class="p">:</span> <span class="s2">"CET"</span><span class="p">})</span>
-<span class="go">1533078000000</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="n">Undefined</span><span class="p">())</span>
-<span class="go">'null'</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">"now"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1530000000000</span>
-<span class="go">True</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">"now"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2000000000000</span> <span class="c1"># 2033</span>
-<span class="go">False</span>
-</pre></div>
-</div>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.uniq">
-<span class="sig-name descname"><span class="pre">uniq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.uniq" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>uniq</strong></p>
-<p>Produce the unique list.  If <code class="docutils literal notranslate"><span class="pre">val</span></code> is a dict, produce unique list of key values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>val</strong> (<em>[</em><em>str</em><em> | </em><em>int</em><em> | </em><em>obj</em><em>]</em>) – The original list</p></li>
-<li><p><strong>key</strong> (<em>str</em>) – If <code class="docutils literal notranslate"><span class="pre">val</span></code> is a dict return a list with dicts with just that <code class="docutils literal notranslate"><span class="pre">key</span></code></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Original list of items with duplicates removed</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]))</span>
-<span class="go">[1, 2, 3]</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">}]))</span>
-<span class="go">[{'a': 1}, {'a': 2}, {'a': 3}]</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="ne">Exception</span><span class="p">()],</span> <span class="s2">"a"</span><span class="p">))</span>
-<span class="go">[{'a': 1}, {'a': 2}, {'a': 3}, Exception()]</span>
-</pre></div>
-</div>
-</dd></dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_lib.components.templates_common.url_filter">
-<span class="sig-name descname"><span class="pre">url_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.templates_common.url_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>url</strong></p>
-<p>Produces URL-encoded string of the value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>val</strong> (<em>str</em>) – The string to encoded</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Encoded string</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-</section>
 <section id="exceptions">
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
@@ -1519,10 +863,6 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
-<p><strong>2022-04: version 44.1</strong></p>
-<ul class="simple">
-<li><p>Added <a class="reference internal" href="#common-jinja-methods">Common Jinja Methods</a> for help with using Jinja in your App</p></li>
-</ul>
 <p><strong>2022-02: version 44.0</strong></p>
 <ul class="simple">
 <li><p>Ensure <code class="docutils literal notranslate"><span class="pre">tests/</span></code> is not included in packaged code</p></li>
@@ -1671,7 +1011,7 @@ adding the ability to validate fields in app.config</p></li>
         </div>
 
         <div class="related-information">
-              Copyright &#169; 2022, IBM |
+              Copyright &#169; 2021, IBM |
           Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
           <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
         </div>
@@ -1695,7 +1035,6 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#proxies">Proxies</a></li>
 <li><a class="reference internal" href="#module-resilient_lib.components.resilient_common">Common Helper Methods</a></li>
 <li><a class="reference internal" href="#common-request-methods">Common Request Methods</a></li>
-<li><a class="reference internal" href="#module-resilient_lib.components.templates_common">Common Jinja Methods</a></li>
 <li><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
 </ul>
