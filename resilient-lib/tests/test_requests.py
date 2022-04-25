@@ -66,8 +66,10 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_timeout, None)
         self.assertEqual(rc.get_timeout(), 35)
 
+
+    def test_timeout_failure(self):
         # test timeout
-        integrations_twenty = { "integrations": { "timeout": "8" } }
+        integrations_twenty = { "integrations": { "timeout": "1" } }
         rc = RequestsCommon(integrations_twenty, None)
         url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
 
@@ -75,10 +77,12 @@ class TestFunctionRequests(unittest.TestCase):
             rc.execute_call_v2("get", url)
 
 
-        integrations_fourty = { "integrations": { "timeout": "20" } }
+    def test_timeout_success(self):
+        integrations_fourty = { "integrations": { "timeout": "5" } }
         rc = RequestsCommon(integrations_fourty, None)
-        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
-        rc.execute_call_v2("get", url)
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "1"))
+        resp = rc.execute_call_v2("get", url)
+        assert resp.json() == {"delay": "1"}
 
 
     def test_timeout_section_value(self):
