@@ -278,7 +278,7 @@ class FunctionResult(object):
         if not isinstance(value, dict):
             msg = "FunctionResult must be a dictionary. " \
                   "'{}' may cause the workflow to fail.".format(type(value).__name__)
-            logging.getLogger(__name__).error(msg)
+            logging.getLogger(__name__).warning(msg)
 
         self.value = value
         self.success = success

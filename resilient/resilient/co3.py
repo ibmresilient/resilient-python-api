@@ -21,8 +21,7 @@ from argparse import Namespace
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-from cachetools import cachedmethod
-from cachetools.ttl import TTLCache
+from cachetools import cachedmethod, TTLCache
 from .co3base import ensure_unicode, get_proxy_dict, NoChange
 
 try:
@@ -343,7 +342,7 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None):
         """Gets the specified URI.
 
         .. note::
@@ -359,14 +358,16 @@ class SimpleClient(co3base.BaseClient):
         :type timeout: int
         :param is_uri_absolute: if True, does not insert /org/{org_id} into the uri.
         :type is_uri_absolute: bool
-        :return: A dictionary or list with the value returned by the server.
-        :rtype: dict | list
+        :param get_response_object: if True, returns entire response object.
+        :type get_response_object: bool
+        :return: A dictionary, list, or response object with the value returned by the server.
+        :rtype: dict | list | Response
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call get from BaseClient, convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute)
+            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute, get_response_object)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -612,7 +613,7 @@ class SimpleClient(co3base.BaseClient):
         """
         Upload a file to the specified URI
         e.g. ``/incidents/<id>/attachments`` (for incident attachments)
-        or,  ``/tasks/<id>/attachments`` (for task attachments)
+        or ``/tasks/<id>/attachments`` (for task attachments)
 
         .. warning::
             Please see our updated :class:`resilient_lib.write_file_attachment <resilient_lib.components.resilient_common.write_file_attachment>`

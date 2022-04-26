@@ -16,7 +16,12 @@ from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
 from six import string_types
 
-INCIDENT_FRAGMENT = '#incidents'
+CP4S_PREFIX = "cases-rest."
+CP4S_RESOURCE_PREFIX = "app/respond"
+INCIDENT_FRAGMENT = "#incidents"
+CASE_FRAGMENT = "#cases"
+TASK_FRAGMENT = "taskId="
+TASK_DETAILS_FRAGMENT = "tabName=details"
 PAYLOAD_VERSION = "1.0"
 
 LOG = logging.getLogger(__name__)
@@ -26,7 +31,11 @@ LOG.addHandler(logging.StreamHandler())
 
 def build_incident_url(url, incidentId):
     """
-    Build the url to link to a SOAR incident
+    Build the url to link to a SOAR incident or CP4S case.
+    Add 'https' if http/https is not provided at the start.
+    If ``url`` is not a string, returns back the value given.
+
+    Returns a URL of the format ``https://<url>/#<incident_id>``.
 
     :param url: the URL of your SOAR instance
     :type url: str
@@ -35,12 +44,62 @@ def build_incident_url(url, incidentId):
     :return: full URL to the incident
     :rtype: str
     """
+
+    if not isinstance(url, str):
+        LOG.warning("Called 'build_incident_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
+        return url
+
+    # determine if host url needs http/s prefix
+    # if not given, assumes https
+    if not url.lower().startswith("http"):
+        url = "https://{0}".format(url)
+
+    # remove cp4s prefix if still present
+    if CP4S_PREFIX in url:
+        url = url.replace(CP4S_PREFIX, "")
+
+        # unfortunately we can't insert app/respond unless we know the cp4s prefix was there
+        # so we insert if missing
+        # otherwise we have to assume this is a standalone instance link
+        if CP4S_RESOURCE_PREFIX not in url:
+            url = '/'.join([url, CP4S_RESOURCE_PREFIX])
+
+    if CP4S_RESOURCE_PREFIX in url:
+        return '/'.join([url, CASE_FRAGMENT, str(incidentId)])
+
     return '/'.join([url, INCIDENT_FRAGMENT, str(incidentId)])
+
+
+def build_task_url(url, incident_id, task_id):
+    """
+    Build the url to link to a SOAR/CP4S task.
+    Add 'https' if http/https is not provided at the start.
+    If ``url`` is not a string, returns back the value given.
+
+    Returns a URL of the format ``https://<url>/#<incident_id>?taskId=<task_id>&tabName=details``.
+
+    :param url: the URL of your SOAR instance
+    :type url: str
+    :param incident_id: the id of the incident
+    :type incident_id: str|int
+    :param task_is: the id of the task
+    :type task_is: str|int
+    :return: full URL to the task's details tab
+    :rtype: str
+    """
+
+    if not isinstance(url, str):
+        LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
+        return url
+
+    return "{0}?{1}{2}&{3}".format(build_incident_url(url, incident_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
 
 
 def build_resilient_url(host, port):
     """
-    Build basic url to resilient instance
+    Build basic url to SOAR/CP4S instance.
+    Add 'https' if http/https is not provided at the start.
+    If ``host`` is not a string, returns back the value given.
 
     :param host: host name
     :type host: str
@@ -49,16 +108,28 @@ def build_resilient_url(host, port):
     :return: base url
     :rtype: str
     """
-    if host.lower().startswith("http"):
-        return "{0}:{1}".format(host, port)
 
-    return "https://{0}:{1}".format(host, port)
+    if not isinstance(host, str):
+        LOG.warning("Called 'build_resilient_url' with a '{0}'  but was expecting a 'str' host value. Returning original value.".format(type(host)))
+        return host
+
+    # determine if host url needs http/s prefix
+    # if not given, assumes https
+    if not host.lower().startswith("http"):
+        host = "https://{0}".format(host)
+
+    # check if host is CP4S host
+    if CP4S_PREFIX in host:
+        host = host.replace(CP4S_PREFIX, "")
+        return "{0}:{1}/{2}".format(host, port, CP4S_RESOURCE_PREFIX)
+
+    return "{0}:{1}".format(host, port)
 
 
 def clean_html(html_fragment):
     """
-    Resilient textarea fields return html fragments. This routine will remove the
-    html and insert any code within ``<div></div>`` with a linefeed
+    SOAR textarea fields return HTML fragments. This routine removes the
+    HTML and inserts any code within ``<div></div>`` with a linefeed.
 
     .. note::
         The string returned from this method may not format well as no presentation of line feeds are preserved,
@@ -114,8 +185,8 @@ def validate_fields(field_list, kwargs):
     a field name or it can be a list/tuple of ``dicts`` where each item
     has the attributes ``name`` (**required**) and ``placeholder`` (**optional**).
 
-    ``kwargs`` can be a dict/namedtuple. If it is a namedtuple tries to call it's
-    ``kwargs._as_dict()`` method and raises a ``ValueError`` if it cannot.
+    ``kwargs`` can be a dict or namedtuple. If a namedtuple, it calls its
+    ``kwargs._as_dict()`` method and raises a ``ValueError`` if it does not succeed.
 
     * If the value of the item in ``kwargs`` is equal to its ``placeholder``
       defined in ``field_list``, a ``ValueError`` is raised.
@@ -201,7 +272,7 @@ def validate_fields(field_list, kwargs):
 
 def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
     """
-    Call the Resilient REST API to get the attachment or artifact data for
+    Call the SOAR REST API to get the attachment or artifact data for
     an Incident or a Task
 
     * If ``incident_id`` and ``artifact_id`` are defined it will get that Artifact
@@ -221,7 +292,7 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
         with open("malware.eml", "wb") as f:
             f.write(artifact_data)
 
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :type res_client: resilient_circuits.ResilientComponent.rest_client()
     :param incident_id: id of the Incident
     :type incident_id: int|str
@@ -253,9 +324,9 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
 
 def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
     """
-    Call the Resilient REST API to get the attachment or artifact attachment metadata
+    Call the SOAR REST API to get the attachment or artifact attachment metadata
 
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :type res_client: resilient_circuits.ResilientComponent.rest_client()
     :param incident_id: id of the Incident
     :type incident_id: int|str
@@ -288,9 +359,9 @@ def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task
 
 def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, task_id=None, attachment_id=None):
     """
-    Call the Resilient REST API to get the attachment or artifact attachment name
+    Call the SOAR REST API to get the attachment or artifact attachment name
 
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :type res_client: resilient_circuits.ResilientComponent.rest_client()
     :param incident_id: id of the Incident
     :type incident_id: int|str
@@ -324,7 +395,7 @@ def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, tas
 
 def write_file_attachment(res_client, file_name, datastream, incident_id, task_id=None, content_type=None):
     """
-    Add a file attachment to Resilient using the REST API
+    Add a file attachment to SOAR using the REST API
     to an Incident or a Task
 
     **Example:**
@@ -334,7 +405,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
         with open("malware.eml", "rb") as data_stream:
             res = write_file_attachment(self.rest_client(), "malware.eml", data_stream, 2001)
 
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :type res_client: :class:`ResilientComponent.rest_client() <resilient_circuits.actions_component.ResilientComponent.rest_client()>`
     :param file_name: name of the attachment to create
     :type file_name: str
@@ -359,7 +430,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     to read and POST the attachment
     """
 
-    # Create a new attachment by calling resilient REST API
+    # Create a new attachment by calling SOAR REST API
 
     if task_id:
         attachment_uri = "/tasks/{}/attachments".format(task_id)
@@ -382,7 +453,7 @@ def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%
     """
     Convert an epoch timestamp to a string using a format
 
-    :param timestamp: ts of object sent from Resilient Server i.e. ``incident.create_date``
+    :param timestamp: ts of object sent from SOAR Server i.e. ``incident.create_date``
     :type timestamp: int
     :param milliseconds: Set to ``True`` if ts in milliseconds
     :type milliseconds: bool
@@ -496,7 +567,7 @@ def close_incident(res_client, incident_id, kwargs, handle_names=False):
             handle_names=True
         )
 
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :type res_client: resilient_circuits.ResilientComponent.rest_client()
     :param incident_id: id of the incident
     :type incident_id: int|str
@@ -523,7 +594,7 @@ def close_incident(res_client, incident_id, kwargs, handle_names=False):
     if "plan_status" not in mandatory_fields:
         mandatory_fields["plan_status"] = "C"
 
-    # API call to the Resilient REST API to patch the incident data (close incident)
+    # API call to the SOAR REST API to patch the incident data (close incident)
     response = _patch_to_close_incident(res_client, incident_id, mandatory_fields, handle_names)
 
     return response
@@ -531,7 +602,7 @@ def close_incident(res_client, incident_id, kwargs, handle_names=False):
 
 def _get_required_fields(res_client):
     """
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :return: list
     """
     fields = _get_incident_fields(res_client)
@@ -543,9 +614,9 @@ def _get_required_fields(res_client):
 @cached(cache=TTLCache(maxsize=10, ttl=600))
 def _get_incident_fields(res_client):
     """
-    call the Resilient REST API to get list of fields required to close an incident
+    call the SOAR REST API to get list of fields required to close an incident
     this call is cached for multiple calls
-    :param res_client: required for communication back to resilient
+    :param res_client: required for communication back to SOAR
     :return: json
     """
     uri = "/types/incident"
@@ -557,8 +628,8 @@ def _get_incident_fields(res_client):
 
 def _patch_to_close_incident(res_client, incident_id, close_fields, handle_names=False):
     """
-    call the Resilient REST API to patch incident
-    :param res_client: required for communication back to resilient
+    call the SOAR REST API to patch incident
+    :param res_client: required for communication back to SOAR
     :param incident_id: required
     :param close_fields: required
     :return: response object

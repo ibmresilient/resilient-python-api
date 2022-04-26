@@ -1,37 +1,18 @@
+![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
+
 # pytest-resilient-circuits
 
-This package is a `py.test` plugin that provides fixtures to facilitate testing resilient-circuits applications.
+This package is a `pytest` plugin that provides fixtures to facilitate testing IBM SOAR apps.
 
 ### Changelog
 
-### Requirements
-
-The `resilient` and `resilient-circuits` packages should be installed before use.
-
-Other requirements are installed when you install the package.
-
-
 ### Installing this module
 
-To install a pre-built package file:
+To install from PyPi:
 
-    pip install dist/pytest_resilient_circuits-x.x.x.tar.gz
-
-
-To install directly into your local Python environment:
-
-    python setup.py install
-
-
-To build the installable package file:
-
-    python setup.py sdist --formats=gztar
-
-This creates a single file `dist/pytest_resilient_circuits-x.x.x.tar.gz` (the filename will
-vary according to the current version).
-
+    pip install pytest-resilient-circuits
 
 ### Usage
 
-For usage instructions and examples, please see the Resilient Integrations Python Developer's Guide.
+For usage instructions and examples, please see the IBM SOAR App Developer's Guide.
 
