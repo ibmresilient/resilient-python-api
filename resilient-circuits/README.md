@@ -1,6 +1,6 @@
 ![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-# IBM SOAR `resilient-circuits` Framework
+# IBM SOAR Resilient Circuits Framework
 
 ## Overview
 The IBM SOAR `resilient-circuits` Framework is used to run IBM SOAR Apps and Integrations.

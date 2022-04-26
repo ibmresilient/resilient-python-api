@@ -1,6 +1,6 @@
 ![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-# IBM SOAR `resilient` Python Library
+# IBM SOAR Python Library
 
 ## Overview
 This package is a Python client module for the IBM SOAR REST API.
@@ -13,29 +13,6 @@ For more information on how to develop custom Apps for IBM SOAR see the IBM SOAR
 
 For our API Documentation on this library, please see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs).
 
-
----
-
-
-### Using `res-keyring`
-This module comes packaged with the `res-keyring` command line utility. The utility allows values in the config file to be pulled from a compatible keystore system
-on your OS.  For example, to retrieve a value named `yourkey` from a keystore, set it to `^yourkey`.
-
-Example from app.confg:
-```
-[resilient]
-yourkey=^yourkey
-```
-
-Once you have referenced the keys in your app.config file, run `res-keyring` and you will be prompted for the secure values to store.
-
-```
-  $ res-keyring
-  Configuration file: /Users/example/.resilient/app.config
-  Secrets are stored with 'keyring.backends.OS_X'
-  [resilient] yourkey: <not set>
-  Enter new value (or <ENTER> to leave unchanged):
-```
 
 
 ## Change Log
