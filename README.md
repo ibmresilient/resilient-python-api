@@ -2,43 +2,20 @@
 
 # IBM SOAR Python APIs
 
-This directory contains
+This directory contains the source code for:
 
- * [resilient](./resilient), the `resilient` Python Client Module for the IBM SOAR platform APIs.
- * [resilient-circuits](./resilient-circuits), an application framework for SOAR Action Module.
- * [resilient-lib](./resilient-lib), a package with common library calls which facilitate the development of functions for IBM SOAR.
-* [resilient-sdk](./resilient-sdk), a CLI tool for app development including code generation, code validation, documentation generation, and exporting SOAR appliance components such as scripts, rules, playbooks, custom fields, etc.
+ * [resilient](./resilient), a Python client module for the IBM SOAR REST API.
+ * [resilient-circuits](./resilient-circuits), an application framework used to run IBM SOAR Apps and Integrations.
+ * [resilient-lib](./resilient-lib), a package with common library calls which facilitate the development of Apps for IBM SOAR.
+* [resilient-sdk](./resilient-sdk), a CLI tool needed to develop IBM SOAR Apps.
 
 See more details of usage and examples for these packages at our [docs](https://ibm.biz/soar-python-docs).
 
 
-## Certificates
+## Documentation
+The IBM SOAR App Developer's Guide provides information on using the IBM SOAR Resilient Circuits Framework to run Apps and Integrations. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the following page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
 
-In order to connect to the SOAR server, if the server
-doesn't have a trusted TLS certificate, you must provide the server's
-certificate in a file (e.g. "cacerts.pem").  The quickest way to do this
-is to use either `openssl` or the Java `keytool` command line utilities.
-
-Using openssl to create the cacerts.pem file (using Linux or Mac OS):
-```
-openssl s_client -connect SERVER:443 -showcerts -tls1 < /dev/null > cacerts.pem 2> /dev/null
-```
-
-Using keytool to create the cacerts.pem file (Linux, Mac OS or Windows):
-```
-keytool -printcert -rfc -sslserver SERVER:443 > cacerts.pem
-```
-
-WARNING:  In a production setting, you should take care to get the certificate
-from a trusted source and confirm its fingerprint.
-
-When connecting to a SOAR server with the Python libraries,
-the hostname you specify must match exactly the name in the server
-certificate.  If there is a mismatch, the permanent solution is to either
-change your DNS server or change the server certificate so it matches. It is
-also possible to modify your 'hosts' file temporarily, but that is not a permanent
-solution.
-
+For our API Documentation on these libraries, please see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs).
 
 
 # Contributing

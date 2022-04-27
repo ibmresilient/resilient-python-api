@@ -3,26 +3,20 @@
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Simple client for Resilient REST API"""
-from __future__ import print_function
-
+import datetime
+import importlib
 import json
-import ssl
-import mimetypes
+import logging
 import os
 import sys
-import logging
-import datetime
-import unicodedata
-import requests
-import importlib
-from . import co3base
-from .patch import PatchStatus
 from argparse import Namespace
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
-from requests_toolbelt.multipart.encoder import MultipartEncoder
-from cachetools import cachedmethod, TTLCache
-from .co3base import ensure_unicode, get_proxy_dict, NoChange
+
+import requests
+from cachetools import TTLCache, cachedmethod
+
+from . import co3base
+from .co3base import NoChange, ensure_unicode, get_proxy_dict
+from .patch import PatchStatus
 
 try:
     # Python 3
@@ -96,13 +90,17 @@ def get_config_file(filename=None, generate_filename=False):
     return config_file
 
 
-def get_client(opts):
+def get_client(opts, custom_headers=None):
     """
-    Helper: get a SimpleClient for Resilient REST API.
+    This is a helper method to get an instance of
+    :class:`SimpleClient` for the SOAR REST API.
 
-    :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`
+    :param opts: the connection options - usually the contents of the app.config file
+    :type opts: dict
+    :param custom_headers: A dictionary of any headers you want to send in **every** request
+    :type custom_headers: dict
 
-    A standard way to initialize a SimpleClient with default configuration is,
+    A standard way to initialize a :class:`SimpleClient` with default configuration is:
 
     .. code-block:: python
 
@@ -110,7 +108,7 @@ def get_client(opts):
         opts = parser.parse_args()
         client = resilient.get_client(opts)
 
-    Returns: a connected and verified instance of SimpleClient.
+    :return: a connected and verified instance of :class:`SimpleClient`
     """
     if isinstance(opts, Namespace):
         opts = vars(opts)
@@ -140,7 +138,8 @@ def get_client(opts):
                           "proxies": proxy,
                           "base_url": url,
                           "verify": verify,
-                          "certauth": certauth}
+                          "certauth": certauth,
+                          "custom_headers": custom_headers}
     if opts.get("log_http_responses"):
         LOG.warning("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
         simple_client = LoggingSimpleClient
@@ -294,7 +293,7 @@ class SimpleClient(co3base.BaseClient):
         or by going to: ``https://<base_url>/docs/rest-api/index.html``
     """
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None, custom_headers=None):
         """
         :param org_name: The name of the organization to use.
         :type org_name: str
@@ -306,8 +305,10 @@ class SimpleClient(co3base.BaseClient):
         :type verify: str|bool
         :param cache_ttl: Time in seconds to live for cached API responses
         :type cache_ttl: int
+        :param custom_headers: A dictionary of any headers you want to send in **every** request
+        :type custom_headers: dict
         """
-        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth)
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth, custom_headers=custom_headers)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):

@@ -48,7 +48,7 @@ def fx_base_client():
     Before: Creates a directory at mock_paths.TEST_TEMP_DIR
     After: Nothing
     """
-    base_client = BaseClient(org_name="Mock Org", base_url="https://examle.com")
+    base_client = BaseClient(org_name="Mock Org", base_url="https://example.com")
     requests_adapter = requests_mock.Adapter()
     base_client.session.mount(u'https://', requests_adapter)
     base_client.org_id = 201

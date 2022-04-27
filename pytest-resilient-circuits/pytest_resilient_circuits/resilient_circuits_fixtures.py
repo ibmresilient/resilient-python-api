@@ -1,25 +1,28 @@
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
 """Pytest Fixture for Testing Resilient Circuits Components"""
-from __future__ import print_function
 
+import calendar
+import json
+import logging
 import os
 import sys
 import time
-import calendar
-import json
 import traceback
-import logging
+
 import pytest
-from pytest_resilient_circuits.circuits_fixtures import manager, watcher
 import resilient
-from resilient import SimpleHTTPException
 import resilient_circuits.app
+from resilient_circuits import rest_helper
+from resilient import SimpleHTTPException
+
+from pytest_resilient_circuits.circuits_fixtures import manager, watcher
+from pytest_resilient_circuits.shared_mock_data import mock_constants
 
 """
 Depending on which version of python we are on
-we may either need to import the StringIO package 
-or the io package which contains the equivelant class on that platform
+we may either need to import the StringIO package
+or the io package which contains the equivalent class on that platform
 """
 if sys.version_info.major < 3:
     from StringIO import StringIO
@@ -446,6 +449,28 @@ port = 443
                 handler.flush()
 
 # end ResilientCircuits
+
+
+"""
+Shared pytest fixtures
+
+Note:
+    -   Code after the 'yield' statement in a fixture
+        is ran after the test (or scope i.e. test session) has complete
+    -   fx_ prefixes a 'fixture'
+    -   Put fixture logic in separate 'private' function so we
+        can share logic between fixtures
+    -   Fixture must have BEFORE and AFTER docstring
+"""
+
+
+@pytest.fixture(scope="session")
+def fx_mock_resilient_client():
+    """
+    Before: Creates a mock instance of get_resilient_client
+    After: N/A
+    """
+    yield rest_helper.get_resilient_client(opts=mock_constants.MOCK_APP_CONFIGS)
 
 
 @pytest.fixture(scope="class")

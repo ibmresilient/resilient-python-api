@@ -10,8 +10,8 @@ import sys
 import pytest
 from resilient import constants
 
-from tests.shared_mock_data import mock_paths
 from tests import helpers
+from tests.shared_mock_data import mock_paths
 
 
 def test_set_api_key_authorized(fx_base_client):
@@ -114,6 +114,24 @@ def test_extract_org_id_disabled_org(fx_base_client):
 
     with pytest.raises(Exception, match=r"This organization is not accessible to you"):
         base_client._extract_org_id(mock_response)
+
+
+def test_client_has_base_headers(fx_base_client):
+    base_client = fx_base_client[0]
+    headers = base_client.headers
+
+    assert headers.get("content-type") == "application/json"
+    assert headers.get(constants.HEADER_MODULE_VER_KEY) == constants.HEADER_MODULE_VER_VALUE
+
+
+def test_make_headers_supports_additional_header(fx_base_client):
+    base_client = fx_base_client[0]
+    additional_headers = {"Mock-Key": "Mock-Value"}
+    headers = base_client.make_headers(additional_headers=additional_headers)
+
+    assert headers.get("content-type") == "application/json"
+    assert headers.get(constants.HEADER_MODULE_VER_KEY) == constants.HEADER_MODULE_VER_VALUE
+    assert headers.get("Mock-Key") == "Mock-Value"
 
 
 def test_post_attachment_file_path(fx_base_client, fx_mk_temp_dir):
