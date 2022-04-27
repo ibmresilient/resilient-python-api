@@ -122,17 +122,32 @@ def get_proxy_dict(opts):
 
 
 class BaseClient(object):
-    """Helper for using Resilient REST API."""
+    """Helper for using SOAR REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, custom_headers=None):
         """
-        Args:
-          org_name - the cloud_account/uuid/name of the organization to use.
-          base_url - the base URL to use.
-          proxies - HTTP proxies to use, if any.
-          verify - The name of a PEM file to use as the list of trusted CAs.
+        :param org_name: The name of the organization to use
+        :type org_name: str
+        :param base_url: The base URL of the SOAR server, e.g. ``https://soar.ibm.com/``
+        :type base_url: str
+        :param proxies: A dictionary of ``HTTP`` proxies to use, if any
+        :type proxies: dict
+        :param verify: The path to a ``PEM`` file containing the trusted CAs, or ``False`` to disable all TLS verification
+        :type verify: str|bool
+        :param custom_headers: A dictionary of any headers you want to send in **every** request
+        :type custom_headers: dict
         """
-        self.headers = {'content-type': 'application/json'}
+
+        base_headers = {
+            "content-type": "application/json",
+            constants.HEADER_MODULE_VER_KEY: constants.HEADER_MODULE_VER_VALUE
+        }
+
+        if custom_headers and isinstance(custom_headers, dict):
+            base_headers.update(custom_headers)
+
+        self.headers = base_headers
+
         self.cookies = None
         self.org_id = None
         self.user_id = None
@@ -290,8 +305,6 @@ class BaseClient(object):
     def make_headers(self, co3_context_token=None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
-
-        headers[constants.HEADER_USR_AGENT_KEY] = constants.HEADER_USR_AGENT_VALUE
 
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token
