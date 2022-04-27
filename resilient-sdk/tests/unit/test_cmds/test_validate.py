@@ -8,7 +8,7 @@ import sys
 import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdValidate, base_cmd
-from resilient_sdk.util import constants
+from resilient_sdk.util import constants, sdk_validate_configs
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
 
@@ -363,43 +363,47 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
 
-def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
-    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
+def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
 
     # Add cmd line arg
     sys.argv.extend(["--tests", "--tox-args", 'arg1="val1"', 'arg2="val2"'])
 
-    cmd_validate = CmdValidate(fx_get_sub_parser)
-    args = cmd_validate.parser.parse_known_args()[0]
-
-    cmd_validate.execute_command(args)
-
-    assert "Running ['tox', '--', '--junitxml'," in caplog.text
-    assert "'val2'] as a subprocess" in caplog.text
-
-
-def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_mock_res_client, fx_get_sub_parser, caplog):
-    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
-
-    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
-    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_and_pip_install_fn_main_mock_integration[1]
-
-    # Add cmd line arg
-    sys.argv.extend(["--tests", "--settings", mock_paths.MOCK_SDK_SETTINGS_PATH])
-
-    with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_client") as mock_client:
-
-        mock_client.return_value = fx_mock_res_client
+    # remove the last call which is the one that actually runs the tox tests
+    # this method is checked in other tests and is too slow to run here live
+    with patch.object(sdk_validate_configs, "tests_attributes", sdk_validate_configs.tests_attributes[0:-1]):
 
         cmd_validate = CmdValidate(fx_get_sub_parser)
         args = cmd_validate.parser.parse_known_args()[0]
 
         cmd_validate.execute_command(args)
 
-        assert "tests passed!" in caplog.text
+        assert "tests PASS" in caplog.text
+
+
+def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_mock_res_client, fx_get_sub_parser, caplog):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = fx_copy_fn_main_mock_integration[1]
+
+    # Add cmd line arg
+    sys.argv.extend(["--tests", "--settings", mock_paths.MOCK_SDK_SETTINGS_PATH])
+
+    with patch.object(sdk_validate_configs, "tests_attributes", sdk_validate_configs.tests_attributes[0:-1]):
+        with patch("resilient_sdk.cmds.validate.sdk_helpers.get_resilient_client") as mock_client:
+
+            mock_client.return_value = fx_mock_res_client
+
+            cmd_validate = CmdValidate(fx_get_sub_parser)
+            args = cmd_validate.parser.parse_known_args()[0]
+
+            cmd_validate.execute_command(args)
+
+            assert "tests PASS" in caplog.text
 
 
 def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
