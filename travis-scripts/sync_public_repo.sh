@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# param $1: (required) branch name to push to. Accepted values are: ALL, gh-pages or master.
+# param $1: (required) branch name to push to. Accepted values are: ALL, gh-pages or main.
 
 ###############
 ## Variables ##
@@ -42,8 +42,8 @@ print_msg "\
 BRANCHES_TO_SYNC:\t$BRANCHES_TO_SYNC \n\
 "
 
-if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "master" ] ; then
-    sync_branch "master" "master"
+if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "main" ] ; then
+    sync_branch "master" "main"
 fi
 
 if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "gh-pages" ] ; then

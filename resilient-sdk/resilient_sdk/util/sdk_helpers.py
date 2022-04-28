@@ -395,7 +395,7 @@ def get_resilient_server_version(res_client):
 
 def get_latest_org_export(res_client):
     """
-    Generates a new Export on the Resilient Appliance.
+    Generates a new Export on SOAR.
     Returns the POST response
     """
     LOG.debug("Generating new organization export")
@@ -466,7 +466,7 @@ def confirm_configuration_import(result, import_id, res_client):
     uri = "{}/{}".format(constants.IMPORT_URL, import_id)
     try:
         res_client.put(uri, result)
-        LOG.info("Imported configuration changes successfully to the Resilient Appliance")
+        LOG.info("Imported configuration changes successfully to SOAR")
     except requests.RequestException as import_exception:
         raise SDKException(repr(import_exception))
 
@@ -499,7 +499,10 @@ def get_object_api_names(api_name, list_objs):
     """
     Return a list of object api_names from list_objs
     """
-    return [o.get(api_name) for o in list_objs]
+    if list_objs:
+        return [o.get(api_name) for o in list_objs]
+    else:
+        return []
 
 
 def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
@@ -518,7 +521,9 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    if obj_list:
+        return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    return {}
 
 
 def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
@@ -537,8 +542,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :type export: Dict
     :param condition: A lambda function to evaluate each object
     :type condition: function
-    :param export: Whether or not to return the objects API name as a field.
-    :type export: bool
+    :param include_api_name: Whether or not to return the objects API name as a field.
+    :type include_api_name: bool
     :return: List of Resilient Objects
     :rtype: List
     """
@@ -740,7 +745,10 @@ def get_from_export(export,
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
     # Get Playbooks
-    return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
+    if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        raise SDKException("Playbooks are only supported in {0} for SOAR >= {1}. Current version: {2}.".format(constants.SDK_RESOURCE_NAME, constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS, constants.CURRENT_SOAR_SERVER_VERSION))
+    else:
+        return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
     return return_dict
 
@@ -861,7 +869,49 @@ def minify_export(export,
     if "incident/" not in fields:
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
+    # Clean out any pii values with keys included in pii_key_list
+    pii_key_list = ["creator", "creator_id"]
+    minified_export = rm_pii(pii_key_list, minified_export)
+
     return minified_export
+
+
+def rm_pii(pii_key_list, export):
+    """
+    Remove any keys from 'export' that are in 'pii_key_list'.
+    Recursively searches the export object.
+    
+    :param pii_key_list: list of str keys to be removed from 'export'. ex: ["creator", "creator_id"]
+    :type pii_key_list: [str]
+    :param export: the result of calling get_latest_org_export() or minified_export from calling minify_export()
+    :type export: Dict
+    :return: modified export with any pii keys removed
+    :rtype: Dict
+    """
+
+    if export:
+        export_copy = export.copy()
+
+        for key in list(export_copy.keys()):
+            content = export_copy[key]
+
+            # if key is in pii_list to remove, delete entry in payload_result
+            if key in pii_key_list:
+                del export_copy[key]
+                continue
+
+            # if key wasn't in pii_list, continue searching recursively for dictionaries and scrubbing pii
+            if isinstance(content, dict):
+                export_copy[key] = rm_pii(pii_key_list, content)
+            elif isinstance(content, list):
+                # recreates the list where any dict elements of the list are recursively scrubbed
+                # if list item is not a dictionary, don't 
+                export_copy[key] = [rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
+
+        return export_copy
+    else:
+        return export
+
 
 def find_parent_child_types(export, object_type, attribute_name, name_list):
     """[get all parent objects (like incident_types)]

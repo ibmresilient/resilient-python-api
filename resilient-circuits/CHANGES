@@ -1,3 +1,21 @@
+**2022-05: version 45.0**
+
+* Added new config ``trap_exception`` and if set to ``True`` a Function's exception will be ignored with the error sent as a Status Message
+  and a default payload returned like below, allowing the Workflow or Playbook to continue
+
+  .. code-block::
+
+    {
+      "success": False,
+      "reason": "Error message"
+    }
+* Added a custom header for all requests from ``resilient-circuits`` that will include the current version of the library: ``Resilient-Circuits-Version: 45.0.0``
+
+**2022-04: version 44.1**
+
+* Move Jinja template management functions to ``resilient-lib`` while
+  keeping backward compatibility here
+
 **2022-02: version 44.0**
 
 * Ensure ``tests/`` is not included in packaged code

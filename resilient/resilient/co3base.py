@@ -12,6 +12,7 @@ import sys
 import logging
 import unicodedata
 import requests
+import traceback
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -46,12 +47,18 @@ class TLSHttpAdapter(HTTPAdapter):
 
 class BasicHTTPException(Exception):
     """Exception for HTTP errors."""
-    def __init__(self, response):
+    def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
           response - the Response object from the get/put/etc.
         """
-        super(BasicHTTPException, self).__init__(u"{0}:  {1}".format(response.reason, response.text))
+
+        err_reason = response.reason if response.reason else err_reason
+        err_text = response.text if response.text else err_text
+
+        err_message = u"'resilient' API Request FAILED:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
+
+        super(BasicHTTPException, self).__init__(err_message)
 
         self.response = response
 
@@ -60,7 +67,15 @@ class BasicHTTPException(Exception):
 
     @staticmethod
     def raise_if_error(response):
-        if response.status_code != 200:
+
+        if response.status_code == 401:
+            try:
+                raise BasicHTTPException(response, err_reason=constants.ERROR_MSG_CONNECTION_UNAUTHORIZED, err_text=constants.ERROR_MSG_CONNECTION_INVALID_CREDS)
+            except BasicHTTPException:
+                traceback.print_exc()
+                sys.exit(constants.ERROR_CODE_CONNECTION_UNAUTHORIZED)
+
+        elif response.status_code != 200:
             raise BasicHTTPException(response)
 
 
@@ -79,7 +94,7 @@ def ensure_unicode(input_value):
 
     if not isinstance(input_value, basestring):
         return input_value
-    elif isinstance(input_value, str):
+    if isinstance(input_value, str):
         input_unicode = input_value.decode('utf-8')
     else:
         input_unicode = input_value
@@ -107,17 +122,32 @@ def get_proxy_dict(opts):
 
 
 class BaseClient(object):
-    """Helper for using Resilient REST API."""
+    """Helper for using SOAR REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, custom_headers=None):
         """
-        Args:
-          org_name - the name of the organization to use.
-          base_url - the base URL to use.
-          proxies - HTTP proxies to use, if any.
-          verify - The name of a PEM file to use as the list of trusted CAs.
+        :param org_name: The name of the organization to use
+        :type org_name: str
+        :param base_url: The base URL of the SOAR server, e.g. ``https://soar.ibm.com/``
+        :type base_url: str
+        :param proxies: A dictionary of ``HTTP`` proxies to use, if any
+        :type proxies: dict
+        :param verify: The path to a ``PEM`` file containing the trusted CAs, or ``False`` to disable all TLS verification
+        :type verify: str|bool
+        :param custom_headers: A dictionary of any headers you want to send in **every** request
+        :type custom_headers: dict
         """
-        self.headers = {'content-type': 'application/json'}
+
+        base_headers = {
+            "content-type": "application/json",
+            constants.HEADER_MODULE_VER_KEY: constants.HEADER_MODULE_VER_VALUE
+        }
+
+        if custom_headers and isinstance(custom_headers, dict):
+            base_headers.update(custom_headers)
+
+        self.headers = base_headers
+
         self.cookies = None
         self.org_id = None
         self.user_id = None
@@ -188,30 +218,56 @@ class BaseClient(object):
         }
         return self._connect(timeout=timeout)
 
-    def _extract_org_id(self, resp):
+    def _extract_org_id(self, response):
         """
-        Extract org id from server resp
-        :param resp: server response from session endpoint
-        :return:
+        Extract the org's id from server response. Loops the orgs
+        in the response and checks each ``cloud_account``, ``uuid``
+        or ``name`` against the ``org_name`` attribute in the 
+        app.config file to see if it matches any of the 3.
+
+        If found, sets ``self.org_id`` equal to the ``id`` of the org
+
+        Also sets ``self.all_orgs`` equal to the full list of orgs
+        that are ``enabled`` for that user
+
+        :param response: server response from session endpoint
+        :type response: dict
+        :raises Exception: if user is not a member of any orgs
+        :raises Exception: if ``org_name`` value in app.config is not set
+        :raises Exception: if the user is not a member of the org specified in the app.config
+        :raises Exception: if the org specified has an ``enabled`` state set to ``False``
         """
-        orgs = resp['orgs']
+        app_config_org_value = self.org_name
         selected_org = None
-        if orgs is None or len(orgs) == 0:
-            raise Exception("User is a member of no orgs")
-        elif self.org_name:
-            org_names = []
-            for org in orgs:
-                org_name = org['name']
-                org_names.append(org_name)
-                if ensure_unicode(org_name) == self.org_name:
-                    selected_org = org
-        else:
-            org_names = [org['name'] for org in orgs]
-            msg = u"Please specify the organization name to which you want to connect.  " + \
+        orgs = response.get("orgs", [])
+
+        if not orgs:
+            raise Exception("User is not a member of any orgs")
+
+        if not app_config_org_value:
+            org_names = [org.get("name") for org in orgs]
+            msg = u"Please specify the organization name to which you want to connect.\n" + \
                   u"The user is a member of the following organizations: '{0}'"
             raise Exception(msg.format(u"', '".join(org_names)))
 
-        if selected_org is None:
+        for o in orgs:
+
+            if app_config_org_value == o.get("cloud_account", ""):
+                LOG.info("Using cloud account id: %s", app_config_org_value)
+                selected_org = o
+                break
+
+            if app_config_org_value == o.get("uuid", ""):
+                LOG.info("Using org uuid: %s", app_config_org_value)
+                selected_org = o
+                break
+
+            if ensure_unicode(app_config_org_value) == o.get("name", ""):
+                LOG.info("Using org name: %s", app_config_org_value)
+                selected_org = o
+                break
+
+        if not selected_org:
             msg = u"The user is not a member of the specified organization '{0}'."
             raise Exception(msg.format(self.org_name))
 
@@ -221,10 +277,10 @@ class BaseClient(object):
                   "The organization does not allow access from your current IP address.\n" \
                   "The organization requires authentication with a different provider than you are currently using.\n" \
                   "Your IP address is {0}"
-            raise Exception(msg.format(resp["session_ip"]))
+            raise Exception(msg.format(response.get("session_ip", "Unknown")))
 
         self.all_orgs = [org for org in orgs if org.get("enabled")]
-        self.org_id = selected_org['id']
+        self.org_id = selected_org.get("id", None)
 
     def _connect(self, timeout=None):
         """Establish a session"""
@@ -249,8 +305,6 @@ class BaseClient(object):
     def make_headers(self, co3_context_token=None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
-
-        headers[constants.HEADER_USR_AGENT_KEY] = constants.HEADER_USR_AGENT_VALUE
 
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token
@@ -277,7 +331,7 @@ class BaseClient(object):
             result = operation(url, **kwargs)
         return result
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -288,8 +342,9 @@ class BaseClient(object):
           co3_context_token
           timeout: number of seconds to wait for response
           is_uri_absolute: if True, does not insert /org/{org_id} into the uri
+          get_response_object: if True, returns the response object rather than the json of the response.text
         Returns:
-          A dictionary or array with the value returned by the server.
+          A dictionary, array, or response object with the value returned by the server.
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
@@ -308,6 +363,10 @@ class BaseClient(object):
                                          verify=self.verify,
                                          timeout=timeout)
         BasicHTTPException.raise_if_error(response)
+
+        if get_response_object:
+            return response
+
         return json.loads(response.text)
 
     def get_content(self, uri, co3_context_token=None, timeout=None):
@@ -367,28 +426,54 @@ class BaseClient(object):
         return json.loads(response.text)
 
     def post_attachment(self, uri, filepath,
-                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+                        filename=None,
+                        mimetype=None,
+                        data=None,
+                        co3_context_token=None,
+                        timeout=None,
+                        bytes_handle=None):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
         or,  "/tasks/<id>/attachments" (for task attachments)
 
         :param uri: The REST URI for posting
-        :param filepath: the path of the file to post
+        :param filepath:the path of the file to post or if ``None``, use ``bytes_handle``
         :param filename: optional name of the file when posted
         :param mimetype: optional override for the guessed MIME type
         :param data: optional dict with additional MIME parts (not required for file attachments; used in artifacts)
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
+        :param bytes_handle: BytesIO handle for content, used if ``filepath`` is None
         """
         filepath = ensure_unicode(filepath)
         if filename:
             filename = ensure_unicode(filename)
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
-        with open(filepath, 'rb') as filehandle:
-            attachment_name = filename or os.path.basename(filepath)
-            multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+
+        if filepath:
+            with open(filepath, 'rb') as filehandle:
+                attachment_name = filename or os.path.basename(filepath)
+                multipart_data = {'file': (attachment_name, filehandle, mime_type)}
+                multipart_data.update(data or {})
+                encoder = MultipartEncoder(fields=multipart_data)
+                headers = self.make_headers(co3_context_token,
+                                            additional_headers={'content-type': encoder.content_type})
+                response = self._execute_request(self.session.post,
+                                                 url,
+                                                 data=encoder,
+                                                 proxies=self.proxies,
+                                                 cookies=self.cookies,
+                                                 headers=headers,
+                                                 verify=self.verify,
+                                                 timeout=timeout)
+                BasicHTTPException.raise_if_error(response)
+                return json.loads(response.text)
+
+        elif bytes_handle:
+            attachment_name = filename if filename else "Unknown"
+            multipart_data = {'file': (attachment_name, bytes_handle, mime_type)}
             multipart_data.update(data or {})
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.make_headers(co3_context_token,
@@ -404,20 +489,29 @@ class BaseClient(object):
             BasicHTTPException.raise_if_error(response)
             return json.loads(response.text)
 
+        else:
+            raise ValueError("Either filepath or bytes_handle are required")
+
     def post_artifact_file(self, uri, artifact_type, artifact_filepath,
-                           description=None, value=None, mimetype=None, co3_context_token=None, timeout=None):
+                          description=None,
+                          value=None,
+                          mimetype=None,
+                          co3_context_token=None,
+                          timeout=None,
+                          bytes_handle=None):
         """
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"
 
         :param uri: The REST URI for posting
         :param artifact_type: the artifact type name ("IP Address", etc) or type ID
-        :param artifact_filepath: the path of the file to post
+        :param artifact_filepath: the path of the file to post or ``None`` if using ``bytes_handle``
         :param description: optional description for the artifact
         :param value: optional value for the artifact
         :param mimetype: optional override for the guessed MIME type
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
+        :param bytes_handle: byte content to create as an artifact file, used if ``artifact_filepath`` is ``None``
 
         """
         artifact = {
@@ -430,10 +524,12 @@ class BaseClient(object):
         }
         return self.post_attachment(uri,
                                     artifact_filepath,
+                                    filename=value if bytes_handle else None,
                                     mimetype=mimetype,
                                     data=mimedata,
                                     co3_context_token=co3_context_token,
-                                    timeout=timeout)
+                                    timeout=timeout,
+                                    bytes_handle=bytes_handle)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
         """Internal helper to do a get/apply/put loop
@@ -464,7 +560,7 @@ class BaseClient(object):
                                          timeout=timeout)
         if response.status_code == 200:
             return json.loads(response.text)
-        elif response.status_code == 409:
+        if response.status_code == 409:
             return None
         BasicHTTPException.raise_if_error(response)
         return None

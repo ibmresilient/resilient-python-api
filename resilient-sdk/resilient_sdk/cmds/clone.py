@@ -85,7 +85,7 @@ class CmdClone(BaseCmd):
 
         self.parser.add_argument("-pb", "--playbook",
                                  type=ensure_unicode,
-                                 help="API names of playbooks to include",
+                                 help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
                                  nargs="*")
 
         self.parser.add_argument("-r", "--rule",
@@ -140,7 +140,7 @@ class CmdClone(BaseCmd):
         LOG.debug("Called clone with %s", args)
         start = datetime.now()
 
-        # Instansiate connection to the Resilient Appliance
+        # Instansiate connection to SOAR
         CmdClone.res_client = get_resilient_client(path_config_file=args.config)
 
         org_export = get_latest_org_export(CmdClone.res_client)

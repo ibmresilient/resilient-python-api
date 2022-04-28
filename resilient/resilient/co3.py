@@ -3,27 +3,20 @@
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 
 """Simple client for Resilient REST API"""
-from __future__ import print_function
-
+import datetime
+import importlib
 import json
-import ssl
-import mimetypes
+import logging
 import os
 import sys
-import logging
-import datetime
-import unicodedata
-import requests
-import importlib
-from . import co3base
-from .patch import PatchStatus
 from argparse import Namespace
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
-from requests_toolbelt.multipart.encoder import MultipartEncoder
-from cachetools import cachedmethod
-from cachetools.ttl import TTLCache
-from .co3base import ensure_unicode, get_proxy_dict, NoChange
+
+import requests
+from cachetools import TTLCache, cachedmethod
+
+from . import co3base
+from .co3base import NoChange, ensure_unicode, get_proxy_dict
+from .patch import PatchStatus
 
 try:
     # Python 3
@@ -97,13 +90,17 @@ def get_config_file(filename=None, generate_filename=False):
     return config_file
 
 
-def get_client(opts):
+def get_client(opts, custom_headers=None):
     """
-    Helper: get a SimpleClient for Resilient REST API.
+    This is a helper method to get an instance of
+    :class:`SimpleClient` for the SOAR REST API.
 
-    :param opts: the connection options, as a :class:`dict`, or a :class:`Namespace`
+    :param opts: the connection options - usually the contents of the app.config file
+    :type opts: dict
+    :param custom_headers: A dictionary of any headers you want to send in **every** request
+    :type custom_headers: dict
 
-    A standard way to initialize a SimpleClient with default configuration is,
+    A standard way to initialize a :class:`SimpleClient` with default configuration is:
 
     .. code-block:: python
 
@@ -111,7 +108,7 @@ def get_client(opts):
         opts = parser.parse_args()
         client = resilient.get_client(opts)
 
-    Returns: a connected and verified instance of SimpleClient.
+    :return: a connected and verified instance of :class:`SimpleClient`
     """
     if isinstance(opts, Namespace):
         opts = vars(opts)
@@ -133,7 +130,8 @@ def get_client(opts):
     simple_client_args = {"org_name": opts.get("org"),
                           "proxies": proxy,
                           "base_url": url,
-                          "verify": verify}
+                          "verify": verify,
+                          "custom_headers": custom_headers}
     if opts.get("log_http_responses"):
         LOG.warning("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
         simple_client = LoggingSimpleClient
@@ -287,7 +285,7 @@ class SimpleClient(co3base.BaseClient):
         or by going to: ``https://<base_url>/docs/rest-api/index.html``
     """
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, custom_headers=None):
         """
         :param org_name: The name of the organization to use.
         :type org_name: str
@@ -299,8 +297,10 @@ class SimpleClient(co3base.BaseClient):
         :type verify: str|bool
         :param cache_ttl: Time in seconds to live for cached API responses
         :type cache_ttl: int
+        :param custom_headers: A dictionary of any headers you want to send in **every** request
+        :type custom_headers: dict
         """
-        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify)
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, custom_headers=custom_headers)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
@@ -335,7 +335,7 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None):
         """Gets the specified URI.
 
         .. note::
@@ -351,14 +351,16 @@ class SimpleClient(co3base.BaseClient):
         :type timeout: int
         :param is_uri_absolute: if True, does not insert /org/{org_id} into the uri.
         :type is_uri_absolute: bool
-        :return: A dictionary or list with the value returned by the server.
-        :rtype: dict | list
+        :param get_response_object: if True, returns entire response object.
+        :type get_response_object: bool
+        :return: A dictionary, list, or response object with the value returned by the server.
+        :rtype: dict | list | Response
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
         # Call get from BaseClient, convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute)
+            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute, get_response_object)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -598,12 +600,13 @@ class SimpleClient(co3base.BaseClient):
 
         return response
 
-    def post_attachment(self, uri, filepath,
-                        filename=None, mimetype=None, data=None, co3_context_token=None, timeout=None):
+    def post_attachment(self, uri, filepath, filename=None,
+                        mimetype=None, data=None, co3_context_token=None, timeout=None,
+                        bytes_handle=None):
         """
         Upload a file to the specified URI
         e.g. ``/incidents/<id>/attachments`` (for incident attachments)
-        or,  ``/tasks/<id>/attachments`` (for task attachments)
+        or ``/tasks/<id>/attachments`` (for task attachments)
 
         .. warning::
             Please see our updated :class:`resilient_lib.write_file_attachment <resilient_lib.components.resilient_common.write_file_attachment>`
@@ -623,14 +626,20 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
+        :param bytes_handle: BytesIO handle for content or use filepath
+        :type bytes_handle: BytesIO
         :return: the ``response`` from the endpoint.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_
         """
         # Call BaseClient post_attachment. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).post_attachment(uri, filepath, filename, mimetype, data,
-                                                                 co3_context_token, timeout)
+            response = super(SimpleClient, self).post_attachment(uri, filepath, filename=filename,
+                                                                 mimetype=mimetype,
+                                                                 data=data,
+                                                                 co3_context_token=co3_context_token,
+                                                                 timeout=timeout,
+                                                                 bytes_handle=bytes_handle)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -638,7 +647,7 @@ class SimpleClient(co3base.BaseClient):
     def search(self, payload, co3_context_token=None, timeout=None):
         """
         Posts to the ``SearchExREST`` endpoint.
-        
+
         Endpoint for performing full text searches through incidents and incident child objects
         (tasks, incident comments, task comments, milestones, artifacts, incident attachments,
         task attachments, and data tables).

@@ -1,14 +1,16 @@
 # (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
 from __future__ import print_function
-import pytest
+
 import doctest
+import os
 import time
 import types
-import os
-import resilient
 from argparse import ArgumentParser
-from mock import patch
 from shutil import rmtree
+
+import pytest
+import resilient
+from mock import patch
 
 DEFAULT_CONFIG_FILENAME = "app.config"
 DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join("~", ".resilient", DEFAULT_CONFIG_FILENAME))

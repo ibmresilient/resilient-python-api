@@ -3,13 +3,13 @@
 # IBM SOAR Resilient Circuits Framework
 
 ## Overview
-The IBM SOAR Resilient Circuits Framework is used to run IBM SOAR Apps and Integrations.
+The IBM SOAR `resilient-circuits` Framework is used to run IBM SOAR Apps and Integrations.
 
 
 ## Documentation
 The IBM SOAR App Developer's Guide provides information on using the IBM SOAR Resilient Circuits Framework to run Apps and Integrations. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the follow-on page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
 
-For our API Documentation on this library, please see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs)
+For our API Documentation on this library, please see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs).
 
 
 ## Change Log
@@ -18,7 +18,7 @@ We are continuously adding to this package and our change log can be found at [i
 
 ## License and Terms
 
-Copyright © IBM Corporation 2021
+Copyright © IBM Corporation 2022
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
 """Global accessor for the Resilient REST API"""
 
 import functools
 import logging
-import os
-import resilient
 import time
+
+import resilient
+
+from resilient_circuits import constants
 
 resilient_client = None
 connection_opts = None
 
 MAX_CONNECTION_RETRIES = "max_connection_retries"
+
 
 def reset_resilient_client():
     """Reset the cached client"""
@@ -64,9 +67,21 @@ def retry(func):
 
     return wrapper
 
+
 @retry
 def get_resilient_client(opts):
-    """Get a connected instance of SimpleClient for Resilient REST API"""
+    """
+    Get a connected instance of :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+    for the SOAR REST API
+
+    Passes the custom header of ``Resilient-Circuits-Version: 45.0.0`` to the
+    :class:`resilient.SimpleClient <resilient.co3.SimpleClient>` instantiation
+
+    :param opts: the connection options - usually the contents of the app.config file
+    :type opts: dict
+
+    :return: a connected and verified instance of :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+    """
     global resilient_client
     global connection_opts
 
@@ -81,11 +96,18 @@ def get_resilient_client(opts):
                 opts.get("proxy_password"),
                 opts.get("email"),
                 opts.get("api_key_id"))
+
+    custom_headers = {
+        constants.HEADER_CIRCUITS_VER_KEY: constants.HEADER_CIRCUITS_VER_VALUE
+    }
+
     if new_opts != connection_opts:
         resilient_client = None
         connection_opts = new_opts
+
     if resilient_client:
         return resilient_client
 
-    resilient_client = resilient.get_client(opts)
+    resilient_client = resilient.get_client(opts, custom_headers=custom_headers)
+
     return resilient_client

@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.abspath("../resilient_sdk"))
 # -- Project information -----------------------------------------------------
 
 project = 'IBM SOAR Python Libraries'
-copyright = '2021, IBM'
+copyright = '2022, IBM'
 author = 'IBM SOAR'
 version = resilient_lib.__version__
 release = resilient_lib.__version__
@@ -91,18 +91,21 @@ cmd_validate = CmdValidate(sdk_sub_parser)
 # parse the setup.py files
 the_globals = {
     "__file__": "",
-    "long_description": ""
+    "long_description": "",
+    "_python_requires": ""
 }
 resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 lib_setup_attributes = parse_setup_py(os.path.abspath("../resilient-lib/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
 sdk_setup_attributes = parse_setup_py(os.path.abspath("../resilient-sdk/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+jinja_filters = ", ".join(list(resilient_lib.components.templates_common.JINJA_FILTERS.keys()))
 
 # make variables available in .rst files
 rst_epilog = f"""
 .. |resilient_desc| replace:: {resilient_setup_attributes.get("description")}
 .. |circuits_desc| replace:: {circuits_setup_attributes.get("description")}
 .. |lib_desc| replace:: {lib_setup_attributes.get("description")}
+.. |lib_jinja_filters| replace:: {jinja_filters}
 .. |sdk_desc| replace:: {sdk_setup_attributes.get("description")}
 .. |sdk_parser_desc| replace:: {sdk_parser.description}
 .. |sdk_parser_usage| replace:: {sdk_parser.usage}
