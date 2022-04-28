@@ -134,6 +134,8 @@ class BaseClient(object):
         :type proxies: dict
         :param verify: The path to a ``PEM`` file containing the trusted CAs, or ``False`` to disable all TLS verification
         :type verify: str|bool
+        :param certauth: The filepath for the client side certificate and the private key either as a single file or as a tuple of both files' paths
+        :type certauth: str|tuple(str, str)
         :param custom_headers: A dictionary of any headers you want to send in **every** request
         :type custom_headers: dict
         """

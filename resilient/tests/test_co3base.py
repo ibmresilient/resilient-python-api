@@ -124,6 +124,34 @@ def test_client_has_base_headers(fx_base_client):
     assert headers.get(constants.HEADER_MODULE_VER_KEY) == constants.HEADER_MODULE_VER_VALUE
 
 
+def test_client_with_client_certs_can_get(fx_base_client):
+    incident_id = 100
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+    mock_cert = ("mock_cert_file_path.pem", "mock_cert_file_key_path.pem")
+
+    base_client.cert = mock_cert
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    mock_response = {"incident_id": incident_id}
+
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(mock_response))
+
+    uri = '/incidents/{0}'.format(incident_id)
+
+    # make a GET call to the uri
+    resp = base_client.get(
+        uri=uri,
+        co3_context_token=None,
+        timeout=None,
+        is_uri_absolute=False,
+        get_response_object=False
+    )
+
+    assert requests_adapter.last_request.cert == mock_cert
+    assert resp['incident_id'] == incident_id
+
+
 def test_make_headers_supports_additional_header(fx_base_client):
     base_client = fx_base_client[0]
     additional_headers = {"Mock-Key": "Mock-Value"}

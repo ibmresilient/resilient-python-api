@@ -4,6 +4,9 @@
   ``cloud_account``, ``uuid`` or ``name``
 * Removed the ``User-Agent`` header for all requests
 * Added a custom header for all requests that will include the current version of the library: ``Resilient-Module-Version: 45.0.0``
+* The optional ``client_auth_cert`` and ``client_auth_key`` app.config parameters 
+  have been added to enable integration servers to specify the respective paths 
+  to client side certifcates and client side certificate private keys
 
 **2022-04: version 44.1**
 

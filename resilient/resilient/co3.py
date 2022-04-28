@@ -121,10 +121,10 @@ def get_client(opts, custom_headers=None):
         verify = False
 
     # Enable client certificate authentication
-    certauthcert = opts.get("cert_auth_cert", None)
-    certauthkey = opts.get("cert_auth_key", None)
-    certauth = (certauthcert, certauthkey)
-    if str(certauthcert).lower() == "false" or certauthcert is None or certauthkey is None:
+    clientauthcert = opts.get("client_auth_cert", None)
+    clientauthkey = opts.get("client_auth_key", None)
+    certauth = (clientauthcert, clientauthkey)
+    if str(clientauthcert).lower() == "false" or clientauthcert is None or clientauthkey is None:
         certauth = False
 
     proxy = None

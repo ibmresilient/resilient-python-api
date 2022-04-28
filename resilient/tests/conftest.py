@@ -45,7 +45,7 @@ def _add_to_cmd_line_args(args_to_add):
 @pytest.fixture
 def fx_base_client():
     """
-    Before: Creates a directory at mock_paths.TEST_TEMP_DIR
+    Before: Creates sample BaseClient object with mocked URI https://example.com
     After: Nothing
     """
     base_client = BaseClient(org_name="Mock Org", base_url="https://example.com")
