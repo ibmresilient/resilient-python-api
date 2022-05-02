@@ -105,9 +105,10 @@ def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_mai
             "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text
 
 
-def test_execute_command_with_validate_enabled(fx_copy_and_pip_install_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package, fx_add_dev_env_var):
-    mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
-    path_fn_main_mock_integration = fx_copy_and_pip_install_fn_main_mock_integration[1]
+@patch("resilient_sdk.cmds.validate.CmdValidate._run_main_validation")
+def test_execute_command_with_validate_enabled(mock_validate, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
     # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
     sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
@@ -115,28 +116,21 @@ def test_execute_command_with_validate_enabled(fx_copy_and_pip_install_fn_main_m
     sys.argv.append("--no-samples")
     sys.argv.append("--validate")
 
-    with patch("resilient_sdk.cmds.validate.sdk_helpers.run_subprocess") as mock_process:
 
-        mock_process.return_value = (0, "Done!")
+    # Package the app
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    cmd_package = CmdPackage(fx_get_sub_parser, cmd_validate)
+    args = cmd_package.parser.parse_known_args()[0]
 
-        # Package the app
-        cmd_validate = CmdValidate(fx_get_sub_parser)
-        cmd_package = CmdPackage(fx_get_sub_parser, cmd_validate)
-        args = cmd_package.parser.parse_known_args()[0]
+    path_the_app_zip = cmd_package.execute_command(args)
 
-        path_the_app_zip = cmd_package.execute_command(args)
+    # Test app.zip contents
+    assert zipfile.is_zipfile(path_the_app_zip)
+    with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
+        assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
 
-        # Test app.zip contents
-        assert zipfile.is_zipfile(path_the_app_zip)
-        with zipfile.ZipFile((path_the_app_zip), 'r') as app_zip:
-            assert helpers.verify_expected_list(EXPECTED_FILES_APP_ZIP, app_zip.namelist())
-
-        # Test app.zip/validate_report.md contents
-        validate_report_contents = sdk_helpers.read_zip_file(path_the_app_zip, "validate_report.md")
-
-        assert "## App Details" in validate_report_contents
-        assert "## `setup.py` file validation" in validate_report_contents
-        assert "## Package files validation" in validate_report_contents
+    # and assert that validate was called
+    mock_validate.assert_called()
 
 
 def test_bak_files_are_not_packaged(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):

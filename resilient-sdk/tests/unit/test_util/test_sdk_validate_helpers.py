@@ -567,18 +567,24 @@ def test_tox_tests_validate_not_min_env_version_only(fx_copy_fn_main_mock_integr
         assert result[0] == 1
         assert "Unsupported tox environment found in envlist in 'tox.ini' file" in result[1].description
 
-def test_tox_tests_run_tox_tests(fx_pip_install_tox, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+def test_tox_tests_run_tox_tests(fx_copy_fn_main_mock_integration, caplog):
 
-    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.tests_attributes[3]
 
     # want to skip using a conftest file as that is irrelevant here
     args = constants.TOX_TESTS_DEFAULT_ARGS.append("--noconftest")
 
-    result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_tox_sub_process:
 
-    assert "Using mock args" in caplog.text
-    assert result[0] == 1
+        mock_tox_sub_process.return_value = (None, "bad run")
+
+        result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
+
+        assert "Using mock args" in caplog.text
+        assert "Something went wrong..." in result[1].description
+        assert "bad run" in result[1].description
+        assert result[0] == 0
 
 
 def test_tox_tests_parse_xml_report():
@@ -733,10 +739,10 @@ def test_bandit_validate_bandit_not_installed():
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
-def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_fn_main_mock_integration, caplog):
 
-    package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
-    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    package_name = fx_copy_fn_main_mock_integration[0]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.bandit_attributes[1]
 
     with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_bandit_subprocess:
@@ -750,10 +756,10 @@ def test_bandit_run_bandit_scan_success(fx_pip_install_bandit, fx_copy_and_pip_i
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
-def test_bandit_run_bandit_scan_fails(fx_pip_install_bandit, fx_copy_and_pip_install_fn_main_mock_integration, caplog):
+def test_bandit_run_bandit_scan_fails(fx_pip_install_bandit, fx_copy_fn_main_mock_integration, caplog):
 
-    package_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
-    path_package = fx_copy_and_pip_install_fn_main_mock_integration[1]
+    package_name = fx_copy_fn_main_mock_integration[0]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.bandit_attributes[1]
 
     with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_bandit_subprocess:
