@@ -91,7 +91,33 @@ class RequestsCommon:
 
         return int(timeout)
 
-    def execute(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
+    def get_clientauth(self):
+        """
+        A client certificate for authenticating calls to external endpoints can be specified on a per function basis.
+
+        If ``client_auth_cert`` and ``client_auth_key`` are set in the **Function Section** (``[my_function]``) of your app.config file,
+          returns a tuple containing the respective paths to the certificate and private key for the client cert.
+
+        Example:
+
+          .. code-block::
+
+            [my_function]
+            ...
+            client_auth_cert = <path_to_cert.pem>
+            client_auth_key = <path_to_cert_private_key.pem>
+
+        :return: The filepaths for the client side certificate and the private key as a tuple of both files' paths
+        :rtype: tuple(str, str)
+        """
+        cert = None
+
+        if self.function_opts and (self.function_opts.get("client_auth_cert") and self.function_opts.get("client_auth_key")):
+            cert = (self.function_opts.get("client_auth_cert"), self.function_opts.get("client_auth_key"))
+
+        return cert
+
+    def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, **kwargs):
         """
         Constructs and sends a request. Returns a
         `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object.
@@ -106,7 +132,7 @@ class RequestsCommon:
             *See requests docs for more*. If ``None`` it looks in the ``[integrations]``
             section of your app.config for the ``timeout`` setting.
         :type timeout: float or tuple
-        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+        :param proxies: (Optional) Dictionary mapping protocol to the URL of the proxy.
             The mapping protocol must be in the format:
 
             .. code-block::
@@ -120,6 +146,8 @@ class RequestsCommon:
             return this callback function passing in the ``response`` as its
             only parameter. Can be used to specifically handle errors.
         :type callback: function
+        :param clientauth: (Optional) The filepath for the client side certificate and the private key either as a single file or as a tuple of both files' paths
+        :type clientauth: str or tuple(str, str)
         :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
             or ``callback`` function.
@@ -135,6 +163,9 @@ class RequestsCommon:
             if timeout is None:
                 timeout = self.get_timeout()
 
+            if clientauth is None:
+                clientauth = self.get_clientauth()
+
             # Log the parameter inputs that are not None
             args_dict = locals()
             # When debugging execute_call_v2 in PyCharm you may get an exception when executing the for-loop:
@@ -147,7 +178,7 @@ class RequestsCommon:
                     LOG.debug("  %s: %s", k, args_dict[k])
 
             # Pass request to requests.request() function
-            response = requests.request(method, url, timeout=timeout, proxies=proxies, **kwargs)
+            response = requests.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, **kwargs)
 
             # Debug logging
             LOG.debug(response.status_code)
