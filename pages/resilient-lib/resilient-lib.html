@@ -240,7 +240,10 @@ Add this section to define proxy settings to be used for all integrations that u
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
 <span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the URL to link to a SOAR incident</p>
+<dd><p>Build the url to link to a SOAR incident or CP4S case.
+Add ‘https’ if http/https is not provided at the start.
+If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
+<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -259,7 +262,9 @@ Add this section to define proxy settings to be used for all integrations that u
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_resilient_url">
 <span class="sig-name descname"><span class="pre">build_resilient_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_resilient_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build basic URL to SOAR instance</p>
+<dd><p>Build basic url to SOAR/CP4S instance.
+Add ‘https’ if http/https is not provided at the start.
+If <code class="docutils literal notranslate"><span class="pre">host</span></code> is not a string, returns back the value given.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -269,6 +274,29 @@ Add this section to define proxy settings to be used for all integrations that u
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>base url</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_task_url">
+<span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the url to link to a SOAR/CP4S task.
+Add ‘https’ if http/https is not provided at the start.
+If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
+<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
+<li><p><strong>incident_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
+<li><p><strong>task_is</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the task</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>full URL to the task’s details tab</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>str</p>
@@ -783,7 +811,7 @@ in a class that inherits <a class="reference internal" href="../resilient-circui
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.execute">
-<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clientauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs and sends a request. Returns a
 <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object.</p>
 <p>This uses the <code class="docutils literal notranslate"><span class="pre">requests.request()</span></code> function to
@@ -797,7 +825,7 @@ for information on any parameters available, but not documented here.</p>
 before sending a float or a timeout tuple (connect timeout, read timeout).
 <em>See requests docs for more</em>. If <code class="docutils literal notranslate"><span class="pre">None</span></code> it looks in the <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
 section of your app.config for the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> setting.</p></li>
-<li><p><strong>proxies</strong> (<em>dict</em>) – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
+<li><p><strong>proxies</strong> (<em>dict</em>) – <p>(Optional) Dictionary mapping protocol to the URL of the proxy.
 The mapping protocol must be in the format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="s2">"https_proxy"</span><span class="p">:</span> <span class="s2">"https://localhost:8080,</span>
@@ -809,6 +837,9 @@ The mapping protocol must be in the format:</p>
 <li><p><strong>callback</strong> (<em>function</em>) – (Optional) Once a response is received from the endpoint,
 return this callback function passing in the <code class="docutils literal notranslate"><span class="pre">response</span></code> as its
 only parameter. Can be used to specifically handle errors.</p></li>
+<li><p><strong>clientauth</strong> (<em>str</em><em> or </em><em>tuple</em><em>(</em><em>str</em><em>, </em><em>str</em><em>)</em>) – (Optional) The filepath for the client side certificate and the private key either as a
+single file or as a tuple of both files’ paths. If set to``None`` a value will try to be found in the
+<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code> section of the app.config. If not found there no client certs will be used.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
