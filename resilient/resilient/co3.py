@@ -120,6 +120,13 @@ def get_client(opts, custom_headers=None):
         requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
 
+    # Enable client certificate authentication
+    clientauthcert = opts.get("client_auth_cert", None)
+    clientauthkey = opts.get("client_auth_key", None)
+    certauth = (clientauthcert, clientauthkey)
+    if str(clientauthcert).lower() == "false" or clientauthcert is None or clientauthkey is None:
+        certauth = False
+
     proxy = None
     if opts.get("proxy_host"):
         proxy = get_proxy_dict(opts)
@@ -131,6 +138,7 @@ def get_client(opts, custom_headers=None):
                           "proxies": proxy,
                           "base_url": url,
                           "verify": verify,
+                          "certauth": certauth,
                           "custom_headers": custom_headers}
     if opts.get("log_http_responses"):
         LOG.warning("Logging all HTTP Responses from Resilient to %s", opts["log_http_responses"])
@@ -285,7 +293,7 @@ class SimpleClient(co3base.BaseClient):
         or by going to: ``https://<base_url>/docs/rest-api/index.html``
     """
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, custom_headers=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None, custom_headers=None):
         """
         :param org_name: The name of the organization to use.
         :type org_name: str
@@ -300,7 +308,7 @@ class SimpleClient(co3base.BaseClient):
         :param custom_headers: A dictionary of any headers you want to send in **every** request
         :type custom_headers: dict
         """
-        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, custom_headers=custom_headers)
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth, custom_headers=custom_headers)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):
