@@ -108,6 +108,7 @@ class RequestsCommon:
             client_auth_key = <path_to_cert_private_key.pem>
 
         :return: The filepaths for the client side certificate and the private key as a tuple of both files' paths
+                 or ``None`` if either one of the values are missing
         :rtype: tuple(str, str)
         """
         cert = None
@@ -146,7 +147,9 @@ class RequestsCommon:
             return this callback function passing in the ``response`` as its
             only parameter. Can be used to specifically handle errors.
         :type callback: function
-        :param clientauth: (Optional) The filepath for the client side certificate and the private key either as a single file or as a tuple of both files' paths
+        :param clientauth: (Optional) The filepath for the client side certificate and the private key either as a
+            single file or as a tuple of both files' paths. If set to``None`` a value will try to be found in the
+            ``[my_function]`` section of the app.config. If not found there no client certs will be used.
         :type clientauth: str or tuple(str, str)
         :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
@@ -157,13 +160,13 @@ class RequestsCommon:
                 raise IntegrationError("unknown method {}".format(method))
 
             # If proxies was not set check if they are set in the config
-            if proxies is None:
+            if not proxies:
                 proxies = self.get_proxies()
 
-            if timeout is None:
+            if not timeout:
                 timeout = self.get_timeout()
 
-            if clientauth is None:
+            if not clientauth:
                 clientauth = self.get_clientauth()
 
             # Log the parameter inputs that are not None
