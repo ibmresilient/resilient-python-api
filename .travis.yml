@@ -45,13 +45,14 @@ env:
   - FYRE_DEPLOY_SLEEP_SECONDS=90
   - FYRE_DEPLOY_TIMEOUT_SECONDS=540
 
+  - PATH_SCRIPTS_DIR="$TRAVIS_BUILD_DIR/travis-scripts"
   - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
+  - PATH_SONAR_PROPERTIES="$TRAVIS_BUILD_DIR/sonar-project.properties"
 
   - PAGES_INTERNAL_LINK="https://pages.github.ibm.com/Resilient/resilient-python-api/"
   - PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
 
-  - SONAR_SCANNER_VERSION="4.7.0.2747"
   - SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
   - SONAR_SCANNER_CLI_FILENAME="sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip"
   - SONAR_QUBE_URL="https://sonarqube.secintel.intranet.ibm.com"
@@ -114,8 +115,10 @@ matrix:
       before_install:
         - wget "$SONAR_SCANNER_CLI_URL/$SONAR_SCANNER_CLI_FILENAME"
         - unzip $SONAR_SCANNER_CLI_FILENAME -d /tmp
+        - pip install requests
       script:
-        - /tmp/sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner -Dsonar.host.url=$SONAR_QUBE_URL -Dsonar.login=$SONAR_QUBE_TOKEN
+        - echo "Installing and running SonarQube scan"
+        - $PATH_SCRIPTS_DIR/run_sonar_scanner.sh
 
     - stage: build packages
       name: Build Packages in Python 3.9
