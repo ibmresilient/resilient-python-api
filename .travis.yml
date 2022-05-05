@@ -70,42 +70,42 @@ matrix:
       name: Python 2.7 Unit Tests
       python: 2.7
       env: RUN_TYPE=unit_test TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
-      install: ./travis-scripts/install_unit_tests_deps.sh
+      install: $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 2.7 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
 
     - stage: run tests and sonarqube scan
       name: Python 3.6 Unit Tests
       python: 3.6
       env: RUN_TYPE=unit_test TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
-      install: ./travis-scripts/install_unit_tests_deps.sh
+      install: $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.6 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
 
     - stage: run tests and sonarqube scan
       name: Python 3.9 Unit Tests
       python: 3.9
       env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
-      install: ./travis-scripts/install_unit_tests_deps.sh
+      install: $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.9 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
 
     - stage: run tests and sonarqube scan
       name: Python 3.9 Integration Tests
       python: 3.9
       env: RUN_TYPE=int_test TOXENV=py39
-      install: ./travis-scripts/install_int_tests_deps.sh
+      install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then
-            ./travis-scripts/manage_fyre_instance.sh DEPLOY $FYRE_STENCIL_ID $FYRE_CLUSTER_NAME $FYRE_CLUSTER_DOMAIN $FYRE_DEPLOY_SLEEP_SECONDS $FYRE_DEPLOY_TIMEOUT_SECONDS;
-            ./travis-scripts/run_int_tests.sh;
+            $PATH_SCRIPTS_DIR/manage_fyre_instance.sh DEPLOY $FYRE_STENCIL_ID $FYRE_CLUSTER_NAME $FYRE_CLUSTER_DOMAIN $FYRE_DEPLOY_SLEEP_SECONDS $FYRE_DEPLOY_TIMEOUT_SECONDS;
+            $PATH_SCRIPTS_DIR/run_int_tests.sh;
           fi
       after_script:
         - if [ $RUN_INT_TESTS == 1 ]; then
-            ./travis-scripts/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
+            $PATH_SCRIPTS_DIR/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
           fi
 
     - stage: run tests and sonarqube scan
@@ -125,31 +125,31 @@ matrix:
       python: 3.9
       script:
         - echo "Building packages in Python 3.9"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
       script:
         - echo "Building packages in Python 3.9 and Deploying to Artifactory"
-        - ./travis-scripts/build_and_deploy_packages.sh do_deploy
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
     - stage: release to pypi
       install:
         - pip install twine
       script:
         - echo "Building packages in Python 3.9 and releasing to PyPi"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy do_release
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
+        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
     - stage: deploy documentation
       install:
       - pip install sphinx furo==2022.1.2
       script:
         - echo "Building packages in Python 3.9 and deploying Documentation internally too"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy no_release deploy_docs
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy no_release deploy_docs
       deploy:
         - provider: pages:git
           github_url: github.ibm.com
@@ -163,14 +163,14 @@ matrix:
           verbose: true
           edge: true
       after_deploy:
-        - ./travis-scripts/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
+        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
 
     - stage: sync public repo
       script:
         - echo "Syncing INTERNAL repo with PUBLIC repo"
-        - ./travis-scripts/sync_public_repo.sh "ALL"
+        - $PATH_SCRIPTS_DIR/sync_public_repo.sh "ALL"
       after_success:
-        - ./travis-scripts/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
+        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 after_failure:
-  - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
+  - $PATH_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"
