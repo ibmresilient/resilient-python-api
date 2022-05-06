@@ -55,7 +55,7 @@ env:
   - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
   - PATH_SONAR_PROPERTIES="$TRAVIS_BUILD_DIR/sonar-project.properties"
-  - PATH_COV_SAVE_LOC="$TRAVIS_BUILD_DIR/coverage_reports"
+  - PATH_COV_SAVE_LOC="coverage_reports"
 
   - PAGES_INTERNAL_LINK="https://pages.github.ibm.com/Resilient/resilient-python-api/"
   - PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
