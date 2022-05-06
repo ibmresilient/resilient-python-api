@@ -135,6 +135,8 @@ matrix:
       script:
         - echo "Installing and running SonarQube scan"
         - $PATH_SCRIPTS_DIR/run_sonar_scanner.sh
+      after_script:
+        - python $PATH_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
 
     - stage: build packages
       name: Build Packages in Python 3.9
@@ -189,4 +191,5 @@ matrix:
         - $PATH_SCRIPTS_DIR/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 after_failure:
+  - python $PATH_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
   - $PATH_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"
