@@ -26,7 +26,6 @@ env:
   global:
   - ARTIFACTORY_BASE_URL=https://na.artifactory.swg-devops.com
   - ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/artifactory/sec-resilient-team-integrations-generic-local/resilient-python-api
-  - ARTIFACTORY_STORAGE_URL=$ARTIFACTORY_BASE_URL/api/storage/sec-resilient-team-integrations-generic-local/resilient-python-api
   - ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$TRAVIS_BUILD_NUMBER
 
   - TEST_RESILIENT_APPLIANCE=staging2.internal.resilientsystems.com
