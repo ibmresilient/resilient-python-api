@@ -1345,29 +1345,6 @@ def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=loggi
     return proc.returncode, details
 
 
-    """ OLD code with a progress bar -- keeping this here for potentially picking it back up later """
-
-    # start_time = time.time()
-
-    # # "waiting bar" that spins while waiting for proc to finish
-    # # the waiting bar is only output if the logging threshold is not met
-    # waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
-    # i = 0
-    # details = ""
-    # while proc.poll() == None and (time.time() - start_time) < timeout:
-    #     sys.stdout.write("\r")
-    #     sys.stdout.write("Running {0} ... {1}        ".format(cmd_name, waiting_bar[i]))
-    #     sys.stdout.flush()
-    #     i = (i + 1) % len(waiting_bar)
-    #     time.sleep(0.2)
-
-
-    # # overwrite the last stdout.write of "Running <cmd_name> ..."
-    # sys.stdout.write("\r")
-    # sys.stdout.write(" "*30+"\n")
-    # sys.stdout.flush()
-
-
 def scrape_results_from_log_file(path_log_file):
     """
     Validate that path_log_file exists, reverse it and look for lines

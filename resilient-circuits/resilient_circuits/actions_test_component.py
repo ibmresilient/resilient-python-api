@@ -89,7 +89,7 @@ class ResilientTestActions(Component):
         return "Submit actions with format: <queue> <message json>"
 
     @handler("SubmitTestAction", "SubmitTestFunction")
-    def _submit_message(self, event, queue, msg_id, message, channel="*"):
+    def _submit_message(self, event, queue, msg_id, message, channel):
         """ Create and fire an ActionMessage """
         try:
             message_id = "ID:resilient-54199-{val}-6:2:12:1:1".format(val=msg_id)
