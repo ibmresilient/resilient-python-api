@@ -154,6 +154,11 @@ def _artifactory_get_file_list(url):
     r = requests.get(url=url, headers=_get_headers(), timeout=REQUESTS_TIMEOUT)
     r.raise_for_status()
     file_list = r.json()
+
+    if not file_list.get("children", {}):
+        print_msg("No children found - treating this URL as a single file")
+        return file_list.get("uri")
+
     return [f.get("uri") for f in file_list.get("children", {})]
 
 
@@ -249,6 +254,8 @@ def download_and_save_all_files(dir_url, dir_save_location):
     """
     Download all files from artifactory at the given url and save them
 
+    If the ``dir_url`` is a single file, just download that file
+
     :param file_url: The location in artifactory of the directory to download the files from
     :type file_name: str
     :param dir_save_location: The absolute location on this instance to save the files.
@@ -259,11 +266,18 @@ def download_and_save_all_files(dir_url, dir_save_location):
 
     list_of_files = _artifactory_get_file_list(dir_url)
 
-    for f in list_of_files:
-        print_msg("Found '{0}'. Attempting to download and save it!".format(f))
-        file_name = f[1:]
-        file_url = "{0}/{1}".format(dir_url, file_name)
+    # If its a str, its a single file
+    if isinstance(list_of_files, str):
+        file_url = list_of_files
+        file_name = os.path.basename(file_url)
         download_and_save_file(file_url=file_url, file_name=file_name, dir_save_location=dir_save_location)
+
+    else:
+        for f in list_of_files:
+            print_msg("Found '{0}'. Attempting to download and save it!".format(f))
+            file_name = f[1:]
+            file_url = "{0}/{1}".format(dir_url, file_name)
+            download_and_save_file(file_url=file_url, file_name=file_name, dir_save_location=dir_save_location)
 
 
 def main():
