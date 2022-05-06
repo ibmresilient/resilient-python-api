@@ -21,6 +21,7 @@ ARTIFACTORY_KEYWORD = "/artifactory/"
 
 RETRY_TRIES = 3
 RETRY_DELAY = 5  # in seconds
+REQUESTS_TIMEOUT = 10  # in seconds
 
 PARSER_DESC = """
 Helper script for managing Artifactory. Ensure that the environmental variable ARTIFACTORY_API_KEY is set
@@ -93,7 +94,7 @@ def _artifactory_upload_file(url, file_obj):
     :return: The response from artifactory
     :rtype: requests.response
     """
-    r = requests.put(url=url, headers=_get_headers(), data=file_obj)
+    r = requests.put(url=url, headers=_get_headers(), data=file_obj, timeout=REQUESTS_TIMEOUT)
     r.raise_for_status()
     return r
 
@@ -108,7 +109,7 @@ def _artifactory_download_file(url):
     :return: The response from artifactory
     :rtype: requests.response
     """
-    r = requests.get(url=url, headers=_get_headers())
+    r = requests.get(url=url, headers=_get_headers(), timeout=REQUESTS_TIMEOUT)
     r.raise_for_status()
     return r
 
@@ -126,7 +127,7 @@ def _artifactory_delete_dir_or_file(url):
     :return: The response from artifactory
     :rtype: requests.response
     """
-    r = requests.delete(url=url, headers=_get_headers())
+    r = requests.delete(url=url, headers=_get_headers(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code == 404:
         msg = r.json().get("errors", [{}])[0].get("message", "Nothing to delete")
@@ -150,7 +151,7 @@ def _artifactory_get_file_list(url):
     """
     if ARTIFACTORY_API_STORAGE not in url:
         url = _add_api_storage_to_url(url)
-    r = requests.get(url=url, headers=_get_headers())
+    r = requests.get(url=url, headers=_get_headers(), timeout=REQUESTS_TIMEOUT)
     r.raise_for_status()
     file_list = r.json()
     return [f.get("uri") for f in file_list.get("children", {})]

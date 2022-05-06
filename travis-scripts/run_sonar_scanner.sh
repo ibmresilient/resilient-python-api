@@ -1,8 +1,12 @@
 #!/bin/bash -e
 
+# Download coverage files
+python $PATH_SCRIPTS_DIR/manage_artifactory.py "DOWNLOAD" "$ARTIFACTORY_COV_LOCATION" --save-location "$PATH_COV_SAVE_LOC"
+
 # Update the sonar-project.properties file
 sed -e "s|{{SONAR_QUBE_BRANCH}}|$TRAVIS_BRANCH|" \
 -e "s|{{SONAR_QUBE_PROJ_KEY}}|$SONAR_QUBE_PROJ_KEY|" \
+-e "s|{{PATH_COV_SAVE_LOC}}|$PATH_COV_SAVE_LOC|" \
 $PATH_SONAR_PROPERTIES > $PATH_SONAR_PROPERTIES.tmp && mv $PATH_SONAR_PROPERTIES.tmp $PATH_SONAR_PROPERTIES
 
 # Run the sonar-scanner
