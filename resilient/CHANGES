@@ -1,6 +1,6 @@
 **2022-05: version 45.0**
 
-* The ``orgs`` config can now specify any of the organization's
+* The ``org`` config can now specify any of the organization's
   ``cloud_account``, ``uuid`` or ``name``
 * Removed the ``User-Agent`` header for all requests
 * Added a custom header for all requests that will include the current version of the library: ``Resilient-Module-Version: 45.0.0``
