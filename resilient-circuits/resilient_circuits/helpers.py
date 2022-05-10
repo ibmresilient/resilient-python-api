@@ -198,11 +198,13 @@ def get_packages(working_set):
 
     :param working_set: the working_set for all packages installed in this env
     :type working_set: setuptools.pkg_resources.WorkingSet obj
-    :return: pkg_list: a list of tuples [('name','version')] e.g. [('resilient-circuits', '39.0.0')]
+    :return: pkg_list: a list of tuples [('name','version')] e.g. [('resilient-circuits', '39.0.0')].
+        If ``working_set`` is not a ``pkg_resources.WorkingSet`` object, just return the current value of ``working_set``
     :rtype: list
     """
 
-    isinstance(working_set, pkg_resources.WorkingSet)
+    if not isinstance(working_set, pkg_resources.WorkingSet):
+        return working_set
 
     pkg_list = []
 
