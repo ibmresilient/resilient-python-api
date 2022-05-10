@@ -278,8 +278,8 @@ def run_apps_selftest(cmd_line_args, app_configs):
                     continue
 
     # any missed packages?
-    if len(install_list):
-        LOG.warning("%s not found. Check package name(s)", install_list)
+    if install_list:
+        LOG.warning("\n%s not found. Selftest not ran for %s. Check package name(s)\n", install_list, install_list)
 
     # Check if any failures were found and printed to the console
     if selftest_failure_count or selftest_unknown_count:
@@ -292,7 +292,8 @@ def run_apps_selftest(cmd_line_args, app_configs):
         LOG.info("\nERROR: selftest not found for this App. Note: the App may still continue to work...\nError Code: {0}".format(ERROR_EXIT_CODES_MAP.get(2, 2)))
         exit(ERROR_EXIT_CODES_MAP.get(2, 2))
 
-    LOG.info("{0}Successfully ran App's selftest!{0}".format(constants.LOG_DIVIDER))
+    if not install_list:
+        LOG.info("{0}Successfully ran App's selftest!{0}".format(constants.LOG_DIVIDER))
 
 
 def execute_command(cmd_line_args):
