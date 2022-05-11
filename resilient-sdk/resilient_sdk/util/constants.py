@@ -14,8 +14,8 @@ LOG_DIVIDER = "\n------------------------\n"
 ENV_VAR_DEV = "RES_SDK_DEV"
 ENV_VAR_APP_CONFIG_FILE = "APP_CONFIG_FILE"
 
-RESILIENT_LIBRARIES_VERSION = "44.0.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "44.0.0"
+RESILIENT_LIBRARIES_VERSION = "45.0.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "45.0.0"
 RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
 MIN_SOAR_SERVER_VERSION_PLAYBOOKS = 44.0
@@ -87,10 +87,17 @@ VALIDATE_LOG_LEVEL_WARNING = "WARNING"
 VALIDATE_LOG_LEVEL_INFO = "INFO"
 VALIDATE_LOG_LEVEL_DEBUG = "DEBUG"
 
-# Error Messages
+# INFO Messages
+INFO_MIN_PB_SUPPORT = "Only IBM SOAR >= v{0} supported".format(MIN_SOAR_SERVER_VERSION_PLAYBOOKS)
+
+# WARNING Messages
+WARNING_DRAFT_PB_SIDE_EFFECTS = "WARNING: Using the --draft-playbook option may have unexpected side effects. Please ensure your cloned Playbook is behaving as expected"
+
+# ERROR Messages
 ERROR_NOT_FIND_DIR = "Could not find directory"
 ERROR_NOT_FIND_FILE = "Could not find file"
 ERROR_WRONG_PYTHON_VERSION = "Please install Python >= 3.6 to use this functionality"
+ERROR_PLAYBOOK_SUPPORT = "Playbooks are only supported in {0} for IBM SOAR >= {1}. Current version: {2}.".format(SDK_RESOURCE_NAME, MIN_SOAR_SERVER_VERSION_PLAYBOOKS, CURRENT_SOAR_SERVER_VERSION)
 
 # Resilient Customizations
 CUST_PLAYBOOKS = "playbooks"

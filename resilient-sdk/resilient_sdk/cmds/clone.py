@@ -58,6 +58,7 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
     $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name>
+    $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name> --draft-playbook
     $ resilient-sdk clone --playbook <playbook_to_be_cloned> <new_playbook_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
@@ -85,13 +86,12 @@ class CmdClone(BaseCmd):
 
         self.parser.add_argument("-pb", "--playbook",
                                  type=ensure_unicode,
-                                 help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
+                                 help="API names of playbooks to include. {0}".format(constants.INFO_MIN_PB_SUPPORT),
                                  nargs="*")
 
         self.parser.add_argument("--draft-playbook",
                                  action="store_true",
-                                 help="""If specified with the '--playbook' arg will clone the Playbook into a Draft state, allowing you to change it's Activation Type.
-Only SOAR >= v{0} supported""".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS))
+                                 help="If specified with the '--playbook' option will clone the Playbook into a Draft state, allowing you to change it's Activation Type. {0}".format(constants.INFO_MIN_PB_SUPPORT))
 
         self.parser.add_argument("-r", "--rule",
                                  type=ensure_unicode,
@@ -193,7 +193,10 @@ Only SOAR >= v{0} supported""".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOK
                 if args.playbook:
 
                     if get_resilient_server_version(CmdClone.res_client) < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
-                        raise SDKException(u"Playbooks are only supported with IBM SOAR >= {0}".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS))
+                        raise SDKException(constants.ERROR_PLAYBOOK_SUPPORT)
+
+                    if args.draft_playbook:
+                        LOG.warning(constants.WARNING_DRAFT_PB_SIDE_EFFECTS)
 
                     # If a Playbook was provided, call _clone_action_object with Playbook related params and
                     # add the newly cloned Playbook to new_export_data

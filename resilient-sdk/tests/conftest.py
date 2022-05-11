@@ -429,6 +429,27 @@ def fx_cmd_line_args_clone_prefix():
 
 
 @pytest.fixture
+def fx_cmd_line_args_clone_playbook_draft():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "clone",
+        "-pb", "mock_main_pb", "new_pb_test",
+        "--draft-playbook"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
 def fx_cmd_line_args_dev_set_version():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
