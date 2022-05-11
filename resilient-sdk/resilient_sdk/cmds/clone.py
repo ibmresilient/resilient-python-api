@@ -88,6 +88,11 @@ class CmdClone(BaseCmd):
                                  help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
                                  nargs="*")
 
+        self.parser.add_argument("--draft-playbook",
+                                 action="store_true",
+                                 help="""If specified with the '--playbook' arg will clone the Playbook into a Draft state, allowing you to change it's Activation Type.
+Only SOAR >= v{0} supported""".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS))
+
         self.parser.add_argument("-r", "--rule",
                                  type=ensure_unicode,
                                  help="Display names of rules to include (surrounded by \"\")",
@@ -199,7 +204,8 @@ class CmdClone(BaseCmd):
                         obj_identifier=ResilientObjMap.PLAYBOOKS,
                         obj_key=constants.CUST_PLAYBOOKS,
                         replace_fn=CmdClone.replace_playbook_object_attrs,
-                        new_object_type=args.changetype)
+                        new_object_type=args.changetype,
+                        convert_to_draft=args.draft_playbook)
 
             add_configuration_import(new_export_data, CmdClone.res_client)
             # If any message destinations were cloned, after creation attach a Authorised User or API Key
@@ -325,7 +331,7 @@ class CmdClone(BaseCmd):
         return any([obj.get(ResilientObjMap.RULES, "") in specified_objs, obj.get(ResilientObjMap.WORKFLOWS, "") in specified_objs, obj.get(ResilientObjMap.FUNCTIONS, "") in specified_objs, obj.get(ResilientObjMap.DATATABLES, "") in specified_objs])
 
     @staticmethod
-    def _clone_action_object(input_args, org_export, obj_name, obj_identifier, obj_key, replace_fn, new_object_type=None):
+    def _clone_action_object(input_args, org_export, obj_name, obj_identifier, obj_key, replace_fn, new_object_type=None, convert_to_draft=False):
         CmdClone.validate_provided_args_length(input_args)
 
         original_obj_api_name, new_obj_api_name = input_args
@@ -337,7 +343,7 @@ class CmdClone(BaseCmd):
                                                                original_object_api_name=original_obj_api_name,
                                                                export=org_export)
 
-        cloned_object = replace_fn(original_obj.copy(), new_obj_api_name, changetype=new_object_type)
+        cloned_object = replace_fn(original_obj.copy(), new_obj_api_name, changetype=new_object_type, convert_to_draft=convert_to_draft)
         if new_object_type:
             cloned_object['object_type'] = new_object_type
 
@@ -583,6 +589,7 @@ class CmdClone(BaseCmd):
         playbook_xml = obj_to_modify.get("content", {}).get("xml", "")
         local_scripts = obj_to_modify.get("local_scripts")
         changetype = kwargs.get("changetype", None)
+        convert_to_draft = kwargs.get("convert_to_draft", False)
 
         if local_scripts:
             for s in local_scripts:
@@ -629,6 +636,14 @@ class CmdClone(BaseCmd):
             obj_to_modify.update({
                 "object_type": changetype
             })
+
+        if convert_to_draft:
+            obj_to_modify.update({
+                "activation_type": None,
+                "activation_details": {},
+                "status": "draft"
+            })
+
         obj_to_modify.pop("id")
 
         return obj_to_modify
