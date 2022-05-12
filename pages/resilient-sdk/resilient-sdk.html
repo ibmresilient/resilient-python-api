@@ -299,6 +299,7 @@ options:
 $ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt;
 $ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt; --changetype artifact
 $ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt;
+$ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --draft-playbook
 $ resilient-sdk clone --playbook &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --changetype artifact
 $ resilient-sdk clone -f &lt;function_to_be_cloned&gt; &lt;new_function_name&gt;
 $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
@@ -311,7 +312,8 @@ options:
 -c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -f, --function			API names of functions to include 
 -m, --messagedestination	API names of message destinations to include 
--pb, --playbook			API names of playbooks to include. Only SOAR &gt;= v44.0 supported 
+-pb, --playbook			API names of playbooks to include. Only IBM SOAR &gt;= v44.0 supported 
+--draft-playbook		If specified with the '--playbook' option will clone the Playbook into a Draft state, allowing you to change it's Activation Type. Only IBM SOAR &gt;= v44.0 supported 
 -r, --rule			Display names of rules to include (surrounded by "") 
 -s, --script			Display names of scripts to include (surrounded by "") 
 -w, --workflow			API names of workflows to include 
@@ -409,6 +411,11 @@ options:
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2022-05: version 45.0</strong></p>
+<ul class="simple">
+<li><p>Added new option <code class="docutils literal notranslate"><span class="pre">--draft-playbook</span></code> to the <code class="docutils literal notranslate"><span class="pre">clone</span></code> command that if specified with the <code class="docutils literal notranslate"><span class="pre">--playbook</span></code> option
+will clone the Playbook into a <strong>Draft</strong> state, allowing you to change it’s Activation Type</p></li>
+</ul>
 <p><strong>2022-04: version 44.1</strong></p>
 <ul class="simple">
 <li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
