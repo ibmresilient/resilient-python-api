@@ -277,7 +277,7 @@ def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client):
 
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
-    with pytest.raises(SDKException, match=r"Playbooks are only supported in resilient_sdk for SOAR >= 44"):
+    with pytest.raises(SDKException, match=r"Playbooks are only supported in resilient_sdk for IBM SOAR >= 44"):
         sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
 
 
