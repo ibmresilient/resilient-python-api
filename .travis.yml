@@ -51,6 +51,7 @@ env:
   - FYRE_DEPLOY_TIMEOUT_SECONDS=540
 
   - PATH_SCRIPTS_DIR="$TRAVIS_BUILD_DIR/travis-scripts"
+  - PATH_COMMON_SCRIPTS_DIR="$TRAVIS_BUILD_DIR/common_scripts"
   - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
   - PATH_SONAR_PROPERTIES="$TRAVIS_BUILD_DIR/sonar-project.properties"
@@ -98,8 +99,9 @@ matrix:
       script:
         - echo "Starting Python 3.9 Tests"
         - $PATH_SCRIPTS_DIR/run_unit_tests.sh
+        - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
         - >
-          python $PATH_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
+          python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
           --upload-files
           "$TRAVIS_BUILD_DIR/resilient/cov_resilient.xml"
           "$TRAVIS_BUILD_DIR/resilient-lib/cov_resilient_lib.xml"
@@ -133,7 +135,7 @@ matrix:
         - echo "Installing and running SonarQube scan"
         - $PATH_SCRIPTS_DIR/run_sonar_scanner.sh
       after_script:
-        - python $PATH_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
+        - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
 
     - stage: build packages
       name: Build Packages in Python 3.9
@@ -168,7 +170,7 @@ matrix:
       deploy:
         - provider: pages:git
           github_url: github.ibm.com
-          github_token: $GH_TOKEN_INTERNAL
+          github_token: $GITHUB_AUTH_TOKEN
           target_branch: gh-pages
           on:
             all_branches: true
@@ -188,5 +190,6 @@ matrix:
         - $PATH_SCRIPTS_DIR/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 after_failure:
-  - python $PATH_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
+  - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
+  - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
   - $PATH_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"
