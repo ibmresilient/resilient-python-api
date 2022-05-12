@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
+# Download common scripts
+$PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
+
 # Download coverage files
-python $PATH_SCRIPTS_DIR/manage_artifactory.py "DOWNLOAD" "$ARTIFACTORY_COV_LOCATION" --save-location "$TRAVIS_BUILD_DIR/$PATH_COV_SAVE_LOC"
+python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DOWNLOAD" "$ARTIFACTORY_COV_LOCATION" --save-location "$TRAVIS_BUILD_DIR/$PATH_COV_SAVE_LOC"
 
 # Update the sonar-project.properties file
 sed -e "s|{{SONAR_QUBE_BRANCH}}|$TRAVIS_BRANCH|" \
@@ -17,4 +20,4 @@ $PATH_SONAR_PROPERTIES > $PATH_SONAR_PROPERTIES.tmp && mv $PATH_SONAR_PROPERTIES
 sleep $SONAR_QUBE_SEC_TO_WAIT_FOR_ANALYSIS
 
 # Get analysis status
-python $PATH_SCRIPTS_DIR/get_sonarqube_project_status.py "$SONAR_QUBE_URL" "$SONAR_QUBE_TOKEN" "$SONAR_QUBE_PROJ_KEY" "$TRAVIS_BRANCH"
+python $PATH_COMMON_SCRIPTS_DIR/get_sonar_qube_project_status.py "$SONAR_QUBE_URL" "$SONAR_QUBE_TOKEN" "$SONAR_QUBE_PROJ_KEY" "$TRAVIS_BRANCH"
