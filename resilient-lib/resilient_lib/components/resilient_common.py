@@ -35,7 +35,7 @@ def build_incident_url(url, incidentId, orgId):
     Add 'https' if http/https is not provided at the start.
     If ``url`` is not a string, returns back the value given.
 
-    Returns a URL of the format ``https://<url>/#<incident_id>``.
+    Returns a URL of the format ``https://<url>/#<incident_id>?orgId=<orgId>``.
 
     :param url: the URL of your SOAR instance
     :type url: str
@@ -80,7 +80,7 @@ def build_task_url(url, incident_id, task_id, org_id):
     Add 'https' if http/https is not provided at the start.
     If ``url`` is not a string, returns back the value given.
 
-    Returns a URL of the format ``https://<url>/#<incident_id>?taskId=<task_id>&tabName=details``.
+    Returns a URL of the format ``https://<url>/#<incident_id>?orgId=<org_id>&taskId=<task_id>&tabName=details``.
 
     :param url: the URL of your SOAR instance
     :type url: str
