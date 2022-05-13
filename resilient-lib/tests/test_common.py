@@ -158,11 +158,13 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertIsNone(clean_html(None))
 
     def test_build_incident_url(self):
-        url = build_incident_url(build_resilient_url("https://localhost", 8443), 12345, 201)
-        self.assertEqual(url, "https://localhost:8443/#incidents/12345?orgId=201")
+        # no orgid provided
+        url = build_incident_url(build_resilient_url("https://localhost", 8443), 12345)
+        self.assertEqual(url, "https://localhost:8443/#incidents/12345")
 
-        url = build_incident_url(build_resilient_url("localhost", 8443), 12345, 201)
-        self.assertEqual(url, "https://localhost:8443/#incidents/12345?orgId=201")
+        # no orgid provided
+        url = build_incident_url(build_resilient_url("localhost", 8443), 12345)
+        self.assertEqual(url, "https://localhost:8443/#incidents/12345")
 
         url = build_incident_url(build_resilient_url("https://cases-rest.cp4s.ibm.com", 443), 101, 201)
         self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201")

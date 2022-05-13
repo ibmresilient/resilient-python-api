@@ -29,11 +29,16 @@ LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
 
-def build_incident_url(url, incidentId, orgId):
+def build_incident_url(url, incidentId, orgId=None):
     """
     Build the url to link to a SOAR incident or CP4S case.
     Add 'https' if http/https is not provided at the start.
     If ``url`` is not a string, returns back the value given.
+
+    ``orgId`` is optional to maintain backward compatibility, however, it is
+    strongly recommended to provide the organization ID of the incident
+    so that links work without unexpected hiccups when multiple orgs are
+    available on your SOAR instance
 
     Returns a URL of the format ``https://<url>/#<incident_id>?orgId=<orgId>``.
 
@@ -41,8 +46,10 @@ def build_incident_url(url, incidentId, orgId):
     :type url: str
     :param incidentId: the id of the incident
     :type incidentId: str|int
-    :param orgId: the id of the org the incident lives in
-    :type orgId: str|int
+    :param orgId: (optional) the id of the org the incident lives in. If the user is logged into a different org
+        and this is not set, the link produced may direct the user to a different incident resulting in
+        unexpected results
+    :type orgId: str|int|None
     :return: full URL to the incident
     :rtype: str
     """
@@ -71,7 +78,15 @@ def build_incident_url(url, incidentId, orgId):
     else:
         fragment = INCIDENT_FRAGMENT
 
-    return '/'.join([url, fragment, str(incidentId)]) + "?orgId={0}".format(orgId)
+    link = '/'.join([url, fragment, str(incidentId)])
+    
+    if orgId and (isinstance(orgId, str) or isinstance(orgId, int)):
+        link += "?orgId={0}".format(orgId)
+    else:
+        LOG.warning("Building an incident link without the ORG ID may produce a link that directs the user to a different\
+                    incident resulting in unexpected results. It is recommended to provide the ORG ID.")
+
+    return link
 
 
 def build_task_url(url, incident_id, task_id, org_id):
@@ -98,7 +113,7 @@ def build_task_url(url, incident_id, task_id, org_id):
         LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
         return url
 
-    return "{0}&{1}{2}&{3}".format(build_incident_url(url, incident_id, org_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
+    return "{0}&{1}{2}&{3}".format(build_incident_url(url, incident_id, orgId=org_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
 
 
 def build_resilient_url(host, port):

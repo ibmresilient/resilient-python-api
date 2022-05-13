@@ -1,3 +1,8 @@
+**2022-05: version 45.0**
+
+* Added ``build_task_url`` to build direct links to incident Tasks
+* Updated ``build_incident_url`` to support appending Organization ID queries
+
 **2022-04: version 44.1**
 
 * Added `Common Jinja Methods`_ for help with using Jinja in your App
