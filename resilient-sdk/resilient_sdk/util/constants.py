@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
-# pragma: no cover
-
 import os
 
 import pkg_resources
