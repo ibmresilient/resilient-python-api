@@ -11,12 +11,10 @@ import sys
 import tempfile
 
 import resilient
-import sys
 from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
-from six import string_types
-
 from resilient_lib.util import constants
+from six import string_types
 
 CP4S_PREFIX = "cases-rest."
 CP4S_RESOURCE_PREFIX = "app/respond"
