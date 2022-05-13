@@ -16,6 +16,8 @@ from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
 from six import string_types
 
+from resilient_lib.util import constants
+
 CP4S_PREFIX = "cases-rest."
 CP4S_RESOURCE_PREFIX = "app/respond"
 INCIDENT_FRAGMENT = "#incidents"
@@ -80,11 +82,10 @@ def build_incident_url(url, incidentId, orgId=None):
 
     link = '/'.join([url, fragment, str(incidentId)])
     
-    if orgId and (isinstance(orgId, str) or isinstance(orgId, int)):
+    if orgId and isinstance(orgId, (str, int)):
         link += "?orgId={0}".format(orgId)
     else:
-        LOG.warning("Building an incident link without the ORG ID may produce a link that directs the user to a different\
-                    incident resulting in unexpected results. It is recommended to provide the ORG ID.")
+        LOG.warning(constants.WARN_BUILD_INCIDENT_ORG_ID)
 
     return link
 
