@@ -239,16 +239,23 @@ Add this section to define proxy settings to be used for all integrations that u
 <span id="common-helper-methods"></span><h2>Common Helper Methods<a class="headerlink" href="#module-resilient_lib.components.resilient_common" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
-<span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orgId</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the url to link to a SOAR incident or CP4S case.
 Add ‘https’ if http/https is not provided at the start.
 If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
-<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">orgId</span></code> is optional to maintain backward compatibility, however, it is
+strongly recommended to provide the organization ID of the incident
+so that links work without unexpected hiccups when multiple orgs are
+available on your SOAR instance</p>
+<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?orgId=&lt;orgId&gt;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
 <li><p><strong>incidentId</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
+<li><p><strong>orgId</strong> (<em>str</em><em>|</em><em>int</em><em>|</em><em>None</em>) – (optional) the id of the org the incident lives in. If the user is logged into a different org
+and this is not set, the link produced may direct the user to a different incident resulting in
+unexpected results</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -282,17 +289,18 @@ If <code class="docutils literal notranslate"><span class="pre">host</span></cod
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_task_url">
-<span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the url to link to a SOAR/CP4S task.
 Add ‘https’ if http/https is not provided at the start.
 If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
-<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
+<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?orgId=&lt;org_id&gt;&amp;taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>url</strong> (<em>str</em>) – the URL of your SOAR instance</p></li>
 <li><p><strong>incident_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the incident</p></li>
-<li><p><strong>task_is</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the task</p></li>
+<li><p><strong>task_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the task</p></li>
+<li><p><strong>org_id</strong> (<em>str</em><em>|</em><em>int</em>) – the id of the org the incident lives in</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1522,6 +1530,11 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2022-05: version 45.0</strong></p>
+<ul class="simple">
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">build_task_url</span></code> to build direct links to incident Tasks</p></li>
+<li><p>Updated <code class="docutils literal notranslate"><span class="pre">build_incident_url</span></code> to support appending Organization ID queries</p></li>
+</ul>
 <p><strong>2022-04: version 44.1</strong></p>
 <ul class="simple">
 <li><p>Added <a class="reference internal" href="#common-jinja-methods">Common Jinja Methods</a> for help with using Jinja in your App</p></li>
