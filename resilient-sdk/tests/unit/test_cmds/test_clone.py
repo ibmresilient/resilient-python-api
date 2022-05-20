@@ -190,7 +190,7 @@ def test_replace_playbook_object_attrs():
 
     new_obj_name = "new_pb_test"
     new_obj = CmdClone.replace_playbook_object_attrs(copy.deepcopy(original_obj), new_obj_name)
-    new_local_script = new_obj.get("local_scripts", {})[0]
+    new_local_script = new_obj.get("local_scripts", [{}])[0]
     new_tag = new_obj.get("tag", {})
 
     assert new_obj[ResilientObjMap.PLAYBOOKS] != old_pb_name
