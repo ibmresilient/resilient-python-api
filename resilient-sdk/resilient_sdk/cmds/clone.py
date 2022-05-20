@@ -635,6 +635,14 @@ class CmdClone(BaseCmd):
             "uuid": str(uuid.uuid4())
         })
 
+        if obj_to_modify.get("tag"):
+            tag_new_name = "playbook_{0}".format(pb_new_uuid)
+            obj_to_modify.get("tag").update({
+                "display_name": tag_new_name,
+                "name": tag_new_name,
+                "uuid": str(uuid.uuid4())
+            })
+
         if changetype:
             obj_to_modify.update({
                 "object_type": changetype
