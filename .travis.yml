@@ -171,6 +171,7 @@ matrix:
           github_url: github.ibm.com
           github_token: $GITHUB_AUTH_TOKEN
           target_branch: gh-pages
+          skip_cleanup: true
           on:
             all_branches: true
             condition: $TRAVIS_BRANCH =~ ^(pages\/.+|release\/.+|master)
