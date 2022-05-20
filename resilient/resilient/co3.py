@@ -305,6 +305,8 @@ class SimpleClient(co3base.BaseClient):
         :type verify: str|bool
         :param cache_ttl: Time in seconds to live for cached API responses
         :type cache_ttl: int
+        :param certauth: The filepath for the client side certificate and the private key either as a single file or as a tuple of both files' paths
+        :type certauth: str|tuple(str, str)
         :param custom_headers: A dictionary of any headers you want to send in **every** request
         :type custom_headers: dict
         """

@@ -10,6 +10,7 @@
       "reason": "Error message"
     }
 * Added a custom header for all requests from ``resilient-circuits`` that will include the current version of the library: ``Resilient-Circuits-Version: 45.0.0``
+* Better handling of errors if an app's ``selftest`` is unimplemented
 
 **2022-04: version 44.1**
 
