@@ -241,13 +241,13 @@ Add this section to define proxy settings to be used for all integrations that u
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_incident_url">
 <span class="sig-name descname"><span class="pre">build_incident_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incidentId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orgId</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_incident_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the url to link to a SOAR incident or CP4S case.
-Add ‘https’ if http/https is not provided at the start.
+Add <code class="docutils literal notranslate"><span class="pre">https</span></code> if http/https is not provided at the start.
 If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
 <p><code class="docutils literal notranslate"><span class="pre">orgId</span></code> is optional to maintain backward compatibility, however, it is
 strongly recommended to provide the organization ID of the incident
 so that links work without unexpected hiccups when multiple orgs are
 available on your SOAR instance</p>
-<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?orgId=&lt;orgId&gt;</span></code>.</p>
+<p>Returns a URL in the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?orgId=&lt;orgId&gt;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -291,9 +291,9 @@ If <code class="docutils literal notranslate"><span class="pre">host</span></cod
 <dt class="sig sig-object py" id="resilient_lib.components.resilient_common.build_task_url">
 <span class="sig-name descname"><span class="pre">build_task_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.build_task_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the url to link to a SOAR/CP4S task.
-Add ‘https’ if http/https is not provided at the start.
+Add <code class="docutils literal notranslate"><span class="pre">https</span></code> if http/https is not provided at the start.
 If <code class="docutils literal notranslate"><span class="pre">url</span></code> is not a string, returns back the value given.</p>
-<p>Returns a URL of the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?orgId=&lt;org_id&gt;&amp;taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
+<p>Returns a URL in the format <code class="docutils literal notranslate"><span class="pre">https://&lt;url&gt;/#&lt;incident_id&gt;?orgId=&lt;org_id&gt;&amp;taskId=&lt;task_id&gt;&amp;tabName=details</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

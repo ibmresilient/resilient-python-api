@@ -278,6 +278,7 @@ or by going to: <code class="docutils literal notranslate"><span class="pre">htt
 <li><p><strong>proxies</strong> (<em>dict</em>) – A dictionary of <code class="docutils literal notranslate"><span class="pre">HTTP</span></code> proxies to use, if any.</p></li>
 <li><p><strong>verify</strong> (<em>str</em><em>|</em><em>bool</em>) – The path to a <code class="docutils literal notranslate"><span class="pre">PEM</span></code> file containing the trusted CAs, or <code class="docutils literal notranslate"><span class="pre">False</span></code> to disable all TLS verification</p></li>
 <li><p><strong>cache_ttl</strong> (<em>int</em>) – Time in seconds to live for cached API responses</p></li>
+<li><p><strong>certauth</strong> (<em>str</em><em>|</em><em>tuple</em><em>(</em><em>str</em><em>, </em><em>str</em><em>)</em>) – The filepath for the client side certificate and the private key either as a single file or as a tuple of both files’ paths</p></li>
 <li><p><strong>custom_headers</strong> (<em>dict</em>) – A dictionary of any headers you want to send in <strong>every</strong> request</p></li>
 </ul>
 </dd>
@@ -657,7 +658,7 @@ to indicate ‘no change’ (which then just bypasses the update operation).</p>
 <li><p>Removed the <code class="docutils literal notranslate"><span class="pre">User-Agent</span></code> header for all requests</p></li>
 <li><p>Added a custom header for all requests that will include the current version of the library: <code class="docutils literal notranslate"><span class="pre">Resilient-Module-Version:</span> <span class="pre">45.0.0</span></code></p></li>
 <li><p>The optional <code class="docutils literal notranslate"><span class="pre">client_auth_cert</span></code> and <code class="docutils literal notranslate"><span class="pre">client_auth_key</span></code> app.config parameters
-have been added to specify the respective paths to client side certifcates and
+have been added to specify the respective paths to client side certificates and
 client side certificate private keys</p></li>
 </ul>
 <p><strong>2022-04: version 44.1</strong></p>
