@@ -1,37 +1,35 @@
+![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
+
 # pytest-resilient-circuits
 
-This package is a `py.test` plugin that provides fixtures to facilitate testing resilient-circuits applications.
+This package is a `pytest` plugin that provides fixtures to facilitate testing IBM SOAR apps.
 
-### Changelog
+## Installing this module
 
-### Requirements
+To install from PyPi:
 
-The `resilient` and `resilient-circuits` packages should be installed before use.
+```
+pip install pytest-resilient-circuits
+```
 
-Other requirements are installed when you install the package.
+## License and Terms
 
+Copyright © IBM Corporation 2022
 
-### Installing this module
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-To install a pre-built package file:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-    pip install dist/pytest_resilient_circuits-x.x.x.tar.gz
-
-
-To install directly into your local Python environment:
-
-    python setup.py install
-
-
-To build the installable package file:
-
-    python setup.py sdist --formats=gztar
-
-This creates a single file `dist/pytest_resilient_circuits-x.x.x.tar.gz` (the filename will
-vary according to the current version).
-
-
-### Usage
-
-For usage instructions and examples, please see the Resilient Integrations Python Developer's Guide.
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.

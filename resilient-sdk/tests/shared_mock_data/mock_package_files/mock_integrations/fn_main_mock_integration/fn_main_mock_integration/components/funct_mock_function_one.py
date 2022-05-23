@@ -1,67 +1,89 @@
 # -*- coding: utf-8 -*-
-# pragma pylint: disable=unused-argument, no-self-use
-"""Function implementation"""
 
-import logging
-from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
+"""AppFunction implementation"""
+
+from resilient_circuits import AppFunctionComponent, app_function, FunctionResult
+from resilient_lib import IntegrationError, validate_fields
 
 PACKAGE_NAME = "fn_main_mock_integration"
+FN_NAME = "mock_function_one"
 
 
-class FunctionComponent(ResilientComponent):
-    """Component that implements Resilient function 'mock_function_one''"""
+class FunctionComponent(AppFunctionComponent):
+    """Component that implements function 'mock_function_one'"""
 
     def __init__(self, opts):
-        """constructor provides access to the configuration options"""
-        super(FunctionComponent, self).__init__(opts)
-        self.options = opts.get(PACKAGE_NAME, {})
+        super(FunctionComponent, self).__init__(opts, PACKAGE_NAME)
 
-    @handler("reload")
-    def _reload(self, event, opts):
-        """Configuration options have changed, save new values"""
-        self.options = opts.get(PACKAGE_NAME, {})
+    @app_function(FN_NAME)
+    def _app_function(self, fn_inputs):
+        """
+        Function: A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ
+        Inputs:
+            -   fn_inputs.mock_input_date_picker
+            -   fn_inputs.mock_input_number
+            -   fn_inputs.mock_input_multiselect
+            -   fn_inputs.mock_input_text_with_value_string
+            -   fn_inputs.mock_input_date_time_picker
+            -   fn_inputs.mock_input_select
+            -   fn_inputs.mock_input_boolean
+            -   fn_inputs.mock_input_text
+        """
 
-    @function("mock_function_one")
-    def _mock_function_one_function(self, event, *args, **kwargs):
-        """Function: A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ"""
-        try:
+        yield self.status_message("Starting App Function: '{0}'".format(FN_NAME))
 
-            # Get the wf_instance_id of the workflow this Function was called in
-            wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
+        yield self.status_message("Mock Input Text: '{0}'".format(fn_inputs.mock_input_text))
 
-            yield StatusMessage("Starting 'mock_function_one' running in workflow '{0}'".format(wf_instance_id))
+        # Example validating app_configs
+        # validate_fields([
+        #     {"name": "api_key", "placeholder": "<your-api-key>"},
+        #     {"name": "base_url", "placeholder": "<api-base-url>"}],
+        #     self.app_configs)
 
-            # Get the function parameters:
-            mock_input_number = kwargs.get("mock_input_number")  # number
-            mock_input_boolean = kwargs.get("mock_input_boolean")  # boolean
-            mock_input_select = self.get_select_param(kwargs.get("mock_input_select"))  # select, values: "select one", "select two", "select  ล ฦ ว ศ ษ ส ห ฬ อ"
-            mock_input_date_time_picker = kwargs.get("mock_input_date_time_picker")  # datetimepicker
-            mock_input_date_picker = kwargs.get("mock_input_date_picker")  # datepicker
-            mock_input_text_with_value_string = self.get_textarea_param(kwargs.get("mock_input_text_with_value_string"))  # textarea
-            mock_input_multiselect = self.get_select_param(kwargs.get("mock_input_multiselect"))  # multiselect, values: "value one", "value two", "value  ล ฦ ว ศ ษ ส ห ฬ อ"
-            mock_input_text = kwargs.get("mock_input_text")  # text
+        # Example validating required fn_inputs
+        # validate_fields(["required_input_one", "required_input_two"], fn_inputs)
 
-            log = logging.getLogger(__name__)
-            log.info("mock_input_number: %s", mock_input_number)
-            log.info("mock_input_boolean: %s", mock_input_boolean)
-            log.info("mock_input_select: %s", mock_input_select)
-            log.info("mock_input_date_time_picker: %s", mock_input_date_time_picker)
-            log.info("mock_input_date_picker: %s", mock_input_date_picker)
-            log.info("mock_input_text_with_value_string: %s", mock_input_text_with_value_string)
-            log.info("mock_input_multiselect: %s", mock_input_multiselect)
-            log.info("mock_input_text: %s", mock_input_text)
+        # Example accessing optional attribute in fn_inputs (this is similiar for app_configs)
+        # optional_input = fn_inputs.optional_input if hasattr(fn_inputs, "optional_input") else "Default Value"
 
-            ##############################################
-            # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE #
-            ##############################################
+        # Example getting access to self.get_fn_msg()
+        # fn_msg = self.get_fn_msg()
+        # self.LOG.info("fn_msg: %s", fn_msg)
 
-            yield StatusMessage("Finished 'mock_function_one' that was running in workflow '{0}'".format(wf_instance_id))
+        # Example interacting with REST API
+        # res_client = self.rest_client()
+        # function_details = res_client.get("/functions/{0}?handle_format=names".format(FN_NAME))
 
-            results = {
-                "content": "xyz"
-            }
+        # Example raising an exception
+        # raise IntegrationError("Example raising custom error")
 
-            # Produce a FunctionResult with the results
-            yield FunctionResult(results)
-        except Exception:
-            yield FunctionError()
+        ##############################################
+        # PUT YOUR FUNCTION IMPLEMENTATION CODE HERE #
+        ##############################################
+
+        # Call API implemtation example:
+        # params = {
+        #     "api_key": self.app_configs.api_key,
+        #     "ip_address": fn_inputs.artifact_value
+        # }
+        #
+        # response = self.rc.execute(
+        #     method="get",
+        #     url=self.app_configs.api_base_url,
+        #     params=params
+        # )
+        #
+        # results = response.json()
+        #
+        # yield self.status_message("Endpoint reached successfully and returning results for App Function: '{0}'".format(FN_NAME))
+        #
+        # yield FunctionResult(results)
+        ##############################################
+
+        yield self.status_message("Finished running App Function: '{0}'".format(FN_NAME))
+
+        # Note this is only used for demo purposes! Put your own key/value pairs here that you want to access on the Platform
+        results = {"note_text": fn_inputs.mock_input_text}
+
+        yield FunctionResult(results)
+        # yield FunctionResult({}, success=False, reason="Bad call")

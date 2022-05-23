@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
-import uuid
-import sys
-from argparse import Namespace
 import copy
-from mock import patch
+import sys
+import uuid
+from argparse import Namespace
+
 import pytest
-from resilient_sdk.cmds import base_cmd, CmdClone
+from mock import patch
+from resilient_sdk.cmds import CmdClone, base_cmd
+from resilient_sdk.util import constants
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-
 from tests.helpers import read_mock_json
+
 TEST_OBJ = {
     "uuid": uuid.uuid4(),
     "export_key": "TEST_OBJ",
@@ -20,6 +22,8 @@ TEST_OBJ = {
 }
 
 TEST_EXPORT = read_mock_json("export.JSON")
+TEST_EXPORT_PLAYBOOKS = read_mock_json("export-with-playbook.JSON")
+
 # Mandatory keys for a configuration import
 MANDATORY_KEYS = ["incident_types", "fields"]
 # Map from export object keys to each objects unique identifier
@@ -46,6 +50,7 @@ def test_cmd_clone_setup(fx_get_sub_parser):
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
     $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name>
+    $ resilient-sdk clone -pb <playbook_to_be_cloned> <new_playbook_name> --draft-playbook
     $ resilient-sdk clone --playbook <playbook_to_be_cloned> <new_playbook_name> --changetype artifact
     $ resilient-sdk clone -f <function_to_be_cloned> <new_function_name>
     $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name"
@@ -166,7 +171,7 @@ def test_replace_rule_object_attrs():
 def test_replace_md_object_attrs():
     """test_replace_md_object_attrs test to verify the functionality of replacing a message destinations unique attributes
     """
-    # Get the first rule from the list
+    # Get the first message destination from the list
     obj_to_modify = copy.copy(TEST_EXPORT.get("message_destinations")[0])
 
     old_md_name = obj_to_modify[ResilientObjMap.MESSAGE_DESTINATIONS]
@@ -174,6 +179,24 @@ def test_replace_md_object_attrs():
     new_obj = CmdClone.replace_md_object_attrs(obj_to_modify, "fn_msg_dst")
 
     assert new_obj[ResilientObjMap.RULES] != old_md_name
+
+
+def test_replace_playbook_object_attrs():
+
+    original_obj = [x for x in TEST_EXPORT_PLAYBOOKS.get(constants.CUST_PLAYBOOKS) if x.get(ResilientObjMap.PLAYBOOKS) == "mock_main_pb"][0]
+    old_pb_name = original_obj[ResilientObjMap.PLAYBOOKS]
+    original_obj_local_script_uuid = original_obj.get("local_scripts", [{}])[0].get("uuid")
+    original_obj_tag_uuid = original_obj.get("tag", {}).get("uuid")
+
+    new_obj_name = "new_pb_test"
+    new_obj = CmdClone.replace_playbook_object_attrs(copy.deepcopy(original_obj), new_obj_name)
+    new_local_script = new_obj.get("local_scripts", [{}])[0]
+    new_tag = new_obj.get("tag", {})
+
+    assert new_obj[ResilientObjMap.PLAYBOOKS] != old_pb_name
+    assert new_local_script.get("uuid") != original_obj_local_script_uuid
+    assert new_local_script.get("playbook_handle") == new_obj_name
+    assert new_tag.get("uuid") != original_obj_tag_uuid
 
 
 def test_replace_common_object_attrs():
@@ -255,6 +278,28 @@ def test_clone_change_type(fx_get_sub_parser, fx_cmd_line_args_clone_typechange)
     assert export_data[0]['object_type'] != original_obj['object_type'], "Expected the cloned workflow to have a different object type to before"
 
 
+def test_clone_draft_playbook(fx_get_sub_parser, fx_cmd_line_args_clone_playbook_draft):
+    cmd_clone = CmdClone(fx_get_sub_parser)
+
+    args = cmd_clone.parser.parse_known_args()[0]
+    assert args.draft_playbook is True
+
+    export_data = cmd_clone._clone_action_object(
+        input_args=args.playbook,
+        org_export=TEST_EXPORT_PLAYBOOKS,
+        obj_name='Playbook',
+        obj_identifier=ResilientObjMap.PLAYBOOKS,
+        obj_key=constants.CUST_PLAYBOOKS,
+        replace_fn=CmdClone.replace_playbook_object_attrs,
+        new_object_type=args.changetype,
+        convert_to_draft=args.draft_playbook
+    )
+
+    assert export_data[0].get("status", "") == "draft"
+    assert export_data[0].get("activation_type", "automatic") is None
+    assert export_data[0].get("activation_details") == {}
+
+
 def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
     """
     Test when calling 'clone' and specifying a prefix
@@ -298,7 +343,7 @@ def test_clone_prefix(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
 def test_clone_multiple(fx_get_sub_parser, fx_cmd_line_args_clone_prefix):
     """
     Test when calling 'clone'  with multiple objects and specifying a prefix
-    the resultant export object contains the appropiate number of cloned objects
+    the resultant export object contains the appropriate number of cloned objects
     """
     cmd_clone = CmdClone(fx_get_sub_parser)
 

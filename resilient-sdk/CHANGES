@@ -1,3 +1,10 @@
+**2022-05: version 45.0**
+
+* Added new option ``--draft-playbook`` to the ``clone`` command that if specified with the ``--playbook`` option
+  will clone the Playbook into a **Draft** state, allowing you to change it's Activation Type
+* ``codegen`` and ``extract`` now exclude the ``creator`` from the generated ``export.res`` file
+* Minor updates to templates produced with ``codegen``
+
 **2022-04: version 44.1**
 
 * No major changes. Just bumping build number to coincide with other builds

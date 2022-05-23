@@ -11,12 +11,17 @@ import sys
 import tempfile
 
 import resilient
-import sys
 from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
+from resilient_lib.util import constants
 from six import string_types
 
-INCIDENT_FRAGMENT = '#incidents'
+CP4S_PREFIX = "cases-rest."
+CP4S_RESOURCE_PREFIX = "app/respond"
+INCIDENT_FRAGMENT = "#incidents"
+CASE_FRAGMENT = "#cases"
+TASK_FRAGMENT = "taskId="
+TASK_DETAILS_FRAGMENT = "tabName=details"
 PAYLOAD_VERSION = "1.0"
 
 LOG = logging.getLogger(__name__)
@@ -24,23 +29,97 @@ LOG.setLevel(logging.INFO)
 LOG.addHandler(logging.StreamHandler())
 
 
-def build_incident_url(url, incidentId):
+def build_incident_url(url, incidentId, orgId=None):
     """
-    Build the URL to link to a SOAR incident
+    Build the url to link to a SOAR incident or CP4S case.
+    Add ``https`` if http/https is not provided at the start.
+    If ``url`` is not a string, returns back the value given.
+
+    ``orgId`` is optional to maintain backward compatibility, however, it is
+    strongly recommended to provide the organization ID of the incident
+    so that links work without unexpected hiccups when multiple orgs are
+    available on your SOAR instance
+
+    Returns a URL in the format ``https://<url>/#<incident_id>?orgId=<orgId>``.
 
     :param url: the URL of your SOAR instance
     :type url: str
     :param incidentId: the id of the incident
     :type incidentId: str|int
+    :param orgId: (optional) the id of the org the incident lives in. If the user is logged into a different org
+        and this is not set, the link produced may direct the user to a different incident resulting in
+        unexpected results
+    :type orgId: str|int|None
     :return: full URL to the incident
     :rtype: str
     """
-    return '/'.join([url, INCIDENT_FRAGMENT, str(incidentId)])
+
+    if not isinstance(url, str):
+        LOG.warning("Called 'build_incident_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
+        return url
+
+    # determine if host url needs http/s prefix
+    # if not given, assumes https
+    if not url.lower().startswith("http"):
+        url = "https://{0}".format(url)
+
+    # remove cp4s prefix if still present
+    if CP4S_PREFIX in url:
+        url = url.replace(CP4S_PREFIX, "")
+
+        # unfortunately we can't insert app/respond unless we know the cp4s prefix was there
+        # so we insert if missing
+        # otherwise we have to assume this is a standalone instance link
+        if CP4S_RESOURCE_PREFIX not in url:
+            url = '/'.join([url, CP4S_RESOURCE_PREFIX])
+
+    if CP4S_RESOURCE_PREFIX in url:
+        fragment = CASE_FRAGMENT
+    else:
+        fragment = INCIDENT_FRAGMENT
+
+    link = '/'.join([url, fragment, str(incidentId)])
+    
+    if orgId and isinstance(orgId, (str, int)):
+        link += "?orgId={0}".format(orgId)
+    else:
+        LOG.warning(constants.WARN_BUILD_INCIDENT_ORG_ID)
+
+    return link
+
+
+def build_task_url(url, incident_id, task_id, org_id):
+    """
+    Build the url to link to a SOAR/CP4S task.
+    Add ``https`` if http/https is not provided at the start.
+    If ``url`` is not a string, returns back the value given.
+
+    Returns a URL in the format ``https://<url>/#<incident_id>?orgId=<org_id>&taskId=<task_id>&tabName=details``.
+
+    :param url: the URL of your SOAR instance
+    :type url: str
+    :param incident_id: the id of the incident
+    :type incident_id: str|int
+    :param task_id: the id of the task
+    :type task_id: str|int
+    :param org_id: the id of the org the incident lives in
+    :type org_id: str|int
+    :return: full URL to the task's details tab
+    :rtype: str
+    """
+
+    if not isinstance(url, str):
+        LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
+        return url
+
+    return "{0}&{1}{2}&{3}".format(build_incident_url(url, incident_id, orgId=org_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
 
 
 def build_resilient_url(host, port):
     """
-    Build basic URL to SOAR instance
+    Build basic url to SOAR/CP4S instance.
+    Add 'https' if http/https is not provided at the start.
+    If ``host`` is not a string, returns back the value given.
 
     :param host: host name
     :type host: str
@@ -49,10 +128,22 @@ def build_resilient_url(host, port):
     :return: base url
     :rtype: str
     """
-    if host.lower().startswith("http"):
-        return "{0}:{1}".format(host, port)
 
-    return "https://{0}:{1}".format(host, port)
+    if not isinstance(host, str):
+        LOG.warning("Called 'build_resilient_url' with a '{0}'  but was expecting a 'str' host value. Returning original value.".format(type(host)))
+        return host
+
+    # determine if host url needs http/s prefix
+    # if not given, assumes https
+    if not host.lower().startswith("http"):
+        host = "https://{0}".format(host)
+
+    # check if host is CP4S host
+    if CP4S_PREFIX in host:
+        host = host.replace(CP4S_PREFIX, "")
+        return "{0}:{1}/{2}".format(host, port, CP4S_RESOURCE_PREFIX)
+
+    return "{0}:{1}".format(host, port)
 
 
 def clean_html(html_fragment):

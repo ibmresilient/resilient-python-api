@@ -16,15 +16,15 @@ $ pip install resilient-sdk
 ```
 
 ## Usage and Documentation
-For details on the Resilient SDK commands, use the `-h` option on the command line. For example, `resilient-sdk -h` and `resilient-sdk codegen -h`.
+For details on the commands provided with the SDK, use the `-h` option on the command line. For example, `resilient-sdk -h` and `resilient-sdk codegen -h`.
 
-For more examples on its usage see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs)
+For more examples on its usage see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs).
 
-The IBM SOAR App Developer's Guide provides information on using the Resilient SDK to develop and package apps. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the follow-on page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
+The IBM SOAR App Developer's Guide provides information on using the IBM SOAR SDK to develop and package apps. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the follow-on page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
 
 
 ## Change Log
-Our change log can be found at [ibm.biz/resilient-sdk-changes](https://ibm.biz/resilient-sdk-changes)
+Our change log can be found at [ibm.biz/resilient-sdk-changes](https://ibm.biz/resilient-sdk-changes).
 
 
 ## License and Terms
