@@ -35,7 +35,7 @@ setup(
     # Runtime dependencies
     install_requires=[
         # Our libraries
-        'resilient-circuits >= 44.1',
+        'resilient-circuits >= 45.0',
 
         # 3rd party dependencies for all python versions
         'requests-mock      ~= 1.9',

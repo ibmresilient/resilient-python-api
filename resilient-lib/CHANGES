@@ -2,6 +2,9 @@
 
 * Added ``build_task_url`` to build direct links to incident Tasks
 * Updated ``build_incident_url`` to support appending Organization ID queries
+* Added ``client_auth_cert`` and ``client_auth_key`` options for client side certificates. 
+  These can be specified per app in the relevant [fn_some_app] section of the app.config 
+  and will be used in any requests made through ``resilient_lib.RequestsCommon``.
 
 **2022-04: version 44.1**
 
