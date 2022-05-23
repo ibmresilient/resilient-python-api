@@ -1534,6 +1534,9 @@ identifying the type of error</p>
 <ul class="simple">
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">build_task_url</span></code> to build direct links to incident Tasks</p></li>
 <li><p>Updated <code class="docutils literal notranslate"><span class="pre">build_incident_url</span></code> to support appending Organization ID queries</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">client_auth_cert</span></code> and <code class="docutils literal notranslate"><span class="pre">client_auth_key</span></code> options for client side certificates.
+These can be specified per app in the relevant [fn_some_app] section of the app.config
+and will be used in any requests made through <code class="docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon</span></code>.</p></li>
 </ul>
 <p><strong>2022-04: version 44.1</strong></p>
 <ul class="simple">
