@@ -32,7 +32,7 @@ LOG.addHandler(logging.StreamHandler())
 def build_incident_url(url, incidentId, orgId=None):
     """
     Build the url to link to a SOAR incident or CP4S case.
-    Add 'https' if http/https is not provided at the start.
+    Add ``https`` if http/https is not provided at the start.
     If ``url`` is not a string, returns back the value given.
 
     ``orgId`` is optional to maintain backward compatibility, however, it is
@@ -40,7 +40,7 @@ def build_incident_url(url, incidentId, orgId=None):
     so that links work without unexpected hiccups when multiple orgs are
     available on your SOAR instance
 
-    Returns a URL of the format ``https://<url>/#<incident_id>?orgId=<orgId>``.
+    Returns a URL in the format ``https://<url>/#<incident_id>?orgId=<orgId>``.
 
     :param url: the URL of your SOAR instance
     :type url: str
@@ -91,10 +91,10 @@ def build_incident_url(url, incidentId, orgId=None):
 def build_task_url(url, incident_id, task_id, org_id):
     """
     Build the url to link to a SOAR/CP4S task.
-    Add 'https' if http/https is not provided at the start.
+    Add ``https`` if http/https is not provided at the start.
     If ``url`` is not a string, returns back the value given.
 
-    Returns a URL of the format ``https://<url>/#<incident_id>?orgId=<org_id>&taskId=<task_id>&tabName=details``.
+    Returns a URL in the format ``https://<url>/#<incident_id>?orgId=<org_id>&taskId=<task_id>&tabName=details``.
 
     :param url: the URL of your SOAR instance
     :type url: str
