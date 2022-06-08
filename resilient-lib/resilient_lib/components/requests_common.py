@@ -6,10 +6,10 @@ import requests
 import logging
 from resilient import is_env_proxies_set, get_and_parse_proxy_env_var, constants as res_constants
 from resilient_lib.components.integration_errors import IntegrationError
-from resilient_lib.util.lib_common import deprecated
+from deprecated import deprecated
 
 
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 30
 
@@ -23,7 +23,7 @@ class RequestsCommon:
     Any similar properties in the function’s section would override the [integrations] properties.
 
     .. note::
-      In the Atomic Function template, as of version 41.1, :class:`RequestsCommon` is instantiated and available available
+      In the Atomic Function template, as of version 41.1, :class:`RequestsCommon` is instantiated and available
       in a class that inherits :class:`~resilient_circuits.app_function_component.AppFunctionComponent` as an ``rc`` attribute:
 
       .. code-block:: python
@@ -64,7 +64,7 @@ class RequestsCommon:
                 proxy_details = get_and_parse_proxy_env_var(res_constants.ENV_HTTP_PROXY)
 
             if proxy_details:
-                log.debug(u"Sending request through proxy: '{0}://{1}:{2}'".format(proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port")))
+                LOG.debug(u"Sending request through proxy: '%s://%s:%s'", proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port"))
 
             return proxies
 
@@ -91,7 +91,34 @@ class RequestsCommon:
 
         return int(timeout)
 
-    def execute(self, method, url, timeout=None, proxies=None, callback=None, **kwargs):
+    def get_clientauth(self):
+        """
+        A client certificate for authenticating calls to external endpoints can be specified on a per function basis.
+
+        If ``client_auth_cert`` and ``client_auth_key`` are set in the **Function Section** (``[my_function]``) of your app.config file,
+          returns a tuple containing the respective paths to the certificate and private key for the client cert.
+
+        Example:
+
+          .. code-block::
+
+            [my_function]
+            ...
+            client_auth_cert = <path_to_cert.pem>
+            client_auth_key = <path_to_cert_private_key.pem>
+
+        :return: The filepaths for the client side certificate and the private key as a tuple of both files' paths
+                 or ``None`` if either one of the values are missing
+        :rtype: tuple(str, str)
+        """
+        cert = None
+
+        if self.function_opts and (self.function_opts.get("client_auth_cert") and self.function_opts.get("client_auth_key")):
+            cert = (self.function_opts.get("client_auth_cert"), self.function_opts.get("client_auth_key"))
+
+        return cert
+
+    def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, **kwargs):
         """
         Constructs and sends a request. Returns a
         `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object.
@@ -106,7 +133,7 @@ class RequestsCommon:
             *See requests docs for more*. If ``None`` it looks in the ``[integrations]``
             section of your app.config for the ``timeout`` setting.
         :type timeout: float or tuple
-        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+        :param proxies: (Optional) Dictionary mapping protocol to the URL of the proxy.
             The mapping protocol must be in the format:
 
             .. code-block::
@@ -120,6 +147,10 @@ class RequestsCommon:
             return this callback function passing in the ``response`` as its
             only parameter. Can be used to specifically handle errors.
         :type callback: function
+        :param clientauth: (Optional) The filepath for the client side certificate and the private key either as a
+            single file or as a tuple of both files' paths. If set to``None`` a value will try to be found in the
+            ``[my_function]`` section of the app.config. If not found there no client certs will be used.
+        :type clientauth: str or tuple(str, str)
         :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
             or ``callback`` function.
@@ -129,11 +160,14 @@ class RequestsCommon:
                 raise IntegrationError("unknown method {}".format(method))
 
             # If proxies was not set check if they are set in the config
-            if proxies is None:
+            if not proxies:
                 proxies = self.get_proxies()
 
-            if timeout is None:
+            if not timeout:
                 timeout = self.get_timeout()
+
+            if not clientauth:
+                clientauth = self.get_clientauth()
 
             # Log the parameter inputs that are not None
             args_dict = locals()
@@ -144,14 +178,14 @@ class RequestsCommon:
             args = args_dict.keys()
             for k in args:
                 if k != "self" and k != "kwargs" and args_dict[k] is not None:
-                    log.debug("  {}: {}".format(k, args_dict[k]))
+                    LOG.debug("  %s: %s", k, args_dict[k])
 
             # Pass request to requests.request() function
-            response = requests.request(method, url, timeout=timeout, proxies=proxies, **kwargs)
+            response = requests.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, **kwargs)
 
             # Debug logging
-            log.debug(response.status_code)
-            log.debug(response.content)
+            LOG.debug(response.status_code)
+            LOG.debug(response.content)
 
             # custom handler for response handling
             # set callback to be the name of the method you would like to call
@@ -167,13 +201,13 @@ class RequestsCommon:
 
         except Exception as err:
             msg = str(err)
-            log.error(msg)
+            LOG.error(msg)
             raise IntegrationError(msg)
 
     # Create alias for execute_call_v2
     execute_call_v2 = execute
 
-    @deprecated("Use the new method execute_call_v2()")
+    @deprecated(version="v34.0", reason="Use the new method execute()")
     def execute_call(self, verb, url, payload={}, log=None, basicauth=None, verify_flag=True, headers=None,
                      proxies=None, timeout=None, resp_type='json', callback=None):
         """
@@ -221,7 +255,7 @@ class RequestsCommon:
                 resp = requests.request(verb.upper(), url, verify=verify_flag, headers=headers, params=payload,
                                         auth=basicauth, timeout=timeout, proxies=proxies)
 
-            if resp is None:
+            if not resp:
                 raise IntegrationError('no response returned')
 
             # custom handler for response handling?

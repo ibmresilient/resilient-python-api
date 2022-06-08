@@ -119,6 +119,15 @@ def test_get_packages():
         assert isinstance(pkg[1], str)
 
 
+def test_get_packages_not_a_working_set_obj():
+
+    invalid_ws = "this is not a working set"
+
+    pkgs = helpers.get_packages(invalid_ws)
+
+    assert pkgs == invalid_ws
+
+
 def test_env_str():
 
     env_str = helpers.get_env_str(pkg_resources.working_set)

@@ -67,7 +67,7 @@ class CmdExtract(BaseCmd):
             org_export = sdk_helpers.read_local_exportfile(args.exportfile)
 
         else:
-            # Instantiate connection to the Resilient Appliance
+            # Instantiate connection to SOAR
             res_client = sdk_helpers.get_resilient_client(path_config_file=args.config)
 
             # Generate + get latest export from Resilient Server
@@ -86,7 +86,8 @@ class CmdExtract(BaseCmd):
                                                    datatables=args.datatable,
                                                    tasks=args.task,
                                                    scripts=args.script,
-                                                   incident_types=args.incidenttype)
+                                                   incident_types=args.incidenttype,
+                                                   playbooks=args.playbook)
 
         # Get 'minified' version of the export. This is used in to create export.res
         min_extract_data = sdk_helpers.minify_export(org_export,
@@ -100,7 +101,8 @@ class CmdExtract(BaseCmd):
                                                      tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, extract_data.get("tasks")),
                                                      phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, extract_data.get("phases")),
                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")),
-                                                     incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")))
+                                                     incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")),
+                                                     playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, extract_data.get(constants.CUST_PLAYBOOKS)))
 
         # Convert dict to JSON string
         if sys.version_info.major >= 3:

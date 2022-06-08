@@ -9,8 +9,13 @@ from os import path
 
 from setuptools import find_packages, setup
 
-this_directory = path.abspath(path.dirname(__file__))
 
+# We only officially support 2.7, 3.6, 3.9. Following PEP 440
+# this is the string format that allows for that restriction.
+# This allows for >=3.6 but we recommend working with 3.9 or 3.6
+_python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in range(6)) # note range() is non-inclusive of upper limit
+
+this_directory = path.abspath(path.dirname(__file__))
 
 with io.open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
@@ -28,26 +33,31 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "argparse",
-        "requests>=2.26.0",
-        "requests-toolbelt>=0.6.0",
-        "requests-mock>=1.2.0",
-        "six",
-        "cachetools<3.0.0",
-        "setuptools~=44.0;python_version<'3.0'",
-        "setuptools>=59.0.0;python_version>='3.0'"
+        # General dependencies applicable to all python versions
+        "requests          ~= 2.27",
+        "requests-toolbelt ~= 0.9",
+        "six               ~= 1.16",
+
+        # Python > 3.6
+        "setuptools        ~= 62.1;   python_version > '3.6'",
+        "keyring           ~= 23.5;   python_version > '3.6'",
+        "cachetools        ~= 5.0;    python_version > '3.6'",
+
+        # Python 3.6
+        "setuptools        ~= 59.6;   python_version == '3.6'",
+        "keyring           ~= 23.4;   python_version == '3.6'",
+        "cachetools        ~= 2.1;    python_version == '3.6'",
+
+        # Python 2.7
+        # configparser is only required for py 2.7 as it is packaged with python in > 3.2
+        "configparser      ~= 4.0;    python_version == '2.7'", 
+        "setuptools        ~= 44.0;   python_version == '2.7'",
+        "cachetools        ~= 2.1;    python_version == '2.7'",
+        "keyring           == 18.0.1; python_version == '2.7'",
     ],
-    extras_require={
-        ":python_version < '3.2'": [
-            "configparser"
-        ],
-        ":python_version >= '3.5'": [
-            "keyring"
-        ],
-        ":python_version < '3.5'": [
-            "keyring>=5.4,<19.0.0"
-        ]
-    },
+
+    # restrict supported python versions
+    python_requires=_python_requires,
 
     entry_points={
         "console_scripts": ["finfo = resilient.bin.finfo:main",
@@ -69,7 +79,8 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9"
     ],
     keywords="ibm soar resilient resilient-circuits circuits resilient-sdk sdk"
 )

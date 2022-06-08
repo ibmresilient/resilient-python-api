@@ -14,12 +14,16 @@ Note:
     -   Fixture must have BEFORE and AFTER docstring
 """
 
-import sys
 import os
 import shutil
+import sys
+
 import pytest
-from tests.shared_mock_data import mock_paths
+import requests_mock
 from resilient import constants
+from resilient.co3base import BaseClient
+
+from tests.shared_mock_data import mock_paths
 
 
 def _mk_temp_dir():
@@ -36,6 +40,19 @@ def _rm_temp_dir():
 
 def _add_to_cmd_line_args(args_to_add):
     sys.argv.extend(args_to_add)
+
+
+@pytest.fixture
+def fx_base_client():
+    """
+    Before: Creates sample BaseClient object with mocked URI https://example.com
+    After: Nothing
+    """
+    base_client = BaseClient(org_name="Mock Org", base_url="https://example.com")
+    requests_adapter = requests_mock.Adapter()
+    base_client.session.mount(u'https://', requests_adapter)
+    base_client.org_id = 201
+    yield (base_client, requests_adapter)
 
 
 @pytest.fixture

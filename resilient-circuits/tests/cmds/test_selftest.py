@@ -11,12 +11,20 @@ from resilient_circuits.cmds import selftest
 from tests.shared_mock_data import mock_paths
 
 
-MOCKED_SELFTEST_ENTRYPOINTS = [EntryPoint.parse('test = tests.selftest_tests.mocked_fail_script:selftest', dist=EggInfoDistribution(
-    project_name='test',
-    version="0.1",
-)), EntryPoint.parse('test2 = tests.selftest_tests.mocked_success_script:selftest', dist=EggInfoDistribution(
-    project_name='test2',
-    version="0.1"))]
+MOCKED_SELFTEST_ENTRYPOINTS = [
+    EntryPoint.parse('test = tests.selftest_tests.mocked_fail_script:selftest', dist=EggInfoDistribution(
+        project_name='test',
+        version="0.1",
+    )), 
+    EntryPoint.parse('test2 = tests.selftest_tests.mocked_success_script:selftest', dist=EggInfoDistribution(
+        project_name='test2',
+        version="0.1"
+    )),
+    EntryPoint.parse('test3 = tests.selftest_tests.mocked_unimplemented_script:selftest', dist=EggInfoDistribution(
+        project_name='test3',
+        version="0.1"
+    ))
+]
 
 
 def test_error_connecting_to_soar_rest(caplog):
@@ -69,3 +77,21 @@ def test_run_apps_selftest_failure():
 
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 1
+
+def test_run_apps_selftest_unimplemented():
+    """
+    Test that when selftest is called and the app's selftest function returns 
+    unimplemented, that the circuits cmd exists and gives an error code of 2
+    """
+
+    app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
+
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        parser = Namespace(install_list=['test3'], project_name=['test3'])
+
+        with patch("resilient_circuits.cmds.selftest.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
+            mocked_entrypoints.return_value = [MOCKED_SELFTEST_ENTRYPOINTS[2]]
+            selftest.run_apps_selftest(parser, app_configs)
+
+    assert pytest_wrapped_e.type == SystemExit
+    assert pytest_wrapped_e.value.code == 2

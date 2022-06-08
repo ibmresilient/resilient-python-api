@@ -1,3 +1,20 @@
+**2022-05: version 45.0**
+
+* Added new option ``--draft-playbook`` to the ``clone`` command that if specified with the ``--playbook`` option
+  will clone the Playbook into a **Draft** state, allowing you to change it's Activation Type
+* ``codegen`` and ``extract`` now exclude the ``creator`` from the generated ``export.res`` file
+* Minor updates to templates produced with ``codegen``
+
+**2022-04: version 44.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2022-02: version 44.0**
+
+* Added support to ``codegen``, ``docgen``, ``package``, ``extract`` and ``clone`` for Playbooks
+* Bump ``Jinja2`` to ``~=3.0`` for Python ``>=3.6``
+* Officially support ``Python 3.9``
+
 **2022-01: version 43.1**
 
 * Added new ``validate`` functionality to the SDK

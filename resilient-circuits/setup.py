@@ -9,6 +9,13 @@ from os import path
 
 from setuptools import find_packages, setup
 
+
+# We only officially support 2.7, 3.6, 3.9. Following PEP 440
+# this is the string format that allows for that restriction.
+# This allows for >=3.6 but we recommend working with 3.9 or 3.6
+_python_requires = ">=2.7," + ",".join("!=3.{0}.*".format(i) for i in range(6)) # note range() is non-inclusive of upper limit
+
+
 this_directory = path.abspath(path.dirname(__file__))
 
 with io.open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
@@ -27,17 +34,25 @@ setup(
 
     # Runtime Dependencies
     install_requires=[
-        "stompest>=2.3.0",
-        "circuits",
-        "pytz",
-        "jinja2~=2.0",
-        "pysocks",
-        "filelock>=2.0.5",
-        "watchdog>=0.9.0, <1.0.0; python_version < '3.6.0'",
-        "watchdog>=0.9.0; python_version >= '3.6.0'",
-        "resilient>=43.1.0",
-        "resilient-lib>=43.0.0"
+        # Our libraries
+        "resilient     >= 45.0",
+        "resilient-lib >= 45.0",
+
+        # 3rd party dependencies for all python versions
+        "stompest      ~= 2.3",
+        "circuits      ~= 3.2",
+        "pysocks       ~= 1.6",
+        "filelock      ~= 3.2",
+
+        # Python >= 3.6
+        "watchdog      ~= 2.1;  python_version >= '3.6'",
+
+        # Python 2.7
+        "watchdog      ~= 0.10; python_version == '2.7'",
     ],
+
+    # restrict supported python versions
+    python_requires=_python_requires,
 
     entry_points={
         "console_scripts": ["res-action-test = resilient_circuits.bin.res_action_test:main",
@@ -58,7 +73,8 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9"
     ],
     keywords="ibm soar resilient circuits resilient-circuits"
 )
