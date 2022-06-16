@@ -179,7 +179,7 @@ class inbound_app(object):
                 return result_list
 
             invoke_inbound_app = task(_invoke_inbound_app, event)
-            ia_result = yield itself.call(invoke_inbound_app, channels="functionworker")
+            ia_result = yield itself.call(invoke_inbound_app, "functionworker")
             yield ia_result.value
 
         return inbound_app_decorator
@@ -291,7 +291,7 @@ class app_function(object):
                 return result_list
 
             invoke_app_function = task(_invoke_app_function, event, **function_inputs)
-            fn_result = yield itself.call(invoke_app_function, channels="functionworker")
+            fn_result = yield itself.call(invoke_app_function, "functionworker")
             yield fn_result.value
 
         return app_function_decorator
