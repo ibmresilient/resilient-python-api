@@ -1,3 +1,13 @@
+**2022-05: version 45.0**
+
+* The ``org`` config can now specify any of the organization's
+  ``cloud_account``, ``uuid`` or ``name``
+* Removed the ``User-Agent`` header for all requests
+* Added a custom header for all requests that will include the current version of the library: ``Resilient-Module-Version: 45.0.0``
+* The optional ``client_auth_cert`` and ``client_auth_key`` app.config parameters
+  have been added to specify the respective paths to client side certificates and
+  client side certificate private keys
+
 **2022-04: version 44.1**
 
 * Better logging of an ``Unauthorized`` request with API Keys and exits with a code of ``21``

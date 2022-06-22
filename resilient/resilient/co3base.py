@@ -122,17 +122,34 @@ def get_proxy_dict(opts):
 
 
 class BaseClient(object):
-    """Helper for using Resilient REST API."""
+    """Helper for using SOAR REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, certauth=None, custom_headers=None):
         """
-        Args:
-          org_name - the name of the organization to use.
-          base_url - the base URL to use.
-          proxies - HTTP proxies to use, if any.
-          verify - The name of a PEM file to use as the list of trusted CAs.
+        :param org_name: The name of the organization to use
+        :type org_name: str
+        :param base_url: The base URL of the SOAR server, e.g. ``https://soar.ibm.com/``
+        :type base_url: str
+        :param proxies: A dictionary of ``HTTP`` proxies to use, if any
+        :type proxies: dict
+        :param verify: The path to a ``PEM`` file containing the trusted CAs, or ``False`` to disable all TLS verification
+        :type verify: str|bool
+        :param certauth: The filepath for the client side certificate and the private key either as a single file or as a tuple of both files' paths
+        :type certauth: str|tuple(str, str)
+        :param custom_headers: A dictionary of any headers you want to send in **every** request
+        :type custom_headers: dict
         """
-        self.headers = {'content-type': 'application/json'}
+
+        base_headers = {
+            "content-type": "application/json",
+            constants.HEADER_MODULE_VER_KEY: constants.HEADER_MODULE_VER_VALUE
+        }
+
+        if custom_headers and isinstance(custom_headers, dict):
+            base_headers.update(custom_headers)
+
+        self.headers = base_headers
+
         self.cookies = None
         self.org_id = None
         self.user_id = None
@@ -160,6 +177,9 @@ class BaseClient(object):
         self.use_api_key = False
         self.api_key_handle = None      # This is the principle ID for an api key. Also called handle
 
+        # Client Cert based authentication
+        self.cert = certauth
+
     def set_api_key(self, api_key_id, api_key_secret, timeout=None):
         """
         Call this method instead of the connect method in order to use API key
@@ -178,7 +198,8 @@ class BaseClient(object):
                                     proxies=self.proxies,
                                     headers=self.make_headers(),
                                     verify=self.verify,
-                                    timeout=timeout)
+                                    timeout=timeout,
+                                    cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
@@ -203,30 +224,56 @@ class BaseClient(object):
         }
         return self._connect(timeout=timeout)
 
-    def _extract_org_id(self, resp):
+    def _extract_org_id(self, response):
         """
-        Extract org id from server resp
-        :param resp: server response from session endpoint
-        :return:
+        Extract the org's id from server response. Loops the orgs
+        in the response and checks each ``cloud_account``, ``uuid``
+        or ``name`` against the ``org_name`` attribute in the 
+        app.config file to see if it matches any of the 3.
+
+        If found, sets ``self.org_id`` equal to the ``id`` of the org
+
+        Also sets ``self.all_orgs`` equal to the full list of orgs
+        that are ``enabled`` for that user
+
+        :param response: server response from session endpoint
+        :type response: dict
+        :raises Exception: if user is not a member of any orgs
+        :raises Exception: if ``org_name`` value in app.config is not set
+        :raises Exception: if the user is not a member of the org specified in the app.config
+        :raises Exception: if the org specified has an ``enabled`` state set to ``False``
         """
-        orgs = resp['orgs']
+        app_config_org_value = self.org_name
         selected_org = None
-        if orgs is None or len(orgs) == 0:
-            raise Exception("User is a member of no orgs")
-        if self.org_name:
-            org_names = []
-            for org in orgs:
-                org_name = org['name']
-                org_names.append(org_name)
-                if ensure_unicode(org_name) == self.org_name:
-                    selected_org = org
-        else:
-            org_names = [org['name'] for org in orgs]
-            msg = u"Please specify the organization name to which you want to connect.  " + \
+        orgs = response.get("orgs", [])
+
+        if not orgs:
+            raise Exception("User is not a member of any orgs")
+
+        if not app_config_org_value:
+            org_names = [org.get("name") for org in orgs]
+            msg = u"Please specify the organization name to which you want to connect.\n" + \
                   u"The user is a member of the following organizations: '{0}'"
             raise Exception(msg.format(u"', '".join(org_names)))
 
-        if selected_org is None:
+        for o in orgs:
+
+            if app_config_org_value == o.get("cloud_account", ""):
+                LOG.info("Using cloud account id: %s", app_config_org_value)
+                selected_org = o
+                break
+
+            if app_config_org_value == o.get("uuid", ""):
+                LOG.info("Using org uuid: %s", app_config_org_value)
+                selected_org = o
+                break
+
+            if ensure_unicode(app_config_org_value) == o.get("name", ""):
+                LOG.info("Using org name: %s", app_config_org_value)
+                selected_org = o
+                break
+
+        if not selected_org:
             msg = u"The user is not a member of the specified organization '{0}'."
             raise Exception(msg.format(self.org_name))
 
@@ -236,10 +283,10 @@ class BaseClient(object):
                   "The organization does not allow access from your current IP address.\n" \
                   "The organization requires authentication with a different provider than you are currently using.\n" \
                   "Your IP address is {0}"
-            raise Exception(msg.format(resp["session_ip"]))
+            raise Exception(msg.format(response.get("session_ip", "Unknown")))
 
         self.all_orgs = [org for org in orgs if org.get("enabled")]
-        self.org_id = selected_org['id']
+        self.org_id = selected_org.get("id", None)
 
     def _connect(self, timeout=None):
         """Establish a session"""
@@ -248,7 +295,8 @@ class BaseClient(object):
                                      proxies=self.proxies,
                                      headers=self.make_headers(),
                                      verify=self.verify,
-                                     timeout=timeout)
+                                     timeout=timeout,
+                                     cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
@@ -264,8 +312,6 @@ class BaseClient(object):
     def make_headers(self, co3_context_token=None, additional_headers=None):
         """Makes a headers dict, including the X-Co3ContextToken (if co3_context_token is specified)."""
         headers = self.headers.copy()
-
-        headers[constants.HEADER_USR_AGENT_KEY] = constants.HEADER_USR_AGENT_VALUE
 
         if co3_context_token is not None:
             headers['X-Co3ContextToken'] = co3_context_token
@@ -322,7 +368,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
 
         if get_response_object:
@@ -352,7 +399,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return response.content
 
@@ -382,7 +430,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
@@ -428,7 +477,8 @@ class BaseClient(object):
                                                  cookies=self.cookies,
                                                  headers=headers,
                                                  verify=self.verify,
-                                                 timeout=timeout)
+                                                 timeout=timeout,
+                                                 cert=self.cert)
                 BasicHTTPException.raise_if_error(response)
                 return json.loads(response.text)
 
@@ -446,7 +496,8 @@ class BaseClient(object):
                                              cookies=self.cookies,
                                              headers=headers,
                                              verify=self.verify,
-                                             timeout=timeout)
+                                             timeout=timeout,
+                                             cert=self.cert)
             BasicHTTPException.raise_if_error(response)
             return json.loads(response.text)
 
@@ -503,7 +554,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         payload = json.loads(response.text)
         try:
@@ -518,7 +570,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         if response.status_code == 200:
             return json.loads(response.text)
         if response.status_code == 409:
@@ -574,7 +627,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
@@ -597,7 +651,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         if response.status_code == 204:
             # 204 - No content is OK for a delete
             return None

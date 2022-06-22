@@ -13,6 +13,11 @@ MOCK_DESTINATION = "/queue/{0}".format(MOCK_SUBSCRIPTION)
 MOCK_QUEUE = helpers.get_queue(MOCK_DESTINATION)
 
 MOCK_PACKAGE_NAME = u"mock_function_package"
+
+MOCK_FUNCTION_PREFIX = "function_mock"
+MOCK_FN_NAME_ONE = u"{0}_{1}".format(MOCK_FUNCTION_PREFIX, "one")
+MOCK_FN_NAME_EX = u"{0}_{1}".format(MOCK_FUNCTION_PREFIX, "raise_exception")
+
 MOCK_INBOUND_Q_NAME = u"mock_inbound_q_name"
 MOCK_INBOUND_Q_NAME_CREATE = u"{0}_{1}".format(MOCK_INBOUND_Q_NAME, "create")
 MOCK_INBOUND_Q_NAME_EX = u"{0}_{1}".format(MOCK_INBOUND_Q_NAME, "raise_exception")

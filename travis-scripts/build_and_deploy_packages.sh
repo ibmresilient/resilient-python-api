@@ -92,10 +92,10 @@ if [ "$deploy" = true ] ; then
     # Loop paths_all_sdists and copy to Artifactory using curl
     for p in "${paths_all_sdists[@]}"; do
         package_name=$(basename $p)
-        artifactory_path=$BASE_ARTIFACTORY_PATH/$package_name
-        print_msg "copying $package_name to Artifactory at: $ARTIFACTORY_REPO_LINK/$artifactory_path"
+        artifactory_path=$ARTIFACTORY_LIB_LOCATION/$package_name
+        print_msg "copying $package_name to Artifactory at: $artifactory_path"
         # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
-        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$ARTIFACTORY_REPO_LINK/$artifactory_path"
+        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$artifactory_path"
     done
 fi
 

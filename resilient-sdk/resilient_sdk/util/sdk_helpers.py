@@ -746,7 +746,7 @@ def get_from_export(export,
 
     # Get Playbooks
     if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
-        raise SDKException("Playbooks are only supported in {0} for SOAR >= {1}. Current version: {2}.".format(constants.SDK_RESOURCE_NAME, constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS, constants.CURRENT_SOAR_SERVER_VERSION))
+        raise SDKException(constants.ERROR_PLAYBOOK_SUPPORT)
     else:
         return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
@@ -869,7 +869,49 @@ def minify_export(export,
     if "incident/" not in fields:
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
+    # Clean out any pii values with keys included in pii_key_list
+    pii_key_list = ["creator", "creator_id"]
+    minified_export = rm_pii(pii_key_list, minified_export)
+
     return minified_export
+
+
+def rm_pii(pii_key_list, export):
+    """
+    Remove any keys from 'export' that are in 'pii_key_list'.
+    Recursively searches the export object.
+    
+    :param pii_key_list: list of str keys to be removed from 'export'. ex: ["creator", "creator_id"]
+    :type pii_key_list: [str]
+    :param export: the result of calling get_latest_org_export() or minified_export from calling minify_export()
+    :type export: Dict
+    :return: modified export with any pii keys removed
+    :rtype: Dict
+    """
+
+    if export:
+        export_copy = export.copy()
+
+        for key in list(export_copy.keys()):
+            content = export_copy[key]
+
+            # if key is in pii_list to remove, delete entry in payload_result
+            if key in pii_key_list:
+                del export_copy[key]
+                continue
+
+            # if key wasn't in pii_list, continue searching recursively for dictionaries and scrubbing pii
+            if isinstance(content, dict):
+                export_copy[key] = rm_pii(pii_key_list, content)
+            elif isinstance(content, list):
+                # recreates the list where any dict elements of the list are recursively scrubbed
+                # if list item is not a dictionary, don't 
+                export_copy[key] = [rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
+
+        return export_copy
+    else:
+        return export
+
 
 def find_parent_child_types(export, object_type, attribute_name, name_list):
     """[get all parent objects (like incident_types)]
@@ -1301,29 +1343,6 @@ def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=loggi
     os.chdir(current_dir)
 
     return proc.returncode, details
-
-
-    """ OLD code with a progress bar -- keeping this here for potentially picking it back up later """
-
-    # start_time = time.time()
-
-    # # "waiting bar" that spins while waiting for proc to finish
-    # # the waiting bar is only output if the logging threshold is not met
-    # waiting_bar = ("-", "\\", "|", "/", "-", "\\", "|", "/")
-    # i = 0
-    # details = ""
-    # while proc.poll() == None and (time.time() - start_time) < timeout:
-    #     sys.stdout.write("\r")
-    #     sys.stdout.write("Running {0} ... {1}        ".format(cmd_name, waiting_bar[i]))
-    #     sys.stdout.flush()
-    #     i = (i + 1) % len(waiting_bar)
-    #     time.sleep(0.2)
-
-
-    # # overwrite the last stdout.write of "Running <cmd_name> ..."
-    # sys.stdout.write("\r")
-    # sys.stdout.write(" "*30+"\n")
-    # sys.stdout.flush()
 
 
 def scrape_results_from_log_file(path_log_file):

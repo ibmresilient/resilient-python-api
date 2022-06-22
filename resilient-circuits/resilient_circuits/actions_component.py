@@ -3,31 +3,41 @@
 
 """Circuits component for Action Module subscription and message handling"""
 
-import ssl
+import base64
 import json
 import logging
 import os.path
-import base64
+import ssl
+import sys
 import traceback
-from collections import Callable
 from signal import SIGINT, SIGTERM
-from six import string_types
+
+if sys.version_info.major < 3:
+    from collections import Callable
+else:
+    from collections.abc import Callable
+
 from circuits import BaseComponent, Worker
-from circuits.core.manager import ExceptionWrapper
 from circuits.core.handlers import handler
+from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
+from six import string_types
+
 import resilient
 from resilient import ensure_unicode
 from resilient_lib import IntegrationError
 import resilient_circuits.actions_test_component as actions_test_component
+from resilient_circuits import constants, helpers
+from resilient_circuits.action_message import (ActionMessage,
+                                               ActionMessageBase,
+                                               BaseFunctionError,
+                                               FunctionMessage, FunctionResult,
+                                               InboundMessage, StatusMessage)
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
-from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
-from resilient_circuits.action_message import ActionMessageBase, ActionMessage, \
-    FunctionMessage, InboundMessage, StatusMessage, FunctionResult, BaseFunctionError
+from resilient_circuits.rest_helper import (get_resilient_client,
+                                            reset_resilient_client)
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
-from resilient_circuits import helpers
-from resilient_circuits import constants
 
 LOG = logging.getLogger(__name__)
 
@@ -79,8 +89,45 @@ class FunctionWorker(Worker):
         try:
             yield result.get()
         except Exception as e:
-            LOG.error(traceback.format_exc())
-            yield ExceptionWrapper(e)
+            str_traceback = traceback.format_exc()
+            ignore_exception = False
+
+            if isinstance(self.parent, Actions):
+                app_configs = self.parent.opts
+                ignore_exception = app_configs.get(constants.APP_CONFIG_TRAP_EXCEPTION, False)
+
+            if ignore_exception:
+
+                err = str(e)
+
+                # Handle strs as unicode if Python 2
+                if sys.version_info.major == 2:
+                    err = unicode(err, "utf-8")
+                    str_traceback = unicode(str_traceback, "utf-8")
+
+                fn_name = constants.DEFAULT_UNKNOWN_STR
+
+                # args being the parameters of the decorator
+                if isinstance(args, tuple) and hasattr(args[0], "name"):
+                    fn_name = args[0].name
+
+                status_message = u"Error running '{0}'. Config '{1}' set to 'True' so ignoring exception\nERROR:\n{2}".format(fn_name, constants.APP_CONFIG_TRAP_EXCEPTION, err)
+
+                # If the loglevel is DEBUG, the full stacktrace will be added to the StatusMessage
+                if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                    status_message = u"{0}\n{1}".format(status_message, str_traceback)
+
+                log_message = u"{0}\n{1}".format(status_message, str_traceback)
+
+                yield StatusMessage(status_message)
+
+                LOG.warning(log_message)
+
+                yield FunctionResult({"success": False, "reason": err})
+
+            else:
+                LOG.error(str_traceback)
+                yield ExceptionWrapper(e)
 
 
 class ResilientComponent(BaseComponent):
