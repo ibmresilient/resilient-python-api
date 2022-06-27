@@ -10,85 +10,93 @@ from resilient_sdk.util import sdk_helpers, sdk_validate_helpers
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
 # formatted strings follow array of values: [attr, attr_value, <OPTIONAL: fail_msg_lambda_supplement>]
-setup_py_attributes = {
-    "name": {
+setup_py_attributes = [
+    ("name", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x),
         "fail_msg": u"setup.py attribute '{0}' has invalid character(s) in '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Make sure that '{0}' is all lowercase and contains only letters, numbers or underscores",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    },
-    "display_name": {
+    }),
+    ("display_name", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"^<<|>>$", x),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an appropriate value. This value is displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
-    },
-    "license": {
+    }),
+    ("license", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"^<<|>>$", x),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an valid license.",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    },
-    "url": {
+    }),
+    ("url", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: not sdk_helpers.is_valid_url(x),
         "fail_msg": u"'{1}' is not a valid '{0}'",
         "missing_msg": "'url' is a recommended attribute",
         "solution": "Include a valid URL for your organization",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
-    },
-    "author": {
+    }),
+    ("author", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"^<<|>>$", x),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the name of the author",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    },
-    "author_email": {
+    }),
+    ("author_email", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"@example\.com", x),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the author's contact email",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    },
-    "description": {
+    }),
+    ("description", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", x),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
-    },
-    "long_description": {
+    }),
+    ("long_description", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", x),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
-    },
-    "install_requires": {
+    }),
+    ("install_requires", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: False 
             if package_helpers.get_dependency_from_install_requires(x, "resilient_circuits") is not None 
             else False if package_helpers.get_dependency_from_install_requires(x, "resilient-circuits") is not None
             else True,
         "fail_msg": u"'resilient_circuits' must be included as a dependency in '{0}'. Found '{1}'",
-        "missing_msg": u"'resilient_circuits' must be included as a dependency in '{0}'",
+        "missing_msg": u"'install_requires' is required in setup.py",
         "solution": u"Include 'resilient_circuits>={0}' as a requirement in '{1}'".format(
             constants.RESILIENT_LIBRARIES_VERSION, "{0}"
         ),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    },
-    "python_requires": {
+    }),
+    ("install_requires", {
+        "parse_func": package_helpers.parse_setup_py,
+        "fail_func": lambda x: bool(sdk_validate_helpers.check_dependencies_version_specifiers(x)),
+        "fail_msg": u"'{0}' has the following improperly formatted dependencies: {2}",
+        "fail_msg_lambda_supplement": lambda x: sdk_validate_helpers.check_dependencies_version_specifiers(x),
+        "solution": u"All dependencies (besides resilient-circuits) must be include a version in the format '~=' or '=='",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
+    }),
+    ("python_requires", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: package_helpers.get_required_python_version(x) < constants.MIN_SUPPORTED_PY_VERSION,
         "fail_msg": u"'{0}' version '{2[0]}.{2[1]}' is not supported",
@@ -99,8 +107,8 @@ setup_py_attributes = {
             constants.MIN_SUPPORTED_PY_VERSION[1]
         ),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
-    },
-    "entry_points": {
+    }),
+    ("entry_points", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: False if not any([ep not in x for ep in package_helpers.SUPPORTED_EP]) else True,
         "fail_msg": u"'{0}' is missing {2} which is one of the required entry points", 
@@ -108,8 +116,8 @@ setup_py_attributes = {
         "missing_msg": u"'{0}' is missing",
         "solution": "Make sure that all of the following values for '{0}' are implemented: " + str(package_helpers.SUPPORTED_EP),
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-    }
-}
+    })
+]
 
 
 # NOTE: selftest_attributes needs to be a list as the order of these checks MATTERS

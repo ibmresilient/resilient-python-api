@@ -35,6 +35,15 @@ except ImportError as err:
 # float value in range [0, 1] that determines the cutoff at which two files are a match
 MATCH_THRESHOLD = 1.0
 
+def check_dependencies_version_specifiers(install_requires_list):
+    deps_need_fixing = []
+    for dep in install_requires_list:
+        if constants.CIRCUITS_PACKAGE_NAME not in dep:
+            if "~=" not in dep and "==" not in dep:
+                deps_need_fixing.append(dep)
+
+    return deps_need_fixing
+
 def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     """
     selftest.py validation helper method.

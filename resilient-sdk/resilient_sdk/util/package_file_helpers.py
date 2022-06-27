@@ -217,7 +217,12 @@ def parse_setup_py(path, attribute_names, the_globals={}):
             return_dict[attribute_name] = entry_point_paths
         else:
             if result.get(attribute_name):
-                return_dict[attribute_name] = result.get(attribute_name)
+                value = result.get(attribute_name)
+
+                # clean out spaces in install_requires for better formatting
+                if attribute_name == "install_requires":
+                    value = [v.replace(" ", "") for v in value]
+                return_dict[attribute_name] = value
 
     return return_dict
 
