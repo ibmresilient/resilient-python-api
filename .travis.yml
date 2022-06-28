@@ -16,7 +16,7 @@ stages:
   - name: deploy to artifactory
     if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
   - name: deploy documentation
-    if: type != cron AND (branch =~ ^pages\/.+ OR branch =~ ^release\/.+)
+    if: type != cron AND ( branch =~ ^pages\/.+ OR branch =~ ^release\/.+ OR branch = master )
   - name: release to pypi
     if: tag =~ ^release\/pypi\/.+
   - name: sync public repo
@@ -67,6 +67,7 @@ env:
 # Install package deps
 before_install:
   - pip install -U pip setuptools requests retry2
+  - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
 
 matrix:
   fast_finish: true
@@ -99,7 +100,6 @@ matrix:
       script:
         - echo "Starting Python 3.9 Tests"
         - $PATH_SCRIPTS_DIR/run_unit_tests.sh
-        - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
         - >
           python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
           --upload-files
@@ -127,13 +127,12 @@ matrix:
       name: SonarQube Scan
       language: java
       env: RUN_TYPE=sonarqube
-      before_install:
+      install:
         - wget "$SONAR_SCANNER_CLI_URL/$SONAR_SCANNER_CLI_FILENAME"
         - unzip $SONAR_SCANNER_CLI_FILENAME -d /tmp
-        - pip install requests retry2
       script:
         - echo "Installing and running SonarQube scan"
-        - $PATH_SCRIPTS_DIR/run_sonar_scanner.sh
+        - $PATH_COMMON_SCRIPTS_DIR/run_sonar_scanner.sh "PYTHON_LIBRARIES" "$PATH_COMMON_SCRIPTS_DIR" 0 1
       after_script:
         - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
 
@@ -150,7 +149,7 @@ matrix:
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
-        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
     - stage: release to pypi
       install:
@@ -159,7 +158,7 @@ matrix:
         - echo "Building packages in Python 3.9 and releasing to PyPi"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
         - echo "Sending notification to Slack"
-        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
     - stage: deploy documentation
       install:
@@ -172,6 +171,7 @@ matrix:
           github_url: github.ibm.com
           github_token: $GITHUB_AUTH_TOKEN
           target_branch: gh-pages
+          skip_cleanup: true
           on:
             all_branches: true
             condition: $TRAVIS_BRANCH =~ ^(pages\/.+|release\/.+|master)
@@ -180,16 +180,16 @@ matrix:
           verbose: true
           edge: true
       after_deploy:
-        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
 
     - stage: sync public repo
       script:
         - echo "Syncing INTERNAL repo with PUBLIC repo"
         - $PATH_SCRIPTS_DIR/sync_public_repo.sh "ALL"
       after_success:
-        - $PATH_SCRIPTS_DIR/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 after_failure:
   - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
   - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
-  - $PATH_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"
+  - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"
