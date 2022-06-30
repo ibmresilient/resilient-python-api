@@ -11,10 +11,10 @@
   {# "owner_id": "{{ **assignedTo** |soar_substitute('{"Automation": "soar_user1@ent.com", "defender_user2@co.com": "soar_user2@ent.com", "DEFAULT": "default_user@ent.com" }') }}", #}
   "plan_status": "A",
   "severity_code": "{{ **severity** | soar_substitute('{"Safe": "Low"}') }}",
-  {# specify your custom fields for your endpoint solution}
+  {# specify your custom fields for your endpoint solution #}
   "properties": {
     "**endpoint_id**": "{{ **id** }}",
-    "**endpoint_link**": "<a target='blank' href='{{ **endpoint_url** }}'>Linkt</a>",
+    "**endpoint_link**": "<a target='_blank' href='{{ **endpoint_url** }}'>Link</a>",
     "**endpoint_tags**": "{{ **tags** | join(', ') }}",
   },
   {# add comments as necessary #}
@@ -37,7 +37,7 @@
   ]
   {# add artifacts as necessary #}
   "artifacts": [
-    {% for alert in **alerts** %}
+    {% for item in **entities** %}
       {% if **item.entityType** == 'Ip' %}
         {
             "type": {

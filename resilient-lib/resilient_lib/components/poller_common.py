@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
 # (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
+
 import base64
 import datetime
 import functools
@@ -32,12 +33,34 @@ def get_template_dir():
 
 # P O L L E R   L O G I C
 def poller(named_poller_interval, named_last_poller_time, package_name):
-    """[decorator for poller, manage poller time, calling the customized method for getting the next entities]
+    """
+    Decorator to wrap a function as the logic for a poller.
 
-    Args:
-        named_poller_interval ([str]): [name of instance variable containing the poller interval in seconds]
-        named_last_poller_time ([datetime]): [name of instance variable containing the lookback value in mseconds]
-        package_name ([str]: [name of package for loggging]
+    **Example:**
+
+    .. code-block:: python
+
+        from resilient_lib import poller
+
+        PACKAGE_NAME = "fn_my_app"
+
+        @poller('polling_interval', 'last_poller_time', PACKAGE_NAME)
+        def run(self, *args, **kwargs):
+
+            # poll endpoint
+            query_results = query_entities_since_last_poll(kwargs['last_poller_time'])
+
+            # process any results to create, update, or close case in SOAR
+            if query_results:
+                self.process_entity_list(query_results)
+
+
+    :param named_poller_interval: name of instance variable containing the poller interval in seconds
+    :type named_poller_interval: str
+    :param named_last_poller_time: name of instance variable containing the lookback value in mseconds
+    :type named_last_poller_time: datetime
+    :param package_name: name of package for loggging
+    :type package_name: str
     """
     def poller_wrapper(func):
         # decorator for running a function forever, passing the ms timestamp of
@@ -70,23 +93,32 @@ def poller(named_poller_interval, named_last_poller_time, package_name):
     return poller_wrapper
 
 class SOARCommon():
-    """ common methods for accessing IBM SOAR cases and their entities: comment, attachments, etc. """
+    """
+    Common methods for accessing IBM SOAR cases and their entities: comments, attachments, etc.
+    This class and its methods should be used in conjunction with wrapped
+    polling logic to communicated with the SOAR platform.
+    """
     def __init__(self, rest_client):
         self.rest_client = rest_client
 
     def get_soar_case(self, search_fields, open_cases=True):
-        """Find a SOAR case which contains custom field(s) associated with the associated endpoint
+        """Find a SOAR case which contains custom field(s) associated with the associated endpoint.
+        Returns only one case. See :class:`SOARCommon.get_soar_cases()` for examples.
 
-        Args:
-            search_fields [dict]: [dictionary containing key/value pairs to search for a case match]
-                                  field values can be True/False for 'has_a_value' or 'does_not_have_a_value'
-                                  Otherwise a field will use 'equals' for the value
-            NOTE: search_fields only supports custom fields
-            open_cases [bool]: [true if only querying open cases]
+        .. note::
 
-        Returns:
-            case_info [dict]: [API results of the first case found or None]
-            error_msg [str]: [error message if the query failed]
+            ``search_fields`` only supports custom fields.
+
+        :param search_fields: Dictionary containing key/value pairs to search for a case match.
+            Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
+            otherwise a field will use ``equals`` for the value.
+        :type search_fields: dict
+        :param open_cases: True if only querying open cases.
+        :type open_cases: bool
+
+        :return: A tuple with the matching case, if any, and any associated error message if something went wrong.
+            Returns ``None`` if no associated case was found.
+        :rtype: tuple(dict, str)
         """
         r_cases, error_msg = self.get_soar_cases(search_fields, open_cases=open_cases)
         if error_msg:
@@ -96,16 +128,36 @@ class SOARCommon():
         return (r_cases[0] if r_cases else None, None)
 
     def get_soar_cases(self, search_fields, open_cases=True):
-        """ find all IBM SOAR cases which are associated with the endpoint platform
-        Args:
-            search_fields [dict]: list of field(s) used to track the relationship with a SOAR case
-                                 field values can be True/False for 'has_a_value' or 'does_not_have_a_value'
-                                 Otherwise a field will use 'equals' for the value
-            NOTE: search_fields only supports custom fields
+        """
+        Get all IBM SOAR cases that match the given search fields.
+        To find all cases that are synced from the endpoint platform,
+        provide the unique search field that matches the unique id of your
+        endpoint solution.
 
-        Returns:
-            soar_cases [list]: returned list of cases
-            error_msg [str]: any error during the query or None
+        **Example:**
+
+        .. code-block:: python
+
+            from resilient-lib import SOARCommon
+
+            soar_common = SOARCommon(res_client)
+
+            found_id = get_id_from_endpoint_query_result()
+            cases = soar_common.get_soar_cases({ "endpoint_id": found_id }, open_cases=False)
+
+        .. note::
+
+            ``search_fields`` only supports custom fields.
+
+        :param search_fields: Dictionary containing key/value pairs to search for a case match.
+            Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
+            otherwise a field will use ``equals`` for the value.
+        :type search_fields: dict
+        :param open_cases: True if only querying open cases.
+        :type open_cases: bool
+
+        :return: A tuple with a list of cases whose values match the ``search_fields`` and any associated error message.
+        :rtype: tuple(dict, str)
         """
         query = self._build_search_query(search_fields, open_cases=open_cases)
 
@@ -176,12 +228,13 @@ class SOARCommon():
 
     def create_soar_case(self, case_payload):
         """
-        Create a new IBM SOAR case based on a payload formatted for the API call
-        Args:
-            case_payload [dict]: fields to use for creating a SOAR case
+        Create a new IBM SOAR case based on a payload formatted for the API call.
 
-        Returns:
-            case [dict]: created case
+        :param case_payload: Fields to use for creating a SOAR case
+        :type case_payload: dict
+
+        :return: API result with the created case
+        :rtype: dict
         """
         try:
             # Post case to IBM SOAR
@@ -193,9 +246,12 @@ class SOARCommon():
 
     def update_soar_case(self, case_id, case_payload):
         """
-        Update a IBM SOAR case by rendering a jinja2 template
-        :param case_payload: inciednt fields to update (json object)
-        :return: IBM SOAR case
+        Update an IBM SOAR case (usually from a rendered Jinja template).
+
+        :param case_payload: Fields to be updated and their values
+        :type case_payload: dict
+        :return: The updated SOAR case case
+        :rtype: dict
         """
         try:
             result = self._patch_case(case_id, case_payload)
@@ -206,9 +262,11 @@ class SOARCommon():
             raise IntegrationError from err
 
     def _patch_case(self, case_id, case_payload):
-        """ _patch_case will update an case with the specified json payload.
+        """
+        _patch_case will update an case with the specified json payload.
+
         :param case_id: case ID of case to be updated.
-        ;param case_payload: case fields to be updated.
+        :param case_payload: case fields to be updated.
         :return:
         """
         try:
@@ -236,14 +294,20 @@ class SOARCommon():
             LOG.error(str(err))
             raise IntegrationError from err
 
-    def create_case_comment(self, case_id, entity_comment_id, entity_comment_header, note):
+    def create_case_comment(self, case_id, note, entity_comment_id=None, entity_comment_header=None):
         """
-        Add a comment to the specified SOAR case by ID
-        :param case_id:  SOAR case ID
-        :param entity_comment_id: entity comment id (or None)
-        :param entity_comment_header: identifier for comment as synchronized from another system
-        :param note: Content to be added as note
-        :return: Response from SOAR
+        Add a comment to the specified SOAR case by ID.
+
+        :param case_id: SOAR case ID
+        :type case_id: str|int
+        :param note: Content to be added as a note to the case
+        :type note: str
+        :param entity_comment_id: (Optional) entity comment id if updating an existing comment
+        :type entity_comment_id: str|int
+        :param entity_comment_header: (Optional) header to place in bold at the top of the note
+        :type entity_comment_header: str
+        :return: Response from posting the comment to SOAR
+        :rtype: dict
         """
         try:
             uri = "/".join([INCIDENTS_URI, str(case_id), "comments"])
@@ -265,75 +329,77 @@ class SOARCommon():
             raise IntegrationError from err
 
     def create_datatable_row(self, case_id, datatable, rowdata):
-        """create a row in a SOAR case datatable
+        """
+        Create a row in a SOAR datatable.
+        ``rowdata`` should be formatted as a dictionary of
+        column name and value pairs
 
-        Args:
-            case_id (int): case containing the datatable
-            datatable (str): name of datatable
-            rowdata (dict): columns and values to add
+        **Example:**
 
-        Returns:
-            None
+        .. code-block:: python
+
+            from resilient-lib import SOARCommon
+
+            soar_common = SOARCommon(res_client)
+
+            case_id = get_case_id()
+            rowdata = {"column_1_api_name": 1, "column_2_api_name": 2}
+
+            soar_common.create_datatable_row(case_id, "my_dt", rowdata)
+
+        :param case_id: case containing the datatable
+        :type case_id: str|int
+        :param datatable: name of datatable
+        :type datatable: str
+        :param rowdata: columns and values to add
+        :type rowdata: dict
         """
         uri = "/".join([INCIDENTS_URI, str(case_id), "table_data", datatable, "row_data"])
-        return self.rest_client.post(uri=uri, payload=rowdata)
-
-    '''
-    def create_artifact(self, rest_client, incident_id, artifact_type, artifact_value, description, send_file=False):
-        """create an artifact"""
-        try:
-            artifact_uri = "/".join([INCIDENTS_URI, incident_id, ARTIFACTS_URI])
-
-            # set up Artifact payload skeleton
-            artifact_payload = {
-                'type': {
-                    'name': artifact_type,
-                },
-                'description': {
-                    'format': description,
-                }
-            }
-
-            if send_file:
-                artifact_uri = "/".join([artifact_uri, "files"])
-                files=(
-                    ('foo', (None, 'bar')),
-                    ('foo', (None, 'baz')),
-                    ('spam', (None, 'eggs')),
-                )
-            else:
-                rest_client.post(artifact_uri, )
 
 
+        formatted_cells = {}
 
-            # find artifacts that are already associated with this Incident
-            existing_artifacts = self._find_resilient_artifacts_for_incident(incident_id)
+        for column in rowdata:
+            formatted_cells[column] = {"value": rowdata.get(column)};
 
-            # loop through Artifacts provided with this Threat
-            for artifact_id, artifact_type in artifacts.items():
-                # if this Artifact doesn't match an existing value and type
-                if artifact_id not in existing_artifacts or existing_artifacts[artifact_id] != artifact_type:
-                    # populate payload with ID and type
-                    artifact_payload['value'] = artifact_id
-                    artifact_payload['type']['name'] = ARTIFACT_TYPE_API_NAME.get(artifact_type, "String")
-                    artifact_payload['description']['content'] = artifact_type
-                    # attach new Artifact to Incident
-                    resilient_client.post(uri=artifact_uri, payload=artifact_payload)
+        formatted_cells = {"cells": formatted_cells};
 
-        except SimpleHTTPException as ex:
-            log.info(u'Something went wrong when attempting to create the Incident: {}'.format(ex))
-            raise ex
-    '''
+        return self.rest_client.post(uri=uri, payload=formatted_cells)
 
     def get_case(self, case_id):
-        """ get an SOAR case based on the case id """
+        """
+        Get a SOAR case based on the case id
+        
+        :param case_id: ID of the case to get the details of
+        :type case_id: str|int
+        :return: Details of the case for a given ID
+        :rtype: dict
+        """
         case = self._get_case_info(case_id, None)
         # create a new field of the incident_type_ids in label form
         case['case_types'] = self.lookup_incident_types(case['incident_type_ids'])
         return case
 
     def get_case_attachment(self, case_id, artifact_id=None, task_id=None, attachment_id=None, return_base64=True):
-        """ get contents of a file attachment """
+        """
+        Get contents of a file attachment or artifact.
+
+        * If ``incident_id`` and ``artifact_id`` are defined it will get that Artifact
+        * If ``incident_id`` and ``attachment_id`` are defined it will get that Incident Attachment
+        * If ``incident_id``, ``task_id`` and ``attachment_id`` are defined it will get that Task Attachment
+        
+        :param case_id: ID of the case to get the details of
+        :type case_id: str|int
+        :param artifact_id: ID of the Incident's Artifact to download
+        :type artifact_id: str|int
+        :param task_id: ID of the Task to download it's Attachment from
+        :type task_id: str|int
+        :param attachment_id: id of the Incident's Attachment to download
+        :type attachment_id: int|str
+        :param return_base64: if False, return value of the content will be given as bytes
+        :return: name of the artifact or file and base64 encoded string or byte string of attachment
+        :rtype: tuple(str, bytes|base64(str))
+        """
         file_content = get_file_attachment(self.rest_client, case_id, artifact_id=artifact_id, task_id=task_id, attachment_id=attachment_id)
         if return_base64:
             file_content = b_to_s(base64.b64encode(file_content))
@@ -342,15 +408,30 @@ class SOARCommon():
         return file_name, file_content
 
     def get_case_artifacts(self, case_id):
-        """ get all case artifacts """
+        """
+        Get all case artifacts
+
+        :param case_id: ID of the case to get the details of
+        :type case_id: str|int
+        """
         return self._get_case_info(case_id, "artifacts")
 
     def get_case_comments(self, case_id):
-        """ get all case comments """
+        """
+        Get all case comments 
+
+        :param case_id: ID of the case to get the details of
+        :type case_id: str|int
+        """
         return self._get_case_info(case_id, "comments")
 
     def get_case_attachments(self, case_id):
-        """ get all case attachments """
+        """
+        Get all case attachments
+        
+        :param case_id: ID of the case to get the details of
+        :type case_id: str|int
+        """
         attachments =  self._get_case_info(case_id, "attachments")
         for attachment in attachments:
             _, attachment['content'] = self.get_case_attachment(case_id, attachment_id=attachment['id'])
@@ -358,14 +439,28 @@ class SOARCommon():
         return attachments
 
     def lookup_artifact_type(self, artifact_type):
-        """ return an artifact type based on it's ID. If not found, return None """
+        """
+        Return an artifact type based on it's ID on SOAR. If not found, return None
+        
+        :param artifact_type: artifact type to search for in SOAR
+        :type artifact_type: str
+        :return: found artifact type if found in SOAR
+        :rtype: str
+        """
         types = self._get_artifact_types()
         if artifact_type in types:
             return types[artifact_type]
         return None
 
     def lookup_incident_types(self, incident_type_ids):
-        """ return an incident type based on it's ID. If not found, return None """
+        """
+        Return an incident type based on it's ID. If not found, return None
+        
+        :param incident_type_ids: list of incident type IDs to check for in SOAR
+        :type incident_type_ids: list(str)
+        :return: list of incident types that match in SOAR what was given
+        :rtype: list(str)
+        """
         if not incident_type_ids:
             return incident_type_ids
 
@@ -413,20 +508,21 @@ class SOARCommon():
 
     def filter_soar_comments(self, case_id, entity_comments, soar_header=SOAR_HEADER):
         """
-            need to avoid creating same IBM SOAR case comments over and over
-              this logic will read all SOAR comments from a case
-              and remove those comments which have already sync using soar_header as a filter
+        Read all SOAR comments from a case and remove those comments which have
+        already been synced using ``soar_header`` as a filter
 
-        Args:
-            case_id ([str]): [IBM SOAR case id]
-            entity_comments ([list]): [list comments which the endpoint's entity contains.
-                                       This will be a mix of comments sync'd from SOAR and new comments]
-            soar_header ([str]): [title added to SOAR comments to be filtered]
-        Returns:
-            new_comments ([list])
+        :param case_id: ([str]): [IBM SOAR case id]
+        :type case_id: str|int
+        :param entity_comments: list comments which the endpoint's entity contains.
+            This will be a mix of comments sync'd from SOAR and new comments
+        :type entity_comments: list(str)
+        :param soar_header: title added to SOAR comments to be filtered
+        :type soar_header: str
+        :return: list of remaining comments
+        :rtype: list
         """
         # get the SOAR case comments and capture only the text
-        soar_comments = self.get_case_comments(case_id)
+        soar_comments = self.get_case_comments(str(case_id))
         soar_comment_list = [comment['text'] for comment in soar_comments]
 
         # filter entity comments with our SOAR header
@@ -434,9 +530,9 @@ class SOARCommon():
 
     def _filter_comments(self, soar_comment_list, entity_comments, filter_soar_header=None):
         """
-            need to avoid creating same IBM SOAR case comments over and over
-              this logic will read all SOAR comments from a case
-              and remove those comments which have already sync using soar_header as a filter
+        Need to avoid creating same IBM SOAR case comments over and over
+            this logic will read all SOAR comments from a case
+            and remove those comments which have already sync using soar_header as a filter
 
         Args:
             soar_comment_list ([list]): [list of text portion of a case's comments]
@@ -463,15 +559,18 @@ class SOARCommon():
 
     def _chk_status(self, resp, rc=200):
         """
-        check the return status. If return code is not met, raise IntegrationError,
+        Check the return status. If return code is not met, raise IntegrationError,
         if success, return the json payload
-        :param resp:
-        :param rc:
-        :return:
+
+        :param resp: requests response object
+        :param rc: acceptable status code or a list of two numbers indicating an acceptable range
+        :type rc: int|[int, int]
+        :return: json value of the resp object if call was successful
         """
         if hasattr(resp, "status_code"):
             if isinstance(rc, list):
-                if resp.status_code < rc[0] or resp.status_code > rc[1]:
+                rc.sort()
+                if resp.status_code < rc[0] or resp.status_code > rc[-1]:
                     raise IntegrationError("status code failure: {0}".format(resp.status_code))
             elif resp.status_code != rc:
                 raise IntegrationError("status code failure: {0}".format(resp.status_code))

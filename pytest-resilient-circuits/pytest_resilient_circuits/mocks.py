@@ -129,12 +129,19 @@ class BasicResilientMock(ResilientMock):
         """ Callback for patch to /orgs/<org_id>/incidents/<inc_id> """
         LOG.debug("incident_patch")
         # update the incident object
-        vers = request.get("version", 0)
+        request_body = request.json()
+        vers = request_body.get("version", 0)
         vers += 1
         self.incident['vers'] = vers
 
-        for change in request.get('changes', []):
-            name = change.get("field", {}).get("name")
+        # patch requests return success:true if the object was successfully patched,
+        # and success:false when a conflict-related failure occurs
+        success = True
+
+        for change in request_body.get('changes', []):
+            name = change.get("field", {})
+            if hasattr(name, "name"):
+                name = name.get("name")
             if isinstance(change.get("new_value", {}).get("object"), dict):
                 new_value = change["new_value"]["object"].get("content")
             else:
@@ -145,12 +152,20 @@ class BasicResilientMock(ResilientMock):
                 self.incident['properties'][name] = new_value
             else:
                 LOG.error("Field '%s' not found in mock incident", name)
+                success = False
+
+        ret = {
+            "success": success,
+            "title": None,
+            "message": None,
+            "hints": []
+        }
 
         return requests_mock.create_response(request,
                                              status_code=200,
-                                             json=self.incident)
+                                             json=ret)
 
-    @resilient_endpoint("POST", "/incidents/")
+    @resilient_endpoint("POST", "/incidents/?")
     def incident_post(self, request):
         """ Callback for POST to /orgs/<org_id>/incidents """
         LOG.debug("incident_post")
@@ -158,6 +173,14 @@ class BasicResilientMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=self.incident)
+
+    @resilient_endpoint("POST", "/incidents/query\?.*")
+    def incident_post_with_query(self, request):
+        """ Callback for POST to /orgs/<org_id>/incidents """
+        LOG.debug("incident_post")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=[self.incident])
 
     @resilient_endpoint("GET", "/tasks/[0-9]+$")
     def task_get(self, request):
