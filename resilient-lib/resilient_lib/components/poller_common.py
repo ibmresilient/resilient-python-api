@@ -10,9 +10,12 @@ import os
 import traceback
 from ast import literal_eval
 from threading import Event
-from resilient import SimpleHTTPException, Patch
-from resilient_lib import IntegrationError, get_file_attachment, get_file_attachment_name
-from cachetools import cached, LRUCache
+
+from cachetools import LRUCache, cached
+from resilient import Patch, SimpleHTTPException
+from resilient_lib import (IntegrationError, get_file_attachment,
+                           get_file_attachment_name)
+from six import raise_from
 
 LOG = logging.getLogger(__name__)
 
@@ -242,7 +245,7 @@ class SOARCommon():
             return case
         except Exception as err:
             LOG.error(str(err))
-            raise IntegrationError from err
+            raise_from(IntegrationError, err)
 
     def update_soar_case(self, case_id, case_payload):
         """
@@ -259,7 +262,7 @@ class SOARCommon():
 
         except Exception as err:
             LOG.error(str(err))
-            raise IntegrationError from err
+            raise_from(IntegrationError, err)
 
     def _patch_case(self, case_id, case_payload):
         """
@@ -292,7 +295,7 @@ class SOARCommon():
 
         except Exception as err:
             LOG.error(str(err))
-            raise IntegrationError from err
+            raise_from(IntegrationError, err)
 
     def create_case_comment(self, case_id, note, entity_comment_id=None, entity_comment_header=None):
         """
@@ -326,7 +329,7 @@ class SOARCommon():
 
         except Exception as err:
             LOG.error(str(err))
-            raise IntegrationError from err
+            raise_from(IntegrationError, err)
 
     def create_datatable_row(self, case_id, datatable, rowdata):
         """
@@ -504,7 +507,7 @@ class SOARCommon():
             return response
 
         except Exception as err:
-            raise IntegrationError from err
+            raise_from(IntegrationError, err)
 
     def filter_soar_comments(self, case_id, entity_comments, soar_header=SOAR_HEADER):
         """
