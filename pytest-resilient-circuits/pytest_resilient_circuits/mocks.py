@@ -177,7 +177,7 @@ class BasicResilientMock(ResilientMock):
     @resilient_endpoint("POST", "/incidents/query\?.*")
     def incident_post_with_query(self, request):
         """ Callback for POST to /orgs/<org_id>/incidents """
-        LOG.debug("incident_post")
+        LOG.debug("incident_post with query")
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=[self.incident])

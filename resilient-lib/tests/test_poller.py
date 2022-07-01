@@ -12,6 +12,14 @@ NEW_CASE_PAYLOAD = {
   "plan_status": "A"
 }
 
+def test_get_case(fx_mock_resilient_client):
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
+
+    case = soar_common.get_case(2314)
+
+    assert "case_types" in case
+    assert case["id"] == 2314
+
 def test_get_soar_case(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
@@ -49,16 +57,6 @@ def test_create_case_comment(fx_mock_resilient_client):
 
     comment = "A test comment"
 
-    resp = soar_common.create_case_comment(2314, None, None, comment)
+    resp = soar_common.create_case_comment(2314, comment)
 
     assert resp["text"]["content"] == comment
-
-def test_get_case(fx_mock_resilient_client):
-    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
-
-    case = soar_common.get_case(2314)
-
-    assert "case_types" in case
-    assert case["id"] == 2314
-
-def test_
