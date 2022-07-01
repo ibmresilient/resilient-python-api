@@ -141,7 +141,7 @@ class SOARCommon():
 
         .. code-block:: python
 
-            from resilient-lib import SOARCommon
+            from resilient_lib import SOARCommon
 
             soar_common = SOARCommon(res_client)
 
@@ -245,7 +245,7 @@ class SOARCommon():
             return case
         except Exception as err:
             LOG.error(str(err))
-            raise_from(IntegrationError, err)
+            raise_from(IntegrationError("create_soar_case failed to create case in SOAR"), err)
 
     def update_soar_case(self, case_id, case_payload):
         """
@@ -262,7 +262,7 @@ class SOARCommon():
 
         except Exception as err:
             LOG.error(str(err))
-            raise_from(IntegrationError, err)
+            raise_from(IntegrationError("update_soar_case failed to update case in SOAR"), err)
 
     def _patch_case(self, case_id, case_payload):
         """
@@ -295,7 +295,7 @@ class SOARCommon():
 
         except Exception as err:
             LOG.error(str(err))
-            raise_from(IntegrationError, err)
+            raise_from(IntegrationError("_patch_case failed to update case in SOAR"), err)
 
     def create_case_comment(self, case_id, note, entity_comment_id=None, entity_comment_header=None):
         """
@@ -329,7 +329,7 @@ class SOARCommon():
 
         except Exception as err:
             LOG.error(str(err))
-            raise_from(IntegrationError, err)
+            raise_from(IntegrationError("failed to create comment in SOAR"), err)
 
     def create_datatable_row(self, case_id, datatable, rowdata):
         """
@@ -341,7 +341,7 @@ class SOARCommon():
 
         .. code-block:: python
 
-            from resilient-lib import SOARCommon
+            from resilient_lib import SOARCommon
 
             soar_common = SOARCommon(res_client)
 
@@ -507,7 +507,7 @@ class SOARCommon():
             return response
 
         except Exception as err:
-            raise_from(IntegrationError, err)
+            raise_from(IntegrationError("failed to get case info from SOAR"), err)
 
     def filter_soar_comments(self, case_id, entity_comments, soar_header=SOAR_HEADER):
         """
