@@ -393,7 +393,7 @@ class CmdCodegen(BaseCmd):
             poller_mapping_dict = {
                 "__init__.py": "package/poller/__init__.py",
                 "app_common.py": "package/poller/app_common.py",
-                "{0}_poller.py".format(package_name): ("package/poller/poller.py.jinja2", jinja_data),
+                "poller.py": ("package/poller/poller.py.jinja2", jinja_data),
                 "data": {
                     "soar_create_incident.jinja": "package/poller/data/soar_create_incident.jinja2",
                     "soar_update_incident.jinja": "package/poller/data/soar_update_incident.jinja2",
