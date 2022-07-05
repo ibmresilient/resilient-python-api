@@ -1,3 +1,7 @@
+**2022-07: version 45.1**
+
+* Bug fix to avoid ``@app_function`` Components firing on all channels leading to Functions being invoked multiple times
+
 **2022-05: version 45.0**
 
 * Added new config ``trap_exception`` and if set to ``True`` a Function's exception will be ignored with the error sent as a Status Message
