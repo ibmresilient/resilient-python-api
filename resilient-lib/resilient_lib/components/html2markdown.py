@@ -11,7 +11,26 @@ try:
 except:
     from html.parser import HTMLParser
 
+
 class MarkdownParser(HTMLParser):
+    """
+    Convert HTML text into Markdown. A wrapper for
+    `html.parser.HTMLParser <https://docs.python.org/3.6/library/html.parser.html#html.parser.HTMLParser>`_
+
+    **Example:**
+
+    .. code-block:: python
+
+        from resilient_lib import MarkdownParser
+
+        data = "<div class='rte'><div><strong><u>underline and strong</u></strong></div></div>"
+        markdown = "*_underline and strong_*"
+
+        parser = MarkdownParser(bold="*", underline="_") # override defaults
+        converted = parser.convert(data)
+        self.assertEqual(converted, markdown)
+    """
+
     QUILL_RTE = "rte"       # first <div> will have this class. This is part of quill
 
     HTML_STYLE_COLOR = r'rgb\(([\d]+),[\s]*([\d]+),[\s]*([\d]+)\)'
@@ -53,9 +72,13 @@ class MarkdownParser(HTMLParser):
 
     def convert(self, data):
         """
-        starting point for app, wrapper to htmlparser.feed
-        :param data: html string
+        Converts html ``data`` to markdown and
+        returns the converted string
+
+        :param data: html text to convert
+        :type data: str
         :return: converted text to markdown
+        :rtype: str
         """
 
         self.init_buffers()

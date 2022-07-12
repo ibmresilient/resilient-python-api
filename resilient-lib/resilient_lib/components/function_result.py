@@ -20,7 +20,7 @@ class ResultPayload:
           "metrics": json        -- a set of information to capture specifics metrics about the function's runtime environment
         }
     """
-    def __init__(self, pkgname, **kwargs):
+    def __init__(self, pkgname, version=PAYLOAD_VERSION, **kwargs):
         """
         build initial payload data structure and the start the timers for metrics collection
         :param pkgname: package name to capture stats on which package is being used
@@ -28,7 +28,7 @@ class ResultPayload:
         """
         self.fm = FunctionMetrics(pkgname)
         self.payload = {
-            "version": PAYLOAD_VERSION,
+            "version": version,
             "success": None,
             "reason":  None,
             "content": None,
@@ -50,9 +50,10 @@ class ResultPayload:
         self.payload['content'] = content
         self.payload['metrics'] = self.fm.finish()
 
-        try:
-            self.payload['raw'] = json.dumps(content)
-        except:
-            pass
+        if float(self.payload.get("version", 2.0)) < 2.0:
+            try:
+                self.payload['raw'] = json.dumps(content)
+            except:
+                pass
 
         return self.payload

@@ -3,28 +3,41 @@
 
 """Circuits component for Action Module subscription and message handling"""
 
-import ssl
+import base64
 import json
 import logging
 import os.path
-import base64
-from collections import Callable
+import ssl
+import sys
+import traceback
 from signal import SIGINT, SIGTERM
-from six import string_types
+
+if sys.version_info.major < 3:
+    from collections import Callable
+else:
+    from collections.abc import Callable
+
 from circuits import BaseComponent, Worker
-from circuits.core.manager import ExceptionWrapper
 from circuits.core.handlers import handler
+from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
+from six import string_types
+
 import resilient
 from resilient import ensure_unicode
+from resilient_lib import IntegrationError
 import resilient_circuits.actions_test_component as actions_test_component
+from resilient_circuits import constants, helpers
+from resilient_circuits.action_message import (ActionMessage,
+                                               ActionMessageBase,
+                                               BaseFunctionError,
+                                               FunctionMessage, FunctionResult,
+                                               InboundMessage, StatusMessage)
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
-from resilient_circuits.rest_helper import get_resilient_client, reset_resilient_client
-from resilient_circuits.action_message import ActionMessageBase, ActionMessage, \
-    FunctionMessage, StatusMessage, FunctionResult, BaseFunctionError
+from resilient_circuits.rest_helper import (get_resilient_client,
+                                            reset_resilient_client)
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
-from resilient_circuits import helpers
 
 LOG = logging.getLogger(__name__)
 
@@ -39,6 +52,11 @@ _idle_timer = None
 
 # look for unrecoverable errors
 UNRECOVERABLE_ERRORS = ['Already subscribed']
+
+# Errors and Message Destination names will get appended when ran in selftest
+SELFTEST_ERRORS = []
+SELFTEST_SUBSCRIPTIONS = []
+
 
 def validate_cert(cert, hostname):
     """Utility wrapper for SSL validation on the STOMP connection"""
@@ -71,7 +89,45 @@ class FunctionWorker(Worker):
         try:
             yield result.get()
         except Exception as e:
-            yield ExceptionWrapper(e)
+            str_traceback = traceback.format_exc()
+            ignore_exception = False
+
+            if isinstance(self.parent, Actions):
+                app_configs = self.parent.opts
+                ignore_exception = app_configs.get(constants.APP_CONFIG_TRAP_EXCEPTION, False)
+
+            if ignore_exception:
+
+                err = str(e)
+
+                # Handle strs as unicode if Python 2
+                if sys.version_info.major == 2:
+                    err = unicode(err, "utf-8")
+                    str_traceback = unicode(str_traceback, "utf-8")
+
+                fn_name = constants.DEFAULT_UNKNOWN_STR
+
+                # args being the parameters of the decorator
+                if isinstance(args, tuple) and hasattr(args[0], "name"):
+                    fn_name = args[0].name
+
+                status_message = u"Error running '{0}'. Config '{1}' set to 'True' so ignoring exception\nERROR:\n{2}".format(fn_name, constants.APP_CONFIG_TRAP_EXCEPTION, err)
+
+                # If the loglevel is DEBUG, the full stacktrace will be added to the StatusMessage
+                if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                    status_message = u"{0}\n{1}".format(status_message, str_traceback)
+
+                log_message = u"{0}\n{1}".format(status_message, str_traceback)
+
+                yield StatusMessage(status_message)
+
+                LOG.warning(log_message)
+
+                yield FunctionResult({"success": False, "reason": err})
+
+            else:
+                LOG.error(str_traceback)
+                yield ExceptionWrapper(e)
 
 
 class ResilientComponent(BaseComponent):
@@ -166,8 +222,45 @@ class ResilientComponent(BaseComponent):
                 self._function_fields = None
 
     def rest_client(self):
-        """Return a connected instance of the :class:`resilient.SimpleClient`
-        that can be used to access the Resilient REST API.
+        """
+        Return a connected instance of the :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+        that can be used to access the IBM SOAR REST API.
+
+        .. note::
+            An :class:`~resilient_circuits.app_function_component.AppFunctionComponent` inherits a
+            ``ResilientComponent`` so will have access to this method
+
+        **Example:**
+
+        .. code-block:: python
+
+            from resilient_circuits import AppFunctionComponent, FunctionResult, app_function
+
+            PACKAGE_NAME = "fn_mock_app"
+            FN_NAME = "mock_function"
+
+            class FunctionComponent(AppFunctionComponent):
+
+                def __init__(self, opts):
+                    super(FunctionComponent, self).__init__(opts, PACKAGE_NAME)
+
+                @app_function(FN_NAME)
+                def _app_function(self, fn_inputs):
+
+                    res_client = self.rest_client()
+                    inc = res_client.get("/incidents/{0}".format("1001"))
+                    inc_name = inc.get("name")
+
+                    results = {
+                        "inc": inc,
+                        "inc_name": inc_name
+                    }
+
+                    yield FunctionResult(results)
+
+        :return: a connected instance of :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+        :rtype: :class:`resilient.SimpleClient <resilient.co3.SimpleClient>`
+
         """
         self.reset_idle_timer()
         return get_resilient_client(self.opts)
@@ -294,6 +387,7 @@ class Actions(ResilientComponent):
         _retry_timer.register(self)
 
         # Make a worker thread-pool that will run functions
+        LOG.debug("num_workers set to %s", opts.get("num_workers"))
         self._functionworker = FunctionWorker(process=False, channel="functionworker", workers=opts.get("num_workers"))
         self._functionworker.register(self.root)
 
@@ -375,6 +469,9 @@ class Actions(ResilientComponent):
         """STOMP produced an error."""
         LOG.error('STOMP listener: Error:\n%s', message or error)
 
+        if helpers.is_this_a_selftest(self):
+            SELFTEST_ERRORS.append(message or error)
+
         for unrecoverable_error in UNRECOVERABLE_ERRORS:
             if (message and unrecoverable_error in str(message)) or \
                (error and unrecoverable_error in str(error)):
@@ -386,7 +483,7 @@ class Actions(ResilientComponent):
                         headers.get("message"), message))
 
     @handler("Message")
-    def on_stomp_message(self, event, headers, message):
+    def on_stomp_message(self, event, headers, message, queue):
         """STOMP produced a message."""
         # Find the queue name from the subscription id (stomp_listener_xxx)
         msg_id = event.frame.headers.get("message-id")
@@ -430,7 +527,16 @@ class Actions(ResilientComponent):
 
                 message = json.loads(mstr)
                 # Construct a Circuits event with the message, and fire it on the channel
-                if message.get("function"):
+                if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                    channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
+                    event = InboundMessage(source=self,
+                                           queue=queue,
+                                           headers=headers,
+                                           message=message,
+                                           frame=event.frame,
+                                           log_dir=self.logging_directory)
+
+                elif message.get("function"):
                     channel = "functions." + message["function"]["name"]
                     event = FunctionMessage(source=self,
                                             headers=headers,
@@ -602,6 +708,20 @@ class Actions(ResilientComponent):
                 queue_name = component._functions[func_name]["destination_handle"]
                 LOG.info("'%s.%s' function '%s' registered to '%s'",
                          type(component).__module__, type(component).__name__, func_name, queue_name)
+
+            elif str(channel).startswith(constants.INBOUND_MSG_DEST_PREFIX):
+                # If name for inbound q in app.config file, use that
+                try:
+                    app_config_q_name = component.app_configs.get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME)
+                except AttributeError as e:
+                    raise IntegrationError(u"'{0}' does not have app_configs defined\n{1}".format(type(component).__name__, str(e)))
+                if app_config_q_name:
+                    handler_name = app_config_q_name
+                else:
+                    handler_name = channel.split(".", 1)[1]
+                queue_name = u"{0}.{1}.{2}".format(constants.INBOUND_MSG_DEST_PREFIX, self.org_id, handler_name)
+                LOG.info("'%s.%s' inbound handler '%s' registered to '%s'", type(component).__module__, type(component).__name__, handler_name, queue_name)
+
             else:
                 continue
 
@@ -667,10 +787,18 @@ class Actions(ResilientComponent):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.resilient_mock:
             return
-        if self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
+
+        if queue_name.startswith(constants.INBOUND_MSG_DEST_PREFIX):
+            self.fire(Subscribe(queue_name, additional_headers=self.subscribe_headers))
+
+        elif self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
             LOG.info("Subscribe to message destination '%s'", queue_name)
+
+            if helpers.is_this_a_selftest(self):
+                SELFTEST_SUBSCRIPTIONS.append(queue_name)
+
             destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))
         else:
@@ -733,21 +861,28 @@ class Actions(ResilientComponent):
     def exception(self, etype, value, traceback, handler=None, fevent=None):
         """Report an exception thrown during handling of an action event"""
         try:
-            message = u""
+            log_message, message = u"", u""
             if etype and issubclass(etype, BaseFunctionError):
                 try:
                     message += str(value)
                 except UnicodeDecodeError:
                     message += unicode(value)
+                log_message = message
             else:
                 if etype:
-                    message = message + etype.__name__ + u": <{}>".format(value)
+                    message = u"ERROR:\n{0}\n{1}".format(message, value)
                 else:
                     message = u"Processing failed"
                 if traceback and isinstance(traceback, list):
-                    message = message + "\n" + ("".join(traceback))
 
-            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), message)
+                    str_traceback = "".join(traceback)
+
+                    if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+                        message = u"{0}\n{1}".format(message, str_traceback)
+
+                    log_message = u"{0}\n{1}".format(message, str_traceback)
+
+            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), log_message)
 
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):
@@ -755,7 +890,18 @@ class Actions(ResilientComponent):
                     if isinstance(arg, ActionMessageBase):
                         fevent = arg
                         break
-            if fevent and isinstance(fevent, ActionMessageBase):
+
+            if isinstance(fevent, InboundMessage):
+                headers = fevent.hdr()
+                message_id = headers.get("message-id", None)
+                if not fevent.test:
+                    LOG.debug("Exception raised.\nAcknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
+                    self.fire(Ack(fevent.frame))
+
+            elif fevent and isinstance(fevent, ActionMessageBase):
+                # For a ActionMessageBase type
+                # 1. Ack message
+                # 2. Send a message of type 1 containing the exception text
                 fevent.stop()  # Stop further event processing
                 status = 1
                 headers = fevent.hdr()
@@ -871,6 +1017,15 @@ class Actions(ResilientComponent):
         if signo in [SIGINT, SIGTERM]:
             raise SystemExit(0)
 
+    @handler("SelftestTerminateEvent")
+    def _selftest_terminate(self):
+        """
+        Exits resilient-circuits if a SelftestTerminateEvent
+        is fired
+        """
+        LOG.info("SelftestTerminateEvent, exiting resilient-circuits")
+        raise SystemExit(0)
+
     @handler("reload", priority=999)
     def reload(self, event, opts):
         """New config, reconnect to stomp if required"""
@@ -927,8 +1082,16 @@ class Actions(ResilientComponent):
         """Report the successful handling of an action event"""
         if isinstance(event.parent, ActionMessageBase) and event.name.endswith("_success"):
             fevent = event.parent
+            headers = fevent.hdr()
+            message_id = headers.get("message-id", None)
+
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
+
+            elif isinstance(fevent, InboundMessage):
+                if not fevent.test:
+                    LOG.debug("Acknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
+                    self.fire(Ack(fevent.frame))
             else:
                 value = event.parent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
@@ -1009,7 +1172,7 @@ class Actions(ResilientComponent):
                              "message": message,
                              "complete": True}
                 if function_result:
-                    LOG.debug("Result: %s", function_result.value)
+                    LOG.debug("[%s] Result: %s", function_result.name, function_result.value)
                     reply_dto["results"] = function_result.value
                 reply_message = json.dumps(reply_dto, indent=2)
                 if not fevent.test:

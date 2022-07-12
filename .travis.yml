@@ -1,96 +1,195 @@
 language: python
-python: 3.6
+python: 3.9
 os: linux
+dist: xenial
+
+git:
+  depth: false
 
 stages:
-  - run tests
+  - name: run tests
+    if: branch !~ ^pages\/.+
+  - name: sonarqube scan
+    if: branch !~ ^pages\/.+
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
   - name: deploy to artifactory
-    if: branch = master OR branch =~ ^release\/.+
+    if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
   - name: deploy documentation
-    if: branch = master 
+    if: type != cron AND ( branch =~ ^pages\/.+ OR branch =~ ^release\/.+ OR branch = master )
+  - name: release to pypi
+    if: tag =~ ^release\/pypi\/.+
+  - name: sync public repo
+    if: tag =~ ^release\/pypi\/.+
 
 env:
   global:
-  - ARTIFACTORY_REPO_LINK=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local
+  - ARTIFACTORY_BASE_URL=https://na.artifactory.swg-devops.com
+  - ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/artifactory/sec-resilient-team-integrations-generic-local/resilient-python-api
+  - ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$TRAVIS_BUILD_NUMBER
+
   - TEST_RESILIENT_APPLIANCE=staging2.internal.resilientsystems.com
   - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
-  - PIP_FIND_LINKS="$TRAVIS_BUILD_DIR/pkgs"
+
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
-  - LIB_VERSION=$(echo $LATEST_TAG | cut -d "." -f 1,2)
+  - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
+  - IS_RELEASE=$([[ "$TRAVIS_BRANCH" != *"release/"* ]]; echo $?)
+  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2); fi`
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
-  - BASE_ARTIFACTORY_PATH=resilient-python-api/$LIB_VERSION/$NEW_VERSION
+  - SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
+  - ARTIFACTORY_LIB_LOCATION=$ARTIFACTORY_REPO_URL/$LIB_VERSION/$NEW_VERSION
+
+  - RUN_INT_TESTS_KEYWORD="[run-int-tests]"
+  - RUN_INT_TESTS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$RUN_INT_TESTS_KEYWORD"* ]]; echo $?)
+
+  - SKIP_SCANS_KEYWORD="[skip-scans]"
+  - SKIP_SCANS=$([[ "$TRAVIS_COMMIT_MESSAGE" != *"$SKIP_SCANS_KEYWORD"* ]]; echo $?)
+
+  - FYRE_CLUSTER_NAME="${TRAVIS_BUILD_NUMBER}hydratest"
+  - FYRE_CLUSTER_DOMAIN="${FYRE_CLUSTER_NAME}1.fyre.ibm.com"
+  - FYRE_DEPLOY_SLEEP_SECONDS=90
+  - FYRE_DEPLOY_TIMEOUT_SECONDS=540
+
+  - PATH_SCRIPTS_DIR="$TRAVIS_BUILD_DIR/travis-scripts"
+  - PATH_COMMON_SCRIPTS_DIR="$TRAVIS_BUILD_DIR/common_scripts"
+  - PATH_MOCK_APP_CONFIG="$TRAVIS_BUILD_DIR/travis-scripts/mock_app_config"
   - PATH_TEMPLATE_PYPIRC="$TRAVIS_BUILD_DIR/travis-scripts/template.pypirc"
+  - PATH_SONAR_PROPERTIES="$TRAVIS_BUILD_DIR/sonar-project.properties"
+  - PATH_COV_SAVE_LOC="coverage_reports"
+
+  - PAGES_INTERNAL_LINK="https://pages.github.ibm.com/Resilient/resilient-python-api/"
+  - PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
+
+  - SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
+  - SONAR_SCANNER_CLI_FILENAME="sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip"
+  - SONAR_QUBE_URL="https://sonarqube.secintel.intranet.ibm.com"
 
 # Install package deps
 before_install:
-  - pip install --upgrade pip
-  - pip install --upgrade setuptools
+  - pip install -U pip setuptools requests retry2
+  - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
 
 matrix:
   fast_finish: true
 
   include:
     - stage: run tests
-      name: Python 2.7 Tests
+      name: Python 2.7 Unit Tests
       python: 2.7
-      env: TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
-      install: ./travis-scripts/install_unit_tests_deps.sh
+      env: RUN_TYPE=unit_test TOXENV=py27 TEST_RESILIENT_ORG="Resilient PS - Test"
+      install: $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 2.7 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
 
     - stage: run tests
-      name: Python 3.6 Tests
+      name: Python 3.6 Unit Tests
       python: 3.6
-      env: TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
-      install: ./travis-scripts/install_unit_tests_deps.sh
+      env: RUN_TYPE=unit_test TOXENV=py36 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install: $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.6 Tests"
-        - ./travis-scripts/run_unit_tests.sh
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
+
+    - stage: run tests
+      name: Python 3.9 Unit Tests
+      python: 3.9
+      env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install:
+        - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 3.9 Tests"
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
+        - >
+          python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
+          --upload-files
+          "$TRAVIS_BUILD_DIR/resilient/cov_resilient.xml"
+          "$TRAVIS_BUILD_DIR/resilient-lib/cov_resilient_lib.xml"
+          "$TRAVIS_BUILD_DIR/resilient-circuits/cov_resilient_circuits.xml"
+          "$TRAVIS_BUILD_DIR/resilient-sdk/cov_resilient_sdk.xml"
+
+    - stage: run tests
+      name: Python 3.9 Integration Tests
+      python: 3.9
+      env: RUN_TYPE=int_test TOXENV=py39
+      install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
+      script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            $PATH_SCRIPTS_DIR/manage_fyre_instance.sh DEPLOY $FYRE_STENCIL_ID $FYRE_CLUSTER_NAME $FYRE_CLUSTER_DOMAIN $FYRE_DEPLOY_SLEEP_SECONDS $FYRE_DEPLOY_TIMEOUT_SECONDS;
+            $PATH_SCRIPTS_DIR/run_int_tests.sh;
+          fi
+      after_script:
+        - if [ $RUN_INT_TESTS == 1 ]; then
+            $PATH_SCRIPTS_DIR/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
+          fi
+
+    - stage: sonarqube scan
+      name: SonarQube Scan
+      language: java
+      env: RUN_TYPE=sonarqube
+      install:
+        - wget "$SONAR_SCANNER_CLI_URL/$SONAR_SCANNER_CLI_FILENAME"
+        - unzip $SONAR_SCANNER_CLI_FILENAME -d /tmp
+      script:
+        - echo "Installing and running SonarQube scan"
+        - $PATH_COMMON_SCRIPTS_DIR/run_sonar_scanner.sh "PYTHON_LIBRARIES" "$PATH_COMMON_SCRIPTS_DIR" 0 1
+      after_script:
+        - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
 
     - stage: build packages
-      name: Build Packages in Python 2.7
-      python: 2.7
+      name: Build Packages in Python 3.9
+      python: 3.9
       script:
-        - echo "Building packages in Python 2.7"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
-      
-    - stage: build packages
-      name: Build Packages in Python 3.6
-      python: 3.6
-      script:
-        - echo "Building packages in Python 3.6"
-        - ./travis-scripts/build_and_deploy_packages.sh no_deploy
+        - echo "Building packages in Python 3.9"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
       script:
-        - echo "Building packages in Python 3.6 and Deploying to Artifactory"
-        - ./travis-scripts/build_and_deploy_packages.sh do_deploy
+        - echo "Building packages in Python 3.9 and Deploying to Artifactory"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
-        - ./travis-scripts/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_REPO_LINK/$BASE_ARTIFACTORY_PATH|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name> -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+
+    - stage: release to pypi
+      install:
+        - pip install twine
+      script:
+        - echo "Building packages in Python 3.9 and releasing to PyPi"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
+        - echo "Sending notification to Slack"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
 
     - stage: deploy documentation
-      # Install sphinx to handle the rebuild and deploy of docs, install the packages so that their code and comments can be gathered
       install:
-      - pip install sphinx resilient resilient-circuits resilient-lib resilient-sdk pytest-resilient-circuits rc-cts rc-webserver
+      - pip install sphinx furo==2022.1.2
       script:
-        - make -C docs/ html
-        - touch docs/_build/html/.nojekyll
-      # Define a deploy step to the inbuilt git pages deployment provider
+        - echo "Building packages in Python 3.9 and deploying Documentation internally too"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy no_release deploy_docs
       deploy:
         - provider: pages:git
-          verbose: true
-          skip_cleanup: true
-          # The github_url for the internal git needs to be specified otherwise the deploy will fail.
           github_url: github.ibm.com
-          # A token is needed for the deployment, this token is a Personal Access token with limited permissions
-          github_token: $GH_TOKEN
-          edge: true
-          local_dir: ./docs/_build/html/
+          github_token: $GITHUB_AUTH_TOKEN
+          target_branch: gh-pages
+          skip_cleanup: true
+          on:
+            all_branches: true
+            condition: $TRAVIS_BRANCH =~ ^(pages\/.+|release\/.+|master)
+          local_dir: ./docs/_build/
           keep_history: true
+          verbose: true
+          edge: true
+      after_deploy:
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
 
+    - stage: sync public repo
+      script:
+        - echo "Syncing INTERNAL repo with PUBLIC repo"
+        - $PATH_SCRIPTS_DIR/sync_public_repo.sh "ALL"
+      after_success:
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 
 after_failure:
-  - ./travis-scripts/send_slack_notification.sh "resilient-python-api failed to build" "failure"
+  - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
+  - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
+  - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"

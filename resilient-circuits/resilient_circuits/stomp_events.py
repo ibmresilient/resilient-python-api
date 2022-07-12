@@ -5,6 +5,7 @@
 
 import logging
 from circuits import Event
+from resilient_circuits import helpers
 
 LOG = logging.getLogger(__name__)
 
@@ -46,7 +47,8 @@ class Disconnect(StompEvent):
 class Message(StompEvent):
     def __init__(self, frame):
         super(Message, self).__init__(headers=frame.headers,
-                                      message=frame.body)
+                                      message=frame.body,
+                                      queue=helpers.get_queue(frame.headers.get("destination", "")))
         self.frame = frame
 
 
@@ -118,3 +120,7 @@ class Ack(StompEvent):
         super(Ack, self).__init__(frame=frame)
         self.frame = frame
         self.message_id = message_id
+
+
+class SelftestTerminateEvent(Event):
+    pass

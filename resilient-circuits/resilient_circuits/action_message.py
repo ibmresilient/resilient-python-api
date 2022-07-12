@@ -244,6 +244,23 @@ class FunctionMessage(ActionMessageBase):
             self._log_message(log_dir)
 
 
+class InboundMessage(ActionMessageBase):
+    def __init__(self, source=None, headers=None, message=None, queue=None,
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
+
+        super(InboundMessage, self).__init__(source=source, headers=headers, message=message,
+                                             test=test, test_msg_id=test_msg_id, frame=frame, log_dir=log_dir)
+
+        assert isinstance(queue, tuple)
+        assert len(queue) == 3
+
+        self.name = queue[2]
+        self.displayname = queue[2]
+
+        if message and log_dir:
+            self._log_message(log_dir)
+
+
 class StatusMessage(object):
     """Encapsulates a status message yielded from an action or function call"""
     def __init__(self, text):
@@ -256,13 +273,17 @@ class StatusMessage(object):
 
 class FunctionResult(object):
     """Encapsulates the result of a function call."""
-    def __init__(self, value):
+    def __init__(self, value, success=True, reason=None, name="Unknown"):
         super(FunctionResult, self).__init__()
         if not isinstance(value, dict):
             msg = "FunctionResult must be a dictionary. " \
                   "'{}' may cause the workflow to fail.".format(type(value).__name__)
-            logging.getLogger(__name__).error(msg)
+            logging.getLogger(__name__).warning(msg)
+
         self.value = value
+        self.success = success
+        self.reason = reason
+        self.name = name
 
 
 def FunctionError(*args, **kwargs):

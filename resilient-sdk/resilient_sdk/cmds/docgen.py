@@ -7,15 +7,18 @@
 import logging
 import os
 import shutil
+
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util.resilient_objects import IGNORED_INCIDENT_FIELDS, ResilientObjMap
+from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.resilient_objects import (IGNORED_INCIDENT_FIELDS,
+                                                  ResilientObjMap)
+from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(sdk_helpers.LOGGER_NAME)
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 # JINJA Constants
 README_TEMPLATE_NAME = "README.md.jinja2"
@@ -31,7 +34,7 @@ class CmdDocgen(BaseCmd):
     """
 
     CMD_NAME = "docgen"
-    CMD_HELP = "Generate documentation for an app"
+    CMD_HELP = "Generates boilerplate documentation for an app."
     CMD_USAGE = """
     $ resilient-sdk docgen -p <path_to_package>"""
     CMD_DESCRIPTION = CMD_HELP
@@ -90,6 +93,7 @@ class CmdDocgen(BaseCmd):
             the_function["inputs"] = cls._get_fn_input_details(fn)
             the_function["message_destination"] = fn.get("destination_handle", "")
             the_function["workflows"] = fn.get("workflows", [])
+            the_function["x_api_name"] = fn.get("x_api_name", "")
 
             scripts_found = False
             pre_script = None
@@ -173,6 +177,26 @@ class CmdDocgen(BaseCmd):
             the_rule["workflow_triggered"] = rule_workflows[0] if rule_workflows else "-"
 
             return_list.append(the_rule)
+
+        return return_list
+
+    @staticmethod
+    def _get_playbook_details(playbooks):
+        """Return a List of all Playbooks which are Dictionaries with
+        the attributes: api_name, name, object_type, status and description"""
+
+        return_list = []
+
+        for playbook in playbooks:
+            the_playbook = {}
+
+            the_playbook["api_name"] = playbook.get("x_api_name")
+            the_playbook["name"] = playbook.get("display_name")
+            the_playbook["object_type"] = playbook.get("object_type", "")
+            the_playbook["status"] = playbook.get("status", "")
+            the_playbook["description"] = playbook.get("description", {}).get("content", "")
+
+            return_list.append(the_playbook)
 
         return return_list
 
@@ -286,6 +310,7 @@ class CmdDocgen(BaseCmd):
         path_config_py_file = os.path.join(path_to_src, package_name, package_helpers.PATH_CONFIG_PY)
         path_readme = os.path.join(path_to_src, package_helpers.BASE_NAME_README)
         path_screenshots_dir = os.path.join(path_to_src, package_helpers.PATH_SCREENSHOTS)
+        path_payload_samples_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
 
         # Ensure we have read permissions for each required file and the file exists
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_config_py_file)
@@ -297,6 +322,9 @@ class CmdDocgen(BaseCmd):
 
         # Get the resilient_circuits dependency string from setup.py file
         res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient_circuits")
+
+        if not res_circuits_dep_str:
+            res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient-circuits")
 
         # Get ImportDefinition from customize.py
         customize_py_import_def = package_helpers.get_import_definition_from_customize_py(path_customize_py_file)
@@ -322,7 +350,8 @@ class CmdDocgen(BaseCmd):
                                                       artifact_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_ARTIFACT_TYPES, customize_py_import_def.get("incident_artifact_types")),
                                                       datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, customize_py_import_def.get("types")),
                                                       tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, customize_py_import_def.get("automatic_tasks")),
-                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, customize_py_import_def.get("scripts")))
+                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, customize_py_import_def.get("scripts")),
+                                                      playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, customize_py_import_def.get("playbooks", [])))
 
         # Lists we use in Jinja Templates
         jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []))
@@ -331,11 +360,32 @@ class CmdDocgen(BaseCmd):
         jinja_datatables = self._get_datatable_details(import_def_data.get("datatables", []))
         jinja_custom_fields = self._get_custom_fields_details(import_def_data.get("fields", []))
         jinja_custom_artifact_types = self._get_custom_artifact_details(import_def_data.get("artifact_types", []))
+        jinja_playbooks = self._get_playbook_details(import_def_data.get("playbooks", []))
 
         # Other variables for Jinja Templates
         package_name_dash = package_name.replace("_", "-")
         server_version = customize_py_import_def.get("server_version", {})
         supported_app = sdk_helpers.does_url_contain(setup_py_attributes.get("url", ""), "ibm.com/mysupport")
+
+        # See if a payload_samples dir exists and use the contents for function results
+        try:
+            sdk_helpers.validate_dir_paths(os.R_OK, path_payload_samples_dir)
+
+            for f in jinja_functions:
+                fn_name = f.get("x_api_name")
+                path_payload_samples_fn_name = os.path.join(path_payload_samples_dir, fn_name)
+                path_output_json_example = os.path.join(path_payload_samples_fn_name, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE)
+
+                try:
+                    sdk_helpers.validate_file_paths(os.R_OK, path_output_json_example)
+                    f["results"] = sdk_helpers.read_json_file(path_output_json_example)
+                except SDKException as e:
+                    sdk_helpers.handle_file_not_found_error(e, u"Error getting results. No '{0}' file found for '{1}'.".format(
+                        package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE, fn_name))
+
+        except SDKException as e:
+            sdk_helpers.handle_file_not_found_error(e, u"Error getting results. No '{0}' directory found.".format(
+                package_helpers.BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE))
 
         LOG.info("Rendering README for %s", package_name_dash)
 
@@ -348,6 +398,7 @@ class CmdDocgen(BaseCmd):
             "long_description": setup_py_attributes.get("long_description"),
             "version": setup_py_attributes.get("version"),
             "server_version": server_version.get("version"),
+            "all_dependencies": setup_py_attributes.get("install_requires", []),
             "res_circuits_dependency_str": res_circuits_dep_str,
             "author": setup_py_attributes.get("author"),
             "support_url": setup_py_attributes.get("url"),
@@ -358,7 +409,9 @@ class CmdDocgen(BaseCmd):
             "rules": jinja_rules,
             "datatables": jinja_datatables,
             "custom_fields": jinja_custom_fields,
-            "custom_artifact_types": jinja_custom_artifact_types
+            "custom_artifact_types": jinja_custom_artifact_types,
+            "playbooks": jinja_playbooks,
+            "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING
         })
 
         # Create a backup if needed of README

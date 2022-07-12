@@ -2,9 +2,15 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import time
 import pkg_resources
 import pytest
-from resilient_circuits import helpers, function, ResilientComponent
+from resilient_circuits import app, helpers, constants, function, ResilientComponent
+from tests import mock_constants, MockInboundAppComponent
+from tests.shared_mock_data import mock_paths
+
+resilient_mock = mock_constants.RESILIENT_MOCK
+config_data = mock_constants.CONFIG_DATA
 
 
 def test_get_fn_names():
@@ -34,12 +40,26 @@ def test_get_fn_names():
                 return True
 
 
+def test_get_handlers_inbound_handler():
+    mock_cmp_class = MockInboundAppComponent(mock_constants.MOCK_OPTS)
+    mock_handlers = helpers.get_handlers(mock_cmp_class, "inbound_handler")
+    assert isinstance(mock_handlers, list)
+    assert mock_handlers[0][0] == "_inbound_app_mock_one"
+    assert mock_handlers[0][1].channel == "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, "mock_inbound_q")
+
+
 def test_check_exists():
     assert helpers.check_exists("mock", {"mock": "data"}) == "data"
     assert helpers.check_exists("mock", {}) is False
     assert helpers.check_exists("mock", None) is False
     with pytest.raises(AssertionError):
         helpers.check_exists("mock", "abc")
+
+
+def test_get_configs(fx_clear_cmd_line_args):
+    configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG)
+    assert isinstance(configs, dict)
+    assert configs.get("host") == "resilient"
 
 
 def test_validate_configs():
@@ -99,6 +119,15 @@ def test_get_packages():
         assert isinstance(pkg[1], str)
 
 
+def test_get_packages_not_a_working_set_obj():
+
+    invalid_ws = "this is not a working set"
+
+    pkgs = helpers.get_packages(invalid_ws)
+
+    assert pkgs == invalid_ws
+
+
 def test_env_str():
 
     env_str = helpers.get_env_str(pkg_resources.working_set)
@@ -107,6 +136,17 @@ def test_env_str():
     assert "Python Version" in env_str
     assert "Installed packages" in env_str
     assert "\n\tresilient-circuits" in env_str
+
+
+def test_env_str_with_env_var(fx_add_proxy_env_var):
+
+    env_str = helpers.get_env_str(pkg_resources.working_set)
+
+    assert "Environment" in env_str
+    assert "Python Version" in env_str
+    assert "Installed packages" in env_str
+    assert "\n\tresilient-circuits" in env_str
+    assert "Connecting through proxy: 'https://192.168.0.5:3128'" in env_str
 
 
 def test_remove_tag():
@@ -126,3 +166,41 @@ def test_remove_tag():
     assert new_res_obj.get("tags") == []
     assert new_res_obj.get("functions", [])[0].get("tags") == []
     assert new_res_obj.get("workflows", []).get("nested_2")[0].get("tags") == []
+
+
+def test_get_queue(caplog):
+    assert helpers.get_queue("/queue/actions.201.fn_main_mock_integration") == ("actions", "201", "fn_main_mock_integration")
+    assert helpers.get_queue("/queue/inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
+    assert helpers.get_queue("inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
+    assert helpers.get_queue("111.inbound_app_mock") is None
+    assert helpers.get_queue("") is None
+    assert helpers.get_queue(None) is None
+    assert "Could not get queue name" in caplog.text
+
+
+def test_is_this_a_selftest(circuits_app):
+    circuits_app.app.IS_SELFTEST = True
+    assert helpers.is_this_a_selftest(circuits_app.app.action_component) is True
+
+
+def test_is_this_not_a_selftest(circuits_app):
+    circuits_app.app.IS_SELFTEST = False
+    assert helpers.is_this_a_selftest(circuits_app.app.action_component) is False
+
+
+def test_should_timeout():
+    start_time = time.time()
+    time.sleep(2)
+    assert helpers.should_timeout(start_time, 1) is True
+
+
+def test_should_not_timeout():
+    start_time = time.time()
+    assert helpers.should_timeout(start_time, 10) is False
+
+
+def test_get_usr():
+    assert helpers.get_user({"api_key_id": "abc", "email": None}) == "abc"
+    assert helpers.get_user({"api_key_id": None, "email": "def"}) == "def"
+    assert helpers.get_user({"api_key_id": "", "email": ""}) is None
+    assert helpers.get_user({"api_key_id": None, "email": None}) is None

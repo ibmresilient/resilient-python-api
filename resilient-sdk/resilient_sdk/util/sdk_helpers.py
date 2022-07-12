@@ -14,7 +14,14 @@ import json
 import datetime
 import importlib
 import hashlib
+import time
 import uuid
+import shlex
+import subprocess
+import ast
+import pkg_resources
+import tempfile
+import shutil
 import xml.etree.ElementTree as ET
 from jinja2 import Environment, PackageLoader
 from zipfile import ZipFile, is_zipfile, BadZipfile
@@ -23,6 +30,7 @@ from resilient import ArgumentParser, get_config_file, get_client
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
+from resilient_sdk.util import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -34,18 +42,10 @@ else:
     reload = importlib.reload
     from json.decoder import JSONDecodeError
 
-LOGGER_NAME = "resilient_sdk_log"
-ENV_VAR_DEV = "RES_SDK_DEV"
-
 # Temp fix to handle the resilient module logs
 logging.getLogger("resilient.co3").addHandler(logging.StreamHandler())
 # Get the same logger object that is used in app.py
-LOG = logging.getLogger(LOGGER_NAME)
-
-# Resilient export file suffix.
-RES_EXPORT_SUFFIX = ".res"
-# Endpoint url for importing a configuration
-IMPORT_URL = "/configurations/imports"
+LOG = logging.getLogger(constants.LOGGER_NAME)
 
 
 def get_resilient_client(path_config_file=None):
@@ -57,13 +57,16 @@ def get_resilient_client(path_config_file=None):
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
-    LOG.info("Connecting to Resilient Appliance...")
 
     if not path_config_file:
         path_config_file = get_config_file()
 
+    LOG.debug("Using app.config file at: %s", path_config_file)
+
     config_parser = ArgumentParser(config_file=path_config_file)
     opts = config_parser.parse_known_args()[0]
+
+    LOG.info("Connecting to IBM Security SOAR at: %s", opts.get("host"))
 
     return get_client(opts)
 
@@ -85,13 +88,29 @@ def setup_jinja_env(relative_path_to_templates):
     return jinja_env
 
 
+def setup_env_and_render_jinja_file(relative_path_to_template, filename, *args, **kwargs):
+    """
+    Creates a Jinja env and returns the rendered string from a jinja template of a given filename.
+    Passes on args and kwargs to the render function
+    """
+
+    # instantiate Jinja2 Environment with path to Jinja2 templates
+    jinja_env = setup_jinja_env(relative_path_to_template)
+
+    # Load the Jinja2 Template from filename + jinja2 ext
+    file_template = jinja_env.get_template(filename + ".jinja2")
+
+    # render the template with the required variables and return the string value
+    return file_template.render(*args, **kwargs)
+
+
 def write_file(path, contents):
     """Writes the String contents to a file at path"""
 
     if sys.version_info[0] < 3 and isinstance(contents, str):
         contents = unicode(contents, "utf-8")
 
-    with io.open(path, mode="wt", encoding="utf-8") as the_file:
+    with io.open(path, mode="wt", encoding="utf-8", newline="\n") as the_file:
         the_file.write(contents)
 
 
@@ -300,7 +319,7 @@ def validate_file_paths(permissions, *args):
     for path_to_file in args:
         # Check the file exists
         if not os.path.isfile(path_to_file):
-            raise SDKException("Could not find file: {0}".format(path_to_file))
+            raise SDKException(u"{0}: {1}".format(constants.ERROR_NOT_FIND_FILE, path_to_file))
 
         if permissions:
             # Check we have the correct permissions
@@ -316,26 +335,88 @@ def validate_dir_paths(permissions, *args):
     for path_to_dir in args:
         # Check the dir exists
         if not os.path.isdir(path_to_dir):
-            raise SDKException("Could not find directory: {0}".format(path_to_dir))
+            raise SDKException(u"{0}: {1}".format(constants.ERROR_NOT_FIND_DIR, path_to_dir))
 
         if permissions:
             # Check we have the correct permissions
             has_permissions(permissions, path_to_dir)
 
 
+def get_resilient_server_info(res_client, keys_to_get=[]):
+    """
+    Calls the const/ endpoint and returns the info specified in keys_to_get
+
+    **Example:**
+
+    .. code-block:: python
+
+        server_version = get_resilient_server_info(res_client, ["server_version"])
+
+    :param res_client: required for communication back to resilient
+    :type res_client: sdk_helpers.get_resilient_client()
+    :param keys_to_get: list of strings of the keys to return from the const/ endpoint. If ``None``
+    returns the whole response
+    :type keys_to_get: list
+    :return: response from const/
+    :rtype: dict
+    """
+    LOG.debug("Getting server info")
+    server_info = res_client.get("/const/", is_uri_absolute=True)
+
+    if keys_to_get:
+        server_info = {k: server_info.get(k, {}) for k in keys_to_get}
+
+    return server_info
+
+
+def get_resilient_server_version(res_client):
+    """
+    Uses get_resilient_server_info to get the "server_version"
+    and converts it into a float of ``major.minor`` and returns it
+
+    :param res_client: required for communication back to resilient
+    :type res_client: sdk_helpers.get_resilient_client()
+    :return: the server_version in the form ``major.minor``
+    :rtype: float
+    """
+    LOG.debug("Getting server version")
+
+    if constants.CURRENT_SOAR_SERVER_VERSION:
+        return constants.CURRENT_SOAR_SERVER_VERSION
+
+    server_version = get_resilient_server_info(res_client, ["server_version"]).get("server_version", {})
+
+    constants.CURRENT_SOAR_SERVER_VERSION = float("{0}.{1}".format(server_version.get("major", 0), server_version.get("minor", 0)))
+
+    LOG.info("IBM Security SOAR version: v%s", constants.CURRENT_SOAR_SERVER_VERSION)
+
+    return constants.CURRENT_SOAR_SERVER_VERSION
+
+
 def get_latest_org_export(res_client):
     """
-    Generates a new Export on the Resilient Appliance.
+    Generates a new Export on SOAR.
     Returns the POST response
     """
     LOG.debug("Generating new organization export")
     latest_export_uri = "/configurations/exports/"
-    return res_client.post(latest_export_uri, {"layouts": True, "actions": True, "phases_and_tasks": True})
+
+    customizations_to_get = {
+        "layouts": True,
+        "actions": True,
+        "phases_and_tasks": True
+    }
+    server_version = get_resilient_server_version(res_client)
+
+    if server_version >= constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        customizations_to_get.update({"playbooks": True})
+
+    return res_client.post(latest_export_uri, customizations_to_get)
 
 
 def add_configuration_import(new_export_data, res_client):
     """
-    Makes a REST request to add a configuration import. 
+    Makes a REST request to add a configuration import.
 
     After the request is made, the configuration import is set at a pending state and needs to be confirmed.
     If the configuration state is not reported as pending, raise an SDK Exception.
@@ -350,7 +431,7 @@ def add_configuration_import(new_export_data, res_client):
     :raises SDKException: If the confirmation request fails raise an SDKException
     """
     try:
-        result = res_client.post(IMPORT_URL, new_export_data)
+        result = res_client.post(constants.IMPORT_URL, new_export_data)
     except requests.RequestException as upload_exception:
         LOG.debug(new_export_data)
         raise SDKException(upload_exception)
@@ -367,7 +448,7 @@ def confirm_configuration_import(result, import_id, res_client):
     """
     Makes a REST request to confirm a pending configuration import as accepted.
 
-    Takes 3 params 
+    Takes 3 params
     The result of a configuration import request
     The ID of the configuration import request
     A res_client to perform the request
@@ -380,12 +461,12 @@ def confirm_configuration_import(result, import_id, res_client):
     :type res_client: SimpleClient()
     :raises SDKException: If the confirmation request fails raise an SDKException
     """
-    
+
     result["status"] = "ACCEPTED"      # Have to confirm changes
-    uri = "{}/{}".format(IMPORT_URL, import_id)
+    uri = "{}/{}".format(constants.IMPORT_URL, import_id)
     try:
         res_client.put(uri, result)
-        LOG.info("Imported configuration changes successfully to the Resilient Appliance")
+        LOG.info("Imported configuration changes successfully to SOAR")
     except requests.RequestException as import_exception:
         raise SDKException(repr(import_exception))
 
@@ -403,7 +484,7 @@ def read_local_exportfile(path_local_exportfile):
     # Read the export file content.
     if is_zipfile(path_local_exportfile):
         # File is a zip file get unzipped content.
-        export_content = read_zip_file(path_local_exportfile, RES_EXPORT_SUFFIX)
+        export_content = read_zip_file(path_local_exportfile, constants.RES_EXPORT_SUFFIX)
     else:
         # File is a assumed to be a text file read the export file content.
         export_content = ''.join(read_file(path_local_exportfile))
@@ -418,7 +499,10 @@ def get_object_api_names(api_name, list_objs):
     """
     Return a list of object api_names from list_objs
     """
-    return [o.get(api_name) for o in list_objs]
+    if list_objs:
+        return [o.get(api_name) for o in list_objs]
+    else:
+        return []
 
 
 def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
@@ -437,7 +521,9 @@ def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     :return: Dictionary of each found object like the above example
     :rtype: Dict
     """
-    return dict((o[identifer], o) for o in obj_list if condition(o))
+    if obj_list:
+        return dict((o[identifer].strip(), o) for o in obj_list if condition(o))
+    return {}
 
 
 def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, condition=lambda o: True, include_api_name=True):
@@ -456,8 +542,8 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
     :type export: Dict
     :param condition: A lambda function to evaluate each object
     :type condition: function
-    :param export: Whether or not to return the objects API name as a field.
-    :type export: bool
+    :param include_api_name: Whether or not to return the objects API name as a field.
+    :type include_api_name: bool
     :return: List of Resilient Objects
     :rtype: List
     """
@@ -473,21 +559,22 @@ def get_res_obj(obj_name, obj_identifer, obj_display_name, wanted_list, export, 
             temp_obj_identifier = obj.get("identifier", "")
             obj_value = obj.get("value", "")
             full_obj = get_obj_from_list(temp_obj_identifier,
-                                         export[obj_name],
+                                         export.get(obj_name, ""),
                                          lambda wanted_obj, i=temp_obj_identifier, v=obj_value: True if wanted_obj.get(i) == v else False)
 
             wanted_list[index] = full_obj.get(obj_value).get(obj_identifer)
 
     if wanted_list:
-        ex_obj = get_obj_from_list(obj_identifer, export[obj_name], condition)
+        ex_obj = get_obj_from_list(obj_identifer, export.get(obj_name, ""), condition)
 
         for o in set(wanted_list):
-            if o not in ex_obj:
-                raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, o, "\n\t".join(ex_obj.keys())))
+            stripped_o = o.strip()
+            if stripped_o not in ex_obj:
+                raise SDKException(u"{0}: '{1}' not found in this export.\n{0}s Available:\n\t{2}".format(obj_display_name, stripped_o, "\n\t".join(ex_obj.keys())))
 
             # Add x_api_name to each object, so we can easily reference. This avoids needing to know if
             # obj attribute is 'name' or 'programmatic_name' etc.
-            obj = ex_obj.get(o)
+            obj = ex_obj.get(stripped_o)
             if include_api_name:
                 obj["x_api_name"] = obj[obj_identifer]
             return_list.append(obj)
@@ -502,9 +589,11 @@ def get_from_export(export,
                     rules=[],
                     fields=[],
                     artifact_types=[],
+                    incident_types=[],
                     datatables=[],
                     tasks=[],
                     scripts=[],
+                    playbooks=[],
                     get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
@@ -518,9 +607,11 @@ def get_from_export(export,
     :param rules: List of Rule Display Names
     :param fields: List of Field API Names
     :param artifact_types: List of Custom Artifact Type API Names
+    :param incident_types: List of Custom Incident Type API Names
     :param datatables: List of Data Table API Names
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
+    :param playbooks: List of Playbook API Names
     :param get_related_objects: Whether or not to hunt for related action objects, defaults to True
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
@@ -536,9 +627,11 @@ def get_from_export(export,
     rules = rules if rules else []
     fields = fields if fields else []
     artifact_types = artifact_types if artifact_types else []
+    incident_types = incident_types if incident_types else []
     datatables = datatables if datatables else []
     tasks = tasks if tasks else []
     scripts = scripts if scripts else []
+    playbooks = playbooks if playbooks else []
 
     # Dict to return
     return_dict = {
@@ -634,6 +727,9 @@ def get_from_export(export,
     # Get Custom Artifact Types
     return_dict["artifact_types"] = get_res_obj("incident_artifact_types", ResilientObjMap.INCIDENT_ARTIFACT_TYPES, "Custom Artifact", artifact_types, export)
 
+    # Get Incident Types
+    return_dict["incident_types"] = get_res_obj("incident_types", ResilientObjMap.INCIDENT_TYPES, "Custom Incident Type", incident_types, export)
+
     # Get Data Tables
     return_dict["datatables"] = get_res_obj("types", ResilientObjMap.DATATABLES, "Datatable", datatables, export,
                                             condition=lambda o: True if o.get("type_id") == ResilientTypeIds.DATATABLE else False)
@@ -647,6 +743,12 @@ def get_from_export(export,
 
     # Get Scripts
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
+
+    # Get Playbooks
+    if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
+        raise SDKException(constants.ERROR_PLAYBOOK_SUPPORT)
+    else:
+        return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
 
     return return_dict
 
@@ -662,7 +764,9 @@ def minify_export(export,
                   datatables=[],
                   tasks=[],
                   phases=[],
-                  scripts=[]):
+                  scripts=[],
+                  incident_types=[],
+                  playbooks=[]):
     """
     Return a 'minified' version of the export.
     All parameters are a list of api_names of objects to include in the export.
@@ -680,6 +784,8 @@ def minify_export(export,
     :param tasks: List of Custom Task API Names
     :param tasks: List of Phases API Names
     :param scripts: List of Script Display Names
+    :param incident_types: List of Custom Incident Type Names
+    :param playbooks: List of Playbook API Names
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -695,18 +801,23 @@ def minify_export(export,
             "server_version"
         ]
 
+    # some incident types are parent/child. This routine will return all the parent incident types
+    parent_child_incident_types = find_parent_child_types(export, "incident_types", "name", incident_types)
+
     # Setup the keys_to_minify dict
     keys_to_minify = {
-        "message_destinations": {"programmatic_name": message_destinations},
-        "functions": {"name": functions},
-        "workflows": {"programmatic_name": workflows},
-        "actions": {"name": rules},
+        "message_destinations": {ResilientObjMap.MESSAGE_DESTINATIONS: message_destinations},
+        "functions": {ResilientObjMap.FUNCTIONS: functions},
+        "workflows": {ResilientObjMap.WORKFLOWS: workflows},
+        "actions": {ResilientObjMap.RULES: rules},
         "fields": {"export_key": fields},
-        "incident_artifact_types": {"programmatic_name": artifact_types},
-        "types": {"type_name": datatables},
-        "automatic_tasks": {"programmatic_name": tasks},
-        "phases": {"name": phases},
-        "scripts": {"name": scripts}
+        "incident_artifact_types": {ResilientObjMap.INCIDENT_ARTIFACT_TYPES: artifact_types},
+        "types": {ResilientObjMap.DATATABLES: datatables},
+        "automatic_tasks": {ResilientObjMap.TASKS: tasks},
+        "phases": {ResilientObjMap.PHASES: phases},
+        "scripts": {ResilientObjMap.SCRIPTS: scripts},
+        "incident_types": {ResilientObjMap.INCIDENT_TYPES: parent_child_incident_types},
+        "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks}
     }
 
     for key in minified_export.keys():
@@ -722,15 +833,21 @@ def minify_export(export,
             attribute_name = list(keys_to_minify[key].keys())[0]
 
             values = keys_to_minify[key][attribute_name]
+            # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
+            values = [name.strip() for name in values]
 
-            for data in list(minified_export[key]):
+            obj = minified_export.get(key)
 
-                if not data.get(attribute_name):
-                    LOG.warning("No %s in %s", attribute_name, key)
+            if obj:
+                for data in list(obj):
 
-                # If this Resilient Object is not in our minify list, remove it
-                if not data.get(attribute_name) in values:
-                    minified_export[key].remove(data)
+                    if not data.get(attribute_name):
+                        LOG.warning("No %s in %s", attribute_name, key)
+
+                    # strip out extra spaces from the attribute (ie Display name for Rules, Scripts, etc.)
+                    # If this Resilient Object is not in our minify list, remove it
+                    if not data.get(attribute_name, "").strip() in values:
+                        minified_export[key].remove(data)
 
         elif isinstance(minified_export[key], list):
             minified_export[key] = []
@@ -742,14 +859,83 @@ def minify_export(export,
             minified_export[key] = None
 
     # Add default incident_type. Needed for every Import
-    minified_export["incident_types"] = [DEFAULT_INCIDENT_TYPE]
+    if minified_export.get("incident_types"):
+        minified_export["incident_types"].append(DEFAULT_INCIDENT_TYPE)
+    else:
+        minified_export["incident_types"] = [DEFAULT_INCIDENT_TYPE]
 
     # If no Custom Incident Fields are in the export, add this default.
     # An import needs at least 1 Incident Field
     if "incident/" not in fields:
         minified_export["fields"].append(DEFAULT_INCIDENT_FIELD)
 
+    # Clean out any pii values with keys included in pii_key_list
+    pii_key_list = ["creator", "creator_id"]
+    minified_export = rm_pii(pii_key_list, minified_export)
+
     return minified_export
+
+
+def rm_pii(pii_key_list, export):
+    """
+    Remove any keys from 'export' that are in 'pii_key_list'.
+    Recursively searches the export object.
+    
+    :param pii_key_list: list of str keys to be removed from 'export'. ex: ["creator", "creator_id"]
+    :type pii_key_list: [str]
+    :param export: the result of calling get_latest_org_export() or minified_export from calling minify_export()
+    :type export: Dict
+    :return: modified export with any pii keys removed
+    :rtype: Dict
+    """
+
+    if export:
+        export_copy = export.copy()
+
+        for key in list(export_copy.keys()):
+            content = export_copy[key]
+
+            # if key is in pii_list to remove, delete entry in payload_result
+            if key in pii_key_list:
+                del export_copy[key]
+                continue
+
+            # if key wasn't in pii_list, continue searching recursively for dictionaries and scrubbing pii
+            if isinstance(content, dict):
+                export_copy[key] = rm_pii(pii_key_list, content)
+            elif isinstance(content, list):
+                # recreates the list where any dict elements of the list are recursively scrubbed
+                # if list item is not a dictionary, don't 
+                export_copy[key] = [rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
+
+        return export_copy
+    else:
+        return export
+
+
+def find_parent_child_types(export, object_type, attribute_name, name_list):
+    """[get all parent objects (like incident_types)]
+
+    Args:
+        export ([dict]): [export file to parse]
+        object_type ([str]): [heirarchy of objects to parse]
+        attribute_name ([str]): [name of field to check for]
+        name_list ([list]): [list of objects to same]
+    """
+
+    extended_name_list = name_list[:]
+
+    if export.get(object_type):
+        section = export.get(object_type)
+        for name in name_list:
+            for item in section:
+              if item.get(attribute_name) == name:
+                  if item.get('parent_id'):
+                      # add the parent hierarchy
+                      parent_list = find_parent_child_types(export, object_type, attribute_name, [item.get('parent_id')])
+                      extended_name_list.extend(parent_list)
+
+    return list(set(extended_name_list))
 
 
 def load_py_module(path_python_file, module_name):
@@ -803,11 +989,11 @@ def rename_to_bak_file(path_current_file, path_default_file=None):
 
         # If different, rename
         if default_file_contents != current_file_contents:
-            LOG.info("Creating a backup of: %s", path_current_file)
+            LOG.debug("Creating a backup of: %s", path_current_file)
             rename_file(path_current_file, new_file_name)
 
     else:
-        LOG.info("Creating a backup of: %s", path_current_file)
+        LOG.debug("Creating a backup of: %s", path_current_file)
         rename_file(path_current_file, new_file_name)
 
     return os.path.join(os.path.dirname(path_current_file), new_file_name)
@@ -965,3 +1151,292 @@ def is_env_var_set(env_var):
     :rtype: bool
     """
     return str_to_bool(os.getenv(env_var))
+
+
+def get_resilient_libraries_version_to_use():
+    """
+    :return: Version of resilient-circuits to use depending on ENV_VAR_DEV set
+    :rtype: str
+    """
+    if is_env_var_set(constants.ENV_VAR_DEV):
+        return constants.RESILIENT_LIBRARIES_VERSION_DEV
+    else:
+        return constants.RESILIENT_LIBRARIES_VERSION
+
+
+def get_resilient_sdk_version():
+    """
+    wrapper method to call get_package_version on constant SDK_PACKAGE_NAME
+
+    :return: a Version object
+    """
+    return get_package_version(constants.SDK_PACKAGE_NAME)
+
+
+def get_package_version(package_name):
+    """
+    Uses pkg_resources to parse the version of a package if installed in the environment.
+    If not installed, return None
+
+    :param package_name: name of the packge to get version of
+    :type package_name: str
+    :return: a Version object representing the version of the given package or None
+    :rtype: Version or None
+    """
+    try:
+        return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
+    except pkg_resources.DistributionNotFound:
+        return None
+
+
+def is_python_min_supported_version(custom_warning=None):
+    """
+    Logs a WARNING if the current version of Python is not >= MIN_SUPPORTED_PY_VERSION
+    :param custom_warning: a custom message you want to log out
+    :type custom_warning: str
+    :return: a boolean to indicate if current version is supported or not
+    :rtype: bool
+    """
+    if sys.version_info < constants.MIN_SUPPORTED_PY_VERSION:
+
+        if custom_warning:
+            LOG.warning("WARNING: %s", custom_warning)
+
+        else:
+            LOG.warning("WARNING: this package should only be installed on a Python Environment >= {0}.{1} "
+                        "and your current version of Python is {2}.{3}".format(constants.MIN_SUPPORTED_PY_VERSION[0], constants.MIN_SUPPORTED_PY_VERSION[1], sys.version_info[0], sys.version_info[1]))
+
+        return False
+
+    return True
+
+
+def parse_version_object(version_obj):
+    """
+    Parses a Version object into a tuple of (major, minor, micro)
+    so that it can be compared to other tuples of versions
+
+    Mostly used because .major/.minor/.micro attributes aren't available in py27
+
+    :param version_obj: a Version object to be parsed
+    :type version_obj: Version
+    :return: (v.major, v.minor, v.micro) tuple
+    :rypte: (int, int, int)
+    """
+
+    if sys.version_info[0] >= 3: # python 3 
+        return (version_obj.major, version_obj.minor, version_obj.micro)
+    else: # python 2.7
+        major_minor_micro = tuple(int(i) for i in str(version_obj).split("."))
+        
+        # if version is only one number (i.e. '3'), then add a 0 to the end
+        if len(major_minor_micro) == 1:
+            major_minor_micro = (major_minor_micro[0], 0, 0)
+        elif len(major_minor_micro) == 2:
+            major_minor_micro = (major_minor_micro[0], major_minor_micro[1], 0)
+        return major_minor_micro
+
+def parse_optionals(optionals):
+    """
+    Returns all optionals as a formatted string
+    with the number of tabs used depending
+    on the length
+
+    Mainly used to help build our docs
+
+    :param optionals: List of ArgumentParser optionals
+    :type optionals: list
+    :return: Formatted string
+    :rtype: str
+    """
+    parsed_optionals = []
+
+    for option in optionals:
+
+        option_strings = ", ".join(option.option_strings)
+
+        tabs = "\t\t\t"
+
+        if len(option_strings) >= 16:
+            tabs = "\t\t"
+
+        if len(option_strings) >= 22:
+            tabs = "\t"
+
+        if len(option_strings) < 10:
+            tabs = "\t\t\t\t"
+
+        if len(option_strings) in (8, 9):
+            tabs = "\t\t\t"
+
+        parsed_optionals.append("{0}{1}{2}".format(option_strings, tabs, option.help))
+
+    parsed_optionals = " \n ".join(parsed_optionals)
+    parsed_optionals = '{0} \n'.format(parsed_optionals)
+
+    return parsed_optionals
+
+
+def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=logging.DEBUG):
+    """
+    Run a given command as a subprocess. Optionally change directory before running the command (use change_dir parameter)
+
+    :param args: (required) args should be a sequence of program arguments or else a single string (see subprocess.Popen for more details)
+    :type args: str | list[str]
+    :param change_dir: (optional) path of directory to change to before running command
+    :type change_dir: str
+    :param cmd_name: (optional) the name of the command to run as a subprocess. will be used to log in the format "Running <cmd_name> ..."
+    :type cmd_name: str
+    :param log_level_threshold: (optional) the logging level at which to output the stdout/stderr for the subprocess; default is DEBUG
+    :type log_level_threshold: int
+    :return: the exit code and string details of the run
+    :rtype: (int, str)
+    """
+
+    LOG.debug("Running {0} as a subprocess".format(args))
+
+    # save starting directory
+    current_dir = os.getcwd()
+
+    # if change_dir is set, change to that dir
+    if change_dir:
+        LOG.debug("Changing directory to {0}".format(change_dir))
+        os.chdir(change_dir)
+
+    if isinstance(args, str):
+        args = shlex.split(args)
+
+    # run given command as a subprocess
+    proc = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=0)
+
+    sys.stdout.write("Running {0} (this may take a while) ...".format(cmd_name))
+    sys.stdout.flush()
+
+    # if debugging enabled, capture output directly and redirect back to sys.stdout
+    # using LOG.log(log_level...)
+    if LOG.isEnabledFor(log_level_threshold):
+        LOG.debug("")
+        details = ""
+        while proc.stdout:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            LOG.log(log_level_threshold, line.decode("utf-8").strip("\n"))
+            details += line.decode("utf-8")
+
+        proc.wait() # additional wait to make sure process is complete
+    else:
+        # if debugging not enabled, use communicate as that has the
+        # greatest ability to deal with large buffers of output 
+        # being stored in subprocess.PIPE
+        stdout, _ = proc.communicate()
+        sys.stdout.write(" {0} complete\n\n".format(cmd_name))
+        sys.stdout.flush()
+        time.sleep(0.75)
+        details = stdout.decode("utf-8")
+
+
+    # move back to original directory
+    # note that this just changes the working directory for the python process,
+    # — thus if the subprocess was interrupted and the program quits,
+    # the directory of the user's terminal won't be affected
+    os.chdir(current_dir)
+
+    return proc.returncode, details
+
+
+def scrape_results_from_log_file(path_log_file):
+    """
+    Validate that path_log_file exists, reverse it and look for lines
+    containing ``[<fn_name>] Result: {'version': 2.0, 'success': True...``
+
+    Only gets the latest result for each <fn_name> in the log file
+
+    The log file must be in the format of the app.log
+
+    :param path_log_file: (required) absolute path to a app.log file
+    :type args: str
+    :return: a dictionary in the format {<fn_name>: <fn_results>}
+    :rtype: dict
+    """
+    results_scraped = {}
+
+    validate_file_paths(os.R_OK, path_log_file)
+
+    log_file_contents = read_file(path_log_file)
+
+    regex_line = re.compile(r'\[[\w]+\] Result\:')       # Looking for line that contains [<fn_name>] Result: {'version': 2.0, 'success': True...
+    regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')  # Getting <fn_name> from [<fn_name>] Result: {'version': 2.0, 'success': True...
+
+    for l in reversed(log_file_contents):
+        match = regex_line.search(l, endpos=120)
+
+        if match:
+            fn_name_group_index = 0
+
+            fn_name_match = match.group(fn_name_group_index)
+            fn_name_match_endpos = match.end(fn_name_group_index)
+
+            fn_name = regex_fn_name.match(fn_name_match).group(1)
+
+            results_from_l = l[fn_name_match_endpos:].strip("\\n ")
+
+            # Check if this fn_name is already in results_scraped
+            if fn_name not in results_scraped.keys():
+                # Convert str into dict
+                results = ast.literal_eval(results_from_l)
+                results_scraped[fn_name] = results
+
+    return results_scraped
+
+
+def handle_file_not_found_error(e, msg):
+    """
+    Looks at e's message attribute and if
+    it contains ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE
+    prints a LOG.warning message else just raises the exception
+
+    :param e: (required) an Exception
+    :type e: Exception
+    :param msg: (required) the custom error message to print as a WARNING in the logs
+    :type msg: str
+    :raises: The exception that is passed unless it contains 
+    ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
+    """
+    if constants.ERROR_NOT_FIND_DIR or constants.ERROR_NOT_FIND_FILE in e.message:
+        LOG.warning("WARNING: %s", msg)
+    else:
+        raise e
+
+class ContextMangerForTemporaryDirectory():
+    """
+    This is a small class for safe use of ``tempfile.mkdtemp()`` which requires cleanup after
+    use. The class effectively is the same as ``tempfile.TemporaryDirectory``, however, 
+    that class isn't available before python 3 thus the implementation here.
+    On enter, ``tempfile.mkdtemp(*args, **kwargs)`` is called and on exit ``shutil.rmtree(path_to_dir)`` is called.
+    
+    Example:
+
+    .. code-block:: python
+        # create the context manager using the 'with ... as:' statement
+        # on creation of the 'path_to_tmp_dir' object, the ``__enter__`` method is called
+
+        with sdk_helpers.ContextMangerForTemporaryDirectory() as path_to_tmp_dir:
+            # ...
+            # do something with path_to_tmp_dir
+            # ...
+
+        # on exit of context manager, path_to_tmp_dir will be cleaned up by implicit call of the ``__exit__`` method
+    
+    :param args: any ordered args that are relevant to calling ``tempfile.mkdtemp()``
+    :param kwargs: any keyword arguments relevant to calling ``tempfile.mkdtemp()``
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.dir = tempfile.mkdtemp(*args, **kwargs)
+
+    def __enter__(self):
+        return self.dir
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        shutil.rmtree(self.dir)

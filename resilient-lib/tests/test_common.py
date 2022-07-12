@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
-
-import os
-import sys
-import shutil
-import unittest
+import configparser
 import logging
-import pytest
+import os
+import shutil
+import sys
+import time
+import unittest
+from collections import namedtuple
+from io import BytesIO
 
-from resilient_lib.components.resilient_common import str_to_bool, readable_datetime, validate_fields, \
-    unescape, clean_html, build_incident_url, build_resilient_url, get_file_attachment, get_file_attachment_name, \
-    get_file_attachment_metadata, write_to_tmp_file, close_incident
+import pytest
+import resilient
+from resilient_lib.components.resilient_common import (
+    build_incident_url, build_resilient_url, build_task_url, clean_html,
+    close_incident, get_file_attachment, get_file_attachment_metadata,
+    get_file_attachment_name, readable_datetime, str_to_bool, unescape,
+    validate_fields, write_file_attachment, write_to_tmp_file)
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -125,6 +131,17 @@ class TestFunctionMetrics(unittest.TestCase):
                                     "'str_input' is mandatory and still has its placeholder value of 'some text'. You must set this value correctly to run this function"):
             validate_fields(mandatory_fields, inputs)
 
+        # Test works with a namedtuple
+        inputs_as_named_tuple = namedtuple("fn_inputs", inputs.keys())(*inputs.values())
+        self.assertEquals(validate_fields(("bool_input_true"), inputs_as_named_tuple).get("bool_input_true"), True)
+
+        validated_named_tuple_inputs_i = validate_fields([], inputs_as_named_tuple)
+        self.assertEquals(validated_named_tuple_inputs_i, expected_output)
+
+        # Test called again on a normalized dict
+        validated_named_tuple_inputs_ii = validate_fields([], validated_named_tuple_inputs_i)
+        self.assertEquals(validated_named_tuple_inputs_ii, expected_output)
+
     def test_unescape(self):
         # unescape(data)
         test_data = "&lt;-&gt;"
@@ -141,11 +158,53 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertIsNone(clean_html(None))
 
     def test_build_incident_url(self):
+        # no orgid provided
         url = build_incident_url(build_resilient_url("https://localhost", 8443), 12345)
         self.assertEqual(url, "https://localhost:8443/#incidents/12345")
 
+        # no orgid provided
         url = build_incident_url(build_resilient_url("localhost", 8443), 12345)
         self.assertEqual(url, "https://localhost:8443/#incidents/12345")
+
+        url = build_incident_url(build_resilient_url("https://cases-rest.cp4s.ibm.com", 443), 101, 201)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201")
+
+        url = build_incident_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101, 201)
+        self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101?orgId=201")
+
+        # test inserts app/respond and clear cases-rest
+        url = build_incident_url("https://cases-rest.cp4s.ibm.com:443", 101, 201)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201")
+
+        # test string org names work
+        url = build_incident_url("https://cases-rest.cp4s.ibm.com:443", 101, "Test Organization")
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=Test%20Organization")
+
+        # ensure non-string values are simply returned
+        url = build_incident_url(build_resilient_url(["my_fake_list"], 443), 100, 201)
+        self.assertEqual(url, ["my_fake_list"])
+
+    def test_build_task_url(self):
+        url = build_task_url(build_resilient_url("http://localhost", 8443), 12345, 12346, 201)
+        self.assertEqual(url, "http://localhost:8443/#incidents/12345?orgId=201&taskId=12346&tabName=details")
+
+        url = build_task_url(build_resilient_url("deployment1.cases-rest.cp4s.ibm.com", 443), 101, 102, 201)
+        self.assertEqual(url, "https://deployment1.cp4s.ibm.com:443/app/respond/#cases/101?orgId=201&taskId=102&tabName=details")
+
+        # test inserts app/respond and clear cases-rest
+        url = build_task_url("https://cases-rest.cp4s.ibm.com:443", 101, 102, 201)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201&taskId=102&tabName=details")
+
+        url = build_task_url("cases-rest.cp4s.ibm.com:443", 101, 102, 201)
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201&taskId=102&tabName=details")
+
+        # test string org names work
+        url = build_task_url("https://cases-rest.cp4s.ibm.com:443", 101, 102, "Test Organization")
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=Test%20Organization&taskId=102&tabName=details")
+
+        # ensure non-string values are simply returned
+        url = build_task_url(["my_fake_list"], 100, 101, 201)
+        self.assertEqual(url, ["my_fake_list"])
 
     def test_file_attachment(self):
         with self.assertRaises(ValueError):
@@ -292,3 +351,35 @@ class TestFunctionMetrics(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             close_incident(mock_api, incident_id, kwargs_missing)
+
+class TestWriteAttachments:
+    def _create_incident(self, client, incident_dict):
+        """create a test incident to use for patching"""
+        incident = {"name": __name__,
+                    "discovered_date": int(time.time() * 1000)
+        }
+        incident.update(incident_dict)
+        inc = client.post("/incidents", incident)
+        return inc
+
+    @pytest.mark.livetest
+    def test_write_file_attachment(self):
+        config = configparser.ConfigParser()
+        with open(resilient.get_config_file(), 'r') as f:
+            config.read_file(f)
+
+        LOG.info(config)
+        # Connect to Resilient
+        client = resilient.get_client(dict(config['resilient']))
+
+        inc = self._create_incident(client, {"name": "test for attachment"})
+
+        file_name = "test-for-attachment.txt"
+        file_content = b"this is test data"
+        bytes_content = BytesIO(file_content)
+
+        # Post file to Resilient
+        response = write_file_attachment(client, file_name, bytes_content, inc['id'])
+
+        assert response
+        assert response['name'] == file_name

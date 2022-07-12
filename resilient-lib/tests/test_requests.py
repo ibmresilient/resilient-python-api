@@ -1,10 +1,15 @@
 import json
 import logging
+import os
 import unittest
+
 import requests
 from parameterized import parameterized
-from resilient_lib import RequestsCommon, IntegrationError
-from resilient_lib.components.requests_common import get_case_insensitive_key_value, is_payload_in_json
+from resilient_lib import IntegrationError, RequestsCommon
+from resilient_lib.components.requests_common import (
+    get_case_insensitive_key_value, is_payload_in_json)
+
+from tests.shared_mock_data import mock_paths
 
 
 class TestFunctionRequests(unittest.TestCase):
@@ -47,7 +52,13 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual("abc", proxies['https'])
         self.assertEqual("def", proxies['http'])
 
-        
+        os.environ["HTTP_PROXY"] = "https://mock.example.com:3128"
+        integrations = { "integrations": { "https_proxy": "abc", 'http_proxy': 'def' } }
+        rc = RequestsCommon(integrations)
+        proxies = rc.get_proxies()
+        os.environ["HTTP_PROXY"] = ""
+        self.assertEqual(None, proxies)
+
     def test_timeout_overrides(self):
         # test default timeout
         integrations = { "integrations": { } }
@@ -59,8 +70,10 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_timeout, None)
         self.assertEqual(rc.get_timeout(), 35)
 
+
+    def test_timeout_failure(self):
         # test timeout
-        integrations_twenty = { "integrations": { "timeout": "8" } }
+        integrations_twenty = { "integrations": { "timeout": "1" } }
         rc = RequestsCommon(integrations_twenty, None)
         url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
 
@@ -68,10 +81,12 @@ class TestFunctionRequests(unittest.TestCase):
             rc.execute_call_v2("get", url)
 
 
-        integrations_fourty = { "integrations": { "timeout": "20" } }
+    def test_timeout_success(self):
+        integrations_fourty = { "integrations": { "timeout": "5" } }
         rc = RequestsCommon(integrations_fourty, None)
-        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
-        rc.execute_call_v2("get", url)
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "1"))
+        resp = rc.execute_call_v2("get", url)
+        assert resp.json() == {"delay": "1"}
 
 
     def test_timeout_section_value(self):
@@ -81,7 +96,7 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_fourty, integration_section)
         self.assertEqual(rc.get_timeout(), 50)
 
-
+    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
@@ -104,6 +119,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertIsNotNone(bytes_result)
         self.assertTrue(isinstance(bytes_result, bytes))
 
+    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_v2_resp_type(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
@@ -199,7 +215,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         # P O S T
         # test json argument without headers
-        resp = rc.execute_call_v2("post", "/".join((URL, "post")), json=payload)
+        resp = rc.execute("post", "/".join((URL, "post")), json=payload)
         print (resp.json())
         self.assertEqual(resp.json()["json"].get("body"), "bar")
 
@@ -212,7 +228,7 @@ class TestFunctionRequests(unittest.TestCase):
         headers_data = {
             "Content-type": "application/x-www-form-urlencoded"
         }
-        resp = rc.execute_call_v2("post", "/".join((URL, "post")), data=payload, headers=headers_data)
+        resp = rc.execute("post", "/".join((URL, "post")), data=payload, headers=headers_data)
         print (resp.json())
         self.assertEqual(resp.json()['json'].get("body"), "bar")
 
@@ -223,7 +239,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         # P U T
         # With params
-        resp = rc.execute_call_v2("put", "/".join((URL, "put")), params=payload, headers=headers)
+        resp = rc.execute("put", "/".join((URL, "put")), params=payload, headers=headers)
         TestFunctionRequests.LOG.info(resp)
         self.assertTrue(resp.json()['args'].get("title"))
         self.assertEqual(resp.json()['args'].get("title"), 'foo')
@@ -428,6 +444,7 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
 
+    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_proxy_v2(self):
         rc = RequestsCommon()
 
@@ -556,3 +573,47 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_60, function_timeout_90)
         timeout = rc.get_timeout()
         self.assertEqual(timeout, 90)
+
+    def test_clientauth(self):
+        rc = RequestsCommon()
+        cert = rc.get_clientauth()
+        self.assertIsNone(cert)
+
+
+        mock_fn_section = {
+            "url": "fake_url.com",
+            "client_auth_cert": "cert.pem",
+            "client_auth_key": "private.pem"
+        }
+        rc = RequestsCommon(opts=None, function_opts=mock_fn_section)
+        cert = rc.get_clientauth()
+        self.assertEqual(cert, ("cert.pem", "private.pem"))
+
+
+        mock_fn_section = {
+            "url": "fake_url.com",
+            "client_auth_cert": "cert.pem"
+        }
+        rc = RequestsCommon(opts=None, function_opts=mock_fn_section)
+        cert = rc.get_clientauth()
+        self.assertIsNone(cert)
+
+
+        mock_fn_section = {
+            "url": "fake_url.com",
+            "client_auth_cert": mock_paths.MOCK_CLIENT_CERT_FILE,
+            "client_auth_key": mock_paths.MOCK_CLIENT_KEY_FILE
+        }
+        rc = RequestsCommon(opts=None, function_opts=mock_fn_section)
+        # make sure can still make call to execute with no issues
+        resp = rc.execute("get", self.URL_TEST_HTTP_VERBS)
+        self.assertEqual(resp.status_code, 200)
+
+
+        rc = RequestsCommon()
+        # make sure can call execute with clientauth optional parameter
+        # but doesn't set the cert value for the whole object
+        resp = rc.execute("get", self.URL_TEST_HTTP_VERBS, clientauth=(mock_paths.MOCK_CLIENT_CERT_FILE, mock_paths.MOCK_CLIENT_KEY_FILE))
+        self.assertEqual(resp.status_code, 200)
+        cert = rc.get_clientauth()
+        self.assertIsNone(cert)

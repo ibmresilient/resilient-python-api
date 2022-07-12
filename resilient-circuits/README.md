@@ -1,83 +1,39 @@
-# resilient-circuits
-This package is a framework for rapid development of Resilient Action Module event processors in Python.
+![IBM Security](https://raw.githubusercontent.com/ibmresilient/resilient-python-api/master/resilient-sdk/assets/IBM_Security_lockup_pos_RGB.png)
 
-### Changelog
+# IBM SOAR Resilient Circuits Framework
 
-### Installation  
-Instructions for building and installing this package can be found in the 
-[repository README](https://github.com/ibmresilient/resilient-python-api/blob/master/README.md).
+## Overview
+The IBM SOAR `resilient-circuits` Framework is used to run IBM SOAR Apps and Integrations.
 
 
-### Configuration
+## Documentation
+The IBM SOAR App Developer's Guide provides information on using the IBM SOAR Resilient Circuits Framework to run Apps and Integrations. The guide is available on the IBM Knowledge Center at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your IBM SOAR platform version. On the follow-on page, you can find the App Developer's Guide by expanding **Apps** in the Table of Contents pane.
 
-Configuration parameters for the server URLs, user credentials and so on
-should be provided using a configuration file.  They can optionally also
-be provided on the command-line.
-
-If the environment variable `APP_CONFIG_FILE` is set, it defines the path
-to your configuration file.  The default configuration file is named
-`app.config` and is stored in ~/.resilient/app.config.
-
-Generate a template app.config file with:
-```
-resilient-circuits config -c
-```  
-
-Or on Windows:
-```
-resilient-circuits.exe config -c
-```
-
-Edit the `app.config` file with parameters appropriate to your environment.__
-Any sample components you are running may have additional sections that 
-need to be added to the app.config file, which will be indicated in their README.  
-
-### Running an example
-
-After installing the resilient-circuits module, install a compatible integration
-package or copy some sample component modules to your `components` directory.  
-The path to this `components` directory will need to be specified in your app.config
-file in the [resilient] section in the `componentsdir` parameter.  
-
-Create a directory for resilient-circuits to write log files to and specify
-its location in the `logdir` parameter in your app.config file.  
-
-Once everything is configured, start the integration:
-```
-resilient-circuits run
-```  
-
-or on Windows,
-```
-resilient-circuits.exe run
-```
+For our API Documentation on this library, please see [ibm.biz/soar-python-docs](https://ibm.biz/soar-python-docs).
 
 
-### Logging
+## Change Log
+We are continuously adding to this package and our change log can be found at [ibm.biz/resilient-circuits-changes](https://ibm.biz/resilient-circuits-changes).
 
-Script output is logged to a file "app.log", which rotates if it grows large.
-On unix systems, the script output is also sent to syslog.
-You should periodically check the log for warnings and errors.
 
-### Usage:
-```
-resilient-circuits [-h] [-v]
-                          {run,list,test,service,config,codegen,extract,customize,selftest,clone,ext:package,ext:convert}
+## License and Terms
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -v, --verbose         Print debug output
+Copyright © IBM Corporation 2022
 
-subcommands:
-                        one of these options must be provided
-    run                 Run the Resilient Circuits application
-    list                List the installed Resilient Circuits components
-    test                An interactive client for testing Resilient Circuits
-                        messages
-    service             Manage Resilient Circuits as a service
-    config              Create or update a basic configuration file
-    customize           Apply customizations to the Resilient platform
-    selftest            Calls selftest functions for every package and prints
-                        out their return states
-    clone               Clone Resilient objects
-```
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
