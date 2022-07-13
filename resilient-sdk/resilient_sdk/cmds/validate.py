@@ -238,11 +238,10 @@ class CmdValidate(BaseCmd):
         # proxy support is determined by the version of resilient-circuits that is installed
         # if version 42 or greater, proxies are supported
         proxy_supported = False
-        install_requires = parsed_setup_file.get("install_requires", [])
-        # try to parse 'resilient-circuits' and if not found, try 'resilient_circuits'
-        package = package_helpers.get_dependency_from_install_requires(install_requires, "resilient-circuits")
-        if not package:
-            package = package_helpers.get_dependency_from_install_requires(install_requires, "resilient_circuits")
+        install_requires = parsed_setup_file.get(constants.SETUP_PY_INSTALL_REQ_NAME, [])
+        # try to parse 'resilient-circuits' from install requires
+        package = package_helpers.get_dependency_from_install_requires(install_requires, constants.CIRCUITS_PACKAGE_NAME)
+
         if package:
             circuits_version = re.findall(r"[0-9]+", package)
             circuits_version = tuple([int(i) for i in circuits_version])

@@ -77,10 +77,7 @@ setup_py_attributes = [
     }),
     ("install_requires", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: False 
-            if package_helpers.get_dependency_from_install_requires(x, "resilient_circuits") is not None 
-            else False if package_helpers.get_dependency_from_install_requires(x, "resilient-circuits") is not None
-            else True,
+        "fail_func": lambda x: package_helpers.get_dependency_from_install_requires(x, constants.CIRCUITS_PACKAGE_NAME) is None,
         "fail_msg": u"'resilient_circuits' must be included as a dependency in '{0}'. Found '{1}'",
         "missing_msg": u"'install_requires' is required in setup.py",
         "solution": u"Include 'resilient_circuits>={0}' as a requirement in '{1}'".format(
@@ -93,7 +90,7 @@ setup_py_attributes = [
         "fail_func": lambda x: bool(sdk_validate_helpers.check_dependencies_version_specifiers(x)),
         "fail_msg": u"'{0}' has the following improperly formatted dependencies: {2}",
         "fail_msg_lambda_supplement": lambda x: sdk_validate_helpers.check_dependencies_version_specifiers(x),
-        "solution": u"All dependencies (besides resilient-circuits) must be include a version in the format '~=' or '=='",
+        "solution": u"All dependencies (other than resilient-circuits) must be include a version in the format '~=' or '=='",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
     ("python_requires", {
