@@ -64,10 +64,13 @@ def test_get_package_name_invalid_path():
 
 
 def test_get_dependency_from_install_requires():
-    setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, ["install_requires"])
-    install_requires_str = setup_attributes.get("install_requires")
+    setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, [constants.SETUP_PY_INSTALL_REQ_NAME])
+    install_requires_str = setup_attributes.get(constants.SETUP_PY_INSTALL_REQ_NAME)
     res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(install_requires_str, "resilient_circuits")
+    assert res_circuits_dep_str == "resilient_circuits>=30.0.0"
 
+    # make sure works with "resiilent-circuits" too even if the install_requires specifies "_"
+    res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(install_requires_str, "resilient-circuits")
     assert res_circuits_dep_str == "resilient_circuits>=30.0.0"
 
 
