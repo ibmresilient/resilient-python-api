@@ -138,6 +138,7 @@ class ResilientComponent(BaseComponent):
        and actions and functions will be dispatched to its `handler` and `function` methods.
     """
     test_mode = False  # True with --test-actions option
+    IS_SELFTEST = False
 
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()

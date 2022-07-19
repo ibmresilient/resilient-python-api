@@ -278,10 +278,11 @@ class app_function(object):
 
                     elif isinstance(r, FunctionResult):
                         r.name = evt.name
-                        r.value = rp.done(
-                            content=r.value,
-                            success=r.success,
-                            reason=r.reason)
+                        if not r.custom_results:
+                            r.value = rp.done(
+                                content=r.value,
+                                success=r.success,
+                                reason=r.reason)
                         LOG.info("[%s] Returning results", r.name)
                         result_list.append(r)
 
