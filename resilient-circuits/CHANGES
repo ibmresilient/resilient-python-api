@@ -1,3 +1,9 @@
+**2022-07: version 46.0**
+
+* The ``FunctionResult`` in an ``AppFunctionComponent`` now supports a ``custom_results`` kwarg. If set to ``True`` the
+  dictionary of results sent to SOAR will be exactly as passed and not contain our default payload. We **do not recommend this**
+  however in some cases it may be necessary
+
 **2022-07: version 45.1**
 
 * Bug fix to avoid ``@app_function`` Components firing on all channels leading to Functions being invoked multiple times
