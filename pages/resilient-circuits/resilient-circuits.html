@@ -375,6 +375,12 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<p><strong>2022-07: version 46.0</strong></p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">FunctionResult</span></code> in an <code class="docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code> now supports a <code class="docutils literal notranslate"><span class="pre">custom_results</span></code> kwarg. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code> the
+dictionary of results sent to SOAR will be exactly as passed and not contain our default payload. We <strong>do not recommend this</strong>
+however in some cases it may be necessary</p></li>
+</ul>
 <p><strong>2022-07: version 45.1</strong></p>
 <ul class="simple">
 <li><p>Bug fix to avoid <code class="docutils literal notranslate"><span class="pre">@app_function</span></code> Components firing on all channels leading to Functions being invoked multiple times</p></li>
