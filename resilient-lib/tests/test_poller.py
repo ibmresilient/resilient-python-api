@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import sys
 from datetime import datetime
 
+import pytest
 from resilient_lib.components import poller_common
+from resilient_lib.util import constants
 
 NEW_CASE_PAYLOAD = {
   "name": "test case",
@@ -12,6 +15,7 @@ NEW_CASE_PAYLOAD = {
   "plan_status": "A"
 }
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_case(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
@@ -20,6 +24,7 @@ def test_get_case(fx_mock_resilient_client):
     assert "case_types" in case
     assert case["id"] == 2314
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_soar_case(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
@@ -28,6 +33,7 @@ def test_get_soar_case(fx_mock_resilient_client):
     assert case["plan_status"] == "A"
     assert case["id"] == 2314
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_soar_cases(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
@@ -37,13 +43,15 @@ def test_get_soar_cases(fx_mock_resilient_client):
     assert len(cases) == 1
     assert cases[0]["id"] == 2314
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_create_soar_case(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     created_case = soar_common.create_soar_case(NEW_CASE_PAYLOAD)
-    
+
     assert created_case["name"] == "test case"
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_update_soar_case(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
@@ -52,6 +60,7 @@ def test_update_soar_case(fx_mock_resilient_client):
     assert updated_case["id"] == 2314
     assert updated_case["success"]
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_create_case_comment(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
