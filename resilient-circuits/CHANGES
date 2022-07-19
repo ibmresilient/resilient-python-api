@@ -1,3 +1,15 @@
+**2022-08: version 46.0**
+
+* Enhanced the :func:`resilient_circuits.is_this_a_selftest() <resilient_circuits.helpers.is_this_a_selftest>` method
+  to check if any Component has been instantiated in a resilient-circuits instance running ``selftest``. Example:
+
+  .. code-block::
+
+    from resilient_circuits.helpers import is_this_a_selftest
+
+    if is_this_a_selftest(self):
+        # Do nothing...
+
 **2022-07: version 45.1**
 
 * Bug fix to avoid ``@app_function`` Components firing on all channels leading to Functions being invoked multiple times

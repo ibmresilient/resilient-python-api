@@ -421,13 +421,19 @@ port = 443
         # Set this manually b/c it is only read on import in app.py
         resilient_circuits.app.APP_CONFIG_FILE = config_file.strpath
 
+        # Check if is_selftest param was set
+        is_selftest = False
+
+        if hasattr(request, "param") and request.param.get("IS_SELFTEST"):
+            is_selftest = True
+
         self.manager = manager
         self.watcher = watcher
 
         # Remove the pytest commandline arguments so they don't break ArgParse in resilient
         sys.argv = sys.argv[0:1]
 
-        self.app = resilient_circuits.app.App().register(manager)
+        self.app = resilient_circuits.app.App(IS_SELFTEST=is_selftest).register(manager)
         assert watcher.wait("registered")
         pytest.wait_for(manager, "_running", True)
         assert watcher.wait("load_all_success", timeout=10)

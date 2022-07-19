@@ -88,6 +88,9 @@ class App(Component):
             # Make all components aware that we are in test mode
             ResilientComponent.test_mode = True
 
+        # Make all components aware that we are in selftest mode
+        ResilientComponent.IS_SELFTEST = self.IS_SELFTEST
+
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
