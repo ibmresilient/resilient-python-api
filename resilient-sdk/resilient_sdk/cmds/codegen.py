@@ -9,7 +9,6 @@ import logging
 import os
 import re
 import shutil
-import resilient_sdk
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -55,7 +54,7 @@ class CmdCodegen(BaseCmd):
 
         self.parser.add_argument("-pr", "--poller",
                                  action="store_true",
-                                 help="Build templates files for a poller")
+                                 help="Build template files for a poller")
 
         self.parser.add_argument(constants.SUB_CMD_OPT_GATHER_RESULTS,
                                  action="store",
@@ -130,20 +129,16 @@ class CmdCodegen(BaseCmd):
                 newly_generated_files += new_files
                 files_skipped += skipped_files
 
-            elif isinstance(file_info, str):
-                full_path = os.path.join(os.path.dirname(resilient_sdk.__file__),
-                              constants.PACKAGE_TEMPLATE_PATH,
-                              file_info)
-                if os.path.isfile(full_path):
-                    # It is just a path to a file, copy it to the target_file
-                    target_file = os.path.join(target_dir, file_name)
-                    if os.path.exists(target_file):
-                        # If file already exists skip copy.
-                        files_skipped.append(os.path.relpath(target_file, start=package_dir))
-                        continue
+            elif isinstance(file_info, str) and os.path.isfile(file_info):
+                # It is just a path to a file, copy it to the target_file
+                target_file = os.path.join(target_dir, file_name)
+                if os.path.exists(target_file):
+                    # If file already exists skip copy.
+                    files_skipped.append(os.path.relpath(target_file, start=package_dir))
+                    continue
 
-                    newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
-                    shutil.copy(full_path, target_file)
+                newly_generated_files.append(os.path.relpath(target_file, start=package_dir))
+                shutil.copy(file_info, target_file)
 
             else:
                 # Initialize variable for target file name from export.
@@ -153,7 +148,6 @@ class CmdCodegen(BaseCmd):
 
                 # Get data dict for this Jinja2 template
                 template_data = file_info[1]
-                print(os.path.join(os.path.dirname(resilient_sdk.__file__), constants.PACKAGE_TEMPLATE_PATH, path_template)) ## TODO
                 target_file = os.path.join(target_dir, file_name)
                 # Get target file extension.
                 target_ext = os.path.splitext(target_file)[1]
@@ -336,6 +330,9 @@ class CmdCodegen(BaseCmd):
         # add poller flag
         jinja_data["poller_flag"] = args.poller
 
+        # add ::CHANGE_ME:: to jinja data
+        jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
@@ -388,16 +385,18 @@ class CmdCodegen(BaseCmd):
             }
         }
 
-        # poller logic if requested
+        # poller logic if --poller flag was passed
         if args.poller:
             poller_mapping_dict = {
-                "__init__.py": "package/poller/__init__.py",
-                "app_common.py": "package/poller/app_common.py",
+                "__init__.py": ("package/poller/__init__.py.jinja2", jinja_data),
+                "app_common.py": ("package/poller/app_common.py.jinja2", jinja_data),
                 "poller.py": ("package/poller/poller.py.jinja2", jinja_data),
+                # data isn't rendered with jinja — these are default jinja templates to be modified
+                # by the developer who is implementing a poller
                 "data": {
-                    "soar_create_incident.jinja": "package/poller/data/soar_create_incident.jinja2",
-                    "soar_update_incident.jinja": "package/poller/data/soar_update_incident.jinja2",
-                    "soar_close_incident.jinja": "package/poller/data/soar_close_incident.jinja2"
+                    "soar_create_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
+                    "soar_update_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
+                    "soar_close_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
                 }
             }
             package_mapping_dict[package_name]['poller'] = poller_mapping_dict

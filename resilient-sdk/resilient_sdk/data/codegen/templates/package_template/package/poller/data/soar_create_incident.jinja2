@@ -8,7 +8,7 @@
   "discovered_date": {{ **receivedAt**| soar_datetimeformat(split_at='.') }},
   "start_date": {{ **start_date** | soar_datetimeformat(split_at='.') }},
   {# if alert users are different than SOAR users, consider using a mapping table using soar_substitute: #}
-  {# "owner_id": "{{ **assignedTo** |soar_substitute('{"Automation": "soar_user1@ent.com", "defender_user2@co.com": "soar_user2@ent.com", "DEFAULT": "default_user@ent.com" }') }}", #}
+  {# "owner_id": "{{ **assignedTo** |soar_substitute('{"Automation": "soar_user1@example.com", "default_user@example.com": "soar_user2@example.com", "DEFAULT": "default_user@example.com" }') }}", #}
   "plan_status": "A",
   "severity_code": "{{ **severity** | soar_substitute('{"Safe": "Low"}') }}",
   {# specify your custom fields for your endpoint solution #}

@@ -6,7 +6,7 @@ from resilient_lib.components import poller_common
 
 NEW_CASE_PAYLOAD = {
   "name": "test case",
-  "description": "a short description",
+  "description": u"a short description  ฑ ฒ ณ ด ต ถ ท ธ น ",
   "discovered_date": str(datetime.now()),
   "start_date": str(datetime.now()),
   "plan_status": "A"
@@ -55,7 +55,7 @@ def test_update_soar_case(fx_mock_resilient_client):
 def test_create_case_comment(fx_mock_resilient_client):
     soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
-    comment = "A test comment"
+    comment = u"A test comment  ฑ ฒ ณ ด ต ถ ท ธ น "
 
     resp = soar_common.create_case_comment(2314, comment)
 
