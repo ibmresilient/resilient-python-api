@@ -89,7 +89,7 @@ MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "display_name", "name", "version", "author",
-    "author_email", "install_requires", "description", 
+    "author_email", "install_requires", "description",
     "long_description", "url", "entry_points", "python_requires"
 )
 
@@ -224,7 +224,12 @@ def parse_setup_py(path, attribute_names, the_globals={}):
             return_dict[attribute_name] = entry_point_paths
         else:
             if result.get(attribute_name):
-                return_dict[attribute_name] = result.get(attribute_name)
+                value = result.get(attribute_name)
+
+                # clean out spaces in install_requires for better formatting
+                if attribute_name == constants.SETUP_PY_INSTALL_REQ_NAME:
+                    value = [" ".join(v.split()) for v in value]
+                return_dict[attribute_name] = value
 
     return return_dict
 
@@ -259,6 +264,15 @@ def get_dependency_from_install_requires(install_requires, dependency_name):
 
     # Get the dependency if it includes dependency_name
     dependency = next((d for d in install_requires if dependency_name in d), None)
+
+    if not dependency:
+        # pip allows for dependencies to have either "-" or "_" in their names so create a
+        # version that is the swapped of what was given to make this method resilient in handling
+        # both options
+        # eg: both "resilient-circuits" and "resilient_circuits" are allowed as depedencies in
+        # the install_requires list
+        dependency_name = dependency_name.replace("_", "-") if "_" in dependency_name else dependency_name.replace("-", "_")
+        dependency = next((d for d in install_requires if dependency_name in d), None)
 
     return dependency
 

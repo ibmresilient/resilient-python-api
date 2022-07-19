@@ -35,6 +35,30 @@ except ImportError as err:
 # float value in range [0, 1] that determines the cutoff at which two files are a match
 MATCH_THRESHOLD = 1.0
 
+def check_dependencies_version_specifiers(install_requires_list):
+    """
+    Check if all dependencies given in the "install_requires" list from setup.py
+    have the appropriate version specifiers. The allowed specifiers are "~=" and "=="
+    except for "resilient-circuits".
+    :param install_requires_list: list of dependencies as specified in setup.py file's install_requires list
+    :type install_requires_list: list(str)
+    :return: returns a list of all the dependencies that are mis-formatted or an empty list if all are correctly specified
+    :rtype: list
+    """
+
+    # need to allow for underscore versions too
+    circuits_name_with_under_score = constants.CIRCUITS_PACKAGE_NAME.replace("-", "_")
+
+    allowed_specifiers = ["~=", "=="]
+
+    deps_need_fixing = []
+    for dep in install_requires_list:
+        if constants.CIRCUITS_PACKAGE_NAME not in dep and circuits_name_with_under_score not in dep:
+            if all(specifier not in dep for specifier in allowed_specifiers):
+                deps_need_fixing.append(dep)
+
+    return deps_need_fixing
+
 def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     """
     selftest.py validation helper method.
