@@ -272,8 +272,23 @@ class StatusMessage(object):
 
 
 class FunctionResult(object):
-    """Encapsulates the result of a function call."""
     def __init__(self, value, success=True, reason=None, name="Unknown", custom_results=False):
+        """
+        Encapsulates the result of a Function call
+
+        :param value: the results of the Function
+        :type value: dict
+        :param success: whether or not the Function has succeeded, defaults to ``True``
+        :type success: bool, optional
+        :param reason: a brief reason why it failed, defaults to ``None``
+        :type reason: str | None, optional
+        :param name: name of the Function, defaults to ``"Unknown"``
+        :type name: str, optional
+        :param custom_results: if ``True`` ``value`` will not contain any default payload.
+            We **do not recommend setting it to True** however in some cases it may be necessary,
+            defaults to ``False``
+        :type custom_results: bool, optional
+        """
         super(FunctionResult, self).__init__()
         if not isinstance(value, dict):
             msg = "FunctionResult must be a dictionary. " \
