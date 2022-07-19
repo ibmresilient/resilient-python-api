@@ -7,7 +7,7 @@ import os
 from threading import Thread
 
 from resilient import get_client
-from resilient_circuits import AppFunctionComponent
+from resilient_circuits import AppFunctionComponent, is_this_a_selftest
 from resilient_lib import (SOARCommon, get_last_poller_date, get_template_dir,
                            make_payload_from_template, poller)
 
@@ -137,7 +137,8 @@ class PollerComponent(AppFunctionComponent):
         :rtype: bool
         """
         self.polling_interval = float(options.get("polling_interval", 0))
-        if not self.polling_interval:
+        if not self.polling_interval or is_this_a_selftest(self):
+            LOG.debug("Exiting poller because polling interval set to 0 or this run is a selftest.")
             return False
 
         LOG.info("Poller initiated, polling interval %s", self.polling_interval)

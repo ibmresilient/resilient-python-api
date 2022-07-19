@@ -13,7 +13,6 @@ from threading import Event
 
 from cachetools import LRUCache, cached
 from resilient import Patch, SimpleHTTPException
-from resilient_circuits.helpers import is_this_a_selftest
 from resilient_lib import (IntegrationError, get_file_attachment,
                            get_file_attachment_name)
 from six import raise_from
@@ -69,29 +68,28 @@ def poller(named_poller_interval, named_last_poller_time):
         #  when the last poller run to the function it's calling
         @functools.wraps(func)
         def wrapped(self, *args):
-            if not is_this_a_selftest(self):
 
-                last_poller_time = getattr(self, named_last_poller_time)
-                exit_event = Event()
+            last_poller_time = getattr(self, named_last_poller_time)
+            exit_event = Event()
 
-                while not exit_event.is_set():
-                    try:
-                        LOG.info("%s polling start.", self.PACKAGE_NAME)
-                        poller_start = datetime.datetime.now()
-                        # function execution with the last poller time in ms
-                        func(self, *args, last_poller_time=int(last_poller_time.timestamp()*1000))
+            while not exit_event.is_set():
+                try:
+                    LOG.info("%s polling start.", self.PACKAGE_NAME)
+                    poller_start = datetime.datetime.now()
+                    # function execution with the last poller time in ms
+                    func(self, *args, last_poller_time=int(last_poller_time.timestamp()*1000))
 
-                    except Exception as err:
-                        LOG.error(str(err))
-                        LOG.error(traceback.format_exc())
-                    finally:
-                        LOG.info("%s polling complete.", self.PACKAGE_NAME)
-                        # set the last poller time for next cycle
-                        last_poller_time = poller_start
+                except Exception as err:
+                    LOG.error(str(err))
+                    LOG.error(traceback.format_exc())
+                finally:
+                    LOG.info("%s polling complete.", self.PACKAGE_NAME)
+                    # set the last poller time for next cycle
+                    last_poller_time = poller_start
 
-                        # sleep before the next poller execution
-                        exit_event.wait(getattr(self, named_poller_interval))
-                exit_event.set() # loop complete
+                    # sleep before the next poller execution
+                    exit_event.wait(getattr(self, named_poller_interval))
+            exit_event.set() # loop complete
 
         return wrapped
     return poller_wrapper
