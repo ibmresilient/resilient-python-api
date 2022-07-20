@@ -173,8 +173,8 @@ selftest_attributes = [
 
 
 # check package files are present
-package_files = {
-    "MANIFEST.in": {
+package_files = [ 
+    ("MANIFEST.in", {
         "func": sdk_validate_helpers.package_files_manifest,
         "name": "'MANIFEST.in'",
 
@@ -187,8 +187,9 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'MANIFEST.in' has the minimum files included"
-    },
-    "apikey_permissions.txt": {
+    }),
+
+    ("apikey_permissions.txt", {
         "func": sdk_validate_helpers.package_files_apikey_pem,
         "name": "'apikey_permissions.txt'",
 
@@ -202,10 +203,11 @@ package_files = {
 
         "pass_msg": "'apikey_permissions.txt' is valid; it contains the base permissions",
         "pass_solution": "Permissions found: {0}"
-    },
-    "Dockerfile": {
+    }),
+
+    ("Dockerfile", {
         "func": sdk_validate_helpers.package_files_template_match,
-        "name": "'Dockerfile'",
+        "name": "'Dockerfile, template match'",
 
         "fail_msg": "'Dockerfile' does not match the template file ({0:.0f}% match). Difference from template:\n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
@@ -216,8 +218,19 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'Dockerfile' matches the template"
-    },
-    "entrypoint.sh": {
+    }),
+    ("Dockerfile", {
+        "func": sdk_validate_helpers.package_files_validate_base_image,
+        "name": "'Dockerfile, base image'",
+
+        "fail_msg": "Dockerfile is not using the correct base image: {0}", 
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "This can be fixed by {0}", 
+
+        "pass_msg": "Dockerfile is using the correct base image"
+        }),
+
+    ("entrypoint.sh", {
         "func": sdk_validate_helpers.package_files_template_match,
         "name": "'entrypoint.sh'",
 
@@ -230,8 +243,9 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'entrypoint.sh' matches the template file"
-    },
-    "config.py": {
+    }),
+
+    ("config.py", {
         "func": sdk_validate_helpers.package_files_validate_config_py,
         "path": "{0}/util/config.py",
         "name": "'config.py'",
@@ -250,8 +264,9 @@ package_files = {
 
         "pass_msg": "'config.py' returned a valid app.config value",
         "pass_solution": u"config data: \n\t\t{0}"
-    },
-    "customize.py": {
+    }),
+
+    ("customize.py", {
         "func": sdk_validate_helpers.package_files_validate_customize_py,
         "path": "{0}/util/customize.py",
         "name": "'customize.py'",
@@ -266,8 +281,9 @@ package_files = {
 
         "pass_msg": "'customize.py' returned a valid import definition",
         "pass_solution": u"ImportDefinition found: {0}...; View the entire contents at '{1}'"
-    },
-    "README.md": {
+    }),
+
+    ("README.md", {
         "func": sdk_validate_helpers.package_files_validate_readme,
         "name": "'README.md'",
 
@@ -293,8 +309,9 @@ package_files = {
 
         "pass_msg": "'README.md' has been implemented",
         "pass_solution": "Make sure that all documentation is up to date before packaging"
-    },
-    "app_logo.png": {
+    }),
+
+    ("app_logo.png", {
         "func": sdk_validate_helpers.package_files_validate_icon,
         "path": package_helpers.PATH_ICON_EXTENSION_LOGO,
         "default_path": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
@@ -313,8 +330,9 @@ package_files = {
 
         "pass_msg": "'{0}' icon found at {1}",
         "solution": "Icons appear in SOAR when your app is installed with App Host"
-    },
-    "company_logo.png": {
+    }),
+
+    ("company_logo.png", {
         "func": sdk_validate_helpers.package_files_validate_icon,
         "path": package_helpers.PATH_ICON_COMPANY_LOGO,
         "default_path": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
@@ -333,8 +351,9 @@ package_files = {
 
         "pass_msg": "'{0}' icon found at {1}",
         "solution": "Icons appear in SOAR when your app is installed with App Host"
-    },
-    "LICENSE": {
+    }),
+
+    ("LICENSE", {
         "func": sdk_validate_helpers.package_files_validate_license,
         "path": "{0}/LICENSE",
         "name": "LICENSE",
@@ -349,8 +368,8 @@ package_files = {
 
         "pass_msg": "'LICENSE' file is valid",
         "pass_solution": "It is recommended to manually validate the license. Suggested formats: MIT, Apache, and BSD"
-    }
-}
+    })
+ ]
 
 payload_samples_attributes = {
     "func": sdk_validate_helpers.payload_samples_validate_payload_samples,

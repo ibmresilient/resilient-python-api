@@ -332,3 +332,45 @@ def test_pass_parse_file_paths_from_readme():
 
     with pytest.raises(SDKException):
         result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)
+
+def test_parse_dockerfile():
+
+    command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH)
+
+    from_list = [constants.DOCKER_BASE_REPO]
+    arg_list = [
+        "APPLICATION=fn_main_mock_integration",
+        "RESILIENT_CIRCUITS_VERSION=37",
+        "PATH_RESILIENT_CIRCUITS=rescircuits",
+        "APP_HOST_CONTAINER=1"
+        ]
+    env_list = [
+        r"APP_HOST_CONTAINER=${APP_HOST_CONTAINER}",
+        r"APP_CONFIG_FILE /etc/${PATH_RESILIENT_CIRCUITS}/app.config",
+        r"APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}"
+    ]
+    user_list = ["0","1001"]
+    run_list = [
+        "pip install --upgrade pip",
+        r'pip install "resilient-circuits>=${RESILIENT_CIRCUITS_VERSION}"',
+        r"pip install /tmp/packages/${APPLICATION}-*.tar.gz",
+        r"mkdir /etc/${PATH_RESILIENT_CIRCUITS}",
+        "groupadd -g 1001 default && usermod -g 1001 default",
+        r"mkdir /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
+        r"mkdir /var/${PATH_RESILIENT_CIRCUITS}",
+        r"mkdir /opt/${PATH_RESILIENT_CIRCUITS}"
+        ]
+    copy_list = ["./dist /tmp/packages",r"entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh"]
+    entrypoint_list = ['[ "sh", "/opt/rescircuits/entrypoint.sh" ]']
+    empty_list = [
+        r"chgrp -R 1001 /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
+        r"chmod -R g=u /var/log/${PATH_RESILIENT_CIRCUITS}"]
+    
+    assert command_dict[constants.DOCKER_COMMAND_DICT["from_command"]] == from_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["set_argument"]] == arg_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["set_env_var"]] == env_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["user"]] == user_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["run_command"]] == run_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["copy_command"]] == copy_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["entrypoint"]] == entrypoint_list
+    # assert command_dict[''] == empty_list

@@ -147,9 +147,9 @@ def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
 def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = {
-        "mock_valid_file": {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]}
-    }
+    mock_data = [ 
+        ("mock_valid_file", {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]})
+     ]
 
     # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
     with patch("resilient_sdk.cmds.validate.sdk_helpers.validate_file_paths") as mock_validate_file:
@@ -168,10 +168,10 @@ def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = {
-        "mock_valid_file": {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]},
-        "mock_invalid_file": {"func": lambda **_: [SDKValidateIssue("fail", "fail")]}
-    }
+    mock_data = [ 
+        ("mock_valid_file", {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]}),
+        ("mock_invalid_file", {"func": lambda **_: [SDKValidateIssue("fail", "fail")]})
+     ]
 
     # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
     with patch("resilient_sdk.cmds.validate.sdk_helpers.validate_file_paths") as mock_validate_file:
@@ -192,14 +192,14 @@ def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
 def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration):
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = {
-        "mock_missing_file": {
+    mock_data = [ 
+        ("mock_missing_file", {
             "missing_name": "mock_name",
             "missing_msg": "mock_msg {0}",
             "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
             "missing_solution": "mock_solution"
-        }
-    }
+        })
+     ]
 
     # mock the package_file data to mock_data
     with patch("resilient_sdk.cmds.validate.validation_configurations.package_files", new=mock_data):
