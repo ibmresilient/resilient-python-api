@@ -373,13 +373,39 @@ that can be used to access the IBM SOAR REST API.</p>
 <p>The function handler will automatically be subscribed to the function’s <code class="docutils literal notranslate"><span class="pre">message</span> <span class="pre">destination</span></code>.</p>
 </dd></dl>
 </section>
+<section id="helpers">
+<h2>Helpers<a class="headerlink" href="#helpers" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_circuits.helpers.is_this_a_selftest">
+<span class="sig-name descname"><span class="pre">is_this_a_selftest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.helpers.is_this_a_selftest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> if this instantiation of
+<code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> is from selftest or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>component</strong> (<em>circuits.Component</em>) – the current component that is calling this method (usually ‘self’)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+</section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
-<p><strong>2022-07: version 46.0</strong></p>
-<ul class="simple">
+<p><strong>2022-08: version 46.0</strong></p>
+<ul>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">FunctionResult</span></code> in an <code class="docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code> now supports a <code class="docutils literal notranslate"><span class="pre">custom_results</span></code> kwarg. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code> the
 dictionary of results sent to SOAR will be exactly as passed and not contain our default payload. We <strong>do not recommend this</strong>
 however in some cases it may be necessary</p></li>
+<li><p>Enhanced the <a class="reference internal" href="#resilient_circuits.helpers.is_this_a_selftest" title="resilient_circuits.helpers.is_this_a_selftest"><code class="xref py py-func docutils literal notranslate"><span class="pre">resilient_circuits.is_this_a_selftest()</span></code></a> method
+to check if any Component has been instantiated in a resilient-circuits instance running <code class="docutils literal notranslate"><span class="pre">selftest</span></code>. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_circuits.helpers</span> <span class="kn">import</span> <span class="n">is_this_a_selftest</span>
+
+<span class="k">if</span> <span class="n">is_this_a_selftest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="c1"># Do nothing...</span>
+</pre></div>
+</div>
+</li>
 </ul>
 <p><strong>2022-07: version 45.1</strong></p>
 <ul class="simple">
@@ -700,6 +726,7 @@ components are instead sent a ‘reload’ event.</p></li>
 <li><a class="reference internal" href="#">resilient-circuits</a><ul>
 <li><a class="reference internal" href="#components">Components</a></li>
 <li><a class="reference internal" href="#decorators">Decorators</a></li>
+<li><a class="reference internal" href="#helpers">Helpers</a></li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
 </ul>
 </li>
