@@ -3,34 +3,40 @@
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
 """Common Helper Functions for the resilient-sdk"""
-import logging
-import keyword
-import re
-import os
-import sys
-import io
+import ast
 import copy
-import json
 import datetime
-import importlib
 import hashlib
+import importlib
+import io
+import json
+import keyword
+import logging
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
 import time
 import uuid
-import shlex
-import subprocess
-import ast
-import pkg_resources
-import tempfile
-import shutil
 import xml.etree.ElementTree as ET
-from jinja2 import Environment, PackageLoader
-from zipfile import ZipFile, is_zipfile, BadZipfile
+from zipfile import BadZipfile, ZipFile, is_zipfile
+
+import pkg_resources
+import requests
 import requests.exceptions
-from resilient import ArgumentParser, get_config_file, get_client
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.resilient_objects import DEFAULT_INCIDENT_TYPE, DEFAULT_INCIDENT_FIELD, ResilientTypeIds, ResilientFieldTypes, ResilientObjMap
-from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
+from jinja2 import Environment, PackageLoader
+from resilient import ArgumentParser, get_client, get_config_file
 from resilient_sdk.util import constants
+from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
+from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_FIELD,
+                                                  DEFAULT_INCIDENT_TYPE,
+                                                  ResilientFieldTypes,
+                                                  ResilientObjMap,
+                                                  ResilientTypeIds)
+from resilient_sdk.util.sdk_exception import SDKException
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -112,6 +118,28 @@ def write_file(path, contents):
 
     with io.open(path, mode="wt", encoding="utf-8", newline="\n") as the_file:
         the_file.write(contents)
+
+
+def write_latest_pypi_tmp_file(latest_version, path_sdk_tmp_pypi_version):
+    """
+    Writes the ``latest_version`` and the ts of the current time
+    to ``path_sdk_tmp_pypi_version``
+
+    If ``latest_version`` is a ``pkg_resources.Version``, get its ``base_version``.
+    Note: this is actually a different Version type - we would have to import extra
+    dependencies to correctly use isinstance(latest_version, Version) - so just checking
+    if it has the attribute
+    """
+    # Try get the 'base_version' if this is a Version object
+    if isinstance(latest_version, object):
+        latest_version = getattr(latest_version, "base_version", latest_version)
+
+    saved_version_data = {
+        "ts": int(time.time()),
+        "version": latest_version
+    }
+
+    write_file(path_sdk_tmp_pypi_version, json.dumps(saved_version_data))
 
 
 def read_file(path):
@@ -1170,6 +1198,10 @@ def get_resilient_sdk_version():
 
     :return: a Version object
     """
+    # TODO: remove this when QA is finished for this story
+    if os.getenv(constants.ENV_VAR_DEV) == '2':
+        return pkg_resources.parse_version("40.0.0")
+
     return get_package_version(constants.SDK_PACKAGE_NAME)
 
 
@@ -1178,7 +1210,7 @@ def get_package_version(package_name):
     Uses pkg_resources to parse the version of a package if installed in the environment.
     If not installed, return None
 
-    :param package_name: name of the packge to get version of
+    :param package_name: name of the package to get version of
     :type package_name: str
     :return: a Version object representing the version of the given package or None
     :rtype: Version or None
@@ -1187,6 +1219,111 @@ def get_package_version(package_name):
         return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
     except pkg_resources.DistributionNotFound:
         return None
+
+
+def get_latest_version_on_pypi():
+    """
+    Uses requests to call 'https://pypi.org/pypi/resilient-sdk/json'
+    to get a JSON dict of all the available versions on PyPi.
+    Sorts the dict into a list, then gets the latest
+
+    :raises HTTPError: if a problem occurs reaching pypi.org
+    :return: the latest available version of this library on PyPi
+    :rtype: pkg_resources.extern.packaging.version.Version
+    """
+    r = requests.get(constants.URL_PYPI_VERSION, timeout=5)
+    r.raise_for_status()
+
+    res_json = r.json()
+
+    available_versions = []
+
+    for the_version in res_json.get("releases", {}):
+
+        v = pkg_resources.parse_version(the_version)
+
+        if not isinstance(v, pkg_resources.extern.packaging.version.LegacyVersion):
+            available_versions.append(v)
+
+    available_versions = sorted(available_versions)
+
+    return available_versions[-1]
+
+
+def get_latest_available_version():
+    """
+    Sees if the latest version is stored in a tmp file
+    and if the file is missing or the timestamp is older
+    than 3 days, gets the latest version from PyPi
+
+    :return: the latest available version of this library on PyPi
+    :rtype: pkg_resources.Version
+    """
+    latest_available_version = None
+
+    sdk_tmp_dir = get_sdk_tmp_dir()
+    path_sdk_tmp_pypi_version = os.path.join(sdk_tmp_dir, constants.TMP_PYPI_VERSION)
+
+    if os.path.isfile(path_sdk_tmp_pypi_version):
+        pypi_version_data = read_json_file(path_sdk_tmp_pypi_version)
+
+        now = datetime.datetime.now()
+        ts = datetime.datetime.fromtimestamp(pypi_version_data.get("ts", ""))
+        refresh_pypi_date = ts + datetime.timedelta(days=3)
+
+        if now > refresh_pypi_date:
+            latest_available_version = get_latest_version_on_pypi()
+            write_latest_pypi_tmp_file(latest_available_version, path_sdk_tmp_pypi_version)
+
+        else:
+            return pkg_resources.parse_version(pypi_version_data.get("version", ""))
+
+    else:
+        latest_available_version = get_latest_version_on_pypi()
+        write_latest_pypi_tmp_file(latest_available_version, path_sdk_tmp_pypi_version)
+
+    return latest_available_version
+
+
+def create_tmp_dir(sdk_tmp_dir_name=constants.SDK_RESOURCE_NAME, tmp_dir=tempfile.gettempdir()):
+    """
+    Checks if user has correct permissions then creates
+    the sdk_tmp_dir
+
+    :param sdk_tmp_dir_name: the name for the dir to create in the system's /tmp folder
+    :type sdk_tmp_dir_name: str
+    :param tmp_dir: the path to the temp files location on the system
+    :type tmp_dir: str
+    :return: path to the sdk_tmp_dir
+    :rtype: str
+    """
+    validate_dir_paths(os.W_OK, tmp_dir)
+
+    path_sdk_tmp_dir = os.path.join(tmp_dir, sdk_tmp_dir_name)
+
+    os.makedirs(path_sdk_tmp_dir)
+
+    return path_sdk_tmp_dir
+
+
+def get_sdk_tmp_dir(sdk_tmp_dir_name=constants.SDK_RESOURCE_NAME, tmp_dir=tempfile.gettempdir()):
+    """
+    Gets the path to the sdk_tmp_dir or creates it if it does
+    not exist
+
+    :param sdk_tmp_dir_name: the name for the dir normally the name of the package
+    :type sdk_tmp_dir_name: str
+    :param tmp_dir: the path to the temp files location on the system
+    :type tmp_dir: str
+    :return: path to the sdk_tmp_dir
+    :rtype: str
+    """
+    path_sdk_tmp_dir = os.path.join(tmp_dir, sdk_tmp_dir_name)
+
+    if not os.path.isdir(path_sdk_tmp_dir):
+        path_sdk_tmp_dir = create_tmp_dir(sdk_tmp_dir_name, tmp_dir)
+
+    return path_sdk_tmp_dir
 
 
 def is_python_min_supported_version(custom_warning=None):

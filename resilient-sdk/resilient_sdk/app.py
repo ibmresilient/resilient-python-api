@@ -8,12 +8,9 @@ import logging
 import os
 import sys
 
-import pkg_resources
-import requests
-
 from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDev, CmdDocgen,
                                 CmdExtPackage, CmdExtract, CmdValidate)
-from resilient_sdk.util import constants, sdk_helpers
+from resilient_sdk.util import constants, sdk_helpers, package_file_helpers
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 from resilient_sdk.util.sdk_exception import SDKException
 
@@ -79,33 +76,23 @@ def main():
     Main entry point for resilient-sdk
     """
 
-    response = requests.request("GET", "https://pypi.org/pypi/resilient-sdk/json", timeout=10)
-
-    res_json = response.json()
-
-    available_versions = []
-
-    res_json["releases"].update({"42.0.0": None})
-
-    for k in res_json.get("releases", {}):
-        try:
-            available_versions.append(pkg_resources.parse_version(k))
-        except TypeError:
-            LOG.debug("WARNING: Could not parse version for '%s', skipping...", k)
-
-    available_versions = sorted(available_versions)
-    latest_available_version = available_versions[-1]
-
-    current_version = pkg_resources.parse_version(pkg_resources.require("resilient-sdk")[0].version)
-
-    if current_version < latest_available_version:
-        LOG.warning("--------------------\nWARNING: '%s' is not the latest version. v%s is available on https://pypi.org/project/resilient-sdk/ \nRun: 'pip install -U resilient-sdk' to get latest version\n--------------------", current_version, latest_available_version)
-
     # add color support for WINDOWS
     os.system("")
 
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV)
+
+    if sys.version_info.major >= 3:
+
+        try:
+            current_version = sdk_helpers.get_resilient_sdk_version()
+            latest_available_version = sdk_helpers.get_latest_available_version()
+
+            if current_version < latest_available_version:
+                package_file_helpers.print_latest_version_warning(current_version, latest_available_version)
+
+        except Exception as err:
+            LOG.debug("Error getting latest version: %s", str(err))
 
     # Get main parser object
     parser = get_main_app_parser()

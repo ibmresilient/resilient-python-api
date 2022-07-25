@@ -1091,3 +1091,22 @@ def check_validate_report_exists():
     """
 
     return PATH_VALIDATE_REPORT if os.path.exists(PATH_VALIDATE_REPORT) else None
+
+
+def print_latest_version_warning(current_version, latest_available_version):
+    """
+    Convert all text to yellow and LOG a warning message
+    with current_version and latest_available_version
+    """
+
+    log_level = "WARNING"
+
+    l0 = color_output(constants.LOG_DIVIDER, log_level)
+    l1 = color_output("WARNING:", log_level)
+    l2 = color_output("'{0}' is not the latest version of the resilient-sdk. 'v{1}' is available on https://pypi.org/project/resilient-sdk/".format(current_version, latest_available_version), log_level)
+    l3 = color_output("To update run:", log_level)
+    l4 = color_output("$ pip install -U resilient-sdk", log_level)
+
+    s = "{0}\n{1}\n{2}\n\n{3}\n\t{4}\n{0}".format(l0, l1, l2, l3, l4)
+
+    LOG.warning(s)
