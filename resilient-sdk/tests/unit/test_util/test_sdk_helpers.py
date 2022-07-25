@@ -526,6 +526,7 @@ def test_get_latest_available_version_tmp_file(fx_mk_os_tmp_dir):
     assert latest_version.base_version == "45.0.0"
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_get_latest_available_version_refresh_date(fx_mk_os_tmp_dir):
 
     path_sdk_tmp_pypi_version = os.path.join(fx_mk_os_tmp_dir, constants.TMP_PYPI_VERSION)
