@@ -1093,6 +1093,36 @@ def check_validate_report_exists():
     return PATH_VALIDATE_REPORT if os.path.exists(PATH_VALIDATE_REPORT) else None
 
 
+def color_lines(log_level, lines):
+    """
+    Takes a list of strs and adds the given log_level
+    color to the str. Then returns the list of ``colored_lines``
+
+    Note: colored_lines[0] will always be a ``constants.LOG_DIVIDER``
+
+    See ``print_latest_version_warning`` method for an example usage
+
+    :param log_level: map to COLORS dict defined as constant above
+    :type log_level: str
+    :param lines: list of strings to add color to
+    :type lines: [str]
+    :return: List of colored_lines or an empty list if ``lines`` is falsy
+    :rtype: [str] | None
+    """
+
+    colored_lines = []
+
+    if not lines:
+        return colored_lines
+
+    colored_lines.append(color_output(constants.LOG_DIVIDER, log_level))
+
+    for l in lines:
+        colored_lines.append(color_output(l, log_level))
+
+    return colored_lines
+
+
 def print_latest_version_warning(current_version, latest_available_version):
     """
     Convert all text to yellow and LOG a warning message
@@ -1101,12 +1131,13 @@ def print_latest_version_warning(current_version, latest_available_version):
 
     log_level = "WARNING"
 
-    l0 = color_output(constants.LOG_DIVIDER, log_level)
-    l1 = color_output("WARNING:", log_level)
-    l2 = color_output("'{0}' is not the latest version of the resilient-sdk. 'v{1}' is available on https://pypi.org/project/resilient-sdk/".format(current_version, latest_available_version), log_level)
-    l3 = color_output("To update run:", log_level)
-    l4 = color_output("$ pip install -U resilient-sdk", log_level)
+    colored_lines = color_lines(log_level, [
+        "{0}:".format(log_level),
+        "'{0}' is not the latest version of the resilient-sdk. 'v{1}' is available on https://pypi.org/project/resilient-sdk/".format(current_version, latest_available_version),
+        "To update run:",
+        "$ pip install -U resilient-sdk"
+    ])
 
-    s = "{0}\n{1}\n{2}\n\n{3}\n\t{4}\n{0}".format(l0, l1, l2, l3, l4)
+    w = "{0}\n{1}\n{2}\n\n{3}\n\t{4}\n{0}".format(colored_lines[0], colored_lines[1], colored_lines[2], colored_lines[3], colored_lines[4])
 
-    LOG.warning(s)
+    LOG.warning(w)

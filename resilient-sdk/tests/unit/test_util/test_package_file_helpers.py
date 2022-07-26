@@ -316,6 +316,7 @@ def test_color_diff_output():
             # lines that shouldn't get any color added
             assert line == mock_diff_data_generator[i]
 
+
 def test_pass_parse_file_paths_from_readme():
 
     mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
@@ -332,3 +333,14 @@ def test_pass_parse_file_paths_from_readme():
 
     with pytest.raises(SDKException):
         result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)
+
+
+def test_color_lines_empty():
+    assert not package_helpers.color_lines("WARNING", [])
+
+
+def test_color_lines():
+    colored_lines = package_helpers.color_lines("CRITICAL", ["WARNING:", "This is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error"])
+    assert colored_lines[0] == "\x1b[91m\n------------------------\n\x1b[0m"
+    assert colored_lines[1] == "\x1b[91mWARNING:\x1b[0m"
+    assert colored_lines[2] == u"\x1b[91mThis is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error\x1b[0m"
