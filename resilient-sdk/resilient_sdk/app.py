@@ -76,12 +76,15 @@ def main():
     Main entry point for resilient-sdk
     """
 
+    pypi_warning = None
+
     # add color support for WINDOWS
     os.system("")
 
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV)
 
+    # Check if we have latest version installed
     if sys.version_info.major >= 3:
 
         try:
@@ -92,7 +95,11 @@ def main():
                 package_file_helpers.print_latest_version_warning(current_version, latest_available_version)
 
         except Exception as err:
-            LOG.debug("Error getting latest version: %s", str(err))
+            log_level = "WARNING"
+            colored_lines = package_file_helpers.color_lines(log_level, [
+                "{0}: Error getting latest version from PyPi:".format(log_level)
+            ])
+            pypi_warning = "{0}\n{1}\n\t{2}\n{0}".format(colored_lines[0], colored_lines[1], str(err))
 
     # Get main parser object
     parser = get_main_app_parser()
@@ -161,6 +168,9 @@ def main():
     if args.verbose:
         LOG.setLevel(logging.DEBUG)
         LOG.debug("Logging set to DEBUG mode")
+
+        if pypi_warning:
+            LOG.debug(pypi_warning)
 
     # Handle what subcommand was called
     if args.cmd == cmd_docgen.CMD_NAME:

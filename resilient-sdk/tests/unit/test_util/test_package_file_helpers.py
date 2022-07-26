@@ -340,7 +340,7 @@ def test_color_lines_empty():
 
 
 def test_color_lines():
-    colored_lines = package_helpers.color_lines("CRITICAL", ["WARNING:", "This is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error"])
-    assert colored_lines[0] == "\x1b[91m\n------------------------\n\x1b[0m"
-    assert colored_lines[1] == "\x1b[91mWARNING:\x1b[0m"
+    colored_lines = package_helpers.color_lines("CRITICAL", [u"WARNING:", u"This is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error"])
+    assert colored_lines[0] == u"\x1b[91m\n------------------------\n\x1b[0m"
+    assert colored_lines[1] == u"\x1b[91mWARNING:\x1b[0m"
     assert colored_lines[2] == u"\x1b[91mThis is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error\x1b[0m"
