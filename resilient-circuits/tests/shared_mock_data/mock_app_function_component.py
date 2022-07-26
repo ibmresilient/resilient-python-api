@@ -31,6 +31,10 @@ class AppFunctionMockComponent(AppFunctionComponent):
         yield self.status_message(u"Function name: {0}".format(fn_msg.get("function", {}).get("name", "Unknown")))
         yield FunctionResult({"malware": True})
 
+    @app_function(mock_constants.MOCK_APP_FN_NAME_CUSTOM_RESULT)
+    def _app_function_mock_custom_result(self, fn_inputs):
+        yield FunctionResult({"custom_key": "custom_value"}, custom_results=True)
+
     @app_function(mock_constants.MOCK_APP_FN_NAME_EX)
     def _app_function_mock_raise_exception(self, fn_inputs):
         raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")

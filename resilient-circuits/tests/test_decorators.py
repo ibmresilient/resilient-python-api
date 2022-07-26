@@ -122,9 +122,16 @@ def test_fn_trap_exception_True(circuits_app):
     assert "mock error message with unicode" in results.get("reason")
 
 
-def test_app_trap_exception_True(circuits_app):
-    circuits_app.app.opts[constants.APP_CONFIG_TRAP_EXCEPTION] = True
+def test_app_trap_exception_False(circuits_app):
+    circuits_app.app.opts[constants.APP_CONFIG_TRAP_EXCEPTION] = False
     AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app)
-    results = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
-    assert results.get("success") is False
-    assert "mock error message with unicode" in results.get("reason")
+
+    with pytest.raises(IntegrationError, match=r"mock error message with unicode"):
+        helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_EX, {"input_one": "abc"}, circuits_app)
+
+
+def test_app_custom_result_True(circuits_app):
+    circuits_app.app.opts[constants.APP_CONFIG_TRAP_EXCEPTION] = False
+    AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app)
+    results = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_CUSTOM_RESULT, {"input_one": "abc"}, circuits_app)
+    assert results.get("custom_key", "") == "custom_value"

@@ -13,3 +13,4 @@ from .action_message import ActionMessageBase, ActionMessage, \
 from .decorators import function, inbound_app, app_function, handler, required_field, required_action_field, defer, debounce
 from .actions_test_component import SubmitTestAction, SubmitTestFunction, SubmitTestInboundApp
 from .app_function_component import AppFunctionComponent
+from .helpers import is_this_a_selftest

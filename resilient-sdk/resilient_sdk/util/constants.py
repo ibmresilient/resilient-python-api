@@ -56,6 +56,9 @@ TMP_PYPI_VERSION = "latest_pypi_version.json"
 # URLs
 URL_PYPI_VERSION = "https://pypi.org/pypi/resilient-sdk/json"
 
+# setup.py constants (for validate)
+SETUP_PY_INSTALL_REQ_NAME = "install_requires"
+
 # tox tests constants (used in validate)
 TOX_PACKAGE_NAME = "tox"
 TOX_INI_FILENAME = "tox.ini"
@@ -76,6 +79,7 @@ BANDIT_DEFAULT_ARGS = ["--exclude", "customize.py,tests/*", "--format", "screen"
 BANDIT_DEFAULT_SEVERITY_LEVEL = ["-ll"]
 BANDIT_VERBOSE_FLAG = ["-v"]
 
+# icon sizing constants (for validate)
 ICON_APP_LOGO_REQUIRED_WIDTH = 200
 ICON_APP_LOGO_REQUIRED_HEIGHT = 72
 ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100
