@@ -77,7 +77,7 @@ class FunctionWorker(Worker):
            (see FallBackSignalHandler in circuits/core/helpers.py)
         """
         if signo in [SIGINT, SIGTERM]:
-            LOG.info("Worker interrupted")
+            LOG.error("Worker interrupted")
             raise SystemExit(0)
 
     @handler("task", override=True)
