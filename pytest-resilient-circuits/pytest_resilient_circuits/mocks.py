@@ -261,6 +261,16 @@ class BasicResilientMock(ResilientMock):
         field_data = test_data("200_JSON_GET__types_function_fields.json")
         return requests_mock.create_response(request, status_code=200, json=field_data)
 
+    @resilient_endpoint("GET", "/types/[\w_]+$")
+    def type_get(self, request):
+        """ Callback for GET to /orgs/<org_id>/types/<some_type> """
+        LOG.debug("function_fields_get")
+        try:
+            field_data = test_data("200_JSON_GET__types_{0}.json".format(request.path.split("/")[-1]))
+            return requests_mock.create_response(request, status_code=200, json=field_data)
+        except FileNotFoundError:
+            return requests_mock.create_response(request, status_code=404)
+
     @resilient_endpoint("GET", "/actions")
     def actions_get(self, request):
         """ Callback for GET to /orgs/<org_id>/actions """
@@ -306,13 +316,39 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json=data)
 
+    @resilient_endpoint("GET", "/incidents/[0-9]+/attachments/[0-9]+$")
+    def attachments_get_with_id(self, request):
+        """ Callback for GET to attachment list """
+        LOG.debug("attachments_with_id_get")
+        data = test_data("200_JSON_GET__attachments.json")
+
+        attach_id = request.path.split("/")[-1]
+
+        data = next(d for d in data if str(d["id"]) == attach_id)
+
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
 
     @resilient_endpoint("POST", "/incidents/[0-9]+/attachments$")
     def attachment_contents_post(self, request):
         """ Callback for POST to attachment """
         LOG.debug("attachment_post")
         data = test_data("200_JSON_POST__attachment.json")
-        return requests_mock.create_response(request, status_code=200, json=data)
+        return requests_mock.create_response(request, 
+                                             status_code=200, 
+                                             json=data)
+
+
+    @resilient_endpoint("POST", "/incidents/[0-9]+/table_data/[\w\d]+/row_data$")
+    def datatable_cells_post(self, request):
+        """ Callback for POST to table_data """
+        LOG.debug("datatable_cells_post")
+        data = test_data("200_JSON_POST__table_data.json")
+        return requests_mock.create_response(request, 
+                                             status_code=200, 
+                                             json=data)
 
     @resilient_endpoint("GET", "/wikis")
     def wikis_get(self, request):

@@ -487,7 +487,8 @@ class SOARCommon():
         :type task_id: str|int
         :param attachment_id: id of the Incident's Attachment to download
         :type attachment_id: int|str
-        :param return_base64: if False, return value of the content will be given as bytes
+        :param return_base64: if False, return value of the content will be given as bytes, default True returns a base64 encoded string
+        :type return_base64: bool
         :return: name of the artifact or file and base64 encoded string or byte string of attachment
         :rtype: tuple(str, bytes|base64(str))
         """
@@ -516,37 +517,44 @@ class SOARCommon():
         """
         return self._get_case_info(case_id, "comments")
 
-    def get_case_attachments(self, case_id):
+    def get_case_attachments(self, case_id, return_base64=True):
         """
         Get all case attachments
         
         :param case_id: ID of the case to get the details of
         :type case_id: str|int
+        :param return_base64: if False, return value of the content will be given as bytes
+        :type return_base64: bool
+        :return: list of attachments associated with the given case
+        :rtype: list[tuple(str, bytes|base64(str))]
         """
         attachments =  self._get_case_info(case_id, "attachments")
         for attachment in attachments:
-            _, attachment['content'] = self.get_case_attachment(case_id, attachment_id=attachment['id'])
+            _, attachment['content'] = self.get_case_attachment(case_id, attachment_id=attachment['id'], return_base64=return_base64)
 
         return attachments
 
     def lookup_artifact_type(self, artifact_type):
         """
         Return an artifact type based on it's ID on SOAR. If not found, return None
-        
+
         :param artifact_type: artifact type to search for in SOAR
         :type artifact_type: str
         :return: found artifact type if found in SOAR
         :rtype: str
         """
-        types = self._get_artifact_types()
-        if artifact_type in types:
-            return types[artifact_type]
+        try:
+            types = self._get_artifact_types()
+            if artifact_type in types:
+                return types[artifact_type]
+        except SimpleHTTPException:
+            pass
         return None
 
     def lookup_incident_types(self, incident_type_ids):
         """
         Return an incident type based on it's ID. If not found, return None
-        
+
         :param incident_type_ids: list of incident type IDs to check for in SOAR
         :type incident_type_ids: list(str)
         :return: list of incident types that match in SOAR what was given
@@ -671,7 +679,8 @@ def get_last_poller_date(polling_lookback):
     return _get_timestamp() - datetime.timedelta(minutes=polling_lookback)
 
 def _get_timestamp():
-    """get the existing timestamp
+    """
+    Get the current timestamp
 
     Returns:
         datetime: current datetime

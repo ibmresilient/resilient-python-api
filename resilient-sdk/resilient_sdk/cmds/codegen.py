@@ -389,7 +389,6 @@ class CmdCodegen(BaseCmd):
         if args.poller:
             poller_mapping_dict = {
                 "__init__.py": ("package/poller/__init__.py.jinja2", jinja_data),
-                "app_common.py": ("package/poller/app_common.py.jinja2", jinja_data),
                 "poller.py": ("package/poller/poller.py.jinja2", jinja_data),
                 # data isn't rendered with jinja — these are default jinja templates to be modified
                 # by the developer who is implementing a poller
@@ -399,7 +398,12 @@ class CmdCodegen(BaseCmd):
                     "soar_close_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
                 }
             }
+            lib_mapping_dict = {
+                "__init__.py": ("package/lib/__init__.py.jinja2", jinja_data),
+                "app_common.py": ("package/lib/app_common.py.jinja2", jinja_data)
+            }
             package_mapping_dict[package_name]['poller'] = poller_mapping_dict
+            package_mapping_dict[package_name]['lib'] = lib_mapping_dict
 
         # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):
