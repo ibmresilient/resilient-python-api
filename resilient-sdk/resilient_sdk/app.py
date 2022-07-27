@@ -10,8 +10,7 @@ import sys
 
 from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDev, CmdDocgen,
                                 CmdExtPackage, CmdExtract, CmdValidate)
-from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util import constants
+from resilient_sdk.util import constants, sdk_helpers, package_file_helpers
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 from resilient_sdk.util.sdk_exception import SDKException
 
@@ -77,11 +76,30 @@ def main():
     Main entry point for resilient-sdk
     """
 
+    pypi_warning = None
+
     # add color support for WINDOWS
     os.system("")
 
     # See if RES_SDK_DEV environment var is set
     sdk_dev = sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV)
+
+    # Check if we have latest version installed
+    if sys.version_info.major >= 3:
+
+        try:
+            current_version = sdk_helpers.get_resilient_sdk_version()
+            latest_available_version = sdk_helpers.get_latest_available_version()
+
+            if current_version < latest_available_version:
+                package_file_helpers.print_latest_version_warning(current_version, latest_available_version)
+
+        except Exception as err:
+            log_level = "WARNING"
+            colored_lines = package_file_helpers.color_lines(log_level, [
+                "{0}: Error getting latest version from PyPi:".format(log_level)
+            ])
+            pypi_warning = "{0}\n{1}\n\t{2}\n{0}".format(colored_lines[0], colored_lines[1], str(err))
 
     # Get main parser object
     parser = get_main_app_parser()
@@ -150,6 +168,9 @@ def main():
     if args.verbose:
         LOG.setLevel(logging.DEBUG)
         LOG.debug("Logging set to DEBUG mode")
+
+        if pypi_warning:
+            LOG.debug(pypi_warning)
 
     # Handle what subcommand was called
     if args.cmd == cmd_docgen.CMD_NAME:

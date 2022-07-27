@@ -319,6 +319,7 @@ def test_color_diff_output():
             # lines that shouldn't get any color added
             assert line == mock_diff_data_generator[i]
 
+
 def test_pass_parse_file_paths_from_readme():
 
     mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
@@ -335,3 +336,22 @@ def test_pass_parse_file_paths_from_readme():
 
     with pytest.raises(SDKException):
         result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)
+
+
+def test_color_lines_empty():
+    assert not package_helpers.color_lines("WARNING", [])
+
+
+def test_color_lines():
+    colored_lines = package_helpers.color_lines("CRITICAL", [u"WARNING:", u"This is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error"])
+    assert colored_lines[0] == u"\x1b[91m\n------------------------\n\x1b[0m"
+    assert colored_lines[1] == u"\x1b[91mWARNING:\x1b[0m"
+    assert colored_lines[2] == u"\x1b[91mThis is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error\x1b[0m"
+
+
+def test_print_latest_version_warning(caplog):
+    package_helpers.print_latest_version_warning("40.0.0", "41.0.0")
+    msg = "WARNING:\n'40.0.0' is not the latest version of the resilient-sdk. \
+'v41.0.0' is available on https://pypi.org/project/resilient-sdk/\n\n\
+To update run:\n\t$ pip install -U resilient-sdk"
+    assert msg in caplog.text
