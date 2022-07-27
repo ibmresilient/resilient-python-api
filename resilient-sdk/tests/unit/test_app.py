@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
 
-import sys
 import argparse
+import sys
+import pytest
+
 import resilient_sdk.app as app
+from mock import patch, MagicMock
+import pkg_resources
 
 
 def test_get_main_app_parser():
@@ -31,3 +35,18 @@ def test_get_main_app_sub_parser():
     assert sub_parser.dest == "cmd"
     assert sub_parser.container.description == "one of these subcommands must be provided"
     assert sub_parser.container.title == "subcommands"
+
+
+@patch.multiple("resilient_sdk.app.sdk_helpers",
+                get_resilient_sdk_version=MagicMock(return_value=pkg_resources.parse_version("40.0.0")),
+                get_latest_available_version=MagicMock(return_value=pkg_resources.parse_version("41.0.0")))
+def test_main_print_version_warning(caplog):
+
+    with pytest.raises(SystemExit):
+        app.main()
+
+    msg = "WARNING:\n'40.0.0' is not the latest version of the resilient-sdk. \
+'v41.0.0' is available on https://pypi.org/project/resilient-sdk/\n\n\
+To update run:\n\t$ pip install -U resilient-sdk"
+
+    assert msg in caplog.text
