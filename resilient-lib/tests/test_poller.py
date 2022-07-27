@@ -30,9 +30,9 @@ NEW_CASE_PAYLOAD = {
 
 class SimplePollerTester():
 
-    def __init__(self):
+    def __init__(self, interval=1):
         self.PACKAGE_NAME = "TEST_PACKAGE"
-        self.polling_interval = 1
+        self.polling_interval = interval
         self.last_poller_time = get_last_poller_date(10)
 
         self.count = 0
@@ -58,25 +58,27 @@ def _raise_http_exception(*__args, **__kwargs):
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_poller_decorator_success():
     """
-    NOTE: this test takes 5 seconds to run as it is
+    NOTE: this test takes 'sleep_time' seconds to run as it is
     testing the poller
     """
+    sleep_time = 1
 
-    test_poller = SimplePollerTester()
+    test_poller = SimplePollerTester(interval=1)
 
     poller_thread = Thread(target=test_poller.good_run)
     poller_thread.daemon = True
     poller_thread.start()
 
-    sleep_time = 5
     time.sleep(sleep_time)
-    assert test_poller.count == sleep_time
+    # allow for flexibility of ± 1
+    assert test_poller.count in range(sleep_time-1, sleep_time+2)
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_poller_decorator_failure(caplog):
     """
     Raises and exception to make sure those are handled properly
     """
+    sleep_time = 1
 
     test_poller = SimplePollerTester()
 
@@ -84,9 +86,9 @@ def test_poller_decorator_failure(caplog):
     poller_thread.daemon = True
     poller_thread.start()
 
-    sleep_time = 1
     time.sleep(sleep_time)
-    assert test_poller.count == 1
+    # allow for flexibility of ± 1
+    assert test_poller.count in range(sleep_time-1, sleep_time+2)
 
     # the actual ERROR message has the line number, but that could easily change
     # so we're splitting up the assertions here around the line number
