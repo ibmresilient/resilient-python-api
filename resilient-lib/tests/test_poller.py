@@ -7,17 +7,16 @@
 
 import sys
 import time
-from unittest import mock
 from collections import namedtuple
 from datetime import datetime
 from threading import Thread
 
+import mock
 import pytest
 from resilient import SimpleHTTPException
 from resilient_lib import (IntegrationError, SOARCommon, b_to_s, eval_mapping,
                            get_last_poller_date, poller, s_to_b)
 from resilient_lib.util import constants
-
 
 NEW_CASE_PAYLOAD = {
   "name": "test case",
@@ -134,12 +133,16 @@ def test_get_soar_cases_success(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_soar_cases_failure(fx_mock_resilient_client):
+    old_post = fx_mock_resilient_client.post
     fx_mock_resilient_client.post = _raise_http_exception
     soar_common = SOARCommon(fx_mock_resilient_client)
 
     cases, _err_msg = soar_common.get_soar_cases({ "id": 2314, "bad_field": True }, open_cases=True)
 
     assert "No reason:  something went wrong" in _err_msg
+
+    # reset
+    fx_mock_resilient_client.post = old_post
 
 
 
@@ -153,6 +156,7 @@ def test_create_soar_case_success(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_soar_case_failure(fx_mock_resilient_client):
+    old_post = fx_mock_resilient_client.post
     fx_mock_resilient_client.post = _raise_generic_exception
     soar_common = SOARCommon(fx_mock_resilient_client)
 
@@ -160,6 +164,9 @@ def test_create_soar_case_failure(fx_mock_resilient_client):
         soar_common.create_soar_case(NEW_CASE_PAYLOAD)
 
     assert "create_soar_case failed to create case in SOAR" in str(err)
+
+    # reset
+    fx_mock_resilient_client.post = old_post
 
 
 
@@ -175,6 +182,7 @@ def test_update_soar_case_success(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_update_soar_case_failure(fx_mock_resilient_client):
+    old_patch = fx_mock_resilient_client.patch
     fx_mock_resilient_client.patch = _raise_generic_exception
     soar_common = SOARCommon(fx_mock_resilient_client)
 
@@ -182,6 +190,9 @@ def test_update_soar_case_failure(fx_mock_resilient_client):
         soar_common.update_soar_case(2314, {"description": "now has a description  ฑ ฒ ณ ด ต ถ ท ธ น"})
 
     assert "update_soar_case failed to update case in SOAR" in str(err)
+
+    # reset
+    fx_mock_resilient_client.patch = old_patch
 
 
 
@@ -286,9 +297,11 @@ def test_get_last_poller_date():
     with mock.patch("resilient_lib.components.poller_common._get_timestamp") as mock_time:
         mock_time.return_value = datetime.fromtimestamp(1234)
 
+        # note these hard coded timestamps are set to work with
+        # Travis's timezone so might not work locally
         x = get_last_poller_date(20)
-        assert str(x) == "1969-12-31 19:00:34"
+        assert str(x) == "1970-01-01 00:00:34"
 
 
         x = get_last_poller_date(10)
-        assert str(x) == "1969-12-31 19:10:34"
+        assert str(x) == "1970-01-01 00:10:34"

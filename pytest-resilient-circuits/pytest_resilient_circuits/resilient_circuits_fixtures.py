@@ -470,7 +470,7 @@ Note:
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def fx_mock_resilient_client():
     """
     Before: Creates a mock instance of get_resilient_client
