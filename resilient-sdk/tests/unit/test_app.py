@@ -5,11 +5,12 @@
 
 import argparse
 import sys
-import pytest
 
-import resilient_sdk.app as app
-from mock import patch, MagicMock
 import pkg_resources
+import pytest
+import resilient_sdk.app as app
+from mock import MagicMock, patch
+from resilient_sdk.util import constants
 
 
 def test_get_main_app_parser():
