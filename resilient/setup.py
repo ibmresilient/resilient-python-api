@@ -54,6 +54,8 @@ setup(
         "setuptools        ~= 44.0;   python_version == '2.7'",
         "cachetools        ~= 2.1;    python_version == '2.7'",
         "keyring           == 18.0.1; python_version == '2.7'",
+
+        "retry2",
     ],
 
     # restrict supported python versions
