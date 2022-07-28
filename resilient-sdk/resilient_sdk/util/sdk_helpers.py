@@ -1198,10 +1198,6 @@ def get_resilient_sdk_version():
 
     :return: a Version object
     """
-    # TODO: remove this when QA is finished for this story
-    if os.getenv(constants.ENV_VAR_DEV) == '2':
-        return pkg_resources.parse_version("40.0.0")
-
     return get_package_version(constants.SDK_PACKAGE_NAME)
 
 
