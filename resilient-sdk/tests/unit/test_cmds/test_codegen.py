@@ -50,9 +50,11 @@ EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['output_json_example.json', 'o
 EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['mock_json_endpoint_fail.json', 'mock_json_endpoint_success.json', 'mock_json_expectation_fail.json',
                                                   'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
 """
+EXPECTED_FILES_POLLER_DIR = ["__init__.py", "poller.py"]
+EXPECTED_FILES_POLLER_DATA_DIR = ["soar_create_incident.jinja", "soar_update_incident.jinja", "soar_close_incident.jinja"]
+EXPECTED_FILES_LIB_DIR = ["__init__.py", "app_common.py"]
 
-
-def general_test_package_structure(package_name, package_path):
+def general_test_package_structure(package_name, package_path, poller=False):
     """
     This is a general function that the tests for gen_package and reload_package
     call to make sure that the expected files are created in each directory
@@ -77,6 +79,11 @@ def general_test_package_structure(package_name, package_path):
             assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
         else:
             assert helpers.verify_expected_list(EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR, os.listdir(os.path.join(package_path, "payload_samples", file_name)))
+
+    if poller:
+        assert helpers.verify_expected_list(EXPECTED_FILES_POLLER_DIR, os.listdir(os.path.join(package_path, package_name, "poller")))
+        assert helpers.verify_expected_list(EXPECTED_FILES_POLLER_DATA_DIR, os.listdir(os.path.join(package_path, package_name, "poller", "data")))
+        assert helpers.verify_expected_list(EXPECTED_FILES_LIB_DIR, os.listdir(os.path.join(package_path, package_name, "lib")))
 
 
 def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
@@ -545,3 +552,25 @@ def test_gather_results_on_py27(fx_copy_fn_main_mock_integration, fx_cmd_line_ar
 def test_execute_command():
     # TODO
     pass
+
+
+def test_codegen_poller(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir, fx_add_dev_env_var):
+
+    output_path = mock_paths.TEST_TEMP_DIR
+
+    # Add paths to an output base and an export.res file
+    sys.argv.extend(["-o", output_path])
+    sys.argv.extend(["-e", mock_paths.MOCK_EXPORT_RES])
+
+    # Add arg to gather-results and a path to a mock export.res file for --reload
+    sys.argv.extend(["--poller"])
+
+    cmd_codegen = CmdCodegen(fx_get_sub_parser)
+    args = cmd_codegen.parser.parse_known_args()[0]
+    cmd_codegen._gen_package(args)
+
+    package_name = args.package
+    package_path = os.path.join(output_path, args.package)
+
+
+    general_test_package_structure(package_name, package_path, poller=True)

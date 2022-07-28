@@ -14,8 +14,8 @@ from threading import Thread
 import mock
 import pytest
 from resilient import SimpleHTTPException
-from resilient_lib import (IntegrationError, SOARCommon, b_to_s, eval_mapping,
-                           get_last_poller_date, poller, s_to_b)
+from resilient_lib import IntegrationError
+from resilient_lib.components import poller_common
 from resilient_lib.util import constants
 
 NEW_CASE_PAYLOAD = {
@@ -33,17 +33,17 @@ class SimplePollerTester():
     def __init__(self, interval=1):
         self.PACKAGE_NAME = "TEST_PACKAGE"
         self.polling_interval = interval
-        self.last_poller_time = get_last_poller_date(10)
+        self.last_poller_time = poller_common.get_last_poller_date(10)
 
         self.count = 0
 
 
-    @poller("polling_interval", "last_poller_time")
+    @poller_common.poller("polling_interval", "last_poller_time")
     def good_run(self, *args, **kwargs):
         self.count += 1
         assert "last_poller_time" in kwargs
 
-    @poller("polling_interval", "last_poller_time")
+    @poller_common.poller("polling_interval", "last_poller_time")
     def bad_run(self, *args, **kwargs):
         self.count += 1
         raise Exception("some exception")
@@ -101,7 +101,7 @@ def test_poller_decorator_failure(caplog):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_case(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     case = soar_common.get_case(2314)
 
@@ -113,7 +113,7 @@ def test_get_case(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_soar_case(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     case, _err_msg = soar_common.get_soar_case({ "id": 2314 }, open_cases=False)
 
@@ -125,7 +125,7 @@ def test_get_soar_case(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_soar_cases_success(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     cases, _err_msg = soar_common.get_soar_cases({ "id": 2314, "bad_field": True }, open_cases=True)
 
@@ -137,7 +137,7 @@ def test_get_soar_cases_success(fx_mock_resilient_client):
 def test_get_soar_cases_failure(fx_mock_resilient_client):
     old_post = fx_mock_resilient_client.post
     fx_mock_resilient_client.post = _raise_http_exception
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     cases, _err_msg = soar_common.get_soar_cases({ "id": 2314, "bad_field": True }, open_cases=True)
 
@@ -150,7 +150,7 @@ def test_get_soar_cases_failure(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_soar_case_success(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     created_case = soar_common.create_soar_case(NEW_CASE_PAYLOAD)
 
@@ -160,7 +160,7 @@ def test_create_soar_case_success(fx_mock_resilient_client):
 def test_create_soar_case_failure(fx_mock_resilient_client):
     old_post = fx_mock_resilient_client.post
     fx_mock_resilient_client.post = _raise_generic_exception
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     with pytest.raises(IntegrationError) as err:
         soar_common.create_soar_case(NEW_CASE_PAYLOAD)
@@ -175,7 +175,7 @@ def test_create_soar_case_failure(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_update_soar_case_success(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     updated_case = soar_common.update_soar_case(2314, {"description": "now has a description  ฑ ฒ ณ ด ต ถ ท ธ น"})
 
@@ -186,7 +186,7 @@ def test_update_soar_case_success(fx_mock_resilient_client):
 def test_update_soar_case_failure(fx_mock_resilient_client):
     old_patch = fx_mock_resilient_client.patch
     fx_mock_resilient_client.patch = _raise_generic_exception
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     with pytest.raises(IntegrationError) as err:
         soar_common.update_soar_case(2314, {"description": "now has a description  ฑ ฒ ณ ด ต ถ ท ธ น"})
@@ -201,7 +201,7 @@ def test_update_soar_case_failure(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_case_comment(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     comment = "A test comment  ฑ ฒ ณ ด ต ถ ท ธ น "
 
@@ -214,7 +214,7 @@ def test_create_case_comment(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_datatable_row(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     rowdata = {"column_1_api_name": 1, "column_2_api_name": 2}
     resp = soar_common.create_datatable_row(2314, "custom_dt", rowdata)
@@ -228,7 +228,7 @@ def test_create_datatable_row(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_case_attachment(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     resp = soar_common.get_case_attachments(2314, return_base64=True)
 
@@ -246,7 +246,7 @@ def test_get_case_attachment(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_lookup_artifact_type_failure(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     resp = soar_common.lookup_artifact_type("incident")
 
@@ -254,7 +254,7 @@ def test_lookup_artifact_type_failure(fx_mock_resilient_client):
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_lookup_artifact_type_success(fx_mock_resilient_client):
-    soar_common = SOARCommon(fx_mock_resilient_client)
+    soar_common = poller_common.SOARCommon(fx_mock_resilient_client)
 
     resp = soar_common.lookup_artifact_type("artifact")
 
@@ -266,14 +266,14 @@ def test_lookup_artifact_type_success(fx_mock_resilient_client):
 def test_eval_mapping(caplog):
     # test convert str to dict
     mock_config = '"source":"A","tags":["tagA"],"priorities":[40,50]'
-    parsed_config = eval_mapping(mock_config, "{{ {} }}")
+    parsed_config = poller_common.eval_mapping(mock_config, "{{ {} }}")
     assert parsed_config == { "source": "A", "tags": ["tagA"], "priorities": [40, 50] }
 
     # test no value given
-    assert not eval_mapping(None)
+    assert not poller_common.eval_mapping(None)
 
     # test bad result (not list or dict)
-    result = eval_mapping("4, 5", "({})")
+    result = poller_common.eval_mapping("4, 5", "({})")
     assert not result
     assert """mapping eval_value must be a string representation of a (partial) array or dictionary e.g. "'value1', 'value2'" or "'key':'value'""" in caplog.text
 
@@ -282,15 +282,15 @@ def test_eval_mapping(caplog):
 def test_s_to_b_and_b_to_s():
     mocks = ["ç∆˚¬å", "test", ]
     for mock_s_val in mocks:
-        b = s_to_b(mock_s_val)
+        b = poller_common.s_to_b(mock_s_val)
         assert b
 
-        s = b_to_s(b)
+        s = poller_common.b_to_s(b)
         assert s
         assert s == mock_s_val
 
     # check for non-decodeable value
-    assert b_to_s("1234") == "1234"
+    assert poller_common.b_to_s("1234") == "1234"
 
 
 
@@ -301,9 +301,9 @@ def test_get_last_poller_date():
 
         # note these hard coded timestamps are set to work with
         # Travis's timezone so might not work locally
-        x = get_last_poller_date(20)
+        x = poller_common.get_last_poller_date(20)
         assert str(x) == "1970-01-01 00:00:34"
 
 
-        x = get_last_poller_date(10)
+        x = poller_common.get_last_poller_date(10)
         assert str(x) == "1970-01-01 00:10:34"
