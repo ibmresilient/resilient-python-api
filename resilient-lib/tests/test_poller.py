@@ -279,6 +279,7 @@ def test_eval_mapping(caplog):
 
 
 
+
 def test_s_to_b_and_b_to_s():
     mocks = ["ç∆˚¬å", "test", ]
     for mock_s_val in mocks:
