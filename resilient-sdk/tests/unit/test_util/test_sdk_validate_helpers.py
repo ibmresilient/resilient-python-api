@@ -85,7 +85,7 @@ def test_invalid_selftest_validate_selftestpy_file_exists():
     assert result[0] is False
     assert "selftest.py is a required file" in result[1].description
     
-def test_sefltest_run_selftestpy_valid():
+def test_selftest_run_selftestpy_valid():
 
     attr_dict = sdk_validate_configs.selftest_attributes[3]
 
@@ -101,7 +101,7 @@ def test_sefltest_run_selftestpy_valid():
         assert result[0]
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_sefltest_run_selftestpy_invalid(fx_copy_fn_main_mock_integration):
+def test_selftest_run_selftestpy_invalid(fx_copy_fn_main_mock_integration):
 
     attr_dict = sdk_validate_configs.selftest_attributes[3]
 

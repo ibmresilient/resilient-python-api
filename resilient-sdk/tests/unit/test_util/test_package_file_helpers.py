@@ -373,4 +373,3 @@ def test_parse_dockerfile():
     assert command_dict[constants.DOCKER_COMMAND_DICT["run_command"]] == run_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["copy_command"]] == copy_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["entrypoint"]] == entrypoint_list
-    # assert command_dict[''] == empty_list
