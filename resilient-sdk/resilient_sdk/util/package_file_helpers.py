@@ -1106,12 +1106,12 @@ def parse_dockerfile(path):
     """
 
     found_commands = defaultdict(lambda: [])
-    with open(path,'r') as f:
-        for line in f: 
-            # split the line into the command and the argument, and strip any extra characters
-            split_line = line.strip().split(" ")
-            if split_line[0] == "#" or split_line[0] == "": # skip comments
-                continue
-            found_commands[split_line[0]].append(' '.join(split_line[1:])) # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
+    lines = sdk_helpers.read_file(path)
+    for line in lines: 
+        # split the line into the command and the argument, and strip any extra characters
+        split_line = line.strip().split(" ")
+        if split_line[0] == "#" or split_line[0] == "": # skip comments
+            continue
+        found_commands[split_line[0]].append(' '.join(split_line[1:])) # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
 
     return found_commands

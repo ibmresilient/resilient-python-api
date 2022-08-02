@@ -1,9 +1,0 @@
-include README.md
-include Dockerfile
-include entrypoint.sh
-recursive-include fn_main_mock_integration/util *
-include fn_main_mock_integration/LICENSE
-include doc/*.md
-include doc/screenshots/*
-
-global-exclude *.bak
