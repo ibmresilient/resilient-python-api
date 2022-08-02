@@ -8,6 +8,7 @@ import os
 import shutil
 
 import pytest
+from mock import patch
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
@@ -373,3 +374,19 @@ def test_parse_dockerfile():
     assert command_dict[constants.DOCKER_COMMAND_DICT["run_command"]] == run_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["copy_command"]] == copy_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["entrypoint"]] == entrypoint_list
+
+
+def test_parse_dockerfile_unicode():
+    with patch("resilient_sdk.util.sdk_helpers.read_file") as mock_lines:
+        mock_lines.return_value = [
+            "FROM unicode testing mock",
+            "RUN ɐ ɑ ɒ ɓ ɔ ɕ",
+            "يجري a command!",
+            "TIBET ༀ ༁ ༂"
+        ]
+        command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH)
+
+    assert command_dict["FROM"] == ["unicode testing mock"]
+    assert command_dict["RUN"] == ["ɐ ɑ ɒ ɓ ɔ ɕ"]
+    assert command_dict["يجري"] == ["a command!"]
+    assert command_dict["TIBET"] == ["ༀ ༁ ༂"]
