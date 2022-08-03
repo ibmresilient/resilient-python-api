@@ -36,7 +36,23 @@ SELFTEST_UNIMPLEMENTED_STATE = "unimplemented"
 INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_CONFIG_TRAP_EXCEPTION = "trap_exception"
 APP_CONFIG_SELFTEST_TIMEOUT = "selftest_timeout"
+APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD = "heartbeat_timeout_threshold"
 
 # Headers
 HEADER_CIRCUITS_VER_KEY = "Resilient-Circuits-Version"
 HEADER_CIRCUITS_VER_VALUE = pkg_resources.get_distribution(PACKAGE_NAME).version
+
+# Exit Codes
+EXIT_SELFTEST_ERROR = 1             # Error running App's selftest
+EXIT_SELFTEST_UNIMPLEMENTED = 2     # selftest was unimplemented
+EXIT_REST_CONNECTION_ERROR = 20     # REST: Generic connection error
+EXIT_REST_UNAUTHORIZED = 21         # REST: Connection unauthorized
+EXIT_REST_OS_ERROR = 22             # REST: OSError (Could not find Certificate file)
+EXIT_REST_SSL_ERROR = 23            # REST: SSL Error (Invalid Certificate Error)
+EXIT_REST_ORG_ERROR = 24            # REST: Organization Membership Error
+EXIT_REST_INVALID_PW = 25           # REST: Invalid Username or Password
+EXIT_STOMP_ERROR = 30               # STOMP: Generic connection error
+EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instansiate STOMP connection
+EXIT_STOMP_UNAUTHORIZED_Q = 32      # STOMP: Not authorized to read from queue
+EXIT_STOMP_Q_TIMEOUT = 33           # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
+EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatTimeout event and the first HeartbeatTimeout event is greater than the 'heartbeat_timeout_threshold'

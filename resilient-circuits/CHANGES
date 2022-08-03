@@ -13,6 +13,8 @@
     if is_this_a_selftest(self):
         # Do nothing...
 
+* Added a new configuration setting to app.config, called ``heartbeat_timeout_threshold``. It is a value in seconds between the current ``HeartbeatTimeout`` event and the first ``HeartbeatTimeout`` event. If the time is greater than the ``heartbeat_timeout_threshold``, the resilient-circuits process stops.
+
 **2022-07: version 45.1**
 
 * Bug fix to avoid ``@app_function`` Components firing on all channels leading to Functions being invoked multiple times

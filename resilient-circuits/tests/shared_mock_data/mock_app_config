@@ -43,6 +43,8 @@ loglevel=INFO
 # The number of Functions to run in parallel
 num_workers=5
 
+heartbeat_timeout_threshold=5
+
 # If your Resilient server uses a self-signed TLS certificate, or some
 # other certificate that is not automatically trusted by your machine,
 # you need to explicitly tell the Python scripts that it should be trusted.

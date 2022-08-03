@@ -24,6 +24,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_MAX_CONNECTION_RETRIES = 1
     DEFAULT_NUM_WORKERS = 10
     DEFAULT_APP_EXCEPTION = False
+    DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD = None
 
     def __init__(self, config_file=None):
 
@@ -65,6 +66,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_num_workers = self.getopt(self.DEFAULT_APP_SECTION, "num_workers") or self.DEFAULT_NUM_WORKERS
         default_trap_exception = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_TRAP_EXCEPTION) or self.DEFAULT_APP_EXCEPTION
         default_trap_exception = self._is_true(default_trap_exception)
+
+        default_heartbeat_timeout_threshold = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD) or self.DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD
 
         logging.getLogger().removeHandler(temp_handler)
 
@@ -155,6 +158,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=bool,
                           default=default_trap_exception,
                           help=("If set to 'True' a Function's exception will be ignored"))
+        self.add_argument("--{0}".format(constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD),
+                          type=int,
+                          default=default_heartbeat_timeout_threshold,
+                          help=("The amount of time in seconds that can occur between HeartbeatTimeouts before exiting"))
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""

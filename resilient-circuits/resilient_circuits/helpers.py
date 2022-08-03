@@ -375,3 +375,26 @@ def get_user(app_configs):
             return None
 
     return usr
+
+
+def filter_heartbeat_timeout_events(heartbeat_timeouts):
+    """
+    Sort a list of HeartbeatTimeout on their ts and
+    remove an occurrences of HeartbeatTimeout whose ts
+    value is -1
+
+    :param heartbeat_timeouts: List of HeartbeatTimeout
+    :type heartbeat_timeouts: [HeartbeatTimeout]
+    :return: Sorted and filtered list of HeartbeatTimeout
+    :rtype: [HeartbeatTimeout]
+    """
+
+    if not heartbeat_timeouts:
+        return heartbeat_timeouts
+
+    # Remove any elements whose ts is -1
+    heartbeat_timeouts = [hb for hb in heartbeat_timeouts if hb.ts != -1]
+
+    heartbeat_timeouts.sort()
+
+    return heartbeat_timeouts
