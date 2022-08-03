@@ -2,14 +2,19 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import datetime
+import json
 import os
 import re
+import shutil
 import stat
 import sys
+import tempfile
 
 import jinja2
 import pkg_resources
 import pytest
+import requests_mock
 from mock import patch
 from resilient import SimpleClient
 from resilient_sdk.cmds import CmdCodegen, CmdValidate
@@ -38,6 +43,17 @@ def test_read_write_file(fx_mk_temp_dir):
 
     file_lines = sdk_helpers.read_file(temp_file)
     assert mock_data.mock_file_contents in file_lines
+
+
+def test_write_latest_pypi_tmp_file(fx_mk_temp_dir):
+    mock_file_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path_sdk_tmp_pypi_version.json")
+    mock_version = pkg_resources.parse_version("45.0.0")
+    sdk_helpers.write_latest_pypi_tmp_file(mock_version, mock_file_path)
+
+    file_contents = sdk_helpers.read_json_file(mock_file_path)
+
+    assert file_contents.get("ts")
+    assert file_contents.get("version") == "45.0.0"
 
 
 def test_read_json_file_success():
@@ -476,6 +492,81 @@ def test_get_package_version_found_in_env():
 def test_get_package_version_not_found():
     not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
     assert not_found is None
+
+
+def test_get_latest_version_on_pypi():
+    current_version = sdk_helpers.get_resilient_sdk_version()
+    latest_version = sdk_helpers.get_latest_version_on_pypi()
+    assert current_version >= latest_version
+
+
+def test_get_latest_version_on_pypi_legacy_version():
+    mock_releases = {"releases": ["41.0.0", "#$%^&*mock_legacy_version"]}
+    with requests_mock.Mocker() as m:
+        m.get(constants.URL_PYPI_VERSION, json=mock_releases)
+        assert pkg_resources.parse_version("41.0.0") == sdk_helpers.get_latest_version_on_pypi()
+
+
+def test_get_latest_available_version_pypi(fx_mk_os_tmp_dir):
+    current_version = sdk_helpers.get_resilient_sdk_version()
+    latest_version = sdk_helpers.get_latest_available_version()
+
+    assert current_version >= latest_version
+    assert os.path.isdir(fx_mk_os_tmp_dir)
+
+
+def test_get_latest_available_version_tmp_file(fx_mk_os_tmp_dir):
+
+    path_sdk_tmp_pypi_version = os.path.join(fx_mk_os_tmp_dir, constants.TMP_PYPI_VERSION)
+    mock_version = pkg_resources.parse_version("45.0.0")
+
+    sdk_helpers.write_latest_pypi_tmp_file(mock_version, path_sdk_tmp_pypi_version)
+    latest_version = sdk_helpers.get_latest_available_version()
+
+    assert latest_version.base_version == "45.0.0"
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_get_latest_available_version_refresh_date(fx_mk_os_tmp_dir):
+
+    path_sdk_tmp_pypi_version = os.path.join(fx_mk_os_tmp_dir, constants.TMP_PYPI_VERSION)
+    current_version = sdk_helpers.get_resilient_sdk_version()
+
+    mock_ts = datetime.datetime.now() - datetime.timedelta(days=5)
+    mock_ts = int(mock_ts.timestamp())
+
+    mock_version_data = {
+        "ts": mock_ts,
+        "version": "41.0.0"
+    }
+
+    sdk_helpers.write_file(path_sdk_tmp_pypi_version, json.dumps(mock_version_data))
+
+    latest_version = sdk_helpers.get_latest_available_version()
+
+    assert current_version >= latest_version
+    assert os.path.isfile(path_sdk_tmp_pypi_version)
+
+
+def test_create_tmp_dir():
+    mock_path = os.path.join(tempfile.gettempdir(), constants.SDK_RESOURCE_NAME)
+
+    if os.path.isdir(mock_path):
+        shutil.rmtree(mock_path)
+
+    actual_path = sdk_helpers.create_tmp_dir()
+
+    assert mock_path == actual_path
+    assert os.path.isdir(mock_path)
+
+    shutil.rmtree(mock_path)
+
+
+def test_get_sdk_tmp_dir(fx_mk_os_tmp_dir):
+    actual_path = sdk_helpers.get_sdk_tmp_dir()
+    assert fx_mk_os_tmp_dir == actual_path
+    assert os.path.isdir(fx_mk_os_tmp_dir)
+
 
 def test_is_python_min_supported_version(caplog):
     mock_log = "WARNING: this package should only be installed on a Python Environment >="

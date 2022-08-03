@@ -128,7 +128,11 @@ class RequestsCommon:
         See `requests.request() <https://docs.python-requests.org/en/latest/api/#requests.request>`_
         for information on any parameters available, but not documented here.
 
-        :param timeout: Number of seconds to wait for the server to send data
+        :param method: Rest method to execute (``GET``, ``POST``, etc...)
+        :type method: str
+        :param url: URL to execute request against
+        :type url: str
+        :param timeout: (Optional) Number of seconds to wait for the server to send data
             before sending a float or a timeout tuple (connect timeout, read timeout).
             *See requests docs for more*. If ``None`` it looks in the ``[integrations]``
             section of your app.config for the ``timeout`` setting.
@@ -147,9 +151,26 @@ class RequestsCommon:
             return this callback function passing in the ``response`` as its
             only parameter. Can be used to specifically handle errors.
         :type callback: function
-        :param clientauth: (Optional) The filepath for the client side certificate and the private key either as a
-            single file or as a tuple of both files' paths. If set to``None`` a value will try to be found in the
-            ``[my_function]`` section of the app.config. If not found there no client certs will be used.
+        :param clientauth: (Optional) Equivalent to the ``cert`` parameter of ``requests``.
+            Client-side certificates can be configured automatically in
+            the app's section of the app.config. These values will be read in automatically by
+            ``RequestsCommon`` when ``execute`` is called.
+
+            Example:
+
+            .. code-block::
+
+                [resilient]
+                ... # configs for connection to SOAR
+
+                [fn_my_app]
+                ... # some other configs
+                client_auth_cert=<path_to_client_auth_cert_file>
+                client_auth_key=<path_to_client_auth_private_key_file>
+
+            If not set in the app.config file, the filepath for the client side certificate and the
+            private key can be passed to this function either as the path to a single file or as a
+            tuple of both files' paths.
         :type clientauth: str or tuple(str, str)
         :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object

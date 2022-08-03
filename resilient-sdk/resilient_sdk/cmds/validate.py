@@ -239,17 +239,20 @@ class CmdValidate(BaseCmd):
 
         # proxy support is determined by the version of resilient-circuits that is installed
         # if version 42 or greater, proxies are supported
-        library_found = False
-        for package in parsed_setup_file.get("install_requires"):
-            if re.findall(r"(?:resilient[\-,\_]circuits\>\=)([0-9]+\.[0-9]+\.[0-9]+)", package):
-                circuits_version = re.findall(r"[0-9]+", package)
-                circuits_version = tuple([int(i) for i in circuits_version])
+        proxy_supported = False
+        install_requires = parsed_setup_file.get(constants.SETUP_PY_INSTALL_REQ_NAME, [])
+        # try to parse 'resilient-circuits' from install requires
+        package = package_helpers.get_dependency_from_install_requires(install_requires, constants.CIRCUITS_PACKAGE_NAME)
 
-                package_details_output.append(("Proxy support", "Proxies supported if running on AppHost>=1.6" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"))
-                library_found = True
-                break
-        if not library_found:
-            package_details_output.append(("install_requires.resilient_circuits", "'resilient_circuits' not found in 'install_requires' in package's setup.py"))
+        if package:
+            circuits_version = re.findall(r"[0-9]+", package)
+            circuits_version = tuple([int(i) for i in circuits_version])
+
+            if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT:
+                package_details_output.append(("Proxy support", "Proxies supported if running on AppHost>=1.6"))
+                proxy_supported = True
+        if not proxy_supported:
+            package_details_output.append(("Proxy support", "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"))
 
 
 
@@ -365,8 +368,7 @@ class CmdValidate(BaseCmd):
         attributes = validation_configurations.setup_py_attributes
 
         # check through setup.py file parse
-        for attr in attributes:
-            attr_dict = attributes.get(attr)
+        for attr, attr_dict in attributes:
 
             # get output details from attr_dict (to be modified as necessary based on results)
             fail_func = attr_dict.get("fail_func")
@@ -382,6 +384,12 @@ class CmdValidate(BaseCmd):
             if not parsed_attr:
                 # if attr isn't found and it is optional, skip to the next attr
                 if attr in SETUP_OPTIONAL_ATTRS:
+                    continue
+
+                # if missing_msg wasn't provided, this attr can be skipped if not found
+                # currently this is used to remove duplicate errors i.e. an attribute
+                # is checked twice, so on the second one we skip the handling of it not being found
+                if not missing_msg:
                     continue
                 
                 name = "{0} not found".format(attr)

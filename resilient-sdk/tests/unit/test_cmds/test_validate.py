@@ -33,6 +33,7 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
     assert args.package == "fn_main_mock_integration"
     assert bool(not args.validate and not args.tests and not args.pylint and not args.bandit) is True
 
+
 def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate, caplog):
 
     cmd_validate = CmdValidate(fx_get_sub_parser)
@@ -44,21 +45,41 @@ def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_pars
 
     assert "Printing details" in caplog.text
     assert "name: fn_main_mock_integration" in caplog.text
-    assert "Proxy support: " in caplog.text
+    assert "Proxies not fully supported" in caplog.text
+
+
+def test_print_package_details_proxy_supported(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate, caplog):
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+    assert args.package == "fn_main_mock_integration"
+
+    # set package name to path to package
+    args.package = fx_copy_fn_main_mock_integration[1]
+
+    with patch("resilient_sdk.cmds.validate.package_helpers.get_dependency_from_install_requires") as mock_dep:
+
+        mock_dep.return_value = "resilient_circuits>={0}".format(constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT)
+        cmd_validate._print_package_details(args)
+
+        assert "Printing details" in caplog.text
+        assert "name: fn_main_mock_integration" in caplog.text
+        assert "Proxies supported" in caplog.text
+
 
 def test_pass_validate_setup_py_file(fx_copy_fn_main_mock_integration):
     """Test for success when calling _validate_setup()"""
 
     mock_package_path = fx_copy_fn_main_mock_integration[1]
-        
-    mock_data = {
-        "test": {
+
+    mock_data = [
+        ("test", {
             "fail_func": lambda x: False,
             "parse_func": lambda _, attr_list: {attr: "mock_data" for attr in attr_list},
-        }
-    }
+        })
+    ]
 
-    with patch.dict("resilient_sdk.cmds.validate.validation_configurations.setup_py_attributes", mock_data, clear=True):
+    with patch.object(sdk_validate_configs, "setup_py_attributes", mock_data):
         results = CmdValidate._validate_setup(mock_package_path)
 
         assert results[0]
@@ -66,39 +87,47 @@ def test_pass_validate_setup_py_file(fx_copy_fn_main_mock_integration):
         assert len(results[1]) == 1
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
+
 def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
     """Test for failure when calling _validate_setup()"""
 
     mock_package_path = fx_copy_fn_main_mock_integration[1]
         
-    mock_data = {
-        "test2": {
+    mock_data = [
+        ("test2", {
             "fail_func": lambda x: True,
             "fail_msg": "failed",
             "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
             "missing_msg": "missing",
             "solution": "solution",
             "parse_func": lambda _, attr_list: {attr: "mock_data" for attr in attr_list},
-        },
-        "test": {
+        }),
+        ("test", {
             "fail_func": lambda x: True,
             "fail_msg": "failed",
             "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
             "missing_msg": "missing",
             "solution": "solution",
             "parse_func": lambda _, attr_list: {attr: "mock_data" for attr in attr_list},
-        },
-        "test3": {
+        }),
+        ("test3", {
             "fail_func": lambda x: True,
             "fail_msg": "failed",
             "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
             "missing_msg": "missing",
             "solution": "solution",
             "parse_func": lambda _, attr_list: {attr: "mock_data" for attr in attr_list},
-        }
-    }
+        }),
+        ("test4", {
+            "fail_func": lambda x: True,
+            "fail_msg": "failed",
+            "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            "solution": "solution",
+            "parse_func": lambda _, attr_list: {"attr": False},
+        })
+    ]
 
-    with patch.dict("resilient_sdk.cmds.validate.validation_configurations.setup_py_attributes", mock_data, clear=True):
+    with patch.object(sdk_validate_configs, "setup_py_attributes", mock_data):
         results = CmdValidate._validate_setup(mock_package_path)
 
         assert not results[0]

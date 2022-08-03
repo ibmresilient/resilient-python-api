@@ -83,7 +83,7 @@ MIN_SETUP_PY_VERSION = "1.0.0"
 
 SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES = (
     "display_name", "name", "version", "author",
-    "author_email", "install_requires", "description", 
+    "author_email", "install_requires", "description",
     "long_description", "url", "entry_points", "python_requires"
 )
 
@@ -218,7 +218,12 @@ def parse_setup_py(path, attribute_names, the_globals={}):
             return_dict[attribute_name] = entry_point_paths
         else:
             if result.get(attribute_name):
-                return_dict[attribute_name] = result.get(attribute_name)
+                value = result.get(attribute_name)
+
+                # clean out spaces in install_requires for better formatting
+                if attribute_name == constants.SETUP_PY_INSTALL_REQ_NAME:
+                    value = [" ".join(v.split()) for v in value]
+                return_dict[attribute_name] = value
 
     return return_dict
 
@@ -253,6 +258,15 @@ def get_dependency_from_install_requires(install_requires, dependency_name):
 
     # Get the dependency if it includes dependency_name
     dependency = next((d for d in install_requires if dependency_name in d), None)
+
+    if not dependency:
+        # pip allows for dependencies to have either "-" or "_" in their names so create a
+        # version that is the swapped of what was given to make this method resilient in handling
+        # both options
+        # eg: both "resilient-circuits" and "resilient_circuits" are allowed as depedencies in
+        # the install_requires list
+        dependency_name = dependency_name.replace("_", "-") if "_" in dependency_name else dependency_name.replace("-", "_")
+        dependency = next((d for d in install_requires if dependency_name in d), None)
 
     return dependency
 
@@ -1093,6 +1107,7 @@ def check_validate_report_exists():
 
     return PATH_VALIDATE_REPORT if os.path.exists(PATH_VALIDATE_REPORT) else None
 
+
 def parse_dockerfile(path):
     """ 
     Reads through a Dockerfile line by line and adds commands to a dictionary
@@ -1115,3 +1130,53 @@ def parse_dockerfile(path):
         found_commands[split_line[0]].append(' '.join(split_line[1:])) # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
 
     return found_commands
+
+
+def color_lines(log_level, lines):
+    """
+    Takes a list of strs and adds the given log_level
+    color to the str. Then returns the list of ``colored_lines``
+
+    Note: colored_lines[0] will always be a ``constants.LOG_DIVIDER``
+
+    See ``print_latest_version_warning`` method for an example usage
+
+    :param log_level: map to COLORS dict defined as constant above
+    :type log_level: str
+    :param lines: list of strings to add color to
+    :type lines: [str]
+    :return: List of colored_lines or an empty list if ``lines`` is falsy
+    :rtype: [str] | None
+    """
+
+    colored_lines = []
+
+    if not lines:
+        return colored_lines
+
+    colored_lines.append(color_output(constants.LOG_DIVIDER, log_level))
+
+    for l in lines:
+        colored_lines.append(color_output(l, log_level))
+
+    return colored_lines
+
+
+def print_latest_version_warning(current_version, latest_available_version):
+    """
+    Convert all text to yellow and LOG a warning message
+    with current_version and latest_available_version
+    """
+
+    log_level = "WARNING"
+
+    colored_lines = color_lines(log_level, [
+        "{0}:".format(log_level),
+        "'{0}' is not the latest version of the resilient-sdk. 'v{1}' is available on https://pypi.org/project/resilient-sdk/".format(current_version, latest_available_version),
+        "To update run:",
+        "$ pip install -U resilient-sdk"
+    ])
+
+    w = "{0}\n{1}\n{2}\n\n{3}\n\t{4}\n{0}".format(colored_lines[0], colored_lines[1], colored_lines[2], colored_lines[3], colored_lines[4])
+
+    LOG.warning(w)

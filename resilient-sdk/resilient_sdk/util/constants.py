@@ -53,15 +53,24 @@ VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
 # docker test constants (used in validate)
 DOCKER_BASE_REPO = "registry.access.redhat.com/ubi8/python-39:latest"
 DOCKER_COMMAND_DICT = {
-    "from_command":"FROM", # sets base image to build on top of
-    "set_argument": "ARG", # sets variabes to use during building of image
-    "set_env_var": "ENV", # sets enviornment variables that persist after image is built
-    "user":"USER", # changes user
-    "run_command":"RUN", # runs a shell command
-    "copy_command":"COPY", # copies from one directoy to another (i.e. 'cp' command)
-    "entrypoint":"ENTRYPOINT", # sets the entrypoint for the image
-    "change_directory":"WORKDIR", # changes current directory while building image (i.e. 'cd' command)
-    }
+    "from_command": "FROM",         # sets base image to build on top of
+    "set_argument": "ARG",          # sets variables to use during building of image
+    "set_env_var": "ENV",           # sets environment variables that persist after image is built
+    "user": "USER",                 # changes user
+    "run_command": "RUN",           # runs a shell command
+    "copy_command": "COPY",         # copies from one directory to another (i.e. 'cp' command)
+    "entrypoint": "ENTRYPOINT",     # sets the entrypoint for the image
+    "change_directory": "WORKDIR",  # changes current directory while building image (i.e. 'cd' command)
+}
+
+# Temp File Prefixes
+TMP_PYPI_VERSION = "latest_pypi_version.json"
+
+# URLs
+URL_PYPI_VERSION = "https://pypi.org/pypi/resilient-sdk/json"
+
+# setup.py constants (for validate)
+SETUP_PY_INSTALL_REQ_NAME = "install_requires"
 
 # tox tests constants (used in validate)
 TOX_PACKAGE_NAME = "tox"
@@ -83,6 +92,7 @@ BANDIT_DEFAULT_ARGS = ["--exclude", "customize.py,tests/*", "--format", "screen"
 BANDIT_DEFAULT_SEVERITY_LEVEL = ["-ll"]
 BANDIT_VERBOSE_FLAG = ["-v"]
 
+# icon sizing constants (for validate)
 ICON_APP_LOGO_REQUIRED_WIDTH = 200
 ICON_APP_LOGO_REQUIRED_HEIGHT = 72
 ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100

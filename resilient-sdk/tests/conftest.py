@@ -19,11 +19,13 @@ import logging
 import os
 import shutil
 import sys
+import tempfile
 
 import pytest
 import resilient_sdk.app as app
-from resilient_sdk.util import constants, sdk_helpers, sdk_validate_configs
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers, sdk_validate_configs
 
 from tests.shared_mock_data import mock_paths
 
@@ -32,16 +34,16 @@ LOG = logging.getLogger(constants.LOGGER_NAME)
 LOG.setLevel(logging.DEBUG)
 
 
-def _mk_temp_dir():
-    if os.path.exists(mock_paths.TEST_TEMP_DIR):
-        shutil.rmtree(mock_paths.TEST_TEMP_DIR)
+def _mk_temp_dir(dir_path=mock_paths.TEST_TEMP_DIR):
+    if os.path.exists(dir_path):
+        shutil.rmtree(dir_path)
 
-    os.makedirs(mock_paths.TEST_TEMP_DIR)
+    os.makedirs(dir_path)
 
 
-def _rm_temp_dir():
-    if os.path.exists(mock_paths.TEST_TEMP_DIR):
-        shutil.rmtree(mock_paths.TEST_TEMP_DIR)
+def _rm_temp_dir(dir_path=mock_paths.TEST_TEMP_DIR):
+    if os.path.exists(dir_path):
+        shutil.rmtree(dir_path)
 
 
 def _mk_app_config():
@@ -119,6 +121,17 @@ def fx_mk_temp_dir():
     _mk_temp_dir()
     yield
     _rm_temp_dir()
+
+
+@pytest.fixture
+def fx_mk_os_tmp_dir():
+    tmp_dir = tempfile.gettempdir()
+    sdk_tmp_dir_name = constants.SDK_RESOURCE_NAME
+    dir_path = os.path.join(tmp_dir, sdk_tmp_dir_name)
+
+    _mk_temp_dir(dir_path=dir_path)
+    yield dir_path
+    _rm_temp_dir(dir_path=dir_path)
 
 
 @pytest.fixture

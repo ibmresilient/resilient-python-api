@@ -321,10 +321,8 @@ class CmdDocgen(BaseCmd):
             shutil.copy(package_helpers.PATH_DEFAULT_SCREENSHOT, path_screenshots_dir)
 
         # Get the resilient_circuits dependency string from setup.py file
-        res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient_circuits")
-
-        if not res_circuits_dep_str:
-            res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(setup_py_attributes.get("install_requires"), "resilient-circuits")
+        res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(
+                setup_py_attributes.get(constants.SETUP_PY_INSTALL_REQ_NAME), constants.CIRCUITS_PACKAGE_NAME)
 
         # Get ImportDefinition from customize.py
         customize_py_import_def = package_helpers.get_import_definition_from_customize_py(path_customize_py_file)

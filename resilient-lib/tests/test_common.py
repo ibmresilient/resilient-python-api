@@ -176,6 +176,10 @@ class TestFunctionMetrics(unittest.TestCase):
         url = build_incident_url("https://cases-rest.cp4s.ibm.com:443", 101, 201)
         self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201")
 
+        # test string org names work
+        url = build_incident_url("https://cases-rest.cp4s.ibm.com:443", 101, "Test Organization")
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=Test%20Organization")
+
         # ensure non-string values are simply returned
         url = build_incident_url(build_resilient_url(["my_fake_list"], 443), 100, 201)
         self.assertEqual(url, ["my_fake_list"])
@@ -193,6 +197,10 @@ class TestFunctionMetrics(unittest.TestCase):
 
         url = build_task_url("cases-rest.cp4s.ibm.com:443", 101, 102, 201)
         self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=201&taskId=102&tabName=details")
+
+        # test string org names work
+        url = build_task_url("https://cases-rest.cp4s.ibm.com:443", 101, 102, "Test Organization")
+        self.assertEqual(url, "https://cp4s.ibm.com:443/app/respond/#cases/101?orgId=Test%20Organization&taskId=102&tabName=details")
 
         # ensure non-string values are simply returned
         url = build_task_url(["my_fake_list"], 100, 101, 201)

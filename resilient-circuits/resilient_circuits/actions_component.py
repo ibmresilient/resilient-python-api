@@ -77,7 +77,7 @@ class FunctionWorker(Worker):
            (see FallBackSignalHandler in circuits/core/helpers.py)
         """
         if signo in [SIGINT, SIGTERM]:
-            LOG.info("Worker interrupted")
+            LOG.error("Worker interrupted")
             raise SystemExit(0)
 
     @handler("task", override=True)
@@ -138,6 +138,7 @@ class ResilientComponent(BaseComponent):
        and actions and functions will be dispatched to its `handler` and `function` methods.
     """
     test_mode = False  # True with --test-actions option
+    IS_SELFTEST = False
 
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()
