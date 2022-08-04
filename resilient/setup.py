@@ -34,6 +34,7 @@ setup(
     # Runtime Dependencies
     install_requires=[
         # General dependencies applicable to all python versions
+        "retry2            ~= 0.9",
         "requests          ~= 2.27",
         "requests-toolbelt ~= 0.9",
         "six               ~= 1.16",
