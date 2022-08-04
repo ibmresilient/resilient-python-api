@@ -785,6 +785,69 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if there is at least one issue in the list
         return issues
 
+def package_files_validate_base_image(path_file, attr_dict,**_):
+    """
+    Validates that the Dockerfile is using the correct base image 
+
+    Checks the following:
+      - Is a FROM statement missing
+      - Are there too many FROM statements
+      - If there is only one FROM statement, is it pullling from the right repo
+      - Else the validation passes
+
+    It is possible for multiple checks to fail in this validation thus the use of the 
+    list[SDKValidateIssue] return type.
+
+    :param path_file: (required) the path to the file 
+    """
+
+    # list of issues found
+    issues = []
+    # gets a dictionary that maps Dockercommands to all of their arguments
+    # e.g. if the Dockerfile has lines "RUN yum clean", "RUN yum update", "USER 0"
+    # then command_dict = {"RUN":["yum clean","yum update"],"USER":["0"]}
+    command_dict = package_helpers.parse_dockerfile(path_file)
+
+    from_command = constants.DOCKER_COMMAND_DICT["from_command"]
+
+    if len(command_dict[from_command]) == 0: # if no FROM commands found
+
+        issue = [SDKValidateIssue(
+            attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format("Cannot find a FROM command in Dockerfile"),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution").format("adding the following line to the top of your Dockerfile - FROM {0}").format(constants.DOCKER_BASE_REPO)
+        )]
+
+    elif len(command_dict[from_command]) == 1:
+        if command_dict[from_command][0] != constants.DOCKER_BASE_REPO: # if only one FROM command found but it is incorrect
+            issue = [SDKValidateIssue(
+                attr_dict.get("name"),
+                attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution").format("changing the repo to '{0}'").format(constants.DOCKER_BASE_REPO)
+            )]
+
+        else: # if only one FROM command is found but it is correct
+            issue = [SDKValidateIssue(
+                attr_dict.get("name"),
+                attr_dict.get("pass_msg"),
+                severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            )]
+        
+    elif len(command_dict[from_command]) > 1: # if more than one FROM command found
+
+            issue = [SDKValidateIssue(
+                attr_dict.get("name"),
+                attr_dict.get("fail_msg").format("More than one FROM command found"),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution").format("removing any extra FROM commands")
+            )]
+
+
+    issues.extend(issue)
+    return issues
+    
 def payload_samples_validate_payload_samples(path_package, package_name, attr_dict):
     """
     This function verifies:
@@ -1613,3 +1676,4 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
             severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
             solution=attr_dict.get("pass_solution")
         )
+

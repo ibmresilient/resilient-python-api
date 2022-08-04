@@ -25,7 +25,7 @@ import pytest
 import resilient_sdk.app as app
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, sdk_validate_configs
 
 from tests.shared_mock_data import mock_paths
 
@@ -142,6 +142,19 @@ def fx_mk_app_config():
     Note: MUST be called AFTER mk_temp_dir
     """
     return _mk_app_config()
+
+
+@pytest.fixture(scope="module")
+def fx_get_package_files_config():
+    """
+    Before: Maps the name of an attribute to its index, so that the attr_dict can be accessed in tests
+    After: Nothing (there is nothing to clean up) 
+    """
+    d = {}
+    for i, (filename,_) in enumerate(sdk_validate_configs.package_files):
+        d[filename] = i
+
+    return d
 
 
 @pytest.fixture

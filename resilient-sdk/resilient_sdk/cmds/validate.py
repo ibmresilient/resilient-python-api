@@ -4,9 +4,11 @@
 
 """ Implementation of `resilient-sdk validate` """
 
+
 import logging
 import os
 import re
+from collections import defaultdict
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -304,7 +306,7 @@ class CmdValidate(BaseCmd):
         validations = [
             ("setup.py", self._validate_setup),
             ("package files", self._validate_package_files),
-            ("payload samples", self._validate_payload_samples)
+            ("payload samples", self._validate_payload_samples),
         ]
 
 
@@ -461,10 +463,9 @@ class CmdValidate(BaseCmd):
         package_name = parsed_setup.get("name")
         package_version = parsed_setup.get("version")
 
-        # run through validations for package files
-        # details of each check can be found in the sdk_validate_configs.package_files
-        for filename in validation_configurations.package_files:
-            attr_dict = validation_configurations.package_files.get(filename)
+        attributes = validation_configurations.package_files
+
+        for filename,attr_dict in attributes:
 
             # if a specific path is required for this file, it will be specified in the "path" attribute
             if attr_dict.get("path"):
@@ -483,6 +484,10 @@ class CmdValidate(BaseCmd):
                 # are only used when a logo is missing; the value should be None otherwise
                 # be aware of this if a dev ever wants to add infomation to the missing 
                 # solution for other package files
+
+                if not attr_dict.get("missing_msg"):
+                    continue
+
                 issue_list = [SDKValidateIssue(
                     name=attr_dict.get("name"),
                     description=attr_dict.get("missing_msg").format(path_file),
@@ -495,6 +500,7 @@ class CmdValidate(BaseCmd):
                 if not attr_dict.get("func"):
                     raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
 
+                    
                 # run given "func"
                 issue_list = attr_dict.get("func")(
                     filename=filename,

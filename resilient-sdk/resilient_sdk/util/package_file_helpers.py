@@ -15,6 +15,7 @@ import shutil
 import struct
 import sys
 import tempfile
+from collections import defaultdict
 
 import pkg_resources
 from resilient import ImportDefinition
@@ -1105,6 +1106,30 @@ def check_validate_report_exists():
     """
 
     return PATH_VALIDATE_REPORT if os.path.exists(PATH_VALIDATE_REPORT) else None
+
+
+def parse_dockerfile(path):
+    """ 
+    Reads through a Dockerfile line by line and adds commands to a dictionary
+    The dictionary has the following format - {"COMMAND":[list_of_arguments]}.
+    This means that if line 1 is "RUN yum clean" and line 2 is "RUN yum install", the resulting dictionary would be
+    {"RUN":["yum clean","yum install"]}
+    
+    Does not yet support multi-line commands
+
+    :param path: Path to dockerfile
+    """
+
+    found_commands = defaultdict(lambda: [])
+    lines = sdk_helpers.read_file(path)
+    for line in lines: 
+        # split the line into the command and the argument, and strip any extra characters
+        split_line = line.strip().split(" ")
+        if split_line[0] == "#" or split_line[0] == "": # skip comments
+            continue
+        found_commands[split_line[0]].append(' '.join(split_line[1:])) # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
+
+    return found_commands
 
 
 def color_lines(log_level, lines):
