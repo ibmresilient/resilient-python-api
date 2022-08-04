@@ -14,12 +14,38 @@ Note:
     -   Fixture must have BEFORE and AFTER docstring
 """
 
-import os
 import copy
+import os
 import sys
-import pytest
+
 import pkg_resources
+import pytest
+import requests_mock
 from resilient import constants as res_constants
+from resilient.co3 import SimpleClient
+
+
+@pytest.fixture
+def fx_simple_client():
+    """
+    Before: Creates sample SimpleClient object with mocked URI https://example.com
+    After: Nothing
+    """
+    simple_client = SimpleClient(org_name="Mock Org", base_url="https://example.com")
+    requests_adapter = requests_mock.Adapter()
+    simple_client.session.mount(u'https://', requests_adapter)
+    simple_client.org_id = 201
+
+    mock_inc_fields_uri = "{0}/rest/orgs/{1}/types/incident/fields".format(simple_client.base_url, simple_client.org_id)
+    requests_adapter.register_uri('GET', mock_inc_fields_uri, status_code=200, json={})
+
+    mock_action_fields_uri = "{0}/rest/orgs/{1}/types/actioninvocation/fields".format(simple_client.base_url, simple_client.org_id)
+    requests_adapter.register_uri('GET', mock_action_fields_uri, status_code=200, json={})
+
+    mock_actions_uri = "{0}/rest/orgs/{1}/actions".format(simple_client.base_url, simple_client.org_id)
+    requests_adapter.register_uri('GET', mock_actions_uri, status_code=200, json={"entities": []})
+
+    yield (simple_client, requests_adapter)
 
 
 @pytest.fixture

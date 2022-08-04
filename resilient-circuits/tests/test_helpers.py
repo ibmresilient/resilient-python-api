@@ -6,8 +6,8 @@ import time
 
 import pkg_resources
 import pytest
-from resilient_circuits import (ResilientComponent, constants, function,
-                                helpers)
+from resilient_circuits import ResilientComponent, constants, function, helpers
+from resilient_circuits.stomp_events import HeartbeatTimeout
 
 from tests import (AppFunctionMockComponent, MockInboundAppComponent,
                    mock_constants)
@@ -224,3 +224,25 @@ def test_get_usr():
     assert helpers.get_user({"api_key_id": None, "email": "def"}) == "def"
     assert helpers.get_user({"api_key_id": "", "email": ""}) is None
     assert helpers.get_user({"api_key_id": None, "email": None}) is None
+
+
+def test_filter_heartbeat_timeout_events():
+    hb1 = HeartbeatTimeout(10)
+    hb2 = HeartbeatTimeout(20)
+    hb3 = HeartbeatTimeout(30)
+    hb4 = HeartbeatTimeout()
+
+    heartbeat_timeouts = [hb2, hb4, hb3, hb1]
+
+    filtered_hbs = helpers.filter_heartbeat_timeout_events(heartbeat_timeouts)
+
+    for hb in filtered_hbs:
+        assert hb.ts != -1
+
+    assert filtered_hbs[0].ts == 10
+    assert filtered_hbs[1].ts == 20
+    assert filtered_hbs[-1].ts == 30
+
+
+def test_filter_heartbeat_timeout_events_empty():
+    assert helpers.filter_heartbeat_timeout_events([]) == []

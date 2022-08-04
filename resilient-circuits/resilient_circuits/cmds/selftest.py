@@ -22,18 +22,18 @@ from resilient_circuits.stomp_events import SelftestTerminateEvent
 LOG = logging.getLogger(constants.CMDS_LOGGER_NAME)
 
 ERROR_EXIT_CODES_MAP = {
-    1: 1,       # Error running App's selftest
-    2: 2,       # selftest was unimplemented
-    20: 20,     # REST: Generic connection error
-    401: 21,    # REST: Connection unauthorized
-    22: 22,     # REST: OSError (Could not find Certificate file)
-    23: 23,     # REST: SSL Error (Invalid Certificate Error)
-    24: 24,     # REST: Organization Membership Error
-    25: 25,     # REST: Invalid Username or Password
-    30: 30,     # STOMP: Generic connection error
-    31: 31,     # STOMP: Not authorized to instansiate STOMP connection
-    32: 32,     # STOMP: Not authorized to read from queue
-    33: 33      # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
+    1: constants.EXIT_SELFTEST_ERROR,
+    2: constants.EXIT_SELFTEST_UNIMPLEMENTED,
+    20: constants.EXIT_REST_CONNECTION_ERROR,
+    401: constants.EXIT_REST_UNAUTHORIZED,
+    22: constants.EXIT_REST_OS_ERROR,
+    23: constants.EXIT_REST_SSL_ERROR,
+    24: constants.EXIT_REST_ORG_ERROR,
+    25: constants.EXIT_REST_INVALID_PW,
+    30: constants.EXIT_STOMP_ERROR,
+    31: constants.EXIT_STOMP_UNAUTHORIZED_CONN,
+    32: constants.EXIT_STOMP_UNAUTHORIZED_Q,
+    33: constants.EXIT_STOMP_Q_TIMEOUT
 }
 
 

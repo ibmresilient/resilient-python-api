@@ -98,7 +98,19 @@ class OnStompError(StompEvent):
 
 
 class HeartbeatTimeout(StompEvent):
-    pass
+
+    def __init__(self, ts=-1):
+        """
+        A circuits event that is fired with the current time
+
+        :param ts: A timestamp, defaults to -1
+        :type ts: int, float, optional
+        """
+        super(HeartbeatTimeout, self).__init__()
+        self.ts = ts
+
+    def __lt__(self, other):
+        return self.ts < other.ts
 
 
 class Subscribe(StompEvent):
