@@ -71,18 +71,18 @@ setup_py_attributes = [
     }),
     ("description", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(IBM SOAR app).*", x, re.IGNORECASE),
+        "fail_func": lambda x: re.findall(r"{0}.*".format(constants.DOCGEN_PLACEHOLDER_STRING), x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
+        "solution": u"Enter a quick description for the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
     ("long_description", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
+        "fail_func": lambda x: re.findall(r"{0}.*".format(constants.DOCGEN_PLACEHOLDER_STRING), x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
+        "solution": u"Enter a detailed description for the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
     ("install_requires", {

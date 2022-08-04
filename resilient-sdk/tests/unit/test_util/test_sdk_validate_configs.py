@@ -61,20 +61,18 @@ def test_author_email_lambda():
 def test_description_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[7][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("My Custom Function is well described")
-    assert func("IBM SOAR app fn_test")
-    assert func("IBM soar app") # lowercase should work too
+    assert func("<<::CHANGE_ME::>>IBM SOAR app fn_test")
 
 def test_long_description_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[8][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("My Custom Function is well described. And the description is long.")
-    assert func("<<change to include app description and key features>>")
-    assert func("<<asd;flkjasfg;hj>>")
+    assert func("<<::CHANGE_ME::>> to include app description and key features")
 
 def test_install_requires_lambda():
 

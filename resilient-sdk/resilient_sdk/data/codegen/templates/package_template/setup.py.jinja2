@@ -28,8 +28,11 @@ setup(
     author="<<your name here>>",
     author_email="you@example.com",
     url="<<your company url>>",
-    description="IBM SOAR app '{{package_name}}'",
-    long_description="""<<change to include app description and key features>>""",
+    description="<<{{change_me_str}}>>Enter a short description of the App",
+    long_description="""<<{{change_me_str}}>>Enter a long description, including the key features of the App. \
+Multiple continuation lines are supported with a backslash. Line breaks are supported too:
+<br>- This will be rendered like a list
+<br>- once the App is installed in SOAR""",
     install_requires=[
         "resilient-circuits>={{resilient_libraries_version}}"
     ],
