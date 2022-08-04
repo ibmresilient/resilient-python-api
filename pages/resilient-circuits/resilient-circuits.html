@@ -406,6 +406,7 @@ to check if any Component has been instantiated in a resilient-circuits instance
 </pre></div>
 </div>
 </li>
+<li><p>Added a new configuration setting to app.config, called <code class="docutils literal notranslate"><span class="pre">heartbeat_timeout_threshold</span></code>. It is a value in seconds between the current <code class="docutils literal notranslate"><span class="pre">HeartbeatTimeout</span></code> event and the first <code class="docutils literal notranslate"><span class="pre">HeartbeatTimeout</span></code> event. If the time is greater than the <code class="docutils literal notranslate"><span class="pre">heartbeat_timeout_threshold</span></code>, the resilient-circuits process stops.</p></li>
 </ul>
 <p><strong>2022-07: version 45.1</strong></p>
 <ul class="simple">
