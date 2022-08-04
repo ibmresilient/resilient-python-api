@@ -49,11 +49,17 @@ class ConfiguredAppliance:
         org = os.environ.get("TEST_RESILIENT_ORG", request.config.option.resilient_org)
         user = os.environ.get("TEST_RESILIENT_USER", request.config.option.resilient_email)
         password = os.environ.get("TEST_RESILIENT_PASSWORD", request.config.option.resilient_password)
-        assert all((host, org, user, password))
+        api_key_id = os.environ.get("TEST_RESILIENT_API_KEY_ID", request.config.option.resilient_api_key_id)
+        api_key_secret = os.environ.get("TEST_RESILIENT_API_KEY_SECRET", request.config.option.resilient_api_key_secret)
+
+        assert all((host, org)) and (all(user, password) or all(api_key_id, api_key_secret))
 
         # Connect to Resilient
         self.client = resilient.SimpleClient(org_name=org, base_url=url, verify=False)
-        session = self.client.connect(user, password)
+        if api_key_id is not None:
+            self.client.set_api_key(api_key_id=api_key_id, api_key_secret=api_key_secret)
+        else:
+            self.client.connect(user, password)
 
         # Retrieve constants from appliance
         constants = self._get_constants()["actions_framework"]
@@ -398,6 +404,20 @@ port = 443
         password = os.environ.get("TEST_RESILIENT_PASSWORD", request.config.option.resilient_password)
         if password:
             config_parser.set(RESILIENT, "password", password)
+
+        api_key_id = os.environ.get("TEST_RESILIENT_API_KEY_ID")
+        if api_key_id:
+            print("TEST api_key_id={} (from environment)".format(api_key_id))
+        else:
+            api_key_id = request.config.option.resilient_api_key_id
+            print("TEST api_key_id={} (from configuration data)".format(api_key_id))
+
+        if api_key_id:
+            config_parser.set(RESILIENT, "api_key_id", api_key_id)
+
+        api_key_secret = os.environ.get("TEST_RESILIENT_API_KEY_SECRET", request.config.option.resilient_api_key_secret)
+        if api_key_secret:
+            config_parser.set(RESILIENT, "api_key_secret", api_key_secret)
 
         # common values
         config_parser.set(RESILIENT, "no_prompt_password", "True")
