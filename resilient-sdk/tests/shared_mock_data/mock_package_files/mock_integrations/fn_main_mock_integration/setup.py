@@ -29,7 +29,7 @@ setup(
     author_email="you@example.com",
     url="https://ibm.com/mysupport",
     # url='https://ibm.biz/resilientcommunity',
-    description="Resilient Circuits Components for 'fn_main_mock_integration'",
+    description="IBM SOAR app 'fn_main_mock_integration'",
     long_description=u"""Resilient Circuits Components for 'fn_main_mock_integration'
     A mock description of mock_function_one with unicode:  ล ฦ ว ศ ษ ส ห ฬ อ""",
     install_requires=[

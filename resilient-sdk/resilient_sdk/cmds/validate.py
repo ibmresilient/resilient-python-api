@@ -413,10 +413,10 @@ class CmdValidate(BaseCmd):
                     description = fail_msg.format(*formats)
                 else: # else is present and did not fail
                     # passes checks
-                    name = "{0} valid in setup.py".format(attr)
+                    name = u"{0} valid in setup.py".format(attr)
                     description = u"'{0}' passed".format(attr)
                     severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
-                    solution = "Value found for '{0}' in setup.py: '{1}'"
+                    solution = u"Value found for '{0}' in setup.py: '{1}'"
 
             # for each attr create a SDKValidateIssue to be appended to the issues list
             issue = SDKValidateIssue(
