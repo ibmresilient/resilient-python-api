@@ -392,21 +392,31 @@ class CmdValidate(BaseCmd):
                 
                 name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
-            elif fail_func(parsed_attr): # check if it fails the 'fail_func'
-                formats = [attr, parsed_attr]
+            else:
+                # certain checks require the path to the setup.py
+                # file which needs to be passed from here
+                include_setup_path = attr_dict.get("include_setup_py_path_in_fail_func", False)
 
-                # some attr require a supplemental lambda function to properly output their failure message
-                if attr_dict.get("fail_msg_lambda_supplement"):
-                    formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
+                if include_setup_path:
+                    fail = fail_func(parsed_attr, path_setup_py_file)
+                else:
+                    fail = fail_func(parsed_attr)
 
-                name = "invalid value in setup.py"
-                description = fail_msg.format(*formats)
-            else: # else is present and did not fail
-                # passes checks
-                name = "{0} valid in setup.py".format(attr)
-                description = u"'{0}' passed".format(attr)
-                severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
-                solution = "Value found for '{0}' in setup.py: '{1}'"
+                if fail: # check if it fails the 'fail_func'
+                    formats = [attr, parsed_attr]
+
+                    # some attr require a supplemental lambda function to properly output their failure message
+                    if attr_dict.get("fail_msg_lambda_supplement"):
+                        formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
+
+                    name = "invalid value in setup.py"
+                    description = fail_msg.format(*formats)
+                else: # else is present and did not fail
+                    # passes checks
+                    name = "{0} valid in setup.py".format(attr)
+                    description = u"'{0}' passed".format(attr)
+                    severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+                    solution = "Value found for '{0}' in setup.py: '{1}'"
 
             # for each attr create a SDKValidateIssue to be appended to the issues list
             issue = SDKValidateIssue(

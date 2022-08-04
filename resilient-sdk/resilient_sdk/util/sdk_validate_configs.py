@@ -9,11 +9,13 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers, sdk_validate_helpers
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
+DEFAULT_SETUP_ATTR_REGEX = r"^<<|>>$"
+
 # formatted strings follow array of values: [attr, attr_value, <OPTIONAL: fail_msg_lambda_supplement>]
 setup_py_attributes = [
     ("name", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x),
+        "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' has invalid character(s) in '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Make sure that '{0}' is all lowercase and contains only letters, numbers or underscores",
@@ -21,15 +23,23 @@ setup_py_attributes = [
     }),
     ("display_name", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^<<|>>$", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an appropriate value. This value is displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
+    ("display_name", {
+        "parse_func": package_helpers.parse_setup_py,
+        "fail_func": sdk_validate_helpers.check_display_name_not_equal_to_name,
+        "include_setup_py_path_in_fail_func": True,
+        "fail_msg": u"'{0}' should not be the same as 'name'", 
+        "solution": u"Set '{0}' to a value that will be displayed when installed on App Host",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    }),
     ("license", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^<<|>>$", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an valid license.",
@@ -45,7 +55,7 @@ setup_py_attributes = [
     }),
     ("author", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^<<|>>$", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the name of the author",
@@ -53,7 +63,7 @@ setup_py_attributes = [
     }),
     ("author_email", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"@example\.com", x),
+        "fail_func": lambda x: re.findall(r"@example\.com", x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the author's contact email",
@@ -61,7 +71,7 @@ setup_py_attributes = [
     }),
     ("description", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", x),
+        "fail_func": lambda x: re.findall(r"^(IBM SOAR app).*", x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
@@ -69,7 +79,7 @@ setup_py_attributes = [
     }),
     ("long_description", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
