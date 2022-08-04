@@ -9,6 +9,10 @@ import mimetypes
 import os
 import sys
 import tempfile
+if sys.version_info.major >= 3:
+    from urllib.parse import quote
+else:
+    from urllib import quote
 
 import resilient
 from bs4 import BeautifulSoup
@@ -81,6 +85,7 @@ def build_incident_url(url, incidentId, orgId=None):
     link = '/'.join([url, fragment, str(incidentId)])
     
     if orgId and isinstance(orgId, (str, int)):
+        orgId = quote(str(orgId))
         link += "?orgId={0}".format(orgId)
     else:
         LOG.warning(constants.WARN_BUILD_INCIDENT_ORG_ID)
@@ -112,7 +117,9 @@ def build_task_url(url, incident_id, task_id, org_id):
         LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
         return url
 
-    return "{0}&{1}{2}&{3}".format(build_incident_url(url, incident_id, orgId=org_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
+    url = "{0}&{1}{2}&{3}".format(build_incident_url(url, incident_id, orgId=org_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
+
+    return url
 
 
 def build_resilient_url(host, port):

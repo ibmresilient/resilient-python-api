@@ -327,14 +327,14 @@ def get_queue(destination):
 
 def is_this_a_selftest(component):
     """
-    Return a True or False if this instantiation of
-    resilient-circuits is from selftest or not.
+    Return ``True`` or ``False`` if this instantiation of
+    ``resilient-circuits`` is from selftest or not.
 
     :param component: the current component that is calling this method (usually 'self')
     :type component: circuits.Component
     :rtype: bool
     """
-    return bool(component.parent.name == "App" and component.parent.IS_SELFTEST)
+    return component.IS_SELFTEST
 
 
 def should_timeout(start_time, timeout_value):

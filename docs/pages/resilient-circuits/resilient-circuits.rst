@@ -20,6 +20,13 @@ Decorators
 
 .. autodecorator:: resilient_circuits.decorators::app_function
 
+
+----------
+Helpers
+----------
+
+.. autofunction:: resilient_circuits.helpers::is_this_a_selftest
+
 ----------
 Change Log
 ----------
