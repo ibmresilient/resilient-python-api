@@ -52,7 +52,7 @@ class ConfiguredAppliance:
         api_key_id = os.environ.get("TEST_RESILIENT_API_KEY_ID", request.config.option.resilient_api_key_id)
         api_key_secret = os.environ.get("TEST_RESILIENT_API_KEY_SECRET", request.config.option.resilient_api_key_secret)
 
-        assert all((host, org)) and (all(user, password) or all(api_key_id, api_key_secret))
+        assert all([host, org]) and (all([user, password]) or all([api_key_id, api_key_secret]))
 
         # Connect to Resilient
         self.client = resilient.SimpleClient(org_name=org, base_url=url, verify=False)
