@@ -34,6 +34,7 @@ setup(
     # Runtime Dependencies
     install_requires=[
         # General dependencies applicable to all python versions
+        "retry2            ~= 0.9",
         "requests          ~= 2.27",
         "requests-toolbelt ~= 0.9",
         "six               ~= 1.16",
@@ -54,8 +55,6 @@ setup(
         "setuptools        ~= 44.0;   python_version == '2.7'",
         "cachetools        ~= 2.1;    python_version == '2.7'",
         "keyring           == 18.0.1; python_version == '2.7'",
-
-        "retry2",
     ],
 
     # restrict supported python versions
