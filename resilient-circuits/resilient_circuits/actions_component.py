@@ -476,16 +476,22 @@ class Actions(ResilientComponent):
 
         heartbeat_timeout_threshold = self.opts.get(constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD)
 
+        # If heartbeat_timeout_threshold config is set
         if heartbeat_timeout_threshold:
 
+            # Add the current HB to the list
             self.heartbeat_timeouts.append(event)
 
+            # If more than 1 HBs are in the list
             if len(self.heartbeat_timeouts) > 1:
 
+                # Remove any invalid timeouts and sort the list
                 self.heartbeat_timeouts = helpers.filter_heartbeat_timeout_events(self.heartbeat_timeouts)
 
+                # Get the difference in seconds between the oldest and current timeout
                 delta = int(self.heartbeat_timeouts[-1].ts - self.heartbeat_timeouts[0].ts)
 
+                # If the delta is greater than the config, log an error and exit resilient-circuits
                 if delta > heartbeat_timeout_threshold:
                     LOG.error("'%s' is set to '%ss' and '%ss' have passed since the first HeartbeatTimeout, exiting...",
                               constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD, heartbeat_timeout_threshold, delta)
