@@ -33,6 +33,15 @@ def test_display_name_not_name_func():
     assert not func("Main Mock Integration", MOCK_SETUP_PY)
     assert func("fn_main_mock_integration", MOCK_SETUP_PY)
 
+def test_no_display_name_not_name_func():
+
+    func = sdk_validate_configs.setup_py_attributes[2][1].get("fail_func", None)
+    
+    assert func is not None
+    assert not func("Main Mock Integration", MOCK_SETUP_PY)
+    assert func("fn_main_mock_integration", MOCK_SETUP_PY)
+    assert not func(None, MOCK_SETUP_PY)
+
 def test_license_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[3][1].get("fail_func", None)

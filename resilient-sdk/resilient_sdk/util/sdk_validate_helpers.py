@@ -46,6 +46,8 @@ def check_display_name_not_equal_to_name(display_name, path_setup_py_file):
     :return: True if the two values equal (i.e. True when it should fail the check)
     :rtype: bool
     """
+    if not display_name:
+        return False
     name = package_helpers.parse_setup_py(path_setup_py_file, ["name"]).get("name")
     return name.lower() == display_name.lower()
 
