@@ -322,6 +322,9 @@ class CmdCodegen(BaseCmd):
 
         jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
 
+        # add ::CHANGE_ME:: to jinja data
+        jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 

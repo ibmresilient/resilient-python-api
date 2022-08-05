@@ -35,6 +35,22 @@ except ImportError as err:
 # float value in range [0, 1] that determines the cutoff at which two files are a match
 MATCH_THRESHOLD = 1.0
 
+def check_display_name_not_equal_to_name(display_name, path_setup_py_file):
+    """
+    Fail func to verify that 'display_name' does not equal 'name' in setup.py
+
+    :param display_name: display_name value from setup.py
+    :type display_name: str
+    :param path_setup_py_file: path to setup.py file of package
+    :type path_setup_py_file: str
+    :return: True if the two values equal (i.e. True when it should fail the check)
+    :rtype: bool
+    """
+    if not display_name:
+        return False
+    name = package_helpers.parse_setup_py(path_setup_py_file, ["name"]).get("name")
+    return name.lower() == display_name.lower()
+
 def check_dependencies_version_specifiers(install_requires_list):
     """
     Check if all dependencies given in the "install_requires" list from setup.py
