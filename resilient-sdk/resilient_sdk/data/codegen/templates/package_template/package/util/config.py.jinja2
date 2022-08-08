@@ -19,9 +19,12 @@ endpoint_url=https://xxx/
 polling_interval=60
 # Number of minutes to lookback for queries the first time the poller runs.
 polling_lookback=120
-cafile=/path/to/cafile.crt or false
      {% endif %}
 #
 #setting=xxx
-#"""
+# 
+# # Specify paths to files if client certs are needed to authenticate
+# client_auth_cert = <path_to_cert.pem>
+# client_auth_key = <path_to_cert_private_key.pem>
+# """
     return config_data

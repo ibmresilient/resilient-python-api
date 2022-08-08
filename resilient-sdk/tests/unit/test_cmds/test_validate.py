@@ -33,6 +33,7 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
     assert args.package == "fn_main_mock_integration"
     assert bool(not args.validate and not args.tests and not args.pylint and not args.bandit) is True
 
+
 def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate, caplog):
 
     cmd_validate = CmdValidate(fx_get_sub_parser)
@@ -44,13 +45,33 @@ def test_print_package_details(fx_copy_fn_main_mock_integration, fx_get_sub_pars
 
     assert "Printing details" in caplog.text
     assert "name: fn_main_mock_integration" in caplog.text
-    assert "Proxy support: " in caplog.text
+    assert "Proxies not fully supported" in caplog.text
+
+
+def test_print_package_details_proxy_supported(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate, caplog):
+
+    cmd_validate = CmdValidate(fx_get_sub_parser)
+    args = cmd_validate.parser.parse_known_args()[0]
+    assert args.package == "fn_main_mock_integration"
+
+    # set package name to path to package
+    args.package = fx_copy_fn_main_mock_integration[1]
+
+    with patch("resilient_sdk.cmds.validate.package_helpers.get_dependency_from_install_requires") as mock_dep:
+
+        mock_dep.return_value = "resilient_circuits>={0}".format(constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT)
+        cmd_validate._print_package_details(args)
+
+        assert "Printing details" in caplog.text
+        assert "name: fn_main_mock_integration" in caplog.text
+        assert "Proxies supported" in caplog.text
+
 
 def test_pass_validate_setup_py_file(fx_copy_fn_main_mock_integration):
     """Test for success when calling _validate_setup()"""
 
     mock_package_path = fx_copy_fn_main_mock_integration[1]
-        
+
     mock_data = [
         ("test", {
             "fail_func": lambda x: False,
@@ -65,6 +86,7 @@ def test_pass_validate_setup_py_file(fx_copy_fn_main_mock_integration):
         assert len(results) == 2
         assert len(results[1]) == 1
         assert results[1][0].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
 
 def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
     """Test for failure when calling _validate_setup()"""
@@ -95,6 +117,13 @@ def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
             "missing_msg": "missing",
             "solution": "solution",
             "parse_func": lambda _, attr_list: {attr: "mock_data" for attr in attr_list},
+        }),
+        ("test4", {
+            "fail_func": lambda x: True,
+            "fail_msg": "failed",
+            "severity": SDKValidateIssue.SEVERITY_LEVEL_INFO,
+            "solution": "solution",
+            "parse_func": lambda _, attr_list: {"attr": False},
         })
     ]
 
@@ -147,9 +176,9 @@ def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
 def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = {
-        "mock_valid_file": {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]}
-    }
+    mock_data = [ 
+        ("mock_valid_file", {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]})
+     ]
 
     # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
     with patch("resilient_sdk.cmds.validate.sdk_helpers.validate_file_paths") as mock_validate_file:
@@ -168,10 +197,10 @@ def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = {
-        "mock_valid_file": {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]},
-        "mock_invalid_file": {"func": lambda **_: [SDKValidateIssue("fail", "fail")]}
-    }
+    mock_data = [ 
+        ("mock_valid_file", {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]}),
+        ("mock_invalid_file", {"func": lambda **_: [SDKValidateIssue("fail", "fail")]})
+     ]
 
     # the file isn't actually real so we need to mock the validate_file_paths call to not raise and error
     with patch("resilient_sdk.cmds.validate.sdk_helpers.validate_file_paths") as mock_validate_file:
@@ -192,14 +221,14 @@ def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
 def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration):
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = {
-        "mock_missing_file": {
+    mock_data = [ 
+        ("mock_missing_file", {
             "missing_name": "mock_name",
             "missing_msg": "mock_msg {0}",
             "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
             "missing_solution": "mock_solution"
-        }
-    }
+        })
+     ]
 
     # mock the package_file data to mock_data
     with patch("resilient_sdk.cmds.validate.validation_configurations.package_files", new=mock_data):

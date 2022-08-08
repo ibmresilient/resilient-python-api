@@ -9,7 +9,7 @@ import sys
 import pkg_resources
 import pytest
 from mock import patch
-from resilient_sdk.util import (constants, sdk_validate_configs,
+from resilient_sdk.util import (constants, package_file_helpers, sdk_validate_configs,
                                 sdk_validate_helpers)
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
@@ -85,7 +85,7 @@ def test_invalid_selftest_validate_selftestpy_file_exists():
     assert result[0] is False
     assert "selftest.py is a required file" in result[1].description
     
-def test_sefltest_run_selftestpy_valid():
+def test_selftest_run_selftestpy_valid():
 
     attr_dict = sdk_validate_configs.selftest_attributes[3]
 
@@ -101,7 +101,7 @@ def test_sefltest_run_selftestpy_valid():
         assert result[0]
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_sefltest_run_selftestpy_invalid(fx_copy_fn_main_mock_integration):
+def test_selftest_run_selftestpy_invalid(fx_copy_fn_main_mock_integration):
 
     attr_dict = sdk_validate_configs.selftest_attributes[3]
 
@@ -136,10 +136,12 @@ def test_sefltest_run_selftestpy_rest_error(fx_copy_fn_main_mock_integration):
         assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
         assert error_msg in result[1].description
 
-def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration):
+
+def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "MANIFEST.in"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1] # [i] is the index of the tuple, [1] is the attr_dict
     package_name = fx_copy_fn_main_mock_integration[0]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
@@ -154,10 +156,11 @@ def test_pass_package_files_manifest(fx_copy_fn_main_mock_integration):
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration):
+def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "MANIFEST.in"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1] # [i] is the index of the tuple, [1] is the attr_dict
     package_name = fx_copy_fn_main_mock_integration[0]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
@@ -172,10 +175,11 @@ def test_fail_package_files_manifest(fx_copy_fn_main_mock_integration):
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
-def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
+def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "apikey_permissions.txt"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]    
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     result = sdk_validate_helpers.package_files_apikey_pem(path_file, attr_dict)
@@ -185,10 +189,11 @@ def test_pass_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
     assert isinstance(result, SDKValidateIssue)
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
+def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "apikey_permissions.txt"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]    
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     # mock the file reading
@@ -203,10 +208,12 @@ def test_fail_package_files_apikey_pem(fx_copy_fn_main_mock_integration):
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
-def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integration):
+def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "Dockerfile"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    # becuase there are two Dockerfile tests, the first one will be at index i-1, the second one at index i
+    attr_dict = sdk_validate_configs.package_files[i-1][1] 
     package_name = fx_copy_fn_main_mock_integration[0]
     package_version = "fake.version"
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
@@ -222,10 +229,12 @@ def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
-def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integration):
+def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "Dockerfile"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    # becuase there are two Dockerfile tests, the first one will be at index i-1, the second one at index i
+    attr_dict = sdk_validate_configs.package_files[i-1][1] 
     package_name = fx_copy_fn_main_mock_integration[0]
     package_version = "fake.version"
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
@@ -241,10 +250,77 @@ def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
+def test_pass_package_files_base_image_correct_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+
+    filename = "Dockerfile"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
+        mock_dict.return_value = {"FROM":[constants.DOCKER_BASE_REPO]}
+
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+
+        assert len(result) == 1
+        result = result[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+
+def test_fail_package_files_base_image_incorrect_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+
+    filename = "Dockerfile"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
+        mock_dict.return_value = {"FROM":["incorrect_repo"]}
+
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+
+        assert len(result) == 1
+        result = result[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+
+def test_fail_package_files_base_image_missing_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+
+    filename = "Dockerfile"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
+        mock_dict.return_value = {"FROM":[]}
+
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+
+        assert len(result) == 1
+        result = result[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+
+def test_fail_package_files_base_image_too_many_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+
+    filename = "Dockerfile"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
+        mock_dict.return_value = {"FROM":["repo1","repo2"]}
+
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+
+        assert len(result) == 1
+        result = result[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "entrypoint.sh"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     package_name = fx_copy_fn_main_mock_integration[0]
     package_version = "fake.version"
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
@@ -260,10 +336,11 @@ def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integ
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
 
-def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration):
+def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "entrypoint.sh"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     package_name = fx_copy_fn_main_mock_integration[0]
     package_version = "fake.version"
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
@@ -299,10 +376,11 @@ def test_difflib_unified_diff_used_in_template_match():
         if i == 2:
             assert line.startswith("@@ -1 +1 @@")
 
-def test_pass_package_files_validate_config_py(fx_copy_fn_main_mock_integration):
+def test_pass_package_files_validate_config_py(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     
     filename = "config.py"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock config parsing - return valid config
@@ -318,10 +396,11 @@ def test_pass_package_files_validate_config_py(fx_copy_fn_main_mock_integration)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
         assert "fake=fake" in result.solution
 
-def test_warn_package_files_validate_config_py(fx_copy_fn_main_mock_integration):
+def test_warn_package_files_validate_config_py(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     
     filename = "config.py"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock config parsing - return no config
@@ -336,10 +415,11 @@ def test_warn_package_files_validate_config_py(fx_copy_fn_main_mock_integration)
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
 
-def test_fail_package_files_validate_config_py(fx_copy_fn_main_mock_integration):
+def test_fail_package_files_validate_config_py(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     
     filename = "config.py"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock config parsing - mock raising an exception
@@ -354,10 +434,11 @@ def test_fail_package_files_validate_config_py(fx_copy_fn_main_mock_integration)
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
-def test_pass_package_files_validate_customize_py(fx_copy_fn_main_mock_integration):
+def test_pass_package_files_validate_customize_py(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     
     filename = "customize.py"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock import def parsing - given a valid dict (actual validation of the import def happens)
@@ -374,10 +455,11 @@ def test_pass_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integration):
+def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     
     filename = "customize.py"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock import definition parsing - mock raising an exception
@@ -392,10 +474,11 @@ def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
-def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration):
+def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "app_logo.png"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
 
     # mock import definition parsing - mock raising an exception
@@ -412,10 +495,11 @@ def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integrati
     assert isinstance(result, SDKValidateIssue)
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_package_files_validate_found_default_icon(fx_copy_fn_main_mock_integration):
+def test_package_files_validate_found_default_icon(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "app_logo.png"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
 
     # mock import definition parsing - mock raising an exception
@@ -431,10 +515,11 @@ def test_package_files_validate_found_default_icon(fx_copy_fn_main_mock_integrat
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_INFO
     assert "'{0}' is the default icon".format(filename) in result.description
 
-def test_package_files_validate_improper_icon(fx_copy_fn_main_mock_integration):
+def test_package_files_validate_improper_icon(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "app_logo.png"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path"))
 
     # mock import definition parsing - mock raising an exception
@@ -450,10 +535,11 @@ def test_package_files_validate_improper_icon(fx_copy_fn_main_mock_integration):
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "ERROR: Failed for some reason" == result.description
 
-def test_package_files_validate_license_is_default(fx_copy_fn_main_mock_integration):
+def test_package_files_validate_license_is_default(fx_copy_fn_main_mock_integration,fx_get_package_files_config):
 
     filename = "LICENSE"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
@@ -464,10 +550,11 @@ def test_package_files_validate_license_is_default(fx_copy_fn_main_mock_integrat
     assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     assert "'LICENSE' is the default license file" == result.description
 
-def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_integration):
+def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_integration,fx_get_package_files_config):
 
     filename = "LICENSE"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.setup_env_and_render_jinja_file") as mock_jinja_render:
@@ -482,10 +569,11 @@ def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_inte
     assert "'LICENSE' file is valid" == result[0].description
     assert result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
-def test_package_files_validate_readme(fx_copy_fn_main_mock_integration):
+def test_package_files_validate_readme(fx_copy_fn_main_mock_integration,fx_get_package_files_config):
 
     filename = "README.md"
-    attr_dict = sdk_validate_configs.package_files.get(filename)
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
 
     result = sdk_validate_helpers.package_files_validate_readme(fx_copy_fn_main_mock_integration[1], path_file, filename, attr_dict)

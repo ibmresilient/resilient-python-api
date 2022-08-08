@@ -79,7 +79,7 @@ class CmdExtPackage(BaseCmd):
                                  help="Run the 'validate' command and generate the validation report to include in packaging",
                                  action="store_true")
 
-    def execute_command(self, args):
+    def execute_command(self, args, propagate_logs=False):
         """
         Function that creates The App.zip file from the give source path and returns
         the path to the new App.zip
@@ -95,6 +95,9 @@ class CmdExtPackage(BaseCmd):
             -  **args.no_samples**: if defined, set path_payload_samples to None.
             -  **args.validate**: if defined, run ``validate`` and save report in packaged app.
         :type args: argparse Namespace
+        :param propagate_logs: If True, logs generated for use_setuptools.run_setup are propagated to the root log,
+            default is False
+        :type propagate_logs: bool
 
         :return: Path to new app.zip
         :rtype: str
@@ -150,6 +153,8 @@ class CmdExtPackage(BaseCmd):
 
         LOG.info("\nBuild Distribution starting\n")
 
+        LOG.propagate = propagate_logs
+
         # Create the build distribution
         use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
 
@@ -171,5 +176,7 @@ class CmdExtPackage(BaseCmd):
         )
 
         LOG.info("App created at: %s", path_the_extension_zip)
+
+        LOG.propagate = True
 
         return path_the_extension_zip

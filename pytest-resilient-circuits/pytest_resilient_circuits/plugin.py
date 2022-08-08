@@ -9,6 +9,8 @@ from pytest_resilient_circuits.resilient_circuits_fixtures import *
 _help_email = "Resilient user email"
 _help_host = "Resilient host"
 _help_password = "Resilient password"
+_help_api_key_id = "Resilient API key ID"
+_help_api_key_secret = "Resilient API key secret"
 _help_org = "Resilient org"
 _help_app_config = "Resilient app.config file"
 
@@ -29,6 +31,18 @@ def pytest_addoption(parser):
 
     parser.addoption("--resilient_password",
                      help=_help_password,
+                     action="store",
+                     default="",
+                     required=False)
+
+    parser.addoption("--resilient_api_key_id",
+                     help=_help_api_key_id,
+                     action="store",
+                     default="",
+                     required=False)
+
+    parser.addoption("--resilient_api_key_secret",
+                     help=_help_api_key_secret,
                      action="store",
                      default="",
                      required=False)

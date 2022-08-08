@@ -50,6 +50,25 @@ BASE_PATH_VALIDATE_DATA = os.path.join("data", "validate")
 VALIDATE_TEMPLATE_PATH = os.path.join(BASE_PATH_VALIDATE_DATA, "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
 
+# docker test constants (used in validate)
+DOCKER_BASE_REPO = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_COMMAND_DICT = {
+    "from_command": "FROM",         # sets base image to build on top of
+    "set_argument": "ARG",          # sets variables to use during building of image
+    "set_env_var": "ENV",           # sets environment variables that persist after image is built
+    "user": "USER",                 # changes user
+    "run_command": "RUN",           # runs a shell command
+    "copy_command": "COPY",         # copies from one directory to another (i.e. 'cp' command)
+    "entrypoint": "ENTRYPOINT",     # sets the entrypoint for the image
+    "change_directory": "WORKDIR",  # changes current directory while building image (i.e. 'cd' command)
+}
+
+# Temp File Prefixes
+TMP_PYPI_VERSION = "latest_pypi_version.json"
+
+# URLs
+URL_PYPI_VERSION = "https://pypi.org/pypi/resilient-sdk/json"
+
 # setup.py constants (for validate)
 SETUP_PY_INSTALL_REQ_NAME = "install_requires"
 

@@ -219,7 +219,7 @@ class StompClient(BaseComponent):
         if ((self._client.serverHeartBeat / 1000.0) * self.ALLOWANCE + self.last_heartbeat) < now:
             LOG.error("Server heartbeat timeout. %d seconds since last heartbeat.", elapsed)
             event.success = False
-            self.fire(HeartbeatTimeout())
+            self.fire(HeartbeatTimeout(now))
 
     @handler("ClientHeartbeat")
     def send_heartbeat(self, event):

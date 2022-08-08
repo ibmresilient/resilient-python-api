@@ -99,7 +99,7 @@ def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_mai
     cmd_package = CmdPackage(fx_get_sub_parser)
     args = cmd_package.parser.parse_known_args()[0]
 
-    cmd_package.execute_command(args)
+    cmd_package.execute_command(args, propagate_logs=True)
 
     assert ("WARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
             "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text

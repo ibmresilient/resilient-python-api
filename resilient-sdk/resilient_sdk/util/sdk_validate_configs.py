@@ -9,11 +9,13 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers, sdk_validate_helpers
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 
+DEFAULT_SETUP_ATTR_REGEX = r"^<<|>>$"
+
 # formatted strings follow array of values: [attr, attr_value, <OPTIONAL: fail_msg_lambda_supplement>]
 setup_py_attributes = [
     ("name", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x),
+        "fail_func": lambda x: re.findall(r"[^a-z_0-9]+", x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' has invalid character(s) in '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Make sure that '{0}' is all lowercase and contains only letters, numbers or underscores",
@@ -21,15 +23,23 @@ setup_py_attributes = [
     }),
     ("display_name", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^<<|>>$", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an appropriate value. This value is displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
+    ("display_name", {
+        "parse_func": package_helpers.parse_setup_py,
+        "fail_func": sdk_validate_helpers.check_display_name_not_equal_to_name,
+        "include_setup_py_path_in_fail_func": True,
+        "fail_msg": u"'{0}' should not be the same as 'name'", 
+        "solution": u"Set '{0}' to a value that will be displayed when installed on App Host",
+        "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+    }),
     ("license", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^<<|>>$", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an valid license.",
@@ -45,7 +55,7 @@ setup_py_attributes = [
     }),
     ("author", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^<<|>>$", x),
+        "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the name of the author",
@@ -53,7 +63,7 @@ setup_py_attributes = [
     }),
     ("author_email", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"@example\.com", x),
+        "fail_func": lambda x: re.findall(r"@example\.com", x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the author's contact email",
@@ -61,18 +71,18 @@ setup_py_attributes = [
     }),
     ("description", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", x),
+        "fail_func": lambda x: re.findall(r"{0}.*".format(constants.DOCGEN_PLACEHOLDER_STRING), x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
+        "solution": u"Enter a quick description for the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
     ("long_description", {
         "parse_func": package_helpers.parse_setup_py,
-        "fail_func": lambda x: re.findall(r"^(Resilient Circuits Components).*", x),
+        "fail_func": lambda x: re.findall(r"{0}.*".format(constants.DOCGEN_PLACEHOLDER_STRING), x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Enter text that describes the app in '{0}'. This will be displayed when the app is installed",
+        "solution": u"Enter a detailed description for the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
     ("install_requires", {
@@ -178,8 +188,8 @@ selftest_attributes = [
 
 
 # check package files are present
-package_files = {
-    "MANIFEST.in": {
+package_files = [ 
+    ("MANIFEST.in", {
         "func": sdk_validate_helpers.package_files_manifest,
         "name": "'MANIFEST.in'",
 
@@ -192,8 +202,9 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'MANIFEST.in' has the minimum files included"
-    },
-    "apikey_permissions.txt": {
+    }),
+
+    ("apikey_permissions.txt", {
         "func": sdk_validate_helpers.package_files_apikey_pem,
         "name": "'apikey_permissions.txt'",
 
@@ -207,10 +218,11 @@ package_files = {
 
         "pass_msg": "'apikey_permissions.txt' is valid; it contains the base permissions",
         "pass_solution": "Permissions found: {0}"
-    },
-    "Dockerfile": {
+    }),
+
+    ("Dockerfile", {
         "func": sdk_validate_helpers.package_files_template_match,
-        "name": "'Dockerfile'",
+        "name": "'Dockerfile, template match'",
 
         "fail_msg": "'Dockerfile' does not match the template file ({0:.0f}% match). Difference from template:\n\n\t\t{1}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
@@ -221,8 +233,19 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'Dockerfile' matches the template"
-    },
-    "entrypoint.sh": {
+    }),
+    ("Dockerfile", {
+        "func": sdk_validate_helpers.package_files_validate_base_image,
+        "name": "'Dockerfile, base image'",
+
+        "fail_msg": "Dockerfile is not using the correct base image: {0}", 
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "This can be fixed by {0}", 
+
+        "pass_msg": "Dockerfile is using the correct base image"
+        }),
+
+    ("entrypoint.sh", {
         "func": sdk_validate_helpers.package_files_template_match,
         "name": "'entrypoint.sh'",
 
@@ -235,8 +258,9 @@ package_files = {
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "'entrypoint.sh' matches the template file"
-    },
-    "config.py": {
+    }),
+
+    ("config.py", {
         "func": sdk_validate_helpers.package_files_validate_config_py,
         "path": "{0}/util/config.py",
         "name": "'config.py'",
@@ -255,8 +279,9 @@ package_files = {
 
         "pass_msg": "'config.py' returned a valid app.config value",
         "pass_solution": u"config data: \n\t\t{0}"
-    },
-    "customize.py": {
+    }),
+
+    ("customize.py", {
         "func": sdk_validate_helpers.package_files_validate_customize_py,
         "path": "{0}/util/customize.py",
         "name": "'customize.py'",
@@ -271,8 +296,9 @@ package_files = {
 
         "pass_msg": "'customize.py' returned a valid import definition",
         "pass_solution": u"ImportDefinition found: {0}...; View the entire contents at '{1}'"
-    },
-    "README.md": {
+    }),
+
+    ("README.md", {
         "func": sdk_validate_helpers.package_files_validate_readme,
         "name": "'README.md'",
 
@@ -298,8 +324,9 @@ package_files = {
 
         "pass_msg": "'README.md' has been implemented",
         "pass_solution": "Make sure that all documentation is up to date before packaging"
-    },
-    "app_logo.png": {
+    }),
+
+    ("app_logo.png", {
         "func": sdk_validate_helpers.package_files_validate_icon,
         "path": package_helpers.PATH_ICON_EXTENSION_LOGO,
         "default_path": package_helpers.PATH_DEFAULT_ICON_EXTENSION_LOGO,
@@ -318,8 +345,9 @@ package_files = {
 
         "pass_msg": "'{0}' icon found at {1}",
         "solution": "Icons appear in SOAR when your app is installed with App Host"
-    },
-    "company_logo.png": {
+    }),
+
+    ("company_logo.png", {
         "func": sdk_validate_helpers.package_files_validate_icon,
         "path": package_helpers.PATH_ICON_COMPANY_LOGO,
         "default_path": package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO,
@@ -338,8 +366,9 @@ package_files = {
 
         "pass_msg": "'{0}' icon found at {1}",
         "solution": "Icons appear in SOAR when your app is installed with App Host"
-    },
-    "LICENSE": {
+    }),
+
+    ("LICENSE", {
         "func": sdk_validate_helpers.package_files_validate_license,
         "path": "{0}/LICENSE",
         "name": "LICENSE",
@@ -354,8 +383,8 @@ package_files = {
 
         "pass_msg": "'LICENSE' file is valid",
         "pass_solution": "It is recommended to manually validate the license. Suggested formats: MIT, Apache, and BSD"
-    }
-}
+    })
+ ]
 
 payload_samples_attributes = {
     "func": sdk_validate_helpers.payload_samples_validate_payload_samples,

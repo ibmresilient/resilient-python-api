@@ -4,9 +4,11 @@
 
 """ Implementation of `resilient-sdk validate` """
 
+
 import logging
 import os
 import re
+from collections import defaultdict
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -304,7 +306,7 @@ class CmdValidate(BaseCmd):
         validations = [
             ("setup.py", self._validate_setup),
             ("package files", self._validate_package_files),
-            ("payload samples", self._validate_payload_samples)
+            ("payload samples", self._validate_payload_samples),
         ]
 
 
@@ -392,21 +394,31 @@ class CmdValidate(BaseCmd):
                 
                 name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
-            elif fail_func(parsed_attr): # check if it fails the 'fail_func'
-                formats = [attr, parsed_attr]
+            else:
+                # certain checks require the path to the setup.py
+                # file which needs to be passed from here
+                include_setup_path = attr_dict.get("include_setup_py_path_in_fail_func", False)
 
-                # some attr require a supplemental lambda function to properly output their failure message
-                if attr_dict.get("fail_msg_lambda_supplement"):
-                    formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
+                if include_setup_path:
+                    fail = fail_func(parsed_attr, path_setup_py_file)
+                else:
+                    fail = fail_func(parsed_attr)
 
-                name = "invalid value in setup.py"
-                description = fail_msg.format(*formats)
-            else: # else is present and did not fail
-                # passes checks
-                name = "{0} valid in setup.py".format(attr)
-                description = u"'{0}' passed".format(attr)
-                severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
-                solution = "Value found for '{0}' in setup.py: '{1}'"
+                if fail: # check if it fails the 'fail_func'
+                    formats = [attr, parsed_attr]
+
+                    # some attr require a supplemental lambda function to properly output their failure message
+                    if attr_dict.get("fail_msg_lambda_supplement"):
+                        formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
+
+                    name = "invalid value in setup.py"
+                    description = fail_msg.format(*formats)
+                else: # else is present and did not fail
+                    # passes checks
+                    name = u"{0} valid in setup.py".format(attr)
+                    description = u"'{0}' passed".format(attr)
+                    severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+                    solution = u"Value found for '{0}' in setup.py: '{1}'"
 
             # for each attr create a SDKValidateIssue to be appended to the issues list
             issue = SDKValidateIssue(
@@ -461,10 +473,9 @@ class CmdValidate(BaseCmd):
         package_name = parsed_setup.get("name")
         package_version = parsed_setup.get("version")
 
-        # run through validations for package files
-        # details of each check can be found in the sdk_validate_configs.package_files
-        for filename in validation_configurations.package_files:
-            attr_dict = validation_configurations.package_files.get(filename)
+        attributes = validation_configurations.package_files
+
+        for filename,attr_dict in attributes:
 
             # if a specific path is required for this file, it will be specified in the "path" attribute
             if attr_dict.get("path"):
@@ -483,6 +494,10 @@ class CmdValidate(BaseCmd):
                 # are only used when a logo is missing; the value should be None otherwise
                 # be aware of this if a dev ever wants to add infomation to the missing 
                 # solution for other package files
+
+                if not attr_dict.get("missing_msg"):
+                    continue
+
                 issue_list = [SDKValidateIssue(
                     name=attr_dict.get("name"),
                     description=attr_dict.get("missing_msg").format(path_file),
@@ -495,6 +510,7 @@ class CmdValidate(BaseCmd):
                 if not attr_dict.get("func"):
                     raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
 
+                    
                 # run given "func"
                 issue_list = attr_dict.get("func")(
                     filename=filename,

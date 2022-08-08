@@ -27,12 +27,12 @@ class TestFunctionResult:
         mock_results = {"content": u"unicode: ล ฦ ว"}
         mock_fn_name = "mock_fn_name"
 
-        result = FunctionResult(mock_results, name=mock_fn_name, custom_results=True)
+        result = FunctionResult(mock_results, name=mock_fn_name, success=False, reason="Failure", custom_results=True)
 
         assert result.value == mock_results
         assert result.name == mock_fn_name
-        assert result.reason is None
-        assert result.success is True
+        assert result.reason == "Failure"
+        assert result.success is False
         assert result.custom_results is True
 
     def test_results_not_dict(self, caplog):
