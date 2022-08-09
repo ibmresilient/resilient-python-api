@@ -13,7 +13,7 @@ from mock import patch
 from resilient_sdk.cmds import CmdExtPackage as CmdPackage
 from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from tests import helpers
 from tests.shared_mock_data import mock_paths
 
