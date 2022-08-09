@@ -32,6 +32,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
+    $ resilient-sdk codegen -p <path_current_package> --poller
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
@@ -50,6 +51,10 @@ class CmdCodegen(BaseCmd):
         self.parser.add_argument("-re", "--reload",
                                  action="store_true",
                                  help="Reload customizations and create new customize.py")
+
+        self.parser.add_argument("-pr", "--poller",
+                                 action="store_true",
+                                 help="Build template files for a poller")
 
         self.parser.add_argument(constants.SUB_CMD_OPT_GATHER_RESULTS,
                                  action="store",
@@ -322,6 +327,9 @@ class CmdCodegen(BaseCmd):
 
         jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
 
+        # add poller flag
+        jinja_data["poller_flag"] = args.poller if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) else False
+
         # add ::CHANGE_ME:: to jinja data
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
 
@@ -376,6 +384,27 @@ class CmdCodegen(BaseCmd):
                 }
             }
         }
+
+        # poller logic if --poller flag was passed
+        # as of v46 this is hid behind a RES_SDK_DEV flag
+        if args.poller and sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
+            poller_mapping_dict = {
+                "__init__.py": ("package/poller/__init__.py.jinja2", jinja_data),
+                "poller.py": ("package/poller/poller.py.jinja2", jinja_data),
+                # data isn't rendered with jinja — these are default jinja templates to be modified
+                # by the developer who is implementing a poller
+                "data": {
+                    "soar_create_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
+                    "soar_update_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
+                    "soar_close_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
+                }
+            }
+            lib_mapping_dict = {
+                "__init__.py": ("package/lib/__init__.py.jinja2", jinja_data),
+                "app_common.py": ("package/lib/app_common.py.jinja2", jinja_data)
+            }
+            package_mapping_dict[package_name]['poller'] = poller_mapping_dict
+            package_mapping_dict[package_name]['lib'] = lib_mapping_dict
 
         # If there are Functions, add a 'tests' and a 'payload_samples' directory (if in dev mode)
         if jinja_data.get("functions"):

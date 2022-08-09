@@ -10,8 +10,18 @@ def config_section_data():
     """
     config_data = None
 
-#     config_data = u"""[{{package_name}}]
-# setting=xxx
+#    config_data = u"""[{{package_name}}]
+     {% if poller_flag %}
+api_key=xxx
+api_secret=xxx
+endpoint_url=https://xxx/
+# Number of seconds between poller cycles. A value of 0 disables the poller
+polling_interval=60
+# Number of minutes to lookback for queries the first time the poller runs.
+polling_lookback=120
+     {% endif %}
+#
+#setting=xxx
 # 
 # # Specify paths to files if client certs are needed to authenticate
 # client_auth_cert = <path_to_cert.pem>
