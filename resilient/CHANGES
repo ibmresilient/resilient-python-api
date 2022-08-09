@@ -1,3 +1,8 @@
+**2022-08: version 46.0**
+
+* Added some retry logic to :func:`resilient.SimpleClient.post_attachment() <resilient.co3.SimpleClient.post_attachment>`.
+  If a response code of ``409`` is received we retry adding the attachment
+
 **2022-07: version 45.1**
 
 * No major changes. Just bumping build number to coincide with other builds
