@@ -54,9 +54,9 @@ class AppCommon():
         """
 
         self.package_name = package_name
-        self.api_key = app_configs['api_key']
-        self.api_secret = app_configs['api_secret']
-        self.endpoint_url = app_configs['endpoint_url']
+        self.api_key = app_configs.get("api_key", "<- {{change_me_str}} change to default for API Key or remove default ->")
+        self.api_secret = app_configs.get("api_secret","<- {{change_me_str}} change to default for API secret or remove default ->")
+        self.endpoint_url = app_configs.get("endpoint_url", "<- {{change_me_str}} change to default for endpoint url or remove default ->")
         self.rc = rc
         self.verify = str_to_bool(app_configs.get("cafile", "false"))
 
@@ -176,7 +176,7 @@ class AppCommon():
             "query_field_name": readable_datetime(timestamp) # utc datetime format
         }
 
-        LOG.debug(query)
+        LOG.debug("Querying endpoint with %s", query)
         response, err_msg = self._api_call("GET", 'alerts', query, refresh_authentication=True)
         if err_msg:
             LOG.error("%s API call failed: %s", self.package_name, err_msg)

@@ -106,7 +106,7 @@ class PollerComponent(AppFunctionComponent):
         :type opts: dict
         """
         # Validate required fields in app.config are set
-        # <{{change_me_str}} change change this validation to include all the fields required in the app.config file >
+        # <{{change_me_str}} change this validation to include all the fields required in the app.config file >
         required_fields = ["polling_interval",
                         "polling_lookback",
                         "endpoint_url",
@@ -164,7 +164,7 @@ class PollerComponent(AppFunctionComponent):
         The steps taken are:
            1) query SOAR for all open entities associated with the datasource
            2) query datasource entities for changes based on these incidents
-           3) determine SOAR actions to take: create, update case or close
+           3) determine SOAR actions to take: create, update, or close a case
 
         :param last_poller_time: time in milliseconds when the last poller ran
         :type last_poller_time: int
@@ -192,7 +192,7 @@ class PollerComponent(AppFunctionComponent):
         The logic is to determine if a SOAR case needs to be created, updated or closed, and
         apply the correct template file to apply the field changes.
 
-        :param query_results: list of endpoint entities to check again SOAR cases
+        :param query_results: list of endpoint entities to check against SOAR cases
         :type query_results: list
         """
 
