@@ -330,7 +330,7 @@ def is_this_a_selftest(component):
     Return ``True`` or ``False`` if this instantiation of
     ``resilient-circuits`` is from selftest or not.
 
-    :param component: the current component that is calling this method (usually 'self')
+    :param component: the current component that is calling this method (usually ``self``)
     :type component: circuits.Component
     :rtype: bool
     """
