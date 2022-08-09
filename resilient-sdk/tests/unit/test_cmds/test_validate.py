@@ -18,7 +18,7 @@ def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser,
 
     assert isinstance(cmd_validate, base_cmd.BaseCmd)
     assert cmd_validate.CMD_NAME == "validate"
-    assert cmd_validate.CMD_HELP == "Tests the content of all files associated with the app, including code, before packaging it"
+    assert cmd_validate.CMD_HELP == "Tests the content of all files associated with the app, including code, before packaging it. Only Python >= 3.6 supported."
     assert cmd_validate.CMD_USAGE == """
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
@@ -350,6 +350,7 @@ def test_print_status(fx_get_sub_parser, caplog):
     assert "testprintstatus FAIL" in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_custom_app_config_file(fx_copy_and_pip_install_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
     mock_app_config_path = mock_paths.TEST_TEMP_DIR + "/mock_app.config"
     mock_integration_name = fx_copy_and_pip_install_fn_main_mock_integration[0]
@@ -372,6 +373,7 @@ def test_custom_app_config_file(fx_copy_and_pip_install_fn_main_mock_integration
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
 
@@ -392,6 +394,7 @@ def test_not_using_custom_app_config_file(fx_copy_fn_main_mock_integration, fx_c
         assert not os.getenv(constants.ENV_VAR_APP_CONFIG_FILE, default=None)
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
 
@@ -413,6 +416,7 @@ def test_run_tests_with_tox_args(fx_pip_install_tox, fx_copy_fn_main_mock_integr
         assert "tests PASS" in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_mock_res_client, fx_get_sub_parser, caplog):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
 
@@ -435,6 +439,7 @@ def test_run_tests_with_settings_file(fx_pip_install_tox, fx_copy_fn_main_mock_i
             assert "tests PASS" in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_run_pylint_scan(fx_pip_install_pylint, fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, caplog):
 
     # This test runs pylint on the fn_main_mock_integration
@@ -507,6 +512,7 @@ def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_vali
     assert os.path.exists(os.path.join(path_package, "dist/validate_report.md"))
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 def test_execute_command(fx_copy_fn_main_mock_integration, fx_cmd_line_args_validate, fx_get_sub_parser, fx_mock_res_client, caplog):
 
     mock_integration_name = fx_copy_fn_main_mock_integration[0]

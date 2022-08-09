@@ -105,6 +105,8 @@ def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_mai
             "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text
 
 
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 @patch("resilient_sdk.cmds.validate.CmdValidate._run_main_validation")
 def test_execute_command_with_validate_enabled(mock_validate, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
