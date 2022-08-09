@@ -23,6 +23,7 @@ def test_display_name_lambda():
     
     assert func is not None
     assert not func("This is My Display Name")
+    assert not func("This is My Display Name ส ห ฬ ")
     assert func("<<default display name>>")
 
 def test_display_name_not_name_func():

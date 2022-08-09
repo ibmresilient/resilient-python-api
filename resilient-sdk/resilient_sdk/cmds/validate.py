@@ -38,7 +38,7 @@ class CmdValidate(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "validate"
-    CMD_HELP = "Tests the content of all files associated with the app, including code, before packaging it"
+    CMD_HELP = "Tests the content of all files associated with the app, including code, before packaging it. Only Python >= 3.6 supported."
     CMD_USAGE = """
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
@@ -93,9 +93,24 @@ class CmdValidate(BaseCmd):
 
     def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """
-        TODO: docstring, unit tests
-        returns the path to the validation report that was last generated
+        Runs validate. Can be any of: 
+          - static validation,
+          - selftest,
+          - tox tests,
+          - pylint,
+          - bandit
+
+        If ``run_from_package`` then the validation is being run from ``resilient-sdk package`` command.
+        Returns the path to the validation report that was last generated
         """
+
+        # set the appropriate command for error messages
+        if not run_from_package:
+            SDKException.command_ran = "{0}".format(self.CMD_NAME)
+
+        # Check if Python >= MIN_SUPPORTED_PY_VERSION
+        if not sdk_helpers.is_python_min_supported_version(constants.ERROR_WRONG_PYTHON_VERSION):
+            raise SDKException(constants.ERROR_WRONG_PYTHON_VERSION)
 
         sdk_helpers.is_python_min_supported_version()
 
