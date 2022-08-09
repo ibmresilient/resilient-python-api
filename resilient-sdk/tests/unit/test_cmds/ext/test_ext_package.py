@@ -8,6 +8,7 @@ import sys
 import tarfile
 import zipfile
 
+import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdExtPackage as CmdPackage
 from resilient_sdk.cmds.validate import CmdValidate
