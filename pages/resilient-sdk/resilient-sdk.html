@@ -239,6 +239,7 @@ options:
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' -c '/usr/custom_app.config'
 $ resilient-sdk codegen -p &lt;path_current_package&gt; --reload --workflow 'new_wf_to_add'
+$ resilient-sdk codegen -p &lt;path_current_package&gt; --poller
 $ resilient-sdk codegen -p &lt;path_current_package&gt; --gather-results
 $ resilient-sdk codegen -p &lt;path_current_package&gt; --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'
 
@@ -260,6 +261,7 @@ options:
 -c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -p, --package			(required) Name of new or path to existing package 
 -re, --reload			Reload customizations and create new customize.py 
+-pr, --poller			Build template files for a poller 
 --gather-results		Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results. Only Python &gt;= 3.6 supported</pre>
 </section>
 <section id="docgen">
