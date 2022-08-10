@@ -307,7 +307,7 @@ def test_fail_package_files_base_image_too_many_dockerfile(fx_copy_fn_main_mock_
     attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
     with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
-        mock_dict.return_value = {"FROM":["repo1","repo2"]}
+        mock_dict.return_value = {"FROM":[constants.DOCKER_BASE_REPO,constants.DOCKER_BASE_REPO]}
 
         result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
 
@@ -315,6 +315,20 @@ def test_fail_package_files_base_image_too_many_dockerfile(fx_copy_fn_main_mock_
         result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
+def test_fail_package_files_base_image_too_many_and_incorrect_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+    filename = "Dockerfile"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
+        mock_dict.return_value = {"FROM":["repo1","repo2"]}
+
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+
+        assert len(result) == 2
+        assert isinstance(result[0], SDKValidateIssue) and isinstance(result[1], SDKValidateIssue)
+        assert result[0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL and result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
 def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
