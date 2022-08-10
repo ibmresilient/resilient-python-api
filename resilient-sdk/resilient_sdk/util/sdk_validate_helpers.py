@@ -860,6 +860,15 @@ def package_files_validate_base_image(path_file, attr_dict,**_):
                 solution=attr_dict.get("fail_solution").format("removing any extra FROM commands")
             )]
 
+            for command in command_dict[from_command]:
+                if command != constants.DOCKER_BASE_REPO:
+                    issue.extend([SDKValidateIssue(
+                    attr_dict.get("name"),
+                    attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
+                    severity=attr_dict.get("fail_severity"),
+                    solution=attr_dict.get("fail_solution").format("changing the repo to '{0}'").format(constants.DOCKER_BASE_REPO)
+                    )])
+                    break
 
     issues.extend(issue)
     return issues
