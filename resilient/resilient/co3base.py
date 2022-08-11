@@ -436,7 +436,7 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
-    @retry(BasicHTTPException, tries=5, delay=1, jitter=2)
+    @retry(BasicHTTPException, tries=8, delay=2, backoff=2)
     def post_attachment(self, uri, filepath,
                         filename=None,
                         mimetype=None,
