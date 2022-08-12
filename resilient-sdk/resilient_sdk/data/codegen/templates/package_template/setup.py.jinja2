@@ -28,8 +28,11 @@ setup(
     author="<<your name here>>",
     author_email="you@example.com",
     url="<<your company url>>",
-    description="Resilient Circuits Components for '{{package_name}}'",
-    long_description="""Resilient Circuits Components for '{{package_name}}'""",
+    description="<<{{change_me_str}}>>Enter a short description of the App",
+    long_description="""<<{{change_me_str}}>>Enter a long description, including the key features of the App. \
+Multiple continuation lines are supported with a backslash. Line breaks are supported too:
+<br>- This will be rendered like a list
+<br>- once the App is installed in SOAR""",
     install_requires=[
         "resilient-circuits>={{resilient_libraries_version}}"
     ],
@@ -44,7 +47,13 @@ setup(
         "resilient.circuits.components": [
             # When setup.py is executed, loop through the .py files in the components directory and create the entry points.
             "{}FunctionComponent = {{package_name}}.components.{}:FunctionComponent".format(snake_to_camel(get_module_name(filename)), get_module_name(filename)) for filename in glob.glob("./{{package_name}}/components/[a-zA-Z]*.py")
-        ],
+        ]
+        {% if poller_flag %}
+        + [
+            "PollerComponent = {{package_name}}.poller.poller:PollerComponent"
+          ]
+        {% endif %}
+        ,
         "resilient.circuits.configsection": ["gen_config = {{package_name}}.util.config:config_section_data"],
         "resilient.circuits.customize": ["customize = {{package_name}}.util.customize:customization_data"],
         "resilient.circuits.selftest": ["selftest = {{package_name}}.util.selftest:selftest_function"]

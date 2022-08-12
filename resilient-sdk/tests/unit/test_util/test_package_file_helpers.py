@@ -8,6 +8,7 @@ import os
 import shutil
 
 import pytest
+from mock import patch
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
@@ -64,10 +65,13 @@ def test_get_package_name_invalid_path():
 
 
 def test_get_dependency_from_install_requires():
-    setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, ["install_requires"])
-    install_requires_str = setup_attributes.get("install_requires")
+    setup_attributes = package_helpers.parse_setup_py(mock_paths.MOCK_SETUP_PY, [constants.SETUP_PY_INSTALL_REQ_NAME])
+    install_requires_str = setup_attributes.get(constants.SETUP_PY_INSTALL_REQ_NAME)
     res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(install_requires_str, "resilient_circuits")
+    assert res_circuits_dep_str == "resilient_circuits>=30.0.0"
 
+    # make sure works with "resiilent-circuits" too even if the install_requires specifies "_"
+    res_circuits_dep_str = package_helpers.get_dependency_from_install_requires(install_requires_str, "resilient-circuits")
     assert res_circuits_dep_str == "resilient_circuits>=30.0.0"
 
 
@@ -316,6 +320,7 @@ def test_color_diff_output():
             # lines that shouldn't get any color added
             assert line == mock_diff_data_generator[i]
 
+
 def test_pass_parse_file_paths_from_readme():
 
     mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
@@ -332,3 +337,80 @@ def test_pass_parse_file_paths_from_readme():
 
     with pytest.raises(SDKException):
         result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)
+
+
+def test_parse_dockerfile():
+
+    command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH)
+
+    from_list = [constants.DOCKER_BASE_REPO]
+    arg_list = [
+        "APPLICATION=fn_main_mock_integration",
+        "RESILIENT_CIRCUITS_VERSION=37",
+        "PATH_RESILIENT_CIRCUITS=rescircuits",
+        "APP_HOST_CONTAINER=1"
+        ]
+    env_list = [
+        r"APP_HOST_CONTAINER=${APP_HOST_CONTAINER}",
+        r"APP_CONFIG_FILE /etc/${PATH_RESILIENT_CIRCUITS}/app.config",
+        r"APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}"
+    ]
+    user_list = ["0","1001"]
+    run_list = [
+        "pip install --upgrade pip",
+        r'pip install "resilient-circuits>=${RESILIENT_CIRCUITS_VERSION}"',
+        r"pip install /tmp/packages/${APPLICATION}-*.tar.gz",
+        r"mkdir /etc/${PATH_RESILIENT_CIRCUITS}",
+        "groupadd -g 1001 default && usermod -g 1001 default",
+        r"mkdir /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
+        r"mkdir /var/${PATH_RESILIENT_CIRCUITS}",
+        r"mkdir /opt/${PATH_RESILIENT_CIRCUITS}"
+        ]
+    copy_list = ["./dist /tmp/packages",r"entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh"]
+    entrypoint_list = ['[ "sh", "/opt/rescircuits/entrypoint.sh" ]']
+    empty_list = [
+        r"chgrp -R 1001 /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
+        r"chmod -R g=u /var/log/${PATH_RESILIENT_CIRCUITS}"]
+    
+    assert command_dict[constants.DOCKER_COMMAND_DICT["from_command"]] == from_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["set_argument"]] == arg_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["set_env_var"]] == env_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["user"]] == user_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["run_command"]] == run_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["copy_command"]] == copy_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["entrypoint"]] == entrypoint_list
+
+
+def test_parse_dockerfile_unicode():
+    with patch("resilient_sdk.util.sdk_helpers.read_file") as mock_lines:
+        mock_lines.return_value = [
+            "FROM unicode testing mock",
+            "RUN ɐ ɑ ɒ ɓ ɔ ɕ",
+            "يجري a command!",
+            "TIBET ༀ ༁ ༂"
+        ]
+        command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH)
+
+    assert command_dict["FROM"] == ["unicode testing mock"]
+    assert command_dict["RUN"] == ["ɐ ɑ ɒ ɓ ɔ ɕ"]
+    assert command_dict["يجري"] == ["a command!"]
+    assert command_dict["TIBET"] == ["ༀ ༁ ༂"]
+
+
+def test_color_lines_empty():
+    assert not package_helpers.color_lines("WARNING", [])
+
+
+def test_color_lines():
+    colored_lines = package_helpers.color_lines("CRITICAL", [u"WARNING:", u"This is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error"])
+    assert colored_lines[0] == u"\x1b[91m\n------------------------\n\x1b[0m"
+    assert colored_lines[1] == u"\x1b[91mWARNING:\x1b[0m"
+    assert colored_lines[2] == u"\x1b[91mThis is a mock Ķ ķ ĸ Ĺ ĺ Ļ ļ error\x1b[0m"
+
+
+def test_print_latest_version_warning(caplog):
+    package_helpers.print_latest_version_warning("40.0.0", "41.0.0")
+    msg = "WARNING:\n'40.0.0' is not the latest version of the resilient-sdk. \
+'v41.0.0' is available on https://pypi.org/project/resilient-sdk/\n\n\
+To update run:\n\t$ pip install -U resilient-sdk"
+    assert msg in caplog.text

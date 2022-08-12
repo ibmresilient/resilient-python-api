@@ -77,7 +77,7 @@ class FunctionWorker(Worker):
            (see FallBackSignalHandler in circuits/core/helpers.py)
         """
         if signo in [SIGINT, SIGTERM]:
-            LOG.info("Worker interrupted")
+            LOG.error("Worker interrupted")
             raise SystemExit(0)
 
     @handler("task", override=True)
@@ -138,6 +138,7 @@ class ResilientComponent(BaseComponent):
        and actions and functions will be dispatched to its `handler` and `function` methods.
     """
     test_mode = False  # True with --test-actions option
+    IS_SELFTEST = False
 
     def __init__(self, opts):
         super(ResilientComponent, self).__init__()
@@ -380,6 +381,7 @@ class Actions(ResilientComponent):
         self._configure_opts(opts)
         self.max_retry_count = int(opts.get("stomp_max_retries")) # default from app.py:DEFAULT_STOMP_MAX_RETRIES
         self.stomp_timeout = int(opts.get("stomp_timeout", SUBSCRIBE_TO_QUEUES_TIMEOUT))
+        self.heartbeat_timeouts = []
 
         timer_internal = int(opts['resilient'].get("stomp_timer_interval", RETRY_TIMER_INTERVAL))
 
@@ -449,6 +451,10 @@ class Actions(ResilientComponent):
     def on_stomp_connected(self):
         """Client has connected to the STOMP server"""
         LOG.info("STOMP connected.")
+
+        # Once STOMP has connected, we want to empty the heartbeat_timeouts list
+        self.heartbeat_timeouts = []
+
         # Stop retrying the failed deliveries from previous session
         # We'll ack them right away if they are re-delivered
         # TODO: We should age these out of here at some point. 24 hours?
@@ -458,10 +464,43 @@ class Actions(ResilientComponent):
             self._resilient_ack_delivery_failures[key]["from_prev_conn"] = True
 
     @handler("HeartbeatTimeout")
-    def on_heartbeat_timeout(self):
-        """Heartbeat timed out from the STOMP server"""
-        LOG.error("Reconnecting after STOMP heartbeat timeout.")
-        # Disconnect and Reconnect
+    def on_heartbeat_timeout(self, event):
+        """
+        Handler for a HeartbeatTimeout event
+
+        Checks to see if the 'heartbeat_timeout_threshold' config is set. Keeps
+        track of HBs in a list. Each HB has a ts value. If the difference
+        between the first and current HB's ts is greater than the config,
+        resilient-circuits exits with an exit code of 34
+        """
+
+        heartbeat_timeout_threshold = self.opts.get(constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD)
+
+        # If heartbeat_timeout_threshold config is set
+        if heartbeat_timeout_threshold:
+
+            # Add the current HB to the list
+            self.heartbeat_timeouts.append(event)
+
+            # If more than 1 HBs are in the list
+            if len(self.heartbeat_timeouts) > 1:
+
+                # Remove any invalid timeouts and sort the list
+                self.heartbeat_timeouts = helpers.filter_heartbeat_timeout_events(self.heartbeat_timeouts)
+
+                # Get the difference in seconds between the oldest and current timeout
+                delta = int(self.heartbeat_timeouts[-1].ts - self.heartbeat_timeouts[0].ts)
+
+                # If the delta is greater than the config, log an error and exit resilient-circuits
+                if delta > heartbeat_timeout_threshold:
+                    LOG.error("'%s' is set to '%ss' and '%ss' have passed since the first HeartbeatTimeout, exiting...",
+                              constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD, heartbeat_timeout_threshold, delta)
+
+                    sys.exit(constants.EXIT_STOMP_HEARTBEAT_TIMEOUT)
+
+        LOG.error("Trying to reconnect after STOMP HeartbeatTimeout")
+
+        # Fire a Disconnect event to Reconnect
         self.fire(Disconnect(flush=False, reconnect=True))
 
     @handler("OnStompError")

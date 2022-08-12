@@ -8,11 +8,12 @@ import sys
 import tarfile
 import zipfile
 
+import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdExtPackage as CmdPackage
 from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from tests import helpers
 from tests.shared_mock_data import mock_paths
 
@@ -99,12 +100,14 @@ def test_execute_command_with_payload_sample_file_missing(caplog, fx_copy_fn_mai
     cmd_package = CmdPackage(fx_get_sub_parser)
     args = cmd_package.parser.parse_known_args()[0]
 
-    cmd_package.execute_command(args)
+    cmd_package.execute_command(args, propagate_logs=True)
 
     assert ("WARNING: could not access JSON file to add payload_samples. Continuing to create package.\n"
             "Add '--no-samples' flag to avoid looking for them and avoid this warning message.") in caplog.text
 
 
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 @patch("resilient_sdk.cmds.validate.CmdValidate._run_main_validation")
 def test_execute_command_with_validate_enabled(mock_validate, fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_package):
     mock_integration_name = fx_copy_fn_main_mock_integration[0]

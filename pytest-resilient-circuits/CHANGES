@@ -1,3 +1,16 @@
+2022-058: version 46.0
+* Add ability to set ``IS_SELFTEST`` parameter when invoking the ``circuits_app`` fixture. Example:
+
+  .. code-block::
+
+    class TestIsNotASelftestActionsComponent:
+
+        @pytest.mark.parametrize("circuits_app", [{"IS_SELFTEST": False}], indirect=True)
+        def test_is_this_a_selftest_action_component(self, circuits_app):
+         assert helpers.is_this_a_selftest(circuits_app.app.action_component) is False
+* Extended the capability for the fixture ``fx_mock_resilient_client`` to support more mocked endpoints
+
+
 2022-05: version 45.0
 * No major changes. Just bumping build number to coincide with other builds.
 

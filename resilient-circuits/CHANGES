@@ -1,3 +1,20 @@
+**2022-08: version 46.0**
+
+* The ``FunctionResult`` in an ``AppFunctionComponent`` now supports a ``custom_results`` kwarg. If set to ``True`` the
+  dictionary of results sent to SOAR will be exactly as passed and not contain our default payload. We **do not recommend this**
+  however in some cases it may be necessary
+* Enhanced the :func:`resilient_circuits.is_this_a_selftest() <resilient_circuits.helpers.is_this_a_selftest>` method
+  to check if a Component has been instantiated in a resilient-circuits instance running ``selftest``. Example:
+
+  .. code-block::
+
+    from resilient_circuits.helpers import is_this_a_selftest
+
+    if is_this_a_selftest(self):
+        # Do nothing...
+
+* Added a new configuration setting to app.config, called ``heartbeat_timeout_threshold``. It is a value in seconds between the current ``HeartbeatTimeout`` event and the first ``HeartbeatTimeout`` event. If the time is greater than the ``heartbeat_timeout_threshold``, the resilient-circuits process stops.
+
 **2022-07: version 45.1**
 
 * Bug fix to avoid ``@app_function`` Components firing on all channels leading to Functions being invoked multiple times

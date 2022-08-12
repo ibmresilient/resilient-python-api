@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
 import time
+
 import pkg_resources
 import pytest
-from resilient_circuits import app, helpers, constants, function, ResilientComponent
-from tests import mock_constants, MockInboundAppComponent
+from resilient_circuits import ResilientComponent, constants, function, helpers
+from resilient_circuits.stomp_events import HeartbeatTimeout
+
+from tests import (AppFunctionMockComponent, MockInboundAppComponent,
+                   mock_constants)
 from tests.shared_mock_data import mock_paths
 
 resilient_mock = mock_constants.RESILIENT_MOCK
@@ -178,14 +182,30 @@ def test_get_queue(caplog):
     assert "Could not get queue name" in caplog.text
 
 
-def test_is_this_a_selftest(circuits_app):
-    circuits_app.app.IS_SELFTEST = True
-    assert helpers.is_this_a_selftest(circuits_app.app.action_component) is True
+class TestIsASelftestActionsComponent:
+    @pytest.mark.parametrize("circuits_app", [{"IS_SELFTEST": True}], indirect=True)
+    def test_is_this_a_selftest_action_component(self, circuits_app):
+        assert helpers.is_this_a_selftest(circuits_app.app.action_component) is True
 
 
-def test_is_this_not_a_selftest(circuits_app):
-    circuits_app.app.IS_SELFTEST = False
-    assert helpers.is_this_a_selftest(circuits_app.app.action_component) is False
+class TestIsNotASelftestActionsComponent:
+    @pytest.mark.parametrize("circuits_app", [{"IS_SELFTEST": False}], indirect=True)
+    def test_is_this_a_selftest_action_component(self, circuits_app):
+        assert helpers.is_this_a_selftest(circuits_app.app.action_component) is False
+
+
+class TestIsASelftestResilientComponent:
+    @pytest.mark.parametrize("circuits_app", [{"IS_SELFTEST": True}], indirect=True)
+    def test_is_this_a_selftest_base_component(self, circuits_app):
+        c = AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app)
+        assert helpers.is_this_a_selftest(c) is True
+
+
+class TestIsNotASelftestResilientComponent:
+    @pytest.mark.parametrize("circuits_app", [{"IS_SELFTEST": False}], indirect=True)
+    def test_is_this_a_selftest_base_component(self, circuits_app):
+        c = AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app)
+        assert helpers.is_this_a_selftest(c) is False
 
 
 def test_should_timeout():
@@ -204,3 +224,25 @@ def test_get_usr():
     assert helpers.get_user({"api_key_id": None, "email": "def"}) == "def"
     assert helpers.get_user({"api_key_id": "", "email": ""}) is None
     assert helpers.get_user({"api_key_id": None, "email": None}) is None
+
+
+def test_filter_heartbeat_timeout_events():
+    hb1 = HeartbeatTimeout(10)
+    hb2 = HeartbeatTimeout(20)
+    hb3 = HeartbeatTimeout(30)
+    hb4 = HeartbeatTimeout()
+
+    heartbeat_timeouts = [hb2, hb4, hb3, hb1]
+
+    filtered_hbs = helpers.filter_heartbeat_timeout_events(heartbeat_timeouts)
+
+    for hb in filtered_hbs:
+        assert hb.ts != -1
+
+    assert filtered_hbs[0].ts == 10
+    assert filtered_hbs[1].ts == 20
+    assert filtered_hbs[-1].ts == 30
+
+
+def test_filter_heartbeat_timeout_events_empty():
+    assert helpers.filter_heartbeat_timeout_events([]) == []

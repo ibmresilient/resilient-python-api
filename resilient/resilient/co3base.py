@@ -18,6 +18,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from requests.auth import HTTPBasicAuth
+from retry import retry
 
 from resilient import helpers, constants
 
@@ -435,6 +436,7 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
+    @retry(BasicHTTPException, tries=8, delay=2, backoff=2)
     def post_attachment(self, uri, filepath,
                         filename=None,
                         mimetype=None,

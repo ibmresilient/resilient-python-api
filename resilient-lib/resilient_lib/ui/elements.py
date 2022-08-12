@@ -49,3 +49,12 @@ class Datatable(UIElementBase):
             "element": self.ELEMENT_TYPE,
             "content": self.api_name
         }
+
+class View(UIElementBase):
+    ELEMENT_TYPE = "view"
+
+    def as_dto(self):
+        return {
+            "element": self.ELEMENT_TYPE,
+            "content": self.api_name
+        }

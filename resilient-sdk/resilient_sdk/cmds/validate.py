@@ -4,9 +4,11 @@
 
 """ Implementation of `resilient-sdk validate` """
 
+
 import logging
 import os
 import re
+from collections import defaultdict
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -38,7 +40,7 @@ class CmdValidate(BaseCmd):
     """TODO Docstring"""
 
     CMD_NAME = "validate"
-    CMD_HELP = "Tests the content of all files associated with the app, including code, before packaging it"
+    CMD_HELP = "Tests the content of all files associated with the app, including code, before packaging it. Only Python >= 3.6 supported."
     CMD_USAGE = """
     $ resilient-sdk validate -p <name_of_package>
     $ resilient-sdk validate -p <name_of_package> -c '/usr/custom_app.config'
@@ -93,9 +95,24 @@ class CmdValidate(BaseCmd):
 
     def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """
-        TODO: docstring, unit tests
-        returns the path to the validation report that was last generated
+        Runs validate. Can be any of: 
+          - static validation,
+          - selftest,
+          - tox tests,
+          - pylint,
+          - bandit
+
+        If ``run_from_package`` then the validation is being run from ``resilient-sdk package`` command.
+        Returns the path to the validation report that was last generated
         """
+
+        # set the appropriate command for error messages
+        if not run_from_package:
+            SDKException.command_ran = "{0}".format(self.CMD_NAME)
+
+        # Check if Python >= MIN_SUPPORTED_PY_VERSION
+        if not sdk_helpers.is_python_min_supported_version(constants.ERROR_WRONG_PYTHON_VERSION):
+            raise SDKException(constants.ERROR_WRONG_PYTHON_VERSION)
 
         sdk_helpers.is_python_min_supported_version()
 
@@ -237,17 +254,20 @@ class CmdValidate(BaseCmd):
 
         # proxy support is determined by the version of resilient-circuits that is installed
         # if version 42 or greater, proxies are supported
-        library_found = False
-        for package in parsed_setup_file.get("install_requires"):
-            if re.findall(r"(?:resilient[\-,\_]circuits\>\=)([0-9]+\.[0-9]+\.[0-9]+)", package):
-                circuits_version = re.findall(r"[0-9]+", package)
-                circuits_version = tuple([int(i) for i in circuits_version])
+        proxy_supported = False
+        install_requires = parsed_setup_file.get(constants.SETUP_PY_INSTALL_REQ_NAME, [])
+        # try to parse 'resilient-circuits' from install requires
+        package = package_helpers.get_dependency_from_install_requires(install_requires, constants.CIRCUITS_PACKAGE_NAME)
 
-                package_details_output.append(("Proxy support", "Proxies supported if running on AppHost>=1.6" if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT else "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"))
-                library_found = True
-                break
-        if not library_found:
-            package_details_output.append(("install_requires.resilient_circuits", "'resilient_circuits' not found in 'install_requires' in package's setup.py"))
+        if package:
+            circuits_version = re.findall(r"[0-9]+", package)
+            circuits_version = tuple([int(i) for i in circuits_version])
+
+            if circuits_version >= constants.RESILIENT_VERSION_WITH_PROXY_SUPPORT:
+                package_details_output.append(("Proxy support", "Proxies supported if running on AppHost>=1.6"))
+                proxy_supported = True
+        if not proxy_supported:
+            package_details_output.append(("Proxy support", "Proxies not fully supported unless running on AppHost>=1.6 and resilient-circuits>=42.0.0"))
 
 
 
@@ -301,7 +321,7 @@ class CmdValidate(BaseCmd):
         validations = [
             ("setup.py", self._validate_setup),
             ("package files", self._validate_package_files),
-            ("payload samples", self._validate_payload_samples)
+            ("payload samples", self._validate_payload_samples),
         ]
 
 
@@ -363,8 +383,7 @@ class CmdValidate(BaseCmd):
         attributes = validation_configurations.setup_py_attributes
 
         # check through setup.py file parse
-        for attr in attributes:
-            attr_dict = attributes.get(attr)
+        for attr, attr_dict in attributes:
 
             # get output details from attr_dict (to be modified as necessary based on results)
             fail_func = attr_dict.get("fail_func")
@@ -381,24 +400,40 @@ class CmdValidate(BaseCmd):
                 # if attr isn't found and it is optional, skip to the next attr
                 if attr in SETUP_OPTIONAL_ATTRS:
                     continue
+
+                # if missing_msg wasn't provided, this attr can be skipped if not found
+                # currently this is used to remove duplicate errors i.e. an attribute
+                # is checked twice, so on the second one we skip the handling of it not being found
+                if not missing_msg:
+                    continue
                 
                 name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
-            elif fail_func(parsed_attr): # check if it fails the 'fail_func'
-                formats = [attr, parsed_attr]
+            else:
+                # certain checks require the path to the setup.py
+                # file which needs to be passed from here
+                include_setup_path = attr_dict.get("include_setup_py_path_in_fail_func", False)
 
-                # some attr require a supplemental lambda function to properly output their failure message
-                if attr_dict.get("fail_msg_lambda_supplement"):
-                    formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
+                if include_setup_path:
+                    fail = fail_func(parsed_attr, path_setup_py_file)
+                else:
+                    fail = fail_func(parsed_attr)
 
-                name = "invalid value in setup.py"
-                description = fail_msg.format(*formats)
-            else: # else is present and did not fail
-                # passes checks
-                name = "{0} valid in setup.py".format(attr)
-                description = u"'{0}' passed".format(attr)
-                severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
-                solution = "Value found for '{0}' in setup.py: '{1}'"
+                if fail: # check if it fails the 'fail_func'
+                    formats = [attr, parsed_attr]
+
+                    # some attr require a supplemental lambda function to properly output their failure message
+                    if attr_dict.get("fail_msg_lambda_supplement"):
+                        formats.append(attr_dict.get("fail_msg_lambda_supplement")(parsed_attr))
+
+                    name = "invalid value in setup.py"
+                    description = fail_msg.format(*formats)
+                else: # else is present and did not fail
+                    # passes checks
+                    name = u"{0} valid in setup.py".format(attr)
+                    description = u"'{0}' passed".format(attr)
+                    severity = SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+                    solution = u"Value found for '{0}' in setup.py: '{1}'"
 
             # for each attr create a SDKValidateIssue to be appended to the issues list
             issue = SDKValidateIssue(
@@ -453,10 +488,9 @@ class CmdValidate(BaseCmd):
         package_name = parsed_setup.get("name")
         package_version = parsed_setup.get("version")
 
-        # run through validations for package files
-        # details of each check can be found in the sdk_validate_configs.package_files
-        for filename in validation_configurations.package_files:
-            attr_dict = validation_configurations.package_files.get(filename)
+        attributes = validation_configurations.package_files
+
+        for filename,attr_dict in attributes:
 
             # if a specific path is required for this file, it will be specified in the "path" attribute
             if attr_dict.get("path"):
@@ -475,6 +509,10 @@ class CmdValidate(BaseCmd):
                 # are only used when a logo is missing; the value should be None otherwise
                 # be aware of this if a dev ever wants to add infomation to the missing 
                 # solution for other package files
+
+                if not attr_dict.get("missing_msg"):
+                    continue
+
                 issue_list = [SDKValidateIssue(
                     name=attr_dict.get("name"),
                     description=attr_dict.get("missing_msg").format(path_file),
@@ -487,6 +525,7 @@ class CmdValidate(BaseCmd):
                 if not attr_dict.get("func"):
                     raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
 
+                    
                 # run given "func"
                 issue_list = attr_dict.get("func")(
                     filename=filename,

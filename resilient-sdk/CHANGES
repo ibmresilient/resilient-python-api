@@ -1,3 +1,14 @@
+**2022-08: version 46.0**
+
+* Check to see if the current installed version of the ``resilient-sdk`` is the latest
+  available version on PyPi
+* Slight enhancements to the ``codegen`` template
+* ``validate`` updates:
+
+  * Ensure the base image of in an App's Dockerfile is valid
+  * Further checks of ``setup.py`` file
+  * Validate that all App's dependencies are using the ``~=`` syntax
+
 **2022-07: version 45.1**
 
 * No major changes. Just bumping build number to coincide with other builds

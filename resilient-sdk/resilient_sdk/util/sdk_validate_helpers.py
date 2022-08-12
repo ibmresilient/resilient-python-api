@@ -35,6 +35,46 @@ except ImportError as err:
 # float value in range [0, 1] that determines the cutoff at which two files are a match
 MATCH_THRESHOLD = 1.0
 
+def check_display_name_not_equal_to_name(display_name, path_setup_py_file):
+    """
+    Fail func to verify that 'display_name' does not equal 'name' in setup.py
+
+    :param display_name: display_name value from setup.py
+    :type display_name: str
+    :param path_setup_py_file: path to setup.py file of package
+    :type path_setup_py_file: str
+    :return: True if the two values equal (i.e. True when it should fail the check)
+    :rtype: bool
+    """
+    if not display_name:
+        return False
+    name = package_helpers.parse_setup_py(path_setup_py_file, ["name"]).get("name")
+    return name.lower() == display_name.lower()
+
+def check_dependencies_version_specifiers(install_requires_list):
+    """
+    Check if all dependencies given in the "install_requires" list from setup.py
+    have the appropriate version specifiers. The allowed specifiers are "~=" and "=="
+    except for "resilient-circuits".
+    :param install_requires_list: list of dependencies as specified in setup.py file's install_requires list
+    :type install_requires_list: list(str)
+    :return: returns a list of all the dependencies that are mis-formatted or an empty list if all are correctly specified
+    :rtype: list
+    """
+
+    # need to allow for underscore versions too
+    circuits_name_with_under_score = constants.CIRCUITS_PACKAGE_NAME.replace("-", "_")
+
+    allowed_specifiers = ["~=", "=="]
+
+    deps_need_fixing = []
+    for dep in install_requires_list:
+        if constants.CIRCUITS_PACKAGE_NAME not in dep and circuits_name_with_under_score not in dep:
+            if all(specifier not in dep for specifier in allowed_specifiers):
+                deps_need_fixing.append(dep)
+
+    return deps_need_fixing
+
 def selftest_validate_resilient_circuits_installed(attr_dict, **_):
     """
     selftest.py validation helper method.
@@ -761,6 +801,78 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if there is at least one issue in the list
         return issues
 
+def package_files_validate_base_image(path_file, attr_dict,**_):
+    """
+    Validates that the Dockerfile is using the correct base image 
+
+    Checks the following:
+      - Is a FROM statement missing
+      - Are there too many FROM statements
+      - If there is only one FROM statement, is it pullling from the right repo
+      - Else the validation passes
+
+    It is possible for multiple checks to fail in this validation thus the use of the 
+    list[SDKValidateIssue] return type.
+
+    :param path_file: (required) the path to the file 
+    """
+
+    # list of issues found
+    issues = []
+    # gets a dictionary that maps Dockercommands to all of their arguments
+    # e.g. if the Dockerfile has lines "RUN yum clean", "RUN yum update", "USER 0"
+    # then command_dict = {"RUN":["yum clean","yum update"],"USER":["0"]}
+    command_dict = package_helpers.parse_dockerfile(path_file)
+
+    from_command = constants.DOCKER_COMMAND_DICT["from_command"]
+
+    if len(command_dict[from_command]) == 0: # if no FROM commands found
+
+        issue = [SDKValidateIssue(
+            attr_dict.get("name"),
+            description=attr_dict.get("fail_msg").format("Cannot find a FROM command in Dockerfile"),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution").format("adding the following line to the top of your Dockerfile - FROM {0}").format(constants.DOCKER_BASE_REPO)
+        )]
+
+    elif len(command_dict[from_command]) == 1:
+        if command_dict[from_command][0] != constants.DOCKER_BASE_REPO: # if only one FROM command found but it is incorrect
+            issue = [SDKValidateIssue(
+                attr_dict.get("name"),
+                attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution").format("changing the repo to '{0}'").format(constants.DOCKER_BASE_REPO)
+            )]
+
+        else: # if only one FROM command is found but it is correct
+            issue = [SDKValidateIssue(
+                attr_dict.get("name"),
+                attr_dict.get("pass_msg"),
+                severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            )]
+        
+    elif len(command_dict[from_command]) > 1: # if more than one FROM command found
+
+            issue = [SDKValidateIssue(
+                attr_dict.get("name"),
+                attr_dict.get("fail_msg").format("More than one FROM command found"),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution").format("removing any extra FROM commands")
+            )]
+
+            for command in command_dict[from_command]:
+                if command != constants.DOCKER_BASE_REPO:
+                    issue.extend([SDKValidateIssue(
+                    attr_dict.get("name"),
+                    attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
+                    severity=attr_dict.get("fail_severity"),
+                    solution=attr_dict.get("fail_solution").format("changing the repo to '{0}'").format(constants.DOCKER_BASE_REPO)
+                    )])
+                    break
+
+    issues.extend(issue)
+    return issues
+    
 def payload_samples_validate_payload_samples(path_package, package_name, attr_dict):
     """
     This function verifies:
@@ -1589,3 +1701,4 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
             severity=SDKValidateIssue.SEVERITY_LEVEL_INFO,
             solution=attr_dict.get("pass_solution")
         )
+
