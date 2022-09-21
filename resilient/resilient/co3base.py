@@ -37,13 +37,12 @@ class TLSHttpAdapter(HTTPAdapter):
     Adapter that ensures that we use the best available SSL/TLS version.
     Some environments default to SSLv3, so we need to specifically ask for
     the highest protocol version that both the client and server support.
-    Despite the name, SSLv23 can select "TLS" protocols as well as "SSL".
     """
     def init_poolmanager(self, connections, maxsize, block=False):
         self.poolmanager = PoolManager(num_pools=connections,
                                        maxsize=maxsize,
                                        block=block,
-                                       ssl_version=ssl.PROTOCOL_SSLv23)
+                                       ssl_version=ssl.PROTOCOL_TLS_CLIENT)
 
 
 class BasicHTTPException(Exception):
