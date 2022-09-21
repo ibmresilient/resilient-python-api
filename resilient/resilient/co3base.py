@@ -42,7 +42,7 @@ class TLSHttpAdapter(HTTPAdapter):
         self.poolmanager = PoolManager(num_pools=connections,
                                        maxsize=maxsize,
                                        block=block,
-                                       ssl_version=ssl.PROTOCOL_TLS_CLIENT)
+                                       ssl_version=ssl.PROTOCOL_TLS if sys.version_info.major == 2 else ssl.PROTOCOL_TLS_CLIENT)
 
 
 class BasicHTTPException(Exception):
