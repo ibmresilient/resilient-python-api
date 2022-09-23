@@ -9,6 +9,7 @@ import sys
 
 import pytest
 from resilient import constants
+from resilient.co3base import BasicHTTPException
 
 from tests import helpers
 from tests.shared_mock_data import mock_paths
@@ -114,6 +115,36 @@ def test_extract_org_id_disabled_org(fx_base_client):
 
     with pytest.raises(Exception, match=r"This organization is not accessible to you"):
         base_client._extract_org_id(mock_response)
+
+
+def test_get(fx_base_client):
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    mock_response = {"incident_id": incident_id}
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.get("/incidents/1001")
+
+    assert r.get("incident_id") == 1001
+
+
+def test_get_retry(fx_base_client, caplog):
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    base_client.request_max_retries = 2
+    base_client.request_retry_backoff = 1
+    base_client.request_retry_delay = 1
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
+    requests_adapter.register_uri('GET', mock_uri, status_code=300)
+
+    with pytest.raises(BasicHTTPException, match=r"Response Code: 300"):
+        base_client.get("/incidents/1001")
+
+    assert "retrying in 1 seconds" in caplog.text
 
 
 def test_client_has_base_headers(fx_base_client):

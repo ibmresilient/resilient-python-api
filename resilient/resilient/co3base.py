@@ -5,22 +5,23 @@
 from __future__ import print_function
 
 import json
-import ssl
+import logging
 import mimetypes
 import os
+import ssl
 import sys
-import logging
-import unicodedata
-import requests
 import traceback
+import unicodedata
 
+import requests
 from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
+from requests.exceptions import ConnectionError
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-from requests.auth import HTTPBasicAuth
-from retry import retry
+from retry.api import retry_call
 
-from resilient import helpers, constants
+from resilient import constants, helpers
 
 try:
     # Python 3
@@ -124,7 +125,7 @@ def get_proxy_dict(opts):
 class BaseClient(object):
     """Helper for using SOAR REST API."""
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, certauth=None, custom_headers=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, certauth=None, custom_headers=None, **kwargs):
         """
         :param org_name: The name of the organization to use
         :type org_name: str
@@ -138,6 +139,8 @@ class BaseClient(object):
         :type certauth: str|tuple(str, str)
         :param custom_headers: A dictionary of any headers you want to send in **every** request
         :type custom_headers: dict
+        :param kwargs: A dictionary of any other keyword arguments
+        :type kwargs: dict
         """
 
         base_headers = {
@@ -180,6 +183,13 @@ class BaseClient(object):
         # Client Cert based authentication
         self.cert = certauth
 
+        # Retry configs
+        # TODO: add test that configs are set
+        self.max_connection_retries = kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES, -1)
+        self.request_max_retries = kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES, 5)
+        self.request_retry_delay = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY, 2)
+        self.request_retry_backoff = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF, 2)
+
     def set_api_key(self, api_key_id, api_key_secret, timeout=None):
         """
         Call this method instead of the connect method in order to use API key
@@ -193,13 +203,22 @@ class BaseClient(object):
         self.api_key_secret = api_key_secret
         self.use_api_key = True
 
-        response = self.session.get(u"{0}/rest/session".format(self.base_url),
-                                    auth=HTTPBasicAuth(self.api_key_id, self.api_key_secret),
-                                    proxies=self.proxies,
-                                    headers=self.make_headers(),
-                                    verify=self.verify,
-                                    timeout=timeout,
-                                    cert=self.cert)
+        # TODO: add retry test
+        response = retry_call(self.session.get,
+                              fargs=[u"{0}/rest/session".format(self.base_url)],
+                              fkwargs={
+                                  "auth": HTTPBasicAuth(self.api_key_id, self.api_key_secret),
+                                  "proxies": self.proxies,
+                                  "headers": self.make_headers(),
+                                  "verify": self.verify,
+                                  "timeout": timeout,
+                                  "cert": self.cert
+                              },
+                              exceptions=(BasicHTTPException, ConnectionError),
+                              tries=self.max_connection_retries,
+                              delay=self.request_retry_delay,
+                              backoff=self.request_retry_backoff)
+
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
@@ -290,13 +309,23 @@ class BaseClient(object):
 
     def _connect(self, timeout=None):
         """Establish a session"""
-        response = self.session.post(u"{0}/rest/session".format(self.base_url),
-                                     data=json.dumps(self.authdata),
-                                     proxies=self.proxies,
-                                     headers=self.make_headers(),
-                                     verify=self.verify,
-                                     timeout=timeout,
-                                     cert=self.cert)
+
+        # TODO: add test
+        response = retry_call(self.session.post,
+                              fargs=[u"{0}/rest/session".format(self.base_url)],
+                              fkwargs={
+                                  "data": json.dumps(self.authdata),
+                                  "proxies": self.proxies,
+                                  "headers": self.make_headers(),
+                                  "verify": self.verify,
+                                  "timeout": timeout,
+                                  "cert": self.cert
+                              },
+                              exceptions=(BasicHTTPException, ConnectionError),
+                              tries=self.max_connection_retries,
+                              delay=self.request_retry_delay,
+                              backoff=self.request_retry_backoff)
+
         BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
@@ -320,9 +349,20 @@ class BaseClient(object):
         return headers
 
     def _execute_request(self, operation, url, **kwargs):
-        """Execute a HTTP request.
-           If unauthorized (likely due to a session timeout), retry.
         """
+        If self.use_api_key is set to ``True``, set the ``auth`` header
+        of the request to a ``HTTPBasicAuth`` using the api key id and secret
+
+        Then execute the request
+
+        :param operation: the requests.Session method to call
+        :type operation: requests.Session.get | requests.Session.post | requests.Session.delete
+        :param url: URL to send request to
+        :type url: str
+        :return: requests.response object
+        :rtype: requests.response
+        """
+
         if self.use_api_key:
             kwargs["auth"] = HTTPBasicAuth(self.api_key_id, self.api_key_secret)
             #
@@ -333,9 +373,7 @@ class BaseClient(object):
             self.session.cookies.clear()
 
         result = operation(url, **kwargs)
-        if result.status_code == 401 and not self.use_api_key:  # unauthorized, re-auth and try again
-            self._connect()
-            result = operation(url, **kwargs)
+
         return result
 
     def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None):
@@ -362,15 +400,25 @@ class BaseClient(object):
         else:
             url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
 
-        response = self._execute_request(self.session.get,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout,
-                                         cert=self.cert)
-        BasicHTTPException.raise_if_error(response)
+        # Wrap _execute_request and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __get():
+            r = self._execute_request(self.session.get,
+                                      url,
+                                      proxies=self.proxies,
+                                      cookies=self.cookies,
+                                      headers=self.make_headers(co3_context_token),
+                                      verify=self.verify,
+                                      timeout=timeout,
+                                      cert=self.cert)
+            BasicHTTPException.raise_if_error(r)
+            return r
+
+        response = retry_call(__get,
+                              exceptions=(BasicHTTPException, ConnectionError),
+                              tries=self.request_max_retries,
+                              delay=self.request_retry_delay,
+                              backoff=self.request_retry_backoff)
 
         if get_response_object:
             return response
@@ -435,7 +483,6 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         return json.loads(response.text)
 
-    @retry(BasicHTTPException, tries=8, delay=2, backoff=2)
     def post_attachment(self, uri, filepath,
                         filename=None,
                         mimetype=None,
@@ -463,33 +510,15 @@ class BaseClient(object):
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
 
-        if filepath:
-            with open(filepath, 'rb') as filehandle:
-                attachment_name = filename or os.path.basename(filepath)
-                multipart_data = {'file': (attachment_name, filehandle, mime_type)}
-                multipart_data.update(data or {})
-                encoder = MultipartEncoder(fields=multipart_data)
-                headers = self.make_headers(co3_context_token,
-                                            additional_headers={'content-type': encoder.content_type})
-                response = self._execute_request(self.session.post,
-                                                 url,
-                                                 data=encoder,
-                                                 proxies=self.proxies,
-                                                 cookies=self.cookies,
-                                                 headers=headers,
-                                                 verify=self.verify,
-                                                 timeout=timeout,
-                                                 cert=self.cert)
-                BasicHTTPException.raise_if_error(response)
-                return json.loads(response.text)
+        # TODO: add retry test
 
-        elif bytes_handle:
-            attachment_name = filename if filename else "Unknown"
-            multipart_data = {'file': (attachment_name, bytes_handle, mime_type)}
-            multipart_data.update(data or {})
+        # Wrap _execute_request and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __post_attachment(name=None, file_or_bytes_handle=None, extra_data=None):
+            multipart_data = {'file': (name, file_or_bytes_handle, mime_type)}
+            multipart_data.update(extra_data or {})
             encoder = MultipartEncoder(fields=multipart_data)
-            headers = self.make_headers(co3_context_token,
-                                        additional_headers={'content-type': encoder.content_type})
+            headers = self.make_headers(co3_context_token, additional_headers={'content-type': encoder.content_type})
             response = self._execute_request(self.session.post,
                                              url,
                                              data=encoder,
@@ -501,6 +530,35 @@ class BaseClient(object):
                                              cert=self.cert)
             BasicHTTPException.raise_if_error(response)
             return json.loads(response.text)
+
+        if filepath:
+            with open(filepath, 'rb') as file_handle:
+                attachment_name = filename or os.path.basename(filepath)
+                json_resp = retry_call(__post_attachment,
+                                       fkwargs={
+                                           "name": attachment_name,
+                                           "file_or_bytes_handle": file_handle,
+                                           "extra_data": data
+                                       },
+                                       exceptions=(BasicHTTPException, ConnectionError),
+                                       tries=self.request_max_retries,
+                                       delay=self.request_retry_delay,
+                                       backoff=self.request_retry_backoff)
+                return json_resp
+
+        elif bytes_handle:
+            attachment_name = filename if filename else "Unknown"
+            json_resp = retry_call(__post_attachment,
+                                   fkwargs={
+                                       "name": attachment_name,
+                                       "file_or_bytes_handle": bytes_handle,
+                                       "extra_data": data
+                                   },
+                                   exceptions=(BasicHTTPException, ConnectionError),
+                                   tries=self.request_max_retries,
+                                   delay=self.request_retry_delay,
+                                   backoff=self.request_retry_backoff)
+            return json_resp
 
         else:
             raise ValueError("Either filepath or bytes_handle are required")
@@ -535,6 +593,7 @@ class BaseClient(object):
         mimedata = {
             "artifact": json.dumps(artifact)
         }
+        # TODO: add retry logic and test
         return self.post_attachment(uri,
                                     artifact_filepath,
                                     filename=value if bytes_handle else None,
@@ -645,6 +704,7 @@ class BaseClient(object):
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
+        # TODO: add retry logic and test
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.delete,
                                          url,

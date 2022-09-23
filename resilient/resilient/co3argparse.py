@@ -129,6 +129,10 @@ class ArgumentParser(argparse.ArgumentParser):
         default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or 20)
         default_resilient_mock = self.getopt("resilient", "resilient_mock")
 
+        default_max_request_retries = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_MAX_RETRIES) or 5
+        default_request_retry_delay = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_DELAY) or 2
+        default_request_retry_backoff = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) or 2
+
         self.add_argument("--email",
                           default=default_email,
                           help="The email address to use to authenticate to the Resilient server.")
@@ -201,6 +205,21 @@ class ArgumentParser(argparse.ArgumentParser):
                           default=default_stomp_prefetch_limit,
                           type=int,
                           help="MAX number of Action Module messages to send before ACK is required")
+
+        self.add_argument("--{0}".format(constants.APP_CONFIG_REQUEST_MAX_RETRIES),
+                          type=int,
+                          default=default_max_request_retries,
+                          help="Max number of times to retry a request to SOAR before exiting. Defaults to 5")
+
+        self.add_argument("--{0}".format(constants.APP_CONFIG_REQUEST_RETRY_DELAY),
+                          type=int,
+                          default=default_request_retry_delay,
+                          help="Number of seconds to wait between retries. Defaults to 2")
+
+        self.add_argument("--{0}".format(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF),
+                          type=int,
+                          default=default_request_retry_backoff,
+                          help="Multiplier applied to delay between retry attempts. Defaults to 2")
 
         v_resc = get_resilient_circuits_version()
 
