@@ -1,3 +1,18 @@
+**2022-11: version 47.0**
+
+* Added more general retry logic to our ``get``, ``post`` and ``delete`` request methods. All of which 
+  can be configured by specifying any of the following parameters in the :class:`SimpleClient <resilient.co3.SimpleClient>`
+  class
+
+  * **max_connection_retries** - Number of attempts to retry when connecting to SOAR.
+    Use ``-1`` for unlimited retries. Defaults to ``-1``.
+  * **request_max_retries** - Max number of times to retry a request to SOAR
+    before exiting. Defaults to ``5``.
+  * **request_retry_delay** - Number of seconds to wait between retries.
+    Defaults to ``2``.
+  * **request_retry_backoff** - Multiplier applied to delay between retry attempts.
+    Defaults to ``2``.
+
 **2022-08: version 46.0**
 
 * Added some retry logic to :func:`resilient.SimpleClient.post_attachment() <resilient.co3.SimpleClient.post_attachment>`.
