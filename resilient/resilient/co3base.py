@@ -59,6 +59,10 @@ class BasicHTTPException(Exception):
 
         err_message = u"'resilient' API Request FAILED:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
 
+        # Add a __qualname__ attribute if does not exist - needed for PY27
+        if not hasattr(BasicHTTPException, "__qualname__"):
+            setattr(BasicHTTPException, "__qualname__", BasicHTTPException.__name__)
+
         super(BasicHTTPException, self).__init__(err_message)
 
         self.response = response
