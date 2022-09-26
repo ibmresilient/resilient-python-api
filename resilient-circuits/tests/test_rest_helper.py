@@ -26,6 +26,9 @@ def test_resilient_client_make_headers_has_custom_header(fx_mock_resilient_clien
 
 def test_resilient_client_retry_args():
 
+    if rest_helper.resilient_client:
+        rest_helper.resilient_client = None
+
     opts = copy.deepcopy(mock_constants.MOCK_APP_CONFIGS)
 
     opts.update({
