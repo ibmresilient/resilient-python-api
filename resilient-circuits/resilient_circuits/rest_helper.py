@@ -58,8 +58,6 @@ def get_resilient_client(opts):
     if resilient_client:
         return resilient_client
 
-    # TODO: add test that configs are in opts
-
     retry_args = {
         res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES: opts.get(res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES),
         res_constants.APP_CONFIG_REQUEST_MAX_RETRIES: opts.get(res_constants.APP_CONFIG_REQUEST_MAX_RETRIES),

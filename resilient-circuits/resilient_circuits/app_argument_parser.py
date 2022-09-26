@@ -176,7 +176,6 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
         validate_configs(opts, VALIDATE_DICT)
 
-        # TODO: add test
         # NOTE: Newer retry2 logic requires tries to be -1 (not 0 as before) for unlimited attempts
         if opts.get(res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES, -1) == 0:
             opts[res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES] = -1
