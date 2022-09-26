@@ -1,5 +1,8 @@
 {
   {# JINJA template for creating a new SOAR incident from an endpoint #}
+  {# See https://ibmresilient.github.io/resilient-python-api/pages/resilient-lib/resilient-lib.html#module-resilient_lib.components.templates_common
+     for details on available jinja methods. Examples for `soar_substitute` and more are included below.
+  #}
   {# modify to specify your specific **data** fields #}
   "name": "**EndPoint** Alert - {{ **title** }}",
   "description": "{{ **description** | replace('"', '\\"') }}",
@@ -22,54 +25,54 @@
     {% if notes %}
     {
       "text": {
-          "format": "text",
-          "content": "Created by **EndPoint**:\n{{ **notes** | replace('"', '\\"') }}"
+        "format": "text",
+        "content": "Created by **EndPoint**:\n{{ **notes** | replace('"', '\\"') }}"
       }
     }
     {% else %}
     {
       "text": {
-          "format": "text",
-          "content": "Created by **EndPoint**"
+        "format": "text",
+        "content": "Created by **EndPoint**"
       }
     }
     {% endif %}
-  ]
+  ],
   {# add artifacts as necessary #}
   "artifacts": [
     {% for item in **entities** %}
       {% if **item.entityType** == 'Ip' %}
         {
-            "type": {
+          "type": {
             "name": "IP Address"
-            },
-            "value": "{{ **item.ipAddress** }}",
-            "description": {
+          },
+          "value": "{{ **item.ipAddress** }}",
+          "description": {
             "format": "text",
             "content": "creation date: {{ **item.evidenceCreationTime** }}"
-            }
+          }
         }
       {% elif **item.entityType** == 'Url' %}
         {
-            "type": {
+          "type": {
             "name": "URL"
-            },
-            "value": "{{ **item.url** }}",
-            "description": {
+          },
+          "value": "{{ **item.url** }}",
+          "description": {
             "format": "text",
             "content": "creation date: {{ **item.evidenceCreationTime** }}\n"
-            }
+          }
         }
       {% elif **item.entityType** == 'File' %}
         {
-            "type": {
+          "type": {
             "name": "File Name"
-            },
-            "value": "{{ **item.fileName** }}",
-            "description": {
+          },
+          "value": "{{ **item.fileName** }}",
+          "description": {
             "format": "text",
             "content": "creation date: {{ **item.evidenceCreationTime** }}"
-            }
+          }
         }
       {% endif %}
       {% if artifactFlg and not loop.last %},{% endif %}
