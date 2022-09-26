@@ -149,7 +149,10 @@ def get_client(opts, custom_headers=None, **kwargs):
     else:
         simple_client = SimpleClient
 
-    resilient_client = simple_client(**simple_client_args, **kwargs)
+    # Update with kwargs
+    simple_client_args.update(kwargs)
+
+    resilient_client = simple_client(**simple_client_args)
 
     if opts.get("resilient_mock"):
         # Use a Mock for the Resilient Rest API
