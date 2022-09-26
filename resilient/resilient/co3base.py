@@ -184,7 +184,6 @@ class BaseClient(object):
         self.cert = certauth
 
         # Retry configs
-        # TODO: add test that configs are set
         self.max_connection_retries = kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES) if kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES) is not None else -1
         self.request_max_retries = kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES) if kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES) is not None else 5
         self.request_retry_delay = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) is not None else 2
@@ -203,23 +202,32 @@ class BaseClient(object):
         self.api_key_secret = api_key_secret
         self.use_api_key = True
 
-        # TODO: add retry test
-        response = retry_call(self.session.get,
-                              fargs=[u"{0}/rest/session".format(self.base_url)],
-                              fkwargs={
-                                  "auth": HTTPBasicAuth(self.api_key_id, self.api_key_secret),
-                                  "proxies": self.proxies,
-                                  "headers": self.make_headers(),
-                                  "verify": self.verify,
-                                  "timeout": timeout,
-                                  "cert": self.cert
-                              },
+        # Wrap self.session.get and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __set_api_key():
+            r = retry_call(self.session.get,
+                           fargs=[u"{0}/rest/session".format(self.base_url)],
+                           fkwargs={
+                               "auth": HTTPBasicAuth(self.api_key_id, self.api_key_secret),
+                               "proxies": self.proxies,
+                               "headers": self.make_headers(),
+                               "verify": self.verify,
+                               "timeout": timeout,
+                               "cert": self.cert
+                           },
+                           exceptions=(BasicHTTPException, ConnectionError),
+                           tries=self.max_connection_retries,
+                           delay=self.request_retry_delay,
+                           backoff=self.request_retry_backoff)
+            BasicHTTPException.raise_if_error(r)
+            return r
+
+        response = retry_call(__set_api_key,
                               exceptions=(BasicHTTPException, ConnectionError),
-                              tries=self.max_connection_retries,
+                              tries=self.request_max_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
 
-        BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
         self.api_key_handle = session.get("api_key_handle", None)
@@ -308,25 +316,35 @@ class BaseClient(object):
         self.org_id = selected_org.get("id", None)
 
     def _connect(self, timeout=None):
-        """Establish a session"""
+        """Connect to SOAR using deprecated username and password method"""
 
-        # TODO: add test
-        response = retry_call(self.session.post,
-                              fargs=[u"{0}/rest/session".format(self.base_url)],
-                              fkwargs={
-                                  "data": json.dumps(self.authdata),
-                                  "proxies": self.proxies,
-                                  "headers": self.make_headers(),
-                                  "verify": self.verify,
-                                  "timeout": timeout,
-                                  "cert": self.cert
-                              },
+        # Wrap self.session.post and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __connect():
+            r = retry_call(self.session.post,
+                           fargs=[u"{0}/rest/session".format(self.base_url)],
+                           fkwargs={
+                               "data": json.dumps(self.authdata),
+                               "proxies": self.proxies,
+                               "headers": self.make_headers(),
+                               "verify": self.verify,
+                               "timeout": timeout,
+                               "cert": self.cert
+                           },
+                           exceptions=(BasicHTTPException, ConnectionError),
+                           tries=self.max_connection_retries,
+                           delay=self.request_retry_delay,
+                           backoff=self.request_retry_backoff)
+
+            BasicHTTPException.raise_if_error(r)
+            return r
+
+        response = retry_call(__connect,
                               exceptions=(BasicHTTPException, ConnectionError),
-                              tries=self.max_connection_retries,
+                              tries=self.request_max_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
 
-        BasicHTTPException.raise_if_error(response)
         session = json.loads(response.text)
         self._extract_org_id(session)
 
@@ -471,16 +489,28 @@ class BaseClient(object):
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         payload_json = json.dumps(payload)
-        response = self._execute_request(self.session.post,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout,
-                                         cert=self.cert)
-        BasicHTTPException.raise_if_error(response)
+
+        # Wrap _execute_request and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __post():
+            r = self._execute_request(self.session.post,
+                                      url,
+                                      data=payload_json,
+                                      proxies=self.proxies,
+                                      cookies=self.cookies,
+                                      headers=self.make_headers(co3_context_token),
+                                      verify=self.verify,
+                                      timeout=timeout,
+                                      cert=self.cert)
+            BasicHTTPException.raise_if_error(r)
+            return r
+
+        response = retry_call(__post,
+                              exceptions=(BasicHTTPException, ConnectionError),
+                              tries=self.request_max_retries,
+                              delay=self.request_retry_delay,
+                              backoff=self.request_retry_backoff)
+
         return json.loads(response.text)
 
     def post_attachment(self, uri, filepath,
@@ -510,8 +540,6 @@ class BaseClient(object):
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         mime_type = mimetype or mimetypes.guess_type(filename or filepath)[0] or "application/octet-stream"
 
-        # TODO: add retry test
-
         # Wrap _execute_request and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __post_attachment(name=None, file_or_bytes_handle=None, extra_data=None):
@@ -519,17 +547,17 @@ class BaseClient(object):
             multipart_data.update(extra_data or {})
             encoder = MultipartEncoder(fields=multipart_data)
             headers = self.make_headers(co3_context_token, additional_headers={'content-type': encoder.content_type})
-            response = self._execute_request(self.session.post,
-                                             url,
-                                             data=encoder,
-                                             proxies=self.proxies,
-                                             cookies=self.cookies,
-                                             headers=headers,
-                                             verify=self.verify,
-                                             timeout=timeout,
-                                             cert=self.cert)
-            BasicHTTPException.raise_if_error(response)
-            return json.loads(response.text)
+            r = self._execute_request(self.session.post,
+                                      url,
+                                      data=encoder,
+                                      proxies=self.proxies,
+                                      cookies=self.cookies,
+                                      headers=headers,
+                                      verify=self.verify,
+                                      timeout=timeout,
+                                      cert=self.cert)
+            BasicHTTPException.raise_if_error(r)
+            return json.loads(r.text)
 
         if filepath:
             with open(filepath, 'rb') as file_handle:
@@ -564,12 +592,12 @@ class BaseClient(object):
             raise ValueError("Either filepath or bytes_handle are required")
 
     def post_artifact_file(self, uri, artifact_type, artifact_filepath,
-                          description=None,
-                          value=None,
-                          mimetype=None,
-                          co3_context_token=None,
-                          timeout=None,
-                          bytes_handle=None):
+                           description=None,
+                           value=None,
+                           mimetype=None,
+                           co3_context_token=None,
+                           timeout=None,
+                           bytes_handle=None):
         """
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"
@@ -593,7 +621,6 @@ class BaseClient(object):
         mimedata = {
             "artifact": json.dumps(artifact)
         }
-        # TODO: add retry logic and test
         return self.post_attachment(uri,
                                     artifact_filepath,
                                     filename=value if bytes_handle else None,
@@ -704,18 +731,30 @@ class BaseClient(object):
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
-        # TODO: add retry logic and test
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        response = self._execute_request(self.session.delete,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout,
-                                         cert=self.cert)
-        if response.status_code == 204:
-            # 204 - No content is OK for a delete
-            return None
-        BasicHTTPException.raise_if_error(response)
-        return json.loads(response.text)
+
+        # Wrap _execute_request and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __delete():
+            r = self._execute_request(self.session.delete,
+                                      url,
+                                      proxies=self.proxies,
+                                      cookies=self.cookies,
+                                      headers=self.make_headers(co3_context_token),
+                                      verify=self.verify,
+                                      timeout=timeout,
+                                      cert=self.cert)
+            if r.status_code == 204:
+                # 204 - No content is OK for a delete
+                return None
+
+            BasicHTTPException.raise_if_error(r)
+            return json.loads(r.text)
+
+        response = retry_call(__delete,
+                              exceptions=(BasicHTTPException, ConnectionError),
+                              tries=self.request_max_retries,
+                              delay=self.request_retry_delay,
+                              backoff=self.request_retry_backoff)
+
+        return response
