@@ -209,26 +209,19 @@ class BaseClient(object):
         # Wrap self.session.get and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __set_api_key():
-            r = retry_call(self.session.get,
-                           fargs=[u"{0}/rest/session".format(self.base_url)],
-                           fkwargs={
-                               "auth": HTTPBasicAuth(self.api_key_id, self.api_key_secret),
-                               "proxies": self.proxies,
-                               "headers": self.make_headers(),
-                               "verify": self.verify,
-                               "timeout": timeout,
-                               "cert": self.cert
-                           },
-                           exceptions=(BasicHTTPException, ConnectionError),
-                           tries=self.max_connection_retries,
-                           delay=self.request_retry_delay,
-                           backoff=self.request_retry_backoff)
+            r = self.session.get(u"{0}/rest/session".format(self.base_url),
+                                 auth=HTTPBasicAuth(self.api_key_id, self.api_key_secret),
+                                 proxies=self.proxies,
+                                 headers=self.make_headers(),
+                                 verify=self.verify,
+                                 timeout=timeout,
+                                 cert=self.cert)
             BasicHTTPException.raise_if_error(r)
             return r
 
         response = retry_call(__set_api_key,
                               exceptions=(BasicHTTPException, ConnectionError),
-                              tries=self.request_max_retries,
+                              tries=self.max_connection_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
 
@@ -325,27 +318,20 @@ class BaseClient(object):
         # Wrap self.session.post and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __connect():
-            r = retry_call(self.session.post,
-                           fargs=[u"{0}/rest/session".format(self.base_url)],
-                           fkwargs={
-                               "data": json.dumps(self.authdata),
-                               "proxies": self.proxies,
-                               "headers": self.make_headers(),
-                               "verify": self.verify,
-                               "timeout": timeout,
-                               "cert": self.cert
-                           },
-                           exceptions=(BasicHTTPException, ConnectionError),
-                           tries=self.max_connection_retries,
-                           delay=self.request_retry_delay,
-                           backoff=self.request_retry_backoff)
+            r = self.session.post(u"{0}/rest/session".format(self.base_url),
+                                  data=json.dumps(self.authdata),
+                                  proxies=self.proxies,
+                                  headers=self.make_headers(),
+                                  verify=self.verify,
+                                  timeout=timeout,
+                                  cert=self.cert)
 
             BasicHTTPException.raise_if_error(r)
             return r
 
         response = retry_call(__connect,
                               exceptions=(BasicHTTPException, ConnectionError),
-                              tries=self.request_max_retries,
+                              tries=self.max_connection_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
 

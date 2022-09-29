@@ -8,6 +8,7 @@ import os
 import sys
 
 import pytest
+from mock import patch
 from resilient import constants
 from resilient.co3base import BasicHTTPException
 
@@ -49,7 +50,7 @@ def test_set_api_key_retry(fx_base_client, caplog):
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
 
-    base_client.request_max_retries = 2
+    base_client.max_connection_retries = 3
     base_client.request_retry_backoff = 1
     base_client.request_retry_delay = 1
 
@@ -57,9 +58,11 @@ def test_set_api_key_retry(fx_base_client, caplog):
     requests_adapter.register_uri('GET', mock_uri, status_code=300)
 
     with pytest.raises(BasicHTTPException):
-        base_client.set_api_key("123", "456")
+        with patch("resilient.co3base.requests.Session.get") as mock_session_get:
+            base_client.set_api_key("123", "456")
 
     assert "retrying in 1 seconds" in caplog.text
+    assert mock_session_get.call_count == base_client.max_connection_retries
 
 
 def test_extract_org_id_cloud_account(fx_base_client):
@@ -151,7 +154,7 @@ def test_connect_retry(fx_base_client, caplog):
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
 
-    base_client.request_max_retries = 2
+    base_client.max_connection_retries = 3
     base_client.request_retry_backoff = 1
     base_client.request_retry_delay = 1
 
@@ -159,9 +162,11 @@ def test_connect_retry(fx_base_client, caplog):
     requests_adapter.register_uri("POST", mock_uri, status_code=300)
 
     with pytest.raises(BasicHTTPException):
-        base_client._connect()
+        with patch("resilient.co3base.requests.Session.post") as mock_session_get:
+            base_client._connect()
 
     assert "retrying in 1 seconds" in caplog.text
+    assert mock_session_get.call_count == base_client.max_connection_retries
 
 
 def test_get(fx_base_client):
