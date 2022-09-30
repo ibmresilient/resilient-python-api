@@ -188,10 +188,10 @@ class BaseClient(object):
         self.cert = certauth
 
         # Retry configs
-        self.max_connection_retries = kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES) if kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES) is not None else -1
-        self.request_max_retries = kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES) if kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES) is not None else 5
-        self.request_retry_delay = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) is not None else 2
-        self.request_retry_backoff = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) is not None else 2
+        self.max_connection_retries = kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES) if kwargs.get(constants.APP_CONFIG_MAX_CONNECTION_RETRIES) is not None else constants.APP_CONFIG_MAX_CONNECTION_RETRIES_DEFAULT
+        self.request_max_retries = kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES) if kwargs.get(constants.APP_CONFIG_REQUEST_MAX_RETRIES) is not None else constants.APP_CONFIG_REQUEST_MAX_RETRIES_DEFAULT
+        self.request_retry_delay = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) is not None else constants.APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT
+        self.request_retry_backoff = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) is not None else constants.APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT
 
     def set_api_key(self, api_key_id, api_key_secret, timeout=None):
         """
