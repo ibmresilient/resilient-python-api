@@ -22,3 +22,16 @@ ERROR_CODE_CONNECTION_UNAUTHORIZED = 21
 # Error Messages
 ERROR_MSG_CONNECTION_UNAUTHORIZED = u"Unauthorized"
 ERROR_MSG_CONNECTION_INVALID_CREDS = u"Either the API Key has been blocked, the API Credentials are incorrect or the IP address has been banned. Please review the SOAR logs for more information"
+
+
+# app configs keys
+APP_CONFIG_MAX_CONNECTION_RETRIES = "max_connection_retries"
+APP_CONFIG_REQUEST_MAX_RETRIES = "request_max_retries"
+APP_CONFIG_REQUEST_RETRY_DELAY = "request_retry_delay"
+APP_CONFIG_REQUEST_RETRY_BACKOFF = "request_retry_backoff"
+
+# app config default values
+APP_CONFIG_MAX_CONNECTION_RETRIES_DEFAULT = -1
+APP_CONFIG_REQUEST_MAX_RETRIES_DEFAULT = 5
+APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT = 2
+APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT = 2
