@@ -4,18 +4,24 @@
 
 """Common Helper Functions for the resilient library"""
 
+import io
+import json
 import logging
 import os
 import sys
+
+from jose import jwe
+
 from resilient import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
     from urllib import unquote
+
     from urlparse import urlparse
 else:
     # Handle PY 3 specific imports
-    from urllib.parse import urlparse, unquote
+    from urllib.parse import unquote, urlparse
 
 LOG = logging.getLogger(__name__)
 
@@ -160,3 +166,122 @@ def is_in_no_proxy(host, no_proxy_var=constants.ENV_NO_PROXY):
         return True
 
     return False
+
+
+def protected_secret_exists(secret_name: str, path_secrets_dir: str = constants.PATH_SECRETS_DIR, path_jwk_file: str = constants.PATH_JWK_FILE) -> bool:
+    """
+    Check to see if the /etc/secrets directory, SECRET_FILE and the key.jwk file
+    all exist and the user has the correct permissions to read them
+
+    :param secret_name:  Name of the protected secret file
+    :type secret_name: str
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    :param path_jwk_file: Path to the location of the jwk.key file in a JSON format as per https://www.ietf.org/rfc/rfc7517.txt, defaults to constants.PATH_JWK_FILE
+    :type path_jwk_file: str
+    :return: True if all files are found and the user has the correct permission, False otherwise
+    :rtype: bool
+    """
+    # TODO: add test
+    path_secret = os.path.join(path_secrets_dir, secret_name)
+
+    if not os.path.isdir(path_secrets_dir) or not os.access(os.R_OK):
+        LOG.info("Secrets directory at '%s' does not exist or you do not have the correct permissions", path_secrets_dir)
+        return False
+
+    if not os.path.isfile(path_secret) or not os.access(os.R_OK):
+        LOG.info("No protected secret found for found for '%s' or you do not have the correct permissions to read the file", secret_name)
+        return False
+
+    if not os.path.isfile(path_jwk_file) or not os.access(os.R_OK):
+        LOG.info("Could not find JWK at '%s' or you do not have the correct permissions", path_jwk_file)
+        return False
+
+    return True
+
+
+def get_protected_secret(secret_name: str, path_secrets_dir: str = constants.PATH_SECRETS_DIR, path_jwk_file: str = constants.PATH_JWK_FILE) -> bytes:
+    """
+    Get the JWK, read the token from a file with
+    the secret_name and decrypt it using the JWK
+
+    :param secret_name: Name of the protected secret file
+    :type secret_name: str
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    :param path_jwk_file: Path to the location of the jwk.key file in a JSON format as per https://www.ietf.org/rfc/rfc7517.txt, defaults to constants.PATH_JWK_FILE
+    :type path_jwk_file: str
+    :return: The decrypted value of the protected secret
+    :rtype: bytes
+    """
+    # TODO: add test
+    LOG.info("Reading Protected Secret '%s'", secret_name)
+
+    path_secret = os.path.join(path_secrets_dir, secret_name)
+    tkn = None
+    key = get_jwk(path_jwk_file)
+
+    if not key:
+        return None
+
+    with open(path_secret, mode="r") as f:
+        tkn = f.readline()
+
+    if not tkn:
+        LOG.info("File for protected secret '%s' is empty or corrupt", secret_name)
+        return None
+
+    # We need to remove new line and carriage return characters
+    tkn = tkn.splitlines()[0]
+
+    decrypted_value = jwe.decrypt(tkn, key)
+
+    return decrypted_value
+
+
+def get_jwk(path_jwk_file: str = constants.PATH_JWK_FILE) -> dict:
+    """
+    If the contents of the file at path is valid JSON,
+    returns the contents of the file as a dictionary else
+    returns None
+
+    :param path_jwk_file: Path to JSON JWK file to read
+    :type path_jwk_file: str
+    :return: File contents as a dictionary or None
+    :rtype: dict
+    """
+    # TODO: add test
+    LOG.info("Getting JWK from '%s'", path_jwk_file)
+
+    jwk = None
+
+    with io.open(path_jwk_file, mode="rt", encoding="utf-8") as the_file:
+
+        try:
+            jwk = json.load(the_file)
+
+        # In PY2.7 it raises a ValueError and in PY3.6 it raises
+        # a JSONDecodeError if it cannot load the JSON from the file
+        except (ValueError, JSONDecodeError) as err:
+            LOG.info(str(err))
+
+    if not jwk or not jwk.get("k"):
+        LOG.info("JWK JSON file at '%s' is corrupt or does not in include the required 'k' attribute.\njwk: %s", path_jwk_file, jwk)
+        return None
+
+    return jwk.get("k")
+
+
+def get_config_from_env(config_name: str) -> str:
+    """
+    Read a variable from the environment given it's
+    config_name. If it does not exist, it returns None
+
+    :param config_name: Name of the env var to get
+    :type config_name: str
+    :return: The value of the env var
+    :rtype: str
+    """
+    # TODO: add test
+    LOG.info("Getting environmental variable '%s'", config_name)
+    return os.environ.get(config_name)

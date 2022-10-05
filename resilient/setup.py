@@ -38,6 +38,7 @@ setup(
         "requests          ~= 2.27",
         "requests-toolbelt ~= 0.9",
         "six               ~= 1.16",
+        "python-jose       ~= 3.3.0",
 
         # Python > 3.6
         "setuptools        ~= 62.1;   python_version > '3.6'",

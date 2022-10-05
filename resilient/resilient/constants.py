@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
+import os
 import pkg_resources
 
 PACKAGE_NAME = "resilient"
@@ -9,6 +10,8 @@ PACKAGE_NAME = "resilient"
 ENV_HTTP_PROXY = "HTTP_PROXY"
 ENV_HTTPS_PROXY = "HTTPS_PROXY"
 ENV_NO_PROXY = "NO_PROXY"
+
+PROTECTED_SECRET_PREFIX = "$"
 
 # Headers
 HEADER_MODULE_VER_KEY = "Resilient-Module-Version"
@@ -22,3 +25,7 @@ ERROR_CODE_CONNECTION_UNAUTHORIZED = 21
 # Error Messages
 ERROR_MSG_CONNECTION_UNAUTHORIZED = u"Unauthorized"
 ERROR_MSG_CONNECTION_INVALID_CREDS = u"Either the API Key has been blocked, the API Credentials are incorrect or the IP address has been banned. Please review the SOAR logs for more information"
+
+# File Paths
+PATH_SECRETS_DIR = os.path.join("/", "etc", "secrets")
+PATH_JWK_FILE = os.path.join(PATH_SECRETS_DIR, ".jwk", "key.jwk")
