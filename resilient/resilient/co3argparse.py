@@ -333,17 +333,11 @@ def _parse_parameters(names, options):
 
                 protected_secret = helpers.get_protected_secret(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE)
 
-                if protected_secret:
-                    val = protected_secret.decode("utf-8")
-                else:
-                    val = helpers.get_config_from_env(config_name)
+                val = protected_secret if protected_secret else helpers.get_config_from_env(config_name)
 
             else:
                 val = helpers.get_config_from_env(config_name)
 
         options[key] = val
-
-    if os.path.isdir(constants.PATH_SECRETS_DIR):
-        shutil.rmtree(constants.PATH_SECRETS_DIR, ignore_errors=True)
 
     return options

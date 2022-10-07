@@ -4,11 +4,15 @@
 
 import logging
 import os
-from resilient import parse_parameters, get_config_file
+import shutil
+
+from resilient import constants as res_constants
+from resilient import get_config_file, parse_parameters
+
 import resilient_circuits.keyring_arguments as keyring_arguments
-from resilient_circuits.validate_configs import VALIDATE_DICT
-from resilient_circuits.helpers import validate_configs
 from resilient_circuits import constants
+from resilient_circuits.helpers import validate_configs
+from resilient_circuits.validate_configs import VALIDATE_DICT
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
@@ -172,6 +176,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 opts.update({section: items})
 
             parse_parameters(opts)
+
+            if os.path.isdir(res_constants.PATH_SECRETS_DIR):
+                shutil.rmtree(res_constants.PATH_SECRETS_DIR, ignore_errors=True)
 
         validate_configs(opts, VALIDATE_DICT)
 

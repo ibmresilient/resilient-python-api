@@ -27,5 +27,5 @@ ERROR_MSG_CONNECTION_UNAUTHORIZED = u"Unauthorized"
 ERROR_MSG_CONNECTION_INVALID_CREDS = u"Either the API Key has been blocked, the API Credentials are incorrect or the IP address has been banned. Please review the SOAR logs for more information"
 
 # File Paths
-PATH_SECRETS_DIR = os.path.join("/", "etc", "secrets")
+PATH_SECRETS_DIR = os.path.join(os.path.abspath(os.sep), "etc", "secrets")
 PATH_JWK_FILE = os.path.join(PATH_SECRETS_DIR, ".jwk", "key.jwk")
