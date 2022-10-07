@@ -29,3 +29,15 @@ ERROR_MSG_CONNECTION_INVALID_CREDS = u"Either the API Key has been blocked, the 
 # File Paths
 PATH_SECRETS_DIR = os.path.join(os.path.abspath(os.sep), "etc", "secrets")
 PATH_JWK_FILE = os.path.join(PATH_SECRETS_DIR, ".jwk", "key.jwk")
+
+# app configs keys
+APP_CONFIG_MAX_CONNECTION_RETRIES = "max_connection_retries"
+APP_CONFIG_REQUEST_MAX_RETRIES = "request_max_retries"
+APP_CONFIG_REQUEST_RETRY_DELAY = "request_retry_delay"
+APP_CONFIG_REQUEST_RETRY_BACKOFF = "request_retry_backoff"
+
+# app config default values
+APP_CONFIG_MAX_CONNECTION_RETRIES_DEFAULT = -1
+APP_CONFIG_REQUEST_MAX_RETRIES_DEFAULT = 5
+APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT = 2
+APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT = 2
