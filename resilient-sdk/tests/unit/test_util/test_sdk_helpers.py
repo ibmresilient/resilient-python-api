@@ -319,7 +319,6 @@ def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_re
 
 
 def test_minify_export(fx_mock_res_client):
-    # TODO: test the tags are now removed...
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
     minifed_export = sdk_helpers.minify_export(org_export, functions=["mock_function_one"], phases=["Mock Custom Phase One"], scripts=["Mock Incident Script"])
@@ -351,6 +350,9 @@ def test_minify_export(fx_mock_res_client):
     assert len(minified_incident_types) >= 1
     assert minified_incident_types[0].get("export_key") == "Customization Packages (internal)"
     assert minified_incident_types[0].get("uuid") == "bfeec2d4-3770-11e8-ad39-4a0004044aa0"
+
+    # Test tags are removed
+    assert len(minified_functions[0].get("tags")) == 0
 
 
 def test_minify_export_default_keys_to_keep(fx_mock_res_client):
