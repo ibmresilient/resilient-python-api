@@ -319,6 +319,7 @@ def test_get_related_objects_when_getting_from_export(fx_mock_res_client, get_re
 
 
 def test_minify_export(fx_mock_res_client):
+    # TODO: test the tags are now removed...
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
     minifed_export = sdk_helpers.minify_export(org_export, functions=["mock_function_one"], phases=["Mock Custom Phase One"], scripts=["Mock Incident Script"])

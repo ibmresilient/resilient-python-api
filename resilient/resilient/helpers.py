@@ -4,18 +4,21 @@
 
 """Common Helper Functions for the resilient library"""
 
+import copy
 import logging
 import os
 import sys
+
 from resilient import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
     from urllib import unquote
+
     from urlparse import urlparse
 else:
     # Handle PY 3 specific imports
-    from urllib.parse import urlparse, unquote
+    from urllib.parse import unquote, urlparse
 
 LOG = logging.getLogger(__name__)
 
@@ -160,3 +163,55 @@ def is_in_no_proxy(host, no_proxy_var=constants.ENV_NO_PROXY):
         return True
 
     return False
+
+
+def remove_tag(original_res_obj):
+    """
+    Return the original_res_obj with any of the "tags"
+    attribute set to an empty list
+
+    Example:
+    ```
+    mock_res_obj = {
+        "tags": [{"tag_handle": "fn_tag_test", "value": None}],
+        "functions": [
+            {"export_key": "fn_tag_test_function",
+            "tags": [{'tag_handle': 'fn_tag_test', 'value': None}]}
+        ]
+    }
+
+    new_res_obj = remove_tag(mock_res_obj)
+
+    Returns: {
+        "tags": [],
+        "functions": [
+            {"export_key": "fn_tag_test_function", "tags": []}
+        ]
+    }
+    ```
+    :param original_res_obj: the res_obj you want to remove the tags attribute from
+    :type original_res_obj: dict
+    :return: new_res_obj: a dict with the tag attribute removed
+    :rtype: dict
+    """
+    ATTRIBUTE_NAME = "tags"
+
+    new_res_obj = copy.deepcopy(original_res_obj)
+
+    if isinstance(new_res_obj, dict):
+
+        # Set "tags" to empty list
+        if new_res_obj.get(ATTRIBUTE_NAME):
+            new_res_obj[ATTRIBUTE_NAME] = []
+
+        # Recursively loop the dict
+        for obj_name, obj_value in new_res_obj.items():
+
+            if isinstance(obj_value, list):
+                for index, obj in enumerate(obj_value):
+                    new_res_obj[obj_name][index] = remove_tag(obj)
+
+            elif isinstance(obj_value, dict):
+                new_res_obj[obj_name] = remove_tag(obj_value)
+
+    return new_res_obj
