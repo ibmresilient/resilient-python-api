@@ -7,7 +7,6 @@ import argparse
 import getpass
 import logging
 import os
-import shutil
 import sys
 
 import keyring

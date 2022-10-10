@@ -8,6 +8,7 @@ import io
 import json
 import logging
 import os
+import shutil
 import sys
 
 from jose import jwe
@@ -17,17 +18,34 @@ from resilient import constants
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
     from urllib import unquote
+
     from urlparse import urlparse
     JSONDecodeError = None  # JSONDecodeError is not available in PY2.7 so we set it to None
 else:
     # Handle PY 3 specific imports
-    from urllib.parse import unquote, urlparse
     from json.decoder import JSONDecodeError
+    from urllib.parse import unquote, urlparse
 
 LOG = logging.getLogger(__name__)
 
 CHARS_TO_MASK = [("?", "%3F"), ("#", "%23"), ("/", "%2F")]
 MASK = "_*_{0}_*_"
+
+
+def str_to_bool(value):
+    """
+    Convert value to either a ``True`` or ``False`` boolean
+
+    Returns ``False`` if ``value`` is anything
+    other than: ``'1', 'true', 'yes' or 'on'``
+
+    :param value: the value to convert
+    :type value: str
+    :return: ``True`` or ``False``
+    :rtype: bool
+    """
+    value = str(value).lower()
+    return value in ('1', 'true', 'yes', 'on')
 
 
 def mask_special_chars(s):
@@ -169,10 +187,28 @@ def is_in_no_proxy(host, no_proxy_var=constants.ENV_NO_PROXY):
     return False
 
 
+def is_running_in_app_host(env_var=constants.ENV_VAR_APP_HOST_CONTAINER):
+    """
+    Checks if the APP_HOST_CONTAINER environmental variable
+    is set
+
+    :param env_var: name of the APP_HOST_CONTAINER environmental variable, defaults to constants.ENV_VAR_APP_HOST_CONTAINER
+    :type env_var: str, optional
+    :return: True if it is set to 1, else False
+    :rtype: bool
+    """
+    if not str_to_bool(get_config_from_env(env_var)):
+        LOG.warning("WARNING: Not running in an App Host environment")
+        return False
+
+    return True
+
+
 def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS_DIR, path_jwk_file=constants.PATH_JWK_FILE):
     """
-    Check to see if the /etc/secrets directory, SECRET_FILE and the key.jwk file
-    all exist and the user has the correct permissions to read them
+    Check to see if the APP_HOST_CONTAINER env var is set, the /etc/secrets directory,
+    the SECRET_FILE with the encrypted token and the key.jwk file all exist and
+    the user has the correct permissions to read them
 
     :param secret_name:  Name of the protected secret file
     :type secret_name: str
@@ -184,6 +220,9 @@ def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS
     :rtype: bool
     """
     path_secret = os.path.join(path_secrets_dir, secret_name)
+
+    if not is_running_in_app_host():
+        return False
 
     if not os.path.isdir(path_secrets_dir) or not os.access(path_secrets_dir, os.R_OK):
         LOG.warning("WARNING: Protected secrets directory at '%s' does not exist or you do not have the correct permissions. No value found for '%s'", path_secrets_dir, secret_name)
@@ -278,6 +317,19 @@ def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
     return jwk.get("k")
 
 
+def remove_secrets_dir(path_secrets_dir=constants.PATH_SECRETS_DIR):
+    """
+    Check if we running in App Host and if the secrets directory
+    exists, remove it
+
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    """
+    if is_running_in_app_host() and os.path.isdir(path_secrets_dir):
+        LOG.info("Removing secrets directory at: '%s'", path_secrets_dir)
+        shutil.rmtree(path_secrets_dir, ignore_errors=True)
+
+
 def get_config_from_env(config_name):
     """
     Read a variable from the environment given it's
@@ -288,6 +340,5 @@ def get_config_from_env(config_name):
     :return: The value of the env var
     :rtype: str
     """
-    # TODO: add test
     LOG.info("Getting environmental variable '%s'", config_name)
     return os.environ.get(config_name)

@@ -3,7 +3,21 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import os
-from resilient import helpers
+
+from resilient import constants, helpers
+
+
+def test_str_to_bool():
+    assert helpers.str_to_bool("True") is True
+    assert helpers.str_to_bool("true") is True
+    assert helpers.str_to_bool("1") is True
+    assert helpers.str_to_bool("YeS") is True
+    assert helpers.str_to_bool("ON") is True
+    assert helpers.str_to_bool("2") is False
+    assert helpers.str_to_bool(1) is True
+    assert helpers.str_to_bool(0) is False
+    assert helpers.str_to_bool("0") is False
+    assert helpers.str_to_bool(None) is False
 
 
 def test_is_env_proxies_set(fx_add_proxy_env_var):
@@ -60,14 +74,32 @@ def test_no_proxy_is_not_set():
     assert helpers.is_in_no_proxy(None) is False
 
 
-def test_protected_secret_exists(fx_write_protected_secrets):
+def test_is_running_in_app_host(fx_reset_environmental_variables):
+    os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
+    assert helpers.is_running_in_app_host() is True
+
+
+def test_is_not_running_in_app_host(caplog):
+    assert helpers.is_running_in_app_host() is False
+    assert "WARNING: Not running in an App Host environment" in caplog.text
+
+
+def test_protected_secret_exists(fx_write_protected_secrets, fx_reset_environmental_variables):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
+    os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
 
     assert helpers.protected_secret_exists("API_KEY", path_secrets_dir, path_jwk_file) is True
     assert helpers.protected_secret_exists("API_KEY", "invalid_path", path_jwk_file) is False
     assert helpers.protected_secret_exists("INVALID_SECRET_NAME", path_secrets_dir, path_jwk_file) is False
     assert helpers.protected_secret_exists("API_KEY", path_secrets_dir, "invalid_path") is False
+
+
+def test_protected_secret_exists_env_var_not_set(fx_write_protected_secrets):
+    path_secrets_dir = fx_write_protected_secrets
+    path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
+
+    assert helpers.protected_secret_exists("API_KEY", path_secrets_dir, path_jwk_file) is False
 
 
 def test_get_protected_secret(fx_write_protected_secrets, caplog):
@@ -111,3 +143,9 @@ def test_get_jwk_no_key(fx_write_protected_secrets, caplog):
 def test_get_jwk_invalid_file_path(fx_write_protected_secrets, caplog):
     assert helpers.get_jwk("invalid_path") is None
     assert "WARNING: Could not find JWK at 'invalid_path' or you do not have the correct permissions." in caplog.text
+
+
+def test_get_config_from_env(fx_reset_environmental_variables):
+    os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
+    assert helpers.get_config_from_env(constants.ENV_VAR_APP_HOST_CONTAINER) == "1"
+    assert helpers.get_config_from_env("invalid_env_var") is None

@@ -4,10 +4,11 @@
 
 import logging
 import os
-import shutil
 
 from resilient import constants as res_constants
-from resilient import get_config_file, parse_parameters
+from resilient import get_config_file
+from resilient import helpers as res_helpers
+from resilient import parse_parameters
 
 import resilient_circuits.keyring_arguments as keyring_arguments
 from resilient_circuits import constants
@@ -177,8 +178,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
             parse_parameters(opts)
 
-            if os.path.isdir(res_constants.PATH_SECRETS_DIR):
-                shutil.rmtree(res_constants.PATH_SECRETS_DIR, ignore_errors=True)
+            # Once we have read the app.config and decrypted any protected secrets
+            # we must remove the secrets directory
+            res_helpers.remove_secrets_dir()
 
         validate_configs(opts, VALIDATE_DICT)
 

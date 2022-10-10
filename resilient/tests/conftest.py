@@ -17,6 +17,7 @@ Note:
 import os
 import shutil
 import sys
+import copy
 
 import pytest
 import requests_mock
@@ -109,3 +110,18 @@ def fx_write_protected_secrets(fx_mk_temp_dir):
     path_secrets_dir = os.path.join(mock_paths.TEST_TEMP_DIR, os.path.basename(mock_paths.MOCK_SECRETS_DIR))
     shutil.copytree(mock_paths.MOCK_SECRETS_DIR, path_secrets_dir)
     yield path_secrets_dir
+
+
+@pytest.fixture
+def fx_reset_environmental_variables():
+    """
+    Before: Create a deepcopy of current env variables
+    After: Set the current env variables back to their original
+
+    Used in a test where we want to modify the env vars and avoid leaking into other tests
+    """
+    current_env = copy.deepcopy(os.environ)
+
+    yield
+
+    os.environ = current_env
