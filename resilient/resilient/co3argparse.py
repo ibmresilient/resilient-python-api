@@ -344,7 +344,6 @@ def _parse_parameters(names, options):
             val = keyring.get_password(service, val)
 
         if isinstance(val, string_types) and val.startswith(constants.PROTECTED_SECRET_PREFIX):
-            # TODO: add tests
             config_name = val[1:]
 
             if helpers.protected_secret_exists(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE):
