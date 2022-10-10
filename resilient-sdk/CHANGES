@@ -1,3 +1,13 @@
+**2022-11: version 47.0**
+
+* Add support to ``extract`` command for sub-playbooks. They are treated like normal Playbooks so no
+  further command line args are required. Just ensure you include all other customizations in your
+  command. For example:
+
+  .. code-block::
+
+    $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
+
 **2022-08: version 46.0**
 
 * Check to see if the current installed version of the ``resilient-sdk`` is the latest
