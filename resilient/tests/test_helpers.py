@@ -3,7 +3,9 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import os
+import sys
 
+import pytest
 from resilient import constants, helpers
 
 
@@ -84,6 +86,7 @@ def test_is_not_running_in_app_host(caplog):
     assert "WARNING: Not running in an App Host environment" in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_protected_secret_exists(fx_write_protected_secrets, fx_reset_environmental_variables):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
@@ -95,6 +98,14 @@ def test_protected_secret_exists(fx_write_protected_secrets, fx_reset_environmen
     assert helpers.protected_secret_exists("API_KEY", path_secrets_dir, "invalid_path") is False
 
 
+@pytest.mark.skipif(sys.version_info >= constants.MIN_SUPPORTED_PY3_VERSION, reason="only run this test in Python 2.7")
+def test_protected_secret_exists_unsupported_python_version(caplog):
+
+    assert helpers.protected_secret_exists("API_KEY", "mock_path", "mock_path") is False
+    assert "WARNING: Protected secrets are only Python >= 3 supported" in caplog.text
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_protected_secret_exists_env_var_not_set(fx_write_protected_secrets):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
@@ -102,6 +113,7 @@ def test_protected_secret_exists_env_var_not_set(fx_write_protected_secrets):
     assert helpers.protected_secret_exists("API_KEY", path_secrets_dir, path_jwk_file) is False
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_protected_secret(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
@@ -109,6 +121,7 @@ def test_get_protected_secret(fx_write_protected_secrets, caplog):
     assert helpers.get_protected_secret("API_KEY", path_secrets_dir, path_jwk_file) == "JbkOxTInUg1aIRGxXI8zOG1A25opU39lDKP1_0rfeVQ"
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_protected_secret_empty_file(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
@@ -117,6 +130,7 @@ def test_get_protected_secret_empty_file(fx_write_protected_secrets, caplog):
     assert "ERROR: File for protected secret 'EMPTY' is empty or corrupt" in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_protected_secret_wrong_key(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key_unused.jwk")
@@ -125,6 +139,14 @@ def test_get_protected_secret_wrong_key(fx_write_protected_secrets, caplog):
     assert "ERROR: Invalid key used to decrypt the protected secret 'API_KEY'." in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info >= constants.MIN_SUPPORTED_PY3_VERSION, reason="only run this test in Python 2.7")
+def test_get_protected_secret_unsupported_python_version(caplog):
+
+    assert helpers.get_protected_secret("API_KEY", "mock_path", "mock_path") is None
+    assert "WARNING: Protected secrets are only Python >= 3 supported" in caplog.text
+
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_jwk(fx_write_protected_secrets):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
@@ -132,6 +154,7 @@ def test_get_jwk(fx_write_protected_secrets):
     assert helpers.get_jwk(path_jwk_file) == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_jwk_no_key(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, "EMPTY")
@@ -140,6 +163,7 @@ def test_get_jwk_no_key(fx_write_protected_secrets, caplog):
     assert "JWK JSON file at '{0}' is corrupt or does not in include the required 'k' attribute.".format(path_jwk_file) in caplog.text
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_jwk_invalid_file_path(fx_write_protected_secrets, caplog):
     assert helpers.get_jwk("invalid_path") is None
     assert "WARNING: Could not find JWK at 'invalid_path' or you do not have the correct permissions." in caplog.text

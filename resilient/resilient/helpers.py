@@ -11,8 +11,6 @@ import os
 import shutil
 import sys
 
-from jose import jwe
-
 from resilient import constants
 
 if sys.version_info.major < 3:
@@ -25,6 +23,8 @@ else:
     # Handle PY 3 specific imports
     from json.decoder import JSONDecodeError
     from urllib.parse import unquote, urlparse
+    from jose import jwe
+
 
 LOG = logging.getLogger(__name__)
 
@@ -221,6 +221,10 @@ def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS
     """
     path_secret = os.path.join(path_secrets_dir, secret_name)
 
+    if sys.version_info.major < 3:
+        LOG.warning(constants.WARNING_PROTECTED_SECRETS_NOT_SUPPORTED)
+        return False
+
     if not is_running_in_app_host():
         return False
 
@@ -254,6 +258,10 @@ def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DI
     :rtype: str
     """
     LOG.info("Reading Protected Secret '%s'", secret_name)
+
+    if sys.version_info.major < 3:
+        LOG.warning(constants.WARNING_PROTECTED_SECRETS_NOT_SUPPORTED)
+        return None
 
     path_secret = os.path.join(path_secrets_dir, secret_name)
     tkn = None
@@ -305,9 +313,7 @@ def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
         try:
             jwk = json.load(the_file)
 
-        # In PY2.7 it raises a ValueError and in PY3.6 it raises
-        # a JSONDecodeError if it cannot load the JSON from the file
-        except (ValueError, JSONDecodeError) as err:
+        except JSONDecodeError as err:
             LOG.error(str(err))
 
     if not jwk or not jwk.get("k"):
