@@ -14,7 +14,7 @@
     Defaults to ``2``.
 
 * Now support **Protected Secrets**. If running on the Edge Gateway (formally App Host) and there are encrypted secrets
-  in `JSON Web Key <https://www.ietf.org/rfc/rfc7517.txt>`_ format, in the ``/etc/secrets`` directory, we will the use the ``jwe``
+  in `JSON Web Key <https://www.ietf.org/rfc/rfc7517.txt>`_ format, in the ``/etc/secrets`` directory, we will use the ``jwe``
   library in `python-jose <https://pypi.org/project/python-jose/>`_ to decrypt the secret and make it available in your app
 
 **2022-08: version 46.0**
