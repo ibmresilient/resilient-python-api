@@ -1,3 +1,8 @@
+**2022-11: version 47.0**
+
+* ``codegen`` template updates with Python 3 syntax
+
+
 **2022-08: version 46.0**
 
 * Check to see if the current installed version of the ``resilient-sdk`` is the latest
