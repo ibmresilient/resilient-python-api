@@ -27,7 +27,7 @@ class FunctionComponent(AppFunctionComponent):
         {% endif %}
         """
 
-        yield self.status_message("Starting App Function: '{0}'".format(FN_NAME))
+        yield self.status_message(f"Starting App Function: '{FN_NAME}'")
 
         # Example validating app_configs
         # validate_fields([
@@ -47,7 +47,7 @@ class FunctionComponent(AppFunctionComponent):
 
         # Example interacting with REST API
         # res_client = self.rest_client()
-        # function_details = res_client.get("/functions/{0}?handle_format=names".format(FN_NAME))
+        # function_details = res_client.get(f"/functions/{FN_NAME}?handle_format=names")
 
         # Example raising an exception
         # raise IntegrationError("Example raising custom error")
@@ -70,12 +70,12 @@ class FunctionComponent(AppFunctionComponent):
         #
         # results = response.json()
         #
-        # yield self.status_message("Endpoint reached successfully and returning results for App Function: '{0}'".format(FN_NAME))
+        # yield self.status_message(f"Endpoint reached successfully and returning results for App Function: '{FN_NAME}'")
         #
         # yield FunctionResult(results)
         ##############################################
 
-        yield self.status_message("Finished running App Function: '{0}'".format(FN_NAME))
+        yield self.status_message(f"Finished running App Function: '{FN_NAME}'")
 
         # Note this is only used for demo purposes! Put your own key/value pairs here that you want to access on the Platform
         results = {"mock_key": "Mock Value!"}

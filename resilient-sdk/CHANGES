@@ -8,6 +8,9 @@
 
     $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
 
+* ``codegen`` template updates with Python 3 syntax
+
+
 **2022-08: version 46.0**
 
 * Check to see if the current installed version of the ``resilient-sdk`` is the latest
