@@ -81,6 +81,16 @@ Common Request Methods
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
 
 
+---------------------
+Common Poller Methods
+---------------------
+
+.. autofunction:: resilient_lib.components.poller_common::poller
+.. automodule:: resilient_lib.components.poller_common
+   :members:
+   :exclude-members: s_to_b, b_to_s, get_last_poller_date, _get_timestamp, poller, get_template_dir
+
+
 --------------------
 Common Jinja Methods
 --------------------
@@ -88,17 +98,6 @@ Common Jinja Methods
 .. automodule:: resilient_lib.components.templates_common
    :members:
    :exclude-members: environment
-
-
-.. uncomment when ready to release poller logic
-.. ---------------------
-.. Common Poller Methods
-.. ---------------------
-
-.. .. autofunction:: resilient_lib.components.poller_common::poller
-.. .. automodule:: resilient_lib.components.poller_common
-..    :members:
-..    :exclude-members: s_to_b, b_to_s, get_last_poller_date, _get_timestamp, poller, get_template_dir
 
 
 ----------
