@@ -21,8 +21,11 @@ import sys
 import pkg_resources
 import pytest
 import requests_mock
+from resilient import ImportDefinition
 from resilient import constants as res_constants
 from resilient.co3 import SimpleClient
+
+from tests.shared_mock_data import mock_paths
 
 
 @pytest.fixture
@@ -102,3 +105,16 @@ def fx_add_proxy_env_var():
     os.environ[res_constants.ENV_HTTPS_PROXY] = ""
     os.environ[res_constants.ENV_HTTP_PROXY] = ""
     os.environ[res_constants.ENV_NO_PROXY] = ""
+
+
+@pytest.fixture
+def fx_read_mock_definition():
+    """
+    Before: reads the mock_import_definition.txt file and yields an ImportDefinition of it
+    After: N/A
+    """
+    with open(mock_paths.MOCK_IMPORT_DEFINITION, mode="r") as f:
+        lines = f.readlines()
+        b64 = "\n".join(lines)
+
+    yield ImportDefinition(b64)
