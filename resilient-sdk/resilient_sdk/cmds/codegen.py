@@ -328,7 +328,7 @@ class CmdCodegen(BaseCmd):
         jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
 
         # add poller flag
-        jinja_data["poller_flag"] = args.poller if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) else False
+        jinja_data["poller_flag"] = args.poller
 
         # add ::CHANGE_ME:: to jinja data
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
@@ -386,8 +386,7 @@ class CmdCodegen(BaseCmd):
         }
 
         # poller logic if --poller flag was passed
-        # as of v46 this is hid behind a RES_SDK_DEV flag
-        if args.poller and sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
+        if args.poller:
             poller_mapping_dict = {
                 "__init__.py": ("package/poller/__init__.py.jinja2", jinja_data),
                 "poller.py": ("package/poller/poller.py.jinja2", jinja_data),

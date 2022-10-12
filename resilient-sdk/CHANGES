@@ -9,6 +9,9 @@
     $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
 
 * ``codegen`` template updates with Python 3 syntax
+* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps 
+  which generates a ``lib`` directory in the package and a ``poller`` directory each with 
+  items needed to create a poller-based app.
 
 
 **2022-08: version 46.0**
