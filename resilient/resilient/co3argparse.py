@@ -12,7 +12,7 @@ import sys
 import keyring
 from six import string_types
 
-from resilient import constants
+from resilient import constants, helpers
 
 if sys.version_info.major == 2:
     from io import open
@@ -342,10 +342,19 @@ def _parse_parameters(names, options):
                 service = "_"
             logger.debug("keyring get('%s', '%s')", service, val)
             val = keyring.get_password(service, val)
-        if isinstance(val, string_types) and len(val) > 1 and val[0] == "$":
-            # Read a value from the environment
-            val = val[1:]
-            logger.debug("env('%s')", val)
-            val = os.environ.get(val)
+
+        if isinstance(val, string_types) and val.startswith(constants.PROTECTED_SECRET_PREFIX):
+            config_name = val[1:]
+
+            if helpers.protected_secret_exists(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE):
+
+                protected_secret = helpers.get_protected_secret(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE)
+
+                val = protected_secret if protected_secret else helpers.get_config_from_env(config_name)
+
+            else:
+                val = helpers.get_config_from_env(config_name)
+
         options[key] = val
+
     return options

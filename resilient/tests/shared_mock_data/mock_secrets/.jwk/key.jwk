@@ -1,0 +1,5 @@
+{
+    "kty": "oct",
+    "k": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "alg": "A256GCM"
+}

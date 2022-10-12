@@ -4,23 +4,48 @@
 
 """Common Helper Functions for the resilient library"""
 
+import io
+import json
 import logging
 import os
+import shutil
 import sys
+
 from resilient import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
     from urllib import unquote
+
     from urlparse import urlparse
+    JSONDecodeError = None  # JSONDecodeError is not available in PY2.7 so we set it to None
 else:
     # Handle PY 3 specific imports
-    from urllib.parse import urlparse, unquote
+    from json.decoder import JSONDecodeError
+    from urllib.parse import unquote, urlparse
+    from jose import jwe
+
 
 LOG = logging.getLogger(__name__)
 
 CHARS_TO_MASK = [("?", "%3F"), ("#", "%23"), ("/", "%2F")]
 MASK = "_*_{0}_*_"
+
+
+def str_to_bool(value):
+    """
+    Convert value to either a ``True`` or ``False`` boolean
+
+    Returns ``False`` if ``value`` is anything
+    other than: ``'1', 'true', 'yes' or 'on'``
+
+    :param value: the value to convert
+    :type value: str
+    :return: ``True`` or ``False``
+    :rtype: bool
+    """
+    value = str(value).lower()
+    return value in ('1', 'true', 'yes', 'on')
 
 
 def mask_special_chars(s):
@@ -160,3 +185,166 @@ def is_in_no_proxy(host, no_proxy_var=constants.ENV_NO_PROXY):
         return True
 
     return False
+
+
+def is_running_in_app_host(env_var=constants.ENV_VAR_APP_HOST_CONTAINER):
+    """
+    Checks if the APP_HOST_CONTAINER environmental variable
+    is set
+
+    :param env_var: name of the APP_HOST_CONTAINER environmental variable, defaults to constants.ENV_VAR_APP_HOST_CONTAINER
+    :type env_var: str, optional
+    :return: True if it is set to 1, else False
+    :rtype: bool
+    """
+    if not str_to_bool(get_config_from_env(env_var)):
+        LOG.warning("WARNING: Not running in an App Host environment")
+        return False
+
+    return True
+
+
+def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS_DIR, path_jwk_file=constants.PATH_JWK_FILE):
+    """
+    Check to see if the APP_HOST_CONTAINER env var is set, the /etc/secrets directory,
+    the SECRET_FILE with the encrypted token and the key.jwk file all exist and
+    the user has the correct permissions to read them
+
+    :param secret_name:  Name of the protected secret file
+    :type secret_name: str
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    :param path_jwk_file: Path to the location of the jwk.key file in a JSON format as per https://www.ietf.org/rfc/rfc7517.txt, defaults to constants.PATH_JWK_FILE
+    :type path_jwk_file: str
+    :return: True if all files are found and the user has the correct permission, False otherwise
+    :rtype: bool
+    """
+    path_secret = os.path.join(path_secrets_dir, secret_name)
+
+    if sys.version_info.major < 3:
+        LOG.warning(constants.WARNING_PROTECTED_SECRETS_NOT_SUPPORTED)
+        return False
+
+    if not is_running_in_app_host():
+        return False
+
+    if not os.path.isdir(path_secrets_dir) or not os.access(path_secrets_dir, os.R_OK):
+        LOG.warning("WARNING: Protected secrets directory at '%s' does not exist or you do not have the correct permissions. No value found for '%s'", path_secrets_dir, secret_name)
+        return False
+
+    if not os.path.isfile(path_secret) or not os.access(path_secret, os.R_OK):
+        LOG.warning("WARNING: No protected secret found for '%s' or you do not have the correct permissions to read the file. No value found for '%s'", secret_name, secret_name)
+        return False
+
+    if not os.path.isfile(path_jwk_file) or not os.access(path_jwk_file, os.R_OK):
+        LOG.warning("WARNING: Could not find JWK at '%s' or you do not have the correct permissions. No value found for '%s'", path_jwk_file, secret_name)
+        return False
+
+    return True
+
+
+def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DIR, path_jwk_file=constants.PATH_JWK_FILE):
+    """
+    Get the JWK, read the token from a file with
+    the secret_name and decrypt it using the JWK
+
+    :param secret_name: Name of the protected secret file
+    :type secret_name: str
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    :param path_jwk_file: Path to the location of the jwk.key file in a JSON format as per https://www.ietf.org/rfc/rfc7517.txt, defaults to constants.PATH_JWK_FILE
+    :type path_jwk_file: str
+    :return: The decrypted value of the protected secret
+    :rtype: str
+    """
+    LOG.info("Reading Protected Secret '%s'", secret_name)
+
+    if sys.version_info.major < 3:
+        LOG.warning(constants.WARNING_PROTECTED_SECRETS_NOT_SUPPORTED)
+        return None
+
+    path_secret = os.path.join(path_secrets_dir, secret_name)
+    tkn = None
+    key = get_jwk(path_jwk_file)
+
+    if not key:
+        return None
+
+    with io.open(path_secret, mode="r", encoding="utf-8") as f:
+        tkn = f.readline()
+
+    if not tkn:
+        LOG.error("ERROR: File for protected secret '%s' is empty or corrupt", secret_name)
+        return None
+
+    # We need to remove new line and carriage return characters
+    tkn = tkn.splitlines()[0]
+
+    try:
+        decrypted_value = jwe.decrypt(tkn, key)
+    except Exception as err:
+        LOG.error("ERROR: Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
+        return None
+
+    return decrypted_value.decode("utf-8")
+
+
+def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
+    """
+    If the contents of the file at path is valid JSON,
+    returns the contents of the file as a dictionary else
+    returns None
+
+    :param path_jwk_file: Path to JSON JWK file to read
+    :type path_jwk_file: str
+    :return: File contents as a dictionary or None
+    :rtype: dict
+    """
+    LOG.info("Getting JWK from '%s'", path_jwk_file)
+
+    jwk = None
+
+    if not os.path.isfile(path_jwk_file) or not os.access(path_jwk_file, os.R_OK):
+        LOG.warning("WARNING: Could not find JWK at '%s' or you do not have the correct permissions.", path_jwk_file)
+        return None
+
+    with io.open(path_jwk_file, mode="rt", encoding="utf-8") as the_file:
+
+        try:
+            jwk = json.load(the_file)
+
+        except JSONDecodeError as err:
+            LOG.error(str(err))
+
+    if not jwk or not jwk.get("k"):
+        LOG.error("JWK JSON file at '%s' is corrupt or does not in include the required 'k' attribute.\njwk: %s", path_jwk_file, jwk)
+        return None
+
+    return jwk.get("k")
+
+
+def remove_secrets_dir(path_secrets_dir=constants.PATH_SECRETS_DIR):
+    """
+    Check if we running in App Host and if the secrets directory
+    exists, remove it
+
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    """
+    if is_running_in_app_host() and os.path.isdir(path_secrets_dir):
+        LOG.info("Removing secrets directory at: '%s'", path_secrets_dir)
+        shutil.rmtree(path_secrets_dir, ignore_errors=True)
+
+
+def get_config_from_env(config_name):
+    """
+    Read a variable from the environment given it's
+    config_name. If it does not exist, it returns None
+
+    :param config_name: Name of the env var to get
+    :type config_name: str
+    :return: The value of the env var
+    :rtype: str
+    """
+    LOG.info("Getting environmental variable '%s'", config_name)
+    return os.environ.get(config_name)
