@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
+import os
 import pkg_resources
 
 PACKAGE_NAME = "resilient"
@@ -10,11 +11,16 @@ ENV_HTTP_PROXY = "HTTP_PROXY"
 ENV_HTTPS_PROXY = "HTTPS_PROXY"
 ENV_NO_PROXY = "NO_PROXY"
 
+PROTECTED_SECRET_PREFIX = "$"
+ALLOW_UNRECOGNIZED = False
+MIN_SUPPORTED_PY3_VERSION = (3, 6)
+
+# ENV Vars
+ENV_VAR_APP_HOST_CONTAINER = "APP_HOST_CONTAINER"
+
 # Headers
 HEADER_MODULE_VER_KEY = "Resilient-Module-Version"
 HEADER_MODULE_VER_VALUE = pkg_resources.get_distribution(PACKAGE_NAME).version
-
-ALLOW_UNRECOGNIZED = False
 
 # Error Codes
 ERROR_CODE_CONNECTION_UNAUTHORIZED = 21
@@ -22,7 +28,11 @@ ERROR_CODE_CONNECTION_UNAUTHORIZED = 21
 # Error Messages
 ERROR_MSG_CONNECTION_UNAUTHORIZED = u"Unauthorized"
 ERROR_MSG_CONNECTION_INVALID_CREDS = u"Either the API Key has been blocked, the API Credentials are incorrect or the IP address has been banned. Please review the SOAR logs for more information"
+WARNING_PROTECTED_SECRETS_NOT_SUPPORTED = u"WARNING: Protected secrets are only Python >= 3 supported."
 
+# File Paths
+PATH_SECRETS_DIR = os.path.join(os.path.abspath(os.sep), "etc", "secrets")
+PATH_JWK_FILE = os.path.join(PATH_SECRETS_DIR, ".jwk", "key.jwk")
 
 # app configs keys
 APP_CONFIG_MAX_CONNECTION_RETRIES = "max_connection_retries"
