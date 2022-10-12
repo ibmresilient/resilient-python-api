@@ -1,6 +1,9 @@
 **2022-11: version 47.0**
 
 * ``codegen`` template updates with Python 3 syntax
+* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps 
+  which generates a ``lib`` directory in the package and a ``poller`` directory each with 
+  items needed to create a poller-based app.
 
 
 **2022-08: version 46.0**
