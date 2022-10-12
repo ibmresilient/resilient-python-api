@@ -386,7 +386,6 @@ class CmdCodegen(BaseCmd):
         }
 
         # poller logic if --poller flag was passed
-        # as of v46 this is hid behind a RES_SDK_DEV flag
         if args.poller:
             poller_mapping_dict = {
                 "__init__.py": ("package/poller/__init__.py.jinja2", jinja_data),
