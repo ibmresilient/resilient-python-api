@@ -675,6 +675,9 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">2</span
 Defaults to <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
 </ul>
 </li>
+<li><p>Now support <strong>Protected Secrets</strong>. If running on the Edge Gateway (formally App Host) and there are encrypted secrets
+in <a class="reference external" href="https://www.ietf.org/rfc/rfc7517.txt">JSON Web Key</a> format, in the <code class="docutils literal notranslate"><span class="pre">/etc/secrets</span></code> directory, we will use the <code class="docutils literal notranslate"><span class="pre">jwe</span></code>
+library in <a class="reference external" href="https://pypi.org/project/python-jose/">python-jose</a> to decrypt the secret and make it available in your app</p></li>
 </ul>
 <p><strong>2022-08: version 46.0</strong></p>
 <ul class="simple">
