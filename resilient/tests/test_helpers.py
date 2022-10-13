@@ -8,6 +8,10 @@ import sys
 import pytest
 from resilient import constants, helpers
 
+if sys.version_info.major >= 3:
+    # Handle PY 3 specific imports
+    from jwcrypto.jwk import JWK
+
 
 def test_str_to_bool():
     assert helpers.str_to_bool("True") is True
@@ -155,7 +159,7 @@ def test_get_protected_secret_wrong_key(fx_write_protected_secrets, caplog):
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key_unused.jwk")
 
     assert helpers.get_protected_secret("API_KEY", path_secrets_dir, path_jwk_file) is None
-    assert "ERROR: Invalid key used to decrypt the protected secret 'API_KEY'." in caplog.text
+    assert "ERROR: Could not decrypt the secret. Invalid key used to decrypt the protected secret 'API_KEY'." in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info >= constants.MIN_SUPPORTED_PY3_VERSION, reason="only run this test in Python 2.7")
@@ -170,7 +174,11 @@ def test_get_jwk(fx_write_protected_secrets):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
 
-    assert helpers.get_jwk(path_jwk_file) == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    jwk = helpers.get_jwk(path_jwk_file)
+    in_json = jwk.export(as_dict=True)
+
+    assert isinstance(jwk, JWK)
+    assert in_json.get("k") == "W4VMVYqZg-xGiDTGjFFwRvbzf098AskheVdZPbpiYvE"
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
@@ -179,7 +187,7 @@ def test_get_jwk_no_key(fx_write_protected_secrets, caplog):
     path_jwk_file = os.path.join(path_secrets_dir, "EMPTY")
 
     assert helpers.get_jwk(path_jwk_file) is None
-    assert "JWK JSON file at '{0}' is corrupt or does not in include the required 'k' attribute.".format(path_jwk_file) in caplog.text
+    assert "JWK JSON file at '{0}' is corrupt.".format(path_jwk_file) in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
