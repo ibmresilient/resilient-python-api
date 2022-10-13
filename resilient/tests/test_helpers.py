@@ -77,6 +77,25 @@ def test_no_proxy_is_not_set():
     assert helpers.is_in_no_proxy(None) is False
 
 
+def test_remove_tag():
+
+    mock_res_obj = {
+        "tags": [{"tag_handle": "fn_tag_test", "value": None}],
+        "functions": [
+            {"export_key": "fn_tag_test_function", "tags": [{'tag_handle': 'fn_tag_test', 'value': None}]}
+        ],
+        "workflows": {
+            "nested_2": [{"export_key": "fn_tag_test_function", "tags": [{'tag_handle': 'fn_tag_test', 'value': None}]}]
+        }
+    }
+
+    new_res_obj = helpers.remove_tag(mock_res_obj)
+
+    assert new_res_obj.get("tags") == []
+    assert new_res_obj.get("functions", [])[0].get("tags") == []
+    assert new_res_obj.get("workflows", []).get("nested_2")[0].get("tags") == []
+
+
 def test_is_running_in_app_host(fx_reset_environmental_variables):
     os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
     assert helpers.is_running_in_app_host() is True

@@ -44,11 +44,11 @@ def init_app(rc, options):
     :rtype: ``AppCommon``
     """
     # initialize the class for making API calls to your endpoint
-    endpoint_class = AppCommon(rc, PACKAGE_NAME, options)
+    app_common = AppCommon(rc, PACKAGE_NAME, options)
 
     # <add additional initialization steps for your endpoint as necessary>
 
-    return endpoint_class
+    return app_common
 
 def query_entities(app_common, last_poller_time):
     """
@@ -179,13 +179,6 @@ class PollerComponent(AppFunctionComponent):
         if query_results:
             # iterate over all the entities.
             self.process_query_list(query_results.get("result", [])) # <{{change_me_str}} update to the correct value for your API>
-
-            # Uncomment below if your app has paged results
-            #next_page = query_results.get("nextPage") <{{change_me_str}} update to your API's name for the next page>
-            #while next_page:
-            #    next_page = query_results.get("nextPage")
-            #    query_results = self.app_common.get_next_page(next_page)
-            #    self.process_query_list(query_results.get("result", []))
 
     def process_query_list(self, query_results):
         """

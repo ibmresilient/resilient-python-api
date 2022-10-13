@@ -1,3 +1,9 @@
+**2022-11: version 47.0**
+
+* Support for poller-based apps added with new `Common Poller Methods`_, 
+  including ``resilient_lib.poller()`` decorator and ``resilient_lib.SOARCommon`` 
+  class of common SOAR methods
+
 **2022-08: version 46.0**
 
 * ``build_incident_url`` urlencodes it's ``orgId``

@@ -29,6 +29,7 @@ import requests
 import requests.exceptions
 from jinja2 import Environment, PackageLoader
 from resilient import ArgumentParser, get_client, get_config_file
+from resilient.helpers import remove_tag
 from resilient_sdk.util import constants
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_FIELD,
@@ -900,6 +901,8 @@ def minify_export(export,
     # Clean out any pii values with keys included in pii_key_list
     pii_key_list = ["creator", "creator_id"]
     minified_export = rm_pii(pii_key_list, minified_export)
+
+    minified_export = remove_tag(minified_export)
 
     return minified_export
 

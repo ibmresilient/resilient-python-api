@@ -35,7 +35,7 @@ setup(
     # Runtime Dependencies
     install_requires=[
         # Our libraries
-        "resilient >= 45.0",
+        "resilient >= 47.0",
 
         # 3rd party dependencies for all python versions
         "genson    ~= 1.2",

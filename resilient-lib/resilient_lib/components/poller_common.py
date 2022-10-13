@@ -6,7 +6,6 @@ import base64
 import datetime
 import functools
 import logging
-import os
 import traceback
 from ast import literal_eval
 from threading import Event
@@ -33,19 +32,40 @@ def poller(named_poller_interval, named_last_poller_time):
 
     .. code-block:: python
 
-        from resilient_lib import poller
+        import logging
+        from threading import Thread
+
+        from resilient_circuits import AppFunctionComponent, is_this_a_selftest
+        from resilient_lib import poller, get_last_poller_date
 
         PACKAGE_NAME = "fn_my_app"
 
-        @poller('polling_interval', 'last_poller_time')
-        def run(self, *args, **kwargs):
+        LOG = logging.getLogger(__name__)
 
-            # poll endpoint
-            query_results = query_entities_since_last_poll(kwargs['last_poller_time'])
+        class MyPoller(AppFunctionComponent):
 
-            # process any results to create, update, or close case in SOAR
-            if query_results:
-                self.process_entity_list(query_results)
+            def __init__(self, opts):
+                super(PollerComponent, self).__init__(opts, PACKAGE_NAME)
+
+                polling_interval = 5 # set to 5 seconds or could get from ``self.options``
+                last_poller_time = get_last_poller_date(120) # look back 2 hours
+
+                if is_this_a_selftest(self):
+                    LOG.warn("Running selftest -- disabling poller")
+                else:
+                    poller_thread = Thread(target=self.run)
+                    poller_thread.daemon = True
+                    poller_thread.start()
+
+            @poller('polling_interval', 'last_poller_time')
+            def run(self, *args, **kwargs):
+
+                # poll endpoint
+                query_results = query_entities_since_last_poll(kwargs['last_poller_time'])
+
+                # process any results to create, update, or close case in SOAR
+                if query_results:
+                    self.process_entity_list(query_results)
 
 
     :param named_poller_interval: name of instance variable containing the poller interval in seconds
