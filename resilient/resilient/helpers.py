@@ -23,7 +23,7 @@ else:
     # Handle PY 3 specific imports
     from json.decoder import JSONDecodeError
     from urllib.parse import unquote, urlparse
-    from jose import jwe
+    from jwcrypto import jwk, jwe
 
 
 LOG = logging.getLogger(__name__)
@@ -281,9 +281,12 @@ def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DI
     tkn = tkn.splitlines()[0]
 
     try:
-        decrypted_value = jwe.decrypt(tkn, key)
+        jwetoken = jwe.JWE()
+        jwetoken.deserialize(tkn)
+        jwetoken.decrypt(key)
+        decrypted_value = jwetoken.payload
     except Exception as err:
-        LOG.error("ERROR: Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
+        LOG.error("ERROR: Could not decrypt the secret. Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
         return None
 
     return decrypted_value.decode("utf-8")
@@ -292,17 +295,17 @@ def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DI
 def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
     """
     If the contents of the file at path is valid JSON,
-    returns the contents of the file as a dictionary else
-    returns None
+    reads the file and uses the jwcrypto.jwk.JWK class
+    get the JWK and returns it else returns None
 
     :param path_jwk_file: Path to JSON JWK file to read
     :type path_jwk_file: str
-    :return: File contents as a dictionary or None
-    :rtype: dict
+    :return: File contents as a jwcrypto.jwk.JWK or None
+    :rtype: jwcrypto.jwk.JWK
     """
     LOG.info("Getting JWK from '%s'", path_jwk_file)
 
-    jwk = None
+    file_contents = None
 
     if not os.path.isfile(path_jwk_file) or not os.access(path_jwk_file, os.R_OK):
         LOG.warning("WARNING: Could not find JWK at '%s' or you do not have the correct permissions.", path_jwk_file)
@@ -311,16 +314,24 @@ def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
     with io.open(path_jwk_file, mode="rt", encoding="utf-8") as the_file:
 
         try:
-            jwk = json.load(the_file)
+            file_contents = json.load(the_file)
 
         except JSONDecodeError as err:
-            LOG.error(str(err))
+            LOG.error("JWK JSON file at '%s' is corrupt.\njwk: %s\nError: %s", path_jwk_file, jwk, str(err))
+            return None
 
-    if not jwk or not jwk.get("k"):
-        LOG.error("JWK JSON file at '%s' is corrupt or does not in include the required 'k' attribute.\njwk: %s", path_jwk_file, jwk)
+    if not file_contents:
+        LOG.error("The provided JWK file at '%s' is empty", path_jwk_file)
         return None
 
-    return jwk.get("k")
+    try:
+        aes_key = jwk.JWK.from_json(json.dumps(file_contents))
+
+    except Exception as err:
+        LOG.error("Error getting JWK: %s", str(err))
+        return None
+
+    return aes_key
 
 
 def remove_secrets_dir(path_secrets_dir=constants.PATH_SECRETS_DIR):

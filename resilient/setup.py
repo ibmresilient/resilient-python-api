@@ -40,7 +40,7 @@ setup(
         "six               ~= 1.16",
 
         # Python >= 3.6
-        "python-jose       ~= 3.3.0;  python_version >= '3.6'",
+        "jwcrypto          ~= 1.4.0;  python_version >= '3.6'",
 
         # Python > 3.6
         "setuptools        ~= 62.1;   python_version > '3.6'",
