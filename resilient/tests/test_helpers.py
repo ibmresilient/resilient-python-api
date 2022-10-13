@@ -7,7 +7,10 @@ import sys
 
 import pytest
 from resilient import constants, helpers
-from jwcrypto.jwk import JWK
+
+if sys.version_info.major >= 3:
+    # Handle PY 3 specific imports
+    from jwcrypto.jwk import JWK
 
 
 def test_str_to_bool():
