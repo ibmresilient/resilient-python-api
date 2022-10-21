@@ -99,9 +99,9 @@
 This app supports the IBM Security QRadar SOAR Platform and the IBM Security QRadar SOAR for IBM Cloud Pak for Security.
 
 ### SOAR platform
-The SOAR platform supports two app deployment mechanisms, App Host and integration server.
+The SOAR platform supports two app deployment mechanisms, Edge Gateway (formerly App Host) and integration server.
 
-If deploying to a SOAR platform with an App Host, the requirements are:
+If deploying to a SOAR platform with an Edge Gateway, the requirements are:
 * SOAR platform >= `{{ server_version }}`.
 * The app is in a container-based format (available from the AppExchange as a `zip` file).
 
@@ -117,20 +117,20 @@ If deploying to a SOAR platform with an integration server, the requirements are
   <!-- {{ placeholder_string }} -->
 
 The following SOAR platform guides provide additional information: 
-* _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. 
+* _Edge Gateway Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. 
 * _Integration Server Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings.
 * _System Administrator Guide_: provides the procedure to install, configure and deploy apps. 
 
-The above guides are available on the IBM Documentation website at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your SOAR platform version. On the follow-on page, you can find the _App Host Deployment Guide_ or _Integration Server Guide_ by expanding **Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
+The above guides are available on the IBM Documentation website at [ibm.biz/soar-docs](https://ibm.biz/soar-docs). On this web page, select your SOAR platform version. On the follow-on page, you can find the _Edge Gateway Deployment Guide_ or _Integration Server Guide_ by expanding **Apps** in the Table of Contents pane. The System Administrator Guide is available by expanding **System Administrator**.
 
 ### Cloud Pak for Security
 If you are deploying to IBM Cloud Pak for Security, the requirements are:
-* IBM Cloud Pak for Security >= 1.4.
-* Cloud Pak is configured with an App Host.
+* IBM Cloud Pak for Security >= 1.8.
+* Cloud Pak is configured with an Edge Gateway.
 * The app is in a container-based format (available from the AppExchange as a `zip` file).
 
 The following Cloud Pak guides provide additional information: 
-* _App Host Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration & Automation > **Orchestration and Automation Apps**.
+* _Edge Gateway Deployment Guide_: provides installation, configuration, and troubleshooting information, including proxy server settings. From the Table of Contents, select Case Management and Orchestration & Automation > **Orchestration and Automation Apps**.
 * _System Administrator Guide_: provides information to install, configure, and deploy apps. From the IBM Cloud Pak for Security IBM Documentation table of contents, select Case Management and Orchestration & Automation > **System administrator**.
 
 These guides are available on the IBM Documentation website at [ibm.biz/cp4s-docs](https://ibm.biz/cp4s-docs). From this web page, select your IBM Cloud Pak for Security version. From the version-specific IBM Documentation page, select Case Management and Orchestration & Automation.
@@ -140,7 +140,7 @@ The app **does/does not** <!-- {{ placeholder_string }} --> support a proxy serv
 
 {% if all_dependencies %}
 ### Python Environment
-Both Python 2.7 and Python 3.6 are supported.
+Python 3.6 and Python 3.9 are supported.
 Additional package dependencies may exist for each of these packages:
 {% for dep in all_dependencies|sort %}
 * {{dep}}
