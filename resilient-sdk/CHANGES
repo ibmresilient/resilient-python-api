@@ -1,6 +1,6 @@
 **2022-11: version 47.0**
 
-* Add support to ``extract`` command for sub-playbooks. They are treated like normal Playbooks so no
+* Added support to ``extract`` command for sub-playbooks. They are treated like normal Playbooks so no
   further command line args are required. Just ensure you include all other customizations in your
   command. For example:
 
@@ -9,10 +9,11 @@
     $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
 
 * ``codegen`` template updates with Python 3 syntax
-* ``docgen`` template updated with references to Edge Gateway (formerly App Host)
 * Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps 
   which generates a ``lib`` directory in the package and a ``poller`` directory each with 
   items needed to create a poller-based app.
+* ``docgen`` template updated with references to Edge Gateway (formerly App Host)
+* Added support for activation fields in manually activated playbooks in the ``clone`` command
 
 
 **2022-08: version 46.0**
