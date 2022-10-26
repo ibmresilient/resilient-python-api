@@ -28,7 +28,7 @@ ERROR_CODE_CONNECTION_UNAUTHORIZED = 21
 # Error Messages
 ERROR_MSG_CONNECTION_UNAUTHORIZED = u"Unauthorized"
 ERROR_MSG_CONNECTION_INVALID_CREDS = u"Either the API Key has been blocked, the API Credentials are incorrect or the IP address has been banned. Please review the SOAR logs for more information"
-WARNING_PROTECTED_SECRETS_NOT_SUPPORTED = u"WARNING: Protected secrets are only Python >= 3 supported."
+WARNING_PROTECTED_SECRETS_NOT_SUPPORTED = u"Protected secrets are only Python >= 3 supported."
 
 # File Paths
 PATH_SECRETS_DIR = os.path.join(os.path.abspath(os.sep), "etc", "secrets")

@@ -33,11 +33,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
     def __init__(self, config_file=None):
 
-        # Temporary logging handler until the real one is created later
-        temp_handler = logging.StreamHandler()
-        temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
-        temp_handler.setLevel(logging.INFO)
-        logging.getLogger().addHandler(temp_handler)
+        self._setup_temp_logger()
         config_file = config_file or get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
 
@@ -74,7 +70,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
         default_heartbeat_timeout_threshold = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD) or self.DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD
 
-        logging.getLogger().removeHandler(temp_handler)
+        self._unset_temp_logger()
 
         self.add_argument("--stomp-host",
                           type=str,
@@ -170,6 +166,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""
+        self._setup_temp_logger()
         opts = super(AppArgumentParser, self).parse_args(args, namespace, ALLOW_UNRECOGNIZED)
         if self.config:
             for section in self.config.sections():
@@ -188,7 +185,20 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         if opts.get(res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES, -1) == 0:
             opts[res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES] = -1
 
+        self._unset_temp_logger()
         return opts
+
+    def _setup_temp_logger(self):
+        # Temporary logging handler until the real one is created later in app.py
+        self.temp_handler = logging.StreamHandler()
+        self.temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
+        self.temp_handler.setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().addHandler(self.temp_handler)
+
+    def _unset_temp_logger(self):
+        # Unset the temporary logger
+        logging.getLogger().removeHandler(self.temp_handler)
 
     @staticmethod
     def _is_true(value):

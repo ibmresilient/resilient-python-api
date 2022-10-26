@@ -251,7 +251,7 @@ def is_running_in_app_host(env_var=constants.ENV_VAR_APP_HOST_CONTAINER):
     :rtype: bool
     """
     if not str_to_bool(get_config_from_env(env_var)):
-        LOG.warning("WARNING: Not running in an App Host environment")
+        LOG.debug("Not running in an App Host environment")
         return False
 
     return True
@@ -274,23 +274,23 @@ def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS
     """
     path_secret = os.path.join(path_secrets_dir, secret_name)
 
+    if not is_running_in_app_host():
+        return False
+
     if sys.version_info.major < 3:
         LOG.warning(constants.WARNING_PROTECTED_SECRETS_NOT_SUPPORTED)
         return False
 
-    if not is_running_in_app_host():
-        return False
-
     if not os.path.isdir(path_secrets_dir) or not os.access(path_secrets_dir, os.R_OK):
-        LOG.warning("WARNING: Protected secrets directory at '%s' does not exist or you do not have the correct permissions. No value found for '%s'", path_secrets_dir, secret_name)
+        LOG.debug("Protected secrets directory at '%s' does not exist or you do not have the correct permissions. No value found for '%s'", path_secrets_dir, secret_name)
         return False
 
     if not os.path.isfile(path_secret) or not os.access(path_secret, os.R_OK):
-        LOG.warning("WARNING: No protected secret found for '%s' or you do not have the correct permissions to read the file. No value found for '%s'", secret_name, secret_name)
+        LOG.warning("No protected secret found for '%s' or you do not have the correct permissions to read the file. No value found for '%s'", secret_name, secret_name)
         return False
 
     if not os.path.isfile(path_jwk_file) or not os.access(path_jwk_file, os.R_OK):
-        LOG.warning("WARNING: Could not find JWK at '%s' or you do not have the correct permissions. No value found for '%s'", path_jwk_file, secret_name)
+        LOG.warning("Could not find JWK at '%s' or you do not have the correct permissions. No value found for '%s'", path_jwk_file, secret_name)
         return False
 
     return True
@@ -327,7 +327,7 @@ def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DI
         tkn = f.readline()
 
     if not tkn:
-        LOG.error("ERROR: File for protected secret '%s' is empty or corrupt", secret_name)
+        LOG.error("File for protected secret '%s' is empty or corrupt", secret_name)
         return None
 
     # We need to remove new line and carriage return characters
@@ -339,7 +339,7 @@ def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DI
         jwetoken.decrypt(key)
         decrypted_value = jwetoken.payload
     except Exception as err:
-        LOG.error("ERROR: Could not decrypt the secret. Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
+        LOG.error("Could not decrypt the secret. Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
         return None
 
     return decrypted_value.decode("utf-8")
@@ -356,12 +356,12 @@ def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
     :return: File contents as a jwcrypto.jwk.JWK or None
     :rtype: jwcrypto.jwk.JWK
     """
-    LOG.info("Getting JWK from '%s'", path_jwk_file)
+    LOG.debug("Getting JWK from '%s'", path_jwk_file)
 
     file_contents = None
 
     if not os.path.isfile(path_jwk_file) or not os.access(path_jwk_file, os.R_OK):
-        LOG.warning("WARNING: Could not find JWK at '%s' or you do not have the correct permissions.", path_jwk_file)
+        LOG.warning("Could not find JWK at '%s' or you do not have the correct permissions.", path_jwk_file)
         return None
 
     with io.open(path_jwk_file, mode="rt", encoding="utf-8") as the_file:
@@ -396,7 +396,7 @@ def remove_secrets_dir(path_secrets_dir=constants.PATH_SECRETS_DIR):
     :type path_secrets_dir: str, optional
     """
     if is_running_in_app_host() and os.path.isdir(path_secrets_dir):
-        LOG.info("Removing secrets directory at: '%s'", path_secrets_dir)
+        LOG.debug("Removing secrets directory at: '%s'", path_secrets_dir)
         shutil.rmtree(path_secrets_dir, ignore_errors=True)
 
 
@@ -410,5 +410,5 @@ def get_config_from_env(config_name):
     :return: The value of the env var
     :rtype: str
     """
-    LOG.info("Getting environmental variable '%s'", config_name)
+    LOG.debug("Getting environmental variable '%s'", config_name)
     return os.environ.get(config_name)
