@@ -425,7 +425,7 @@ options:
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
 <p><strong>2022-11: version 47.0</strong></p>
 <ul>
-<li><p>Add support to <code class="docutils literal notranslate"><span class="pre">extract</span></code> command for sub-playbooks. They are treated like normal Playbooks so no
+<li><p>Added support to <code class="docutils literal notranslate"><span class="pre">extract</span></code> command for sub-playbooks. They are treated like normal Playbooks so no
 further command line args are required. Just ensure you include all other customizations in your
 command. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
@@ -433,10 +433,11 @@ command. For example:</p>
 </div>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code> template updates with Python 3 syntax</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docgen</span></code> template updated with references to Edge Gateway (formerly App Host)</p></li>
 <li><p>Added new <code class="docutils literal notranslate"><span class="pre">--poller</span></code> flag to <code class="docutils literal notranslate"><span class="pre">codegen</span></code>. This allows for creating poller-based apps
 which generates a <code class="docutils literal notranslate"><span class="pre">lib</span></code> directory in the package and a <code class="docutils literal notranslate"><span class="pre">poller</span></code> directory each with
 items needed to create a poller-based app.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docgen</span></code> template updated with references to Edge Gateway (formerly App Host)</p></li>
+<li><p>Added support for activation fields in manually activated playbooks in the <code class="docutils literal notranslate"><span class="pre">clone</span></code> command</p></li>
 </ul>
 <p><strong>2022-08: version 46.0</strong></p>
 <ul class="simple">
