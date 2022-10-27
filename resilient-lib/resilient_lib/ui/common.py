@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2020. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
-import resilient
 import copy
-from resilient_lib.components.resilient_common import str_to_bool
 import logging
+
+from resilient_circuits import rest_helper
+from resilient_lib.components.resilient_common import str_to_bool
 
 LOG = logging.getLogger(__name__)
 
