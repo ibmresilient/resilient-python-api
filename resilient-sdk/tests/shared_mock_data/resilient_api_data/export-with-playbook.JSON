@@ -41631,7 +41631,37 @@
       "actions" : [ ],
       "display_name" : "Main Mock Playbook",
       "export_key" : "playbook_37b4be7a_9d54_442f_84f7_5add53d2c464",
-      "fields" : { },
+      "fields" : {
+        "test": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_37b4be7a_9d54_442f_84f7_5add53d2c464/test",
+          "hide_notification": false,
+          "id": 290,
+          "input_type": "boolean",
+          "internal": false,
+          "is_tracked": false,
+          "name": "test",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "",
+          "prefix": null,
+          "read_only": false,
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "test?",
+          "tooltip": "",
+          "type_id": 1007,
+          "uuid": "3c3772d0-a2e3-46e6-8d36-5d95daface5e",
+          "values": []
+        }
+      },
       "for_actions" : false,
       "for_custom_fields" : false,
       "for_notifications" : false,
@@ -41672,7 +41702,16 @@
         } ],
         "logic_type" : "all"
       },
-      "view_items" : [ ]
+      "view_items" : [
+        {
+          "content": "3c3772d0-a2e3-46e6-8d36-5d95daface5e",
+          "element": "field_uuid",
+          "field_type": "playbook_37b4be7a_9d54_442f_84f7_5add53d2c464",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        }
+      ]
     },
     "name" : "main_mock_playbook",
     "object_type" : "incident",
@@ -41713,7 +41752,37 @@
       "actions" : [ ],
       "display_name" : "Run Mock Main Playbook",
       "export_key" : "playbook_f880d96f_839b_47cd_9956_be7125f8273c",
-      "fields" : { },
+      "fields" : {
+        "test": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f880d96f_839b_47cd_9956_be7125f8273c/test",
+          "hide_notification": false,
+          "id": 290,
+          "input_type": "boolean",
+          "internal": false,
+          "is_tracked": false,
+          "name": "test",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "",
+          "prefix": null,
+          "read_only": false,
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "test?",
+          "tooltip": "",
+          "type_id": 1007,
+          "uuid": "3c3772d0-a2e3-46e6-8d36-5d95daface5e",
+          "values": []
+        }
+      },
       "for_actions" : false,
       "for_custom_fields" : false,
       "for_notifications" : false,
@@ -41766,7 +41835,16 @@
         "conditions" : [ ],
         "logic_type" : "all"
       },
-      "view_items" : [ ]
+      "view_items" : [
+        {
+          "content": "3c3772d0-a2e3-46e6-8d36-5d95daface5e",
+          "element": "field_uuid",
+          "field_type": "playbook_f880d96f_839b_47cd_9956_be7125f8273c",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        }
+      ]
     },
     "name" : "mock_main_pb",
     "object_type" : "incident",
