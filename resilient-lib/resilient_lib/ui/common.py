@@ -139,7 +139,7 @@ def create_tab(tab, opts, update_existing=False):
         if not permission_to_edit(tab, opts):
             LOG.info("No permission to edit UI for {}".format(tab.SECTION))
             return
-        client = resilient.get_client(opts)
+        client = rest_helper.get_resilient_client(opts)
         layout = get_incident_layout(client)
 
         # check if tab already exists in the layout
