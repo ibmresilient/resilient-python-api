@@ -28,7 +28,9 @@ import pkg_resources
 import requests
 import requests.exceptions
 from jinja2 import Environment, PackageLoader
-from resilient import ArgumentParser, get_client, get_config_file
+from resilient import ArgumentParser
+from resilient import constants as res_constants
+from resilient import get_client, get_config_file
 from resilient.helpers import remove_tag
 from resilient_sdk.util import constants
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
@@ -75,7 +77,14 @@ def get_resilient_client(path_config_file=None):
 
     LOG.info("Connecting to IBM Security SOAR at: %s", opts.get("host"))
 
-    return get_client(opts)
+    retry_args = {
+        res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES: opts.get(res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES),
+        res_constants.APP_CONFIG_REQUEST_MAX_RETRIES: opts.get(res_constants.APP_CONFIG_REQUEST_MAX_RETRIES),
+        res_constants.APP_CONFIG_REQUEST_RETRY_DELAY: opts.get(res_constants.APP_CONFIG_REQUEST_RETRY_DELAY),
+        res_constants.APP_CONFIG_REQUEST_RETRY_BACKOFF: opts.get(res_constants.APP_CONFIG_REQUEST_RETRY_BACKOFF)
+    }
+
+    return get_client(opts, **retry_args)
 
 
 def setup_jinja_env(relative_path_to_templates):
