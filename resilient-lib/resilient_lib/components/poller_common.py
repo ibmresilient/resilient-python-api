@@ -274,7 +274,7 @@ class SOARCommon():
             new_entity_comments = [comment for comment in staged_entity_comments \
                 if not any([clean_html(comment) in clean_html(already_synced) for already_synced in soar_comment_list])]
         else:
-            new_entity_comments = []
+            new_entity_comments = staged_entity_comments
 
         return new_entity_comments
 
