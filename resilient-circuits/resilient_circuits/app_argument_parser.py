@@ -190,14 +190,15 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
     def _setup_temp_logger(self):
         # Temporary logging handler until the real one is created later in app.py
+        # return
         self.temp_handler = logging.StreamHandler()
         self.temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
         self.temp_handler.setLevel(logging.INFO)
-        logging.getLogger().setLevel(logging.INFO)
         logging.getLogger().addHandler(self.temp_handler)
 
     def _unset_temp_logger(self):
         # Unset the temporary logger
+        # return
         logging.getLogger().removeHandler(self.temp_handler)
 
     @staticmethod
