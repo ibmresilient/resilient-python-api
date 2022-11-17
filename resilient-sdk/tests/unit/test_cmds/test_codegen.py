@@ -554,7 +554,7 @@ def test_execute_command():
     pass
 
 
-def test_codegen_poller(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir, fx_add_dev_env_var):
+def test_codegen_poller(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir):
 
     output_path = mock_paths.TEST_TEMP_DIR
 

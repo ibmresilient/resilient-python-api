@@ -8936,7 +8936,16 @@
     },
     "last_modified_time" : 1606220024618,
     "name" : "mock_function_one",
-    "tags" : [ ],
+    "tags" : [{
+        "tag_handle": "fn_main_mock_integration",
+        "value": null
+    }, {
+        "tag_handle": "workflow_4f32ebbe_99ba_4f45_8735_5bdf286c9fde",
+        "value": "workflow Tag"
+    }, {
+        "tag_handle": "workflow_f880d96f_839b_47cd_9956_be7125f8273c",
+        "value": "workflow Tag"
+    }],
     "uuid" : "9b180887-4ff6-4d13-82a6-cb0a5d8718f1",
     "version" : 1,
     "view_items" : [ {

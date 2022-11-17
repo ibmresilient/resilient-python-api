@@ -4,11 +4,16 @@
 
 import logging
 import os
-from resilient import parse_parameters, get_config_file
+
+from resilient import constants as res_constants
+from resilient import get_config_file
+from resilient import helpers as res_helpers
+from resilient import parse_parameters
+
 import resilient_circuits.keyring_arguments as keyring_arguments
-from resilient_circuits.validate_configs import VALIDATE_DICT
-from resilient_circuits.helpers import validate_configs
 from resilient_circuits import constants
+from resilient_circuits.helpers import validate_configs
+from resilient_circuits.validate_configs import VALIDATE_DICT
 
 
 class AppArgumentParser(keyring_arguments.ArgumentParser):
@@ -21,18 +26,14 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NO_PROMPT_PASS = "False"
     DEFAULT_STOMP_TIMEOUT = 60
     DEFAULT_STOMP_MAX_RETRIES = 3
-    DEFAULT_MAX_CONNECTION_RETRIES = 1
-    DEFAULT_NUM_WORKERS = 10
+    DEFAULT_MAX_CONNECTION_RETRIES = res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES_DEFAULT
+    DEFAULT_NUM_WORKERS = 25
     DEFAULT_APP_EXCEPTION = False
     DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD = None
 
     def __init__(self, config_file=None):
 
-        # Temporary logging handler until the real one is created later
-        temp_handler = logging.StreamHandler()
-        temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
-        temp_handler.setLevel(logging.INFO)
-        logging.getLogger().addHandler(temp_handler)
+        self._setup_temp_logger()
         config_file = config_file or get_config_file()
         super(AppArgumentParser, self).__init__(config_file=config_file)
 
@@ -50,7 +51,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_stomp_url = self.getopt(self.DEFAULT_APP_SECTION, "stomp_host") or self.getopt(self.DEFAULT_APP_SECTION, "host")
         default_stomp_timeout = self.getopt(self.DEFAULT_APP_SECTION, "stomp_timeout") or self.DEFAULT_STOMP_TIMEOUT
         default_stomp_max_retries = self.getopt(self.DEFAULT_APP_SECTION, "stomp_max_retries") or self.DEFAULT_STOMP_MAX_RETRIES
-        default_max_connection_retries = self.getopt(self.DEFAULT_APP_SECTION, "max_connection_retries") or self.DEFAULT_MAX_CONNECTION_RETRIES
+        default_max_connection_retries = self.getopt(self.DEFAULT_APP_SECTION, res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES) or self.DEFAULT_MAX_CONNECTION_RETRIES
 
         default_no_prompt_password = self.getopt(self.DEFAULT_APP_SECTION,
                                                  "no_prompt_password") or self.DEFAULT_NO_PROMPT_PASS
@@ -69,7 +70,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
         default_heartbeat_timeout_threshold = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD) or self.DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD
 
-        logging.getLogger().removeHandler(temp_handler)
+        self._unset_temp_logger()
 
         self.add_argument("--stomp-host",
                           type=str,
@@ -98,7 +99,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=int,
                           action="store",
                           default=os.environ.get('RESILIENT_MAX_CONNECTION_RETRIES') or 0 if os.environ.get("APP_HOST_CONTAINER") else default_max_connection_retries,
-                          help="Resilient max retries when connecting to Resilient or 0 for unlimited")
+                          help="Number of attempts to retry when connecting to SOAR. Use 0 or -1 for unlimited retries. Defaults to 0")
         self.add_argument("--resource-prefix",
                           type=str,
                           action="store",
@@ -165,6 +166,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""
+        self._setup_temp_logger()
         opts = super(AppArgumentParser, self).parse_args(args, namespace, ALLOW_UNRECOGNIZED)
         if self.config:
             for section in self.config.sections():
@@ -173,9 +175,31 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
             parse_parameters(opts)
 
+            # Once we have read the app.config and decrypted any protected secrets
+            # we must remove the secrets directory
+            res_helpers.remove_secrets_dir()
+
         validate_configs(opts, VALIDATE_DICT)
 
+        # NOTE: Newer retry2 logic requires tries to be -1 (not 0 as before) for unlimited attempts
+        if opts.get(res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES, -1) == 0:
+            opts[res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES] = -1
+
+        self._unset_temp_logger()
         return opts
+
+    def _setup_temp_logger(self):
+        # Temporary logging handler until the real one is created later in app.py
+        # return
+        self.temp_handler = logging.StreamHandler()
+        self.temp_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(module)s] %(message)s'))
+        self.temp_handler.setLevel(logging.INFO)
+        logging.getLogger().addHandler(self.temp_handler)
+
+    def _unset_temp_logger(self):
+        # Unset the temporary logger
+        # return
+        logging.getLogger().removeHandler(self.temp_handler)
 
     @staticmethod
     def _is_true(value):

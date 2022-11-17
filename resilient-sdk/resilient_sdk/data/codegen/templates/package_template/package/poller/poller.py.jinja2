@@ -6,9 +6,8 @@ import logging
 import os
 from threading import Thread
 
-from resilient import get_client
 from resilient_circuits import AppFunctionComponent, is_this_a_selftest
-from resilient_lib import (SOARCommon, get_last_poller_date, get_template_dir,
+from resilient_lib import (SOARCommon, get_last_poller_date,
                            make_payload_from_template, poller)
 
 from {{package_name}}.lib.app_common import AppCommon
@@ -23,11 +22,14 @@ ENTITY_COMMENT_HEADER = "Created by <- {{change_me_str}} ->" # header used to id
 
 LOG = logging.getLogger(__name__)
 
+# Directory of default templates
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "data")
+
 # Default Templates used to create/update/close SOAR cases.
 #   Mostly they will be modified to include custom SOAR fields
-CREATE_INCIDENT_TEMPLATE = os.path.join(get_template_dir(), "soar_create_incident.jinja")
-UPDATE_INCIDENT_TEMPLATE = os.path.join(get_template_dir(), "soar_update_incident.jinja")
-CLOSE_INCIDENT_TEMPLATE = os.path.join(get_template_dir(), "soar_close_incident.jinja")
+CREATE_INCIDENT_TEMPLATE = os.path.join(TEMPLATE_DIR, "soar_create_incident.jinja")
+UPDATE_INCIDENT_TEMPLATE = os.path.join(TEMPLATE_DIR, "soar_update_incident.jinja")
+CLOSE_INCIDENT_TEMPLATE = os.path.join(TEMPLATE_DIR, "soar_close_incident.jinja")
 
 def init_app(rc, options):
     """
@@ -41,11 +43,11 @@ def init_app(rc, options):
     :rtype: ``AppCommon``
     """
     # initialize the class for making API calls to your endpoint
-    endpoint_class = AppCommon(rc, PACKAGE_NAME, options)
+    app_common = AppCommon(rc, PACKAGE_NAME, options)
 
     # <add additional initialization steps for your endpoint as necessary>
 
-    return endpoint_class
+    return app_common
 
 def query_entities(app_common, last_poller_time):
     """
@@ -151,7 +153,7 @@ class PollerComponent(AppFunctionComponent):
         self.soar_close_case_template = options.get("soar_close_case_template")
 
         # rest_client is used to make IBM SOAR API calls
-        self.rest_client = get_client(opts)
+        self.rest_client = self.rest_client()
         self.soar_common = SOARCommon(self.rest_client)
         self.app_common = init_app(self.rc, options)
 
@@ -176,13 +178,6 @@ class PollerComponent(AppFunctionComponent):
         if query_results:
             # iterate over all the entities.
             self.process_query_list(query_results.get("result", [])) # <{{change_me_str}} update to the correct value for your API>
-
-            # Uncomment below if your app has paged results
-            #next_page = query_results.get("nextPage") <{{change_me_str}} update to your API's name for the next page>
-            #while next_page:
-            #    next_page = query_results.get("nextPage")
-            #    query_results = self.app_common.get_next_page(next_page)
-            #    self.process_query_list(query_results.get("result", []))
 
     def process_query_list(self, query_results):
         """
@@ -211,13 +206,11 @@ class PollerComponent(AppFunctionComponent):
                 if not soar_case:
                     # create the SOAR case
                     soar_create_payload = make_payload_from_template(
-                                                        self.soar_create_case_template,
-                                                        CREATE_INCIDENT_TEMPLATE,
-                                                        entity
-                                                    )
+                        self.soar_create_case_template,
+                        CREATE_INCIDENT_TEMPLATE,
+                        entity)
                     create_soar_case = self.soar_common.create_soar_case(
-                                                        soar_create_payload
-                                                    )
+                        soar_create_payload)
 
                     soar_case_id = create_soar_case.get("id") # get newly created case_id
 
@@ -230,29 +223,24 @@ class PollerComponent(AppFunctionComponent):
                         if soar_case.get("plan_status", "C") == "A":
                             # close the SOAR case
                             soar_close_payload = make_payload_from_template(
-                                                            self.soar_close_case_template,
-                                                            CLOSE_INCIDENT_TEMPLATE,
-                                                            entity
-                                                        )
+                                self.soar_close_case_template,
+                                CLOSE_INCIDENT_TEMPLATE,
+                                entity)
                             _close_soar_case = self.soar_common.update_soar_case(
-                                                            soar_case_id,
-                                                            soar_close_payload
-                                                        )
+                                soar_case_id,
+                                soar_close_payload)
 
                             cases_closed += 1
                             LOG.info("Closed SOAR case %s from %s %s", soar_case_id, ENTITY_LABEL, entity_id)
                     else:
                         # perform an update operation on the existing SOAR case
                         soar_update_payload = make_payload_from_template(
-                                                        self.soar_update_case_template,
-                                                        UPDATE_INCIDENT_TEMPLATE,
-                                                        entity
-                                                    )
-                        # Update description, tags, priority, assignee, stage, important
+                            self.soar_update_case_template,
+                            UPDATE_INCIDENT_TEMPLATE,
+                            entity)
                         _update_soar_case = self.soar_common.update_soar_case(
-                                                        soar_case_id,
-                                                        soar_update_payload
-                                                    )
+                            soar_case_id,
+                            soar_update_payload)
 
                         cases_updated += 1
                         LOG.info("Updated SOAR case %s from %s %s", soar_case_id, ENTITY_LABEL, entity_id)

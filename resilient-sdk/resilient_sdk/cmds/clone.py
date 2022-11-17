@@ -591,6 +591,7 @@ class CmdClone(BaseCmd):
         new_field_type_uuid = u"{0}_{1}".format("playbook", pb_new_uuid.replace("-", "_"))
         playbook_xml = obj_to_modify.get("content", {}).get("xml", "")
         local_scripts = obj_to_modify.get("local_scripts")
+        fields_type = obj_to_modify.get("fields_type", {})
         changetype = kwargs.get("changetype", None)
         convert_to_draft = kwargs.get("convert_to_draft", False)
 
@@ -628,12 +629,37 @@ class CmdClone(BaseCmd):
             }
         })
 
-        obj_to_modify.get("fields_type", {}).update({
+        fields_type.update({
             "display_name": new_obj_api_name,
             "type_name": new_field_type_uuid,
             "export_key": new_field_type_uuid,
             "uuid": str(uuid.uuid4())
         })
+
+        # if there are any activation fields, they need to be updated as well as they
+        # have export_key's and uuid's
+        fields = fields_type.get("fields", {})
+        for field in fields:
+            field_old_uuid = fields.get(field).get("uuid") # need old UUID to search in view_items list
+            field_new_uuid = str(uuid.uuid4())
+            fields.get(field).update({
+                "export_key": u"{0}/{1}".format(new_field_type_uuid, field),
+                "uuid": field_new_uuid
+            })
+            fields.get(field).pop("id")
+
+            # have to do a sequential search of the manual_settings.view_items
+            # to find the correct item which corresponds to the activation field modified above
+            # search is based on UUID, which is found in manual_settings.view_items[<index>].content
+            # and then the content value needs to be updated to match the new UUID and the field_type
+            # updated to match the new_field_type_uuid
+            for view_item in obj_to_modify.get("manual_settings", {}).get("view_items", []):
+                if view_item.get("content") == field_old_uuid:
+                    view_item.update({
+                        "content": field_new_uuid,
+                        "field_type": new_field_type_uuid
+                    })
+                    break
 
         if obj_to_modify.get("tag"):
             tag_new_name = "playbook_{0}".format(pb_new_uuid)

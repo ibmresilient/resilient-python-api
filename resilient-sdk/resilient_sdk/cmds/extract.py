@@ -33,6 +33,7 @@ class CmdExtract(BaseCmd):
     CMD_HELP = "Extracts data needed to publish a .res file."
     CMD_USAGE = """
     $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+    $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
     $ resilient-sdk extract --script 'custom_script' --zip
     $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""

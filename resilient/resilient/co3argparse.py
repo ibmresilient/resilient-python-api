@@ -12,7 +12,7 @@ import sys
 import keyring
 from six import string_types
 
-from resilient import constants
+from resilient import constants, helpers
 
 if sys.version_info.major == 2:
     from io import open
@@ -129,6 +129,10 @@ class ArgumentParser(argparse.ArgumentParser):
         default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or 20)
         default_resilient_mock = self.getopt("resilient", "resilient_mock")
 
+        default_max_request_retries = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_MAX_RETRIES) or constants.APP_CONFIG_REQUEST_MAX_RETRIES_DEFAULT
+        default_request_retry_delay = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_DELAY) or constants.APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT
+        default_request_retry_backoff = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) or constants.APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT
+
         self.add_argument("--email",
                           default=default_email,
                           help="The email address to use to authenticate to the Resilient server.")
@@ -201,6 +205,21 @@ class ArgumentParser(argparse.ArgumentParser):
                           default=default_stomp_prefetch_limit,
                           type=int,
                           help="MAX number of Action Module messages to send before ACK is required")
+
+        self.add_argument("--{0}".format(constants.APP_CONFIG_REQUEST_MAX_RETRIES),
+                          type=int,
+                          default=default_max_request_retries,
+                          help="Max number of times to retry a request to SOAR before exiting. Defaults to 5")
+
+        self.add_argument("--{0}".format(constants.APP_CONFIG_REQUEST_RETRY_DELAY),
+                          type=int,
+                          default=default_request_retry_delay,
+                          help="Number of seconds to wait between retries. Defaults to 2")
+
+        self.add_argument("--{0}".format(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF),
+                          type=int,
+                          default=default_request_retry_backoff,
+                          help="Multiplier applied to delay between retry attempts. Defaults to 2")
 
         v_resc = get_resilient_circuits_version()
 
@@ -323,10 +342,19 @@ def _parse_parameters(names, options):
                 service = "_"
             logger.debug("keyring get('%s', '%s')", service, val)
             val = keyring.get_password(service, val)
-        if isinstance(val, string_types) and len(val) > 1 and val[0] == "$":
-            # Read a value from the environment
-            val = val[1:]
-            logger.debug("env('%s')", val)
-            val = os.environ.get(val)
+
+        if isinstance(val, string_types) and val.startswith(constants.PROTECTED_SECRET_PREFIX):
+            config_name = val[1:]
+
+            if helpers.protected_secret_exists(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE):
+
+                protected_secret = helpers.get_protected_secret(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE)
+
+                val = protected_secret if protected_secret else helpers.get_config_from_env(config_name)
+
+            else:
+                val = helpers.get_config_from_env(config_name)
+
         options[key] = val
+
     return options

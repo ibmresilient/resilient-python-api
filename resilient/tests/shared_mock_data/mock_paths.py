@@ -12,3 +12,4 @@ TESTS_DIR = os.path.dirname(SHARED_MOCK_DATA_DIR)
 TEST_TEMP_DIR = os.path.join(TESTS_DIR, "test_temp")
 
 MOCK_RESPONSES_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_responses")
+MOCK_SECRETS_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_secrets")
