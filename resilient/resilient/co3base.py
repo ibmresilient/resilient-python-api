@@ -405,7 +405,7 @@ class BaseClient(object):
         BasicHTTPException.raise_if_error(response)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None):
+    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -416,25 +416,30 @@ class BaseClient(object):
            uri
            payload
            co3_context_token
-          timeout: number of seconds to wait for response
+           timeout: number of seconds to wait for response
+           headers: optional headers to include
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        payload_json = json.dumps(payload)
+        # payloads which aren't convertable to json are passed asis
+        payload_json = json.dumps(payload) if isinstance(payload, (list, dict)) else payload
         response = self._execute_request(self.session.post,
                                          url,
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, additional_headers=headers),
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
         BasicHTTPException.raise_if_error(response)
-        return json.loads(response.text)
+        try:
+            return json.loads(response.text)
+        except json.decoder.JSONDecodeError:
+            return response.content
 
     @retry(BasicHTTPException, tries=8, delay=2, backoff=2)
     def post_attachment(self, uri, filepath,
@@ -603,7 +608,7 @@ class BaseClient(object):
                 return obj
         return None
 
-    def put(self, uri, payload, co3_context_token=None, timeout=None):
+    def put(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
         """
         Puts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -613,21 +618,23 @@ class BaseClient(object):
         Args:
            uri
            payload
+           headers: optional headers to include
            co3_context_token
-          timeout: number of seconds to wait for response
+           timeout: number of seconds to wait for response
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           BasicHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
-        payload_json = json.dumps(payload)
+        # payloads which aren't convertable to json are passed asis
+        payload_json = json.dumps(payload) if isinstance(payload, (list, dict)) else payload
         response = self._execute_request(self.session.put,
                                          url,
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, additional_headers=headers),
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
