@@ -78,8 +78,13 @@ class RequestsCommon:
 
     def get_timeout(self):
         """
-        get the default timeout value in the 'integrations' section or the function's own section
+        Get the default timeout value in the **Function Section** (``[my_function]``) of your app.config file,
+        or from the **Integrations Section** (``[integrations]``) of your app.config file.
+
+        ``[my_function]`` section takes precedence over ``[integrations]`` section value.
+
         :return: timeout value
+        :rtype: int
         """
         timeout = DEFAULT_TIMEOUT
 
@@ -91,12 +96,12 @@ class RequestsCommon:
 
         return int(timeout)
 
-    def get_clientauth(self):
+    def get_client_auth(self):
         """
         A client certificate for authenticating calls to external endpoints can be specified on a per function basis.
 
         If ``client_auth_cert`` and ``client_auth_key`` are set in the **Function Section** (``[my_function]``) of your app.config file,
-          returns a tuple containing the respective paths to the certificate and private key for the client cert.
+        returns a tuple containing the respective paths to the certificate and private key for the client cert.
 
         Example:
 
@@ -117,6 +122,10 @@ class RequestsCommon:
             cert = (self.function_opts.get("client_auth_cert"), self.function_opts.get("client_auth_key"))
 
         return cert
+
+    # alias for existing instances of ``get_clientauth``, but from now on
+    # should use ``get_client_auth``
+    get_clientauth = get_client_auth
 
     def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, **kwargs):
         """
@@ -188,7 +197,7 @@ class RequestsCommon:
                 timeout = self.get_timeout()
 
             if not clientauth:
-                clientauth = self.get_clientauth()
+                clientauth = self.get_client_auth()
 
             # Log the parameter inputs that are not None
             args_dict = locals()
