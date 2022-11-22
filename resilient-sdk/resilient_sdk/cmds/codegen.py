@@ -393,9 +393,9 @@ class CmdCodegen(BaseCmd):
                 # data isn't rendered with jinja — these are default jinja templates to be modified
                 # by the developer who is implementing a poller
                 "data": {
-                    "soar_create_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
-                    "soar_update_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
-                    "soar_close_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
+                    "soar_create_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
+                    "soar_update_case.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
+                    "soar_close_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
                 }
             }
             lib_mapping_dict = {
