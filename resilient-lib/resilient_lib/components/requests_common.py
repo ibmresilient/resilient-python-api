@@ -28,7 +28,7 @@ class RequestsCommon:
 
       .. code-block:: python
 
-         response = self.rc.execute(method="get", url=ibm.com)
+         response = self.rc.execute(method="GET", url="ibm.com")
 
     :param opts: all configurations found in the app.config file
     :type opts: dict
