@@ -933,6 +933,48 @@ returns a dictionary mapping protocol to the URL of the proxy.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.get_client_auth">
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">get_client_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.get_client_auth" title="Permalink to this definition">#</a></dt>
+<dd><p>A client certificate for authenticating calls to external endpoints can be specified on a per function basis.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">client_auth_cert</span></code> and <code class="docutils literal notranslate"><span class="pre">client_auth_key</span></code> are set in the <strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file,
+returns a tuple containing the respective paths to the certificate and private key for the client cert.</p>
+<p>Example:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">my_function</span><span class="p">]</span>
+<span class="o">...</span>
+<span class="n">client_auth_cert</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">path_to_cert</span><span class="o">.</span><span class="n">pem</span><span class="o">&gt;</span>
+<span class="n">client_auth_key</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">path_to_cert_private_key</span><span class="o">.</span><span class="n">pem</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The filepaths for the client side certificate and the private key as a tuple of both files’ paths
+or <code class="docutils literal notranslate"><span class="pre">None</span></code> if either one of the values are missing</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple(str, str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.get_timeout">
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">get_timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.get_timeout" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the default timeout value in the <strong>Function Section</strong> (<code class="docutils literal notranslate"><span class="pre">[my_function]</span></code>) of your app.config file,
+or from the <strong>Integrations Section</strong> (<code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>) of your app.config file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[my_function]</span></code> section takes precedence over <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> section value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>timeout value</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="common-poller-methods">
 <h2>Common Poller Methods<a class="headerlink" href="#common-poller-methods" title="Permalink to this heading">#</a></h2>
@@ -2248,6 +2290,8 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon"><code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a><ul>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.execute"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.execute()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_proxies"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_proxies()</span></code></a></li>
+<li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_client_auth"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_client_auth()</span></code></a></li>
+<li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_timeout"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_timeout()</span></code></a></li>
 </ul>
 </li>
 </ul>
