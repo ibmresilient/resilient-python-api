@@ -51,7 +51,7 @@ EXPECTED_FILES_PAYLOAD_SAMPLES_FN_NAME_DIR_DEV = ['mock_json_endpoint_fail.json'
                                                   'mock_json_expectation_success.json', 'output_json_example.json', 'output_json_schema.json']
 """
 EXPECTED_FILES_POLLER_DIR = ["__init__.py", "poller.py"]
-EXPECTED_FILES_POLLER_DATA_DIR = ["soar_create_incident.jinja", "soar_update_incident.jinja", "soar_close_incident.jinja"]
+EXPECTED_FILES_POLLER_DATA_DIR = ["soar_create_case.jinja", "soar_update_case.jinja", "soar_close_case.jinja"]
 EXPECTED_FILES_LIB_DIR = ["__init__.py", "app_common.py"]
 
 def general_test_package_structure(package_name, package_path, poller=False):
@@ -554,7 +554,7 @@ def test_execute_command():
     pass
 
 
-def test_codegen_poller(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir, fx_add_dev_env_var):
+def test_codegen_poller(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_temp_dir):
 
     output_path = mock_paths.TEST_TEMP_DIR
 

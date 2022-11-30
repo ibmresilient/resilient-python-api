@@ -113,5 +113,7 @@
     "password_expiration_date": null,
     "api_key_handle": 4,
     "client_id": "ad261c1f-f1cc-4115-bbce-a151f88bac5e",
-    "display_name": "Local Integration Server"
+    "display_name": "Local Integration Server",
+    "csrf_token": "2d261c1f-f1cc-123-bbce-a151f88bac55",
+    "user_id": 1
 }

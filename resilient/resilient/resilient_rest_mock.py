@@ -45,8 +45,8 @@ class ResilientMock(object):
         self.adapter = requests_mock.Adapter()
         for endpoint, handler in self.registered_endpoints.items():
             # Register with regex since some endpoints embed the org_id in the path
-            LOG.info("Registering %s %s to %s", endpoint.type,
-                     endpoint.uri, str(handler))
+            LOG.debug("Registering %s %s to %s", endpoint.type,
+                      endpoint.uri, str(handler))
             self.adapter.add_matcher(lambda request,
                                      method=endpoint.type,
                                      callback=handler,

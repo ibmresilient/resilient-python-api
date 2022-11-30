@@ -589,13 +589,28 @@ class TestFunctionRequests(unittest.TestCase):
         cert = rc.get_clientauth()
         self.assertEqual(cert, ("cert.pem", "private.pem"))
 
+    def test_client_auth(self):
+        rc = RequestsCommon()
+        cert = rc.get_client_auth()
+        self.assertIsNone(cert)
+
+
+        mock_fn_section = {
+            "url": "fake_url.com",
+            "client_auth_cert": "cert.pem",
+            "client_auth_key": "private.pem"
+        }
+        rc = RequestsCommon(opts=None, function_opts=mock_fn_section)
+        cert = rc.get_client_auth()
+        self.assertEqual(cert, ("cert.pem", "private.pem"))
+
 
         mock_fn_section = {
             "url": "fake_url.com",
             "client_auth_cert": "cert.pem"
         }
         rc = RequestsCommon(opts=None, function_opts=mock_fn_section)
-        cert = rc.get_clientauth()
+        cert = rc.get_client_auth()
         self.assertIsNone(cert)
 
 
@@ -615,5 +630,5 @@ class TestFunctionRequests(unittest.TestCase):
         # but doesn't set the cert value for the whole object
         resp = rc.execute("get", self.URL_TEST_HTTP_VERBS, clientauth=(mock_paths.MOCK_CLIENT_CERT_FILE, mock_paths.MOCK_CLIENT_KEY_FILE))
         self.assertEqual(resp.status_code, 200)
-        cert = rc.get_clientauth()
+        cert = rc.get_client_auth()
         self.assertIsNone(cert)

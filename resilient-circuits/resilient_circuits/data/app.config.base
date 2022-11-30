@@ -12,8 +12,17 @@ api_key_secret=ApiKeySecret
 
 org=My Org
 
-# Number of attempts to retry when connecting to Resilient. 0 = unlimited retries
+# Number of attempts to retry when connecting to SOAR. Use 0 or -1 for unlimited retries. Defaults to 0.
 #max_connection_retries=10
+
+# Max number of times to retry a request to SOAR before exiting. Defaults to 5.
+#request_max_retries=5
+
+# Number of seconds to wait between retries. Defaults to 2.
+#request_retry_delay=2
+
+# Multiplier applied to delay between retry attempts. Defaults to 2.
+#request_retry_backoff=2
 
 # CP4S
 # Actions Module connection
@@ -37,8 +46,8 @@ logdir=/tmp
 logfile=app.log
 loglevel=INFO
 
-# The number of Functions to run concurrently (within the range: 1 <= 100)
-num_workers=10
+# The number of Functions to run concurrently (within the range: 1 <= 500)
+num_workers=50
 
 # Timeout value in seconds for selftest to wait for a response from SOAR
 selftest_timeout=10

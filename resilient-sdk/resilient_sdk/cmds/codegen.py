@@ -328,7 +328,7 @@ class CmdCodegen(BaseCmd):
         jinja_data["resilient_libraries_version"] = sdk_helpers.get_resilient_libraries_version_to_use()
 
         # add poller flag
-        jinja_data["poller_flag"] = args.poller if sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV) else False
+        jinja_data["poller_flag"] = args.poller
 
         # add ::CHANGE_ME:: to jinja data
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
@@ -386,17 +386,16 @@ class CmdCodegen(BaseCmd):
         }
 
         # poller logic if --poller flag was passed
-        # as of v46 this is hid behind a RES_SDK_DEV flag
-        if args.poller and sdk_helpers.is_env_var_set(constants.ENV_VAR_DEV):
+        if args.poller:
             poller_mapping_dict = {
                 "__init__.py": ("package/poller/__init__.py.jinja2", jinja_data),
                 "poller.py": ("package/poller/poller.py.jinja2", jinja_data),
                 # data isn't rendered with jinja — these are default jinja templates to be modified
                 # by the developer who is implementing a poller
                 "data": {
-                    "soar_create_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
-                    "soar_update_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
-                    "soar_close_incident.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
+                    "soar_create_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
+                    "soar_update_case.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
+                    "soar_close_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
                 }
             }
             lib_mapping_dict = {

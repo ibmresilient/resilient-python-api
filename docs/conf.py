@@ -42,7 +42,8 @@ release = resilient_lib.__version__
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'sphinx_copybutton'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -76,6 +77,8 @@ html_static_path = ['_static']
 # autodoc configs
 add_module_names = False
 
+# copybutton extension configs
+copybutton_prompt_text = "$ "
 
 # resilient-sdk parser
 sdk_parser = sdk_app.get_main_app_parser()
