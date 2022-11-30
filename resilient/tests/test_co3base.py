@@ -330,6 +330,172 @@ def test_post_attachment_bytes_handle(fx_base_client):
     assert r.get("result") == "attached"
 
 
+def test_put_with_headers(fx_base_client):
+    def headers_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content-type": request.headers["content-type"]})
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    test_headers = {"content-type": "application/octet-stream"}
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+
+    requests_adapter.register_uri('PUT',
+                                  mock_uri,
+                                  request_headers=test_headers,
+                                  text=headers_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.put(
+        uri,
+        "payload",
+        headers=test_headers
+    )
+
+    assert r['content-type'] == test_headers['content-type']
+
+
+def test_put_with_text_payload(fx_base_client):
+    def text_payload_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content": request.text})
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    test_content = 'abc'
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+
+    requests_adapter.register_uri('PUT',
+                                  mock_uri,
+                                  text=text_payload_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.put(
+        uri,
+        test_content        
+    )
+
+    assert r['content'] == test_content
+
+
+def test_put_with_json_payload(fx_base_client):
+    def json_payload_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content": request.text})
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    test_content = {"something": "else"}
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)
+
+    requests_adapter.register_uri('PUT',
+                                  mock_uri,
+                                  text=json_payload_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.put(
+        uri,
+        test_content        
+    )
+
+    assert json.loads(r['content']) == test_content
+
+#----
+def test_post_with_headers(fx_base_client):
+    def headers_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content-type": request.headers["content-type"]})
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    test_headers = {"content-type": "application/octet-stream"}
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+
+    requests_adapter.register_uri('POST',
+                                  mock_uri,
+                                  request_headers=test_headers,
+                                  text=headers_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.post(
+        uri,
+        "payload",
+        headers=test_headers
+    )
+
+    assert r['content-type'] == test_headers['content-type']
+
+
+def test_post_with_text_payload(fx_base_client):
+    def text_payload_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content": request.text})
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    test_content = 'abc'
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+
+    requests_adapter.register_uri('POST',
+                                  mock_uri,
+                                  text=text_payload_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.post(
+        uri,
+        test_content        
+    )
+
+    assert r['content'] == test_content
+
+
+def test_post_with_json_payload(fx_base_client):
+    def json_payload_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content": request.text})
+
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    test_content = {"something": "else"}
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)
+
+    requests_adapter.register_uri('POST',
+                                  mock_uri,
+                                  text=json_payload_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.post(
+        uri,
+        test_content        
+    )
+
+    assert json.loads(r['content']) == test_content
+
+    
 def test_post_attachment_bytes_handle_retry(fx_base_client, caplog):
 
     incident_id = 1001
