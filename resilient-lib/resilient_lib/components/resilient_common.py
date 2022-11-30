@@ -58,7 +58,7 @@ def build_incident_url(url, incidentId, orgId=None):
     :rtype: str
     """
 
-    if not isinstance(url, str):
+    if not isinstance(url, string_types):
         LOG.warning("Called 'build_incident_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
         return url
 
@@ -113,7 +113,7 @@ def build_task_url(url, incident_id, task_id, org_id):
     :rtype: str
     """
 
-    if not isinstance(url, str):
+    if not isinstance(url, string_types):
         LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
         return url
 
@@ -136,7 +136,7 @@ def build_resilient_url(host, port):
     :rtype: str
     """
 
-    if not isinstance(host, str):
+    if not isinstance(host, string_types):
         LOG.warning("Called 'build_resilient_url' with a '{0}'  but was expecting a 'str' host value. Returning original value.".format(type(host)))
         return host
 

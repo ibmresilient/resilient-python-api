@@ -351,6 +351,9 @@ def test_minify_export(fx_mock_res_client):
     assert minified_incident_types[0].get("export_key") == "Customization Packages (internal)"
     assert minified_incident_types[0].get("uuid") == "bfeec2d4-3770-11e8-ad39-4a0004044aa0"
 
+    # Test tags are removed
+    assert len(minified_functions[0].get("tags")) == 0
+
 
 def test_minify_export_default_keys_to_keep(fx_mock_res_client):
     org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)

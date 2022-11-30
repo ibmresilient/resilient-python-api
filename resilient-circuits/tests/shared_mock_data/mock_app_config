@@ -41,7 +41,7 @@ logfile=app.log
 loglevel=INFO
 
 # The number of Functions to run in parallel
-num_workers=5
+num_workers=50
 
 heartbeat_timeout_threshold=5
 

@@ -90,7 +90,7 @@ def get_config_file(filename=None, generate_filename=False):
     return config_file
 
 
-def get_client(opts, custom_headers=None):
+def get_client(opts, custom_headers=None, **kwargs):
     """
     This is a helper method to get an instance of
     :class:`SimpleClient` for the SOAR REST API.
@@ -99,6 +99,8 @@ def get_client(opts, custom_headers=None):
     :type opts: dict
     :param custom_headers: A dictionary of any headers you want to send in **every** request
     :type custom_headers: dict
+    :param kwargs: A dictionary of any other keyword arguments
+    :type kwargs: dict
 
     A standard way to initialize a :class:`SimpleClient` with default configuration is:
 
@@ -146,6 +148,9 @@ def get_client(opts, custom_headers=None):
         simple_client_args["logging_directory"] = opts["log_http_responses"]
     else:
         simple_client = SimpleClient
+
+    # Update with kwargs
+    simple_client_args.update(kwargs)
 
     resilient_client = simple_client(**simple_client_args)
 
@@ -293,7 +298,7 @@ class SimpleClient(co3base.BaseClient):
         or by going to: ``https://<base_url>/docs/rest-api/index.html``
     """
 
-    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None, custom_headers=None):
+    def __init__(self, org_name=None, base_url=None, proxies=None, verify=None, cache_ttl=240, certauth=None, custom_headers=None, **kwargs):
         """
         :param org_name: The name of the organization to use.
         :type org_name: str
@@ -309,8 +314,16 @@ class SimpleClient(co3base.BaseClient):
         :type certauth: str|tuple(str, str)
         :param custom_headers: A dictionary of any headers you want to send in **every** request
         :type custom_headers: dict
+        :param kwargs: A dictionary of any other keyword arguments including;
+
+            * **max_connection_retries** (*int*) - Number of attempts to retry when connecting to SOAR. Use ``-1`` for unlimited retries. Defaults to ``-1``.
+            * **request_max_retries** (*int*) - Max number of times to retry a request to SOAR before exiting. Defaults to ``5``.
+            * **request_retry_delay** (*int*) - Number of seconds to wait between retries. Defaults to ``2``.
+            * **request_retry_backoff** (*int*) - Multiplier applied to delay between retry attempts. Defaults to ``2``.
+
+        :type kwargs: dict
         """
-        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth, custom_headers=custom_headers)
+        super(SimpleClient, self).__init__(org_name, base_url, proxies, verify, certauth, custom_headers=custom_headers, **kwargs)
         self.cache = TTLCache(maxsize=128, ttl=cache_ttl)
 
     def connect(self, email, password, timeout=None):

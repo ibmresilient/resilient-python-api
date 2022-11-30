@@ -6,33 +6,22 @@ import base64
 import datetime
 import functools
 import logging
-import os
 import traceback
 from ast import literal_eval
 from threading import Event
 
 from cachetools import LRUCache, cached
 from resilient import Patch, SimpleHTTPException
-from resilient_lib import (IntegrationError, get_file_attachment,
+from resilient_lib import (IntegrationError, clean_html, get_file_attachment,
                            get_file_attachment_name)
 from six import raise_from
 
 LOG = logging.getLogger(__name__)
 
-IBM_SOAR = "IBM SOAR" # common label
-SOAR_HEADER = "Created by {}".format(IBM_SOAR)
-
 TYPES_URI = "/types"
 INCIDENTS_URI = "/incidents"
 ARTIFACTS_URI = "/artifacts"
 ARTIFACT_FILE_URI = "/".join([ARTIFACTS_URI, "files"])
-
-# Directory of default templates
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "data")
-
-def get_template_dir():
-    # quick property to get template directory
-    return TEMPLATE_DIR
 
 # P O L L E R   L O G I C
 def poller(named_poller_interval, named_last_poller_time):
@@ -43,19 +32,40 @@ def poller(named_poller_interval, named_last_poller_time):
 
     .. code-block:: python
 
-        from resilient_lib import poller
+        import logging
+        from threading import Thread
+
+        from resilient_circuits import AppFunctionComponent, is_this_a_selftest
+        from resilient_lib import poller, get_last_poller_date
 
         PACKAGE_NAME = "fn_my_app"
 
-        @poller('polling_interval', 'last_poller_time')
-        def run(self, *args, **kwargs):
+        LOG = logging.getLogger(__name__)
 
-            # poll endpoint
-            query_results = query_entities_since_last_poll(kwargs['last_poller_time'])
+        class MyPoller(AppFunctionComponent):
 
-            # process any results to create, update, or close case in SOAR
-            if query_results:
-                self.process_entity_list(query_results)
+            def __init__(self, opts):
+                super(PollerComponent, self).__init__(opts, PACKAGE_NAME)
+
+                polling_interval = 5 # set to 5 seconds or could get from ``self.options``
+                last_poller_time = get_last_poller_date(120) # look back 2 hours
+
+                if is_this_a_selftest(self):
+                    LOG.warn("Running selftest -- disabling poller")
+                else:
+                    poller_thread = Thread(target=self.run)
+                    poller_thread.daemon = True
+                    poller_thread.start()
+
+            @poller('polling_interval', 'last_poller_time')
+            def run(self, *args, **kwargs):
+
+                # poll endpoint
+                query_results = query_entities_since_last_poll(kwargs['last_poller_time'])
+
+                # process any results to create, update, or close case in SOAR
+                if query_results:
+                    self.process_entity_list(query_results)
 
 
     :param named_poller_interval: name of instance variable containing the poller interval in seconds
@@ -255,14 +265,16 @@ class SOARCommon():
         if filter_soar_header:
             # filter entity comments with our SOAR header
             staged_entity_comments = [comment for comment in entity_comments \
-                                        if filter_soar_header not in comment]
+                                        if clean_html(filter_soar_header) not in clean_html(comment)]
         else:
             staged_entity_comments = entity_comments.copy()
 
         # filter out the comments already sync'd to SOAR
         if soar_comment_list:
             new_entity_comments = [comment for comment in staged_entity_comments \
-                if not any([comment in already_syncd for already_syncd in soar_comment_list])]
+                if not any([clean_html(comment) in clean_html(already_synced) for already_synced in soar_comment_list])]
+        else:
+            new_entity_comments = staged_entity_comments
 
         return new_entity_comments
 
@@ -567,7 +579,7 @@ class SOARCommon():
 
         return [types[incident_type] for incident_type in incident_type_ids if incident_type in types]
 
-    def filter_soar_comments(self, case_id, entity_comments, soar_header=SOAR_HEADER):
+    def filter_soar_comments(self, case_id, entity_comments, soar_header=None):
         """
         Read all SOAR comments from a case and remove those comments which have
         already been synced using ``soar_header`` as a filter

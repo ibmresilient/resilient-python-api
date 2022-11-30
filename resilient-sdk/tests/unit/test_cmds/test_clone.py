@@ -187,16 +187,19 @@ def test_replace_playbook_object_attrs():
     old_pb_name = original_obj[ResilientObjMap.PLAYBOOKS]
     original_obj_local_script_uuid = original_obj.get("local_scripts", [{}])[0].get("uuid")
     original_obj_tag_uuid = original_obj.get("tag", {}).get("uuid")
+    original_obj_field_uuid = original_obj.get("fields_type").get("fields").get("test").get("uuid")
 
     new_obj_name = "new_pb_test"
     new_obj = CmdClone.replace_playbook_object_attrs(copy.deepcopy(original_obj), new_obj_name)
     new_local_script = new_obj.get("local_scripts", [{}])[0]
     new_tag = new_obj.get("tag", {})
+    new_field = new_obj.get("fields_type").get("fields").get("test")
 
     assert new_obj[ResilientObjMap.PLAYBOOKS] != old_pb_name
     assert new_local_script.get("uuid") != original_obj_local_script_uuid
     assert new_local_script.get("playbook_handle") == new_obj_name
     assert new_tag.get("uuid") != original_obj_tag_uuid
+    assert new_field.get("uuid") != original_obj_field_uuid
 
 
 def test_replace_common_object_attrs():
