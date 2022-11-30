@@ -13,14 +13,17 @@ import logging
 import unicodedata
 import requests
 import traceback
+import unicodedata
 
+import requests
 from requests.adapters import HTTPAdapter
+from requests.auth import HTTPBasicAuth
+from requests.exceptions import ConnectionError
 from requests.packages.urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-from requests.auth import HTTPBasicAuth
-from retry import retry
+from retry.api import retry_call
 
-from resilient import helpers, constants
+from resilient import constants, helpers
 
 try:
     # Python 3
@@ -426,15 +429,29 @@ class BaseClient(object):
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         # payloads which aren't convertable to json are passed asis
         payload_json = json.dumps(payload) if isinstance(payload, (list, dict)) else payload
-        response = self._execute_request(self.session.post,
-                                         url,
-                                         data=payload_json,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token, additional_headers=headers),
-                                         verify=self.verify,
-                                         timeout=timeout,
-                                         cert=self.cert)
+
+        #----
+        # Wrap _execute_request and its related raise_if_error call in
+        # inner function so we can add retry logic with dynamic parameters to it
+        def __post():
+            r = self._execute_request(self.session.post,
+                                      url,
+                                      data=payload_json,
+                                      proxies=self.proxies,
+                                      cookies=self.cookies,
+                                      headers=self.make_headers(co3_context_token, additional_headers=headers),
+                                      verify=self.verify,
+                                      timeout=timeout,
+                                      cert=self.cert)
+            BasicHTTPException.raise_if_error(r)
+            return r
+
+        response = retry_call(__post,
+                              exceptions=(BasicHTTPException, ConnectionError),
+                              tries=self.request_max_retries,
+                              delay=self.request_retry_delay,
+                              backoff=self.request_retry_backoff)
+
         BasicHTTPException.raise_if_error(response)
         try:
             return json.loads(response.text)
