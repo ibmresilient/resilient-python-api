@@ -812,6 +812,8 @@ def minify_export(export,
 
     :param export: The result of calling get_latest_org_export()
     :type export: Dict
+    :param keys_to_keep: Keys that should remain unchanged from the original export
+    :type keys_to_keep: Dict
     :param message_destinations: List of Message Destination API Names
     :param functions: List of Function API Names
     :param workflows: List of Workflow API Names
@@ -831,6 +833,8 @@ def minify_export(export,
     minified_export = copy.deepcopy(export)
 
     # If no keys_to_keep are specified, use these defaults
+    # keys_to_keep is used to keep values from the original export
+    # without being minified
     if not keys_to_keep:
         keys_to_keep = [
             "export_date",
@@ -838,6 +842,13 @@ def minify_export(export,
             "id",
             "server_version"
         ]
+
+    # certain keys need to be cleared, rather than set to empty objects
+    # so as not to process a delete or update on the platform when the
+    # export is modified and POSTed back to SOAR
+    keys_to_clear = [
+        "overrides"
+    ]
 
     # some incident types are parent/child. This routine will return all the parent incident types
     parent_child_incident_types = find_parent_child_types(export, "incident_types", "name", incident_types)
@@ -886,6 +897,9 @@ def minify_export(export,
                     # If this Resilient Object is not in our minify list, remove it
                     if not data.get(attribute_name, "").strip() in values:
                         minified_export[key].remove(data)
+
+        elif key in keys_to_clear:
+            minified_export[key] = None
 
         elif isinstance(minified_export[key], list):
             minified_export[key] = []
