@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2022. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
 import copy
 import logging
 
-from resilient_circuits import rest_helper
 from resilient_lib.components.resilient_common import str_to_bool
+import resilient
 
 LOG = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ def create_tab(tab, opts, update_existing=False):
         if not permission_to_edit(tab, opts):
             LOG.info("No permission to edit UI for {}".format(tab.SECTION))
             return
-        client = rest_helper.get_resilient_client(opts)
+        client = resilient.get_client(opts)
         layout = get_incident_layout(client)
 
         # check if tab already exists in the layout
