@@ -4,7 +4,7 @@
 
 **2022-11: version 47.0**
 
-* Updated default ``num_workers`` value to **25** if not set and default value in template app.config file to **50**.
+* Updated default ``num_workers`` value to **25** if not set and default value in template app.config file to **50**
 
 **2022-08: version 46.0**
 
