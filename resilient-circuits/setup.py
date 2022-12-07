@@ -35,8 +35,8 @@ setup(
     # Runtime Dependencies
     install_requires=[
         # Our libraries
-        "resilient     >= 47.0",
-        "resilient-lib >= 47.0",
+        "resilient     >= 47.1",
+        "resilient-lib >= 47.1",
 
         # 3rd party dependencies for all python versions
         "stompest      ~= 2.3",
