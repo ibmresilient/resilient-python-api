@@ -465,7 +465,7 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
-        :param headers: Optional headers to include
+        :param headers: Optional headers to include.
         :type headers: dict
         :return: A dictionary or list with the value returned by the server.
         :rtype: dict | list
@@ -750,7 +750,7 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
-        :param headers: Optional headers to include
+        :param headers: Optional headers to include.
         :type headers: dict
         :return: A dictionary or list with the value returned by the server.
         :rtype: dict | list
