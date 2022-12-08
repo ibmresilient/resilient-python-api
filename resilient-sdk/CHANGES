@@ -1,3 +1,8 @@
+**2022-12: version 47.1**
+
+* ``clone``, ``extract``, and ``package`` commands fixed to avoid clearing out overrides for disabled Tasks in SOAR
+* Poller Jinja templates for ``codegen --poller`` updated to reference "cases" rather than "incidents"
+
 **2022-11: version 47.0**
 
 * Added support to ``extract`` command for sub-playbooks. They are treated like normal Playbooks so no

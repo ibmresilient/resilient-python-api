@@ -1,3 +1,7 @@
+**2022-12: version 47.1**
+
+* :class:`resilient_lib.RequestsCommon.get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` renamed from ``get_clientauth``. Alias provided for ``get_clientauth`` for backward compatiblity. Please use :class:`get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` from now on.
+
 **2022-11: version 47.0**
 
 * Support for poller-based apps added with new `Common Poller Methods`_, 

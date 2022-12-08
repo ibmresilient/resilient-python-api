@@ -1,3 +1,7 @@
+**2022-12: version 47.1**
+
+* Support for custom headers when using :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>` and :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>`
+
 **2022-11: version 47.0**
 
 * Added more general retry logic to our ``get``, ``post`` and ``delete`` request methods. All of which 
