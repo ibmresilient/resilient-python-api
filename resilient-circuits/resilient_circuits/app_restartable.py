@@ -89,7 +89,7 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
                 root_logger = logging.getLogger()
                 # If level is different set loglevel to new value.
                 if logging.getLevelName(root_logger.level) != config_loglevel.upper():
-                    logging.getLogger().setLevel(config_loglevel.upper())
+                    root_logger.setLevel(config_loglevel.upper())
             else:
                 LOG.error("Invalid app.config setting for loglevel %s", config_loglevel)
 
