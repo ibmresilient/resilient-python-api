@@ -29,7 +29,7 @@ def test_reload_config_is_already_loading():
 
 def test_reset_loglevel():
     config_update_handler = ConfigFileUpdateHandler(MagicMock())
-    assert logging.getLevelName(logging.getLogger().level) == "DEBUG"
+    assert logging.getLevelName(logging.getLogger().level) == "DEBUG" # NOTE: this always work locally, but when run in Tox, this is the log level here
 
     opts = {"loglevel": "INFO"}
     config_update_handler.reset_loglevel(opts)
