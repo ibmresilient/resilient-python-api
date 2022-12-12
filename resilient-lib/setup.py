@@ -34,7 +34,7 @@ setup(
     # Runtime Dependencies
     install_requires=[
         # Our libraries
-        "resilient      >= 1",
+        "resilient      >= 47.1",
 
         # 3rd party dependencies for all python versions
         "pytz           ~= 2022.1",
