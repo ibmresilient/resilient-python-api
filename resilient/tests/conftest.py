@@ -22,6 +22,7 @@ import copy
 import pytest
 import requests_mock
 from resilient import constants
+from resilient.co3 import SimpleClient
 from resilient.co3base import BaseClient
 
 from tests.shared_mock_data import mock_paths
@@ -50,6 +51,19 @@ def fx_base_client():
     After: Nothing
     """
     base_client = BaseClient(org_name="Mock Org", base_url="https://example.com")
+    requests_adapter = requests_mock.Adapter()
+    base_client.session.mount(u'https://', requests_adapter)
+    base_client.org_id = 201
+    yield (base_client, requests_adapter)
+
+
+@pytest.fixture
+def fx_simple_client():
+    """
+    Before: Creates sample SimpleClient object with mocked URI https://example.com
+    After: Nothing
+    """
+    base_client = SimpleClient(org_name="Mock Org", base_url="https://example.com")
     requests_adapter = requests_mock.Adapter()
     base_client.session.mount(u'https://', requests_adapter)
     base_client.org_id = 201

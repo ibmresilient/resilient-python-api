@@ -66,11 +66,11 @@ PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk"
 PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
 PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
 PATH_DEFAULT_POLLER_CREATE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
-                    "data/codegen/templates/package_template/package/poller/data/soar_create_incident.jinja2")
+                    "data/codegen/templates/package_template/package/poller/data/soar_create_case.jinja2")
 PATH_DEFAULT_POLLER_CLOSE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
-                    "data/codegen/templates/package_template/package/poller/data/soar_close_incident.jinja2")
+                    "data/codegen/templates/package_template/package/poller/data/soar_close_case.jinja2")
 PATH_DEFAULT_POLLER_UPDATE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk", 
-                    "data/codegen/templates/package_template/package/poller/data/soar_update_incident.jinja2")
+                    "data/codegen/templates/package_template/package/poller/data/soar_update_case.jinja2")
 
 
 PATH_TEMPLATE_PAYLOAD_SAMPLES = "payload_samples/function_name"

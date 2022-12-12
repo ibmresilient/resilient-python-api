@@ -448,7 +448,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return response
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None):
+    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
         """
         Posts to the specified URI.
 
@@ -465,6 +465,8 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
+        :param headers: Optional headers to include.
+        :type headers: dict
         :return: A dictionary or list with the value returned by the server.
         :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
@@ -472,7 +474,7 @@ class SimpleClient(co3base.BaseClient):
         # Call post of BaseClient. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout)
+            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout, headers=headers)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -730,7 +732,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return res
 
-    def put(self, uri, payload, co3_context_token=None, timeout=None):
+    def put(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
         """
         Directly performs an update operation by PUT to the specified URI.
 
@@ -748,6 +750,8 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
+        :param headers: Optional headers to include.
+        :type headers: dict
         :return: A dictionary or list with the value returned by the server.
         :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
@@ -755,7 +759,7 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient put. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).put(uri, payload, co3_context_token, timeout)
+            response = super(SimpleClient, self).put(uri, payload, co3_context_token, timeout, headers=headers)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response

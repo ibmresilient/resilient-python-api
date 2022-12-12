@@ -79,6 +79,8 @@ Common Request Methods
 .. autoclass:: resilient_lib.components.requests_common::RequestsCommon
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
+.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_client_auth
+.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_timeout
 
 
 ---------------------

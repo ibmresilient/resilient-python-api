@@ -55,6 +55,7 @@ def _raise_http_exception(*__args, **__kwargs):
     Response = namedtuple("Response", ["reason", "text"])
     raise SimpleHTTPException(Response("No reason", "something went wrong"))
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_poller_decorator_success():
     """
@@ -73,6 +74,7 @@ def test_poller_decorator_success():
     # allow for flexibility of ± 1
     assert test_poller.count in range(sleep_time-1, sleep_time+2)
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_poller_decorator_failure(caplog):
     """
@@ -99,6 +101,7 @@ def test_poller_decorator_failure(caplog):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_case(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -111,6 +114,7 @@ def test_get_case(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_soar_case(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -123,6 +127,7 @@ def test_get_soar_case(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_soar_cases_success(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -133,6 +138,7 @@ def test_get_soar_cases_success(fx_mock_resilient_client):
     assert len(cases) == 1
     assert cases[0]["id"] == 2314
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_soar_cases_failure(fx_mock_resilient_client):
     old_post = fx_mock_resilient_client.post
@@ -148,6 +154,7 @@ def test_get_soar_cases_failure(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_soar_case_success(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -156,6 +163,7 @@ def test_create_soar_case_success(fx_mock_resilient_client):
 
     assert created_case["name"] == "test case"
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_soar_case_failure(fx_mock_resilient_client):
     old_post = fx_mock_resilient_client.post
@@ -173,6 +181,7 @@ def test_create_soar_case_failure(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_update_soar_case_success(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -182,6 +191,7 @@ def test_update_soar_case_success(fx_mock_resilient_client):
     assert updated_case["id"] == 2314
     assert updated_case["success"]
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_update_soar_case_failure(fx_mock_resilient_client):
     old_patch = fx_mock_resilient_client.patch
@@ -199,6 +209,7 @@ def test_update_soar_case_failure(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_case_comment(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -212,6 +223,7 @@ def test_create_case_comment(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_create_datatable_row(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -226,6 +238,7 @@ def test_create_datatable_row(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_get_case_attachment(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -244,6 +257,7 @@ def test_get_case_attachment(fx_mock_resilient_client):
 
 
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_lookup_artifact_type_failure(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -252,6 +266,7 @@ def test_lookup_artifact_type_failure(fx_mock_resilient_client):
 
     assert not resp
 
+@pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
 def test_lookup_artifact_type_success(fx_mock_resilient_client):
     soar_common = SOARCommon(fx_mock_resilient_client)
@@ -301,7 +316,7 @@ def test_get_last_poller_date():
     with mock.patch("resilient_lib.components.poller_common._get_timestamp") as mock_time:
         mock_time.return_value = datetime.datetime.fromtimestamp(1234)
 
-        # note these hard coded timestamps are set to work with
+        # NOTE: these hard coded timestamps are set to work with
         # Travis's timezone so might not work locally
         x = get_last_poller_date(20)
         assert str(x) == "1970-01-01 00:00:34"

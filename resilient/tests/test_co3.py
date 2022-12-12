@@ -1,5 +1,7 @@
-import resilient
+import json
 from mock import patch
+
+import resilient
 
 
 @patch("resilient.co3base.BaseClient.set_api_key")
@@ -31,3 +33,43 @@ def test_get_client(mock_get_call, mock_session):
     assert res_client.base_url == "https://example.com:8080"
     assert res_client.cert == mock_cert
     assert res_client.actions_enabled == False
+
+def test_client_put(fx_simple_client):
+    def headers_callback(request, context):
+        context.status_code = 200
+        context.headers = request.headers
+        return json.dumps({ "content-type": request.headers["content-type"]})
+
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+
+    test_headers = {"content-type": "application/octet-stream"}
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+
+    requests_adapter.register_uri('PUT',
+                                  mock_uri,
+                                  request_headers=test_headers,
+                                  text=headers_callback)
+
+    uri = "/playbooks/imports"
+
+    r = base_client.put(
+        uri,
+        "payload",
+        headers=test_headers
+    )
+
+    assert r['content-type'] == test_headers['content-type']
+
+def test_client_post(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    mock_response = {"incident_id": incident_id}
+    requests_adapter.register_uri('POST', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.post("/incidents/1001", {"incident_name": "Mock Incident"})
+
+    assert r.get("incident_id") == 1001

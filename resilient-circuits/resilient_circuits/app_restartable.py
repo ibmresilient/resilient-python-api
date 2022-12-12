@@ -68,11 +68,30 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         LOG.info("Configuration file has changed! Notify components to reload")
         self.app.reloading = True
         opts = AppArgumentParser().parse_args()
+        # See if we need to reset root loglevel on reload
+        self.reset_loglevel(opts)
         reload_event = reload(opts=opts)
         self.app.reload_timer = Timer(self.max_reload_time, Event.create("reload_timeout"))
         self.app.fire(reload_event)
         self.app.reload_timer.register(self.app)
 
+    def reset_loglevel(self, opts):
+        """ Reset the loglevel if it has changed in the config file. """
+
+        # Get loglevel setting from app.config.
+        config_loglevel = opts.get("loglevel", None)
+
+        # If loglevel setting is configured.
+        if config_loglevel:
+            # Check if it's a valid setting
+            if hasattr(logging, config_loglevel.upper()):
+                # Get root logger instance
+                root_logger = logging.getLogger()
+                # If level is different set loglevel to new value.
+                if logging.getLevelName(root_logger.level) != config_loglevel.upper():
+                    root_logger.setLevel(config_loglevel.upper())
+            else:
+                LOG.error("Invalid app.config setting for loglevel %s", config_loglevel)
 
 # Main component for our application
 class AppRestartable(App):
