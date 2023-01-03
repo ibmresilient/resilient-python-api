@@ -510,7 +510,7 @@ def get_apikey_permissions(path):
         raise SDKException(u"No content found in provided apikey_permissions.txt file: {0}".format(path))
 
     # Get permissions. Ignore comments where 1st non-whitespace character is a '#'.
-    apikey_permissions = [p.strip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
+    apikey_permissions = [p.strip() for p in apikey_permissions_lines if not p.lstrip().startswith("#") and p.strip() != ""]
 
     # Do basic check on api keys to see if they are in correct format.
     for p in apikey_permissions:
