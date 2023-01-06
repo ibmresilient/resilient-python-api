@@ -63,7 +63,7 @@ setup(
     description='Resilient Circuits fixtures for PyTest.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/ibmresilient/resilient-python-api/tree/master/pytest-resilient-circuits',
+    url='https://github.com/ibmresilient/resilient-python-api/tree/main/pytest-resilient-circuits',
     project_urls={
         "Documentation": "https://ibm.biz/soar-docs",
         "API Docs": "https://ibm.biz/soar-python-docs",
