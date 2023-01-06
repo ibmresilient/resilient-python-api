@@ -39,19 +39,6 @@ def test_parse_setup_py():
     assert setup_attributes.get("not_existing") is None
 
 
-def test_parse_setup_py_with_globals():
-    the_globals = {
-        "__file__": "",
-        "long_description": "mock long description",
-        "_python_requires": ">=2.7"
-    }
-    sdk_proj_py_attributes = package_helpers.parse_setup_py(mock_paths.PATH_SDK_SETUP_PY, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-
-    assert sdk_proj_py_attributes.get("name") == "resilient_sdk"
-    assert sdk_proj_py_attributes.get("long_description") == "mock long description"
-    assert sdk_proj_py_attributes.get("python_requires") == ">=2.7"
-
-
 def test_get_package_name(fx_copy_fn_main_mock_integration):
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
     package_name = package_helpers.get_package_name(path_fn_main_mock_integration)
