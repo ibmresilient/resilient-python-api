@@ -1,0 +1,3 @@
+include pytest_resilient_circuits/LICENSE
+include pytest_resilient_circuits/data/*
+include ./CHANGES
