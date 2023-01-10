@@ -12,13 +12,14 @@
 #
 import os
 import sys
+from importlib import metadata
+
 import resilient_lib
 from resilient_sdk import app as sdk_app
+from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen, CmdExtPackage,
+                                CmdExtract)
 from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util.sdk_helpers import parse_optionals
-from resilient_sdk.util.package_file_helpers import parse_setup_py, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES
-from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen,
-                                CmdExtPackage, CmdExtract)
 
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath("../resilient"))
@@ -97,19 +98,19 @@ the_globals = {
     "long_description": "",
     "_python_requires": ""
 }
-resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-lib_setup_attributes = parse_setup_py(os.path.abspath("../resilient-lib/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-sdk_setup_attributes = parse_setup_py(os.path.abspath("../resilient-sdk/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+resilient_setup_attributes = metadata.metadata("resilient")
+circuits_setup_attributes = metadata.metadata("resilient-circuits")
+lib_setup_attributes = metadata.metadata("resilient-lib")
+sdk_setup_attributes = metadata.metadata("resilient-sdk")
 jinja_filters = ", ".join(list(resilient_lib.components.templates_common.JINJA_FILTERS.keys()))
 
 # make variables available in .rst files
 rst_epilog = f"""
-.. |resilient_desc| replace:: {resilient_setup_attributes.get("description")}
-.. |circuits_desc| replace:: {circuits_setup_attributes.get("description")}
-.. |lib_desc| replace:: {lib_setup_attributes.get("description")}
+.. |resilient_desc| replace:: {resilient_setup_attributes.get("Summary")}
+.. |circuits_desc| replace:: {circuits_setup_attributes.get("Summary")}
+.. |lib_desc| replace:: {lib_setup_attributes.get("Summary")}
 .. |lib_jinja_filters| replace:: {jinja_filters}
-.. |sdk_desc| replace:: {sdk_setup_attributes.get("description")}
+.. |sdk_desc| replace:: {sdk_setup_attributes.get("Summary")}
 .. |sdk_parser_desc| replace:: {sdk_parser.description}
 .. |sdk_parser_usage| replace:: {sdk_parser.usage}
 .. |sdk_options| replace:: {parse_optionals(sdk_parser._get_optional_actions())}
