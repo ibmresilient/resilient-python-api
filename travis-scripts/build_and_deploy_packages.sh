@@ -78,7 +78,7 @@ for p in "${package_names[@]}"; do
     fi
 
     # Append path to sdist to paths_all_sdists array
-    sdist_path=$(ls $dir/dist/*)
+    sdist_path=$(ls $dir/dist/*.tar.gz)
     print_msg "Path to sdist: $sdist_path"
     paths_all_sdists+=($sdist_path)
 
