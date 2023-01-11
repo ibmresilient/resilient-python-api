@@ -3,7 +3,9 @@ import logging
 import os
 import unittest
 
+import pytest
 import requests
+import requests_mock
 from parameterized import parameterized
 from resilient_lib import IntegrationError, RequestsCommon
 from resilient_lib.components.requests_common import (
@@ -26,6 +28,11 @@ class TestFunctionRequests(unittest.TestCase):
     #rc.execute_call(verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,
     #            proxies=None, timeout=None, resp_type=json, callback=None):
     LOG = logging.getLogger(__name__)
+
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, caplog):
+        self._caplog = caplog
+
 
     def test_resilient_common_proxies(self):
         rc = RequestsCommon()
@@ -96,7 +103,6 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_fourty, integration_section)
         self.assertEqual(rc.get_timeout(), 50)
 
-    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
@@ -119,7 +125,6 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertIsNotNone(bytes_result)
         self.assertTrue(isinstance(bytes_result, bytes))
 
-    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_v2_resp_type(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
@@ -275,7 +280,6 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call_v2("bad", URL)
 
-    @unittest.skip(reason="http://httpstat.us is currently unavailable")
     def test_statuscode(self):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
@@ -286,7 +290,6 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("get", "/".join((URL, "300")), None, resp_type='text')
 
-    @unittest.skip(reason="http://httpstat.us is currently unavailable")
     def test_statuscode_v2(self):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
@@ -297,7 +300,6 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call_v2("get", "/".join((URL, "400")))
 
-    @unittest.skip(reason="http://httpstat.us is currently unavailable")
     def test_statuscode_callback(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
 
@@ -309,7 +311,6 @@ class TestFunctionRequests(unittest.TestCase):
 
         resp = rc.execute_call("get", URL, None, resp_type='text', callback=callback)
 
-    @unittest.skip(reason="http://httpstat.us is currently unavailable")
     def test_statuscode_callback_v2(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
 
@@ -321,7 +322,6 @@ class TestFunctionRequests(unittest.TestCase):
 
         resp = rc.execute_call_v2("get", URL, callback=callback)
 
-    @unittest.skip(reason="http://httpstat.us is currently unavailable")
     def test_timeout(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
@@ -330,7 +330,6 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("get", URL, None, resp_type='text', timeout=2)
 
-    @unittest.skip(reason="http://httpstat.us is currently unavailable")
     def test_timeout_v2(self):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
@@ -444,7 +443,6 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
 
-    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_proxy_v2(self):
         rc = RequestsCommon()
 
@@ -632,3 +630,64 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         cert = rc.get_client_auth()
         self.assertIsNone(cert)
+
+    def test_get_no_verify(self):
+        rc = RequestsCommon()
+        verify = rc.get_verify()
+        self.assertIsNone(verify)
+
+    @parameterized.expand([
+        [{"verify": "false"}, False],
+        [{"verify": False}, False],
+        [{"verify": "true"}, True],
+        [{"verify": True}, True],
+        [{"verify": "path_to_CA_bundle"}, "path_to_CA_bundle"],
+    ])
+    def test_get_verify_in_app_section(self, mock_fn_section, expected_verify):
+        rc = RequestsCommon(opts=None, function_opts=mock_fn_section)
+        verify = rc.get_verify()
+        self.assertEqual(verify, expected_verify)
+
+    @parameterized.expand([
+        [{"integrations":{"verify": "path_to_CA_bundle"}}, {}, "path_to_CA_bundle"],
+        [{"integrations":{"verify": "true"}}, {}, True],
+        [{"integrations":{"verify": "false"}}, {}, False],
+        [{"integrations":{"verify": False}}, {}, False],
+        [{"integrations":{"verify": "false"}}, {"verify": "path_to_bundle"}, "path_to_bundle"]
+    ])
+    def test_get_verify_in_integrations_section(self, opts, function_opts, expected_verify):
+        rc = RequestsCommon(opts=opts, function_opts=function_opts)
+        verify = rc.get_verify()
+        self.assertEqual(verify, expected_verify)
+
+    @parameterized.expand([
+        # mostly here for backward compatibility with older uses of rc.execute()
+        # and make sure that the value passed in directly is used over any configs
+        ["https://example.com", {}, {"verify": "False"}, True, True],
+        ["https://example.com", {"integrations": {"verify": True}}, {}, False, False],
+        ["https://example.com", {}, {}, None, True],
+        ["https://example.com", {}, {}, "path_to_bundle", "path_to_bundle"],
+
+        # and make sure that if no value is passed, then the configs are used
+        ["https://example.com", {}, {"verify": "False"}, None, False],
+        ["https://example.com", {"integrations": {"verify": True}}, {}, None, True],
+        ["https://example.com", {"integrations": {"verify": True}}, {"verify": "False"}, None, False]
+    ])
+    def test_execute_request_with_verify(self, url, opts, function_opts, verify, expected_verify):
+        # this check is to ensure that calling rc.execute() is properly grabbing
+        # the value that is given directly to it.
+        # The main reason to run this test, is to ensure backward compatiblity
+        # with apps already using rc.execute() with the `verify` parameter set.
+        # in those cases, we want to make sure that we don't override anything with
+        # in the app.config, but instead continue to use it as the developer of that
+        # app expected it to work
+
+
+        # register a request mocker to intercept and monitor the requests
+        with requests_mock.Mocker() as m:
+            m.get(url)
+            rc = RequestsCommon(opts=opts, function_opts=function_opts)
+            rc.execute("GET", url, verify=verify)
+
+            # assert that the used value for verify was what we expected
+            assert m.request_history[0].verify == expected_verify
