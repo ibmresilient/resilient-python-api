@@ -488,6 +488,106 @@ def test_fail_package_files_validate_customize_py(fx_copy_fn_main_mock_integrati
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
 
+def test_package_files_validate_python_versions_in_scripts_fail(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+    """test failure with all types of failure (and some success included)"""
+
+    filename = "export.res"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock export.res
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_import_definition_from_customize_py") as mock_export_res:
+
+        mock_export_res.return_value = {
+            "scripts": [
+                {
+                    "language": "python",
+                    "name": "Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶"
+                },
+                {
+                    "language": "python3",
+                    "name": "Should Pass Δ, Й, ק ,م, ๗, あ, 叶"
+                },
+            ], 
+            "workflows": [{
+                "name": "Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶",
+                "content": {"xml":
+                    "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\u003c{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"post_processing_script\":\"# post process of mock  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d workflow two\\n\\nincident.addNote(u\\\" \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d\\\")\",\"post_processing_script_language\":\"python\",\"pre_processing_script\":\"# A mock pre-process script for mock_workflow_one\\n\\ninputs.mock_input_number = 123\\ninputs.mock_input_boolean = True\\ninputs.mock_input_text = \\\"abc  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d abc\\\"\",\"pre_processing_script_language\":\"python\",\"result_name\":\"output_of_mock_function_one\"}\u003c/resilient:function\u003e\u003c/"
+                }
+            },{
+                "name": "Should Pass Δ, Й, ק ,م, ๗, あ, 叶",
+                "content": {"xml":
+                    "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\u003c{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"post_processing_script\":\"# post process of mock  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d workflow two\\n\\nincident.addNote(u\\\" \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d\\\")\",\"post_processing_script_language\":\"python3\",\"pre_processing_script\":\"# A mock pre-process script for mock_workflow_one\\n\\ninputs.mock_input_number = 123\\ninputs.mock_input_boolean = True\\ninputs.mock_input_text = \\\"abc  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d abc\\\"\",\"pre_processing_script_language\":\"python3\",\"result_name\":\"output_of_mock_function_one\"}\u003c/resilient:function\u003e\u003c/"
+                }
+            }],
+            "playbooks": [{"display_name": "My PB", "local_scripts": [
+                {
+                    "language": "python",
+                    "name": "Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶",
+                },
+                {
+                    "language": "python3",
+                    "name": "Should Pass Δ, Й, ק ,م, ๗, あ, 叶",
+                }]
+            }]
+        }
+
+        results = sdk_validate_helpers.package_files_validate_script_python_versions(path_file, attr_dict)
+
+        assert len(results) == 4
+        result = results[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert "Global script 'Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶' packaged with this app is written in Python 2" in result.description
+        result = results[1]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert "Local script 'Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶' in playbook 'My PB' packaged with this app is written in Python 2" in result.description
+        result = results[2]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert "Pre-processing script for workflow 'Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶' packaged with this app is written in Python 2" in result.description
+        result = results[3]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+        assert "Post-processing script for workflow 'Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶' packaged with this app is written in Python 2" in result.description
+
+def test_package_files_validate_python_versions_in_scripts_pass(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+    """add scripts everywhere they could be found, but make them all pass as py3 scripts"""
+
+    filename = "export.res"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock export.res
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_import_definition_from_customize_py") as mock_export_res:
+
+        mock_export_res.return_value = {
+            "scripts": [{
+                "language": "python3",
+                "name": "Should Pass Δ, Й, ק ,م, ๗, あ, 叶"
+            },], 
+            "workflows": [{
+                "name": "Should Pass Δ, Й, ק ,م, ๗, あ, 叶",
+                "content": {"xml":
+                    "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\u003c{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"post_processing_script\":\"# post process of mock  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d workflow two\\n\\nincident.addNote(u\\\" \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d\\\")\",\"post_processing_script_language\":\"python3\",\"pre_processing_script\":\"# A mock pre-process script for mock_workflow_one\\n\\ninputs.mock_input_number = 123\\ninputs.mock_input_boolean = True\\ninputs.mock_input_text = \\\"abc  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d abc\\\"\",\"pre_processing_script_language\":\"python3\",\"result_name\":\"output_of_mock_function_one\"}\u003c/resilient:function\u003e\u003c/"
+            }}],
+            "playbooks": [{"display_name": "My PB", "local_scripts": [{
+                "language": "python3",
+                "name": u"Should Pass Δ, Й, ק ,م, ๗, あ, 叶",
+            }]}]
+        }
+
+        results = sdk_validate_helpers.package_files_validate_script_python_versions(path_file, attr_dict)
+
+        assert len(results) == 1
+        result = results[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
+        assert "Scripts in app use valid versions of Python" in result.description
+
 def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "app_logo.png"

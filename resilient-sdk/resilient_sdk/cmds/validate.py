@@ -162,8 +162,8 @@ class CmdValidate(BaseCmd):
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, SUB_CMD_SELFTEST[0])
             self._run_selftest(args, )
 
-        self._print_summary(self.SUMMARY_LIST)
-        path_report = self._generate_report(self.VALIDATE_ISSUES, args)
+        self._print_summary()
+        path_report = self._generate_report(self.VALIDATE_ISSUES, args, self._get_counts())
 
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "\nSee the detailed report at {0}".format(path_report))
 
@@ -898,7 +898,7 @@ class CmdValidate(BaseCmd):
 
 
     @staticmethod
-    def _generate_report(validate_issues_dict, args):
+    def _generate_report(validate_issues_dict, args, counts):
         """
         Generates a markdown report for the validation run.
 
@@ -909,6 +909,8 @@ class CmdValidate(BaseCmd):
         :type validate_issues_dict: dict
         :param args: command line args
         :type args: argparse.ArgumentParser
+        :param counts: dict of counts for each validate severity
+        :type counts: dict
         :return: returns the path to the generated file (including the formatted timestamp)
         :rtype: str
         """
@@ -949,7 +951,10 @@ class CmdValidate(BaseCmd):
             timestamp=timestamp,
             validate_issues_dict=validate_issues_dict,
             SEVERITY_THRESHOLD=SDKValidateIssue.SEVERITY_LEVEL_INFO,
-            args=", ".join(["`{0}`: {1}".format(arg, args[arg]) for arg in args if args[arg]])
+            args=", ".join(["`{0}`: {1}".format(arg, args[arg]) for arg in args if args[arg]]),
+            criticals=counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL],
+            warnings=counts[SDKValidateIssue.SEVERITY_LEVEL_WARN],
+            passes=int(counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]) + int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG])
         )
 
 
@@ -966,7 +971,7 @@ class CmdValidate(BaseCmd):
         return path_report
 
 
-    def _print_summary(self, static_issues_list):
+    def _print_summary(self):
         """
         From list of issues, generates a count of issues that are CRITICAL, WARNING, PASS=sum(INFO, DEBUG)
         and outputs in the format:
@@ -986,14 +991,7 @@ class CmdValidate(BaseCmd):
         :return: None - prints output to console
         :rtype: None
         """
-        counts = {
-            SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
-            SDKValidateIssue.SEVERITY_LEVEL_WARN: 0,
-            SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
-            SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0,
-        }
-        for issue in static_issues_list:
-            counts[issue.severity] += 1
+        counts = self._get_counts()
         
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validation Results{0}".format(constants.LOG_DIVIDER))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Critical Issues: {0:>14}".format(
@@ -1004,6 +1002,20 @@ class CmdValidate(BaseCmd):
             int(counts[SDKValidateIssue.SEVERITY_LEVEL_DEBUG]) + int(counts[SDKValidateIssue.SEVERITY_LEVEL_INFO]), "PASS")
         ))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, constants.LOG_DIVIDER)
+
+    
+    def _get_counts(self):
+        counts = {
+            SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
+            SDKValidateIssue.SEVERITY_LEVEL_WARN: 0,
+            SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
+            SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0,
+        }
+        for issue in self.SUMMARY_LIST:
+            counts[issue.severity] += 1
+
+        return counts
+
 
     def _print_status(self, level, msg, run_pass):
         """

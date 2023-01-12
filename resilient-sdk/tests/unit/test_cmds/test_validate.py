@@ -334,7 +334,8 @@ def test_print_summary(fx_get_sub_parser, caplog):
         SDKValidateIssue("debug", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)
     ]
     cmd_validate = CmdValidate(fx_get_sub_parser)
-    cmd_validate._print_summary(mock_data)
+    cmd_validate.SUMMARY_LIST = mock_data
+    cmd_validate._print_summary()
 
     assert "Validation Results" in caplog.text
     assert "Critical Issues:     3" in caplog.text
@@ -494,6 +495,12 @@ def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_vali
             ("a", "b")
         ]
     }
+    mock_counts = {
+        SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0, 
+        SDKValidateIssue.SEVERITY_LEVEL_WARN: 0, 
+        SDKValidateIssue.SEVERITY_LEVEL_INFO: 0, 
+        SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0
+    }
 
     mock_integration_name = fx_copy_fn_main_mock_integration[0]
     path_package = fx_copy_fn_main_mock_integration[1]
@@ -504,7 +511,7 @@ def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_vali
     cmd_validate = CmdValidate(fx_get_sub_parser)
     args = cmd_validate.parser.parse_known_args()[0]
 
-    cmd_validate._generate_report(mock_issues_dict, args)
+    cmd_validate._generate_report(mock_issues_dict, args, mock_counts)
 
     assert "Creating dist directory at" in caplog.text
     assert "Writing report to" in caplog.text
