@@ -3,7 +3,6 @@ import logging
 import os
 import unittest
 
-import pytest
 import requests
 import requests_mock
 from parameterized import parameterized
@@ -28,10 +27,6 @@ class TestFunctionRequests(unittest.TestCase):
     #rc.execute_call(verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,
     #            proxies=None, timeout=None, resp_type=json, callback=None):
     LOG = logging.getLogger(__name__)
-
-    @pytest.fixture(autouse=True)
-    def inject_fixtures(self, caplog):
-        self._caplog = caplog
 
 
     def test_resilient_common_proxies(self):
