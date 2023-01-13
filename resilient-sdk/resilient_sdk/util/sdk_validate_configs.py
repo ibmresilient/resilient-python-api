@@ -42,7 +42,7 @@ setup_py_attributes = [
         "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Set '{0}' to an valid license.",
+        "solution": u"Set '{0}' to a valid license.",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     }),
     ("url", {
@@ -66,7 +66,7 @@ setup_py_attributes = [
         "fail_func": lambda x: re.findall(r"@example\.com", x, re.IGNORECASE),
         "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
-        "solution": u"Set '{0}' to the author's contact email",
+        "solution": u"Set '{0}' to the contact email for the author",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     }),
     ("description", {
@@ -296,6 +296,26 @@ package_files = [
 
         "pass_msg": "'customize.py' returned a valid import definition",
         "pass_solution": u"ImportDefinition found: {0}...; View the entire contents at '{1}'"
+    }),
+
+    ("export.res", {
+        "func": sdk_validate_helpers.package_files_validate_script_python_versions,
+        "path": "{0}/util/customize.py",
+        "name": "'SOAR Scripts'",
+
+        "fail_msg": u"Global script '{0}' packaged with this app is written in Python 2",
+        "fail_msg_playbooks": u"Local script '{0}' in playbook '{1}' packaged with this app is written in Python 2",
+        "fail_msg_pre_processing": u"Pre-processing script for workflow '{0}' packaged with this app is written in Python 2",
+        "fail_msg_post_processing": u"Post-processing script for workflow '{0}' packaged with this app is written in Python 2",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": "Python 2 will soon no longer be supported in SOAR. Update the language of the script to Python 3, being careful to make sure that it is still fully functional",
+
+        "missing_msg": "'customize.py' not found in package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
+
+        "pass_msg": "Scripts in app use valid versions of Python",
+        "pass_solution": "All scripts are written in Python 3. Be careful to make any new scripts in Python 3 only"
     }),
 
     ("README.md", {

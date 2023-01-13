@@ -575,6 +575,114 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
             solution=attr_dict.get("fail_solution")
         )]
 
+def package_files_validate_script_python_versions(path_file, attr_dict, **_):
+    """
+    Validate that no scripts packaged with this app are written in Python 2.
+
+    To do this, we look in all the places a script could be defined:
+        - Globally
+        - Locally in a Playbook
+        - In a workflow's pre-processing script for a function
+        - In a workflows's post-processing script for a function
+
+    The global scripts and playbook scripts are nice and easy to handle as they
+    are represented well in the export.res JSON file, with a "language" attribute.
+    That attribute will be "python" for PY2 and "python3" for PY3.
+
+    For workflow pre-/post-processing scripts, however, we need to scan the
+    XML definition of the workflow to determine the language of the script
+    as that is the only place in the export.res contains that information.
+    The key item that we look for is "pre_processing_script_language":"python"
+    (for pre-processing scripts and the same logic follows for post-processing).
+    If that is found, we know that there is a PY2 script associated with a function
+    in that workflow. For the moment, the scan is not smart enough to count
+    the number of PY2 scripts in the workflow. Just smart enough to tell
+    whether there is a PY2 pre-processing script and a PY2 post-processing
+    script in the workflow.
+
+    For each PY2 script found in the export (with the noted caveat explained above
+    for counting workflow function scripts), a SDKValidateIssue is returned.
+    Each issue has relevant information about the PY2 script and where to find it
+    and gives suggestions on how to fix it, while warning that updating to PY3
+    from PY2 can cause breaking changes and the user should use caution when
+    updating those scripts.
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the customize.py file defined in ``package_files``
+    :type attr_dict: dict
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a list of issues containing the PY2 scripts to be updated; or a passing issue if no scripts were found
+    :rtype: list[SDKValidateIssue]
+    """
+    try:
+        # parse import definition information from customize.py file
+        # this will raise an SDKException if something goes wrong
+        export_res = package_helpers.get_import_definition_from_customize_py(path_file)
+    except SDKException:
+        # something went wrong in reading the import definition.
+        # since this is already checked in another function elsewhere,
+        # ignore and return an empty list
+        return []
+
+    issues = []
+
+    # validate GLOBAL scripts are all python3 only.
+    # for each non-python3 script we find, create an issue
+    for script in export_res.get("scripts", []):
+        if script.get("language", "") not in constants.EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES:
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg").format(script.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+
+    # do very similar check for local scripts in playbooks
+    for playbook in export_res.get("playbooks", []):
+        for local_script in playbook.get("local_scripts", []):
+            if local_script.get("language", "") not in constants.EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES:
+                issues.append(SDKValidateIssue(
+                    name=attr_dict.get("name"),
+                    description=attr_dict.get("fail_msg_playbooks").format(
+                        local_script.get("name", "UNKNOWN SCRIPT NAME"), playbook.get("display_name", "UNKNOWN PLAYBOOK NAME")),
+                    severity=attr_dict.get("fail_severity"),
+                    solution=attr_dict.get("fail_solution")
+                ))
+
+    # workflows are harder, but we can simply look into the XML for what we know should be there:
+    # there should be a line in there that says "post_processing_script_language":"python3" for PY3
+    # or "post_processing_script_language":"python" for Python 2 scripts (same goes for pre_processing...)
+    # so we scan the workflows and their xml properties
+    for workflow in export_res.get("workflows", []):
+        # check for bad pre processing scripts
+        if constants.EXPORT_RES_WORKFLOW_PRE_PROCESSING_UNALLOWED_LANGUAGE in workflow.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_pre_processing").format(workflow.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+        # check for bad post processing scripts
+        if constants.EXPORT_RES_WORKFLOW_POST_PROCESSING_UNALLOWED_LANGUAGE in workflow.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_post_processing").format(workflow.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+
+    if not issues:
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=attr_dict.get("pass_solution")
+        )]
+    else:
+        return issues
+
 def package_files_validate_icon(path_file, attr_dict, filename, **__):
     """
     Helper method for package files to validate an icon
