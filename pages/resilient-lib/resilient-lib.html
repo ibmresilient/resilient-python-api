@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-sdk" href="../resilient-sdk/resilient-sdk.html" /><link rel="prev" title="resilient-circuits" href="../resilient-circuits/resilient-circuits.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 6.0.0 and Furo 2022.12.07 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
         <title>resilient-lib - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
@@ -851,7 +851,7 @@ in a class that inherits <a class="reference internal" href="../resilient-circui
 
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.execute">
-<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clientauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clientauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Permalink to this definition">#</a></dt>
 <dd><p>Constructs and sends a request. Returns a
 <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object.</p>
 <p>This uses the <code class="docutils literal notranslate"><span class="pre">requests.request()</span></code> function to
@@ -896,6 +896,25 @@ the app’s section of the app.config. These values will be read in automaticall
 <p>If not set in the app.config file, the filepath for the client side certificate and the
 private key can be passed to this function either as the path to a single file or as a
 tuple of both files’ paths.</p>
+</p></li>
+<li><p><strong>verify</strong> (<em>bool</em><em> or </em><em>str</em>) – <p>(Optional) Either a boolean, in which case it controls whether requests verifies
+the server’s TLS certificate, or a string, in which case it must be a path
+to a CA bundle to use. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> as passed in here. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+then the value is searched for in the app’s section of the app.config. If no value
+is found, then the requests.request() default of <code class="docutils literal notranslate"><span class="pre">True</span></code> is used. In that case,
+the CA bundle found at <code class="docutils literal notranslate"><span class="pre">requests.utils.DEFAULT_CA_BUNDLE_PATH</span></code> is the CA bundle used,
+which is usually a bundle provided by Mozilla. Setting <code class="docutils literal notranslate"><span class="pre">verify=True</span></code> is the safest option
+and should only be changed if you have a self-signed certificate or you want to bypass
+SSL for testing purposes. A production level app should never disable SSL verification
+completely.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">fn_my_app</span><span class="p">]</span>
+<span class="o">...</span> <span class="c1"># some other configs</span>
+<span class="n">verify</span><span class="o">=&lt;</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">CA</span><span class="o">/</span><span class="n">bundle</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">use</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>NOTE: The value held in the app’s config will be overwritten if a value is passed in by the call
+to <code class="docutils literal notranslate"><span class="pre">execute</span></code></p>
 </p></li>
 </ul>
 </dd>
@@ -2051,6 +2070,14 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
+<p><strong>2022-12: version 48.0</strong></p>
+<ul class="simple">
+<li><p>Added support for <code class="docutils literal notranslate"><span class="pre">verify</span></code> config in app.config when using
+<a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="resilient_lib.components.requests_common.RequestsCommon.execute"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon.execute()</span></code></a>.
+<code class="docutils literal notranslate"><span class="pre">verify</span></code> now can be set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">False</span></code>, or <code class="docutils literal notranslate"><span class="pre">&lt;path_to_your_custom_CA_bundle&gt;</span></code> to control the value used
+when verifying SSL certificates. This change is backward compatible with any apps that use <code class="docutils literal notranslate"><span class="pre">RequestsCommon.execute</span></code>
+so any apps updated to run on v48.0 will pull in these changes and the <code class="docutils literal notranslate"><span class="pre">verify</span></code> configuration will be supported for that app.</p></li>
+</ul>
 <p><strong>2022-12: version 47.1</strong></p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_client_auth" title="resilient_lib.components.requests_common.RequestsCommon.get_client_auth"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon.get_client_auth()</span></code></a> renamed from <code class="docutils literal notranslate"><span class="pre">get_clientauth</span></code>. Alias provided for <code class="docutils literal notranslate"><span class="pre">get_clientauth</span></code> for backward compatiblity. Please use <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_client_auth" title="resilient_lib.components.requests_common.RequestsCommon.get_client_auth"><code class="xref py py-class docutils literal notranslate"><span class="pre">get_client_auth()</span></code></a> from now on.</p></li>
