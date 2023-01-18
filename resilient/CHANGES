@@ -1,3 +1,7 @@
+**2022-12: version 48.0**
+
+* Added logic to skip retry logic for failed API calls in :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>`, :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>` and :class:`resilient.SimpleClient.getput() <resilient.co3.SimpleClient.getput>`
+
 **2022-12: version 47.1**
 
 * Support for custom headers when using :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>` and :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>`

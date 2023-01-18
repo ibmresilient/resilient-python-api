@@ -47,13 +47,11 @@ class TLSHttpAdapter(HTTPAdapter):
 
 
 class BasicHTTPException(Exception):
-    """Exception for HTTP errors."""
     def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
           response - the Response object from the get/put/etc.
         """
-
         err_reason = response.reason if response.reason else err_reason
         err_text = response.text if response.text else err_text
 
@@ -65,23 +63,47 @@ class BasicHTTPException(Exception):
 
         super(BasicHTTPException, self).__init__(err_message)
 
+
+class RetryHTTPException(Exception):
+    """Exception for HTTP errors that should be retried."""
+    def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
+        """
+        Args:
+          response - the Response object from the get/put/etc.
+        """
+
+        err_reason = response.reason if response.reason else err_reason
+        err_text = response.text if response.text else err_text
+
+        err_message = u"'resilient' API Request Retry:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
+
+        # Add a __qualname__ attribute if does not exist - needed for PY27
+        if not hasattr(RetryHTTPException, "__qualname__"):
+            setattr(RetryHTTPException, "__qualname__", RetryHTTPException.__name__)
+
+        super(RetryHTTPException, self).__init__(err_message)
+
         self.response = response
 
     def get_response(self):
         return self.response
 
     @staticmethod
-    def raise_if_error(response):
+    def raise_if_error(response, skip_retry=[]):
 
         if response.status_code == 401:
             try:
-                raise BasicHTTPException(response, err_reason=constants.ERROR_MSG_CONNECTION_UNAUTHORIZED, err_text=constants.ERROR_MSG_CONNECTION_INVALID_CREDS)
-            except BasicHTTPException:
+                raise RetryHTTPException(response, err_reason=constants.ERROR_MSG_CONNECTION_UNAUTHORIZED, err_text=constants.ERROR_MSG_CONNECTION_INVALID_CREDS)
+            except RetryHTTPException:
                 traceback.print_exc()
                 sys.exit(constants.ERROR_CODE_CONNECTION_UNAUTHORIZED)
 
-        elif response.status_code != 200:
-            raise BasicHTTPException(response)
+        elif response.status_code >= 300:
+            # these exceptions should not be retried
+            if response.status_code not in skip_retry:
+                raise RetryHTTPException(response)
+            else:
+                raise BasicHTTPException(response)
 
 
 class NoChange(Exception):
@@ -216,11 +238,11 @@ class BaseClient(object):
                                  verify=self.verify,
                                  timeout=timeout,
                                  cert=self.cert)
-            BasicHTTPException.raise_if_error(r)
+            RetryHTTPException.raise_if_error(r)
             return r
 
         response = retry_call(__set_api_key,
-                              exceptions=(BasicHTTPException, ConnectionError),
+                              exceptions=(RetryHTTPException, ConnectionError),
                               tries=self.max_connection_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
@@ -240,7 +262,7 @@ class BaseClient(object):
         Returns:
           The Resilient session object (dict)
         Raises:
-          BasicHTTPException - if an HTTP exception occurs.
+          RetryHTTPException - if an HTTP exception occurs.
         """
         self.authdata = {
             u'email': ensure_unicode(email),
@@ -326,11 +348,11 @@ class BaseClient(object):
                                   timeout=timeout,
                                   cert=self.cert)
 
-            BasicHTTPException.raise_if_error(r)
+            RetryHTTPException.raise_if_error(r)
             return r
 
         response = retry_call(__connect,
-                              exceptions=(BasicHTTPException, ConnectionError),
+                              exceptions=(RetryHTTPException, ConnectionError),
                               tries=self.max_connection_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
@@ -384,7 +406,8 @@ class BaseClient(object):
 
         return result
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None,
+            skip_retry=[]):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -396,10 +419,11 @@ class BaseClient(object):
           timeout: number of seconds to wait for response
           is_uri_absolute: if True, does not insert /org/{org_id} into the uri
           get_response_object: if True, returns the response object rather than the json of the response.text
+          skip_retry: list of HTTP responses to skip throwing an exception
         Returns:
           A dictionary, array, or response object with the value returned by the server.
         Raises:
-          BasicHTTPException - if an HTTP exception occurs.
+          RetryHTTPException - if an HTTP exception occurs.
         """
 
         if is_uri_absolute:
@@ -419,11 +443,11 @@ class BaseClient(object):
                                       verify=self.verify,
                                       timeout=timeout,
                                       cert=self.cert)
-            BasicHTTPException.raise_if_error(r)
+            RetryHTTPException.raise_if_error(r, skip_retry=skip_retry)
             return r
 
         response = retry_call(__get,
-                              exceptions=(BasicHTTPException, ConnectionError),
+                              exceptions=(RetryHTTPException, ConnectionError),
                               tries=self.request_max_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
@@ -433,7 +457,7 @@ class BaseClient(object):
 
         return json.loads(response.text)
 
-    def get_content(self, uri, co3_context_token=None, timeout=None):
+    def get_content(self, uri, co3_context_token=None, timeout=None, skip_exceptions=[]):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -443,10 +467,11 @@ class BaseClient(object):
           uri
           co3_context_token
           timeout: number of seconds to wait for response
+          skip_retry: list of HTTP responses to skip throwing an exception
         Returns:
           The raw value returned by the server for this resource.
         Raises:
-          BasicHTTPException - if an HTTP exception occurs.
+          RetryHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         response = self._execute_request(self.session.get,
@@ -457,10 +482,11 @@ class BaseClient(object):
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
-        BasicHTTPException.raise_if_error(response)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_exceptions)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
+    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None,
+             skip_retry=[]):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -473,10 +499,11 @@ class BaseClient(object):
            co3_context_token
            timeout: number of seconds to wait for response
            headers: optional headers to include
+           skip_retry: list of HTTP responses to skip throwing an exception
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          BasicHTTPException - if an HTTP exception occurs.
+          RetryHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
 
@@ -496,16 +523,16 @@ class BaseClient(object):
                                       verify=self.verify,
                                       timeout=timeout,
                                       cert=self.cert)
-            BasicHTTPException.raise_if_error(r)
+            RetryHTTPException.raise_if_error(r, skip_retry=skip_retry)
             return r
 
         response = retry_call(__post,
-                              exceptions=(BasicHTTPException, ConnectionError),
+                              exceptions=(RetryHTTPException, ConnectionError),
                               tries=self.request_max_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
 
-        BasicHTTPException.raise_if_error(response)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         try:
             return json.loads(response.text)
         except json.decoder.JSONDecodeError:
@@ -517,7 +544,8 @@ class BaseClient(object):
                         data=None,
                         co3_context_token=None,
                         timeout=None,
-                        bytes_handle=None):
+                        bytes_handle=None,
+                        skip_retry=[]):
         """
         Upload a file to the specified URI
         e.g. "/incidents/<id>/attachments" (for incident attachments)
@@ -531,6 +559,7 @@ class BaseClient(object):
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
         :param bytes_handle: BytesIO handle for content, used if ``filepath`` is None
+        :param skip_retry: list of HTTP responses to skip throwing an exception
         """
         filepath = ensure_unicode(filepath)
         if filename:
@@ -554,7 +583,7 @@ class BaseClient(object):
                                       verify=self.verify,
                                       timeout=timeout,
                                       cert=self.cert)
-            BasicHTTPException.raise_if_error(r)
+            RetryHTTPException.raise_if_error(r, skip_retry=skip_retry)
             return json.loads(r.text)
 
         if filepath:
@@ -566,7 +595,7 @@ class BaseClient(object):
                                            "file_or_bytes_handle": file_handle,
                                            "extra_data": data
                                        },
-                                       exceptions=(BasicHTTPException, ConnectionError),
+                                       exceptions=(RetryHTTPException, ConnectionError),
                                        tries=self.request_max_retries,
                                        delay=self.request_retry_delay,
                                        backoff=self.request_retry_backoff)
@@ -580,7 +609,7 @@ class BaseClient(object):
                                        "file_or_bytes_handle": bytes_handle,
                                        "extra_data": data
                                    },
-                                   exceptions=(BasicHTTPException, ConnectionError),
+                                   exceptions=(RetryHTTPException, ConnectionError),
                                    tries=self.request_max_retries,
                                    delay=self.request_retry_delay,
                                    backoff=self.request_retry_backoff)
@@ -595,7 +624,8 @@ class BaseClient(object):
                            mimetype=None,
                            co3_context_token=None,
                            timeout=None,
-                           bytes_handle=None):
+                           bytes_handle=None,
+                           skip_retry=[]):
         """
         Post a file artifact to the specified URI
         e.g. "/incidents/<id>/artifacts/files"
@@ -609,7 +639,7 @@ class BaseClient(object):
         :param co3_context_token: Action Module context token, if responding to an Action Module event
         :param timeout: optional timeout (seconds)
         :param bytes_handle: byte content to create as an artifact file, used if ``artifact_filepath`` is ``None``
-
+        :param skip_retry: list of HTTP responses to skip throwing an exception
         """
         artifact = {
             "type": artifact_type,
@@ -628,7 +658,7 @@ class BaseClient(object):
                                     timeout=timeout,
                                     bytes_handle=bytes_handle)
 
-    def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
+    def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None, skip_retry=[]):
         """Internal helper to do a get/apply/put loop
         (for situations where the put might return a 409/conflict status code)
         """
@@ -641,7 +671,7 @@ class BaseClient(object):
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
-        BasicHTTPException.raise_if_error(response)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         payload = json.loads(response.text)
         try:
             apply_func(payload)
@@ -661,7 +691,7 @@ class BaseClient(object):
             return json.loads(response.text)
         if response.status_code == 409:
             return None
-        BasicHTTPException.raise_if_error(response)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         return None
 
     def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
@@ -686,7 +716,8 @@ class BaseClient(object):
                 return obj
         return None
 
-    def put(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
+    def put(self, uri, payload, co3_context_token=None, timeout=None, headers=None,
+            skip_retry=[]):
         """
         Puts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -699,10 +730,11 @@ class BaseClient(object):
            headers: optional headers to include
            co3_context_token
            timeout: number of seconds to wait for response
+           skip_retry: list of HTTP responses to skip throwing an exception
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          BasicHTTPException - if an HTTP exception occurs.
+          RetryHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
         # payloads which aren't convertable to json are passed asis
@@ -716,20 +748,21 @@ class BaseClient(object):
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
-        BasicHTTPException.raise_if_error(response)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         return json.loads(response.text)
 
-    def delete(self, uri, co3_context_token=None, timeout=None):
+    def delete(self, uri, co3_context_token=None, timeout=None, skip_retry=[]):
         """Deletes the specified URI.
 
         Args:
           uri
           co3_context_token
           timeout: number of seconds to wait for response
+          skip_retry: list of HTTP responses to skip throwing an exception
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
-          BasicHTTPException - if an HTTP exception occurs.
+          RetryHTTPException - if an HTTP exception occurs.
         """
         url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
 
@@ -748,11 +781,11 @@ class BaseClient(object):
                 # 204 - No content is OK for a delete
                 return None
 
-            BasicHTTPException.raise_if_error(r)
+            RetryHTTPException.raise_if_error(r, skip_retry=skip_retry)
             return json.loads(r.text)
 
         response = retry_call(__delete,
-                              exceptions=(BasicHTTPException, ConnectionError),
+                              exceptions=(RetryHTTPException, ConnectionError),
                               tries=self.request_max_retries,
                               delay=self.request_retry_delay,
                               backoff=self.request_retry_backoff)
