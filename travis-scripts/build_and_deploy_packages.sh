@@ -65,15 +65,16 @@ for p in "${package_names[@]}"; do
 
     # Build the source distribution.
     if [ "$deploy" = true ] ; then
-        python setup.py sdist --formats=gztar upload -r artifactory
+        python -m build
+        twine upload --config-file $HOME/.pypirc -r artifactory $dir/dist/*
 
     else
-        python setup.py sdist --formats=gztar
+        python -m build
     fi
 
     if [ "$deploy_docs" = true ] ; then
         print_msg "Docs are required so pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
-        pip install -e .
+        pip install .
     fi
 
     # Append path to sdist to paths_all_sdists array

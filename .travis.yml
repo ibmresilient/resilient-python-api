@@ -139,11 +139,15 @@ matrix:
     - stage: build packages
       name: Build Packages in Python 3.9
       python: 3.9
+      install:
+        - pip install twine build
       script:
         - echo "Building packages in Python 3.9"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
+      install:
+        - pip install twine build
       script:
         - echo "Building packages in Python 3.9 and Deploying to Artifactory"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
@@ -153,7 +157,7 @@ matrix:
 
     - stage: release to pypi
       install:
-        - pip install twine
+        - pip install twine build
       script:
         - echo "Building packages in Python 3.9 and releasing to PyPi"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
@@ -162,7 +166,7 @@ matrix:
 
     - stage: deploy documentation
       install:
-      - pip install sphinx furo sphinx-copybutton
+      - pip install sphinx furo sphinx-copybutton build
       script:
         - echo "Building packages in Python 3.9 and deploying Documentation internally too"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy no_release deploy_docs
