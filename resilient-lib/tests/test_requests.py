@@ -98,6 +98,7 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(integrations_fourty, integration_section)
         self.assertEqual(rc.get_timeout(), 50)
 
+    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_resp_types(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
@@ -120,6 +121,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertIsNotNone(bytes_result)
         self.assertTrue(isinstance(bytes_result, bytes))
 
+    @unittest.skip(reason="https://api.ipify.org/ is currently unavailable")
     def test_v2_resp_type(self):
         IPIFY = TestFunctionRequests.URL_TEST_DATA_RESULTS
 
@@ -413,7 +415,7 @@ class TestFunctionRequests(unittest.TestCase):
     def test_proxy(self):
         rc = RequestsCommon()
 
-        proxy_url = TestFunctionRequests.URL_TEST_PROXY
+        proxy_url = self.URL_TEST_PROXY
         proxy_result = rc.execute_call("get", proxy_url, None)
 
         proxies = {
@@ -438,6 +440,7 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = rc.execute_call("get", URL, None)
         self.assertTrue(json_result.get("ip"))
 
+    @unittest.skip(reason="may be over the limit")
     def test_proxy_v2(self):
         rc = RequestsCommon()
 
