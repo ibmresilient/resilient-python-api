@@ -100,11 +100,22 @@ class RetryHTTPException(Exception):
 
         elif response.status_code >= 300:
             # these exceptions should not be retried
-            if response.status_code not in skip_retry:
+            if response.status_code not in fix_list(skip_retry):
                 raise RetryHTTPException(response)
             else:
                 raise BasicHTTPException(response)
 
+def fix_list(value):
+    """fix values to always use lists
+
+    :param value: value to test if not a list
+    :type value: list, int
+    :return: converted value if not a list
+    :rtype: list
+    """
+    if value == None:
+        return []
+    return value if isinstance(value, list) else [value]
 
 class NoChange(Exception):
     """
