@@ -1,3 +1,7 @@
+**2023-02: version 48.0**
+
+* Include ``threadName`` in the app logs
+
 **2022-12: version 47.1**
 
 * No major changes. Just bumping build number to coincide with other builds
