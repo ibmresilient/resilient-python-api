@@ -15,7 +15,7 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 30
 
 
-class RequestsCommon:
+class RequestsCommon(object):
     """
     This class represents common functions around the use of the requests package for REST based APIs.
     It incorporates the app.config section ``[integrations]`` which can be used to define a common set of proxies
@@ -40,6 +40,9 @@ class RequestsCommon:
         # capture the properties for the integration as well as the global settings for all integrations for proxy urls
         self.integration_options = opts.get("integrations", None) if opts else None
         self.function_opts = function_opts
+
+        # base class requests object (i.e. with persistent sessions):
+        self.request_obj = requests.Session()
 
     def get_proxies(self):
         """
@@ -276,7 +279,7 @@ class RequestsCommon:
                     LOG.debug("  %s: %s", k, args_dict[k])
 
             # Pass request to requests.request() function
-            response = requests.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, verify=verify, **kwargs)
+            response = self.request_obj.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, verify=verify, **kwargs)
 
             # Debug logging
             LOG.debug(response.status_code)
@@ -383,6 +386,27 @@ class RequestsCommon:
             msg = str(err)
             log and log.error(msg)
             raise IntegrationError(msg)
+
+class RequestsCommonWithoutSession(RequestsCommon):
+    """
+    This class extends :class:`RequestsCommon` maintaining the behavior of 
+    ``RequestsCommon`` that was present in versions <= 47.1.x.
+
+    The difference is that every time :class:`RequestsCommonWithoutSession.execute()`
+    is called, this class will use ``requests.request`` to execute the request, while
+    :class:`RequestsCommon.execute()` uses ``Session().request``.
+
+    This class is interchangeable with :class:`RequestsCommon` and code that uses
+    :class:`RequestsCommon` can be simiply refactored to use :class:`RequestsCommonWithoutSession`
+
+    :param args: positional arguments matching :class:`RequestsCommon`
+    :type args: list
+    :param kwargs: named keyword arguments matching :class:`RequestsCommon`
+    :type kwargs: dict
+    """
+    def __init__(self, *args, **kwargs):
+        super(RequestsCommonWithoutSession, self).__init__(*args, **kwargs)
+        self.request_obj = requests
 
 
 def is_payload_in_json(content_type):
