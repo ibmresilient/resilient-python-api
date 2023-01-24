@@ -10,7 +10,7 @@
   including cookies persisting from the endpoint and significant performance increases when connecting to the same host. 
   If non-session objects are desired, switch your code to use the new class
   :class:`resilient_lib.RequestsCommonWithoutSession <resilient_lib.components.requests_common.RequestsCommonWithoutSession>`
-  which behaves the same as the old ``RequestsCommon`` would.
+  which behaves the same as the old ``RequestsCommon`` would
 
 **2022-12: version 47.1**
 
