@@ -762,9 +762,9 @@ class TestFunctionRequests(unittest.TestCase):
         NOTE: this is a live test
         """
 
-        # N needs to be large enough to see a difference (minimum 10 or so)
+        # N needs to be large enough to see a difference (minimum 25 or so)
         # that said, the difference is pretty start even with small iteration numbers
-        N = 10
+        N = 25
 
         rc = RequestsCommon()
         start = time.time()
