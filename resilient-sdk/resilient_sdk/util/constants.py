@@ -81,7 +81,7 @@ EXPORT_RES_WORKFLOW_POST_PROCESSING_UNALLOWED_LANGUAGE = "\"post_processing_scri
 TOX_PACKAGE_NAME = "tox"
 TOX_INI_FILENAME = "tox.ini"
 TOX_TEMP_PATH_XML_REPORT = ".validate_tmp_dir"
-TOX_TESTS_DEFAULT_ARGS = ['--resilient_email', '"integrations@example.org"', '--resilient_password', '"supersecret"', '--resilient_host', '"example.com"', '--resilient_org', '"Test Organization"']
+TOX_TESTS_DEFAULT_ARGS = ['--resilient_email', '"integrations@example.org"', '--resilient_password', '"supersecret"', '--resilient_host', '"example.com"', '--resilient_org', '"Test Organization"', '-m', '"not livetest"']
 TOX_MIN_ENV_VERSION = "py36" # the last character here must be a number and will be used as the base value for checks of envlist
 TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 

@@ -784,6 +784,7 @@ def test_tox_tests_run_tox_tests(fx_copy_fn_main_mock_integration, caplog):
         result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
 
         assert "Using mock args" in caplog.text
+        assert "'-m', '\"not livetest\"'" in caplog.text
         assert "Something went wrong..." in result[1].description
         assert "bad run" in result[1].description
         assert result[0] == 0
