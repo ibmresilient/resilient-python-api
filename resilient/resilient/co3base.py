@@ -433,6 +433,35 @@ class BaseClient(object):
 
         return json.loads(response.text)
 
+    def get_const(self, co3_context_token=None, timeout=None):
+        """
+        Get the ``ConstREST`` endpoint.
+
+        Endpoint for retrieving various constant information for this server. This information is
+        useful in translating names that the user sees to IDs that other REST API endpoints accept.
+
+        For example, the ``incidentDTO`` has a field called ``"crimestatus_id"``. The valid values are stored
+        in ``constDTO.crime_statuses``.
+
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: ``ConstDTO`` as a dictionary
+        :rtype: dict
+        :raises SimpleHTTPException: if an HTTP exception occurs.
+        """
+        url = u"{0}/rest/const".format(self.base_url)
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.make_headers(co3_context_token),
+                                         verify=self.verify,
+                                         timeout=timeout)
+        BasicHTTPException.raise_if_error(response)
+        return response.json()
+
     def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
