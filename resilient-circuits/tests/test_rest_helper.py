@@ -44,3 +44,9 @@ def test_resilient_client_retry_args():
     assert res_client.request_max_retries == 10
     assert res_client.request_retry_delay == 10
     assert res_client.request_retry_backoff == 10
+
+def test_get_resilient_server_version(fx_mock_resilient_client):
+
+    const = fx_mock_resilient_client.get_const()
+    assert "major" in const.get("server_version", {})
+    assert "minor" in const.get("server_version", {})
