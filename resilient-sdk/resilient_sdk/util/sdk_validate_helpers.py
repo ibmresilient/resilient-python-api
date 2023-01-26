@@ -1361,7 +1361,12 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
 
             # append attr, val at the end the args list [..., "--attr", "val", ...]
             attr, val = match.group(1), match.group(2)
-            args.append("--{0}".format(attr))
+
+            if len(attr) == 1:
+                dashes = "-"
+            else:
+                dashes = "--"
+            args.append("{0}{1}".format(dashes, attr))
             args.append(val)
 
     elif path_sdk_settings and os.path.exists(path_sdk_settings):
@@ -1375,7 +1380,11 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
         if setting_file_contents.get("tox-args"):
             for arg in setting_file_contents.get("tox-args"):
                 # append attr, val at the end the args list [..., "--attr", "val", ...]
-                args.append("--{0}".format(arg))
+                if len(arg) == 1:
+                    dashes = "-"
+                else:
+                    dashes = "--"
+                args.append("{0}{1}".format(dashes, arg))
                 args.append(setting_file_contents.get("tox-args").get(arg))
         else:
             # use defaults because given sdk settings file doesn't have the right format
