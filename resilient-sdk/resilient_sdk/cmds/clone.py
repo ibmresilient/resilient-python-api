@@ -661,6 +661,17 @@ class CmdClone(BaseCmd):
                     })
                     break
 
+            # if this is a subplaybook, need to change the subplaybook field type as well
+            # similar sequential search as above but this time search
+            # subplaybook_settings.view_items for matching UUIDs
+            for view_item in obj_to_modify.get("subplaybook_settings", {}).get("view_items", []):
+                if view_item.get("content") == field_old_uuid:
+                    view_item.update({
+                        "content": field_new_uuid,
+                        "field_type": new_field_type_uuid
+                    })
+                    break
+
         if obj_to_modify.get("tag"):
             tag_new_name = "playbook_{0}".format(pb_new_uuid)
             obj_to_modify.get("tag").update({
