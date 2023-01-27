@@ -789,6 +789,38 @@ def test_tox_tests_run_tox_tests(fx_copy_fn_main_mock_integration, caplog):
         assert "bad run" in result[1].description
         assert result[0] == 0
 
+def test_tox_tests_run_tox_tests_with_pytest_args(fx_copy_fn_main_mock_integration, caplog):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[3]
+
+    args = ["m=\"not livetest\"", "resilienthost=\"fake.soar.com\""]
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_tox_sub_process:
+
+        mock_tox_sub_process.return_value = (None, "bad run")
+
+        result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
+
+        assert "Reading tox args from command line flag --tox-args" in caplog.text
+        assert result[0] == 0
+
+def test_tox_tests_run_tox_tests_with_settings_file(fx_copy_fn_main_mock_integration, caplog):
+
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.tests_attributes[3]
+
+    settings_file_path = mock_paths.MOCK_SDK_SETTINGS_PATH
+
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.run_subprocess") as mock_tox_sub_process:
+
+        mock_tox_sub_process.return_value = (None, "bad run")
+
+        result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, None, settings_file_path)
+
+        assert "Reading tox args from sdk settings JSON file" in caplog.text
+        assert result[0] == 0
+
 
 def test_tox_tests_parse_xml_report():
 
