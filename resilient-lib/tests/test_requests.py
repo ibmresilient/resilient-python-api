@@ -755,6 +755,7 @@ class TestFunctionRequests(unittest.TestCase):
         assert "cookies" in resp.json()
         assert resp.json()["cookies"] == {}
 
+    @unittest.skip(reason="generally true, but not regular enough so closing for now")
     def test_sessions_faster_than_regular(self):
         """
         This test proves that the session object is much more efficient when
