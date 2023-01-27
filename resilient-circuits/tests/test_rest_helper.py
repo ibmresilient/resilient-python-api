@@ -4,7 +4,7 @@
 
 import copy
 
-from pytest_resilient_circuits.shared_mock_data import mock_constants
+from .shared_mock_data import mock_constants
 from resilient import constants as res_constants
 from resilient_circuits import constants, rest_helper
 
@@ -29,7 +29,7 @@ def test_resilient_client_retry_args():
     if rest_helper.resilient_client:
         rest_helper.resilient_client = None
 
-    opts = copy.deepcopy(mock_constants.MOCK_APP_CONFIGS)
+    opts = copy.deepcopy(mock_constants.MOCK_OPTS)
 
     opts.update({
         res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES: 10,
