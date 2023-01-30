@@ -35,6 +35,10 @@
 {% if datatables or custom_incident_fields %}
   - [Custom Layouts](#custom-layouts)
 {% endif %}
+{% if poller_flag %}
+  - [Poller Considerations](#poller-considerations)
+    - [Poller Templates for SOAR Cases](#poller-templates-for-soar-cases)
+{% endif %}
 {% for fn in functions|sort(attribute="name") %}
 - [Function - {{ fn.name }}](#function---{{ fn.anchor }})
 {% endfor %}
@@ -210,6 +214,32 @@ The following table provides the settings you need to configure the app. These s
 
 {% endif %}
 
+{% if poller_flag %}
+### Poller Considerations
+The poller is just one way to escalate to SOAR cases. It's also possible for a case to be raised through a SIEM such as IBM QRadar, which would then coorelate Incident Groups into Offenses. With the QRadar Plugin for SOAR, offenses can then be escalated to SOAR cases. As long as the custom ID is preserved when the case is created, then all the remaining details about the group will synchronize to the SOAR case through this app automatically.
+
+When using another source for escalation to IBM SOAR, disable the poller by changing the app.config setting to `poller_interval=0`.
+
+#### Poller Templates for SOAR Cases
+It may be necessary to modify the templates used to create, update, or close SOAR cases based on your required custom fields in SOAR.
+
+This is especially relevant if you have required custom _close_ fields that need to be filled when closing a case in SOAR. If that is the case, be sure to implement a custom `close_case_template` and reference those required close fields in the template.
+
+When overriding the template in App Host, specify the file path for each file as `/var/rescircuits`.
+
+Below are the default templates used which can be copied, modified, and used with app_config's
+`soar_create_case_template`, `soar_update_case_template`, and `soar_close_case_template` settings to override the default templates.
+
+{% for template_name, template_contents in poller_templates.items() %}
+<details><summary>{{template_name}}</summary>
+
+```jinja
+{{template_contents}}
+```
+</details>
+
+{% endfor %}
+{% endif %}
 ---
 
 {% for fn in functions|sort(attribute="name") %}

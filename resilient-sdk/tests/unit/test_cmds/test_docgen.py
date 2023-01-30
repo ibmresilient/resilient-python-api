@@ -180,6 +180,18 @@ def test_get_custom_artifact_details():
 
     assert the_artifact == mock_artifact
 
+def test_get_poller_details(fx_copy_fn_main_mock_integration):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    poller_templates = CmdDocgen._get_poller_details(path_fn_main_mock_integration, mock_integration_name)
+
+    assert len(poller_templates) == 3
+    assert package_helpers.BASE_NAME_POLLER_CREATE_CASE_TEMPLATE in poller_templates
+    assert package_helpers.BASE_NAME_POLLER_UPDATE_CASE_TEMPLATE in poller_templates
+    assert package_helpers.BASE_NAME_POLLER_CLOSE_CASE_TEMPLATE in poller_templates
+
 
 def test_app_log_results_are_used(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_docgen):
 

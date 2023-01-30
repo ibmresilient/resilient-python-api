@@ -36,7 +36,7 @@ EXPECTED_FILES_ROOT_DIR = [
 EXPECTED_FILES_DATA_DIR = ['wf_mock_workflow_one.md', 'wf_mock_workflow_two.md']
 EXPECTED_FILES_DOC_DIR = ['screenshots']
 EXPECTED_FILES_DOC_SCREENSHOTS_DIR = ['main.png']
-EXPECTED_FILES_PACKAGE_DIR = ['LICENSE', '__init__.py', 'components', 'util']
+EXPECTED_FILES_PACKAGE_DIR = ['LICENSE', '__init__.py', 'components', 'util', 'poller', 'lib']
 EXPECTED_FILES_PACKAGE_COMPONENTS_DIR = ['__init__.py', 'funct_mock_function_one.py', 'funct_mock_function_two.py']
 EXPECTED_FILES_PACKAGE_UTIL_DIR = ['__init__.py', 'config.py', 'customize.py', 'data', 'selftest.py']
 EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR = ['export.res']
@@ -255,6 +255,7 @@ def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_
     # Add paths to an output base and an export.res file
     sys.argv.extend(["-o", output_path])
     sys.argv.extend(["-e", mock_paths.MOCK_EXPORT_RES])
+    sys.argv.extend(["--poller"])
 
     cmd_codegen = CmdCodegen(fx_get_sub_parser)
     args = cmd_codegen.parser.parse_known_args()[0]
