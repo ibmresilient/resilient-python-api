@@ -160,7 +160,7 @@ def read_file(path):
     return file_lines
 
 
-def read_json_file(path):
+def read_json_file(path, section=None):
     """
     If the contents of the file at path is valid JSON,
     returns the contents of the file as a dictionary
@@ -178,7 +178,7 @@ def read_json_file(path):
         # a JSONDecodeError if it cannot load the JSON from the file
         except (ValueError, JSONDecodeError) as err:
             raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
-    return file_contents
+    return file_contents.get(section) if section else file_contents
 
 
 def read_zip_file(path, pattern):

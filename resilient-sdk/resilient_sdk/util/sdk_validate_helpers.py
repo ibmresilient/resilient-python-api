@@ -1376,7 +1376,7 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
         # that the sdk settings file exists
         LOG.debug("Reading tox args from sdk settings JSON file {0}".format(path_sdk_settings))
 
-        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings, "validate")
         if setting_file_contents.get("tox-args"):
             for arg in setting_file_contents.get("tox-args"):
                 # append attr, val at the end the args list [..., "--attr", "val", ...]
@@ -1606,7 +1606,7 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
         # if a settings file exists, check if that file has a pylint
         # section which will contain a list of custom pylint command line args
 
-        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings, "validate")
 
         if settings_file_contents.get("pylint") and isinstance(settings_file_contents.get("pylint"), list):
             LOG.debug("Reading pylint command line args from sdk settings JSON file {0}".format(path_sdk_settings))
@@ -1774,7 +1774,7 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
     if path_sdk_settings and os.path.exists(path_sdk_settings):
         # if a settings file exists, check if it has a bandit section
 
-        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings, "validate")
 
         # grab the bandit section (should be a list)
         settings_bandit_section = settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME)
