@@ -333,6 +333,9 @@ class CmdCodegen(BaseCmd):
         # add ::CHANGE_ME:: to jinja data
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
 
+        # add current SDK version to jinja data
+        jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
 
@@ -418,6 +421,9 @@ class CmdCodegen(BaseCmd):
             # Add package_name to function data
             f["package_name"] = package_name
 
+            # add sdk version to function data
+            f["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+
             # Get function name
             fn_name = f.get(ResilientObjMap.FUNCTIONS)
 
@@ -447,6 +453,10 @@ class CmdCodegen(BaseCmd):
         for w in jinja_data.get("workflows"):
             # Get workflow name
             wf_name = w.get(ResilientObjMap.WORKFLOWS)
+
+            # add sdk version to workflow data
+            w["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+
 
             # Generate wf_xx.md file name
             # Don't add prefix if workflow name already begins with "wf_".
