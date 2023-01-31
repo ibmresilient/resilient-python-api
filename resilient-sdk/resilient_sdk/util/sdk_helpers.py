@@ -167,6 +167,8 @@ def read_json_file(path, section=None):
 
     :param path: Path to JSON file to read
     :type path: str
+    :param section: Section name in JSON file (eg. commands in resilient-sdk)
+    :type section: str
     :return: File contents as a dictionary
     :rtype: dict
     """
@@ -178,7 +180,7 @@ def read_json_file(path, section=None):
         # a JSONDecodeError if it cannot load the JSON from the file
         except (ValueError, JSONDecodeError) as err:
             raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
-    return file_contents.get(section) if section else file_contents
+    return file_contents.get(section, {}) if section else file_contents
 
 
 def read_zip_file(path, pattern):

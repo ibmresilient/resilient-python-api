@@ -36,7 +36,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
+    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
 
     def setup(self):
         # Define codegen usage and description
@@ -274,6 +274,16 @@ class CmdCodegen(BaseCmd):
         # The package_name will be specified in the args
         package_name = args.package
 
+        # Validate that the given path to the sdk settings is valid
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, args.settings)
+            # Parse the sdk_settings.json file
+            settings_file_contents = sdk_helpers.read_json_file(args.settings, "codegen")
+        except SDKException as err:
+            args.settings = None
+            settings_file_contents = {}
+            LOG.warn("Given path to SDK Settings is either not valid or not readable. Using defaults")
+
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
@@ -332,6 +342,13 @@ class CmdCodegen(BaseCmd):
 
         # add ::CHANGE_ME:: to jinja data
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
+
+        # add license name, author, author_email, url
+        settings_file_contents_setup = settings_file_contents.get("setup")
+        jinja_data.update({ k:v for (k,v) in settings_file_contents_setup.items()})
+
+        # add license_content to jinja_data
+        jinja_data["license_content"] = settings_file_contents.get("license_content", "<<PUT YOUR LICENSE TEXT HERE>>")
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
