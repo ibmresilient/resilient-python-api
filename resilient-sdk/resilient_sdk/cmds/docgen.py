@@ -36,8 +36,10 @@ class CmdDocgen(BaseCmd):
     CMD_NAME = "docgen"
     CMD_HELP = "Generates boilerplate documentation for an app."
     CMD_USAGE = """
-    $ resilient-sdk docgen -p <path_to_package>"""
+    $ resilient-sdk docgen -p <path_to_package>
+    $ resilient-sdk docgen -p <name_of_package> --settings <path_to_custom_sdk_settings_file>"""
     CMD_DESCRIPTION = CMD_HELP
+    CMD_ADD_PARSERS = [constants.SDK_SETTINGS_PARSER_NAME]
 
     def setup(self):
         # Define docgen usage and description
@@ -299,6 +301,16 @@ class CmdDocgen(BaseCmd):
         except SDKException as err:
             err.message += "\nEnsure you are in the directory of the package you want to run docgen for"
             raise err
+        
+        # Validate that the given path to the sdk settings is valid
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, args.settings)
+            # Parse the sdk_settings.json file
+            settings_file_contents = sdk_helpers.read_json_file(args.settings, "docgen")
+        except SDKException as err:
+            args.settings = None
+            settings_file_contents = {}
+            LOG.warn("Given path to SDK Settings is either not valid or not readable. Using defaults")            
 
         # Parse the setup.py file
         setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
@@ -363,7 +375,8 @@ class CmdDocgen(BaseCmd):
         # Other variables for Jinja Templates
         package_name_dash = package_name.replace("_", "-")
         server_version = customize_py_import_def.get("server_version", {})
-        supported_app = sdk_helpers.does_url_contain(setup_py_attributes.get("url", ""), "ibm.com/mysupport")
+        supported_app = settings_file_contents.get("supported_app", 
+                                    sdk_helpers.does_url_contain(setup_py_attributes.get("url", ""), "ibm.com/mysupport"))
 
         # See if a payload_samples dir exists and use the contents for function results
         try:
