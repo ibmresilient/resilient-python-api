@@ -409,7 +409,8 @@ class CmdDocgen(BaseCmd):
             "custom_fields": jinja_custom_fields,
             "custom_artifact_types": jinja_custom_artifact_types,
             "playbooks": jinja_playbooks,
-            "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING
+            "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING,
+            "sdk_version": sdk_helpers.get_resilient_sdk_version()
         })
 
         # Create a backup if needed of README
