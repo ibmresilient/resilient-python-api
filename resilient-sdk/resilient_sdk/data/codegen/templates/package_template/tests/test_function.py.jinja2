@@ -2,6 +2,7 @@
 {%- macro get_input_sample(i) -%}{% if i.input_type=="select" %}"{{i["values"][0]["label"]}}"{% elif i.input_type=="multiselect" %}"{{i["values"][0]["label"]}}"{% elif i.input_type=="number" %}123{% elif i.input_type=="boolean" %}True{% elif i.input_type=="datepicker" %}1518480000000{% elif i.input_type=="datetimepicker" %}1518367008000{% elif i.input_type=="textarea" %}{"type": "text", "content": "sample line one\nsample line two"}{%else%}"sample text"{%endif%}{%- endmacro -%}
 
 # -*- coding: utf-8 -*-
+# Generated with resilient-sdk v{{ sdk_version }}
 """Tests using pytest_resilient_circuits"""
 
 import pytest

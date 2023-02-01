@@ -443,7 +443,8 @@ class CmdDocgen(BaseCmd):
             "playbooks": jinja_playbooks,
             "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING,
             "poller_flag": args.poller,
-            "poller_templates": poller_templates
+            "poller_templates": poller_templates,
+            "sdk_version": sdk_helpers.get_resilient_sdk_version()
         })
 
         # Create a backup if needed of README
