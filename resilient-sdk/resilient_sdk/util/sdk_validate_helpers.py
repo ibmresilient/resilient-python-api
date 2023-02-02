@@ -651,6 +651,23 @@ def package_files_validate_script_python_versions(path_file, attr_dict, **_):
                     solution=attr_dict.get("fail_solution")
                 ))
 
+        # check for input scripts calling subplaybooks
+        if constants.EXPORT_RES_SUB_PLAYBOOK_PRE_PROCESSING_UNALLOWED_LANGUAGE in playbook.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_sub_playbooks_input").format(playbook.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+        # check for output scripts from subplaybooks
+        if constants.EXPORT_RES_SUB_PLAYBOOK_OUTPUT_UNALLOWED_LANGUAGE in playbook.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_sub_playbooks_output").format(playbook.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+
     # workflows are harder, but we can simply look into the XML for what we know should be there:
     # there should be a line in there that says "post_processing_script_language":"python3" for PY3
     # or "post_processing_script_language":"python" for Python 2 scripts (same goes for pre_processing...)

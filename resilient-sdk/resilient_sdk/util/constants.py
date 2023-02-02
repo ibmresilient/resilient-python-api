@@ -74,6 +74,8 @@ SETUP_PY_INSTALL_REQ_NAME = "install_requires"
 
 # export.res constants (for validate)
 EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES = ["python3"]
+EXPORT_RES_SUB_PLAYBOOK_PRE_PROCESSING_UNALLOWED_LANGUAGE = "\"pre_processing_script_language\":\"python\""
+EXPORT_RES_SUB_PLAYBOOK_OUTPUT_UNALLOWED_LANGUAGE = "\"script_language\":\"python\""
 EXPORT_RES_WORKFLOW_PRE_PROCESSING_UNALLOWED_LANGUAGE = "\"pre_processing_script_language\":\"python\""
 EXPORT_RES_WORKFLOW_POST_PROCESSING_UNALLOWED_LANGUAGE = "\"post_processing_script_language\":\"python\""
 
