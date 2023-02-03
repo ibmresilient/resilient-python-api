@@ -30,6 +30,7 @@ class CmdCodegen(BaseCmd):
     CMD_HELP = "Generates boilerplate code used to begin developing an app."
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
     $ resilient-sdk codegen -p <path_current_package> --poller
@@ -344,8 +345,11 @@ class CmdCodegen(BaseCmd):
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
 
         # add license name, author, author_email, url
-        settings_file_contents_setup = settings_file_contents.get("setup")
-        jinja_data.update({ k:v for (k,v) in settings_file_contents_setup.items()})
+        settings_file_contents_setup = settings_file_contents.get("setup", {})
+        jinja_data["license"] = settings_file_contents_setup.get("license", "<<insert here>>")
+        jinja_data["author"] = settings_file_contents_setup.get("author", "<<your name here>>")
+        jinja_data["author_email"] = settings_file_contents_setup.get("author_email", "you@example.com")
+        jinja_data["url"] = settings_file_contents_setup.get("url", "<<your company url>>")
 
         # add license_content to jinja_data
         jinja_data["license_content"] = settings_file_contents.get("license_content", "<<PUT YOUR LICENSE TEXT HERE>>")
