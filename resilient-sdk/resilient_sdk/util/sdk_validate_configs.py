@@ -305,6 +305,8 @@ package_files = [
 
         "fail_msg": u"Global script '{0}' packaged with this app is written in Python 2",
         "fail_msg_playbooks": u"Local script '{0}' in playbook '{1}' packaged with this app is written in Python 2",
+        "fail_msg_sub_playbooks_input": u"Input script for a subplaybook in playbook '{0}' packaged with this app is written in Python 2",
+        "fail_msg_sub_playbooks_output": u"Output script for subplaybook '{0}' packaged with this app is written in Python 2",
         "fail_msg_pre_processing": u"Pre-processing script for workflow '{0}' packaged with this app is written in Python 2",
         "fail_msg_post_processing": u"Post-processing script for workflow '{0}' packaged with this app is written in Python 2",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
