@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
-# Generated with resilient-sdk v{{ sdk_version }}
 """Poller implementation"""
 
 import logging
@@ -11,15 +10,15 @@ from resilient_circuits import AppFunctionComponent, is_this_a_selftest
 from resilient_lib import (SOARCommon, get_last_poller_date,
                            make_payload_from_template, poller)
 
-from {{package_name}}.lib.app_common import AppCommon
+from fn_main_mock_integration.lib.app_common import AppCommon
 
 
-PACKAGE_NAME = "{{package_name}}"
-ENTITY_ID = "<- {{change_me_str}} ->"  # name of field in the endpoint entity (alert, case, etc) with the ID value
-ENTITY_CLOSE_FIELD = "<- {{change_me_str}} ->" # name of field in endpoint entity to reference the close state
-SOAR_ENTITY_ID_FIELD = "<- {{change_me_str}} ->" # name of custom IBM SOAR case field to retain the endpoint entity_id
-ENTITY_LABEL = "<- {{change_me_str}} ->" # label the name the case, alert, event, etc. native to your endpoint solution
-ENTITY_COMMENT_HEADER = "Created by <- {{change_me_str}} ->" # header used to identify comments create by the endpoint entity
+PACKAGE_NAME = "fn_main_mock_integration"
+ENTITY_ID = "<- ::CHANGE_ME:: ->"  # name of field in the endpoint entity (alert, case, etc) with the ID value
+ENTITY_CLOSE_FIELD = "<- ::CHANGE_ME:: ->" # name of field in endpoint entity to reference the close state
+SOAR_ENTITY_ID_FIELD = "<- ::CHANGE_ME:: ->" # name of custom IBM SOAR case field to retain the endpoint entity_id
+ENTITY_LABEL = "<- ::CHANGE_ME:: ->" # label the name the case, alert, event, etc. native to your endpoint solution
+ENTITY_COMMENT_HEADER = "Created by <- ::CHANGE_ME:: ->" # header used to identify comments create by the endpoint entity
 
 LOG = logging.getLogger(__name__)
 
@@ -93,7 +92,7 @@ def is_entity_closed(entity):
     :return: true/false if entity is closed
     :rtype: bool
     """
-    # <{{change_me_str}} change this field to reflect the field and logic to determine if the entity is now closed >
+    # <::CHANGE_ME:: change this field to reflect the field and logic to determine if the entity is now closed >
     return bool(entity.get(ENTITY_CLOSE_FIELD, False))
 
 class PollerComponent(AppFunctionComponent):
@@ -109,7 +108,7 @@ class PollerComponent(AppFunctionComponent):
         :type opts: dict
         """
         # Validate required fields in app.config are set
-        # <{{change_me_str}} change this validation to include all the fields required in the app.config file >
+        # <::CHANGE_ME:: change this validation to include all the fields required in the app.config file >
         required_fields = ["polling_interval",
                         "polling_lookback",
                         "endpoint_url",
@@ -178,7 +177,7 @@ class PollerComponent(AppFunctionComponent):
 
         if query_results:
             # iterate over all the entities.
-            self.process_query_list(query_results.get("result", [])) # <{{change_me_str}} update to the correct value for your API>
+            self.process_query_list(query_results.get("result", [])) # <::CHANGE_ME:: update to the correct value for your API>
 
     def process_query_list(self, query_results):
         """
@@ -198,7 +197,7 @@ class PollerComponent(AppFunctionComponent):
                 entity_id = get_entity_id(entity)
 
                 # create linkback url
-                entity["entity_url"] = self.app_common.make_linkback_url(entity_id)
+                entity["entity_url"] = self.app_common.make_linkback_url(entity_id, "")
 
                 # determine if this is an existing SOAR case
                 soar_case, _error_msg = self.soar_common.get_soar_case({ SOAR_ENTITY_ID_FIELD: entity_id }, open_cases=False)

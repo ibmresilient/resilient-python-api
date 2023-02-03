@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
-# Generated with resilient-sdk v{{ sdk_version }}
 
 import logging
 from urllib.parse import urljoin
@@ -51,9 +50,9 @@ class AppCommon():
         """
 
         self.package_name = package_name
-        self.api_key = app_configs.get("api_key", "<- {{change_me_str}} change to default for API Key or remove default ->")
-        self.api_secret = app_configs.get("api_secret","<- {{change_me_str}} change to default for API secret or remove default ->")
-        self.endpoint_url = app_configs.get("endpoint_url", "<- {{change_me_str}} change to default for endpoint url or remove default ->")
+        self.api_key = app_configs.get("api_key", "<- ::CHANGE_ME:: change to default for API Key or remove default ->")
+        self.api_secret = app_configs.get("api_secret","<- ::CHANGE_ME:: change to default for API secret or remove default ->")
+        self.endpoint_url = app_configs.get("endpoint_url", "<- ::CHANGE_ME:: change to default for endpoint url or remove default ->")
         self.rc = rc
         self.verify = _get_verify_ssl(app_configs)
 
@@ -62,7 +61,7 @@ class AppCommon():
     def _get_uri(self, cmd):
         """
         Build API url
-        <- {{change_me_str}} change this to reflect the correct way to build an API call ->
+        <- ::CHANGE_ME:: change this to reflect the correct way to build an API call ->
 
         :param cmd: portion of API: alerts, endpoints, policies
         :type cmd: str
@@ -70,7 +69,6 @@ class AppCommon():
         :rtype: str
         """
         raise IntegrationError("UNIMPLEMENTED")
-        return urljoin(self.endpoint_url, cmd)
 
     def _make_headers(self, token):
         """Build API header using authorization token
@@ -81,10 +79,6 @@ class AppCommon():
         :rtype: dict
         """
         raise IntegrationError("UNIMPLEMENTED")
-        header = HEADER.copy()
-        # modify to represent how to build the header
-
-        return header
 
     def _api_call(self, method, url, payload=None):
         """
@@ -99,16 +93,10 @@ class AppCommon():
         :return: requests.Response object returned from the endpoint call
         :rtype: ``requests.Response``
         """    
-        # <- {{change_me_str}} there may be changes needed in here to
+        # <- ::CHANGE_ME:: there may be changes needed in here to
         # work with your endpoint solution ->
 
-        return self.rc.execute(method,
-                               url,
-                               params=params,
-                               json=payload,
-                               headers=self._make_headers(),
-                               verify=self.verify,
-                               callback=callback)
+        raise IntegrationError("UNIMPLEMENTED")
 
     def query_entities_since_ts(self, timestamp, *args, **kwargs):
         """
@@ -121,20 +109,9 @@ class AppCommon():
         :return: changed entity list
         :rtype: list
         """
-        # <- {{change_me_str}} -> for the specific API calls
+        # <- ::CHANGE_ME:: -> for the specific API calls
         # and make sure to properly handle pagination!
         raise IntegrationError("UNIMPLEMENTED")
-        query = {
-            "query_field_name": readable_datetime(timestamp) # utc datetime format
-        }
-
-        LOG.debug("Querying endpoint with %s", query)
-        response, err_msg = self._api_call("GET", 'alerts', query, refresh_authentication=True)
-        if err_msg:
-            LOG.error("%s API call failed: %s", self.package_name, err_msg)
-            return None
-
-        return response.json()
 
     def make_linkback_url(self, entity_id, linkback_url):
         """
@@ -148,7 +125,6 @@ class AppCommon():
         :rtype: str
         """
         raise IntegrationError("UNIMPLEMENTED")
-        return urljoin(self.endpoint_url, linkback_url.format(entity_id))
 
 
 def callback(response):

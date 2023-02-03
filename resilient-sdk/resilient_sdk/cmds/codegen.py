@@ -353,6 +353,8 @@ class CmdCodegen(BaseCmd):
 
         # add license_content to jinja_data
         jinja_data["license_content"] = settings_file_contents.get("license_content", "<<PUT YOUR LICENSE TEXT HERE>>")
+        # add current SDK version to jinja data
+        jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
@@ -414,9 +416,9 @@ class CmdCodegen(BaseCmd):
                 # data isn't rendered with jinja — these are default jinja templates to be modified
                 # by the developer who is implementing a poller
                 "data": {
-                    "soar_create_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
-                    "soar_update_case.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
-                    "soar_close_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
+                    package_helpers.BASE_NAME_POLLER_CREATE_CASE_TEMPLATE: package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
+                    package_helpers.BASE_NAME_POLLER_UPDATE_CASE_TEMPLATE: package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
+                    package_helpers.BASE_NAME_POLLER_CLOSE_CASE_TEMPLATE: package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
                 }
             }
             lib_mapping_dict = {
@@ -438,6 +440,9 @@ class CmdCodegen(BaseCmd):
         for f in jinja_data.get("functions"):
             # Add package_name to function data
             f["package_name"] = package_name
+
+            # add sdk version to function data
+            f["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 
             # Get function name
             fn_name = f.get(ResilientObjMap.FUNCTIONS)
@@ -468,6 +473,10 @@ class CmdCodegen(BaseCmd):
         for w in jinja_data.get("workflows"):
             # Get workflow name
             wf_name = w.get(ResilientObjMap.WORKFLOWS)
+
+            # add sdk version to workflow data
+            w["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+
 
             # Generate wf_xx.md file name
             # Don't add prefix if workflow name already begins with "wf_".
