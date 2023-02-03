@@ -390,6 +390,7 @@ class Actions(ResilientComponent):
 
         # Make a worker thread-pool that will run functions
         LOG.debug("num_workers set to %s", opts.get("num_workers"))
+        self._num_workers = opts.get("num_workers")
         self._functionworker = FunctionWorker(process=False, channel="functionworker", workers=opts.get("num_workers"))
         self._functionworker.register(self.root)
 
@@ -1067,6 +1068,22 @@ class Actions(ResilientComponent):
 
     @handler("reload", priority=999)
     def reload(self, event, opts):
+        """New config, check to see if num_workers has been changed, update pool if it has and is valid"""
+        reloaded_num_workers = opts.get("num_workers", -1)
+        if 0 <= reloaded_num_workers <= 500:
+            if reloaded_num_workers != self._num_workers:
+                LOG.debug("The num_workers app.config setting has been changed from %s to %s.",
+                          self.num_workers, reloaded_num_workers)
+                # Unregister the existing worker thread-pool that will run functions.
+                self._functionworker.unregister()
+                # Re-create and register the new worker thread-pool that will run functions with new num_workers setting.
+                self._functionworker = FunctionWorker(process=False, channel="functionworker",
+                                                      workers=reloaded_num_workers)
+                self._functionworker.register(self.root)
+        else:
+            LOG.error("The num_workers app.config setting has been changed to an invalid value %s",
+                      reloaded_num_workers)
+
         """New config, reconnect to stomp if required"""
         event.success = False
         super(Actions, self).reload(event, opts)
