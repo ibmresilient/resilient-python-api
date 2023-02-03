@@ -67,7 +67,7 @@ class CmdValidate(BaseCmd):
         self.parser.add_argument(constants.SUB_CMD_OPT_PACKAGE[1], constants.SUB_CMD_OPT_PACKAGE[0],
                                  type=ensure_unicode,
                                  required=False,
-                                 help="Path to existing package. Deafults to current directory",
+                                 help="Path to existing package. Defaults to current directory",
                                  default=os.getcwd())
 
         self.parser.add_argument(SUB_CMD_VALIDATE[0],
