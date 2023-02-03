@@ -337,7 +337,7 @@ class CmdDocgen(BaseCmd):
         except SDKException as err:
             args.settings = None
             settings_file_contents = {}
-            LOG.warn("Given path to SDK Settings is either not valid or not readable. Using defaults")            
+            LOG.debug("Given path to SDK Settings is either not valid or not readable. Using defaults")            
 
         # Parse the setup.py file
         setup_py_attributes = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)

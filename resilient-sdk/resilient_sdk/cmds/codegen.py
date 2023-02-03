@@ -283,7 +283,7 @@ class CmdCodegen(BaseCmd):
         except SDKException as err:
             args.settings = None
             settings_file_contents = {}
-            LOG.warn("Given path to SDK Settings is either not valid or not readable. Using defaults")
+            LOG.debug("Given path to SDK Settings is either not valid or not readable. Using defaults")
 
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
