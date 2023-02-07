@@ -1080,6 +1080,8 @@ class Actions(ResilientComponent):
                 self._functionworker = FunctionWorker(process=False, channel="functionworker",
                                                       workers=reloaded_num_workers)
                 self._functionworker.register(self.root)
+                # Update the instance attribute.
+                self._num_workers = reloaded_num_workers
         else:
             LOG.error("The num_workers app.config setting has been changed to an invalid value %s",
                       reloaded_num_workers)
