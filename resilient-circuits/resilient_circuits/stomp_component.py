@@ -199,8 +199,8 @@ class StompClient(BaseComponent):
 
         except StompConnectionError as err:
             LOG.debug(traceback.format_exc())
-            # is this error is unrecoverable?
-            if "no more data" in lower(str(err)):
+            # is this error unrecoverable?
+            if "no more data" in str(err).lower():
                 self._no_more_data_counter += 1
                 if self._no_more_data_counter >= MAX_NO_MORE_DATA_ERRORS:
                     LOG.error("Exiting due to unrecoverable error")
