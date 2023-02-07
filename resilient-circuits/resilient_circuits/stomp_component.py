@@ -27,6 +27,7 @@ ACK_MODES = (ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
 
 DEFAULT_MAX_RECONNECT_ATTEMPTS = 3
 DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
+MAX_NO_MORE_DATA_ERRORS = 10 # 
 
 LOG = logging.getLogger(__name__)
 
@@ -107,6 +108,7 @@ class StompClient(BaseComponent):
         self.client_heartbeat = None
         self.last_heartbeat = 0
         self.ALLOWANCE = 2  # multiplier for heartbeat timeouts
+        self._no_more_data_counter = 0  # count the number of consecutive errors
 
     @property
     def connected(self):
@@ -192,12 +194,21 @@ class StompClient(BaseComponent):
                 LOG.info("Connected to %s", self._stomp_server)
                 self.fire(Connected())
                 self.start_heartbeats()
+                self._no_more_data_counter = 0 # restart counter
                 return "success"
 
         except StompConnectionError as err:
             LOG.debug(traceback.format_exc())
+            # is this error is unrecoverable?
+            if "no more data" in lower(str(err)):
+                self._no_more_data_counter += 1
+                if self._no_more_data_counter >= MAX_NO_MORE_DATA_ERRORS:
+                    LOG.error("Exiting due to unrecoverable error")
+                    sys.exit(1) # this will exit resilient-circuits
+
             self.fire(ConnectionFailed(self._stomp_server))
             event.success = False
+
         # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
         #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
         #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
