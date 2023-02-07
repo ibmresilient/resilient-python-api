@@ -1070,7 +1070,7 @@ class Actions(ResilientComponent):
     def reload(self, event, opts):
         """New config, check to see if num_workers has been changed, update pool if it has and is valid"""
         reloaded_num_workers = opts.get("num_workers", -1)
-        if 0 <= reloaded_num_workers <= 500:
+        if 1 <= reloaded_num_workers <= 500:
             if reloaded_num_workers != self._num_workers:
                 LOG.debug("The num_workers app.config setting has been changed from %s to %s.",
                           self.num_workers, reloaded_num_workers)
