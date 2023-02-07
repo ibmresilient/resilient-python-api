@@ -1,5 +1,5 @@
 language: python
-python: 3.9.13
+python: 3.9.16
 os: linux
 dist: xenial
 
@@ -93,7 +93,7 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Unit Tests
-      python: 3.9.13
+      python: 3.9.16
       env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install:
         - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
@@ -110,7 +110,7 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Integration Tests
-      python: 3.9.13
+      python: 3.9.16
       env: RUN_TYPE=int_test TOXENV=py39
       install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
@@ -138,7 +138,7 @@ matrix:
 
     - stage: build packages
       name: Build Packages in Python 3.9
-      python: 3.9.13
+      python: 3.9.16
       install:
         - pip install twine build
       script:
