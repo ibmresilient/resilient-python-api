@@ -180,10 +180,13 @@ def read_json_file(path, section=None):
         # a JSONDecodeError if it cannot load the JSON from the file
         except (ValueError, JSONDecodeError) as err:
             raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
-    if file_contents.get('section', {}):
-        return file_contents.get('section')
+    if section:
+        if section in file_contents:
+            file_contents.get(section, {})
+        else: 
+            LOG.debug(f"Section {section} not found in provided JSON.")
+            return {}
     else:
-        LOG.debug(f"Section {section} was not found the provided JSON.")
         return file_contents
 
 
