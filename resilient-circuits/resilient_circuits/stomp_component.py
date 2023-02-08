@@ -27,7 +27,6 @@ ACK_MODES = (ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
 
 DEFAULT_MAX_RECONNECT_ATTEMPTS = 3
 DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
-MAX_NO_MORE_DATA_ERRORS = 10 # 
 
 LOG = logging.getLogger(__name__)
 
@@ -51,7 +50,8 @@ class StompClient(BaseComponent):
              proxy_user=None,
              proxy_password=None,
              channel=channel,
-             stomp_params=None):
+             stomp_params=None,
+             stomp_max_connection_errors=None):
         """ Initialize StompClient.  Called after __init__ """
         self.channel = channel
         if proxy_host:
@@ -108,7 +108,8 @@ class StompClient(BaseComponent):
         self.client_heartbeat = None
         self.last_heartbeat = 0
         self.ALLOWANCE = 2  # multiplier for heartbeat timeouts
-        self._no_more_data_counter = 0  # count the number of consecutive errors
+        self._stomp_max_connection_errors =  stomp_max_connection_errors # count the number of consecutive errors
+        self._stomp_connection_errors = 0
 
     @property
     def connected(self):
@@ -194,15 +195,15 @@ class StompClient(BaseComponent):
                 LOG.info("Connected to %s", self._stomp_server)
                 self.fire(Connected())
                 self.start_heartbeats()
-                self._no_more_data_counter = 0 # restart counter
+                self._stomp_connection_errors = 0 # restart counter
                 return "success"
 
         except StompConnectionError as err:
             LOG.debug(traceback.format_exc())
             # is this error unrecoverable?
             if "no more data" in str(err).lower():
-                self._no_more_data_counter += 1
-                if self._no_more_data_counter >= MAX_NO_MORE_DATA_ERRORS:
+                self._stomp_connection_errors += 1
+                if self._stomp_max_connection_errors and self._stomp_connection_errors >= self._stomp_max_connection_errors:
                     LOG.error("Exiting due to unrecoverable error")
                     sys.exit(1) # this will exit resilient-circuits
 

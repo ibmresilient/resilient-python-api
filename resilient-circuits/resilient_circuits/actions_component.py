@@ -43,6 +43,7 @@ LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
+STOMP_MAX_CONNECTION_ERRORS = 3     # default number of errors when heartbeat is lost
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 
@@ -679,6 +680,7 @@ class Actions(ResilientComponent):
                                                ssl_context=context,
                                                ca_certs=ca_certs,  # For old ssl version
                                                stomp_params=stomp_params,
+                                               stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", STOMP_MAX_CONNECTION_ERRORS),
                                                **self._proxy_args)
             self.stomp_component.register(self)
         else:
@@ -693,6 +695,7 @@ class Actions(ResilientComponent):
                                       ssl_context=context,
                                       ca_certs=ca_certs,  # For old ssl version
                                       stomp_params=stomp_params,
+                                      stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", STOMP_MAX_CONNECTION_ERRORS),
                                       **self._proxy_args)
 
         # Other special options
