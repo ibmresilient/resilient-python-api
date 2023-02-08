@@ -182,7 +182,7 @@ def read_json_file(path, section=None):
             raise SDKException("Could not read corrupt JSON file at {0}\n{1}".format(path, err))
     if section:
         if section in file_contents:
-            file_contents.get(section, {})
+            return file_contents.get(section, {})
         else: 
             LOG.debug(f"Section {section} not found in provided JSON.")
             return {}
