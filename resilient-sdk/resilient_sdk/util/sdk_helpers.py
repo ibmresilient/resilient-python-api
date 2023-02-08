@@ -184,7 +184,7 @@ def read_json_file(path, section=None):
         if section in file_contents:
             return file_contents.get(section, {})
         else: 
-            LOG.debug(f"Section {section} not found in provided JSON.")
+            LOG.debug("Section {} not found in provided JSON.".format(section))
             return {}
     else:
         return file_contents
