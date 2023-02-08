@@ -43,7 +43,7 @@ LOG = logging.getLogger(__name__)
 
 STOMP_CLIENT_HEARTBEAT = 0          # no heartbeat from client to server
 STOMP_SERVER_HEARTBEAT = 15000      # 15-second heartbeat from server to client
-STOMP_MAX_CONNECTION_ERRORS = 3     # default number of errors when heartbeat is lost
+STOMP_MAX_CONNECTION_ERRORS = 2     # default number of errors when heartbeat is lost
 RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 
