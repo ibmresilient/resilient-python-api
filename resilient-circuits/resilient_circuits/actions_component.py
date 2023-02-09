@@ -680,6 +680,7 @@ class Actions(ResilientComponent):
                                                ssl_context=context,
                                                ca_certs=ca_certs,  # For old ssl version
                                                stomp_params=stomp_params,
+                                               stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS),
                                                **self._proxy_args)
             self.stomp_component.register(self)
         else:
@@ -694,6 +695,7 @@ class Actions(ResilientComponent):
                                       ssl_context=context,
                                       ca_certs=ca_certs,  # For old ssl version
                                       stomp_params=stomp_params,
+                                      stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS),
                                       **self._proxy_args)
 
         # Other special options

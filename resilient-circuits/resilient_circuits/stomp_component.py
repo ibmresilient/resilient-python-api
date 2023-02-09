@@ -17,6 +17,7 @@ from stompest.error import StompConnectionError, StompError, StompProtocolError
 from stompest.sync.client import LOG_CATEGORY
 from resilient_circuits.stomp_events import *
 from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
+from resilient_circuits import constants
 
 
 StompSpec.DEFAULT_VERSION = '1.2'
@@ -50,7 +51,8 @@ class StompClient(BaseComponent):
              proxy_user=None,
              proxy_password=None,
              channel=channel,
-             stomp_params=None):
+             stomp_params=None,
+             stomp_max_connection_errors=constants.STOMP_MAX_CONNECTION_ERRORS):
         """ Initialize StompClient.  Called after __init__ """
         self.channel = channel
         if proxy_host:
@@ -107,6 +109,8 @@ class StompClient(BaseComponent):
         self.client_heartbeat = None
         self.last_heartbeat = 0
         self.ALLOWANCE = 2  # multiplier for heartbeat timeouts
+        self._stomp_max_connection_errors =  stomp_max_connection_errors # count the number of consecutive errors
+        self._stomp_connection_errors = 0
 
     @property
     def connected(self):
@@ -192,12 +196,21 @@ class StompClient(BaseComponent):
                 LOG.info("Connected to %s", self._stomp_server)
                 self.fire(Connected())
                 self.start_heartbeats()
+                self._stomp_connection_errors = 0 # restart counter
                 return "success"
 
         except StompConnectionError as err:
             LOG.debug(traceback.format_exc())
+            # is this error unrecoverable?
+            if "no more data" in str(err).lower():
+                self._stomp_connection_errors += 1
+                if self._stomp_max_connection_errors and self._stomp_connection_errors >= self._stomp_max_connection_errors:
+                    LOG.error("Exiting due to unrecoverable error")
+                    sys.exit(1) # this will exit resilient-circuits
+
             self.fire(ConnectionFailed(self._stomp_server))
             event.success = False
+
         # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
         #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
         #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
