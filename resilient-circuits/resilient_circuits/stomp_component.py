@@ -17,6 +17,7 @@ from stompest.error import StompConnectionError, StompError, StompProtocolError
 from stompest.sync.client import LOG_CATEGORY
 from resilient_circuits.stomp_events import *
 from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
+from resilient_circuits import constants
 
 
 StompSpec.DEFAULT_VERSION = '1.2'
@@ -51,7 +52,7 @@ class StompClient(BaseComponent):
              proxy_password=None,
              channel=channel,
              stomp_params=None,
-             stomp_max_connection_errors=None):
+             stomp_max_connection_errors=constants.STOMP_MAX_CONNECTION_ERRORS):
         """ Initialize StompClient.  Called after __init__ """
         self.channel = channel
         if proxy_host:

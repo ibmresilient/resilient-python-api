@@ -57,3 +57,6 @@ EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instansiate STOMP
 EXIT_STOMP_UNAUTHORIZED_Q = 32      # STOMP: Not authorized to read from queue
 EXIT_STOMP_Q_TIMEOUT = 33           # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
 EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatTimeout event and the first HeartbeatTimeout event is greater than the 'heartbeat_timeout_threshold'
+
+# STOMP connection constants
+STOMP_MAX_CONNECTION_ERRORS = 2     # default number of errors when heartbeat is lost
