@@ -65,8 +65,7 @@ def test_stomp_reconnect_one_failure_followed_by_successful_reconnect(caplog):
                 client.connect(mock_evt)
                 assert client._stomp_connection_errors == i+1
 
-            # now a second StompConnectionError with "no more data" error
-            # this should trigger the max, and throw a sys.exit(1)
+            # successful reconnect now should reset count to 0
             patch_stomp_library_connect.side_effect = None
             client.connect(mock_evt)
             assert client._stomp_connection_errors == 0
