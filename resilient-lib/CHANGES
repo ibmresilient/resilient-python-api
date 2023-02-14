@@ -1,4 +1,4 @@
-**2022-12: version 48.0**
+**2023-02: version 48.0**
 
 * Added support for ``verify`` config in app.config when using
   :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`.
@@ -11,6 +11,13 @@
   If non-session objects are desired, switch your code to use the new class
   :class:`resilient_lib.RequestsCommonWithoutSession <resilient_lib.components.requests_common.RequestsCommonWithoutSession>`
   which behaves the same as the old ``RequestsCommon`` would
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
 
 **2022-12: version 47.1**
 
