@@ -63,6 +63,11 @@ class BasicHTTPException(Exception):
 
         super(BasicHTTPException, self).__init__(err_message)
 
+        self.response = response
+
+    def get_response(self):
+        return self.response
+
 
 class RetryHTTPException(Exception):
     """Exception for HTTP errors that should be retried."""
