@@ -1,6 +1,14 @@
 **2023-02: version 48.0**
 
 * Include ``threadName`` in the app logs
+* Display SOAR server version in startup logs. Note: for CP4S this displays the underlying SOAR version, not the platform version
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
 
 **2022-12: version 47.1**
 

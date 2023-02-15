@@ -338,7 +338,12 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     """
 
     # render jinja file of MANIFEST
-    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, package_name=package_name)
+    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PATH,
+        filename,
+        package_name=package_name,
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
 
     # read the contents of the package's MANIFEST file
     file_contents = sdk_helpers.read_file(path_file)
@@ -439,8 +444,14 @@ def package_files_template_match(package_name, package_version, path_file, filen
     """
 
     # render jinja file
-    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, 
-                    package_name=package_name, version=package_version, resilient_libraries_version=sdk_helpers.get_resilient_libraries_version_to_use())
+    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PATH,
+        filename,
+        package_name=package_name,
+        version=package_version,
+        resilient_libraries_version=sdk_helpers.get_resilient_libraries_version_to_use(),
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
     
     # read the package's file
     # strip each line of its newline but then add it back in for consistency between this and the rendered file
@@ -787,7 +798,11 @@ def package_files_validate_license(path_file, attr_dict, filename, **__):
     """
 
     # render jinja file of LICENSE
-    template_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PACKAGE_DIR, filename)
+    template_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PACKAGE_DIR,
+        filename,
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
 
     # read the contents of the package's LICENSE file
     file_contents = "".join(sdk_helpers.read_file(path_file))
@@ -850,7 +865,11 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     # read the package's file
     file_contents = sdk_helpers.read_file(path_file)
     # render codegen jinja file
-    codegen_readme_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename)
+    codegen_readme_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PATH,
+        filename,
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
     # split template file into list of lines
     template_contents = codegen_readme_rendered.splitlines(True)
     # compare given file to template from codegen

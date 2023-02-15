@@ -130,17 +130,17 @@ class RequestsCommon(object):
     def get_verify(self):
         """
         Get ``verify`` parameter from app config or from env var
-        REQUESTS_CA_BUNDLE which is the default way to set
+        ``REQUESTS_CA_BUNDLE`` which is the default way to set
         verify with python requests library.
 
-        Value can be set in [integrations] or in the [fn_my_app] section
+        Value can be set in ``[integrations]`` or in the ``[fn_my_app]`` section
 
-        Value in [fn_my_app] takes precedence over [integrations]
-        which takes precedence over REQUESTS_CA_BUNDLE
+        Value in ``[fn_my_app]`` takes precedence over ``[integrations]``
+        which takes precedence over ``REQUESTS_CA_BUNDLE``
 
         :param app_options: App config dict
         :type app_options: dict
-        :return: Value to set requests.session.verify to (as used in jbxapi).
+        :return: Value to set ``requests.session.verify`` to.
             Either a path or a boolean
         :rtype: bool or str or None (which will default to requests default which is ``True``)
         """
