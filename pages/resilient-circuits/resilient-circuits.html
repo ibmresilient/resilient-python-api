@@ -409,8 +409,16 @@ that can be used to access the IBM SOAR REST API.</p>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
 <p><strong>2023-02: version 48.0</strong></p>
-<ul class="simple">
+<ul>
 <li><p>Include <code class="docutils literal notranslate"><span class="pre">threadName</span></code> in the app logs</p></li>
+<li><p>Display SOAR server version in startup logs. Note: for CP4S this displays the underlying SOAR version, not the platform version</p></li>
+<li><p>Updated project to use <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> and <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code> metadata files. Build backend continues to use <code class="docutils literal notranslate"><span class="pre">setuptools</span></code>.
+Instead of directly invoking setup.py to get a sdist or wheel, use <code class="docutils literal notranslate"><span class="pre">build</span></code> as a build frontend:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>build
+python<span class="w"> </span>-m<span class="w"> </span>build
+</pre></div>
+</div>
+</li>
 </ul>
 <p><strong>2022-12: version 47.1</strong></p>
 <ul class="simple">

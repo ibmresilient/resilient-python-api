@@ -250,7 +250,8 @@ Add this section to define proxy settings to be used for all integrations that u
 <p>You can now take advantage of the global verify functionality.
 Valid options for <code class="docutils literal notranslate"><span class="pre">verify</span></code> are True, False, or a path to a
 valid certificate chain file. The default (and suggested value)
-is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+is <code class="docutils literal notranslate"><span class="pre">True</span></code> which will use the default Python CA bundle found at
+<code class="docutils literal notranslate"><span class="pre">REQUESTS_CA_BUNDLE</span></code>.</p>
 <p><em>The hierarchy of proxies is as follows:</em></p>
 <ol class="arabic simple">
 <li><p><strong>RequestsCommon.execute() Function:</strong> the <code class="docutils literal notranslate"><span class="pre">verify</span></code> parameter.</p></li>
@@ -972,6 +973,29 @@ returns a dictionary mapping protocol to the URL of the proxy.</p></li>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict or <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.get_verify">
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">get_verify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.get_verify" title="Permalink to this definition">#</a></dt>
+<dd><p>Get <code class="docutils literal notranslate"><span class="pre">verify</span></code> parameter from app config or from env var
+<code class="docutils literal notranslate"><span class="pre">REQUESTS_CA_BUNDLE</span></code> which is the default way to set
+verify with python requests library.</p>
+<p>Value can be set in <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> or in the <code class="docutils literal notranslate"><span class="pre">[fn_my_app]</span></code> section</p>
+<p>Value in <code class="docutils literal notranslate"><span class="pre">[fn_my_app]</span></code> takes precedence over <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code>
+which takes precedence over <code class="docutils literal notranslate"><span class="pre">REQUESTS_CA_BUNDLE</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>app_options</strong> (<em>dict</em>) – App config dict</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value to set <code class="docutils literal notranslate"><span class="pre">requests.session.verify</span></code> to.
+Either a path or a boolean</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool or str or None (which will default to requests default which is <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2114,8 +2138,8 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
-<p><strong>2022-12: version 48.0</strong></p>
-<ul class="simple">
+<p><strong>2023-02: version 48.0</strong></p>
+<ul>
 <li><p>Added support for <code class="docutils literal notranslate"><span class="pre">verify</span></code> config in app.config when using
 <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="resilient_lib.components.requests_common.RequestsCommon.execute"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon.execute()</span></code></a>.
 <code class="docutils literal notranslate"><span class="pre">verify</span></code> now can be set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">False</span></code>, or <code class="docutils literal notranslate"><span class="pre">&lt;path_to_your_custom_CA_bundle&gt;</span></code> to control the value used
@@ -2127,6 +2151,13 @@ including cookies persisting from the endpoint and significant performance incre
 If non-session objects are desired, switch your code to use the new class
 <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommonWithoutSession" title="resilient_lib.components.requests_common.RequestsCommonWithoutSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommonWithoutSession</span></code></a>
 which behaves the same as the old <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> would</p></li>
+<li><p>Updated project to use <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> and <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code> metadata files. Build backend continues to use <code class="docutils literal notranslate"><span class="pre">setuptools</span></code>.
+Instead of directly invoking setup.py to get a sdist or wheel, use <code class="docutils literal notranslate"><span class="pre">build</span></code> as a build frontend:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>build
+python<span class="w"> </span>-m<span class="w"> </span>build
+</pre></div>
+</div>
+</li>
 </ul>
 <p><strong>2022-12: version 47.1</strong></p>
 <ul class="simple">
@@ -2370,6 +2401,7 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon"><code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a><ul>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.execute"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.execute()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_proxies"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_proxies()</span></code></a></li>
+<li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_verify"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_verify()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_client_auth"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_client_auth()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.get_timeout"><code class="docutils literal notranslate"><span class="pre">RequestsCommon.get_timeout()</span></code></a></li>
 </ul>

@@ -67,7 +67,8 @@ Certificate Verification
 You can now take advantage of the global verify functionality.
 Valid options for ``verify`` are True, False, or a path to a
 valid certificate chain file. The default (and suggested value)
-is ``True``.
+is ``True`` which will use the default Python CA bundle found at
+``REQUESTS_CA_BUNDLE``.
 
 *The hierarchy of proxies is as follows:*
 
@@ -107,6 +108,7 @@ Common Request Methods
 .. autoclass:: resilient_lib.components.requests_common::RequestsCommon
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
+.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_verify
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_client_auth
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_timeout
 .. autoclass:: resilient_lib.components.requests_common::RequestsCommonWithoutSession
