@@ -1075,7 +1075,7 @@ class Actions(ResilientComponent):
         if 1 <= reloaded_num_workers <= 500:
             if reloaded_num_workers != self._num_workers:
                 LOG.debug("The num_workers app.config setting has been changed from %s to %s.",
-                          self.num_workers, reloaded_num_workers)
+                          self._num_workers, reloaded_num_workers)
                 # Unregister the existing worker thread-pool that will run functions.
                 self._functionworker.unregister()
                 # Re-create and register the new worker thread-pool that will run functions with new num_workers setting.
