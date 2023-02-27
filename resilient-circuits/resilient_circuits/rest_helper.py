@@ -11,7 +11,7 @@ from resilient_circuits import constants
 import resilient
 from resilient import constants as res_constants
 
-LOG = logging.getLogger("__name__")
+LOG = logging.getLogger(__name__)
 
 resilient_client = None
 connection_opts = None

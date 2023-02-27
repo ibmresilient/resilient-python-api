@@ -220,7 +220,7 @@ The following table provides the settings you need to configure the app. These s
 ### Poller Considerations
 When the poller is enabled, cases are automatically escalated from this app. Any updates are checked at the cadence defined by the value set for `poller_interval`. It is possible, however, to escalate cases from other sources.
 In this scenario, the poller would be disabled by setting `poller_interval=0` and a separate source might capture a case from the endpoint and in turn create a case in SOAR. This app can still be useful for enrichment of that
-newly created case even though it was not directly escalated from this app. As long as the Refernce ID (i.e. alert ID, event ID, etc...) for each case is preserved, all remaining details will synchronize to the SOAR case through this app automatically.
+newly created case even though it was not directly escalated from this app. As long as the reference ID (i.e. alert ID, event ID, etc...) for each case is preserved, all remaining details will synchronize to the SOAR case through this app automatically.
 <!-- REVISE THE ABOVE CONSIDERATIONS TO FIT YOUR POLLER IMPLEMENTATION SPECIFICS -->
 
 #### Poller Templates for SOAR Cases
