@@ -73,3 +73,14 @@ def test_client_post(fx_simple_client):
     r = base_client.post("/incidents/1001", {"incident_name": "Mock Incident"})
 
     assert r.get("incident_id") == 1001
+
+def test_simple_client_get_const(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+
+    mock_uri = '{0}/rest/const'.format(base_client.base_url)
+    mock_response = {"server_version": {"major": 47, "minor": 0, "build_number": 8304, "version": "47.0.8304"}}
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.get_const()
+
+    assert r.get("server_version", {}).get("major") == 47

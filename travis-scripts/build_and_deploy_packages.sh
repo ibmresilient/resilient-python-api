@@ -2,7 +2,7 @@
 
 cd $TRAVIS_BUILD_DIR
 
-paths_all_sdists=()
+paths_all_dists=()
 
 readonly package_names=(
     "resilient"
@@ -64,22 +64,36 @@ for p in "${package_names[@]}"; do
     cd $dir
 
     # Build the source distribution.
-    if [ "$deploy" = true ] ; then
-        python setup.py sdist --formats=gztar upload -r artifactory
+    print_msg "building $p with 'python -m build'"
+    python -m build
 
-    else
-        python setup.py sdist --formats=gztar
+    # if deploy to artifactory
+    if [ "$deploy" = true ] ; then
+        print_msg "uploading $p to Artifactory with 'twine upload'"
+        twine upload --config-file $HOME/.pypirc -r artifactory $dir/dist/*
+        print_msg "uploaded $p to Artifactory"
+    fi
+
+    # if release to PyPi
+    if [ "$do_release" = true ] ; then
+        print_msg "uploading $p to PyPi with 'twine upload'"
+        twine upload --config-file $HOME/.pypirc $dir/dist/*
+        print_msg "released $p to PyPi"
     fi
 
     if [ "$deploy_docs" = true ] ; then
         print_msg "Docs are required so pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
-        pip install -e .
+        pip install .
     fi
 
-    # Append path to sdist to paths_all_sdists array
+    # Append path to sdist to paths_all_dists array
     sdist_path=$(ls $dir/dist/*.tar.gz)
     print_msg "Path to sdist: $sdist_path"
-    paths_all_sdists+=($sdist_path)
+    paths_all_dists+=($sdist_path)
+    # Append path to .whl to paths_all_dists array
+    whl_path=$(ls $dir/dist/*.whl)
+    print_msg "Path to Wheel build: $whl_path"
+    paths_all_dists+=($whl_path)
 
 done
 
@@ -87,22 +101,14 @@ done
 cd $TRAVIS_BUILD_DIR
 
 if [ "$deploy" = true ] ; then
-    # Loop paths_all_sdists and copy to Artifactory using curl
-    for p in "${paths_all_sdists[@]}"; do
+    # Loop paths_all_dists and copy to Artifactory using curl
+    # this includes both .tar.gz sdist files, as well as .whl wheel files
+    for p in "${paths_all_dists[@]}"; do
         package_name=$(basename $p)
         artifactory_path=$ARTIFACTORY_LIB_LOCATION/$package_name
         print_msg "copying $package_name to Artifactory at: $artifactory_path"
         # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
-        curl -H "X-JFrog-Art-Api:${ARTIFACTORY_API_KEY}" -T $p "$artifactory_path"
-    done
-fi
-
-if [ "$do_release" = true ] ; then
-    # Loop paths_all_sdists and release to PyPi using twine
-    for p in "${paths_all_sdists[@]}"; do
-        package_name=$(basename $p)
-        twine upload --config-file $HOME/.pypirc $p
-        print_msg "released: $package_name"
+        curl -H "Authorization: Bearer ${ARTIFACTORY_API_KEY}" -T $p "$artifactory_path"
     done
 fi
 

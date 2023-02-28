@@ -1,4 +1,13 @@
-2022-058: version 46.0
+2023-02: version 48.0
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
+2022-08: version 46.0
 * Add ability to set ``IS_SELFTEST`` parameter when invoking the ``circuits_app`` fixture. Example:
 
   .. code-block::

@@ -36,7 +36,7 @@ EXPECTED_FILES_ROOT_DIR = [
 EXPECTED_FILES_DATA_DIR = ['wf_mock_workflow_one.md', 'wf_mock_workflow_two.md']
 EXPECTED_FILES_DOC_DIR = ['screenshots']
 EXPECTED_FILES_DOC_SCREENSHOTS_DIR = ['main.png']
-EXPECTED_FILES_PACKAGE_DIR = ['LICENSE', '__init__.py', 'components', 'util']
+EXPECTED_FILES_PACKAGE_DIR = ['LICENSE', '__init__.py', 'components', 'util', 'poller', 'lib']
 EXPECTED_FILES_PACKAGE_COMPONENTS_DIR = ['__init__.py', 'funct_mock_function_one.py', 'funct_mock_function_two.py']
 EXPECTED_FILES_PACKAGE_UTIL_DIR = ['__init__.py', 'config.py', 'customize.py', 'data', 'selftest.py']
 EXPECTED_FILES_PACKAGE_UTIL_DATA_DIR = ['export.res']
@@ -94,13 +94,14 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     assert cmd_codegen.CMD_HELP == "Generates boilerplate code used to begin developing an app."
     assert cmd_codegen.CMD_USAGE == """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
     $ resilient-sdk codegen -p <path_current_package> --poller
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     assert cmd_codegen.CMD_DESCRIPTION == cmd_codegen.CMD_HELP
-    assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser"]
+    assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
 
     args = cmd_codegen.parser.parse_known_args()[0]
     assert args.package == "fn_main_mock_integration"
@@ -196,6 +197,30 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert '        "functions": [u"fn_mock_function_1", u"fn_mock_function_2"],\n' in customize_py
 
 
+def test_run_tests_with_settings_file(fx_get_sub_parser, fx_mk_temp_dir, fx_mock_res_client, fx_cmd_line_args_codegen_package):
+    with patch("resilient_sdk.cmds.codegen.sdk_helpers.get_resilient_client") as mock_client:
+
+        mock_client.return_value = fx_mock_res_client
+        output_path = mock_paths.TEST_TEMP_DIR
+
+        # Add paths to an output base and an export.res file
+        sys.argv.extend(["--settings", mock_paths.MOCK_SDK_SETTINGS_PATH, "--output", mock_paths.TEST_TEMP_DIR])
+
+        cmd_codegen = CmdCodegen(fx_get_sub_parser)
+        args = cmd_codegen.parser.parse_known_args()[0]
+        cmd_codegen.execute_command(args)
+
+        setup_py = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, "setup.py"))
+        assert '    license="MIT",\n' in setup_py
+        assert '    author="author name",\n' in setup_py
+        assert '    author_email="you@example.com",\n' in setup_py
+        assert '    url="example.com",\n' in setup_py
+
+        license = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
+                        mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, "LICENSE"))
+        assert 'This is a test license.' in license
+
+
 def test_merge_codegen_params():
     old_params = {
         "actions": ["rule 1", "rule 2"],
@@ -255,6 +280,7 @@ def test_gen_package(fx_get_sub_parser, fx_cmd_line_args_codegen_package, fx_mk_
     # Add paths to an output base and an export.res file
     sys.argv.extend(["-o", output_path])
     sys.argv.extend(["-e", mock_paths.MOCK_EXPORT_RES])
+    sys.argv.extend(["--poller"])
 
     cmd_codegen = CmdCodegen(fx_get_sub_parser)
     args = cmd_codegen.parser.parse_known_args()[0]

@@ -1,6 +1,27 @@
+**2023-02: version 48.0**
+
+* Added support for ``verify`` config in app.config when using
+  :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`.
+  ``verify`` now can be set to ``True``, ``False``, or ``<path_to_your_custom_CA_bundle>`` to control the value used
+  when verifying SSL certificates. This change is backward compatible with any apps that use ``RequestsCommon.execute()``
+  so any apps updated to run on v48.0 will pull in these changes and the ``verify`` configuration will be supported for that app
+* Updated :class:`resilient_lib.RequestsCommon <resilient_lib.components.requests_common.RequestsCommon>` to take advantage
+  of persistent sessions from the ``requests`` library using ``requests.Session()``. This has multiple advantages, 
+  including cookies persisting from the endpoint and significant performance increases when connecting to the same host. 
+  If non-session objects are desired, switch your code to use the new class
+  :class:`resilient_lib.RequestsCommonWithoutSession <resilient_lib.components.requests_common.RequestsCommonWithoutSession>`
+  which behaves the same as the old ``RequestsCommon`` would
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
 **2022-12: version 47.1**
 
-* :class:`resilient_lib.RequestsCommon.get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` renamed from ``get_clientauth``. Alias provided for ``get_clientauth`` for backward compatiblity. Please use :class:`get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` from now on.
+* :class:`resilient_lib.RequestsCommon.get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` renamed from ``get_clientauth``. Alias provided for ``get_clientauth`` for backward compatiblity. Please use :class:`get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` from now on
 
 **2022-11: version 47.0**
 

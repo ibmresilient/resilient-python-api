@@ -53,9 +53,9 @@ class RedactingFilter(logging.Filter):
 class App(Component):
     """Our main app component, which sets up the Resilient services and other components"""
 
-    FILE_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] %(message)s'
+    FILE_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] [%(threadName)s] %(message)s'
     SYSLOG_LOG_FORMAT = '%(module)s: %(levelname)s %(message)s'
-    STDERR_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] %(message)s'
+    STDERR_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] [%(threadName)s] %(message)s'
 
     def __init__(self, auto_load_components=True, config_file=None, ALLOW_UNRECOGNIZED=False, IS_SELFTEST=False):
         super(App, self).__init__()

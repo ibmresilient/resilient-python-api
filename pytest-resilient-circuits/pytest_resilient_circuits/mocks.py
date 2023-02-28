@@ -394,3 +394,12 @@ class BasicResilientMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=data)
+
+    @resilient_endpoint("GET", "/rest/const")
+    def get_const(self, request):
+        """ Callback for GET to /rest/const """
+        LOG.debug("wikis_get_xxx")
+        data = test_data("200_JSON_GET__const.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)

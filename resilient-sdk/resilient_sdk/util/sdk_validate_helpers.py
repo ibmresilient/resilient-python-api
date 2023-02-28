@@ -338,7 +338,12 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
     """
 
     # render jinja file of MANIFEST
-    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, package_name=package_name)
+    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PATH,
+        filename,
+        package_name=package_name,
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
 
     # read the contents of the package's MANIFEST file
     file_contents = sdk_helpers.read_file(path_file)
@@ -439,8 +444,14 @@ def package_files_template_match(package_name, package_version, path_file, filen
     """
 
     # render jinja file
-    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename, 
-                    package_name=package_name, version=package_version, resilient_libraries_version=sdk_helpers.get_resilient_libraries_version_to_use())
+    file_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PATH,
+        filename,
+        package_name=package_name,
+        version=package_version,
+        resilient_libraries_version=sdk_helpers.get_resilient_libraries_version_to_use(),
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
     
     # read the package's file
     # strip each line of its newline but then add it back in for consistency between this and the rendered file
@@ -575,6 +586,131 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
             solution=attr_dict.get("fail_solution")
         )]
 
+def package_files_validate_script_python_versions(path_file, attr_dict, **_):
+    """
+    Validate that no scripts packaged with this app are written in Python 2.
+
+    To do this, we look in all the places a script could be defined:
+        - Globally
+        - Locally in a Playbook
+        - In a workflow's pre-processing script for a function
+        - In a workflows's post-processing script for a function
+
+    The global scripts and playbook scripts are nice and easy to handle as they
+    are represented well in the export.res JSON file, with a "language" attribute.
+    That attribute will be "python" for PY2 and "python3" for PY3.
+
+    For workflow pre-/post-processing scripts, however, we need to scan the
+    XML definition of the workflow to determine the language of the script
+    as that is the only place in the export.res contains that information.
+    The key item that we look for is "pre_processing_script_language":"python"
+    (for pre-processing scripts and the same logic follows for post-processing).
+    If that is found, we know that there is a PY2 script associated with a function
+    in that workflow. For the moment, the scan is not smart enough to count
+    the number of PY2 scripts in the workflow. Just smart enough to tell
+    whether there is a PY2 pre-processing script and a PY2 post-processing
+    script in the workflow.
+
+    For each PY2 script found in the export (with the noted caveat explained above
+    for counting workflow function scripts), a SDKValidateIssue is returned.
+    Each issue has relevant information about the PY2 script and where to find it
+    and gives suggestions on how to fix it, while warning that updating to PY3
+    from PY2 can cause breaking changes and the user should use caution when
+    updating those scripts.
+
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param attr_dict: (required) dictionary of attributes for the customize.py file defined in ``package_files``
+    :type attr_dict: dict
+    :param _: (unused) other unused named args
+    :type _: dict
+    :return: a list of issues containing the PY2 scripts to be updated; or a passing issue if no scripts were found
+    :rtype: list[SDKValidateIssue]
+    """
+    try:
+        # parse import definition information from customize.py file
+        # this will raise an SDKException if something goes wrong
+        export_res = package_helpers.get_import_definition_from_customize_py(path_file)
+    except SDKException:
+        # something went wrong in reading the import definition.
+        # since this is already checked in another function elsewhere,
+        # ignore and return an empty list
+        return []
+
+    issues = []
+
+    # validate GLOBAL scripts are all python3 only.
+    # for each non-python3 script we find, create an issue
+    for script in export_res.get("scripts", []):
+        if script.get("language", "") not in constants.EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES:
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg").format(script.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+
+    # do very similar check for local scripts in playbooks
+    for playbook in export_res.get("playbooks", []):
+        for local_script in playbook.get("local_scripts", []):
+            if local_script.get("language", "") not in constants.EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES:
+                issues.append(SDKValidateIssue(
+                    name=attr_dict.get("name"),
+                    description=attr_dict.get("fail_msg_playbooks").format(
+                        local_script.get("name", "UNKNOWN SCRIPT NAME"), playbook.get("display_name", "UNKNOWN PLAYBOOK NAME")),
+                    severity=attr_dict.get("fail_severity"),
+                    solution=attr_dict.get("fail_solution")
+                ))
+
+        # check for input scripts calling subplaybooks
+        if constants.EXPORT_RES_SUB_PLAYBOOK_PRE_PROCESSING_UNALLOWED_LANGUAGE in playbook.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_sub_playbooks_input").format(playbook.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+        # check for output scripts from subplaybooks
+        if constants.EXPORT_RES_SUB_PLAYBOOK_OUTPUT_UNALLOWED_LANGUAGE in playbook.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_sub_playbooks_output").format(playbook.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+
+    # workflows are harder, but we can simply look into the XML for what we know should be there:
+    # there should be a line in there that says "post_processing_script_language":"python3" for PY3
+    # or "post_processing_script_language":"python" for Python 2 scripts (same goes for pre_processing...)
+    # so we scan the workflows and their xml properties
+    for workflow in export_res.get("workflows", []):
+        # check for bad pre processing scripts
+        if constants.EXPORT_RES_WORKFLOW_PRE_PROCESSING_UNALLOWED_LANGUAGE in workflow.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_pre_processing").format(workflow.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+        # check for bad post processing scripts
+        if constants.EXPORT_RES_WORKFLOW_POST_PROCESSING_UNALLOWED_LANGUAGE in workflow.get("content", {}).get("xml", ""):
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_post_processing").format(workflow.get("name", "UNKNOWN SCRIPT NAME")),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution")
+            ))
+
+    if not issues:
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=attr_dict.get("pass_solution")
+        )]
+    else:
+        return issues
+
 def package_files_validate_icon(path_file, attr_dict, filename, **__):
     """
     Helper method for package files to validate an icon
@@ -662,7 +798,11 @@ def package_files_validate_license(path_file, attr_dict, filename, **__):
     """
 
     # render jinja file of LICENSE
-    template_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PACKAGE_DIR, filename)
+    template_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PACKAGE_DIR,
+        filename,
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
 
     # read the contents of the package's LICENSE file
     file_contents = "".join(sdk_helpers.read_file(path_file))
@@ -725,7 +865,11 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
     # read the package's file
     file_contents = sdk_helpers.read_file(path_file)
     # render codegen jinja file
-    codegen_readme_rendered = sdk_helpers.setup_env_and_render_jinja_file(constants.PACKAGE_TEMPLATE_PATH, filename)
+    codegen_readme_rendered = sdk_helpers.setup_env_and_render_jinja_file(
+        constants.PACKAGE_TEMPLATE_PATH,
+        filename,
+        sdk_version=sdk_helpers.get_resilient_sdk_version()
+    )
     # split template file into list of lines
     template_contents = codegen_readme_rendered.splitlines(True)
     # compare given file to template from codegen
@@ -1253,7 +1397,12 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
 
             # append attr, val at the end the args list [..., "--attr", "val", ...]
             attr, val = match.group(1), match.group(2)
-            args.append("--{0}".format(attr))
+
+            if len(attr) == 1:
+                dashes = "-"
+            else:
+                dashes = "--"
+            args.append("{0}{1}".format(dashes, attr))
             args.append(val)
 
     elif path_sdk_settings and os.path.exists(path_sdk_settings):
@@ -1263,11 +1412,15 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
         # that the sdk settings file exists
         LOG.debug("Reading tox args from sdk settings JSON file {0}".format(path_sdk_settings))
 
-        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        setting_file_contents = sdk_helpers.read_json_file(path_sdk_settings, "validate")
         if setting_file_contents.get("tox-args"):
             for arg in setting_file_contents.get("tox-args"):
                 # append attr, val at the end the args list [..., "--attr", "val", ...]
-                args.append("--{0}".format(arg))
+                if len(arg) == 1:
+                    dashes = "-"
+                else:
+                    dashes = "--"
+                args.append("{0}{1}".format(dashes, arg))
                 args.append(setting_file_contents.get("tox-args").get(arg))
         else:
             # use defaults because given sdk settings file doesn't have the right format
@@ -1489,7 +1642,7 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
         # if a settings file exists, check if that file has a pylint
         # section which will contain a list of custom pylint command line args
 
-        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings, "validate")
 
         if settings_file_contents.get("pylint") and isinstance(settings_file_contents.get("pylint"), list):
             LOG.debug("Reading pylint command line args from sdk settings JSON file {0}".format(path_sdk_settings))
@@ -1657,7 +1810,7 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
     if path_sdk_settings and os.path.exists(path_sdk_settings):
         # if a settings file exists, check if it has a bandit section
 
-        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings)
+        settings_file_contents = sdk_helpers.read_json_file(path_sdk_settings, "validate")
 
         # grab the bandit section (should be a list)
         settings_bandit_section = settings_file_contents.get(constants.SDK_SETTINGS_BANDIT_SECTION_NAME)

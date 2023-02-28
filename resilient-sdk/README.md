@@ -29,7 +29,7 @@ Our change log can be found at [ibm.biz/resilient-sdk-changes](https://ibm.biz/r
 
 ## License and Terms
 
-Copyright © IBM Corporation 2022
+Copyright © IBM Corporation 2023
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

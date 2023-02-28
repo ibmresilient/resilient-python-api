@@ -18,7 +18,8 @@ def test_cmd_docgen_setup(fx_get_sub_parser, fx_cmd_line_args_docgen):
     assert cmd_docgen.CMD_NAME == "docgen"
     assert cmd_docgen.CMD_HELP == "Generates boilerplate documentation for an app."
     assert cmd_docgen.CMD_USAGE == """
-    $ resilient-sdk docgen -p <path_to_package>"""
+    $ resilient-sdk docgen -p <path_to_package>
+    $ resilient-sdk docgen -p <name_of_package> --settings <path_to_custom_sdk_settings_file>"""
     assert cmd_docgen.CMD_DESCRIPTION == cmd_docgen.CMD_HELP
 
     args = cmd_docgen.parser.parse_known_args()[0]
@@ -180,6 +181,18 @@ def test_get_custom_artifact_details():
 
     assert the_artifact == mock_artifact
 
+def test_get_poller_details(fx_copy_fn_main_mock_integration):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    poller_templates = CmdDocgen._get_poller_details(path_fn_main_mock_integration, mock_integration_name)
+
+    assert len(poller_templates) == 3
+    assert package_helpers.BASE_NAME_POLLER_CREATE_CASE_TEMPLATE in poller_templates
+    assert package_helpers.BASE_NAME_POLLER_UPDATE_CASE_TEMPLATE in poller_templates
+    assert package_helpers.BASE_NAME_POLLER_CLOSE_CASE_TEMPLATE in poller_templates
+
 
 def test_app_log_results_are_used(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_docgen):
 
@@ -197,6 +210,23 @@ def test_app_log_results_are_used(fx_copy_fn_main_mock_integration, fx_get_sub_p
 
     assert '  "custom_results": "these are my custom results!"' in "\n".join(readme_file)
 
+def test_sdk_settings_for_docgen(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_docgen):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+    # Add cmd line arg
+    sys.argv.extend(["--settings", mock_paths.MOCK_SDK_SETTINGS_PATH])
+
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    args = cmd_docgen.parser.parse_known_args()[0]
+    cmd_docgen.execute_command(args)
+
+    readme_file = sdk_helpers.read_file(os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_README))
+
+    assert 'This is an IBM supported app' in "\n".join(readme_file)
 
 def test_execute_command():
     # TODO
