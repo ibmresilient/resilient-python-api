@@ -24,23 +24,18 @@ def test_stomp_reconnect_two_consecutive_failures(caplog):
             client.connect(mock_evt)
 
 
-            # first StompConnectionError with "no more data" error
-            patch_stomp_library_connect.side_effect = StompConnectionError("No more data received from STOMP")
-            client.connect(mock_evt)
-            assert client._stomp_connection_errors == 1
-
-            # now a StompConnectionError with a different error (this could be possible in real world)
+            # first a StompConnectionError with a different error (this could be possible in real world)
             patch_stomp_library_connect.side_effect = StompConnectionError("A different STOMP error")
             client.connect(mock_evt)
-            assert client._stomp_connection_errors == 1
+            assert client._stomp_connection_errors == 0
 
-            # now a second StompConnectionError with "no more data" error
+            # now a StompConnectionError with "no more data" error
             # this should trigger the max, and throw a sys.exit(1)
             patch_stomp_library_connect.side_effect = StompConnectionError("Some preamble. No more data received from STOMP")
             with pytest.raises(SystemExit):
                 client.connect(mock_evt)
                 assert "Exiting due to unrecoverable error" in caplog.text
-            assert client._stomp_connection_errors == 2
+            assert client._stomp_connection_errors == 1
 
 def test_stomp_reconnect_one_failure_followed_by_successful_reconnect(caplog):
 
