@@ -346,13 +346,13 @@ class CmdCodegen(BaseCmd):
 
         # add license name, author, author_email, url
         settings_file_contents_setup = settings_file_contents.get("setup", {})
-        jinja_data["license"] = settings_file_contents_setup.get("license", "<<insert here>>")
-        jinja_data["author"] = settings_file_contents_setup.get("author", "<<your name here>>")
-        jinja_data["author_email"] = settings_file_contents_setup.get("author_email", "you@example.com")
-        jinja_data["url"] = settings_file_contents_setup.get("url", "<<your company url>>")
+        jinja_data["license"] = settings_file_contents_setup.get("license", constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE)
+        jinja_data["author"] = settings_file_contents_setup.get("author", constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR)
+        jinja_data["author_email"] = settings_file_contents_setup.get("author_email", constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL)
+        jinja_data["url"] = settings_file_contents_setup.get("url", constants.CODEGEN_DEFAULT_SETUP_PY_URL)
 
         # add license_content to jinja_data
-        jinja_data["license_content"] = settings_file_contents.get("license_content", "<<PUT YOUR LICENSE TEXT HERE>>")
+        jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT)
         # add current SDK version to jinja data
         jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 

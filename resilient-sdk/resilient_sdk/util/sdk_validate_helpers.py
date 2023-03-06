@@ -801,7 +801,7 @@ def package_files_validate_license(path_file, attr_dict, filename, **__):
     template_rendered = sdk_helpers.setup_env_and_render_jinja_file(
         constants.PACKAGE_TEMPLATE_PACKAGE_DIR,
         filename,
-        sdk_version=sdk_helpers.get_resilient_sdk_version()
+        license_content=constants.CODEGEN_DEFAULT_LICENSE_CONTENT
     )
 
     # read the contents of the package's LICENSE file
