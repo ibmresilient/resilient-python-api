@@ -3,6 +3,7 @@ import logging
 import os
 import time
 import unittest
+import pytest
 
 import requests
 import requests_mock
