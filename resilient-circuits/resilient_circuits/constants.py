@@ -59,4 +59,4 @@ EXIT_STOMP_Q_TIMEOUT = 33           # STOMP: Timed out trying to see if resilien
 EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatTimeout event and the first HeartbeatTimeout event is greater than the 'heartbeat_timeout_threshold'
 
 # STOMP connection constants
-STOMP_MAX_CONNECTION_ERRORS = 2     # default number of errors when heartbeat is lost
+STOMP_MAX_CONNECTION_ERRORS = 1     # default number of errors when heartbeat is lost
