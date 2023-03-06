@@ -136,6 +136,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         self.assertTrue(isinstance(response, requests.models.Response))
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_verbs(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
@@ -205,6 +206,7 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("bad", URL, None, log=TestFunctionRequests.LOG)
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_verbs_v2(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
@@ -283,6 +285,7 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call_v2("bad", URL)
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_statuscode(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
@@ -294,6 +297,7 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("get", "/".join((URL, "300")), None, resp_type='text')
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_statuscode_v2(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
@@ -305,6 +309,7 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call_v2("get", "/".join((URL, "400")))
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_statuscode_callback(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
@@ -317,6 +322,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         resp = rc.execute_call("get", URL, None, resp_type='text', callback=callback)
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_statuscode_callback_v2(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
@@ -329,6 +335,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         resp = rc.execute_call_v2("get", URL, callback=callback)
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_timeout(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
@@ -338,6 +345,7 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call("get", URL, None, resp_type='text', timeout=2)
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_timeout_v2(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
@@ -347,6 +355,7 @@ class TestFunctionRequests(unittest.TestCase):
         with self.assertRaises(IntegrationError):
             resp = rc.execute_call_v2("get", URL, timeout=2)
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_basicauth(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
@@ -357,6 +366,7 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call("get", URL, None, basicauth=basicauth)
         self.assertTrue(resp.get("authenticated"))
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_basicauth_v2(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
@@ -367,6 +377,7 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call_v2("get", URL, auth=basicauth)
         self.assertTrue(resp.json().get("authenticated"))
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_proxy_override(self, RCObjectType):
         rc = RCObjectType(None, None)
@@ -487,6 +498,7 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = response.json()
         self.assertTrue(json_result.get("ip"))
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_headers(self, RCObjectType):
         # G E T with headers
@@ -501,6 +513,7 @@ class TestFunctionRequests(unittest.TestCase):
         json_result = rc.execute_call("get", URL, None, headers=headers)
         self.assertEqual(json_result['headers'].get("my-sample-header"), "my header")
 
+    @pytest.mark.livetest
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_headers_v2(self, RCObjectType):
         # G E T with headers
