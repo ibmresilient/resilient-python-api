@@ -671,9 +671,9 @@ def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_inte
     attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
-    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.setup_env_and_render_jinja_file") as mock_jinja_render:
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
 
-        mock_jinja_render.return_value = "A sample LICENSE\n\nThis should still be validated manually to ensure proper license type"
+        mock_read_file.return_value = "A sample LICENSE\n\nThis should still be validated manually to ensure proper license type"
 
         result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
 

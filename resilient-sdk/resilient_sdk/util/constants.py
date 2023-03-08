@@ -107,6 +107,11 @@ ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
+CODEGEN_DEFAULT_SETUP_PY_LICENSE = "<<insert here>>"
+CODEGEN_DEFAULT_SETUP_PY_AUTHOR= "<<your name here>>"
+CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
+CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
+CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
 
 # resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
