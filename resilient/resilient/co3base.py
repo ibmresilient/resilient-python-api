@@ -193,23 +193,38 @@ class BaseClient(object):
         self.request_retry_delay = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) is not None else constants.APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT
         self.request_retry_backoff = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) is not None else constants.APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT
 
-    def set_api_key(self, api_key_id, api_key_secret, timeout=None):
+    def set_api_key(self, api_key_id, api_key_secret, timeout=None, include_permissions=False):
         """
         Call this method instead of the connect method in order to use API key
         Just like the connect method, this method calls the session endpoint
         to get org_id information.
-        :param api_key_id:
-        :param api_key_secret:
+        :param api_key_id: api key ID to use to connect
+        :param api_key_secret: associated secret
+        :param timeout: timeout limit if desired. None by default
+        :param include_permissions: whether to include permissions in call to /rest/session.
+            Since SOAR v48 this param has been included and set to "true" by default on the server
+            (until v50 where it will be removed). We don't need permission details in circuits so we
+            set it to False by default, but if there is a use of this elsewhere in app code,
+            and either "perms" or "effective_permissions" details that are returned by the
+            endpoint are needed, the value here should be set to True.
         :return:
         """
         self.api_key_id = api_key_id
         self.api_key_secret = api_key_secret
         self.use_api_key = True
 
+        if include_permissions:
+            LOG.debug("'include_permissions' is deprecated and scheduled to be removed in v50, use GET " +
+                        "/rest/session/{org_id}/acl instead.\n\t\tAt that time, 'include_permissions' will be " +
+                        "removed and this endpoint will not return org permissions.")
+        # convert "include_permissions" query param from bool to string to use in URL
+        if isinstance(include_permissions, bool):
+            include_permissions = "true" if include_permissions else "false"
+
         # Wrap self.session.get and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __set_api_key():
-            r = self.session.get(u"{0}/rest/session".format(self.base_url),
+            r = self.session.get(u"{0}/rest/session?include_permissions={1}".format(self.base_url, include_permissions),
                                  auth=HTTPBasicAuth(self.api_key_id, self.api_key_secret),
                                  proxies=self.proxies,
                                  headers=self.make_headers(),
@@ -312,13 +327,21 @@ class BaseClient(object):
         self.all_orgs = [org for org in orgs if org.get("enabled")]
         self.org_id = selected_org.get("id", None)
 
-    def _connect(self, timeout=None):
+    def _connect(self, timeout=None, include_permissions=False):
         """Connect to SOAR using deprecated username and password method"""
+
+        if include_permissions:
+            LOG.debug("'include_permissions' is deprecated and scheduled to be removed in v50, use GET " +
+                        "/rest/session/{org_id}/acl instead.\n\t\tAt that time, 'include_permissions' will be " +
+                        "removed and this endpoint will not return org permissions.")
+        # convert "include_permissions" query param from bool to string to use in URL
+        if isinstance(include_permissions, bool):
+            include_permissions = "true" if include_permissions else "false"
 
         # Wrap self.session.post and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __connect():
-            r = self.session.post(u"{0}/rest/session".format(self.base_url),
+            r = self.session.post(u"{0}/rest/session?include_permissions={1}".format(self.base_url, include_permissions),
                                   data=json.dumps(self.authdata),
                                   proxies=self.proxies,
                                   headers=self.make_headers(),
