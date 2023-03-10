@@ -199,14 +199,18 @@ class BaseClient(object):
         Just like the connect method, this method calls the session endpoint
         to get org_id information.
         :param api_key_id: api key ID to use to connect
+        :type api_key_id: string
         :param api_key_secret: associated secret
+        :type api_key_secret: string
         :param timeout: timeout limit if desired. None by default
+        :type timeout: float
         :param include_permissions: whether to include permissions in call to /rest/session.
             Since SOAR v48 this param has been included and set to "true" by default on the server
             (until v50 where it will be removed). We don't need permission details in circuits so we
             set it to False by default, but if there is a use of this elsewhere in app code,
             and either "perms" or "effective_permissions" details that are returned by the
             endpoint are needed, the value here should be set to True.
+        :type include_permissions: bool
         :return:
         """
         self.api_key_id = api_key_id
@@ -217,14 +221,11 @@ class BaseClient(object):
             LOG.debug("'include_permissions' is deprecated and scheduled to be removed in v50, use GET " +
                         "/rest/session/{org_id}/acl instead.\n\t\tAt that time, 'include_permissions' will be " +
                         "removed and this endpoint will not return org permissions.")
-        # convert "include_permissions" query param from bool to string to use in URL
-        if isinstance(include_permissions, bool):
-            include_permissions = "true" if include_permissions else "false"
 
         # Wrap self.session.get and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __set_api_key():
-            r = self.session.get(u"{0}/rest/session?include_permissions={1}".format(self.base_url, include_permissions),
+            r = self.session.get(u"{0}/rest/session?include_permissions={1}".format(self.base_url, "true" if include_permissions else "false"),
                                  auth=HTTPBasicAuth(self.api_key_id, self.api_key_secret),
                                  proxies=self.proxies,
                                  headers=self.make_headers(),
@@ -334,14 +335,11 @@ class BaseClient(object):
             LOG.debug("'include_permissions' is deprecated and scheduled to be removed in v50, use GET " +
                         "/rest/session/{org_id}/acl instead.\n\t\tAt that time, 'include_permissions' will be " +
                         "removed and this endpoint will not return org permissions.")
-        # convert "include_permissions" query param from bool to string to use in URL
-        if isinstance(include_permissions, bool):
-            include_permissions = "true" if include_permissions else "false"
 
         # Wrap self.session.post and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __connect():
-            r = self.session.post(u"{0}/rest/session?include_permissions={1}".format(self.base_url, include_permissions),
+            r = self.session.post(u"{0}/rest/session?include_permissions={1}".format(self.base_url, "true" if include_permissions else "false"),
                                   data=json.dumps(self.authdata),
                                   proxies=self.proxies,
                                   headers=self.make_headers(),
