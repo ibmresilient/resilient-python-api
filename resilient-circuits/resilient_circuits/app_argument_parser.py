@@ -23,6 +23,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_COMPONENTS_DIR = ''
     DEFAULT_LOG_LEVEL = 'INFO'
     DEFAULT_LOG_FILE = 'app.log'
+    DEFAULT_LOG_MAX_BYTES = 10000000
+    DEFAULT_LOG_BACKUP_COUNT = 10
     DEFAULT_NO_PROMPT_PASS = "False"
     DEFAULT_STOMP_TIMEOUT = 60
     DEFAULT_STOMP_MAX_RETRIES = 3
@@ -42,6 +44,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_log_dir = self.getopt(self.DEFAULT_APP_SECTION, "logdir") or constants.APP_LOG_DIR
         default_log_level = self.getopt(self.DEFAULT_APP_SECTION, "loglevel") or self.DEFAULT_LOG_LEVEL
         default_log_file = self.getopt(self.DEFAULT_APP_SECTION, "logfile") or self.DEFAULT_LOG_FILE
+        default_log_max_bytes = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_LOG_MAX_BYTES) or self.DEFAULT_LOG_MAX_BYTES
+        default_log_backup_count = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_LOG_BACKUP_COUNT) or self.DEFAULT_LOG_BACKUP_COUNT
 
         # STOMP port is usually 65001
         default_stomp_port = self.getopt(self.DEFAULT_APP_SECTION, "stomp_port") or self.DEFAULT_STOMP_PORT
@@ -125,6 +129,14 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_log_file,
                           help="File to log to")
+        self.add_argument("--{0}".format(constants.APP_CONFIG_LOG_MAX_BYTES),
+                          type=int,
+                          default=default_log_max_bytes,
+                          help="Maximum bytes per log file")
+        self.add_argument("--{0}".format(constants.APP_CONFIG_LOG_BACKUP_COUNT),
+                          type=int,
+                          default=default_log_backup_count,
+                          help="Number of log files to create in rotation")
         self.add_argument("--no-prompt-password",
                           type=bool,
                           default=default_no_prompt_password,

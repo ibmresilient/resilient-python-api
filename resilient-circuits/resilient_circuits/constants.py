@@ -16,6 +16,8 @@ APP_FUNCTION_PAYLOAD_VERSION = 2.0
 
 MIN_NUM_WORKERS = 1
 MAX_NUM_WORKERS = 500
+MIN_LOG_BYTES = 100000
+MIN_BACKUP_COUNT = 0
 DEFAULT_SELFTEST_TIMEOUT_VALUE = 10
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
@@ -38,6 +40,8 @@ INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_CONFIG_TRAP_EXCEPTION = "trap_exception"
 APP_CONFIG_SELFTEST_TIMEOUT = "selftest_timeout"
 APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD = "heartbeat_timeout_threshold"
+APP_CONFIG_LOG_MAX_BYTES = "log_max_bytes"
+APP_CONFIG_LOG_BACKUP_COUNT = "log_backup_count"
 
 # Headers
 HEADER_CIRCUITS_VER_KEY = "Resilient-Circuits-Version"
