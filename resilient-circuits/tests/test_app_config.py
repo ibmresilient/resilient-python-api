@@ -61,7 +61,7 @@ def test_log_max_bytes_settings(fx_clear_cmd_line_args):
     # Test default value - commented out in app.config
     opts = AppArgumentParser(config_file=mock_paths.MOCK_COMMENTED_APP_CONFIG).parse_args()
     assert isinstance(opts.get("log_max_bytes"), int)
-    assert opts.get("log_max_bytes") == 10000000 # default
+    assert opts.get("log_max_bytes") == AppArgumentParser.DEFAULT_LOG_MAX_BYTES # default
 
     # Test overwriting
     sys.argv.extend(["--log_max_bytes", "30000000"])
@@ -85,7 +85,7 @@ def test_log_backup_count_settings(fx_clear_cmd_line_args):
     # Test default value - commented out in app.config
     opts = AppArgumentParser(config_file=mock_paths.MOCK_COMMENTED_APP_CONFIG).parse_args()
     assert isinstance(opts.get("log_backup_count"), int)
-    assert opts.get("log_backup_count") == 10 # default
+    assert opts.get("log_backup_count") == AppArgumentParser.DEFAULT_LOG_BACKUP_COUNT # default
 
     # Test overwriting
     sys.argv.extend(["--log_backup_count", "5"])
