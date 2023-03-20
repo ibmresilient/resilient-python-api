@@ -158,17 +158,15 @@ class SOARCommon():
 
         return query
 
-    def _query_cases(self, query):
+    def _query_cases(self, query, filters="return_level=normal"):
         """ run a query to find case(s) which match the query string
-
         Args:
             query [str]: query string to find cases
-
+            filters [str]: Filters for the end of the uri
         Returns:
             query_results [list]: List of query results
         """
-        query_uri = "/".join([INCIDENTS_URI, "query?return_level=normal"])
-
+        query_uri = "/".join([INCIDENTS_URI, f"query?{filters}"])
         try:
             return self.rest_client.post(query_uri, query), None
         except SimpleHTTPException as err:
@@ -300,18 +298,19 @@ class SOARCommon():
 
         return {}
 
-    def get_soar_case(self, search_fields, open_cases=True):
-        """Find a SOAR case which contains custom field(s) associated with the associated endpoint.
+    def get_soar_case(self, search_fields, uri_filters=None, open_cases=True):
+        """
+        Find a SOAR case which contains custom field(s) associated with the associated endpoint.
         Returns only one case. See :class:`SOARCommon.get_soar_cases()` for examples.
-
         .. note::
-
             ``search_fields`` only supports custom fields.
 
         :param search_fields: Dictionary containing key/value pairs to search for a case match.
             Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
             otherwise a field will use ``equals`` for the value.
         :type search_fields: dict
+        :param uri_filters: Filters for the end of the uri. Default is "return_level=normal"
+        :type uri_filters: str
         :param open_cases: True if only querying open cases.
         :type open_cases: bool
 
@@ -319,14 +318,13 @@ class SOARCommon():
             Returns ``None`` if no associated case was found.
         :rtype: tuple(dict, str)
         """
-        r_cases, error_msg = self.get_soar_cases(search_fields, open_cases=open_cases)
+        r_cases, error_msg = self.get_soar_cases(search_fields, uri_filters=uri_filters, open_cases=open_cases)
         if error_msg:
             return None, error_msg
-
         # return first case
         return (r_cases[0] if r_cases else None, None)
 
-    def get_soar_cases(self, search_fields, open_cases=True):
+    def get_soar_cases(self, search_fields, uri_filters=None, open_cases=True):
         """
         Get all IBM SOAR cases that match the given search fields.
         To find all cases that are synced from the endpoint platform,
@@ -334,24 +332,20 @@ class SOARCommon():
         endpoint solution.
 
         **Example:**
-
         .. code-block:: python
-
             from resilient_lib import SOARCommon
-
             soar_common = SOARCommon(res_client)
-
             found_id = get_id_from_endpoint_query_result()
             cases = soar_common.get_soar_cases({ "endpoint_id": found_id }, open_cases=False)
-
         .. note::
 
             ``search_fields`` only supports custom fields.
-
         :param search_fields: Dictionary containing key/value pairs to search for a case match.
             Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
             otherwise a field will use ``equals`` for the value.
         :type search_fields: dict
+        :param uri_filters: Filters for the end of the uri. Default is "return_level=normal"
+        :type uri_filters: str
         :param open_cases: True if only querying open cases.
         :type open_cases: bool
 
@@ -359,8 +353,7 @@ class SOARCommon():
         :rtype: tuple(dict, str)
         """
         query = self._build_search_query(search_fields, open_cases=open_cases)
-
-        return self._query_cases(query)
+        return self._query_cases(query, filters=uri_filters)
 
     def create_soar_case(self, case_payload):
         """
