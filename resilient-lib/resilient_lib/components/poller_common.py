@@ -166,7 +166,7 @@ class SOARCommon():
         Returns:
             query_results [list]: List of query results
         """
-        query_uri = "/".join([INCIDENTS_URI, f"query?{filters}"])
+        query_uri = "/".join([INCIDENTS_URI, "query?{}".format(filters)])
         try:
             return self.rest_client.post(query_uri, query), None
         except SimpleHTTPException as err:
