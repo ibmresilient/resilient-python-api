@@ -298,7 +298,7 @@ class SOARCommon():
 
         return {}
 
-    def get_soar_case(self, search_fields, uri_filters=None, open_cases=True):
+    def get_soar_case(self, search_fields, open_cases=True, uri_filters=None):
         """
         Find a SOAR case which contains custom field(s) associated with the associated endpoint.
         Returns only one case. See :class:`SOARCommon.get_soar_cases()` for examples.
@@ -318,13 +318,13 @@ class SOARCommon():
             Returns ``None`` if no associated case was found.
         :rtype: tuple(dict, str)
         """
-        r_cases, error_msg = self.get_soar_cases(search_fields, uri_filters=uri_filters, open_cases=open_cases)
+        r_cases, error_msg = self.get_soar_cases(search_fields, open_cases=open_cases, uri_filters=uri_filters)
         if error_msg:
             return None, error_msg
         # return first case
         return (r_cases[0] if r_cases else None, None)
 
-    def get_soar_cases(self, search_fields, uri_filters=None, open_cases=True):
+    def get_soar_cases(self, search_fields, open_cases=True, uri_filters=None):
         """
         Get all IBM SOAR cases that match the given search fields.
         To find all cases that are synced from the endpoint platform,
