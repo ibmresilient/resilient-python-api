@@ -53,37 +53,8 @@ Add this section to define proxy settings to be used for all integrations that u
 .. code-block::
 
    [integrations]
-   verify=True
    # These proxy settings will be used by all integrations. 
    # To override, add any parameter to your specific integration section
-   http_proxy=
-   https_proxy=
-   timeout=30
-
-------------------------
-Certificate Verification
-------------------------
-
-You can now take advantage of the global verify functionality.
-Valid options for ``verify`` are True, False, or a path to a
-valid certificate chain file. The default (and suggested value)
-is ``True`` which will use the default Python CA bundle found at
-``REQUESTS_CA_BUNDLE``.
-
-*The hierarchy of proxies is as follows:*
-
-#. **RequestsCommon.execute() Function:** the ``verify`` parameter.
-#. **Function Options:** ``verify`` config set in the
-   **Function Section** (``[my_function]``) of your app.config file.
-#. **Integrations Options:** ``verify`` config set in the
-   **Integrations Section** (``[integrations]``) of your app.config file.
-
-Example:
-
-.. code-block::
-
-   [my_function]
-   verify=/var/rescircuits/cafile.pem
    http_proxy=
    https_proxy=
    timeout=30
@@ -108,10 +79,8 @@ Common Request Methods
 .. autoclass:: resilient_lib.components.requests_common::RequestsCommon
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.execute
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_proxies
-.. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_verify
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_client_auth
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_timeout
-.. autoclass:: resilient_lib.components.requests_common::RequestsCommonWithoutSession
 
 
 ---------------------
