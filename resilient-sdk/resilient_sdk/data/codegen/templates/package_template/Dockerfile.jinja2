@@ -33,6 +33,10 @@ RUN pip install /tmp/packages/${APPLICATION}-*.tar.gz
 # uncomment and replicate if additional pypi packages are needed
 #RUN pip install <package>
 
+# uncomment and replicate if additional pypi packages in requirements file are needed
+#COPY /path/to/<requirements.txt> /tmp/packages/.
+#RUN pip install -r /tmp/packages/<requirements.txt>
+
 # uncomment and replicate if additional local packages are needed
 #COPY /path/to/extra_package /tmp/packages/.
 #RUN pip install /tmp/packages/<extra_package>*.tar.gz
