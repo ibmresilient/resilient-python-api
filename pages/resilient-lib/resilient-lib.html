@@ -1301,12 +1301,12 @@ This will be a mix of comments sync’d from SOAR and new comments</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_lib.components.poller_common.SOARCommon.get_soar_case">
-<span class="sig-name descname"><span class="pre">get_soar_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_case" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_soar_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uri_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'return_level=normal'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_case" title="Permalink to this definition">#</a></dt>
 <dd><p>Find a SOAR case which contains custom field(s) associated with the associated endpoint.
-Returns only one case. See <a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_cases" title="resilient_lib.components.poller_common.SOARCommon.get_soar_cases"><code class="xref py py-class docutils literal notranslate"><span class="pre">SOARCommon.get_soar_cases()</span></code></a> for examples.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">search_fields</span></code> only supports custom fields.</p>
+Returns only one case. See <a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_cases" title="resilient_lib.components.poller_common.SOARCommon.get_soar_cases"><code class="xref py py-class docutils literal notranslate"><span class="pre">SOARCommon.get_soar_cases()</span></code></a> for examples.
+.. note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>``search_fields`` only supports custom fields.
+</pre></div>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1314,6 +1314,7 @@ Returns only one case. See <a class="reference internal" href="#resilient_lib.co
 <li><p><strong>search_fields</strong> (<em>dict</em>) – Dictionary containing key/value pairs to search for a case match.
 Field values can be True/False for <code class="docutils literal notranslate"><span class="pre">has_a_value</span></code> or <code class="docutils literal notranslate"><span class="pre">does_not_have_a_value</span></code>,
 otherwise a field will use <code class="docutils literal notranslate"><span class="pre">equals</span></code> for the value.</p></li>
+<li><p><strong>uri_filters</strong> (<em>str</em>) – Filters for the end of the uri. Default is “return_level=normal”</p></li>
 <li><p><strong>open_cases</strong> (<em>bool</em>) – True if only querying open cases.</p></li>
 </ul>
 </dd>
@@ -1329,7 +1330,7 @@ Returns <code class="docutils literal notranslate"><span class="pre">None</span>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_lib.components.poller_common.SOARCommon.get_soar_cases">
-<span class="sig-name descname"><span class="pre">get_soar_cases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_cases" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_soar_cases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uri_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'return_level=normal'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_cases" title="Permalink to this definition">#</a></dt>
 <dd><p>Get all IBM SOAR cases that match the given search fields.
 To find all cases that are synced from the endpoint platform,
 provide the unique search field that matches the unique id of your
@@ -1338,7 +1339,6 @@ endpoint solution.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">SOARCommon</span>
 
 <span class="n">soar_common</span> <span class="o">=</span> <span class="n">SOARCommon</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
-
 <span class="n">found_id</span> <span class="o">=</span> <span class="n">get_id_from_endpoint_query_result</span><span class="p">()</span>
 <span class="n">cases</span> <span class="o">=</span> <span class="n">soar_common</span><span class="o">.</span><span class="n">get_soar_cases</span><span class="p">({</span> <span class="s2">&quot;endpoint_id&quot;</span><span class="p">:</span> <span class="n">found_id</span> <span class="p">},</span> <span class="n">open_cases</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
@@ -1353,6 +1353,7 @@ endpoint solution.</p>
 <li><p><strong>search_fields</strong> (<em>dict</em>) – Dictionary containing key/value pairs to search for a case match.
 Field values can be True/False for <code class="docutils literal notranslate"><span class="pre">has_a_value</span></code> or <code class="docutils literal notranslate"><span class="pre">does_not_have_a_value</span></code>,
 otherwise a field will use <code class="docutils literal notranslate"><span class="pre">equals</span></code> for the value.</p></li>
+<li><p><strong>uri_filters</strong> (<em>str</em>) – Filters for the end of the uri. Default is “return_level=normal”</p></li>
 <li><p><strong>open_cases</strong> (<em>bool</em>) – True if only querying open cases.</p></li>
 </ul>
 </dd>
