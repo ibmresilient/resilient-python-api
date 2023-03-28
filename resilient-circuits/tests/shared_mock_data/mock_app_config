@@ -39,6 +39,8 @@ org=My Org
 logdir=/tmp
 logfile=app.log
 loglevel=INFO
+log_max_bytes=20000000
+log_backup_count=11
 
 # The number of Functions to run in parallel
 num_workers=50

@@ -40,6 +40,8 @@ org=My Org
 logdir=/tmp
 logfile=app.log
 loglevel=INFO
+# log_max_bytes=10000000
+# log_backup_count=10
 
 # The number of Functions to run in parallel
 #num_workers=5
