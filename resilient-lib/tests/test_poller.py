@@ -276,6 +276,17 @@ def test_lookup_artifact_type_success(fx_mock_resilient_client):
     assert resp == "my artifact"
 
 
+@pytest.mark.livetest
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
+def test_filter_soar_comments(fx_mock_resilient_client):
+    soar_common = SOARCommon(fx_mock_resilient_client)
+
+    mock_entity_comments = ["new comment to add here", "comment to add"]
+    mock_soar_comments = ["new comment to add here"]
+    resp = soar_common._filter_comments(mock_soar_comments, mock_entity_comments)
+
+    assert resp == ["comment to add"]
+
 
 
 def test_eval_mapping(caplog):
