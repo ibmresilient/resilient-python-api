@@ -13,10 +13,15 @@ from threading import Thread
 
 import mock
 import pytest
-from resilient import SimpleHTTPException
-from resilient_lib.components.poller_common import (IntegrationError, SOARCommon, b_to_s, eval_mapping,
-                           get_last_poller_date, poller, s_to_b)
+from resilient_lib.components.poller_common import (DEFAULT_CASES_QUERY_FILTER,
+                                                    IntegrationError,
+                                                    SOARCommon, b_to_s,
+                                                    eval_mapping,
+                                                    get_last_poller_date,
+                                                    poller, s_to_b)
 from resilient_lib.util import constants
+
+from resilient import SimpleHTTPException
 
 NEW_CASE_PAYLOAD = {
   "name": "test case",
@@ -123,20 +128,23 @@ def test_get_soar_case(fx_mock_resilient_client):
 
     assert case["plan_status"] == "A"
     assert case["id"] == 2314
+    assert fx_mock_resilient_client.session.adapters.get("https://").last_request.query == DEFAULT_CASES_QUERY_FILTER
 
 
 
 
 @pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
-def test_get_soar_cases_success(fx_mock_resilient_client):
+def test_get_soar_cases_success(fx_mock_resilient_client, caplog):
     soar_common = SOARCommon(fx_mock_resilient_client)
 
-    cases, _err_msg = soar_common.get_soar_cases({ "id": 2314, "bad_field": True }, open_cases=True)
+    mock_query = "return_level=notnormal"
+    cases, _err_msg = soar_common.get_soar_cases({ "id": 2314, "bad_field": True }, open_cases=True, uri_filters=mock_query)
 
     assert cases
     assert len(cases) == 1
     assert cases[0]["id"] == 2314
+    assert fx_mock_resilient_client.session.adapters.get("https://").last_request.query == mock_query
 
 @pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
