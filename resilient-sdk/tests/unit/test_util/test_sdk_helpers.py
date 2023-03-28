@@ -636,6 +636,18 @@ def test_scrape_results_from_log_file():
     assert mock_function_one_results.get("version") == 2.1
     assert mock_function_one_results.get("reason") == None
 
+def test_scrape_results_really_long_function_name():
+
+    results_scraped = sdk_helpers.scrape_results_from_log_file(mock_paths.MOCK_APP_LOG_PATH)
+    mock_function_one_results = results_scraped.get("mock_function_one_but_really_really_really_really_really_really_really_really_long")
+
+    assert isinstance(mock_function_one_results, dict)
+
+    # There are two Results for mock_function_one
+    # in the mock_app.log file, so this ensures we get the latest
+    assert mock_function_one_results.get("version") == 2.1
+    assert mock_function_one_results.get("reason") == None
+
 
 def test_scrape_results_from_log_file_not_found():
     with pytest.raises(SDKException, match=constants.ERROR_NOT_FIND_FILE):
