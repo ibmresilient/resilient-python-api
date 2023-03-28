@@ -23,6 +23,8 @@ INCIDENTS_URI = "/incidents"
 ARTIFACTS_URI = "/artifacts"
 ARTIFACT_FILE_URI = "/".join([ARTIFACTS_URI, "files"])
 
+DEFAULT_CASES_QUERY_FILTER = "return_level=normal"
+
 # P O L L E R   L O G I C
 def poller(named_poller_interval, named_last_poller_time):
     """
@@ -158,7 +160,7 @@ class SOARCommon():
 
         return query
 
-    def _query_cases(self, query, filters="return_level=normal"):
+    def _query_cases(self, query, filters=DEFAULT_CASES_QUERY_FILTER):
         """ run a query to find case(s) which match the query string
         Args:
             query [str]: query string to find cases
@@ -298,7 +300,7 @@ class SOARCommon():
 
         return {}
 
-    def get_soar_case(self, search_fields, open_cases=True, uri_filters=None):
+    def get_soar_case(self, search_fields, open_cases=True, uri_filters=DEFAULT_CASES_QUERY_FILTER):
         """
         Find a SOAR case which contains custom field(s) associated with the associated endpoint.
         Returns only one case. See :class:`SOARCommon.get_soar_cases()` for examples.
@@ -324,7 +326,7 @@ class SOARCommon():
         # return first case
         return (r_cases[0] if r_cases else None, None)
 
-    def get_soar_cases(self, search_fields, open_cases=True, uri_filters=None):
+    def get_soar_cases(self, search_fields, open_cases=True, uri_filters=DEFAULT_CASES_QUERY_FILTER):
         """
         Get all IBM SOAR cases that match the given search fields.
         To find all cases that are synced from the endpoint platform,
@@ -332,11 +334,15 @@ class SOARCommon():
         endpoint solution.
 
         **Example:**
+
         .. code-block:: python
+
             from resilient_lib import SOARCommon
+
             soar_common = SOARCommon(res_client)
             found_id = get_id_from_endpoint_query_result()
             cases = soar_common.get_soar_cases({ "endpoint_id": found_id }, open_cases=False)
+
         .. note::
 
             ``search_fields`` only supports custom fields.
