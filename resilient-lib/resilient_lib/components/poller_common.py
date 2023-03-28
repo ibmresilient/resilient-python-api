@@ -263,7 +263,7 @@ class SOARCommon():
         """
 
         if filter_soar_header:
-            # filter entity comments with our SOAR header
+            # Filter entity comments with our SOAR header
             staged_entity_comments = [comment for comment in entity_comments \
                                         if clean_html(filter_soar_header) not in clean_html(comment)]
         else:
@@ -271,8 +271,9 @@ class SOARCommon():
 
         # filter out the comments already sync'd to SOAR
         if soar_comment_list:
-            new_entity_comments = [comment for comment in staged_entity_comments \
-                if not any([clean_html(comment) in clean_html(already_synced) for already_synced in soar_comment_list])]
+            already_synced = [clean_html(soar_comment) for soar_comment in soar_comment_list]
+            new_entity_comments = [comment for comment in staged_entity_comments\
+                if clean_html(comment) not in already_synced]
         else:
             new_entity_comments = staged_entity_comments
 
