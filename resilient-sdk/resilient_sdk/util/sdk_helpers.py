@@ -1537,7 +1537,7 @@ def scrape_results_from_log_file(path_log_file):
     regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')  # Getting <fn_name> from [<fn_name>] Result: {'version': 2.0, 'success': True...
 
     for l in reversed(log_file_contents):
-        match = regex_line.search(l, endpos=120)
+        match = regex_line.search(l)
 
         if match:
             fn_name_group_index = 0
