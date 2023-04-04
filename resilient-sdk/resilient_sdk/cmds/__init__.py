@@ -8,5 +8,6 @@ from resilient_sdk.cmds.clone import CmdClone
 from resilient_sdk.cmds.extract import CmdExtract
 from resilient_sdk.cmds.dev import CmdDev
 from resilient_sdk.cmds.validate import CmdValidate
+from resilient_sdk.cmds.run_init import CmdRunInit
 
 from resilient_sdk.cmds.ext.ext_package import CmdExtPackage
