@@ -1,0 +1,26 @@
+{
+    "validate":{
+        "tox-args": {
+            "resilient_email": "test@example.org",
+            "resilient_password": "pwd_from_json_in_settings",
+            "resilient_host": "example.org",
+            "resilient_org": "example org from settings"
+        },
+        "pylint": [
+            "--enable=E,F"
+        ],
+        "bandit": [
+            "-ll"
+        ]
+    },
+    "docgen":
+            {
+            "supported_app": true
+    },
+    "codegen":{
+            "setup": { 
+                    "long_description": """example description"""
+    },
+    "license_content": "some text"
+    }
+}

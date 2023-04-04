@@ -6,7 +6,6 @@
 
 import logging
 import os
-import shutil
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -40,46 +39,46 @@ class CmdRunInit(BaseCmd):
         # Define init usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
+
+        # Add any positional or optional arguments here
+        self.parser.add_argument("-f", "--file",
+                                 type=ensure_unicode,
+                                 required = False,
+                                 help="Optional path to settings file.")
         
     def execute_command(self, args):
         LOG.debug(f"called: CmdRunInit.execute_command()")
-        # Use default config file in ~/.resilient/app.config.
-        filename = ".sdk_settings_test.json"
-        # settings_file = os.path.expanduser(os.path.join("~", ".resilient", filename))
-        settings_file = constants.SDK_SETTINGS_FILE_PATH or args.path
-        # If generating the config file location, create the '~/.resilient' directory if missing.
-        resilient_dir = os.path.dirname(settings_file)
-        if not os.path.exists(resilient_dir):
-            LOG.info(f"Creating {resilient_dir}")
-            os.makedirs(resilient_dir)
         
-        # fill in the contents
-        contents = '''{
-            "validate":{
-                "tox-args": {
-                    "resilient_email": "test@example.org",
-                    "resilient_password": "pwd_from_json_in_settings",
-                    "resilient_host": "example.org",
-                    "resilient_org": "example org from settings"
-                },
-                "pylint": [
-                    "--enable=E,F"
-                ],
-                "bandit": [
-                    "-ll"
-                ]
-            },
-            "docgen":
-                    {
-                    "supported_app": true
-            },
-            "codegen":{
-                    "setup": { 
-                            "long_description": """example description"""
-            },
-            "license_content": "some text"
-            }
-        }\n'''
+        # If filename is provided in args, use that, otherwise use default .sdk_settings.json
+        settings_file = args.file or constants.SDK_SETTINGS_FILE_PATH
+        
+        # Check the provided path
+        settings_dir = os.path.dirname(settings_file)
+        if not os.path.exists(settings_dir):
+            LOG.info(f"Creating {settings_dir}")
+            os.makedirs(settings_dir)
+        
+        overwrite = "y"
+        # Check if the settings_file exists, if it does, prompt if we should overwrite
+        if os.path.exists(settings_file):
+            overwrite = input(f"{settings_file} exists already. Would you like to overwrite (y/n)? ")
+        
+        if overwrite.lower() == "n":
+            # TODO: Why does this get printed to console?
+            LOG.info(f"Will not overwrite {settings_file}... Exiting CmdRunInit.exeucte_command().")
+            return
+        
+        # Instansiate Jinja2 Environment with path to Jinja2 templates
+        jinja_env = sdk_helpers.setup_jinja_env(constants.SETTINGS_TEMPLATE_PATH)
 
-        sdk_helpers.write_file(settings_file, contents)
-        pass
+        # Load the Jinja2 Template
+        settings_template = jinja_env.get_template(constants.SETTINGS_TEMPLATE_NAME)
+
+        rendered_settings = settings_template.render()
+
+        LOG.info(f"Writing settings to: {settings_file}")
+
+        # Write the new README
+        sdk_helpers.write_file(settings_file, rendered_settings)
+
+        return
