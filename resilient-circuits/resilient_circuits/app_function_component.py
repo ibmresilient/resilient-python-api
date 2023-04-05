@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Implementation of AppFunctionComponent"""
 
@@ -63,8 +63,12 @@ class AppFunctionComponent(ResilientComponent):
         # Instansiate RequestsCommon with dictionary of _app_configs_as_dict
         self.rc = RequestsCommon(opts=opts, function_opts=self._app_configs_as_dict)
 
-        # Convert _app_configs_as_dict to namedtuple
-        self.app_configs = namedtuple("app_configs", self._app_configs_as_dict.keys())(*self._app_configs_as_dict.values())
+        # NOTE: self.app_configs used to be a namedtuple.
+        # Since v49 this is no longer a namedtuple.
+        # It behaves the same way that a namedtuple would, but
+        # instead is a resilient.app_config.AppConfig object.
+        # This allows for pluggable PAM connectors/plugins
+        self.app_configs = self._app_configs_as_dict
 
         self._local_storage = threading.local()
 

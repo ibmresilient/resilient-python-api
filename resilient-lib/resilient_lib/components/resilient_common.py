@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2023. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
 
 import datetime
@@ -237,7 +237,6 @@ def validate_fields(field_list, kwargs):
 
     mandatory_fields = field_list
     provided_fields = kwargs
-    return_fields = {}
     mandatory_err_msg = "'{0}' is mandatory and is not set. You must set this value to run this function"
 
     # This is needed to handle something like: validate_fields(('incident_id'), kwargs)
@@ -282,19 +281,21 @@ def validate_fields(field_list, kwargs):
         # Handle if Select Function Input type
         if isinstance(field_value, dict) and field_value.get("name"):
             field_value = field_value.get("name")
+            provided_fields[field_name] = field_value
 
         # Handle if 'Text with value string Input' type
         elif isinstance(field_value, dict) and field_value.get("content"):
             field_value = field_value.get("content")
+            provided_fields[field_name] = field_value
 
         # Handle if Multi-Select Function Input type
         # There is a chance the list has already been "normalized", so just append as is
         elif isinstance(field_value, list):
             field_value = [f.get("name") if isinstance(f, dict) else f for f in field_value]
 
-        return_fields[field_name] = field_value
+            provided_fields[field_name] = field_value
 
-    return return_fields
+    return provided_fields
 
 
 def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):

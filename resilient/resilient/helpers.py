@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Common Helper Functions for the resilient library"""
 
 import copy
+import inspect
 import io
 import json
 import logging
@@ -12,19 +13,24 @@ import os
 import shutil
 import sys
 
+import resilient_app_config_plugins
+
 from resilient import constants
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
+    import imp  # deprecated version of 'importlib' required for Python 2
     from urllib import unquote
 
     from urlparse import urlparse
     JSONDecodeError = None  # JSONDecodeError is not available in PY2.7 so we set it to None
 else:
     # Handle PY 3 specific imports
+    import importlib.util
     from json.decoder import JSONDecodeError
     from urllib.parse import unquote, urlparse
-    from jwcrypto import jwk, jwe
+
+    from jwcrypto import jwe, jwk
 
 
 LOG = logging.getLogger(__name__)
@@ -265,7 +271,7 @@ def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS
 
     :param secret_name:  Name of the protected secret file
     :type secret_name: str
-    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR, defaults to constants.PATH_SECRETS_DIR
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR
     :type path_secrets_dir: str, optional
     :param path_jwk_file: Path to the location of the jwk.key file in a JSON format as per https://www.ietf.org/rfc/rfc7517.txt, defaults to constants.PATH_JWK_FILE
     :type path_jwk_file: str
@@ -286,7 +292,6 @@ def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS
         return False
 
     if not os.path.isfile(path_secret) or not os.access(path_secret, os.R_OK):
-        LOG.warning("No protected secret found for '%s' or you do not have the correct permissions to read the file. No value found for '%s'", secret_name, secret_name)
         return False
 
     if not os.path.isfile(path_jwk_file) or not os.access(path_jwk_file, os.R_OK):
@@ -296,7 +301,21 @@ def protected_secret_exists(secret_name, path_secrets_dir=constants.PATH_SECRETS
     return True
 
 
-def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DIR, path_jwk_file=constants.PATH_JWK_FILE):
+def get_protected_secrets_keys(path_secrets_dir=constants.PATH_SECRETS_DIR):
+    """
+    Get a set of the secret keys in the given secrets directory
+
+    :param path_secrets_dir: Path to the location of the encrypted secret files, defaults to constants.PATH_SECRETS_DIR
+    :type path_secrets_dir: str, optional
+    :return: set of secret names
+    :rtype: set[str]
+    """
+    if not os.path.isdir(path_secrets_dir) or not os.access(path_secrets_dir, os.R_OK):
+        return []
+    return {f for f in os.listdir(path_secrets_dir) if os.path.isfile(os.path.join(path_secrets_dir, f))}
+
+
+def get_protected_secret_token_and_key(secret_name, path_secrets_dir=constants.PATH_SECRETS_DIR, path_jwk_file=constants.PATH_JWK_FILE):
     """
     Get the JWK, read the token from a file with
     the secret_name and decrypt it using the JWK
@@ -333,16 +352,7 @@ def get_protected_secret(secret_name, path_secrets_dir=constants.PATH_SECRETS_DI
     # We need to remove new line and carriage return characters
     tkn = tkn.splitlines()[0]
 
-    try:
-        jwetoken = jwe.JWE()
-        jwetoken.deserialize(tkn)
-        jwetoken.decrypt(key)
-        decrypted_value = jwetoken.payload
-    except Exception as err:
-        LOG.error("Could not decrypt the secret. Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
-        return None
-
-    return decrypted_value.decode("utf-8")
+    return tkn, key
 
 
 def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
@@ -386,6 +396,34 @@ def get_jwk(path_jwk_file=constants.PATH_JWK_FILE):
 
     return aes_key
 
+def decrypt_protected_secret(token, key, secret_name):
+    """
+    Helper method to decrypt a secret given its encrypted value and decryption key.
+
+    NOTE: the decrypted value returned should not be logged to logs or persisted in
+    long lived memory if possible. It should be used in memory and then left to be
+    garbage collected whenever appropriate.
+
+    :param token: encrypted value of the secret
+    :type token: str
+    :param key: decryption key
+    :type key: str
+    :param secret_name: name of the secret to be decrypted. Ex: $MY_SECRET
+    :type secret_name: str
+    :return: plain-text decrypted value of the secret
+    :rtype: str
+    """
+    try:
+        jwetoken = jwe.JWE()
+        jwetoken.deserialize(token)
+        jwetoken.decrypt(key)
+        decrypted_value = jwetoken.payload
+    except Exception as err:
+        LOG.error("Could not decrypt the secret. Invalid key used to decrypt the protected secret '%s'. Error Message: %s", secret_name, str(err))
+        return None
+
+    return decrypted_value.decode("utf-8")
+
 
 def remove_secrets_dir(path_secrets_dir=constants.PATH_SECRETS_DIR):
     """
@@ -412,3 +450,94 @@ def get_config_from_env(config_name):
     """
     LOG.debug("Getting environmental variable '%s'", config_name)
     return os.environ.get(config_name)
+
+def get_pam_type_name(options, protected_secret_manager):
+    """
+    Search protected secrets, app.config for PAM plugin type set by the user.
+    Order of hierarchy is:
+        1. The protected secret $PAM_TYPE is checked
+        2. if not found, pam_type is looked for in app.config
+            a. can be referenced by another secret like ``pam_type=$MY_PAM_TYPE``
+            b. or can be provided in plain text like ``pam_type=HashiCorpVault``
+
+    NOTE: this function returns a string indicating the plugin type name, without
+    validating that the given name is a valid plugin -- ``load_pam_plugin`` does the work of
+    validating the given plugin name
+
+    :param options: app configs
+    :type options: ``resilient.app_config.AppConfigManager``
+    :param options: Protected Secrets manager
+    :type options: ``resilient.app_config.ProtectedSecretsManager``
+    :return: string indicating the plugin's name
+    :rtype: str
+    """
+    return protected_secret_manager.get(constants.PAM_TYPE_CONFIG_APP_HOST_SECRET_NAME) or protected_secret_manager.get(options.get(constants.PAM_TYPE_CONFIG)) or options.get(constants.PAM_TYPE_CONFIG)
+
+def load_pam_plugin(plugin_type_str, plugin_path=None):
+    """
+    Validate the plugin given by name and return a "loaded" class type.
+    The plugin can be built-in, in which case it is loaded from resilient_app_config_plugins
+    module, or it can be custom in which case a path to the .py file is required
+    and the python file is loaded in. Either way, the returned value from
+    this function can be used to instantiate a Plugin.
+
+    **Example:**
+
+    .. code-block::python
+
+        plugin_type_str = "Keyring"
+        plugin_type = helpers.load_pam_plugin(plugin_type_str)
+
+        plugin_type() # instantiates a ``resilient_app_config_plugins.Keyring`` obj
+
+    **Example:**
+
+    .. code-block::python
+
+        plugin_type_str = "MyPlugin"
+        plugin_path = "/path/to/myplugin.py"
+        plugin_type = helpers.load_pam_plugin(plugin_type_str, plugin_path)
+
+        plugin_type() # instantiates a ``MyPlugin`` obj loaded from the .py file at the given path
+
+    :param plugin_type_str: string name of the plugin object
+        (must be subclass of ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``)
+    :type plugin_type_str: string
+    :param plugin_path: path to custom plugin.py file where ``plugin_type_str`` is implemented, optional, defaults to None
+    :type plugin_path: string
+    :raises ValueError: if plugin is not found or not a subclass of ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
+    :return: class object of plugin
+    :rtype: type(resilient_app_config_plugins.plugin_base.PAMPluginInterface)
+    """
+
+    # check if built-in plugin or custom -- custom plugins are loaded from their Python file directly
+    if not plugin_path:
+        # filter all classes found by inspecting the resilient.app_config_plugins module
+        # to only include subclass of the plugin interface (not including the interface)
+        # if a new plugin is created and is currently marked as invalid, check to make sure
+        # it is exposed in the app_config_plugins module (__init__.py)
+        valid_plugin_names = [a[0] for a in inspect.getmembers(resilient_app_config_plugins, inspect.isclass) \
+                            if issubclass(a[1], resilient_app_config_plugins.plugin_base.PAMPluginInterface) and a[1] != resilient_app_config_plugins.plugin_base.PAMPluginInterface]
+        if plugin_type_str not in valid_plugin_names:
+            raise ValueError("Given {0} '{1}' is invalid. {0} must be one of the valid PAM plugin types: {2} or a custom plugin path must be given with '{3}'".format(
+                constants.PAM_TYPE_CONFIG, plugin_type_str, valid_plugin_names, constants.PAM_PATH_CONFIG))
+        module = resilient_app_config_plugins
+    else:
+        if sys.version_info.major < 3:
+            module = imp.load_source(plugin_type_str, plugin_path)
+        else:
+            # if custom plugin, we'll have to get the spec from the location then grab
+            # the module from there
+            spec = importlib.util.spec_from_file_location(plugin_type_str, plugin_path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[plugin_type_str] = module
+            spec.loader.exec_module(module)
+
+    # acquire plugin from module
+    plugin = getattr(module, plugin_type_str)
+
+    # all plugins must implement the abstract interface defined in PAMPluginInterface
+    if not issubclass(plugin, resilient_app_config_plugins.plugin_base.PAMPluginInterface):
+        raise ValueError("Given plugin '{0}' does not implement required interface: '{1}'".format(plugin, resilient_app_config_plugins.plugin_base.PAMPluginInterface))
+
+    return plugin
