@@ -1,5 +1,5 @@
 {
-    "validate":{
+    "validate": {
         "tox-args": {
             "resilient_email": "test@example.org",
             "resilient_password": "pwd_from_json_in_settings",
@@ -13,14 +13,16 @@
             "-ll"
         ]
     },
-    "docgen":
-            {
-            "supported_app": true
+    "docgen": {
+        "supported_app": {{ supported_app }}
     },
-    "codegen":{
-            "setup": { 
-                    "long_description": """example description"""
-    },
-    "license_content": "some text"
+    "codegen": {
+        "setup": {
+            "license": "{{ license }}",
+            "author": "{{ author }}",
+            "author_email": "{{ author_email }}",
+            "url": "{{ url }}"
+        },
+        "license_content": "<<PUT YOUR LICENSE TEXT HERE>>"
     }
 }
