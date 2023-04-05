@@ -1,3 +1,8 @@
+**2023-04: version 48.1**
+
+* REST client updated to use ``include_permissions=false`` by default when authenticating to ``/rest/session`` endpoint.
+  This will give improved performance for SOAR instances with large organizations.
+
 **2023-02: version 48.0**
 
 * Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
