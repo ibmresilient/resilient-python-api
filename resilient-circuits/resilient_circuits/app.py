@@ -43,7 +43,7 @@ class RedactingFilter(logging.Filter):
         if isinstance(record.msg, string_types):
             for p in constants.PASSWD_PATTERNS:
                 if p in record.msg.lower():
-                    regex = r"{0}(?=.*?':\s)(None,|.+?,|.+?'}})".format(p)
+                    regex = r"{0}(?=.*?'|\":\s)(None,|.+?,|.+?'|.+\"|}})".format(p)
                     record.msg = re.sub(regex, r"***", record.msg)
 
         return True

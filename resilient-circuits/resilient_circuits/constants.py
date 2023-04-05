@@ -8,7 +8,7 @@ import pkg_resources
 
 PACKAGE_NAME = "resilient-circuits"
 
-PASSWD_PATTERNS = ['pass', 'secret', 'pin', 'key', 'id']
+PASSWD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'id']
 
 INBOUND_MSG_DEST_PREFIX = "inbound_destinations"
 
