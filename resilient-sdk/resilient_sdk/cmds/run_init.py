@@ -11,10 +11,7 @@ from argparse import SUPPRESS
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
-from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.resilient_objects import (IGNORED_INCIDENT_FIELDS,
-                                                  ResilientObjMap)
 from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
@@ -75,8 +72,6 @@ class CmdRunInit(BaseCmd):
 
     def execute_command(self, args):
 
-        # TODO: Validate the number of args
-
         LOG.debug(f"called: CmdRunInit.execute_command()")
         
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
@@ -85,7 +80,7 @@ class CmdRunInit(BaseCmd):
         # Check the provided path
         settings_dir = os.path.dirname(settings_file)
         if not os.path.exists(settings_dir):
-            LOG.info(f"Creating {settings_dir}")
+            LOG.info(f"{settings_dir} does not exist... Creating.")
             os.makedirs(settings_dir)
         
         overwrite = "y"
