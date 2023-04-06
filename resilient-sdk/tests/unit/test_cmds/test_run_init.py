@@ -40,11 +40,13 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
-        assert settings_json.get('codegen').get('setup').get('author') == "<<your name here>>"
-        assert settings_json.get('codegen').get('setup').get('author_email') == "you@example.com"
-        assert settings_json.get('codegen').get('setup').get('url') == "<<your company url>>"
-        assert settings_json.get('codegen').get('setup').get('license') == "<<insert here>>"
+        assert settings_json.get('codegen').get('setup').get('author') == constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR
+        assert settings_json.get('codegen').get('setup').get('author_email') == constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL
+        assert settings_json.get('codegen').get('setup').get('url') == constants.CODEGEN_DEFAULT_SETUP_PY_URL
+        assert settings_json.get('codegen').get('setup').get('license') == constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE
+        assert settings_json.get('codegen').get('license_content') == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
         assert settings_json.get('docgen').get('supported_app') == False
+        
 
 def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)
@@ -73,8 +75,9 @@ def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, 
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
-        assert settings_json.get('codegen').get('setup').get('author') == "IBM SOAR"
-        assert settings_json.get('codegen').get('setup').get('author_email') == ""
-        assert settings_json.get('codegen').get('setup').get('url') == "https://ibm.com/mysupport"
-        assert settings_json.get('codegen').get('setup').get('license') == "MIT"
+        assert settings_json.get('codegen').get('setup').get('author') == constants.INIT_INTERNAL_AUTHOR
+        assert settings_json.get('codegen').get('setup').get('author_email') == constants.INIT_INTERNAL_AUTHOR_EMAIL
+        assert settings_json.get('codegen').get('setup').get('url') == constants.INIT_INTERNAL_URL
+        assert settings_json.get('codegen').get('setup').get('license') == constants.INIT_INTERNAL_LICENSE
+        assert "Copyright © IBM Corporation" in settings_json.get("codegen").get('license_content')
         assert settings_json.get('docgen').get('supported_app') == True

@@ -31,7 +31,6 @@ class CmdRunInit(BaseCmd):
     $ resilient-sdk init -f/--file <path to settings json> -a/--author you@example.com
     """
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = [constants.SDK_SETTINGS_PARSER_NAME]
     
     def setup(self):
         # Define init usage and description
@@ -45,8 +44,6 @@ class CmdRunInit(BaseCmd):
                                  help="Optional path to settings file.")
         
         # Optional args for different fields in the settings file
-        # TODO: Would it be better to allow something like this instead of individual arguments?
-        ### $ resilient-sdk validate -p <name_of_package> --tests --tox-args resilient_password="secret_pwd" resilient_host="ibmsoar.example.com"
         self.parser.add_argument("-a", "--author",
                                  type=ensure_unicode,
                                  required=False,
@@ -72,7 +69,7 @@ class CmdRunInit(BaseCmd):
 
     def execute_command(self, args):
 
-        LOG.debug(f"called: CmdRunInit.execute_command()")
+        LOG.debug("called: CmdRunInit.execute_command()")
         
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
         settings_file = args.file or constants.SDK_SETTINGS_FILE_PATH
@@ -80,16 +77,16 @@ class CmdRunInit(BaseCmd):
         # Check the provided path
         settings_dir = os.path.dirname(settings_file)
         if not os.path.exists(settings_dir):
-            LOG.info(f"{settings_dir} does not exist... Creating.")
+            LOG.info("{} does not exist... Creating.".format(settings_dir))
             os.makedirs(settings_dir)
         
         overwrite = "y"
         # Check if the settings_file exists, if it does, prompt if we should overwrite
         if os.path.exists(settings_file):
-            overwrite = input(f"{settings_file} exists already. Would you like to overwrite (y/n)? ")
+            overwrite = input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))
         
         if overwrite.lower() == "n":
-            LOG.info(f"Will not overwrite {settings_file}... Exiting CmdRunInit.exeucte_command().")
+            LOG.info("Will not overwrite {}... Exiting CmdRunInit.exeucte_command().".format(settings_file))
             return
         
         # Instansiate Jinja2 Environment with path to Jinja2 templates
@@ -100,14 +97,15 @@ class CmdRunInit(BaseCmd):
 
         LOG.debug("Rendering settings file with provided args")
         rendered_settings = settings_template.render({
-            "author":  "IBM SOAR" if args.internal else (args.author or "<<your name here>>"),
-            "author_email": "" if args.internal else (args.author_email or "you@example.com"),
-            "url": "https://ibm.com/mysupport" if args.internal else (args.url or "<<your company url>>"),
-            "license": "MIT" if args.internal else (args.license or "<<insert here>>"),
-            "supported_app": "true" if args.internal else "false"
+            "author": constants.INIT_INTERNAL_AUTHOR if args.internal else (args.author or constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR),
+            "author_email": constants.INIT_INTERNAL_AUTHOR_EMAIL if args.internal else (args.author_email or constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL),
+            "url": constants.INIT_INTERNAL_URL if args.internal else (args.url or constants.CODEGEN_DEFAULT_SETUP_PY_URL),
+            "license": constants.INIT_INTERNAL_LICENSE if args.internal else (args.license or constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE),
+            "supported_app": "true" if args.internal else "false",
+            "license_content": constants.INIT_INTERNAL_LICENSE_CONTENT if args.internal else constants.CODEGEN_DEFAULT_LICENSE_CONTENT
         })
 
-        LOG.info(f"Writing settings to: {settings_file}")
+        LOG.info("Writing settings to: {}".format(settings_file))
 
         # Write the new settings.json
         sdk_helpers.write_file(settings_file, rendered_settings)
