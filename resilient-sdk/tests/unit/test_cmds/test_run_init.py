@@ -48,6 +48,7 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
         assert settings_json.get('codegen').get('setup').get('author_email') == constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL
         assert settings_json.get('codegen').get('setup').get('url') == constants.CODEGEN_DEFAULT_SETUP_PY_URL
         assert settings_json.get('codegen').get('setup').get('license') == constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE
+        assert settings_json.get('codegen').get('setup').get('long_description') == constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC
         assert settings_json.get('codegen').get('license_content') == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
         assert settings_json.get('docgen').get('supported_app') == False
         
