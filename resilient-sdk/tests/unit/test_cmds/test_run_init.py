@@ -83,5 +83,5 @@ def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, 
         assert settings_json.get('codegen').get('setup').get('author_email') == constants.INIT_INTERNAL_AUTHOR_EMAIL
         assert settings_json.get('codegen').get('setup').get('url') == constants.INIT_INTERNAL_URL
         assert settings_json.get('codegen').get('setup').get('license') == constants.INIT_INTERNAL_LICENSE
-        assert "Copyright © IBM Corporation" in settings_json.get("codegen").get('license_content')
+        assert u"Copyright © IBM Corporation" in settings_json.get("codegen").get('license_content')
         assert settings_json.get('docgen').get('supported_app') == True
