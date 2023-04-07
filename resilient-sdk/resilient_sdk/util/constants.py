@@ -120,7 +120,7 @@ INIT_INTERNAL_AUTHOR = "IBM SOAR"
 INIT_INTERNAL_AUTHOR_EMAIL = ""
 INIT_INTERNAL_URL = "https://ibm.com/mysupport"
 INIT_INTERNAL_LICENSE = "MIT"
-INIT_INTERNAL_LICENSE_CONTENT = "Copyright © IBM Corporation 2023\\n\\n\
+INIT_INTERNAL_LICENSE_CONTENT = u"Copyright © IBM Corporation 2023\\n\\n\
 Permission is hereby granted, free of charge, to any person obtaining a copy\\n\
 of this software and associated documentation files (the \\\"Software\\\"), to\\n\
 deal in the Software without restriction, including without limitation the\\n\
