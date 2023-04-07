@@ -22,7 +22,8 @@
             "license": "MIT",
             "author": "author name",
             "author_email": "you@example.com",
-            "url": "example.com"
+            "url": "example.com",
+            "long_description": "<<CHANGE ME>> this is an example long description"
         },
         "license_content": "This is a test license."
     }

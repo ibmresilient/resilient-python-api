@@ -215,6 +215,7 @@ def test_run_tests_with_settings_file(fx_get_sub_parser, fx_mk_temp_dir, fx_mock
         assert '    author="author name",\n' in setup_py
         assert '    author_email="you@example.com",\n' in setup_py
         assert '    url="example.com",\n' in setup_py
+        assert '    long_description="""<<CHANGE ME>> this is an example long description""",\n' in setup_py
 
         license = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
                         mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, "LICENSE"))

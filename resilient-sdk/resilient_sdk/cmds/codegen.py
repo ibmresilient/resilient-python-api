@@ -350,6 +350,7 @@ class CmdCodegen(BaseCmd):
         jinja_data["author"] = settings_file_contents_setup.get("author", constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR)
         jinja_data["author_email"] = settings_file_contents_setup.get("author_email", constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL)
         jinja_data["url"] = settings_file_contents_setup.get("url", constants.CODEGEN_DEFAULT_SETUP_PY_URL)
+        jinja_data["long_description"] = settings_file_contents_setup.get("long_description", constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC)
 
         # add license_content to jinja_data
         jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT)

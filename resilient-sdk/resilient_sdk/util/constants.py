@@ -107,12 +107,17 @@ ICON_APP_LOGO_REQUIRED_HEIGHT = 72
 ICON_COMPANY_LOGO_REQUIRED_WIDTH = 100
 ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
+# resilient-sdk docgen
+DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
+
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
 CODEGEN_DEFAULT_SETUP_PY_LICENSE = "<<insert here>>"
 CODEGEN_DEFAULT_SETUP_PY_AUTHOR = "<<your name here>>"
 CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
 CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
+CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \
+Multiple continuation lines are supported with a backslash. Line breaks are supported too: <br>- This will be rendered like a list <br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
 
 # resilient-sdk init internal defaults
@@ -136,9 +141,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\\n\
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\\n\
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\\n\
 IN THE SOFTWARE."
-
-# resilient-sdk docgen
-DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
+INIT_INTERNAL_LONG_DESC = "Links: \
+<ul><a target='blank' href='https://ibm.com/mysupport'>Support</a></ul>\
+<ul><a target='blank' href='https://ideas.ibm.com/'>Enhancement Requests</a></ul>"
 
 # resilient-sdk validate
 VALIDATE_LOG_LEVEL_CRITICAL = "CRITICAL"
