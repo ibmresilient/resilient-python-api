@@ -50,7 +50,7 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
 
 def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)
-    my_new_path = f"{mock_paths.TEST_TEMP_DIR}/my_test.json"
+    my_new_path = "{}/my_test.json".format(mock_paths.TEST_TEMP_DIR)
     sys.argv.extend(["--file", my_new_path])
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)

@@ -6,6 +6,7 @@
 
 import logging
 import os
+import sys
 
 from argparse import SUPPRESS
 from resilient import ensure_unicode
@@ -67,6 +68,12 @@ class CmdRunInit(BaseCmd):
                                 action='store_true',
                                 help=SUPPRESS)    # Use SUPPRESS to avoid printing this arg when doing `init -h`
 
+        # Create an argument for internal use to skip the input field
+        self.parser.add_argument("--no-input",
+                                action='store_true',
+                                required=False,
+                                help=SUPPRESS)
+
     def execute_command(self, args):
 
         LOG.debug("called: CmdRunInit.execute_command()")
@@ -82,10 +89,14 @@ class CmdRunInit(BaseCmd):
         
         overwrite = "y"
         # Check if the settings_file exists, if it does, prompt if we should overwrite
-        if os.path.exists(settings_file):
-            overwrite = input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))
+        # If --no-input is used, we should skip the prompt
+        if os.path.exists(settings_file) and not args.no_input:
+            if sys.version_info.major < 3:
+                overwrite = raw_input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))    
+            else:
+                overwrite = input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))
         
-        if overwrite.lower() == "n":
+        if overwrite.lower() != "y":
             LOG.info("Will not overwrite {}... Exiting CmdRunInit.exeucte_command().".format(settings_file))
             return
         

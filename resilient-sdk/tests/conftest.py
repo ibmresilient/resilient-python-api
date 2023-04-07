@@ -410,7 +410,7 @@ def fx_mock_settings_file_path():
     After: Change the settings file path back to the original value
     """
     old_sdk_settings_path = constants.SDK_SETTINGS_FILE_PATH
-    constants.SDK_SETTINGS_FILE_PATH = f"{mock_paths.TEST_TEMP_DIR}/test_settings.json"
+    constants.SDK_SETTINGS_FILE_PATH = "{}/test_settings.json".format(mock_paths.TEST_TEMP_DIR)
     
     yield
     
