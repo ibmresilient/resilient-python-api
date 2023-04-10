@@ -3,8 +3,12 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import os
+from datetime import date
 
 import pkg_resources
+
+TODAY = date.today()
+YEAR = TODAY.year
 
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
@@ -120,7 +124,7 @@ INIT_INTERNAL_AUTHOR = "IBM SOAR"
 INIT_INTERNAL_AUTHOR_EMAIL = ""
 INIT_INTERNAL_URL = "https://ibm.com/mysupport"
 INIT_INTERNAL_LICENSE = "MIT"
-INIT_INTERNAL_LICENSE_CONTENT = u"Copyright © IBM Corporation 2023\\n\\n\
+INIT_INTERNAL_LICENSE_CONTENT = u"Copyright © IBM Corporation {0}\\n\\n\
 Permission is hereby granted, free of charge, to any person obtaining a copy\\n\
 of this software and associated documentation files (the \\\"Software\\\"), to\\n\
 deal in the Software without restriction, including without limitation the\\n\
@@ -135,7 +139,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\\n\
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\\n\
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\\n\
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\\n\
-IN THE SOFTWARE."
+IN THE SOFTWARE.".format(YEAR)
 
 # resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"

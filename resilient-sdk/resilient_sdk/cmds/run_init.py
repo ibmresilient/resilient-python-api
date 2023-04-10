@@ -97,7 +97,7 @@ class CmdRunInit(BaseCmd):
                 overwrite = input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))
         
         if overwrite.lower() != "y":
-            LOG.info("Will not overwrite {}... Exiting CmdRunInit.exeucte_command().".format(settings_file))
+            LOG.info("Will not overwrite {}... Exiting CmdRunInit.execute_command().".format(settings_file))
             return
         
         # Instansiate Jinja2 Environment with path to Jinja2 templates
