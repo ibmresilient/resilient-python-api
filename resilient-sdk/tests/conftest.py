@@ -385,6 +385,36 @@ def fx_cmd_line_args_validate():
 
     sys.argv = original_cmd_line
 
+@pytest.fixture
+def fx_cmd_line_args_init():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "init"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_mock_settings_file_path():
+    """
+    Before: Change the settings file path to point to the test temp directory
+    After: Change the settings file path back to the original value
+    """
+    old_sdk_settings_path = constants.SDK_SETTINGS_FILE_PATH
+    constants.SDK_SETTINGS_FILE_PATH = "{}/test_settings.json".format(mock_paths.TEST_TEMP_DIR)
+    
+    yield
+    
+    constants.SDK_SETTINGS_FILE_PATH = old_sdk_settings_path
 
 @pytest.fixture
 def fx_cmd_line_args_docgen():

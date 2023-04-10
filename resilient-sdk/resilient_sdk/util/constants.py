@@ -3,8 +3,12 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import os
+from datetime import date
 
 import pkg_resources
+
+TODAY = date.today()
+YEAR = TODAY.year
 
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
@@ -49,6 +53,8 @@ DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 BASE_PATH_VALIDATE_DATA = os.path.join("data", "validate")
 VALIDATE_TEMPLATE_PATH = os.path.join(BASE_PATH_VALIDATE_DATA, "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
+SETTINGS_TEMPLATE_PATH = os.path.join("data", "run_init")
+SETTINGS_TEMPLATE_NAME = "sdk_settings.json.jinja2"
 
 # docker test constants (used in validate)
 DOCKER_BASE_REPO = "registry.access.redhat.com/ubi8/python-39:latest"
@@ -108,10 +114,32 @@ ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
 CODEGEN_DEFAULT_SETUP_PY_LICENSE = "<<insert here>>"
-CODEGEN_DEFAULT_SETUP_PY_AUTHOR= "<<your name here>>"
+CODEGEN_DEFAULT_SETUP_PY_AUTHOR = "<<your name here>>"
 CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
 CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
+
+# resilient-sdk init internal defaults
+INIT_INTERNAL_AUTHOR = "IBM SOAR"
+INIT_INTERNAL_AUTHOR_EMAIL = ""
+INIT_INTERNAL_URL = "https://ibm.com/mysupport"
+INIT_INTERNAL_LICENSE = "MIT"
+INIT_INTERNAL_LICENSE_CONTENT = u"Copyright © IBM Corporation {0}\\n\\n\
+Permission is hereby granted, free of charge, to any person obtaining a copy\\n\
+of this software and associated documentation files (the \\\"Software\\\"), to\\n\
+deal in the Software without restriction, including without limitation the\\n\
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or\\n\
+sell copies of the Software, and to permit persons to whom the Software is\\n\
+furnished to do so, subject to the following conditions: \\n\\n\
+The above copyright notice and this permission notice shall be included in\\n\
+all copies or substantial portions of the Software. \\n\\n\
+THE SOFTWARE IS PROVIDED \\\"AS IS\\\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\\n\
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\\n\
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\\n\
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\\n\
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\\n\
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\\n\
+IN THE SOFTWARE.".format(YEAR)
 
 # resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"

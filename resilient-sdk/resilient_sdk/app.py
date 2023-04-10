@@ -9,7 +9,7 @@ import os
 import sys
 
 from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDev, CmdDocgen,
-                                CmdExtPackage, CmdExtract, CmdValidate)
+                                CmdExtPackage, CmdExtract, CmdValidate, CmdRunInit)
 from resilient_sdk.util import constants, sdk_helpers, package_file_helpers
 from resilient_sdk.util.sdk_argparse import SDKArgumentParser
 from resilient_sdk.util.sdk_exception import SDKException
@@ -119,6 +119,7 @@ def main():
     cmd_docgen = CmdDocgen(sub_parser)
     cmd_extract = CmdExtract(sub_parser)
     cmd_ext_package = CmdExtPackage(sub_parser, cmd_validate=cmd_validate)
+    cmd_run_init = CmdRunInit(sub_parser)
 
     try:
         # Parse the arguments
@@ -158,6 +159,9 @@ def main():
             elif sdk_dev and main_cmd == cmd_dev.CMD_NAME:
                 cmd_dev.parser.print_usage()
 
+            elif main_cmd == cmd_run_init.CMD_NAME:
+                cmd_run_init.parser.print_usage()
+
             else:
                 parser.print_help()
 
@@ -192,6 +196,9 @@ def main():
         cmd_validate.execute_command(args)
     elif sdk_dev and args.cmd == cmd_dev.CMD_NAME:
         cmd_dev.execute_command(args)
+    
+    elif args.cmd == cmd_run_init.CMD_NAME:
+        cmd_run_init.execute_command(args)
 
 
 if __name__ == "__main__":
