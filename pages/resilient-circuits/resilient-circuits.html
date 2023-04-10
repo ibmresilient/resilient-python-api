@@ -408,6 +408,13 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
+<p><strong>2023-04: version 48.1</strong></p>
+<ul class="simple">
+<li><p>Better log handling for errors upon restart</p></li>
+<li><p>Added new configs for log rotation. <code class="docutils literal notranslate"><span class="pre">log_max_bytes</span></code> sets the maximum bytes per log file; defaults to <code class="docutils literal notranslate"><span class="pre">10000000</span></code>.
+<code class="docutils literal notranslate"><span class="pre">log_backup_count</span></code> sets the maximum number of log files to keep as backups while files rotate; defaults to <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
+<li><p>Improved log filtering for sensitive values</p></li>
+</ul>
 <p><strong>2023-02: version 48.0</strong></p>
 <ul>
 <li><p>Include <code class="docutils literal notranslate"><span class="pre">threadName</span></code> in the app logs</p></li>
