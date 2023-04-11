@@ -14,12 +14,6 @@ from tests.shared_mock_data import mock_paths
 import json
 from datetime import date
 
-
-''' fixtures that will be useful:
-* fx_mk_temp_dir -- create a temporary directory at mock_paths.TEST_TEMP_DIR
-* with patch('resilient_sdk.util.constants.SDK_SETTINGS_FILE_PATH') as mock_paths.MOCK_SDK_SETTINGS_PATH:
-'''
-
 def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)
 
@@ -38,6 +32,22 @@ def test_file_creation(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init,
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
     assert os.path.exists(constants.SDK_SETTINGS_FILE_PATH)
+
+@pytest.mark.skipif(sys.version_info.major > 2, reason="requires python3.6 or higher")
+def test_input_py2(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+    with patch('builtins.raw_input', return_value="n"):
+        cmd_init = CmdRunInit(fx_get_sub_parser)
+        args = cmd_init.parser.parse_known_args()[0]
+        cmd_init.execute_command(args)
+        assert "Will not overwrite" in caplog.text
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_input_py3(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+    with patch('builtins.input', return_value="n"):
+        cmd_init = CmdRunInit(fx_get_sub_parser)
+        args = cmd_init.parser.parse_known_args()[0]
+        cmd_init.execute_command(args)
+        assert "Will not overwrite" in caplog.text
 
 def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
     cmd_init = CmdRunInit(fx_get_sub_parser)

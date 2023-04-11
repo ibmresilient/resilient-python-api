@@ -417,6 +417,17 @@ def fx_mock_settings_file_path():
     constants.SDK_SETTINGS_FILE_PATH = old_sdk_settings_path
 
 @pytest.fixture
+def fx_create_mock_settings_file():
+    """
+    Before: Create a temporary file with the default settings file name
+    """
+    fake_settings_json = "{}/test_settings.json".format(mock_paths.TEST_TEMP_DIR)
+    with open(fake_settings_json, "w") as f:
+        pass
+
+    yield
+
+@pytest.fixture
 def fx_cmd_line_args_docgen():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
