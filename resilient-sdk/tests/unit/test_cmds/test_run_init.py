@@ -35,7 +35,7 @@ def test_file_creation(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init,
 
 @pytest.mark.skipif(sys.version_info.major > 2, reason="requires python3.6 or higher")
 def test_input_py2(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
-    with patch('__builtins__.raw_input', return_value="n"):
+    with patch('resilient_sdk.cmds.run_init.execute_command.raw_input', return_value="n"):
         cmd_init = CmdRunInit(fx_get_sub_parser)
         args = cmd_init.parser.parse_known_args()[0]
         cmd_init.execute_command(args)
