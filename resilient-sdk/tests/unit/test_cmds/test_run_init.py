@@ -12,12 +12,7 @@ from resilient_sdk.util import constants, sdk_validate_configs
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
 import json
-
-
-''' fixtures that will be useful:
-* fx_mk_temp_dir -- create a temporary directory at mock_paths.TEST_TEMP_DIR
-* with patch('resilient_sdk.util.constants.SDK_SETTINGS_FILE_PATH') as mock_paths.MOCK_SDK_SETTINGS_PATH:
-'''
+from datetime import date
 
 def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)
@@ -38,6 +33,22 @@ def test_file_creation(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init,
     cmd_init.execute_command(args)
     assert os.path.exists(constants.SDK_SETTINGS_FILE_PATH)
 
+@pytest.mark.skipif(sys.version_info.major > 2, reason="requires python 2")
+def test_input_py2(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+    with patch("resilient_sdk.cmds.run_init.raw_input", return_value="n"):
+        cmd_init = CmdRunInit(fx_get_sub_parser)
+        args = cmd_init.parser.parse_known_args()[0]
+        cmd_init.execute_command(args)
+        assert "Will not overwrite" in caplog.text
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
+def test_input_py3(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+    with patch("resilient_sdk.cmds.run_init.input", return_value="n"):
+        cmd_init = CmdRunInit(fx_get_sub_parser)
+        args = cmd_init.parser.parse_known_args()[0]
+        cmd_init.execute_command(args)
+        assert "Will not overwrite" in caplog.text
+
 def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
     cmd_init = CmdRunInit(fx_get_sub_parser)
     args = cmd_init.parser.parse_known_args()[0]
@@ -48,6 +59,9 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
         assert settings_json.get('codegen').get('setup').get('author_email') == constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL
         assert settings_json.get('codegen').get('setup').get('url') == constants.CODEGEN_DEFAULT_SETUP_PY_URL
         assert settings_json.get('codegen').get('setup').get('license') == constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE
+        assert "<<{}>>".format(constants.DOCGEN_PLACEHOLDER_STRING) in settings_json.get('codegen').get('setup').get('long_description')
+        assert '''Enter a long description, including the key features of the App. \\\nMultiple continuation lines are supported with a backslash.''' \
+            in settings_json.get('codegen').get('setup').get('long_description')
         assert settings_json.get('codegen').get('license_content') == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
         assert settings_json.get('docgen').get('supported_app') == False
         
@@ -79,9 +93,11 @@ def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, 
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
+        year = date.today().year
         assert settings_json.get('codegen').get('setup').get('author') == constants.INIT_INTERNAL_AUTHOR
         assert settings_json.get('codegen').get('setup').get('author_email') == constants.INIT_INTERNAL_AUTHOR_EMAIL
         assert settings_json.get('codegen').get('setup').get('url') == constants.INIT_INTERNAL_URL
         assert settings_json.get('codegen').get('setup').get('license') == constants.INIT_INTERNAL_LICENSE
-        assert u"Copyright © IBM Corporation" in settings_json.get("codegen").get('license_content')
+        assert settings_json.get('codegen').get('setup').get('long_description') == constants.INIT_INTERNAL_LONG_DESC
+        assert u"Copyright © IBM Corporation {}".format(year) in settings_json.get("codegen").get('license_content')
         assert settings_json.get('docgen').get('supported_app') == True

@@ -30,10 +30,7 @@ setup(
     author_email="{{author_email}}",
     url="{{url}}",
     description="<<{{change_me_str}}>>Enter a short description of the App",
-    long_description="""<<{{change_me_str}}>>Enter a long description, including the key features of the App. \
-Multiple continuation lines are supported with a backslash. Line breaks are supported too:
-<br>- This will be rendered like a list
-<br>- once the App is installed in SOAR""",
+    long_description="""{{long_description}}""",
     install_requires=[
         "resilient-circuits>={{resilient_libraries_version}}"
     ],
