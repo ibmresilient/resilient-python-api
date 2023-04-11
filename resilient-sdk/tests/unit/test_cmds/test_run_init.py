@@ -12,6 +12,7 @@ from resilient_sdk.util import constants, sdk_validate_configs
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
 import json
+from datetime import date
 
 
 ''' fixtures that will be useful:
@@ -80,10 +81,11 @@ def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, 
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
+        year = date.today().year
         assert settings_json.get('codegen').get('setup').get('author') == constants.INIT_INTERNAL_AUTHOR
         assert settings_json.get('codegen').get('setup').get('author_email') == constants.INIT_INTERNAL_AUTHOR_EMAIL
         assert settings_json.get('codegen').get('setup').get('url') == constants.INIT_INTERNAL_URL
         assert settings_json.get('codegen').get('setup').get('license') == constants.INIT_INTERNAL_LICENSE
         assert settings_json.get('codegen').get('setup').get('long_description') == constants.INIT_INTERNAL_LONG_DESC
-        assert u"Copyright © IBM Corporation" in settings_json.get("codegen").get('license_content')
+        assert u"Copyright © IBM Corporation {}".format(year) in settings_json.get("codegen").get('license_content')
         assert settings_json.get('docgen').get('supported_app') == True

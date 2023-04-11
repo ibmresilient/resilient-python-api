@@ -121,7 +121,7 @@ CODEGEN_DEFAULT_SETUP_PY_AUTHOR = "<<your name here>>"
 CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
 CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
 CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \
-Multiple continuation lines are supported with a backslash. Line breaks are supported too: <br>- This will be rendered like a list <br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
+Multiple continuation lines are supported with a backslash. Line breaks are supported too:\n<br>- This will be rendered like a list\n<br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
 
 # resilient-sdk init internal defaults
@@ -147,11 +147,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\\n\
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\\n\
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\\n\
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\\n\
-IN THE SOFTWARE."
+IN THE SOFTWARE.".format(YEAR)
 
-
-# resilient-sdk docgen
-DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
 
 # resilient-sdk validate
 VALIDATE_LOG_LEVEL_CRITICAL = "CRITICAL"
