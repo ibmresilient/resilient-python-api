@@ -120,8 +120,7 @@ CODEGEN_DEFAULT_SETUP_PY_LICENSE = "<<insert here>>"
 CODEGEN_DEFAULT_SETUP_PY_AUTHOR = "<<your name here>>"
 CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
 CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
-CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \
-Multiple continuation lines are supported with a backslash. Line breaks are supported too:\n<br>- This will be rendered like a list\n<br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
+CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \\\\\\nMultiple continuation lines are supported with a backslash. Line breaks are supported too:\\n<br>- This will be rendered like a list\\n<br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
 
 # resilient-sdk init internal defaults
