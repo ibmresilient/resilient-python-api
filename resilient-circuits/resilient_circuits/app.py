@@ -14,7 +14,7 @@ from __future__ import print_function
 
 import logging
 from logging.handlers import RotatingFileHandler
-from six import string_types, text_type
+from six import string_types, PY3
 import re
 import os
 import filelock
@@ -40,7 +40,8 @@ class RedactingFilter(logging.Filter):
 
     def filter(self, record):
         # Best effort regex filter pattern to redact password logging.
-        record.msg = text_type(record.msg)
+        if PY3: # struggles to convert unicode dicts in PY2 -- so PY3 only
+            record.msg = str(record.msg)
         if isinstance(record.msg, string_types):
             for p in constants.PASSWD_PATTERNS:
                 if p in record.msg.lower():
