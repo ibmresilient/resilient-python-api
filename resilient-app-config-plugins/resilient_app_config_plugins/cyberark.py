@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import base64
+import logging
 
 import requests_pkcs12 as requests  # required as this allows for .p12 cert files
 from cachetools import TTLCache, cached
@@ -10,7 +11,9 @@ from requests.exceptions import RequestException
 from resilient_app_config_plugins import constants
 from resilient_app_config_plugins.plugin_base import (PAMPluginInterface,
                                                       get_verify_from_string)
+from six.moves.urllib.parse import urljoin
 
+LOG = logging.getLogger(__name__)
 
 class Cyberark(PAMPluginInterface):
     """
@@ -19,6 +22,10 @@ class Cyberark(PAMPluginInterface):
     CERT_PATH = "PAM_CERT_PATH"
     CERT_PASS_KEY = "PAM_CERT_PASSWORD"
     REQUIRED_CONFIGS = [PAMPluginInterface.PAM_ADDRESS, PAMPluginInterface.APP_ID, CERT_PATH, CERT_PASS_KEY]
+
+
+    CYBERARK_BASE_ACCOUNT_URI = "/AIMWebService/api/Accounts"
+    CYBERARK_ACCOUNTS_URI = CYBERARK_BASE_ACCOUNT_URI + "?appid={0}&safe={1}&object={2}"
 
     def __init__(self, protected_secrets_manager, key):
         self.protected_secrets_manager = protected_secrets_manager
@@ -93,7 +100,10 @@ class Cyberark(PAMPluginInterface):
         pkcs12_stream, pkcs12_password = self._get_cert_details()
 
         return requests.get(
-            "{0}/AIMWebService/api/Accounts?appid={1}&safe={2}&object={3}".format(base_url, app_id, safe, obj),
+            urljoin(
+                base_url,
+                self.CYBERARK_ACCOUNTS_URI.format(app_id, safe, obj)
+            ),
             pkcs12_data=pkcs12_stream,
             pkcs12_password=pkcs12_password,
             verify=verify,
@@ -101,24 +111,31 @@ class Cyberark(PAMPluginInterface):
         )
 
     @cached(cache=TTLCache(maxsize=constants.CACHE_SIZE, ttl=constants.CACHE_TTL))
-    def get(self, plain_text_value):
+    def get(self, plain_text_value, default=None):
         """
         Get value from Cyberark given "^"-prefixed key in app.config
 
         :param plain_text_value: "^"-prefixed value from app.config
         :type plain_text_value: str
+        :param default: value to return if item is not found in PAM; defaults to None
+        :type default: str
         :return: value retrieved from "Content" (password) field from CCP
         :rtype: str
         """
         item = plain_text_value.lstrip(constants.PAM_SECRET_PREFIX)
 
         split = item.split("/")
-        safe = split[0]
-        obj = split[1]
+        
+        if len(split) == 2:
+            safe = split[0]
+            obj = split[1]
+        else:
+            LOG.error("Cyberark value '%s' was not properly formatted. Please review the formatting guide for this plugin in the documentation", plain_text_value)
+            return default
 
         response = self._get_account_details(safe, obj).json()
 
-        return response.get("Content")
+        return response.get("Content", default)
 
     def selftest(self):
         """
@@ -141,7 +158,7 @@ class Cyberark(PAMPluginInterface):
 
         try:
             response = requests.get(
-                "{0}/AIMWebService/api/Accounts?appid={1}".format(base_url, app_id),
+                urljoin(base_url, self.CYBERARK_BASE_ACCOUNT_URI.format(app_id)),
                 pkcs12_data=pkcs12_stream,
                 pkcs12_password=pkcs12_password,
                 verify=verify,

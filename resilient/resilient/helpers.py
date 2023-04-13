@@ -438,7 +438,7 @@ def remove_secrets_dir(path_secrets_dir=constants.PATH_SECRETS_DIR):
         shutil.rmtree(path_secrets_dir, ignore_errors=True)
 
 
-def get_config_from_env(config_name):
+def get_config_from_env(config_name, default=None):
     """
     Read a variable from the environment given it's
     config_name. If it does not exist, it returns None
@@ -449,7 +449,7 @@ def get_config_from_env(config_name):
     :rtype: str
     """
     LOG.debug("Getting environmental variable '%s'", config_name)
-    return os.environ.get(config_name)
+    return os.environ.get(config_name, default)
 
 def get_pam_type_name(options, protected_secret_manager):
     """

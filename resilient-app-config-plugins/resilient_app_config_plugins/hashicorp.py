@@ -8,7 +8,9 @@ from datetime import datetime, timedelta
 import requests
 from cachetools import TTLCache, cached
 from resilient_app_config_plugins import constants
-from resilient_app_config_plugins.plugin_base import PAMPluginInterface, get_verify_from_string
+from resilient_app_config_plugins.plugin_base import (PAMPluginInterface,
+                                                      get_verify_from_string)
+from six.moves.urllib.parse import urljoin
 
 LOG = logging.getLogger(__name__)
 
@@ -20,13 +22,15 @@ class HashiCorpVault(PAMPluginInterface):
     for other HashiCorp Vault secret engines. Each would need to overwrite
     the ``get()`` method and implement the REST call required for that engine.
     See details on HashiCorp's APIs here: https://developer.hashicorp.com/vault/api-docs/secret
-    The ``_get_access_token`` method will work fine as long as proper policies
+    The ``_get_access_token()`` method will work fine as long as proper policies
     are set for the app role to access the secrets in any given engine.
     """
     SECRET_ID = "PAM_SECRET_ID"
     REQUIRED_CONFIGS = [PAMPluginInterface.PAM_ADDRESS, PAMPluginInterface.APP_ID, SECRET_ID]
 
     VAULT_API_VERSION = "v1"
+    VAULT_LOGON_URI = "{0}/auth/approle/login".format(VAULT_API_VERSION)
+    VAULT_KV_DATA_URI = "{0}/{1}/data/{2}"
 
     def __init__(self, protected_secrets_manager, key, *args, **kwargs):
         self.protected_secrets_manager = protected_secrets_manager
@@ -38,7 +42,7 @@ class HashiCorpVault(PAMPluginInterface):
     def _get_access_token(self):
         """
         Either on first try or on token expiration,
-        reach out to Hashicorp to get client token using
+        reach out to HashiCorp to get client token using
         role_id and secret_id provided in protected secrets.
         """
         time_now = datetime.utcnow()
@@ -48,7 +52,7 @@ class HashiCorpVault(PAMPluginInterface):
         # NOTE: this will only be called when a item is needed
         # and the token doesn't yet exist or is expired. If the configurations
         # required to get the client token are incorrect, but a item is
-        # never requested from Hashicorp, then no error will be raised.
+        # never requested from HashiCorp, then no error will be raised.
         missing = [key for key in self.REQUIRED_CONFIGS if not self.protected_secrets_manager.get(key)]
         if any(missing):
             raise ValueError("Missing one (or more) required configuration(s): {0} for adapter type '{1}'".format(missing, self.__class__.__name__))
@@ -58,6 +62,7 @@ class HashiCorpVault(PAMPluginInterface):
         role_id = self.protected_secrets_manager.get(self.APP_ID)
         secret_id = self.protected_secrets_manager.get(self.SECRET_ID)
         vault_address = self.protected_secrets_manager.get(self.PAM_ADDRESS)
+        verify = get_verify_from_string(self.protected_secrets_manager.get(self.VERIFY_SERVER_CERT))
 
         # call to login endpoint
         # NOTE: no try-except here; any requests exceptions that are
@@ -66,12 +71,13 @@ class HashiCorpVault(PAMPluginInterface):
         # "errors" in the response, which are server-side and can be handled as
         # needed
         response = requests.post(
-            "{0}/{1}/auth/approle/login".format(vault_address, self.VAULT_API_VERSION),
+            urljoin(vault_address, self.VAULT_LOGON_URI),
             data={
                 "role_id": role_id,
                 "secret_id": secret_id
             },
-            timeout=constants.DEFAULT_TIMEOUT
+            timeout=constants.DEFAULT_TIMEOUT,
+            verify=verify
         ).json()
 
         # there may be errors returned from the endpoint
@@ -79,7 +85,7 @@ class HashiCorpVault(PAMPluginInterface):
         # is required to run the app, but the endpoint was not
         # able to provide the token thus we need to stop circuits
         if "errors" in response:
-            raise ValueError("Unable to login to Hashicorp approle endpoint. Error(s): {0}".format(response.get("errors")))
+            raise ValueError("Unable to login to HashiCorp approle endpoint. Error(s): {0}".format(response.get("errors")))
 
         # if no errors, capture client token and lease duration information
         # NOTE: lease duration is harder to parse in a useful way so we
@@ -104,19 +110,27 @@ class HashiCorpVault(PAMPluginInterface):
         """
         vault_address = self.protected_secrets_manager.get(self.PAM_ADDRESS)
         verify = get_verify_from_string(self.protected_secrets_manager.get(self.VERIFY_SERVER_CERT))
-        return requests.get(
-            "{0}/{1}/{2}/data/{3}".format(vault_address, self.VAULT_API_VERSION, secrets_engine, path),
+        response = requests.get(
+            urljoin(
+                vault_address,
+                self.VAULT_KV_DATA_URI.format(self.VAULT_API_VERSION, secrets_engine, path)
+            ),
             headers={
                 "X-Vault-Token": self.client_token
             },
             timeout=constants.DEFAULT_TIMEOUT,
             verify=verify
-        )
+        ).json()
+
+        if "errors" in response:
+            raise ValueError("Unable to get value for '{0}' from HashiCorp Vault. Error(s): {1}".format(path, response.get("errors")))
+        
+        return response
 
     # each item is cached, but only 5 seconds to live as values could be rotated relatively quickly
     # the caching helps on startup if many values are required quickly in succession
     @cached(cache=TTLCache(maxsize=constants.CACHE_SIZE, ttl=constants.CACHE_TTL))
-    def get(self, plain_text_value):
+    def get(self, plain_text_value, default=None):
         """
         Get item from KV engine. NOTE: only works with KV (key-value) engine
 
@@ -145,32 +159,34 @@ class HashiCorpVault(PAMPluginInterface):
 
         :param plain_text_value: plain text vaule found in app.config (like ^<engine>.m<path>.<key>)
         :type plain_text_value: str
+        :param default: value to return if item is not found in PAM; defaults to None
+        :type default: str
         :return: value for key found in Vault
         :rtype: str
         """
         item = plain_text_value.lstrip(constants.PAM_SECRET_PREFIX)
         split = item.split(".")
 
-        try:
+        if len(split) == 3:
             secrets_engine = split[0]
             path = split[1]
             credential_name = split[2]
-        except IndexError:
-            LOG.error("HashiCorpVault secret '%s' was not properly formatted. Please review the formatting guide for this plugin in the documentation", plain_text_value)
-            return plain_text_value
+        else:
+            LOG.error("HashiCorpVault value '%s' was not properly formatted. Please review the formatting guide for this plugin in the documentation", plain_text_value)
+            return default
 
         if not self.client_token or datetime.utcnow() >= self.lease_expiration:
             self._get_access_token()
 
         if not self.client_token:
-            return plain_text_value
+            return default
 
         try:
-            response = self._get_pv_vault_data(secrets_engine, path).json()
+            response = self._get_pv_vault_data(secrets_engine, path)
 
             # it is possible that some secrets are "deleted" or "destroyed" in the secrets
             # vault. handle these situations and alert the retriever of the issue
-            if not response.get("data", {}).get("data"):
+            if not response.get("data") or not response.get("data", {}).get("data"):
                 cred_version = response.get("data", {}).get("metadata", {}).get("version")
                 if response.get("data", {}).get("metadata", {}).get("destroyed") == True:
                     # "destroyed" but not "deleted" case
@@ -182,7 +198,7 @@ class HashiCorpVault(PAMPluginInterface):
             return response["data"]["data"][credential_name]
         except KeyError as err:
             LOG.error("Error retrieving {0} from HashiCorpVault. Details: {1}".format(plain_text_value, str(err)))
-            return plain_text_value
+            return default
 
     def selftest(self):
         """

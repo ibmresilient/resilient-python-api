@@ -263,14 +263,14 @@ def validate_fields(field_list, kwargs):
             field = field.get("name")
 
         # If the field value is a defined empty str, raise an error
-        if isinstance(provided_fields.get(field), string_types):
-            if not provided_fields.get(field):
-                raise ValueError(mandatory_err_msg.format(field))
-
-        if provided_fields.get(field) is None:
+        field_value = provided_fields.get(field)
+        if isinstance(field_value, string_types) and not field_value:
             raise ValueError(mandatory_err_msg.format(field))
 
-        if placeholder_value and provided_fields.get(field) == placeholder_value:
+        if field_value is None:
+            raise ValueError(mandatory_err_msg.format(field))
+
+        if placeholder_value and field_value == placeholder_value:
             raise ValueError(
                 "'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(
                     field, placeholder_value))

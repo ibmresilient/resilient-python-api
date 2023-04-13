@@ -30,7 +30,7 @@ from tests.shared_mock_data import mock_paths
 
 def _mk_temp_dir():
     if os.path.exists(mock_paths.TEST_TEMP_DIR):
-        shutil.rmtree(mock_paths.TEST_TEMP_DIR)
+        shutil.rmtree(mock_paths.TEST_TEMP_DIR, ignore_errors=True)
 
     os.makedirs(mock_paths.TEST_TEMP_DIR)
 

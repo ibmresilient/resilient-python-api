@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Action Module server
 
@@ -14,7 +14,7 @@ from __future__ import print_function
 
 import logging
 from logging.handlers import RotatingFileHandler
-from six import string_types
+from six import string_types, text_type
 import re
 import os
 import filelock
@@ -40,11 +40,23 @@ class RedactingFilter(logging.Filter):
 
     def filter(self, record):
         # Best effort regex filter pattern to redact password logging.
+        record.msg = text_type(record.msg)
         if isinstance(record.msg, string_types):
             for p in constants.PASSWD_PATTERNS:
                 if p in record.msg.lower():
-                    regex = r"{0}(?=.*?'|\":\s)(None,|.+?,|.+?'|.+\"|}})".format(p)
-                    record.msg = re.sub(regex, r"***", record.msg)
+                    regex = re.compile(r"""
+                        ({0}           # start capturing group for password pattern from constants.PASSWD_PATTERNS
+                        \w*?[\'\"]?    # match any word characters (lazy) and zero or one quotation marks
+                        \W*?u?[\'\"]   # match any non-word characters (lazy) up until exactly one quotation mark
+                                       # and potentially a u'' situation for PY27
+                                       # (this quotation mark indicates the beginning of the secret value)
+                        )              # end first capturing group
+                        (.+?)          # capture the problematic content (lazy capture up until end quotation mark)
+                        ([\'\"])       # capturing group to end the regex match
+                    """.format(p), re.X)
+
+                    # keep first and third capturing groups, but replace inner group with "***"
+                    record.msg = regex.sub(r"\1***\3", record.msg)
 
         return True
 

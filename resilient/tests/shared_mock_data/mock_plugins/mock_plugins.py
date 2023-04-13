@@ -8,7 +8,7 @@ from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 class MyMockPlugin(PAMPluginInterface):
     def __init__(self, *args, **kwargs):
         pass
-    def get(self, key):
+    def get(self, key, default=None):
         return "MOCK"
     def selftest(self):
         return True, ""

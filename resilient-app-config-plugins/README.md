@@ -46,6 +46,7 @@ Then set the value for `pam_plugin_path` in the `[resilient]` section of your ap
 ```python
 # /etc/rescircuits/my_plugin.py
 
+import requests
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 
 class MyPlugin(PAMPluginInterface):
@@ -54,9 +55,9 @@ class MyPlugin(PAMPluginInterface):
         here save the protected_secrets_manager and key variables if needed
         """
         pass
-    def get(self, plain_text_value):
+    def get(self, plain_text_value, default=None):
         """
-        plain_text_value is a ^-prefixed string from the app.config.
+        plain_text_value is the content of a ^-prefixed string from the app.config.
         parse the value as needed to reach out to your endpoint
         """
         return plain_text_value
@@ -80,6 +81,8 @@ pam_type=MyPlugin
 pam_plugin_path=/etc/rescircuits/my_plugin.py
 ...
 ```
+
+Note that the only available external libraries for custom plugins is `requests`.
 
 ## License and Terms
 

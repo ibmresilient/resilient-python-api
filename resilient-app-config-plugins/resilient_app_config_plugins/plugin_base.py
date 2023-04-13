@@ -30,7 +30,7 @@ class PAMPluginInterface():
         """
         raise NotImplementedError("Cannot instantiate object of type {0}".format(type(self)))
 
-    def get(self, plain_text_value):
+    def get(self, plain_text_value, default=None):
         """
         Get value from external provider.
 
@@ -53,6 +53,8 @@ class PAMPluginInterface():
 
         :param plain_text_value: plain text value from app.config (starts with "^")
         :type plain_text_value: str
+        :param default: value to return if item is not found in PAM
+        :type default: str
         """
         raise NotImplementedError("Implementation for PAM Interface 'get()' method is required")
 

@@ -16,6 +16,9 @@ except ImportError:
 
 LOG = logging.getLogger(__name__)
 
+DEFAULT_SERVICE = "_"
+RESILIENT_SERVICE = "resilient"
+
 class Keyring(PAMPluginInterface):
     """
     Default PAM plugin to work with Keyring.
@@ -25,10 +28,10 @@ class Keyring(PAMPluginInterface):
     """
 
     def __init__(self, *args, **kwargs):
-        self.key = kwargs.get("key", "_")
+        self.key = kwargs.get("key", DEFAULT_SERVICE)
 
     @cached(cache=TTLCache(maxsize=constants.CACHE_SIZE, ttl=constants.CACHE_TTL))
-    def get(self, plain_text_value):
+    def get(self, plain_text_value, default=None):
         """
         Using ``keyring.get_password``, retrieve secret from keyring.
 
@@ -40,20 +43,22 @@ class Keyring(PAMPluginInterface):
 
         :param plain_text_value: value in app.config like ``pass=^value``
         :type plain_text_value: str
+        :param default: value to return if item is not found in PAM; defaults to None
+        :type default: str
         :return: value found in keyring
         :rtype: str
         """
         item = plain_text_value.lstrip(constants.PAM_SECRET_PREFIX)
         service = self.key
-        if service == "resilient":
-            # Special case, becuase of the way we parse commandlines, treat this as root
-            service = "_"
+        if service == RESILIENT_SERVICE:
+            # Special case, because of the way we parse command lines, treat "resilient" as root
+            service = DEFAULT_SERVICE
         LOG.debug("keyring get('%s', '%s')", service, item)
         try:
             return keyring.get_password(service, item)
         except KeyringError as err:
             LOG.error("Keyring object was requested from app.config but no suitable backend was found. More info: {0}".format(str(err)))
-            return plain_text_value
+            return default if default else plain_text_value
 
     def selftest(self):
         """

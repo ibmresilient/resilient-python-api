@@ -4,8 +4,9 @@
 
 import logging
 
+from resilient_app_config_plugins.constants import (
+    PAM_SECRET_PREFIX, PAM_SECRET_PREFIX_WITH_BRACKET)
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
-from resilient_app_config_plugins.constants import PAM_SECRET_PREFIX
 from six import string_types
 from six.moves import UserDict
 
@@ -50,7 +51,7 @@ class ProtectedSecretsManager:
                     # protected secrets are stored as tuple of token, key
                     self.data[config_key] = helpers.get_protected_secret_token_and_key(config_key, path_secrets_dir, path_jwk_file)
 
-    def get(self, config_key):
+    def get(self, config_key, default=None):
         """
         Read key from data.
         If found in data, decrypt using the stored token, key pair.
@@ -70,7 +71,7 @@ class ProtectedSecretsManager:
             protected_secret = helpers.decrypt_protected_secret(tkn, key, config_key)
             protected_secret = protected_secret if protected_secret else helpers.get_config_from_env(config_key)
         else:
-            protected_secret = helpers.get_config_from_env(config_key)
+            protected_secret = helpers.get_config_from_env(config_key, default)
 
         return protected_secret
 
@@ -108,6 +109,68 @@ class AppConfigManager(ConfigDict):
 
         self._convert_sub_dicts_to_obj(pam_plugin_type)
 
+    @staticmethod
+    def replace_secret_in_config(item, secret_manager, secret_prefix):
+        """
+        Use either protected secrets or app config plugin to substitute
+        in values where appropriate for item from app.config
+
+        The method here is mostly required to support having multiple
+        secrets in a config. This method deals with multiple substitutions
+        and, in conjunction with the logic in __getitem__, will substitute
+        all secrets in a config.
+
+        To have multiple secrets in a config, brackets must be used.
+
+        **Example:**
+
+        Assuming that you have protected secrets TABLE_SECRET_NAME
+        and VALUE_SECRET_NAME, a sql query could be constructed in
+        an app.config like this:
+
+        .. code-block::
+
+            [fn_my_app]
+            sql_query=FROM ${TABLE_SECRET_NAME} select ${VALUE_SECRET_NAME};
+
+        :param item: value from app.config
+        :type item: str
+        :param secret_manager: Protected Secrets Manager or App Config Plugin
+        :type secret_manager: ProtectedSecretsManager|PAMPluginInterface
+        :param secret_prefix: "$" or "${" or "^" or "^{"
+        :type secret_prefix: str
+        :return: substituted value of app.config item
+        :rtype: str
+        """
+        original_item = item
+        if secret_prefix not in item:
+            return item
+        start = item.index(secret_prefix)
+
+        # loop through any prefixed values in the item and substitute them
+        # the loop here is required for multiple values in a line
+        while start < len(item):
+            end = item.index("}", start) if "}" in item else len(item)
+            prefixed_item = item[start:end+1]
+            unprefixed_item = prefixed_item.replace(secret_prefix, "").replace("}", "")
+            secret_value = secret_manager.get(unprefixed_item, prefixed_item)
+
+            # since we set prefixed_item to be the default value that will
+            # be returned when no value is found, log a warning telling the
+            # user that their value wasn't found
+            if secret_value == prefixed_item:
+                manager_type_str = "PAM Plugin" if isinstance(secret_manager, PAMPluginInterface) else "Protected Secrets"
+                LOG.warning("Failed to find '%s' in %s. To properly deploy your app, please make sure '%s' is correctly configured",
+                          prefixed_item, manager_type_str, prefixed_item)
+            else:
+                LOG.debug("Substituting value for '%s' in %s", prefixed_item, original_item)
+
+            item = u"{0}{1}{2}".format(item[0:start], secret_value, item[end+1:])
+
+            # restart the search from the one beyond where we just subbed in the found value
+            start = item.index(secret_prefix, start+1) if secret_prefix in item[start+1:] else len(item)
+        return item
+
     def __getitem__(self, key):
         """
         This is the key part -- overwrite the behavior of the dictionary
@@ -125,10 +188,24 @@ class AppConfigManager(ConfigDict):
         :return: item from the dictionary, protected secret, or the pam plugin
         """
         item = super(AppConfigManager, self).__getitem__(key)
-        if isinstance(item, string_types) and item.startswith(constants.PROTECTED_SECRET_PREFIX):
-            item = AppConfigManager.protected_secrets_manager.get(item)
+
+        # NOTE: the order of these checks is important -- the check for the version
+        # with bracket has to be checked first, as otherwise the bracket won't be
+        # removed from the item
+        # also NOTE: there can be a mix of ^{} and ${} items in the secret or any
+        # number of {} secrets in the configs
+
+        # handle protected secrets
+        if isinstance(item, string_types) and constants.PROTECTED_SECRET_PREFIX_WITH_BRACKET in item:
+            item = self.replace_secret_in_config(item, AppConfigManager.protected_secrets_manager, constants.PROTECTED_SECRET_PREFIX_WITH_BRACKET)
+        elif isinstance(item, string_types) and item.startswith(constants.PROTECTED_SECRET_PREFIX):
+            item = self.replace_secret_in_config(item, AppConfigManager.protected_secrets_manager, constants.PROTECTED_SECRET_PREFIX)
+
+        # handle pam plugin secrets
+        if self.pam_plugin and isinstance(item, string_types) and PAM_SECRET_PREFIX_WITH_BRACKET in item:
+            item = self.replace_secret_in_config(item, self.pam_plugin, PAM_SECRET_PREFIX_WITH_BRACKET)
         elif self.pam_plugin and isinstance(item, string_types) and item.startswith(PAM_SECRET_PREFIX):
-            item = self.pam_plugin.get(item)
+            item = self.replace_secret_in_config(item, self.pam_plugin, PAM_SECRET_PREFIX)
 
         return item
 
@@ -139,7 +216,7 @@ class AppConfigManager(ConfigDict):
         iterate over the data of the underlying dictionary.
 
         Plugin type is not persisted for the whole AppConfigManager class -- thus it
-        must be provided here to propogate to sub-dictionaries.
+        must be provided here to propagate to sub-dictionaries.
 
         :param plugin_type: plugin type for the app config manager
         :type plugin_type: ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
@@ -152,7 +229,7 @@ class AppConfigManager(ConfigDict):
 
     def _asdict(self):
         """
-        This method is needed to maintain backwards compatability with
+        This method is needed to maintain backwards compatibility with
         the way that AppFunctionComponent.app_configs used to work.
 
         :return: simply returns itself as AppConfigs behave like namedtuples and dicts

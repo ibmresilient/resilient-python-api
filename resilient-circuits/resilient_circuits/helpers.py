@@ -116,7 +116,7 @@ def get_configs(path_config_file=None, ALLOW_UNRECOGNIZED=False):
     :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
     :type ALLOW_UNRECOGNIZED: bool
     :return: dictionary of all the configs in the app.config file
-    :rtype: dict
+    :rtype: ``resilient.app_config.AppConfigManager``
     """
     from resilient import get_config_file
     from resilient_circuits.app_argument_parser import AppArgumentParser

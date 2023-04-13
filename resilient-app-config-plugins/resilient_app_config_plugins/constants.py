@@ -3,7 +3,8 @@
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 PAM_SECRET_PREFIX = "^"
-DEFAULT_TIMEOUT = 10
+PAM_SECRET_PREFIX_WITH_BRACKET = "^{"
+DEFAULT_TIMEOUT = 30
 
 # Cache settings for built-in plugins
 CACHE_SIZE = 25
