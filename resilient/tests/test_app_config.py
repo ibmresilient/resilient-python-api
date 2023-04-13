@@ -123,6 +123,7 @@ def test_replace_secret_in_config_pam_plugin(item, prefix, expected):
 
     assert replaced == expected
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_replace_secret_in_config_protected_secret(fx_write_protected_secrets, fx_reset_environmental_variables):
     os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
     path_secrets_dir = fx_write_protected_secrets
