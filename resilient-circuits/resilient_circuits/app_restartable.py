@@ -8,15 +8,16 @@ from __future__ import print_function
 
 import logging
 import os
+
 import filelock
-import resilient
 from circuits import Event, Timer
-from watchdog.observers import Observer
+from resilient_circuits.app import (App, AppArgumentParser,
+                                    RotatingFileHandler, constants, get_lock,
+                                    helpers)
 from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
 
-from resilient_circuits.app import App, AppArgumentParser
-from resilient_circuits.app import get_lock
-
+import resilient
 
 application = None
 LOG = logging.getLogger(__name__)
@@ -67,9 +68,11 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
 
         LOG.info("Configuration file has changed! Notify components to reload")
         self.app.reloading = True
-        opts = AppArgumentParser().parse_args()
+        opts = helpers.get_configs(path_config_file=self.app.config_file, ALLOW_UNRECOGNIZED=self.app.ALLOW_UNRECOGNIZED)
         # See if we need to reset root loglevel on reload
         self.reset_loglevel(opts)
+        # check if we need to reset rotating file handler opts
+        self.reset_filehandler(opts)
         reload_event = reload(opts=opts)
         self.app.reload_timer = Timer(self.max_reload_time, Event.create("reload_timeout"))
         self.app.fire(reload_event)
@@ -92,6 +95,29 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
                     root_logger.setLevel(config_loglevel.upper())
             else:
                 LOG.error("Invalid app.config setting for loglevel %s", config_loglevel)
+
+    def reset_filehandler(self, opts):
+        """
+        Reset ``log_max_bytes`` and ``log_backup_count`` if changed on reload
+        """
+
+        log_max_bytes = opts.get(constants.APP_CONFIG_LOG_MAX_BYTES)
+        log_backup_count = opts.get(constants.APP_CONFIG_LOG_BACKUP_COUNT)
+
+        # loop through handlers and find the RotatingFileHandler
+        # (it will be there -- just need to find it in the list)
+        handlers = getattr(logging.getLogger(), "handlers", [])
+        for handler in handlers:
+            if isinstance(handler, RotatingFileHandler):
+
+                # update values as appropriate
+                if log_backup_count and handler.backupCount != log_backup_count:
+                    LOG.debug("Reloaded 'log_backup_count' to '%s'",log_backup_count)
+                    handler.backupCount = log_backup_count
+                if log_max_bytes and handler.maxBytes != log_max_bytes:
+                    LOG.debug("Reloaded 'log_max_bytes' to '%s'", log_max_bytes)
+                    handler.maxBytes = log_max_bytes
+                break # break the loop as we only needed the RotatingFileHandler
 
 # Main component for our application
 class AppRestartable(App):
