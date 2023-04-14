@@ -49,7 +49,7 @@ loglevel=INFO
 # and maximum backup count. These default to 10000000 and 10
 # respectively.
 # Setting log_max_bytes to 0 is unlimited.
-# Setting backup count to 0 means no backups will be used.
+# Setting log_backup_count to 0 means no backups will be used.
 #log_max_bytes=10000000
 #log_backup_count=10
 
