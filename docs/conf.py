@@ -135,5 +135,5 @@ rst_epilog = f"""
 .. |cmd_validate_options| replace:: {parse_optionals(cmd_validate.parser._get_optional_actions())}
 .. |cmd_init_desc| replace:: {cmd_init.parser.description}
 .. |cmd_init_usage| replace:: {cmd_init.parser.usage}
-.. |cmd_init_options| replace:: {cmd_init.parser.format_help()}
+.. |cmd_init_options| replace:: {parse_optionals(cmd_init.parser._get_optional_actions())}
 """

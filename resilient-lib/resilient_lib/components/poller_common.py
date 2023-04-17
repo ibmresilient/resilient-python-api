@@ -305,7 +305,9 @@ class SOARCommon():
         """
         Find a SOAR case which contains custom field(s) associated with the associated endpoint.
         Returns only one case. See :class:`SOARCommon.get_soar_cases()` for examples.
+
         .. note::
+
             ``search_fields`` only supports custom fields.
 
         :param search_fields: Dictionary containing key/value pairs to search for a case match.
@@ -316,7 +318,6 @@ class SOARCommon():
         :type uri_filters: str
         :param open_cases: True if only querying open cases.
         :type open_cases: bool
-
         :return: A tuple with the matching case, if any, and any associated error message if something went wrong.
             Returns ``None`` if no associated case was found.
         :rtype: tuple(dict, str)
