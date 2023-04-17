@@ -111,10 +111,10 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
             if isinstance(handler, RotatingFileHandler):
 
                 # update values as appropriate
-                if log_backup_count and handler.backupCount != log_backup_count:
+                if log_backup_count is not None and handler.backupCount != log_backup_count:
                     LOG.debug("Reloaded 'log_backup_count' to '%s'",log_backup_count)
                     handler.backupCount = log_backup_count
-                if log_max_bytes and handler.maxBytes != log_max_bytes:
+                if log_max_bytes is not None and handler.maxBytes != log_max_bytes:
                     LOG.debug("Reloaded 'log_max_bytes' to '%s'", log_max_bytes)
                     handler.maxBytes = log_max_bytes
                 break # break the loop as we only needed the RotatingFileHandler
