@@ -50,6 +50,8 @@ loglevel=INFO
 # respectively.
 # Setting log_max_bytes to 0 is unlimited.
 # Setting log_backup_count to 0 means no backups will be used.
+# NOTE: if either log_max_bytes or log_backup_count are zero,
+# the log file will never roll over and will continue to grow
 #log_max_bytes=10000000
 #log_backup_count=10
 
