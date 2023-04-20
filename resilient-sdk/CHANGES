@@ -1,6 +1,6 @@
 **2023-04: version 48.1**
 
-* Added new ``init`` fuctionality to the SDK
+* Added new ``init`` functionality to the SDK
 * Added ``--settings`` option for ``codegen``, ``docgen``, and ``validate``
 * Bug fixes for ``validate``
 
