@@ -173,6 +173,20 @@ Run ``validate`` without any options to:
 
     You can run each validation individually by specifying its related option.
 
+++++++++
+init
+++++++++
+
+|cmd_init_desc|
+
+.. parsed-literal::
+
+    usage:
+    |cmd_init_usage|
+
+    options:
+    |cmd_init_options|
+
 ----------
 Change Log
 ----------
