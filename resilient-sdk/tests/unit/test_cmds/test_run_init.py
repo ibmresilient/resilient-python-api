@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
+import json
 import os
 import sys
+from datetime import date
 
 import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdRunInit, base_cmd
-from resilient_sdk.util import constants, sdk_validate_configs
-from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
 from tests.shared_mock_data import mock_paths
-import json
-from datetime import date
+
 
 def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)
