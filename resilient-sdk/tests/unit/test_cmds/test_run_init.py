@@ -10,6 +10,7 @@ from datetime import date
 import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdRunInit, base_cmd
+from resilient_sdk.util import constants
 from tests.shared_mock_data import mock_paths
 
 
