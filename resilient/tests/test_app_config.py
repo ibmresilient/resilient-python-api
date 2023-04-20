@@ -14,7 +14,6 @@ from resilient.app_config import AppConfigManager, ProtectedSecretsManager
 
 MOCK_API_KEY_VALUE = "JbkOxTInUg1aIRGxXI8zOG1A25opU39lDKP1_0rfeVQ"
 
-
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_protected_secrets_manager(fx_write_protected_secrets, fx_reset_environmental_variables):
     os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"

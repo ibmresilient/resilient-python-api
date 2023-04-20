@@ -445,13 +445,16 @@ def get_config_from_env(config_name, default=None):
 
     :param config_name: Name of the env var to get
     :type config_name: str
+    :param default: default value to return if not found in env; defaults to None
+    :type default: str
     :return: The value of the env var
     :rtype: str
     """
     LOG.debug("Getting environmental variable '%s'", config_name)
     return os.environ.get(config_name, default)
 
-def get_pam_type_name(options, protected_secret_manager):
+
+def get_pam_type_name(options, protected_secrets_manager):
     """
     Search protected secrets, app.config for PAM plugin type set by the user.
     Order of hierarchy is:
@@ -466,12 +469,13 @@ def get_pam_type_name(options, protected_secret_manager):
 
     :param options: app configs
     :type options: ``resilient.app_config.AppConfigManager``
-    :param options: Protected Secrets manager
-    :type options: ``resilient.app_config.ProtectedSecretsManager``
+    :param protected_secrets_manager: Protected Secrets manager
+    :type protected_secrets_manager: ``resilient.app_config.ProtectedSecretsManager``
     :return: string indicating the plugin's name
     :rtype: str
     """
-    return protected_secret_manager.get(constants.PAM_TYPE_CONFIG_APP_HOST_SECRET_NAME) or protected_secret_manager.get(options.get(constants.PAM_TYPE_CONFIG)) or options.get(constants.PAM_TYPE_CONFIG)
+    return protected_secrets_manager.get(constants.PAM_TYPE_CONFIG_APP_HOST_SECRET_NAME) or protected_secrets_manager.get(options.get(constants.PAM_TYPE_CONFIG)) or options.get(constants.PAM_TYPE_CONFIG)
+
 
 def load_pam_plugin(plugin_type_str, plugin_path=None):
     """
@@ -506,7 +510,7 @@ def load_pam_plugin(plugin_type_str, plugin_path=None):
     :param plugin_path: path to custom plugin.py file where ``plugin_type_str`` is implemented, optional, defaults to None
     :type plugin_path: string
     :raises ValueError: if plugin is not found or not a subclass of ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
-    :return: class object of plugin
+    :return: class object of plugin which can then be used to instantiate an object of that plugin's class
     :rtype: type(resilient_app_config_plugins.plugin_base.PAMPluginInterface)
     """
 
@@ -523,17 +527,19 @@ def load_pam_plugin(plugin_type_str, plugin_path=None):
                 constants.PAM_TYPE_CONFIG, plugin_type_str, valid_plugin_names, constants.PAM_PATH_CONFIG))
         module = resilient_app_config_plugins
     else:
-        if sys.version_info.major < 3:
-            module = imp.load_source(plugin_type_str, plugin_path)
-        else:
-            # if custom plugin, we'll have to get the spec from the location then grab
-            # the module from there
+        # if custom plugin, we'll have to get the spec from the location then grab
+        # the module from there
+        if sys.version_info.major >= 3:
+            # Python 3 version
             spec = importlib.util.spec_from_file_location(plugin_type_str, plugin_path)
             module = importlib.util.module_from_spec(spec)
             sys.modules[plugin_type_str] = module
             spec.loader.exec_module(module)
+        else:
+            # Python 2.7 version
+            module = imp.load_source(plugin_type_str, plugin_path)
 
-    # acquire plugin from module
+    # get plugin class from module
     plugin = getattr(module, plugin_type_str)
 
     # all plugins must implement the abstract interface defined in PAMPluginInterface

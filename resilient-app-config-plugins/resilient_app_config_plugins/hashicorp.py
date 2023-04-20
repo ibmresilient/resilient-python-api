@@ -26,7 +26,7 @@ class HashiCorpVault(PAMPluginInterface):
     are set for the app role to access the secrets in any given engine.
     """
     SECRET_ID = "PAM_SECRET_ID"
-    REQUIRED_CONFIGS = [PAMPluginInterface.PAM_ADDRESS, PAMPluginInterface.APP_ID, SECRET_ID]
+    REQUIRED_CONFIGS = [PAMPluginInterface.PAM_ADDRESS, PAMPluginInterface.PAM_APP_ID, SECRET_ID]
 
     VAULT_API_VERSION = "v1"
     VAULT_LOGON_URI = "{0}/auth/approle/login".format(VAULT_API_VERSION)
@@ -59,10 +59,10 @@ class HashiCorpVault(PAMPluginInterface):
 
         # assuming all required configs are present from here on out:
         # gather role_id, secret_id, and vault_address from protected secrets
-        role_id = self.protected_secrets_manager.get(self.APP_ID)
+        role_id = self.protected_secrets_manager.get(self.PAM_APP_ID)
         secret_id = self.protected_secrets_manager.get(self.SECRET_ID)
         vault_address = self.protected_secrets_manager.get(self.PAM_ADDRESS)
-        verify = get_verify_from_string(self.protected_secrets_manager.get(self.VERIFY_SERVER_CERT))
+        verify = get_verify_from_string(self.protected_secrets_manager.get(self.PAM_VERIFY_SERVER_CERT))
 
         # call to login endpoint
         # NOTE: no try-except here; any requests exceptions that are
@@ -109,7 +109,7 @@ class HashiCorpVault(PAMPluginInterface):
         :rtype: str
         """
         vault_address = self.protected_secrets_manager.get(self.PAM_ADDRESS)
-        verify = get_verify_from_string(self.protected_secrets_manager.get(self.VERIFY_SERVER_CERT))
+        verify = get_verify_from_string(self.protected_secrets_manager.get(self.PAM_VERIFY_SERVER_CERT))
         response = requests.get(
             urljoin(
                 vault_address,

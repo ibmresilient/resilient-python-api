@@ -14,9 +14,9 @@ class PAMPluginInterface():
     all app config plugins.
     """
 
-    VERIFY_SERVER_CERT = "PAM_VERIFY_SERVER_CERT"
+    PAM_VERIFY_SERVER_CERT = "PAM_VERIFY_SERVER_CERT"
     PAM_ADDRESS = "PAM_ADDRESS"
-    APP_ID = "PAM_ROLE_ID"
+    PAM_APP_ID = "PAM_APP_ID"
 
     def __init__(self, protected_secrets_manager, key):
         """

@@ -21,7 +21,7 @@ class Cyberark(PAMPluginInterface):
     """
     CERT_PATH = "PAM_CERT_PATH"
     CERT_PASS_KEY = "PAM_CERT_PASSWORD"
-    REQUIRED_CONFIGS = [PAMPluginInterface.PAM_ADDRESS, PAMPluginInterface.APP_ID, CERT_PATH, CERT_PASS_KEY]
+    REQUIRED_CONFIGS = [PAMPluginInterface.PAM_ADDRESS, PAMPluginInterface.PAM_APP_ID, CERT_PATH, CERT_PASS_KEY]
 
 
     CYBERARK_BASE_ACCOUNT_URI = "/AIMWebService/api/Accounts"
@@ -94,8 +94,8 @@ class Cyberark(PAMPluginInterface):
         self._check_required_params_present()
 
         base_url = self.protected_secrets_manager.get(self.PAM_ADDRESS)
-        app_id = self.protected_secrets_manager.get(self.APP_ID)
-        verify = get_verify_from_string(self.protected_secrets_manager.get(self.VERIFY_SERVER_CERT))
+        app_id = self.protected_secrets_manager.get(self.PAM_APP_ID)
+        verify = get_verify_from_string(self.protected_secrets_manager.get(self.PAM_VERIFY_SERVER_CERT))
 
         pkcs12_stream, pkcs12_password = self._get_cert_details()
 
@@ -151,8 +151,8 @@ class Cyberark(PAMPluginInterface):
             return False, str(err)
 
         base_url = self.protected_secrets_manager.get(self.PAM_ADDRESS)
-        app_id = self.protected_secrets_manager.get(self.APP_ID)
-        verify = get_verify_from_string(self.protected_secrets_manager.get(self.VERIFY_SERVER_CERT))
+        app_id = self.protected_secrets_manager.get(self.PAM_APP_ID)
+        verify = get_verify_from_string(self.protected_secrets_manager.get(self.PAM_VERIFY_SERVER_CERT))
 
         pkcs12_stream, pkcs12_password = self._get_cert_details()
 

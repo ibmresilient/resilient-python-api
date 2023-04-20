@@ -18,7 +18,7 @@ To install the IBM SOAR SDK, execute the following command:
 Configuration
 +++++++++++++
 
-Similar to our ``resilient-circuits`` library, the SDK it requires an ``app.config``
+Similar to our ``resilient-circuits`` library, the SDK requires an ``app.config``
 created in the default location: ``~/.resilient`` with the following minimum configurations:
 
 .. code-block::
