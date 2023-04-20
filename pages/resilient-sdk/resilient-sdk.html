@@ -425,11 +425,29 @@ options:
 </div>
 </section>
 </section>
+<section id="init">
+<h3>init<a class="headerlink" href="#init" title="Permalink to this heading">#</a></h3>
+<p>Generates sdk_settings.json to store default settings.</p>
+<pre class="literal-block">usage:
+$ resilient-sdk init
+$ resilient-sdk init -f/--file &lt;path to settings json&gt;
+$ resilient-sdk init -f/--file &lt;path to settings json&gt; -a/--author <a class="reference external" href="mailto:you&#37;&#52;&#48;example&#46;com">you<span>&#64;</span>example<span>&#46;</span>com</a>
+
+options:
+-h, --help			show this help message and exit
+-f, --file			Optional path to settings file. 
+-a, --author			setup.py author name 
+-ae, --author_email		setup.py author email 
+-u, --url			setup.py company URL 
+-l, --license			setup.py license name</pre>
+</section>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
 <p><strong>2023-04: version 48.1</strong></p>
 <ul class="simple">
+<li><p>Added new <code class="docutils literal notranslate"><span class="pre">init</span></code> functionality to the SDK</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">--settings</span></code> option for <code class="docutils literal notranslate"><span class="pre">codegen</span></code>, <code class="docutils literal notranslate"><span class="pre">docgen</span></code>, and <code class="docutils literal notranslate"><span class="pre">validate</span></code></p></li>
 <li><p>Bug fixes for <code class="docutils literal notranslate"><span class="pre">validate</span></code></p></li>
 </ul>
 <p><strong>2023-02: version 48.0</strong></p>
@@ -670,6 +688,7 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
 <li><a class="reference internal" href="#usage">Usage</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#init">init</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
