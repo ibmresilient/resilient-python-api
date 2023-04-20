@@ -4,6 +4,7 @@ import os
 import time
 import unittest
 
+import pytest
 import requests
 import requests_mock
 from parameterized import parameterized
@@ -137,6 +138,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertTrue(isinstance(response, requests.models.Response))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_verbs(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
 
@@ -206,6 +208,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call("bad", URL, None, log=TestFunctionRequests.LOG)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_verbs_v2(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_VERBS
 
@@ -284,6 +287,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call_v2("bad", URL)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_statuscode(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
@@ -295,6 +299,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call("get", "/".join((URL, "300")), None, resp_type='text')
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_statuscode_v2(self, RCObjectType):
         URL = TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES
 
@@ -306,6 +311,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call_v2("get", "/".join((URL, "400")))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_statuscode_callback(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
 
@@ -318,6 +324,7 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call("get", URL, None, resp_type='text', callback=callback)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_statuscode_callback_v2(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "300"))
 
@@ -330,6 +337,7 @@ class TestFunctionRequests(unittest.TestCase):
         resp = rc.execute_call_v2("get", URL, callback=callback)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_timeout(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
@@ -339,6 +347,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call("get", URL, None, resp_type='text', timeout=2)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_timeout_v2(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_STATUS_CODES, "200?sleep=30000"))
 
@@ -348,6 +357,7 @@ class TestFunctionRequests(unittest.TestCase):
             resp = rc.execute_call_v2("get", URL, timeout=2)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_basicauth(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
         basicauth = ("postman", "password")
@@ -358,6 +368,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertTrue(resp.get("authenticated"))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_basicauth_v2(self, RCObjectType):
         URL = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "basic-auth"))
         basicauth = ("postman", "password")
@@ -368,6 +379,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertTrue(resp.json().get("authenticated"))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_proxy_override(self, RCObjectType):
         rc = RCObjectType(None, None)
         proxies = rc.get_proxies()
@@ -488,6 +500,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertTrue(json_result.get("ip"))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_headers(self, RCObjectType):
         # G E T with headers
         headers = {
@@ -502,6 +515,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual(json_result['headers'].get("my-sample-header"), "my header")
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.livetest
     def test_headers_v2(self, RCObjectType):
         # G E T with headers
         headers = {

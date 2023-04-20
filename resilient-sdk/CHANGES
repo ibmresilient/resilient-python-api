@@ -1,3 +1,9 @@
+**2023-04: version 48.1**
+
+* Added new ``init`` functionality to the SDK
+* Added ``--settings`` option for ``codegen``, ``docgen``, and ``validate``
+* Bug fixes for ``validate``
+
 **2023-02: version 48.0**
 
 * ``clone`` command fixed when cloning subplaybooks with multiple input fields

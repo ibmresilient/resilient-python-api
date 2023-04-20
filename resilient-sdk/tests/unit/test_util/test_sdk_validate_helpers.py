@@ -553,7 +553,13 @@ def test_package_files_validate_python_versions_in_scripts_fail(fx_copy_fn_main_
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
         assert u"Post-processing script for workflow 'Shouldnt Pass Δ, Й, ק ,م, ๗, あ, 叶' packaged with this app is written in Python 2" in result.description
 
-def test_package_files_validate_python_versions_in_scripts_pass(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+@pytest.mark.parametrize("playbook_input", [
+    [{"display_name": "My PB", "local_scripts":
+       [{"language": "python3", "name": u"Should Pass Δ, Й, ק ,م, ๗, あ, 叶",}]}],
+    [], # ensure empty playbook list works
+    None # ensure None playbook object works
+])
+def test_package_files_validate_python_versions_in_scripts_pass(playbook_input, fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     """add scripts everywhere they could be found, but make them all pass as py3 scripts"""
 
     filename = "export.res"
@@ -574,10 +580,7 @@ def test_package_files_validate_python_versions_in_scripts_pass(fx_copy_fn_main_
                 "content": {"xml":
                     "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\u003c{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"post_processing_script\":\"# post process of mock  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d workflow two\\n\\nincident.addNote(u\\\" \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d\\\")\",\"post_processing_script_language\":\"python3\",\"pre_processing_script\":\"# A mock pre-process script for mock_workflow_one\\n\\ninputs.mock_input_number = 123\\ninputs.mock_input_boolean = True\\ninputs.mock_input_text = \\\"abc  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d abc\\\"\",\"pre_processing_script_language\":\"python3\",\"result_name\":\"output_of_mock_function_one\"}\u003c/resilient:function\u003e\u003c/"
             }}],
-            "playbooks": [{"display_name": "My PB", "local_scripts": [{
-                "language": "python3",
-                "name": u"Should Pass Δ, Й, ק ,م, ๗, あ, 叶",
-            }]}]
+            "playbooks": playbook_input
         }
 
         results = sdk_validate_helpers.package_files_validate_script_python_versions(path_file, attr_dict)
@@ -671,9 +674,9 @@ def test_package_files_validate_license_is_not_default(fx_copy_fn_main_mock_inte
     attr_dict = sdk_validate_configs.package_files[i][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
-    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.setup_env_and_render_jinja_file") as mock_jinja_render:
+    with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.read_file") as mock_read_file:
 
-        mock_jinja_render.return_value = "A sample LICENSE\n\nThis should still be validated manually to ensure proper license type"
+        mock_read_file.return_value = "A sample LICENSE\n\nThis should still be validated manually to ensure proper license type"
 
         result = sdk_validate_helpers.package_files_validate_license(path_file, attr_dict, filename)
 
@@ -784,7 +787,7 @@ def test_tox_tests_run_tox_tests(fx_copy_fn_main_mock_integration, caplog):
         result = sdk_validate_helpers.tox_tests_run_tox_tests(path_package, attr_dict, args, None)
 
         assert "Using mock args" in caplog.text
-        assert "'-m', '\"not livetest\"'" in caplog.text
+        assert "'-m', 'not livetest'" in caplog.text
         assert "Something went wrong..." in result[1].description
         assert "bad run" in result[1].description
         assert result[0] == 0

@@ -22,16 +22,13 @@ import tempfile
 import time
 import uuid
 import xml.etree.ElementTree as ET
+from argparse import SUPPRESS
 from zipfile import BadZipfile, ZipFile, is_zipfile
 
 import pkg_resources
 import requests
 import requests.exceptions
 from jinja2 import Environment, PackageLoader
-from resilient import ArgumentParser
-from resilient import constants as res_constants
-from resilient import get_client, get_config_file
-from resilient.helpers import remove_tag
 from resilient_sdk.util import constants
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_FIELD,
@@ -40,6 +37,11 @@ from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_FIELD,
                                                   ResilientObjMap,
                                                   ResilientTypeIds)
 from resilient_sdk.util.sdk_exception import SDKException
+
+from resilient import ArgumentParser
+from resilient import constants as res_constants
+from resilient import get_client, get_config_file
+from resilient.helpers import remove_tag
 
 if sys.version_info.major < 3:
     # Handle PY 2 specific imports
@@ -1421,6 +1423,10 @@ def parse_optionals(optionals):
 
     for option in optionals:
 
+        # skipped any suppressed options
+        if option.help == SUPPRESS:
+            continue
+
         option_strings = ", ".join(option.option_strings)
 
         tabs = "\t\t\t"
@@ -1537,7 +1543,7 @@ def scrape_results_from_log_file(path_log_file):
     regex_fn_name = re.compile(r'\[([\w]+)\] Result\:')  # Getting <fn_name> from [<fn_name>] Result: {'version': 2.0, 'success': True...
 
     for l in reversed(log_file_contents):
-        match = regex_line.search(l, endpos=120)
+        match = regex_line.search(l)
 
         if match:
             fn_name_group_index = 0

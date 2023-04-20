@@ -1,3 +1,7 @@
+**2023-04: version 48.1**
+
+* Updated SOAR case default filters for poller helper methods
+
 **2023-02: version 48.0**
 
 * Added support for ``verify`` config in app.config when using

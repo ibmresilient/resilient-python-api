@@ -641,7 +641,7 @@ def package_files_validate_script_python_versions(path_file, attr_dict, **_):
 
     # validate GLOBAL scripts are all python3 only.
     # for each non-python3 script we find, create an issue
-    for script in export_res.get("scripts", []):
+    for script in export_res.get("scripts") or []:
         if script.get("language", "") not in constants.EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES:
             issues.append(SDKValidateIssue(
                 name=attr_dict.get("name"),
@@ -651,8 +651,8 @@ def package_files_validate_script_python_versions(path_file, attr_dict, **_):
             ))
 
     # do very similar check for local scripts in playbooks
-    for playbook in export_res.get("playbooks", []):
-        for local_script in playbook.get("local_scripts", []):
+    for playbook in export_res.get("playbooks") or []:
+        for local_script in playbook.get("local_scripts") or []:
             if local_script.get("language", "") not in constants.EXPORT_RES_SCRIPTS_ALLOWED_LANGUAGE_TYPES:
                 issues.append(SDKValidateIssue(
                     name=attr_dict.get("name"),
@@ -683,7 +683,7 @@ def package_files_validate_script_python_versions(path_file, attr_dict, **_):
     # there should be a line in there that says "post_processing_script_language":"python3" for PY3
     # or "post_processing_script_language":"python" for Python 2 scripts (same goes for pre_processing...)
     # so we scan the workflows and their xml properties
-    for workflow in export_res.get("workflows", []):
+    for workflow in export_res.get("workflows") or []:
         # check for bad pre processing scripts
         if constants.EXPORT_RES_WORKFLOW_PRE_PROCESSING_UNALLOWED_LANGUAGE in workflow.get("content", {}).get("xml", ""):
             issues.append(SDKValidateIssue(
@@ -801,7 +801,7 @@ def package_files_validate_license(path_file, attr_dict, filename, **__):
     template_rendered = sdk_helpers.setup_env_and_render_jinja_file(
         constants.PACKAGE_TEMPLATE_PACKAGE_DIR,
         filename,
-        sdk_version=sdk_helpers.get_resilient_sdk_version()
+        license_content=constants.CODEGEN_DEFAULT_LICENSE_CONTENT
     )
 
     # read the contents of the package's LICENSE file

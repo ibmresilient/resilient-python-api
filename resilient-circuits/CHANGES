@@ -1,3 +1,10 @@
+**2023-04: version 48.1**
+
+* Better log handling for errors upon restart
+* Added new configs for log rotation. ``log_max_bytes`` sets the maximum bytes per log file; defaults to ``10000000``. 
+  ``log_backup_count`` sets the maximum number of log files to keep as backups while files rotate; defaults to ``10``
+* Improved log filtering for sensitive values
+
 **2023-02: version 48.0**
 
 * Include ``threadName`` in the app logs

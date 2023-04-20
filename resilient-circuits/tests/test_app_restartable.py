@@ -14,6 +14,7 @@ def test_reload_config_not_already_loading():
     with patch("resilient_circuits.app_restartable.AppArgumentParser.parse_args") as mock_parse_args:
         mock_parse_args.return_value = {"loglevel": "DEBUG"}
         magic_app.reloading = False
+        magic_app.config_file = None
         config_update_handler.reload_config()
         assert config_update_handler.app.reloading
 

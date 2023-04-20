@@ -23,6 +23,8 @@ INCIDENTS_URI = "/incidents"
 ARTIFACTS_URI = "/artifacts"
 ARTIFACT_FILE_URI = "/".join([ARTIFACTS_URI, "files"])
 
+DEFAULT_CASES_QUERY_FILTER = "return_level=normal"
+
 # P O L L E R   L O G I C
 def poller(named_poller_interval, named_last_poller_time):
     """
@@ -158,17 +160,15 @@ class SOARCommon():
 
         return query
 
-    def _query_cases(self, query):
+    def _query_cases(self, query, filters=DEFAULT_CASES_QUERY_FILTER):
         """ run a query to find case(s) which match the query string
-
         Args:
             query [str]: query string to find cases
-
+            filters [str]: Filters for the end of the uri
         Returns:
             query_results [list]: List of query results
         """
-        query_uri = "/".join([INCIDENTS_URI, "query?return_level=normal"])
-
+        query_uri = "/".join([INCIDENTS_URI, "query?{}".format(filters)])
         try:
             return self.rest_client.post(query_uri, query), None
         except SimpleHTTPException as err:
@@ -263,7 +263,7 @@ class SOARCommon():
         """
 
         if filter_soar_header:
-            # filter entity comments with our SOAR header
+            # Filter entity comments with our SOAR header
             staged_entity_comments = [comment for comment in entity_comments \
                                         if clean_html(filter_soar_header) not in clean_html(comment)]
         else:
@@ -271,8 +271,9 @@ class SOARCommon():
 
         # filter out the comments already sync'd to SOAR
         if soar_comment_list:
-            new_entity_comments = [comment for comment in staged_entity_comments \
-                if not any([clean_html(comment) in clean_html(already_synced) for already_synced in soar_comment_list])]
+            already_synced = [clean_html(soar_comment) for soar_comment in soar_comment_list]
+            new_entity_comments = [comment for comment in staged_entity_comments\
+                if clean_html(comment) not in already_synced]
         else:
             new_entity_comments = staged_entity_comments
 
@@ -300,8 +301,9 @@ class SOARCommon():
 
         return {}
 
-    def get_soar_case(self, search_fields, open_cases=True):
-        """Find a SOAR case which contains custom field(s) associated with the associated endpoint.
+    def get_soar_case(self, search_fields, open_cases=True, uri_filters=DEFAULT_CASES_QUERY_FILTER):
+        """
+        Find a SOAR case which contains custom field(s) associated with the associated endpoint.
         Returns only one case. See :class:`SOARCommon.get_soar_cases()` for examples.
 
         .. note::
@@ -312,21 +314,21 @@ class SOARCommon():
             Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
             otherwise a field will use ``equals`` for the value.
         :type search_fields: dict
+        :param uri_filters: Filters for the end of the uri. Default is "return_level=normal"
+        :type uri_filters: str
         :param open_cases: True if only querying open cases.
         :type open_cases: bool
-
         :return: A tuple with the matching case, if any, and any associated error message if something went wrong.
             Returns ``None`` if no associated case was found.
         :rtype: tuple(dict, str)
         """
-        r_cases, error_msg = self.get_soar_cases(search_fields, open_cases=open_cases)
+        r_cases, error_msg = self.get_soar_cases(search_fields, open_cases=open_cases, uri_filters=uri_filters)
         if error_msg:
             return None, error_msg
-
         # return first case
         return (r_cases[0] if r_cases else None, None)
 
-    def get_soar_cases(self, search_fields, open_cases=True):
+    def get_soar_cases(self, search_fields, open_cases=True, uri_filters=DEFAULT_CASES_QUERY_FILTER):
         """
         Get all IBM SOAR cases that match the given search fields.
         To find all cases that are synced from the endpoint platform,
@@ -340,18 +342,18 @@ class SOARCommon():
             from resilient_lib import SOARCommon
 
             soar_common = SOARCommon(res_client)
-
             found_id = get_id_from_endpoint_query_result()
             cases = soar_common.get_soar_cases({ "endpoint_id": found_id }, open_cases=False)
 
         .. note::
 
             ``search_fields`` only supports custom fields.
-
         :param search_fields: Dictionary containing key/value pairs to search for a case match.
             Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
             otherwise a field will use ``equals`` for the value.
         :type search_fields: dict
+        :param uri_filters: Filters for the end of the uri. Default is "return_level=normal"
+        :type uri_filters: str
         :param open_cases: True if only querying open cases.
         :type open_cases: bool
 
@@ -359,8 +361,7 @@ class SOARCommon():
         :rtype: tuple(dict, str)
         """
         query = self._build_search_query(search_fields, open_cases=open_cases)
-
-        return self._query_cases(query)
+        return self._query_cases(query, filters=uri_filters)
 
     def create_soar_case(self, case_payload):
         """
