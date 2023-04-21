@@ -90,6 +90,7 @@ def check_pam_plugin_selftest(app_configs):
     if isinstance(result, tuple):
         selftest_pass, reason = result
     else:
+        LOG.warning("PAM Plugin selftest did not return the expected tuple. Make sure selftest is properly implemented")
         selftest_pass, reason = (result, "REASON UNKNOWN")
 
     if not selftest_pass:
