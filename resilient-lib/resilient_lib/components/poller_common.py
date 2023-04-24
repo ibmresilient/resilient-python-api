@@ -611,7 +611,7 @@ class SOARCommon():
         :param handle_format (str): The format to return can be names, ids, or objects. Default is names.
         :return (list): A list of all the tasks for the given SOAR case
         """
-        uri = f"/incidents/{case_id}/tasks?want_layouts={want_layouts}&want_notes={want_notes}&handle_format={handle_format}"
+        uri = "/incidents/{}/tasks?want_layouts={}&want_notes={}&handle_format={}".format(case_id, want_layouts, want_notes, handle_format)
         try:
             tasks = self.rest_client.get(uri=uri)
         except Exception as err:
