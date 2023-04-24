@@ -17,7 +17,6 @@
       pip install build
       python -m build
 
-
 **2022-12: version 47.1**
 
 * Support for custom headers when using :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>` and :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>`

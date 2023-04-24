@@ -520,7 +520,7 @@ class BaseClient(object):
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
                                          timeout=timeout)
-        BasicHTTPException.raise_if_error(response)
+        RetryHTTPException.raise_if_error(response)
         return response.json()
 
     def get_content(self, uri, co3_context_token=None, timeout=None, skip_exceptions=[]):
