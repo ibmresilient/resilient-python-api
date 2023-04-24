@@ -1,3 +1,4 @@
+# Generated with resilient-sdk v{{ sdk_version }}
 # docker build -t ibmresilient/{{package_name}}:{{version}} -t ibmresilient/{{package_name}}:latest .
 
 # Base image using Red Hat's universal base image (rhel 8) for python
@@ -31,6 +32,10 @@ RUN pip install /tmp/packages/${APPLICATION}-*.tar.gz
 
 # uncomment and replicate if additional pypi packages are needed
 #RUN pip install <package>
+
+# uncomment and replicate if additional pypi packages in requirements file are needed
+#COPY /path/to/<requirements.txt> /tmp/packages/.
+#RUN pip install -r /tmp/packages/<requirements.txt>
 
 # uncomment and replicate if additional local packages are needed
 #COPY /path/to/extra_package /tmp/packages/.

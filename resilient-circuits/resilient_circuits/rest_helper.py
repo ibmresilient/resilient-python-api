@@ -4,10 +4,14 @@
 
 """Global accessor for the Resilient REST API"""
 
+import logging
+
+from resilient_circuits import constants
+
 import resilient
 from resilient import constants as res_constants
 
-from resilient_circuits import constants
+LOG = logging.getLogger(__name__)
 
 resilient_client = None
 connection_opts = None
@@ -67,4 +71,31 @@ def get_resilient_client(opts):
 
     resilient_client = resilient.get_client(opts, custom_headers=custom_headers, **retry_args)
 
+    server_version = get_resilient_server_version(resilient_client)
+
+    LOG.info("IBM Security QRadar SOAR version: v%s", server_version)
+
     return resilient_client
+
+def get_resilient_server_version(res_client):
+    """
+    Uses get_const to get the "server_version"
+    and converts it into a float of ``major.minor`` and returns it
+
+    :param res_client: required for communication back to SOAR
+    :type res_client: resilient.get_client()
+    :return: the server_version in the form ``major.minor.build_number``
+    :rtype: str
+    """
+    LOG.debug("Getting server version")
+    try:
+        server_version = res_client.get_const().get("server_version", {})
+    except Exception:
+        # fine to ignore any exceptions here as this is
+        # not critical to get the server info if something goes wrong
+        server_version = {}
+
+    current_server_version = "{0}.{1}.{2}".format(server_version.get("major", 0),
+            server_version.get("minor", 0), server_version.get("build_number", 0))
+
+    return current_server_version

@@ -1,5 +1,5 @@
 language: python
-python: 3.9
+python: 3.9.14
 os: linux
 dist: xenial
 
@@ -93,7 +93,7 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Unit Tests
-      python: 3.9
+      python: 3.9.14
       env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install:
         - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
@@ -110,7 +110,7 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Integration Tests
-      python: 3.9
+      python: 3.9.14
       env: RUN_TYPE=int_test TOXENV=py39
       install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
@@ -138,12 +138,16 @@ matrix:
 
     - stage: build packages
       name: Build Packages in Python 3.9
-      python: 3.9
+      python: 3.9.14
+      install:
+        - pip install twine build
       script:
         - echo "Building packages in Python 3.9"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
+      install:
+        - pip install twine build
       script:
         - echo "Building packages in Python 3.9 and Deploying to Artifactory"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
@@ -153,7 +157,7 @@ matrix:
 
     - stage: release to pypi
       install:
-        - pip install twine
+        - pip install twine build
       script:
         - echo "Building packages in Python 3.9 and releasing to PyPi"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
@@ -162,7 +166,7 @@ matrix:
 
     - stage: deploy documentation
       install:
-      - pip install sphinx furo sphinx-copybutton
+      - pip install sphinx furo sphinx-copybutton build
       script:
         - echo "Building packages in Python 3.9 and deploying Documentation internally too"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy no_release deploy_docs

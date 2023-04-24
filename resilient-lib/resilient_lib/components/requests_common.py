@@ -6,6 +6,7 @@ import requests
 import logging
 from resilient import is_env_proxies_set, get_and_parse_proxy_env_var, constants as res_constants
 from resilient_lib.components.integration_errors import IntegrationError
+from resilient_lib.components.resilient_common import str_to_bool
 from deprecated import deprecated
 
 
@@ -14,7 +15,7 @@ LOG = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 30
 
 
-class RequestsCommon:
+class RequestsCommon(object):
     """
     This class represents common functions around the use of the requests package for REST based APIs.
     It incorporates the app.config section ``[integrations]`` which can be used to define a common set of proxies
@@ -37,8 +38,11 @@ class RequestsCommon:
     """
     def __init__(self, opts=None, function_opts=None):
         # capture the properties for the integration as well as the global settings for all integrations for proxy urls
-        self.integration_options = opts.get('integrations', None) if opts else None
+        self.integration_options = opts.get("integrations", None) if opts else None
         self.function_opts = function_opts
+
+        # base class requests object (i.e. with persistent sessions):
+        self.request_obj = requests.Session()
 
     def get_proxies(self):
         """
@@ -123,11 +127,50 @@ class RequestsCommon:
 
         return cert
 
+    def get_verify(self):
+        """
+        Get ``verify`` parameter from app config or from env var
+        ``REQUESTS_CA_BUNDLE`` which is the default way to set
+        verify with python requests library.
+
+        Value can be set in ``[integrations]`` or in the ``[fn_my_app]`` section
+
+        Value in ``[fn_my_app]`` takes precedence over ``[integrations]``
+        which takes precedence over ``REQUESTS_CA_BUNDLE``
+
+        :param app_options: App config dict
+        :type app_options: dict
+        :return: Value to set ``requests.session.verify`` to.
+            Either a path or a boolean
+        :rtype: bool or str or None (which will default to requests default which is ``True``)
+        """
+        verify = None
+
+        # look in app's config section first
+        if self.function_opts:
+            verify = self.function_opts.get("verify", True)
+
+        # if not found in config, then [integration] wide section can be used;
+        # NOTE: this is pretty much limited to just integration server envs
+        # as most app host deployments will just be the single app, and thus
+        # an integration's wide setting section is not relevant
+        if verify is None and self.integration_options:
+            verify = self.integration_options.get("verify", True)
+
+        # convert potential strings to boolean if necessary
+        # NOTE: it is possible that a string path should be returned,
+        # in which case we don't want there to be a boolean conversion
+        if isinstance(verify, str) and verify.lower() in ["false", "true"]:
+            verify = str_to_bool(verify)
+
+        return verify
+
     # alias for existing instances of ``get_clientauth``, but from now on
     # should use ``get_client_auth``
     get_clientauth = get_client_auth
 
-    def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, **kwargs):
+
+    def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, verify=None, **kwargs):
         """
         Constructs and sends a request. Returns a
         `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object.
@@ -181,6 +224,28 @@ class RequestsCommon:
             private key can be passed to this function either as the path to a single file or as a
             tuple of both files' paths.
         :type clientauth: str or tuple(str, str)
+        :param verify: (Optional) Either a boolean, in which case it controls whether requests verifies
+            the server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use. Defaults to ``None`` as passed in here. If ``None``,
+            then the value is searched for in the app's section of the app.config. If no value
+            is found, then the requests.request() default of ``True`` is used. In that case,
+            the CA bundle found at ``requests.utils.DEFAULT_CA_BUNDLE_PATH`` is the CA bundle used,
+            which is usually a bundle provided by Mozilla. Setting ``verify=True`` is the safest option
+            and should only be changed if you have a self-signed certificate or you want to bypass
+            SSL for testing purposes. A production level app should never disable SSL verification
+            completely.
+
+            Example:
+
+            .. code-block::
+
+                [fn_my_app]
+                ... # some other configs
+                verify=<path/to/CA/bundle/to/use>
+
+            NOTE: The value held in the app's config will be overwritten if a value is passed in by the call
+            to ``execute``
+        :type verify: bool or str
         :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
             or ``callback`` function.
@@ -199,6 +264,9 @@ class RequestsCommon:
             if not clientauth:
                 clientauth = self.get_client_auth()
 
+            if verify is None:
+                verify = self.get_verify()
+
             # Log the parameter inputs that are not None
             args_dict = locals()
             # When debugging execute_call_v2 in PyCharm you may get an exception when executing the for-loop:
@@ -211,7 +279,7 @@ class RequestsCommon:
                     LOG.debug("  %s: %s", k, args_dict[k])
 
             # Pass request to requests.request() function
-            response = requests.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, **kwargs)
+            response = self.request_obj.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, verify=verify, **kwargs)
 
             # Debug logging
             LOG.debug(response.status_code)
@@ -318,6 +386,27 @@ class RequestsCommon:
             msg = str(err)
             log and log.error(msg)
             raise IntegrationError(msg)
+
+class RequestsCommonWithoutSession(RequestsCommon):
+    """
+    This class extends :class:`RequestsCommon` maintaining the behavior of 
+    ``RequestsCommon`` that was present in versions <= 47.1.x.
+
+    The difference is that every time :class:`RequestsCommonWithoutSession.execute()`
+    is called, this class will use ``requests.request`` to execute the request, while
+    :class:`RequestsCommon.execute()` uses ``Session().request``.
+
+    This class is interchangeable with :class:`RequestsCommon` and code that uses
+    :class:`RequestsCommon` can be simiply refactored to use :class:`RequestsCommonWithoutSession`
+
+    :param args: positional arguments matching :class:`RequestsCommon`
+    :type args: list
+    :param kwargs: named keyword arguments matching :class:`RequestsCommon`
+    :type kwargs: dict
+    """
+    def __init__(self, *args, **kwargs):
+        super(RequestsCommonWithoutSession, self).__init__(*args, **kwargs)
+        self.request_obj = requests
 
 
 def is_payload_in_json(content_type):

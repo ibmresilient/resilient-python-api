@@ -411,16 +411,13 @@ class SimpleClient(co3base.BaseClient):
         :rtype: dict
         :raises SimpleHTTPException: if an HTTP exception occurs.
         """
-        url = u"{0}/rest/const".format(self.base_url)
-        response = self._execute_request(self.session.get,
-                                         url,
-                                         proxies=self.proxies,
-                                         cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
-                                         verify=self.verify,
-                                         timeout=timeout)
-        _raise_if_error(response)
-        return json.loads(response.text)
+        # Call get_const from BaseClient. Convert exception if there is any
+        response = None
+        try:
+            response = super(SimpleClient, self).get_const(co3_context_token, timeout)
+        except co3base.BasicHTTPException as ex:
+            _raise_if_error(ex.get_response())
+        return response
 
     def get_content(self, uri, co3_context_token=None, timeout=None):
         """Gets the specified URI.

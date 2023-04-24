@@ -53,6 +53,9 @@ BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 BASE_NAME_DOC_DIR = "doc"
 BASE_NAME_README = "README.md"
 BASE_NAME_VALIDATE_REPORT = "validate_report.md"
+BASE_NAME_POLLER_CREATE_CASE_TEMPLATE = "soar_create_case.jinja"
+BASE_NAME_POLLER_UPDATE_CASE_TEMPLATE = "soar_update_case.jinja"
+BASE_NAME_POLLER_CLOSE_CASE_TEMPLATE = "soar_close_case.jinja"
 BASE_NAME_PAYLOAD_SAMPLES_DIR = "payload_samples"
 BASE_NAME_PAYLOAD_SAMPLES_SCHEMA = "output_json_schema.json"
 BASE_NAME_PAYLOAD_SAMPLES_EXAMPLE = "output_json_example.json"
@@ -510,7 +513,7 @@ def get_apikey_permissions(path):
         raise SDKException(u"No content found in provided apikey_permissions.txt file: {0}".format(path))
 
     # Get permissions. Ignore comments where 1st non-whitespace character is a '#'.
-    apikey_permissions = [p.strip() for p in apikey_permissions_lines if not p.lstrip().startswith("#")]
+    apikey_permissions = [p.strip() for p in apikey_permissions_lines if not p.lstrip().startswith("#") and p.strip() != ""]
 
     # Do basic check on api keys to see if they are in correct format.
     for p in apikey_permissions:

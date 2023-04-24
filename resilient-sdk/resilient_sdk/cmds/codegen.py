@@ -30,13 +30,14 @@ class CmdCodegen(BaseCmd):
     CMD_HELP = "Generates boilerplate code used to begin developing an app."
     CMD_USAGE = """
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
+    $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk codegen -p <name_of_package> -m 'fn_custom_md' -c '/usr/custom_app.config'
     $ resilient-sdk codegen -p <path_current_package> --reload --workflow 'new_wf_to_add'
     $ resilient-sdk codegen -p <path_current_package> --poller
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser"]
+    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
 
     def setup(self):
         # Define codegen usage and description
@@ -274,6 +275,16 @@ class CmdCodegen(BaseCmd):
         # The package_name will be specified in the args
         package_name = args.package
 
+        # Validate that the given path to the sdk settings is valid
+        try:
+            sdk_helpers.validate_file_paths(os.R_OK, args.settings)
+            # Parse the sdk_settings.json file
+            settings_file_contents = sdk_helpers.read_json_file(args.settings, "codegen")
+        except SDKException as err:
+            args.settings = None
+            settings_file_contents = {}
+            LOG.debug("Given path to SDK Settings is either not valid or not readable. Ignoring and using built-in values for codegen")
+
         # Get output_base, use args.output if defined, else current directory
         output_base = args.output if args.output else os.curdir
         output_base = os.path.abspath(output_base)
@@ -332,6 +343,19 @@ class CmdCodegen(BaseCmd):
 
         # add ::CHANGE_ME:: to jinja data
         jinja_data["change_me_str"] = constants.DOCGEN_PLACEHOLDER_STRING
+
+        # add license name, author, author_email, url
+        settings_file_contents_setup = settings_file_contents.get("setup", {})
+        jinja_data["license"] = settings_file_contents_setup.get("license", constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE)
+        jinja_data["author"] = settings_file_contents_setup.get("author", constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR)
+        jinja_data["author_email"] = settings_file_contents_setup.get("author_email", constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL)
+        jinja_data["url"] = settings_file_contents_setup.get("url", constants.CODEGEN_DEFAULT_SETUP_PY_URL)
+        jinja_data["long_description"] = settings_file_contents_setup.get("long_description", constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC)
+
+        # add license_content to jinja_data
+        jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT)
+        # add current SDK version to jinja data
+        jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
@@ -393,9 +417,9 @@ class CmdCodegen(BaseCmd):
                 # data isn't rendered with jinja — these are default jinja templates to be modified
                 # by the developer who is implementing a poller
                 "data": {
-                    "soar_create_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
-                    "soar_update_case.jinja": package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
-                    "soar_close_case.jinja": package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
+                    package_helpers.BASE_NAME_POLLER_CREATE_CASE_TEMPLATE: package_helpers.PATH_DEFAULT_POLLER_CREATE_TEMPLATE,
+                    package_helpers.BASE_NAME_POLLER_UPDATE_CASE_TEMPLATE: package_helpers.PATH_DEFAULT_POLLER_UPDATE_TEMPLATE,
+                    package_helpers.BASE_NAME_POLLER_CLOSE_CASE_TEMPLATE: package_helpers.PATH_DEFAULT_POLLER_CLOSE_TEMPLATE
                 }
             }
             lib_mapping_dict = {
@@ -417,6 +441,9 @@ class CmdCodegen(BaseCmd):
         for f in jinja_data.get("functions"):
             # Add package_name to function data
             f["package_name"] = package_name
+
+            # add sdk version to function data
+            f["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 
             # Get function name
             fn_name = f.get(ResilientObjMap.FUNCTIONS)
@@ -447,6 +474,10 @@ class CmdCodegen(BaseCmd):
         for w in jinja_data.get("workflows"):
             # Get workflow name
             wf_name = w.get(ResilientObjMap.WORKFLOWS)
+
+            # add sdk version to workflow data
+            w["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+
 
             # Generate wf_xx.md file name
             # Don't add prefix if workflow name already begins with "wf_".

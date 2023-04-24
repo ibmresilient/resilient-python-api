@@ -8,7 +8,7 @@ import pkg_resources
 
 PACKAGE_NAME = "resilient-circuits"
 
-PASSWD_PATTERNS = ['pass', 'secret', 'pin', 'key', 'id']
+PASSWD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'id']
 
 INBOUND_MSG_DEST_PREFIX = "inbound_destinations"
 
@@ -16,6 +16,8 @@ APP_FUNCTION_PAYLOAD_VERSION = 2.0
 
 MIN_NUM_WORKERS = 1
 MAX_NUM_WORKERS = 500
+MIN_LOG_BYTES = 100000
+MIN_BACKUP_COUNT = 0
 DEFAULT_SELFTEST_TIMEOUT_VALUE = 10
 
 APP_LOG_DIR = os.environ.get("APP_LOG_DIR", "logs")
@@ -38,6 +40,8 @@ INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_CONFIG_TRAP_EXCEPTION = "trap_exception"
 APP_CONFIG_SELFTEST_TIMEOUT = "selftest_timeout"
 APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD = "heartbeat_timeout_threshold"
+APP_CONFIG_LOG_MAX_BYTES = "log_max_bytes"
+APP_CONFIG_LOG_BACKUP_COUNT = "log_backup_count"
 
 # Headers
 HEADER_CIRCUITS_VER_KEY = "Resilient-Circuits-Version"
@@ -57,3 +61,6 @@ EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instansiate STOMP
 EXIT_STOMP_UNAUTHORIZED_Q = 32      # STOMP: Not authorized to read from queue
 EXIT_STOMP_Q_TIMEOUT = 33           # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
 EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatTimeout event and the first HeartbeatTimeout event is greater than the 'heartbeat_timeout_threshold'
+
+# STOMP connection constants
+STOMP_MAX_CONNECTION_ERRORS = 1     # default number of errors when heartbeat is lost

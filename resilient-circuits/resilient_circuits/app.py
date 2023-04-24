@@ -43,7 +43,7 @@ class RedactingFilter(logging.Filter):
         if isinstance(record.msg, string_types):
             for p in constants.PASSWD_PATTERNS:
                 if p in record.msg.lower():
-                    regex = r"{0}(?=.*?':\s)(None,|.+?,|.+?'}})".format(p)
+                    regex = r"{0}(?=.*?'|\":\s)(None,|.+?,|.+?'|.+\"|}})".format(p)
                     record.msg = re.sub(regex, r"***", record.msg)
 
         return True
@@ -53,9 +53,9 @@ class RedactingFilter(logging.Filter):
 class App(Component):
     """Our main app component, which sets up the Resilient services and other components"""
 
-    FILE_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] %(message)s'
+    FILE_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] [%(threadName)s] %(message)s'
     SYSLOG_LOG_FORMAT = '%(module)s: %(levelname)s %(message)s'
-    STDERR_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] %(message)s'
+    STDERR_LOG_FORMAT = '%(asctime)s %(levelname)s [%(module)s] [%(threadName)s] %(message)s'
 
     def __init__(self, auto_load_components=True, config_file=None, ALLOW_UNRECOGNIZED=False, IS_SELFTEST=False):
         super(App, self).__init__()
@@ -72,7 +72,7 @@ class App(Component):
     def do_initialization(self):
         self.opts = helpers.get_configs(path_config_file=self.config_file, ALLOW_UNRECOGNIZED=self.ALLOW_UNRECOGNIZED)
 
-        self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts['logfile'])
+        self.config_logging(self.opts["logdir"], self.opts["loglevel"], self.opts["logfile"], self.opts[constants.APP_CONFIG_LOG_MAX_BYTES], self.opts[constants.APP_CONFIG_LOG_BACKUP_COUNT])
         LOG.info("Configuration file: %s", self.config_file)
         LOG.info("Resilient server: %s", self.opts.get("host"))
         if self.opts.get("email", None):
@@ -117,7 +117,7 @@ class App(Component):
                 self.component_loader.opts = self.opts
             self.component_loader.register(self)
 
-    def config_logging(self, logdir, loglevel, logfile):
+    def config_logging(self, logdir, loglevel, logfile, log_max_bytes, log_backup_count):
         """ set up some logging """
         global LOG_PATH, LOG, logging_initialized
 
@@ -143,8 +143,8 @@ class App(Component):
 
         LOG.addFilter(RedactingFilter())
 
-        file_handler = RotatingFileHandler(LOG_PATH, maxBytes=10000000,
-                                           backupCount=10)
+        file_handler = RotatingFileHandler(LOG_PATH, maxBytes=log_max_bytes,
+                                           backupCount=log_backup_count)
         file_handler.setFormatter(logging.Formatter(self.FILE_LOG_FORMAT))
         file_handler.addFilter(RedactingFilter())
         logging.getLogger().addHandler(file_handler)

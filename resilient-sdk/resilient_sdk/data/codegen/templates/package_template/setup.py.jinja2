@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Generated with resilient-sdk v{{ sdk_version }}
 
 from setuptools import setup, find_packages
 import glob
@@ -24,15 +25,12 @@ setup(
     name="{{package_name}}",
     display_name="<<display name of your app here>>",
     version="1.0.0",
-    license="<<insert here>>",
-    author="<<your name here>>",
-    author_email="you@example.com",
-    url="<<your company url>>",
+    license="{{license}}",
+    author="{{author}}",
+    author_email="{{author_email}}",
+    url="{{url}}",
     description="<<{{change_me_str}}>>Enter a short description of the App",
-    long_description="""<<{{change_me_str}}>>Enter a long description, including the key features of the App. \
-Multiple continuation lines are supported with a backslash. Line breaks are supported too:
-<br>- This will be rendered like a list
-<br>- once the App is installed in SOAR""",
+    long_description="""{{long_description}}""",
     install_requires=[
         "resilient-circuits>={{resilient_libraries_version}}"
     ],

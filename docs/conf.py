@@ -12,13 +12,14 @@
 #
 import os
 import sys
+from importlib import metadata
+
 import resilient_lib
 from resilient_sdk import app as sdk_app
+from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen, CmdExtPackage,
+                                CmdExtract, CmdRunInit)
 from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util.sdk_helpers import parse_optionals
-from resilient_sdk.util.package_file_helpers import parse_setup_py, SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES
-from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen,
-                                CmdExtPackage, CmdExtract)
 
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath("../resilient"))
@@ -30,7 +31,7 @@ sys.path.insert(0, os.path.abspath("../resilient_sdk"))
 # -- Project information -----------------------------------------------------
 
 project = 'IBM SOAR Python Libraries'
-copyright = '2022, IBM'
+copyright = '2023, IBM'
 author = 'IBM SOAR'
 version = resilient_lib.__version__
 release = resilient_lib.__version__
@@ -90,6 +91,7 @@ cmd_ext_package = CmdExtPackage(sdk_sub_parser)
 cmd_clone = CmdClone(sdk_sub_parser)
 cmd_extract = CmdExtract(sdk_sub_parser)
 cmd_validate = CmdValidate(sdk_sub_parser)
+cmd_init = CmdRunInit(sdk_sub_parser)
 
 # parse the setup.py files
 the_globals = {
@@ -97,19 +99,19 @@ the_globals = {
     "long_description": "",
     "_python_requires": ""
 }
-resilient_setup_attributes = parse_setup_py(os.path.abspath("../resilient/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-circuits_setup_attributes = parse_setup_py(os.path.abspath("../resilient-circuits/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-lib_setup_attributes = parse_setup_py(os.path.abspath("../resilient-lib/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
-sdk_setup_attributes = parse_setup_py(os.path.abspath("../resilient-sdk/setup.py"), SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES, the_globals=the_globals)
+resilient_setup_attributes = metadata.metadata("resilient")
+circuits_setup_attributes = metadata.metadata("resilient-circuits")
+lib_setup_attributes = metadata.metadata("resilient-lib")
+sdk_setup_attributes = metadata.metadata("resilient-sdk")
 jinja_filters = ", ".join(list(resilient_lib.components.templates_common.JINJA_FILTERS.keys()))
 
 # make variables available in .rst files
 rst_epilog = f"""
-.. |resilient_desc| replace:: {resilient_setup_attributes.get("description")}
-.. |circuits_desc| replace:: {circuits_setup_attributes.get("description")}
-.. |lib_desc| replace:: {lib_setup_attributes.get("description")}
+.. |resilient_desc| replace:: {resilient_setup_attributes.get("Summary")}
+.. |circuits_desc| replace:: {circuits_setup_attributes.get("Summary")}
+.. |lib_desc| replace:: {lib_setup_attributes.get("Summary")}
 .. |lib_jinja_filters| replace:: {jinja_filters}
-.. |sdk_desc| replace:: {sdk_setup_attributes.get("description")}
+.. |sdk_desc| replace:: {sdk_setup_attributes.get("Summary")}
 .. |sdk_parser_desc| replace:: {sdk_parser.description}
 .. |sdk_parser_usage| replace:: {sdk_parser.usage}
 .. |sdk_options| replace:: {parse_optionals(sdk_parser._get_optional_actions())}
@@ -131,4 +133,7 @@ rst_epilog = f"""
 .. |cmd_validate_desc| replace:: {cmd_validate.parser.description}
 .. |cmd_validate_usage| replace:: {cmd_validate.parser.usage}
 .. |cmd_validate_options| replace:: {parse_optionals(cmd_validate.parser._get_optional_actions())}
+.. |cmd_init_desc| replace:: {cmd_init.parser.description}
+.. |cmd_init_usage| replace:: {cmd_init.parser.usage}
+.. |cmd_init_options| replace:: {parse_optionals(cmd_init.parser._get_optional_actions())}
 """

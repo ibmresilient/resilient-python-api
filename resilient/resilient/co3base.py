@@ -231,23 +231,39 @@ class BaseClient(object):
         self.request_retry_delay = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_DELAY) is not None else constants.APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT
         self.request_retry_backoff = kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) if kwargs.get(constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) is not None else constants.APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT
 
-    def set_api_key(self, api_key_id, api_key_secret, timeout=None):
+    def set_api_key(self, api_key_id, api_key_secret, timeout=None, include_permissions=False):
         """
         Call this method instead of the connect method in order to use API key
         Just like the connect method, this method calls the session endpoint
         to get org_id information.
-        :param api_key_id:
-        :param api_key_secret:
+        :param api_key_id: api key ID to use to connect
+        :type api_key_id: string
+        :param api_key_secret: associated secret
+        :type api_key_secret: string
+        :param timeout: timeout limit if desired. None by default
+        :type timeout: float
+        :param include_permissions: whether to include permissions in call to /rest/session.
+            Since SOAR v48 this param has been included and set to "true" by default on the server
+            (until v50 where it will be removed). We don't need permission details in circuits so we
+            set it to False by default, but if there is a use of this elsewhere in app code,
+            and either "perms" or "effective_permissions" details that are returned by the
+            endpoint are needed, the value here should be set to True.
+        :type include_permissions: bool
         :return:
         """
         self.api_key_id = api_key_id
         self.api_key_secret = api_key_secret
         self.use_api_key = True
 
+        if include_permissions:
+            LOG.debug("'include_permissions' is deprecated and scheduled to be removed in v50, use GET " +
+                        "/rest/session/{org_id}/acl instead.\n\t\tAt that time, 'include_permissions' will be " +
+                        "removed and this endpoint will not return org permissions.")
+
         # Wrap self.session.get and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __set_api_key():
-            r = self.session.get(u"{0}/rest/session".format(self.base_url),
+            r = self.session.get(u"{0}/rest/session?include_permissions={1}".format(self.base_url, "true" if include_permissions else "false"),
                                  auth=HTTPBasicAuth(self.api_key_id, self.api_key_secret),
                                  proxies=self.proxies,
                                  headers=self.make_headers(),
@@ -350,13 +366,18 @@ class BaseClient(object):
         self.all_orgs = [org for org in orgs if org.get("enabled")]
         self.org_id = selected_org.get("id", None)
 
-    def _connect(self, timeout=None):
+    def _connect(self, timeout=None, include_permissions=False):
         """Connect to SOAR using deprecated username and password method"""
+
+        if include_permissions:
+            LOG.debug("'include_permissions' is deprecated and scheduled to be removed in v50, use GET " +
+                        "/rest/session/{org_id}/acl instead.\n\t\tAt that time, 'include_permissions' will be " +
+                        "removed and this endpoint will not return org permissions.")
 
         # Wrap self.session.post and its related raise_if_error call in
         # inner function so we can add retry logic with dynamic parameters to it
         def __connect():
-            r = self.session.post(u"{0}/rest/session".format(self.base_url),
+            r = self.session.post(u"{0}/rest/session?include_permissions={1}".format(self.base_url, "true" if include_permissions else "false"),
                                   data=json.dumps(self.authdata),
                                   proxies=self.proxies,
                                   headers=self.make_headers(),
@@ -472,6 +493,35 @@ class BaseClient(object):
             return response
 
         return json.loads(response.text)
+
+    def get_const(self, co3_context_token=None, timeout=None):
+        """
+        Get the ``ConstREST`` endpoint.
+
+        Endpoint for retrieving various constant information for this server. This information is
+        useful in translating names that the user sees to IDs that other REST API endpoints accept.
+
+        For example, the ``incidentDTO`` has a field called ``"crimestatus_id"``. The valid values are stored
+        in ``constDTO.crime_statuses``.
+
+        :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
+        :type co3_context_token: str
+        :param timeout: Optional timeout (seconds).
+        :type timeout: int
+        :return: ``ConstDTO`` as a dictionary
+        :rtype: dict
+        :raises SimpleHTTPException: if an HTTP exception occurs.
+        """
+        url = u"{0}/rest/const".format(self.base_url)
+        response = self._execute_request(self.session.get,
+                                         url,
+                                         proxies=self.proxies,
+                                         cookies=self.cookies,
+                                         headers=self.make_headers(co3_context_token),
+                                         verify=self.verify,
+                                         timeout=timeout)
+        BasicHTTPException.raise_if_error(response)
+        return response.json()
 
     def get_content(self, uri, co3_context_token=None, timeout=None, skip_exceptions=[]):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
