@@ -8,10 +8,11 @@ import logging
 import threading
 from collections import namedtuple
 
-from resilient_circuits import ResilientComponent, StatusMessage, handler
+from resilient_circuits import (ResilientComponent, StatusMessage, constants,
+                                handler)
 from resilient_circuits.app_argument_parser import AppArgumentParser
 from resilient_lib import (RequestsCommon, RequestsCommonWithoutSession,
-                           validate_fields, str_to_bool)
+                           str_to_bool, validate_fields)
 
 
 class AppFunctionComponent(ResilientComponent):
@@ -64,7 +65,7 @@ class AppFunctionComponent(ResilientComponent):
         self.options = self._app_configs_as_dict
 
         # Instantiate RequestsCommon with dictionary of _app_configs_as_dict
-        if str_to_bool(opts.get("rc_use_persistent_sessions", AppArgumentParser.DEFAULT_RC_USE_PERSISTENT_SESSIONS)):
+        if str_to_bool(opts.get(constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS, AppArgumentParser.DEFAULT_RC_USE_PERSISTENT_SESSIONS)):
             requests_common_type = RequestsCommon
         else:
             requests_common_type = RequestsCommonWithoutSession

@@ -4,7 +4,7 @@
 
 import pytest
 from resilient_lib import IntegrationError, RequestsCommon, RequestsCommonWithoutSession
-from resilient_circuits import StatusMessage
+from resilient_circuits import StatusMessage, constants
 from tests import mock_constants, AppFunctionMockComponent
 
 
@@ -27,7 +27,7 @@ def test_basic_instantiation(circuits_app):
 
 def test_basic_instantiation_rc_without_session(circuits_app):
     opts = mock_constants.MOCK_OPTS
-    opts["rc_use_persistent_sessions"] = "False"
+    opts[constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS] = "False"
     mock_cmp = AppFunctionMockComponent(
         opts=opts,
         package_name=mock_constants.MOCK_PACKAGE_NAME,
