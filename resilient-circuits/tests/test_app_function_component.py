@@ -3,7 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import pytest
-from resilient_lib import IntegrationError, RequestsCommon
+from resilient_lib import IntegrationError, RequestsCommon, RequestsCommonWithoutSession
 from resilient_circuits import StatusMessage
 from tests import mock_constants, AppFunctionMockComponent
 
@@ -22,6 +22,21 @@ def test_basic_instantiation(circuits_app):
     assert mock_cmp.opts == mock_constants.MOCK_OPTS
     assert mock_cmp.required_app_configs == mock_constants.MOCK_REQUIRED_APP_CONFIGS
     assert isinstance(mock_cmp.rc, RequestsCommon)
+    assert mock_cmp.app_configs.url == "https://www.mockexample.com"
+    assert mock_cmp.options == mock_cmp._app_configs_as_dict
+
+def test_basic_instantiation_rc_without_session(circuits_app):
+    opts = mock_constants.MOCK_OPTS
+    opts["rc_use_persistent_sessions"] = "False"
+    mock_cmp = AppFunctionMockComponent(
+        opts=opts,
+        package_name=mock_constants.MOCK_PACKAGE_NAME,
+        required_app_configs=mock_constants.MOCK_REQUIRED_APP_CONFIGS)
+
+    assert mock_cmp.PACKAGE_NAME == mock_constants.MOCK_PACKAGE_NAME
+    assert mock_cmp.opts == opts
+    assert mock_cmp.required_app_configs == mock_constants.MOCK_REQUIRED_APP_CONFIGS
+    assert isinstance(mock_cmp.rc, RequestsCommonWithoutSession)
     assert mock_cmp.app_configs.url == "https://www.mockexample.com"
     assert mock_cmp.options == mock_cmp._app_configs_as_dict
 
