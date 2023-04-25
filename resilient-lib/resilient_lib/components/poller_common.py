@@ -441,7 +441,7 @@ class SOARCommon():
                 }
             }
 
-        :param payload: Dictionary that cotains changes to make to SOAR cases
+        :param payload: Dictionary that contains changes to make to SOAR cases
         :type payload: dict
         :return: Dictionary of failures if any occur
         :rtype: dict
