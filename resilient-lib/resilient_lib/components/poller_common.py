@@ -402,44 +402,49 @@ class SOARCommon():
         """
         Update mulitple IBM SOAR cases (usually from a rendered Jinja template).
 
-        Example payload:
-        {
-            "patches": {
-                "incidentID1": {
-                    "changes": [
-                        {
-                            "field": {"name": "incident_field_name"},
-                            "old_value": {"field_type": "current_value"},
-                            "new_value": {"field_type": "new_value"}
-                        },
-                        {
-                            "field": {"name": "incident_field_name"},
-                            "old_value": {"id": 1},
-                            "new_value": {"id": 2}
-                        }
-                    ],
-                    "version": 12345 #Current version + 1
-                },
-                "2315": {
-                    "changes": [
-                        {
-                            "field": {"name": "start_date"},
-                            "old_value": {"date": None},
-                            "new_value": {"date": 1681753245000}
-                        },
-                        {
-                            "field": {"name": "zip"},
-                            "old_value": {"text": None},
-                            "new_value": {"text": "14294"}
-                        }
-                    ],
-                    "version": 14
+        **Example:**
+
+        .. code-block:: python
+
+            payload = {
+                "patches": {
+                    "incidentID1": {
+                        "changes": [
+                            {
+                                "field": {"name": "incident_field_name"},
+                                "old_value": {"field_type": "current_value"},
+                                "new_value": {"field_type": "new_value"}
+                            },
+                            {
+                                "field": {"name": "incident_field_name"},
+                                "old_value": {"id": 1},
+                                "new_value": {"id": 2}
+                            }
+                        ],
+                        "version": 12345 #Current version + 1
+                    },
+                    "2315": {
+                        "changes": [
+                            {
+                                "field": {"name": "start_date"},
+                                "old_value": {"date": None},
+                                "new_value": {"date": 1681753245000}
+                            },
+                            {
+                                "field": {"name": "zip"},
+                                "old_value": {"text": None},
+                                "new_value": {"text": "14294"}
+                            }
+                        ],
+                        "version": 14
+                    }
                 }
             }
-        }
 
-        :param payload (dict): Dictionary that cotains changes to make to SOAR cases
-        :return (dict): dictionary of failures if any occur
+        :param payload: Dictionary that cotains changes to make to SOAR cases
+        :type payload: dict
+        :return: Dictionary of failures if any occur
+        :rtype: dict
         """
         try:
             result = self.rest_client.put("/incidents/patch", payload)
