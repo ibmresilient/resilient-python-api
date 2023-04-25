@@ -145,7 +145,8 @@ class PollerComponent(AppFunctionComponent):
             return False
 
         LOG.info("Poller initiated, polling interval %s", self.polling_interval)
-        self.last_poller_time = get_last_poller_date(int(options.get("polling_lookback", 0)))
+        polling_lookback = options.get("polling_lookback") or 0
+        self.last_poller_time = get_last_poller_date(int(polling_lookback))
         LOG.info("Poller lookback: %s", self.last_poller_time)
 
         # collect the override templates to use when creating, updating and closing cases
