@@ -40,6 +40,7 @@ INBOUND_MSG_APP_CONFIG_Q_NAME = "inbound_destination_api_name"
 APP_CONFIG_TRAP_EXCEPTION = "trap_exception"
 APP_CONFIG_SELFTEST_TIMEOUT = "selftest_timeout"
 APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD = "heartbeat_timeout_threshold"
+APP_CONFIG_RC_USE_PERSISTENT_SESSIONS = "rc_use_persistent_sessions"
 APP_CONFIG_LOG_MAX_BYTES = "log_max_bytes"
 APP_CONFIG_LOG_BACKUP_COUNT = "log_backup_count"
 
