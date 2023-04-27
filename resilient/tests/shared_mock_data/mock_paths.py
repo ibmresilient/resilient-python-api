@@ -15,7 +15,3 @@ MOCK_RESPONSES_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_responses")
 MOCK_SECRETS_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_secrets")
 MOCK_PLUGINS_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_plugins")
 
-MOCK_CUSTOM_PLUGIN_PATH = os.path.join(MOCK_PLUGINS_DIR, "mock_plugins.py")
-MOCK_GOOD_PLUGIN_NAME = "MyMockPlugin"
-MOCK_BAD_PLUGIN_NAME = "MyBadMockPlugin"
-

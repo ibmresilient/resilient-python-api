@@ -139,11 +139,3 @@ def fx_reset_environmental_variables():
     yield
 
     os.environ = current_env
-
-@pytest.fixture
-def fx_get_path_good_mock_pam_plugin():
-    yield mock_paths.MOCK_GOOD_PLUGIN_NAME, mock_paths.MOCK_CUSTOM_PLUGIN_PATH
-
-@pytest.fixture
-def fx_get_path_bad_mock_pam_plugin():
-    yield mock_paths.MOCK_BAD_PLUGIN_NAME, mock_paths.MOCK_CUSTOM_PLUGIN_PATH

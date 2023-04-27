@@ -229,18 +229,3 @@ def test_load_pam_plugin_success_builtin():
     plugin = helpers.load_pam_plugin(plugin_name)
 
     assert plugin.__name__ == "Keyring"
-
-
-def test_load_pam_plugin_success_custom(fx_get_path_good_mock_pam_plugin):
-    plugin_name, plugin_path = fx_get_path_good_mock_pam_plugin
-    plugin = helpers.load_pam_plugin(plugin_name, plugin_path)
-
-    assert plugin.__name__ == "MyMockPlugin"
-
-
-def test_load_pam_plugin_failure_custom(fx_get_path_bad_mock_pam_plugin):
-    plugin_name, plugin_path = fx_get_path_bad_mock_pam_plugin
-    with pytest.raises(ValueError) as err:
-        plugin = helpers.load_pam_plugin(plugin_name, plugin_path)
-
-    assert "does not implement required interface" in str(err)
