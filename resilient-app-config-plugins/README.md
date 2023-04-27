@@ -37,6 +37,7 @@ To reference a secret to be pulled from the plugin in the app.config, use the pl
 **TODO**
 
 ## Creating a Custom Plugin
+TODO: update this with new convention for custom plugins
 You can create your own plugin to connect `resilient-circuits` to any external credential provider that may not be built-in to the `resilient-circuits` framework. To create a custom plugin, simply create one Python file. This Python file should expose a custom class, which implements the interface defined by `resilient_app_config_plugins.plugin_base.PAMPluginInterface`. That interface requires that you implement a constructor, a `get()` method, and a `selftest()` method. See one of the built-in plugins for details. The most important part is to implement the `get()` method to make a REST request out to the solution to retrieve the data affiliated with the value that you set for that config in your app.config file. The format which you use to reference values in the app.config is up to you.
 
 Note that there are a few conventions that we use which are exposed from the parent class `PAMPluginInterface`. 
@@ -44,7 +45,7 @@ Note that there are a few conventions that we use which are exposed from the par
 * `PAM_ADDRESS`: address where the PAM endpoint is hosted
 * `PAM_APP_ID`: ID needed to authenticate to endpoint with plugin
 
-Upload the file to App Host by adding a file in the configuration for the app. Then set the value for `pam_plugin_path` in the `[resilient]` section of your app.config to the path to the Python file *and* set the value for `PAM_TYPE` in protected secrets to the name of the class (or set `pam_type` to the same value in the `[resilient]` section of the app.config).
+Upload the file to App Host by adding a file in the configuration for the app. Then set the value for `pam_plugin_path` in the `[resilient]` section of your app.config to the path to the Python file *and* set the value for `PAM_TYPE` in protected secrets to the name of the class.
 
 **Example:**
 
@@ -75,19 +76,6 @@ class MyPlugin(PAMPluginInterface):
         """
         return True, ""
 ```
-
-```
-[fn_my_app]
-password=^password_from_my_pam
-
-[resilient]
-...
-pam_type=MyPlugin
-pam_plugin_path=/etc/rescircuits/my_plugin.py
-...
-```
-
-Note that the only available external libraries for custom plugins is `requests`.
 
 ## License and Terms
 

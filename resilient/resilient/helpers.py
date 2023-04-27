@@ -477,13 +477,11 @@ def get_pam_type_name(options, protected_secrets_manager):
     return protected_secrets_manager.get(constants.PAM_TYPE_CONFIG_APP_HOST_SECRET_NAME) or protected_secrets_manager.get(options.get(constants.PAM_TYPE_CONFIG)) or options.get(constants.PAM_TYPE_CONFIG)
 
 
-def load_pam_plugin(plugin_type_str, plugin_path=None):
+def load_pam_plugin(plugin_type_str):
     """
     Validate the plugin given by name and return a "loaded" class type.
-    The plugin can be built-in, in which case it is loaded from resilient_app_config_plugins
-    module, or it can be custom in which case a path to the .py file is required
-    and the python file is loaded in. Either way, the returned value from
-    this function can be used to instantiate a Plugin.
+    The plugin is loaded from resilient_app_config_plugins module.
+    The returned value from this function can be used to instantiate a Plugin.
 
     **Example:**
 
@@ -494,56 +492,32 @@ def load_pam_plugin(plugin_type_str, plugin_path=None):
 
         plugin_type() # instantiates a ``resilient_app_config_plugins.Keyring`` obj
 
-    **Example:**
-
-    .. code-block::python
-
-        plugin_type_str = "MyPlugin"
-        plugin_path = "/path/to/myplugin.py"
-        plugin_type = helpers.load_pam_plugin(plugin_type_str, plugin_path)
-
-        plugin_type() # instantiates a ``MyPlugin`` obj loaded from the .py file at the given path
-
     :param plugin_type_str: string name of the plugin object
         (must be subclass of ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``)
     :type plugin_type_str: string
-    :param plugin_path: path to custom plugin.py file where ``plugin_type_str`` is implemented, optional, defaults to None
-    :type plugin_path: string
     :raises ValueError: if plugin is not found or not a subclass of ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
     :return: class object of plugin which can then be used to instantiate an object of that plugin's class
     :rtype: type(resilient_app_config_plugins.plugin_base.PAMPluginInterface)
     """
 
-    # check if built-in plugin or custom -- custom plugins are loaded from their Python file directly
-    if not plugin_path:
-        # filter all classes found by inspecting the resilient.app_config_plugins module
-        # to only include subclass of the plugin interface (not including the interface)
-        # if a new plugin is created and is currently marked as invalid, check to make sure
-        # it is exposed in the app_config_plugins module (__init__.py)
-        valid_plugin_names = [a[0] for a in inspect.getmembers(resilient_app_config_plugins, inspect.isclass) \
-                            if issubclass(a[1], resilient_app_config_plugins.plugin_base.PAMPluginInterface) and a[1] != resilient_app_config_plugins.plugin_base.PAMPluginInterface]
-        if plugin_type_str not in valid_plugin_names:
-            raise ValueError("Given {0} '{1}' is invalid. {0} must be one of the valid PAM plugin types: {2} or a custom plugin path must be given with '{3}'".format(
-                constants.PAM_TYPE_CONFIG, plugin_type_str, valid_plugin_names, constants.PAM_PATH_CONFIG))
-        module = resilient_app_config_plugins
-    else:
-        # if custom plugin, we'll have to get the spec from the location then grab
-        # the module from there
-        if sys.version_info.major >= 3:
-            # Python 3 version
-            spec = importlib.util.spec_from_file_location(plugin_type_str, plugin_path)
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[plugin_type_str] = module
-            spec.loader.exec_module(module)
-        else:
-            # Python 2.7 version
-            module = imp.load_source(plugin_type_str, plugin_path)
+    # filter all classes found by inspecting the resilient.app_config_plugins module
+    # to only include subclass of the plugin interface (not including the interface)
+    # if a new plugin is created and is currently marked as invalid, check to make sure
+    # it is exposed in the app_config_plugins module (__init__.py)
+    valid_plugin_names = [a[0] for a in inspect.getmembers(resilient_app_config_plugins, inspect.isclass) \
+                        if issubclass(a[1], resilient_app_config_plugins.plugin_base.PAMPluginInterface) and a[1] != resilient_app_config_plugins.plugin_base.PAMPluginInterface]
+    if plugin_type_str not in valid_plugin_names:
+        raise ValueError("Given {0} '{1}' is invalid. {0} must be one of the valid PAM plugin types: {2}".format(
+            constants.PAM_TYPE_CONFIG, plugin_type_str, valid_plugin_names))
+    module = resilient_app_config_plugins
 
     # get plugin class from module
     plugin = getattr(module, plugin_type_str)
 
     # all plugins must implement the abstract interface defined in PAMPluginInterface
+    # this is double checking that the given plugin does in fact implement the interface
     if not issubclass(plugin, resilient_app_config_plugins.plugin_base.PAMPluginInterface):
-        raise ValueError("Given plugin '{0}' does not implement required interface: '{1}'".format(plugin, resilient_app_config_plugins.plugin_base.PAMPluginInterface))
+        raise ValueError("Given plugin '{0}' does not implement required interface: '{1}'".format(
+            plugin, resilient_app_config_plugins.plugin_base.PAMPluginInterface))
 
     return plugin

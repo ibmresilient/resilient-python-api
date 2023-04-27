@@ -114,8 +114,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # PAM plugin configurations
         default_pam_type = self.getopt(constants.PACKAGE_NAME, constants.PAM_TYPE_CONFIG) or constants.PAM_DEFAULT_PAM_TYPE
-        # the path is usually not used, only relevant to custom plugins
-        default_pam_path = self.getopt(constants.PACKAGE_NAME, constants.PAM_PATH_CONFIG) or None
 
         self.add_argument("--email",
                           default=default_email,
@@ -209,10 +207,6 @@ class ArgumentParser(argparse.ArgumentParser):
                           default=default_pam_type,
                           help="PAM plugin type to use for pulling secrets. Defaults to Keyring")
 
-        self.add_argument("--{0}".format(constants.PAM_PATH_CONFIG),
-                          default=default_pam_path,
-                          help="Path to python file for custom PAM plugins. Defaults to None")
-
         v_resc = get_resilient_circuits_version()
 
         # Having --resilient-mock here allows us to run unit tests for resilient-circuits and resilient-sdk
@@ -279,43 +273,10 @@ def parse_parameters(options):
        - If a value begins with '^', redirect to fetch the value from
          the secret key stored in the plugin provided by pam_type.
        - If a value begins with '$', fetch the value from environment or protected secret
-
-    >>> opts = {
-    ...    "thing": u"value",
-    ...    "key3": "^val3",
-    ...    "key4": u"$val4",
-    ...    "key5": "$val5",
-    ...    "deep1": {"key1": "val1", "key2": u"^val2"}
-    ... }
-
-    >>> keyring.set_password("_", "val3", "key3password")
-    >>> keyring.set_password("_", "val2", "")
-    >>> keyring.set_password("deep1", "val2", "key2password")
-    >>> os.environ["val4"] = "key4param"
-    >>> os.environ["val5"] = "key5param"
-
-    >>> str(parse_parameters(opts)["key3"])
-    'key3password'
-
-    >>> parse_parameters(opts)["deep1"]["key1"]
-    'val1'
-
-    >>> str(parse_parameters(opts)["deep1"]["key2"])
-    'key2password'
-
-    >>> parse_parameters(opts)["deep1"]["key1"]
-    'val1'
-
-    >>> parse_parameters(opts)["key4"]
-    'key4param'
-
-    >>> parse_parameters(opts)["key5"]
-    'key5param'
-
     """
 
     plugin_type_str = helpers.get_pam_type_name(options, ProtectedSecretsManager())
-    plugin_type = helpers.load_pam_plugin(plugin_type_str, options.get(constants.PAM_PATH_CONFIG))
+    plugin_type = helpers.load_pam_plugin(plugin_type_str)
 
     # though options is already an AppConfig object, the plugin_type was not available
     # when the options object was initially created -- it was created with the default value.
