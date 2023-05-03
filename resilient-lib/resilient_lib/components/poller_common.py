@@ -9,7 +9,6 @@ import logging
 import traceback
 from ast import literal_eval
 from threading import Event
-from json import dumps
 
 from cachetools import LRUCache, cached
 from resilient import Patch, SimpleHTTPException
@@ -448,7 +447,7 @@ class SOARCommon():
         :rtype: dict
         """
         try:
-            result = self.rest_client.put("/incidents/patch", dumps(payload))
+            result = self.rest_client.put("/incidents/patch", payload)
         except Exception as err:
             LOG.error(str(err))
             raise_from(IntegrationError("update_soar_cases failed to update cases in SOAR"), err)
