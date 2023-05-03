@@ -559,7 +559,8 @@ def _get_script_info(each_script_in_playbook, scripts_in_location, script_type):
     '''
     Extracts script related information for playbooks. Scripts can be of 2 types: local or global.
     Local scripts live within the playbook itself, while global scripts are stored in the global_export dict.
-
+    
+    Note: The scripts are passed by reference. They need not be returned. They are directly updated.
     :param each_script_in_playbook: Individual scripts found in the playbook
     :type each_script_in_playbook: dict
     :param scripts_in_location: All scripts in the location (global or local). Global scripts are pulled directly from the global_export dict. Local scripts are pulled from the playbook
@@ -571,7 +572,7 @@ def _get_script_info(each_script_in_playbook, scripts_in_location, script_type):
     for sc in scripts_in_location:
         if each_script_in_playbook.get("uuid", "a") == sc.get("uuid", "b"):
             each_script_in_playbook["name"] = sc.get("name")
-            each_script_in_playbook["script_type"] = SCRIPT_TYPE_MAP.get("local")
+            each_script_in_playbook["script_type"] = script_type
             each_script_in_playbook["description"] = sc.get("description")
             each_script_in_playbook["object_type"] = sc.get("object_type")
             each_script_in_playbook["script_text"] = sc.get("script_text", "")
