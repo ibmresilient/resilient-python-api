@@ -33,6 +33,7 @@ from resilient_sdk.util import constants
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_FIELD,
                                                   DEFAULT_INCIDENT_TYPE,
+                                                  SCRIPT_TYPE_MAP,
                                                   ResilientFieldTypes,
                                                   ResilientObjMap,
                                                   ResilientTypeIds)
@@ -554,6 +555,31 @@ def get_object_api_names(api_name, list_objs):
         return []
 
 
+def _get_script_info(each_script_in_playbook, scripts_in_location, script_type):
+    '''
+    Extracts script related information for playbooks. Scripts can be of 2 types: local or global.
+    Local scripts live within the playbook itself, while global scripts are stored in the global_export dict.
+
+    :param each_script_in_playbook: Individual scripts found in the playbook
+    :type each_script_in_playbook: dict
+    :param scripts_in_location: All scripts in the location (global or local). Global scripts are pulled directly from the global_export dict. Local scripts are pulled from the playbook
+    :type scripts_in_location: list
+    :param script_type: The type of script (global or local)
+    :type script_type: str
+    '''
+    found_script = False
+    for sc in scripts_in_location:
+        if each_script_in_playbook.get("uuid", "a") == sc.get("uuid", "b"):
+            each_script_in_playbook["name"] = sc.get("name")
+            each_script_in_playbook["script_type"] = SCRIPT_TYPE_MAP.get("local")
+            each_script_in_playbook["description"] = sc.get("description")
+            each_script_in_playbook["object_type"] = sc.get("object_type")
+            each_script_in_playbook["script_text"] = sc.get("script_text", "")
+            found_script = True
+            break
+    return found_script
+
+
 def get_obj_from_list(identifer, obj_list, condition=lambda o: True):
     """
     Return a dict the name of the object as its Key
@@ -798,6 +824,41 @@ def get_from_export(export,
         raise SDKException(constants.ERROR_PLAYBOOK_SUPPORT)
     else:
         return_dict["playbooks"] = get_res_obj("playbooks", ResilientObjMap.PLAYBOOKS, "Playbook", playbooks, export)
+
+        if get_related_objects:
+            # For Playbooks we attempt to locate related functions and scripts
+            # Get Functions in Playbooks
+            for playbook in return_dict["playbooks"]:
+                # This gets all the functions and scripts in the Playbooks's XML
+                pb_objects = get_playbook_objects(playbook)
+
+                # Add the Display Name and Name to each wf_function
+                for pb_fn in pb_objects.get("functions", []):
+                    for fn in return_dict["functions"]:
+                        if pb_fn.get("uuid", "a") == fn.get("uuid", "b"):
+                            pb_fn["name"] = fn.get("name")
+                            pb_fn["display_name"] = fn.get("display_name")
+                            pb_fn["message_destination"] = fn.get("destination_handle", "")
+                            break
+
+                # If a playbook script is local, its information can be directly extracted from the playbook,
+                # if not, the script's information has to be extracted from the global scripts
+                for pb_sc in pb_objects.get("scripts", []):
+                    # If the script is a local script, then we need to find the script in the Playbook
+                    found_script = _get_script_info(pb_sc, playbook.get("local_scripts"), SCRIPT_TYPE_MAP.get("local"))
+
+                    # If script not found in playbook, searching Global Scripts
+                    found_script = _get_script_info(pb_sc, return_dict["scripts"], SCRIPT_TYPE_MAP.get("global")) if not found_script else True
+
+                    if not found_script:
+                        _unfound_scripts = get_res_obj("scripts", "uuid", "Script", [pb_sc.get("uuid")], export)
+                        for script in _unfound_scripts:
+                            script["x_api_name"] = script["name"]
+                        found_script = _get_script_info(pb_sc, _unfound_scripts, SCRIPT_TYPE_MAP.get("global"))
+                        return_dict["scripts"].extend(_unfound_scripts)
+
+                playbook["pb_functions"] = pb_objects.get("functions")
+                playbook["pb_scripts"]   = pb_objects.get("scripts")
 
     return return_dict
 
@@ -1161,6 +1222,71 @@ def get_workflow_functions(workflow, function_uuid=None):
         return_functions.append(return_function)
 
     return return_functions
+
+
+def get_playbook_objects(playbook, function_uuid=None):
+    """Parses the XML of the Playbook Object and returns
+    a List of all Functions and Scripts found. The scripts
+    returned only has the uuid attribute. This can later
+    be used to extract all script related information either
+    form the playbook export or from global scripts. If
+    function_uuid is defined returns all occurrences of that
+    function.
+
+    Function Attributes:
+    - uuid: String
+    - inputs: Dict
+    - post_processing_script: String
+    - pre_processing_script: String
+    - result_name: String
+
+    Script Attributes:
+    - uuid: String
+    """
+
+    playbook_elements = {"functions": [], "scripts": []}
+
+    # Workflow XML text
+    pb_xml = playbook.get("content", {}).get("xml", None)
+
+    if pb_xml is None:
+        raise SDKException("Could not load xml content from Playbooks: {0}".format(playbook))
+
+    # Get the root element + encoded in utf8 in order to handle Unicode
+    root = ET.fromstring(pb_xml.encode("utf8"))
+
+    # Get the prefix for each element's tag
+    tag_prefix = root.tag.replace("definitions", "")
+
+    xml_function_path = "./{0}process/{0}serviceTask/{0}extensionElements/*".format(tag_prefix)
+    xml_script_path   = "./{0}process/{0}scriptTask/{0}extensionElements/*".format(tag_prefix)
+
+    if function_uuid is not None:
+        xml_function_path = "{0}[@uuid='{1}']".format(xml_function_path, function_uuid)
+
+        # Get all elements at xml_path that have the uuid of the function
+        playbook_elements += root.findall(xml_function_path)
+    else:
+        # Paths to functions and scripts in the XML
+        the_extension_elements  = root.findall(xml_function_path)
+        the_extension_elements += root.findall(xml_script_path)
+
+        # Extracting Function related data from the XML
+        for extension_element in the_extension_elements:
+            return_function = {}
+            if "function" in extension_element.tag:
+                return_function = json.loads(extension_element.text)
+                return_function["uuid"] = extension_element.attrib.get("uuid", "")
+                return_function["result_name"] = return_function.get("result_name", None)
+                return_function["pre_processing_script"] = return_function.get("pre_processing_script", None)
+                playbook_elements["functions"].append(return_function)
+
+            # Extracting Script related data from the XML
+            if "script" in extension_element.tag:
+                return_function["uuid"] = extension_element.get("uuid", "")
+                playbook_elements["scripts"].append(return_function)
+
+    return playbook_elements #return return_functions
 
 
 def get_main_cmd():
