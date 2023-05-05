@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-from resilient_app_config_plugins import constants
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 
 class MyMockPlugin(PAMPluginInterface):
@@ -12,7 +11,7 @@ class MyMockPlugin(PAMPluginInterface):
         return "MOCK"
     def selftest(self):
         return True, ""
-    
+
 class MyBadMockPlugin(): # does not implement required Interface
     def __init__(self, *args, **kwargs):
         pass
@@ -20,4 +19,3 @@ class MyBadMockPlugin(): # does not implement required Interface
         return "MOCK"
     def selftest(self):
         return True, ""
-    
