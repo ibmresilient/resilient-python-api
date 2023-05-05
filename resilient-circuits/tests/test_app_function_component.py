@@ -27,7 +27,7 @@ def test_basic_instantiation(circuits_app):
     assert mock_cmp.options == mock_cmp._app_configs_as_dict
 
 def test_basic_instantiation_rc_without_session(circuits_app):
-    opts = mock_constants.MOCK_OPTS
+    opts = AppConfigManager(mock_constants.MOCK_OPTS)
     opts[constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS] = "False"
     mock_cmp = AppFunctionMockComponent(
         opts=opts,
