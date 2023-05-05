@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
-import pytest
-from resilient.app_config import AppConfigManager
-from resilient_lib import IntegrationError, RequestsCommon
-from resilient_circuits import StatusMessage
-from tests import mock_constants, AppFunctionMockComponent
+from resilient_circuits import StatusMessage, constants
+from resilient_lib import RequestsCommon, RequestsCommonWithoutSession
+from tests import AppFunctionMockComponent, mock_constants
 
+from resilient.app_config import AppConfigManager
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
