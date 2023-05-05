@@ -851,11 +851,14 @@ def get_from_export(export,
                     # If script not found in playbook, searching Global Scripts
                     found_script = _get_script_info(pb_sc, return_dict["scripts"], SCRIPT_TYPE_MAP.get("global")) if not found_script else True
 
+                    # If the script is not found in the Playbook or Global Scripts, then its UUID is used to find the script form the org export
                     if not found_script:
                         _unfound_scripts = get_res_obj("scripts", "uuid", "Script", [pb_sc.get("uuid")], export)
                         for script in _unfound_scripts:
+                            # Renaming the x_api_name to name. Since the script was fetched with UUID, the x_api_name is the UUID
                             script["x_api_name"] = script["name"]
                         found_script = _get_script_info(pb_sc, _unfound_scripts, SCRIPT_TYPE_MAP.get("global"))
+                        # Adding script to return_dict. This is to make sure that its included in the export.res and customize.py
                         return_dict["scripts"].extend(_unfound_scripts)
 
                 playbook["pb_functions"] = pb_objects.get("functions")
@@ -1229,25 +1232,23 @@ def get_playbook_objects(playbook, function_uuid=None):
     """Parses the XML of the Playbook Object and returns
     a List of all Functions and Scripts found. The scripts
     returned only has the uuid attribute. This can later
-    be used to extract all script related information either
+    be used to extract all script-related information either
     form the playbook export or from global scripts. If
     function_uuid is defined returns all occurrences of that
-    function.
+    function only.
 
     Function Attributes:
     - uuid: String
     - inputs: Dict
-    - post_processing_script: String
     - pre_processing_script: String
     - result_name: String
 
     Script Attributes:
     - uuid: String
     """
-
     playbook_elements = {"functions": [], "scripts": []}
 
-    # Workflow XML text
+    # Playbook XML text
     pb_xml = playbook.get("content", {}).get("xml", None)
 
     if pb_xml is None:
@@ -1272,9 +1273,9 @@ def get_playbook_objects(playbook, function_uuid=None):
         the_extension_elements  = root.findall(xml_function_path)
         the_extension_elements += root.findall(xml_script_path)
 
-        # Extracting Function related data from the XML
         for extension_element in the_extension_elements:
             return_function = {}
+            # Extracting Function related data from the XML
             if "function" in extension_element.tag:
                 return_function = json.loads(extension_element.text)
                 return_function["uuid"] = extension_element.attrib.get("uuid", "")

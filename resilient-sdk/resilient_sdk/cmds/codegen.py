@@ -256,13 +256,19 @@ class CmdCodegen(BaseCmd):
 
     @staticmethod
     def _check_and_create_md_files(package_mapping_dict, object_type, jinja_data):
-        '''
+        """
         Creates md files for workflows and playbooks using jinja2 templates.
         
         Note: as the mapping_dict is passed by reference,
-        there is no need to return it
+        there is no need to return it.
         
-        '''
+        :param package_mapping_dict: Dictionary of all the files to render
+        :type package_mapping_dict: dict
+        :param object_type: Type of object to create md files for (workflow or playbook)
+        :type object_type: str
+        :param jinja_data: A dictionary of the data to render the associated template with
+        :type jinja_data: dict
+        """
         _obj_properties = MD_FILE_PROPERTIES[object_type]
 
         # Get a list of workflow/playbooks names in export.
@@ -288,7 +294,6 @@ class CmdCodegen(BaseCmd):
 
             # Add workflow/playbook to data directory
             package_mapping_dict["data"][file_name] = (_obj_properties["jinja_file_path"], obj)
-        return package_mapping_dict
 
     @staticmethod
     def _gen_function(args):
@@ -504,9 +509,9 @@ class CmdCodegen(BaseCmd):
             # Add a 'payload_samples/fn_name' directory and the files to it
             CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
-        # checks and creates .md files for workflow
+        # checks and creates data for .md files for workflow
         CmdCodegen._check_and_create_md_files(package_mapping_dict, "workflows", jinja_data)
-        
+
         # checks and creates .md files for playbooks
         CmdCodegen._check_and_create_md_files(package_mapping_dict, "playbooks", jinja_data)
 
