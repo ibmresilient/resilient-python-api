@@ -288,6 +288,34 @@ def test_get_playbooks_from_export(fx_mock_res_client):
         assert export_data.get("playbooks")[0].get(ResilientObjMap.PLAYBOOKS) == "main_mock_playbook"
         constants.CURRENT_SOAR_SERVER_VERSION = None # reset for other tests
 
+def test_get_playbooks_with_functions_and_script(fx_mock_res_client):
+    with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
+
+        mock_server_version.return_value = 44.0
+        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+        export_data = sdk_helpers.get_from_export(org_export, playbooks=["test_resilient_sdk"])
+
+        assert export_data.get("playbooks")[0].get(ResilientObjMap.PLAYBOOKS) == "test_resilient_sdk"
+        assert len(export_data.get("playbooks")[0].get("pb_functions")) == 2
+        for function in export_data.get("playbooks")[0].get("pb_functions"):
+            assert "pre_processing_script" in function
+            assert function.get("pre_processing_script") is not None
+            assert "result_name" in function
+            assert "uuid" in function
+            assert "post_processing_script" not in function
+            
+        assert len(export_data.get("playbooks")[0].get("pb_scripts")) == 4
+        for script in export_data.get("playbooks")[0].get("pb_scripts"):
+            assert "uuid" in script
+            assert "name" in script
+            assert "script_type" in script
+            assert "description" in script
+            assert "object_type" in script
+            assert script.get("name") is not None
+            assert script.get("script_type") is not None
+
+        constants.CURRENT_SOAR_SERVER_VERSION = None # reset for other tests
 
 def test_get_playbooks_from_export_incompatible_version(fx_mock_res_client):
 
@@ -438,6 +466,32 @@ def test_simplify_string():
 def test_get_workflow_functions():
     # TODO: taken from docgen
     pass
+
+
+def test_get_playbook_objects(fx_mock_res_client):
+    with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
+        playbook = None
+        mock_server_version.return_value = 44.0
+        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
+
+        for pb in org_export.get("playbooks"):
+            if pb.get("export_key") == "test_resilient_sdk":
+                playbook = pb
+                break
+
+        assert playbook
+        pb_elements = sdk_helpers.get_playbook_objects(playbook)
+
+        assert "functions" in pb_elements
+        for function in pb_elements.get("functions"):
+            assert "uuid" in function
+            assert "result_name" in function
+            assert "pre_processing_script" in function
+
+        assert "scripts" in pb_elements
+        for script in pb_elements.get("scripts"):
+            assert "uuid" in script
 
 
 def test_get_main_cmd(monkeypatch):
