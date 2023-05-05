@@ -7,8 +7,12 @@
 import logging
 import threading
 from collections import namedtuple
-from resilient_circuits import ResilientComponent, handler, StatusMessage
-from resilient_lib import RequestsCommon, validate_fields
+
+from resilient_circuits import (ResilientComponent, StatusMessage, constants,
+                                handler)
+from resilient_circuits.app_argument_parser import AppArgumentParser
+from resilient_lib import (RequestsCommon, RequestsCommonWithoutSession,
+                           str_to_bool, validate_fields)
 
 
 class AppFunctionComponent(ResilientComponent):
@@ -60,8 +64,13 @@ class AppFunctionComponent(ResilientComponent):
         # This variable also is used to get the app.configs
         self.options = self._app_configs_as_dict
 
-        # Instansiate RequestsCommon with dictionary of _app_configs_as_dict
-        self.rc = RequestsCommon(opts=opts, function_opts=self._app_configs_as_dict)
+        # Instantiate RequestsCommon with dictionary of _app_configs_as_dict
+        if str_to_bool(opts.get(constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS, AppArgumentParser.DEFAULT_RC_USE_PERSISTENT_SESSIONS)):
+            requests_common_type = RequestsCommon
+        else:
+            requests_common_type = RequestsCommonWithoutSession
+
+        self.rc = requests_common_type(opts=opts, function_opts=self._app_configs_as_dict)
 
         # NOTE: self.app_configs used to be a namedtuple.
         # Since v49 this is no longer a namedtuple.

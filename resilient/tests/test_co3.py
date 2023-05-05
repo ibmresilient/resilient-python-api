@@ -35,10 +35,6 @@ def test_get_client(mock_get_call, mock_session):
     assert res_client.actions_enabled == False
 
 def test_client_put(fx_simple_client):
-    def headers_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content-type": request.headers["content-type"]})
 
     base_client = fx_simple_client[0]
     requests_adapter = fx_simple_client[1]
@@ -49,8 +45,9 @@ def test_client_put(fx_simple_client):
 
     requests_adapter.register_uri('PUT',
                                   mock_uri,
+                                  status_code=200,
                                   request_headers=test_headers,
-                                  text=headers_callback)
+                                  text=json.dumps(test_headers))
 
     uri = "/playbooks/imports"
 

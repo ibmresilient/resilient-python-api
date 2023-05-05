@@ -32,6 +32,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
     DEFAULT_NUM_WORKERS = 25
     DEFAULT_APP_EXCEPTION = False
     DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD = None
+    DEFAULT_RC_USE_PERSISTENT_SESSIONS = True
 
     def __init__(self, config_file=None):
 
@@ -73,6 +74,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
         default_trap_exception = self._is_true(default_trap_exception)
 
         default_heartbeat_timeout_threshold = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD) or self.DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD
+        default_rc_use_persistent_sessions = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS) or self.DEFAULT_RC_USE_PERSISTENT_SESSIONS
 
         self._unset_temp_logger()
 
@@ -175,6 +177,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=int,
                           default=default_heartbeat_timeout_threshold,
                           help=("The amount of time in seconds that can occur between HeartbeatTimeouts before exiting"))
+        self.add_argument("--{0}".format(constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS),
+                          type=str,
+                          default=default_rc_use_persistent_sessions,
+                          help=("Set to False to disable the use of persistent sessions with RequestsCommon in app functions"))
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""
