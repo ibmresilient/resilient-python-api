@@ -1,3 +1,7 @@
+**2023-05: version 48.2**
+
+* Update version of requests-toolbelt to v1.0 to support urllib3 v2.0
+
 **2023-04: version 48.1**
 
 * REST client updated to use ``include_permissions=false`` by default when authenticating to ``/rest/session`` endpoint.
