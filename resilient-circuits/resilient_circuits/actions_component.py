@@ -924,7 +924,13 @@ class Actions(ResilientComponent):
 
                     log_message = u"{0}\n{1}".format(message, str_traceback)
 
-            LOG.error(u"%s (%s): %s", repr(fevent), repr(etype), log_message)
+            # any event that had "opts" as an argument to it will be output here with "repr(fevent)"
+            # so we have to see if the event has "opts" as an arg. If so, then just output the
+            # type of the event, not the whole repr of the event.
+            # Example:
+            # ERROR [actions_component] Circuits event <class 'resilient_circuits.app_restartable.reload'> raised exception ...
+            rep = type(fevent) if hasattr(fevent, "kwargs") and "opts" in fevent.kwargs else repr(fevent)
+            LOG.error(u"Circuits event %s raised exception (%s): %s", rep, repr(etype), log_message)
 
             # Try find the underlying Action or Function message
             if fevent and fevent.args and not isinstance(fevent, ActionMessageBase):

@@ -100,7 +100,7 @@ setup_py_attributes = [
         "fail_func": lambda x: bool(sdk_validate_helpers.check_dependencies_version_specifiers(x)),
         "fail_msg": u"'{0}' has the following improperly formatted dependencies: {2}",
         "fail_msg_lambda_supplement": lambda x: sdk_validate_helpers.check_dependencies_version_specifiers(x),
-        "solution": u"All dependencies (other than resilient-circuits) must be include a version in the format '~=' or '=='",
+        "solution": u"All dependencies (other than resilient-circuits) must include a version in the format '~=' or '=='",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
     }),
     ("python_requires", {

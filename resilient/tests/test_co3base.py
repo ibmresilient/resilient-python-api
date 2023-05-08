@@ -377,10 +377,6 @@ def test_post_attachment_bytes_handle(fx_base_client):
 
 
 def test_put_with_headers(fx_base_client):
-    def headers_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content-type": request.headers["content-type"]})
 
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
@@ -391,8 +387,9 @@ def test_put_with_headers(fx_base_client):
 
     requests_adapter.register_uri('PUT',
                                   mock_uri,
+                                  status_code=200,
                                   request_headers=test_headers,
-                                  text=headers_callback)
+                                  text=json.dumps(test_headers))
 
     uri = "/playbooks/imports"
 
@@ -406,10 +403,6 @@ def test_put_with_headers(fx_base_client):
 
 
 def test_put_with_text_payload(fx_base_client):
-    def text_payload_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content": request.text})
 
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
@@ -420,7 +413,8 @@ def test_put_with_text_payload(fx_base_client):
 
     requests_adapter.register_uri('PUT',
                                   mock_uri,
-                                  text=text_payload_callback)
+                                  status_code=200,
+                                  text=json.dumps({ "content": test_content}))
 
     uri = "/playbooks/imports"
 
@@ -433,10 +427,6 @@ def test_put_with_text_payload(fx_base_client):
 
 
 def test_put_with_json_payload(fx_base_client):
-    def json_payload_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content": request.text})
 
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
@@ -447,23 +437,20 @@ def test_put_with_json_payload(fx_base_client):
 
     requests_adapter.register_uri('PUT',
                                   mock_uri,
-                                  text=json_payload_callback)
+                                  status_code=200,
+                                  text=json.dumps({"content": test_content}))
 
     uri = "/playbooks/imports"
 
     r = base_client.put(
         uri,
-        test_content        
+        test_content
     )
 
-    assert json.loads(r['content']) == test_content
+    assert r['content'] == test_content
 
 #----
 def test_post_with_headers(fx_base_client):
-    def headers_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content-type": request.headers["content-type"]})
 
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
@@ -474,8 +461,9 @@ def test_post_with_headers(fx_base_client):
 
     requests_adapter.register_uri('POST',
                                   mock_uri,
+                                  status_code=200,
                                   request_headers=test_headers,
-                                  text=headers_callback)
+                                  text=json.dumps(test_headers))
 
     uri = "/playbooks/imports"
 
@@ -489,10 +477,6 @@ def test_post_with_headers(fx_base_client):
 
 
 def test_post_with_text_payload(fx_base_client):
-    def text_payload_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content": request.text})
 
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
@@ -503,7 +487,8 @@ def test_post_with_text_payload(fx_base_client):
 
     requests_adapter.register_uri('POST',
                                   mock_uri,
-                                  text=text_payload_callback)
+                                  status_code=200,
+                                  text=json.dumps({"content": test_content}))
 
     uri = "/playbooks/imports"
 
@@ -516,10 +501,6 @@ def test_post_with_text_payload(fx_base_client):
 
 
 def test_post_with_json_payload(fx_base_client):
-    def json_payload_callback(request, context):
-        context.status_code = 200
-        context.headers = request.headers
-        return json.dumps({ "content": request.text})
 
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
@@ -530,7 +511,8 @@ def test_post_with_json_payload(fx_base_client):
 
     requests_adapter.register_uri('POST',
                                   mock_uri,
-                                  text=json_payload_callback)
+                                  status_code=200,
+                                  text=json.dumps({ "content": test_content}))
 
     uri = "/playbooks/imports"
 
@@ -539,7 +521,7 @@ def test_post_with_json_payload(fx_base_client):
         test_content        
     )
 
-    assert json.loads(r['content']) == test_content
+    assert r['content'] == test_content
 
     
 def test_post_attachment_bytes_handle_retry(fx_base_client, caplog):
