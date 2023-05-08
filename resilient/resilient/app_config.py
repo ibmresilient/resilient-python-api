@@ -62,6 +62,8 @@ class ProtectedSecretsManager:
         :return: secret value of config_key either decrypted from protected secret or from ENV
         :rtype: str
         """
+        if not config_key:
+            return default
 
         config_key = config_key.lstrip(constants.PROTECTED_SECRET_PREFIX)
 
@@ -69,7 +71,7 @@ class ProtectedSecretsManager:
             tkn, key = self.data.get(config_key)
 
             protected_secret = helpers.decrypt_protected_secret(tkn, key, config_key)
-            protected_secret = protected_secret if protected_secret else helpers.get_config_from_env(config_key)
+            protected_secret = protected_secret if protected_secret else helpers.get_config_from_env(config_key, default)
         else:
             protected_secret = helpers.get_config_from_env(config_key, default)
 

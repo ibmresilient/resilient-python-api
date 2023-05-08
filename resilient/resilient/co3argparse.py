@@ -113,7 +113,12 @@ class ArgumentParser(argparse.ArgumentParser):
         default_request_retry_backoff = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) or constants.APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT
 
         # PAM plugin configurations
-        default_pam_type = self.getopt(constants.PACKAGE_NAME, constants.PAM_TYPE_CONFIG) or constants.PAM_DEFAULT_PAM_TYPE
+        if helpers.is_running_in_app_host(constants.ENV_VAR_APP_HOST_CONTAINER):
+            # no default in app host
+            default_pam_type = None
+        else:
+            # integration server defaults to Keyring
+            default_pam_type = self.getopt(constants.PACKAGE_NAME, constants.PAM_TYPE_CONFIG) or constants.PAM_DEFAULT_PAM_TYPE
 
         self.add_argument("--email",
                           default=default_email,
@@ -276,9 +281,9 @@ def parse_parameters(options):
     """
 
     plugin_type_str = helpers.get_pam_type_name(options, ProtectedSecretsManager())
-    plugin_type = helpers.load_pam_plugin(plugin_type_str)
+    plugin_type = helpers.load_pam_plugin(plugin_type_str) if plugin_type_str else None
 
-    # though options is already an AppConfig object, the plugin_type was not available
+    # though options is already an AppConfigManager object, the plugin_type was not available
     # when the options object was initially created -- it was created with the default value.
     # we need to recreate it with the new pam plugin
     options = AppConfigManager(options, pam_plugin_type=plugin_type)
