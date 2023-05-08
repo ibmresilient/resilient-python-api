@@ -166,12 +166,8 @@ class inbound_app(object):
                 result_list = []
                 LOG.debug("Running _invoke_inbound_app in Thread: %s", threading.currentThread().name)
 
-                # Get the required attribute from the message
-                message = evt.message
-                inbound_action = message.get("action", "Unknown")
-
                 # Invoke the actual Function
-                ia_results = ia(itself, evt.message, inbound_action)
+                ia_results = ia(itself, evt.message, evt.message.get("action", "Unknown"))
 
                 for r in ia_results:
                     LOG.debug(r)
