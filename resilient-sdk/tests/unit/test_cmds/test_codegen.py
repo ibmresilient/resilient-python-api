@@ -221,10 +221,10 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     just that it exists
     """
     output_path = mock_paths.TEST_TEMP_DIR
+    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
 
     # Add paths to an output base and an export.res file
     sys.argv.extend(["codegen"])
-    # sys.argv.extend(["--set-version", "46.0.0"])
     sys.argv.extend(["-p", "test_resilient_sdk_with_playbooks"])
     sys.argv.extend(["-pb", "test_resilient_sdk"])
     sys.argv.extend(["-f", "create_a_scheduled_rule", "scheduled_rule_pause"])
@@ -238,6 +238,8 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     package_name = args.package
     package_path = os.path.join(output_path, args.package)
     compare_playbooks_md_file(package_name, package_path)
+    
+    constants.CURRENT_SOAR_SERVER_VERSION = 39.0 # resetting SOAR server version back to 39.0
 
 
 def test_run_tests_with_settings_file(fx_get_sub_parser, fx_mk_temp_dir, fx_mock_res_client, fx_cmd_line_args_codegen_package):

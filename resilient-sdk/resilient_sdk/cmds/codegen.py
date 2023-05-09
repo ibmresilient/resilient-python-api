@@ -274,7 +274,7 @@ class CmdCodegen(BaseCmd):
         # Get a list of workflow/playbooks names in export.
         ob_names = [obj.get(_obj_properties["ResilientObj"]) for obj in jinja_data.get(object_type)]
 
-        for obj in jinja_data.get(object_type):
+        for obj in jinja_data.get(object_type, []):
             # Get workflow/playbooks name
             ob_name = obj.get(_obj_properties["ResilientObj"])
 

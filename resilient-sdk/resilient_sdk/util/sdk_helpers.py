@@ -829,14 +829,14 @@ def get_from_export(export,
         if get_related_objects:
             # For Playbooks we attempt to locate related functions and scripts
             # Get Functions in Playbooks
-            for playbook in return_dict["playbooks"]:
+            for playbook in return_dict.get("playbooks", []):
                 # This gets all the functions and scripts in the Playbooks's XML
                 pb_objects = get_playbook_objects(playbook)
 
                 # Add the Display Name and Name to each wf_function
                 for pb_fn in pb_objects.get("functions", []):
                     for fn in return_dict["functions"]:
-                        if pb_fn.get("uuid", "a") == fn.get("uuid", "b"):
+                        if pb_fn.get("uuid", "uuid_not_found_pb") == fn.get("uuid", "uuid_not_found_fn"):
                             pb_fn["name"] = fn.get("name")
                             pb_fn["display_name"] = fn.get("display_name")
                             pb_fn["message_destination"] = fn.get("destination_handle", "")
@@ -1288,7 +1288,7 @@ def get_playbook_objects(playbook, function_uuid=None):
                 return_function["uuid"] = extension_element.get("uuid", "")
                 playbook_elements["scripts"].append(return_function)
 
-    return playbook_elements #return return_functions
+    return playbook_elements
 
 
 def get_main_cmd():
