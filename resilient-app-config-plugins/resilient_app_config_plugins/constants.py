@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2023. All Rights Reserved.
 
 PAM_SECRET_PREFIX = "^"
 PAM_SECRET_PREFIX_WITH_BRACKET = "^{"

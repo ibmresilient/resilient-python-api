@@ -104,7 +104,8 @@ class AppConfigManager(ConfigDict):
         super(AppConfigManager, self).__init__(dict)
 
         if pam_plugin_type:
-            assert issubclass(pam_plugin_type, PAMPluginInterface), "'pam_plugin_type' must be a subclass of 'PAMPluginInterface'"
+            if not issubclass(pam_plugin_type, PAMPluginInterface):
+                raise ValueError("'pam_plugin_type' must be a subclass of 'PAMPluginInterface'")
             self.pam_plugin = pam_plugin_type(protected_secrets_manager=AppConfigManager.protected_secrets_manager, key=key)
         else:
             self.pam_plugin = None
