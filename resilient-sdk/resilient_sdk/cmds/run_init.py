@@ -28,8 +28,8 @@ class CmdRunInit(BaseCmd):
     CMD_HELP = "Generates sdk_settings.json to store default settings."
     CMD_USAGE = """
     $ resilient-sdk init
-    $ resilient-sdk init -f/--file <path to settings json>
-    $ resilient-sdk init -f/--file <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -sf/--file <path to settings json>
+    $ resilient-sdk init -sf/--file <path to settings json> -a/--author you@example.com
     """
     CMD_DESCRIPTION = CMD_HELP
     
@@ -39,7 +39,7 @@ class CmdRunInit(BaseCmd):
         self.parser.description = self.CMD_DESCRIPTION
 
         # Argument to specify a filepath
-        self.parser.add_argument("-f", "--file",
+        self.parser.add_argument("-sf", "--settings_file",
                                  type=ensure_unicode,
                                  required=False,
                                  help="Optional path to settings file.")
@@ -79,7 +79,7 @@ class CmdRunInit(BaseCmd):
         LOG.debug("called: CmdRunInit.execute_command()")
         
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
-        settings_file = args.file or constants.SDK_SETTINGS_FILE_PATH
+        settings_file = args.settings_file or constants.SDK_SETTINGS_FILE_PATH
         
         # Check the provided path
         settings_dir = os.path.dirname(settings_file)

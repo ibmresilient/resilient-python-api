@@ -22,8 +22,8 @@ def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
     assert cmd_init.CMD_HELP == "Generates sdk_settings.json to store default settings."
     assert cmd_init.CMD_USAGE == """
     $ resilient-sdk init
-    $ resilient-sdk init -f/--file <path to settings json>
-    $ resilient-sdk init -f/--file <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -sf/--file <path to settings json>
+    $ resilient-sdk init -sf/--file <path to settings json> -a/--author you@example.com
     """
     assert cmd_init.CMD_DESCRIPTION == cmd_init.CMD_HELP
 
@@ -69,7 +69,7 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
 def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)
     my_new_path = "{}/my_test.json".format(mock_paths.TEST_TEMP_DIR)
-    sys.argv.extend(["--file", my_new_path])
+    sys.argv.extend(["--settings_file", my_new_path])
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
     assert os.path.exists(my_new_path)
