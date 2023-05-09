@@ -570,7 +570,7 @@ def _get_script_info(each_script_in_playbook, scripts_in_location, script_type):
     '''
     found_script = False
     for sc in scripts_in_location:
-        if each_script_in_playbook.get("uuid", "a") == sc.get("uuid", "b"):
+        if each_script_in_playbook.get("uuid", "uuid_not_found_pb") == sc.get("uuid", "uuid_not_found_sc"):
             each_script_in_playbook["name"] = sc.get("name")
             each_script_in_playbook["script_type"] = script_type
             each_script_in_playbook["description"] = sc.get("description")
