@@ -15,7 +15,7 @@ from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.resilient_objects import ResilientObjMap
+from resilient_sdk.util.resilient_objects import ResilientObjMap, MD_FILE_PROPERTIES
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_genson_overwrites import main_genson_builder_overwrites, CustomSchemaBuilder
 
@@ -255,6 +255,47 @@ class CmdCodegen(BaseCmd):
         """
 
     @staticmethod
+    def _check_and_create_md_files(package_mapping_dict, object_type, jinja_data):
+        """
+        Creates md files for workflows and playbooks using jinja2 templates.
+        
+        Note: as the mapping_dict is passed by reference,
+        there is no need to return it.
+        
+        :param package_mapping_dict: Dictionary of all the files to render
+        :type package_mapping_dict: dict
+        :param object_type: Type of object to create md files for (workflow or playbook)
+        :type object_type: str
+        :param jinja_data: A dictionary of the data to render the associated template with
+        :type jinja_data: dict
+        """
+        _obj_properties = MD_FILE_PROPERTIES[object_type]
+
+        # Get a list of workflow/playbooks names in export.
+        ob_names = [obj.get(_obj_properties["ResilientObj"]) for obj in jinja_data.get(object_type)]
+
+        for obj in jinja_data.get(object_type, []):
+            # Get workflow/playbooks name
+            ob_name = obj.get(_obj_properties["ResilientObj"])
+
+            # add sdk version to workflow data
+            obj["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+
+            # Generate pb_xx.md/wf_xx.md file name
+            # Don't add prefix if workflow/playbook name already begins with "wf_/pb_".
+            if re.search(_obj_properties["prefix_pattern"], ob_name):
+                file_name = u"{0}.md".format(ob_name)
+            else:
+                file_name = _obj_properties["obj_file_name"].format(ob_name)
+                # Check if file_name without extension already exists in workflow/playbooks names list.
+                if os.path.splitext(file_name)[0] in ob_names:
+                    raise SDKException(u"File name '{0}' already in use please recreate the {1} '{2}'."
+                        .format(file_name, object_type, ob_name))
+
+            # Add workflow/playbook to data directory
+            package_mapping_dict["data"][file_name] = (_obj_properties["jinja_file_path"], obj)
+
+    @staticmethod
     def _gen_function(args):
         # TODO: Handle just generating a FunctionComponent for the /components directory
         LOG.info("codegen _gen_function called")
@@ -468,30 +509,11 @@ class CmdCodegen(BaseCmd):
             # Add a 'payload_samples/fn_name' directory and the files to it
             CmdCodegen.add_payload_samples(package_mapping_dict, fn_name, f)
 
-        # Get a list of workflow names in export.
-        wf_names = [w.get(ResilientObjMap.WORKFLOWS) for w in jinja_data.get("workflows")]
+        # checks and creates data for .md files for workflow
+        CmdCodegen._check_and_create_md_files(package_mapping_dict, "workflows", jinja_data)
 
-        for w in jinja_data.get("workflows"):
-            # Get workflow name
-            wf_name = w.get(ResilientObjMap.WORKFLOWS)
-
-            # add sdk version to workflow data
-            w["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
-
-
-            # Generate wf_xx.md file name
-            # Don't add prefix if workflow name already begins with "wf_".
-            if re.search(r"^wf_", wf_name):
-                file_name = u"{0}.md".format(wf_name)
-            else:
-                file_name = u"wf_{0}.md".format(wf_name)
-                # Check if file_name without extension already exists in workflow names list.
-                if os.path.splitext(file_name)[0] in wf_names:
-                    raise SDKException(u"File name '{0}' already in use please recreate the workflow '{1}'."
-                                       .format(file_name, wf_name))
-
-            # Add workflow to data directory
-            package_mapping_dict["data"][file_name] = ("data/workflow.md.jinja2", w)
+        # checks and creates .md files for playbooks
+        CmdCodegen._check_and_create_md_files(package_mapping_dict, "playbooks", jinja_data)
 
         newly_generated_files, skipped_files = CmdCodegen.render_jinja_mapping(
             jinja_mapping_dict=package_mapping_dict,
