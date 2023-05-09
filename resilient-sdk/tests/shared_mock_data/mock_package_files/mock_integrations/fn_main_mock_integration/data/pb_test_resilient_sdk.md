@@ -17,7 +17,7 @@
 ### Message Destination
 `fn_scheduler`
 
-### Pre-Processing Script
+### Function-Input Script
 ```python
 inputs.scheduler_type = getattr(playbook.inputs, "schedule_type", "cron")
 
@@ -47,7 +47,7 @@ inputs.scheduler_is_playbook = getattr(playbook.inputs, "schedule_is_playbook", 
 ### Message Destination
 `fn_scheduler`
 
-### Pre-Processing Script
+### Function-Input Script
 ```python
 '''
 
