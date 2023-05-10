@@ -7,7 +7,8 @@ import sys
 
 import pytest
 from mock import patch
-from tests.shared_mock_data.mock_plugins.mock_plugins import MyMockPlugin
+from tests.shared_mock_data.mock_plugins.mock_plugins import (MyBadMockPlugin,
+                                                              MyMockPlugin)
 
 from resilient import constants
 from resilient.app_config import AppConfigManager, ProtectedSecretsManager
@@ -148,3 +149,9 @@ def test_replace_secret_in_config_protected_secret(fx_write_protected_secrets, f
             replaced = AppConfigManager.replace_secret_in_config(item, manager, prefix)
 
             assert replaced == expected
+
+def test_app_config_manager_bad_plugin():
+    with pytest.raises(ValueError) as captured_err:
+        AppConfigManager({}, MyBadMockPlugin)
+
+    assert "'pam_plugin_type' must be a subclass of 'PAMPluginInterface'" in str(captured_err)

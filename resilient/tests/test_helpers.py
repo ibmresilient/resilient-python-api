@@ -7,7 +7,7 @@ import os
 import sys
 
 import pytest
-from resilient import constants, helpers
+from resilient import constants, helpers, app_config
 
 if sys.version_info.major >= 3:
     # Handle PY 3 specific imports
@@ -229,3 +229,22 @@ def test_load_pam_plugin_success_builtin():
     plugin = helpers.load_pam_plugin(plugin_name)
 
     assert plugin.__name__ == "Keyring"
+
+def test_get_pam_type_name(fx_reset_environmental_variables, fx_write_protected_secrets):
+    path_secrets_dir = fx_write_protected_secrets
+    path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
+    protected_secrets_manager = app_config.ProtectedSecretsManager(path_secrets_dir, path_jwk_file)
+
+    opts = {"pam_type": None}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == None
+
+    opts = {"pam_type": "HashiCorpVault_Custom"}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == "HashiCorpVault_Custom"
+
+    os.environ["MY_PAM"] = "Keyring"
+    opts = {"pam_type": "$MY_PAM"}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == "Keyring"
+
+    os.environ["PAM_TYPE"] = "HigherPrecedence"
+    opts = {"pam_type": "LowerPrecedence"}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == "HigherPrecedence"
