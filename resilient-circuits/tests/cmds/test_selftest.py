@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
+import logging
+from argparse import Namespace
+
 import pytest
 from mock import patch
-from argparse import Namespace
 from pkg_resources import EggInfoDistribution, EntryPoint
 from resilient_circuits import helpers
 from resilient_circuits.cmds import selftest
 from tests.shared_mock_data import mock_paths
-
+from resilient_app_config_plugins import Keyring
 
 MOCKED_SELFTEST_ENTRYPOINTS = [
     EntryPoint.parse('test = tests.selftest_tests.mocked_fail_script:selftest', dist=EggInfoDistribution(
@@ -95,3 +97,62 @@ def test_run_apps_selftest_unimplemented():
 
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 2
+
+def test_run_check_pam_plugin_selftest_has_no_plugin(caplog):
+
+    caplog.set_level(logging.INFO)
+
+    app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
+
+    del app_configs.pam_plugin
+
+    selftest.check_pam_plugin_selftest(app_configs)
+
+    assert "No Plugin specified" in caplog.text
+
+def test_run_check_pam_plugin_selftest_not_implemented(caplog):
+
+    caplog.set_level(logging.INFO)
+
+    app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
+
+    with patch.object(Keyring, "selftest") as patch_selftest:
+        patch_selftest.side_effect = NotImplementedError()
+        selftest.check_pam_plugin_selftest(app_configs)
+
+    assert "PAM Plugin selftest not implemented" in caplog.text
+
+def test_run_check_pam_plugin_selftest_unknown_error(caplog):
+
+    caplog.set_level(logging.INFO)
+
+    app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
+
+    with patch.object(Keyring, "selftest") as patch_selftest:
+        patch_selftest.side_effect = Exception("some error")
+        selftest.check_pam_plugin_selftest(app_configs)
+
+    assert "Unknown error while running PAM Plugin selftest: some error" in caplog.text
+
+def test_run_check_pam_plugin_selftest_returns_not_tuple(caplog):
+
+    caplog.set_level(logging.INFO)
+
+    app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
+
+    with patch.object(Keyring, "selftest") as patch_selftest:
+        patch_selftest.return_value = False
+        with pytest.raises(SystemExit):
+            selftest.check_pam_plugin_selftest(app_configs)
+
+    assert "ERROR: PAM Plugin test failed. Reason: REASON UNKNOWN" in caplog.text
+
+def test_run_check_pam_plugin_selftest_normal(caplog):
+
+    caplog.set_level(logging.INFO)
+
+    app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
+
+    selftest.check_pam_plugin_selftest(app_configs)
+
+    assert "PAM Plugin correctly configured" in caplog.text

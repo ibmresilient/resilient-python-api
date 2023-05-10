@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import logging
 import os
@@ -191,7 +191,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                 items = dict((item.lower(), self.config.get(section, item)) for item in self.config.options(section))
                 opts.update({section: items})
 
-            parse_parameters(opts)
+            opts = parse_parameters(opts)
 
             # Once we have read the app.config and decrypted any protected secrets
             # we must remove the secrets directory

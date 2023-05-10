@@ -2,31 +2,32 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
-import pytest
-from resilient_lib import IntegrationError, RequestsCommon, RequestsCommonWithoutSession
 from resilient_circuits import StatusMessage, constants
-from tests import mock_constants, AppFunctionMockComponent
+from resilient_lib import RequestsCommon, RequestsCommonWithoutSession
+from tests import AppFunctionMockComponent, mock_constants
 
+from resilient.app_config import AppConfigManager
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
 
 
 def test_basic_instantiation(circuits_app):
+    opts = AppConfigManager(mock_constants.MOCK_OPTS)
     mock_cmp = AppFunctionMockComponent(
-        opts=mock_constants.MOCK_OPTS,
+        opts=opts,
         package_name=mock_constants.MOCK_PACKAGE_NAME,
         required_app_configs=mock_constants.MOCK_REQUIRED_APP_CONFIGS)
 
     assert mock_cmp.PACKAGE_NAME == mock_constants.MOCK_PACKAGE_NAME
-    assert mock_cmp.opts == mock_constants.MOCK_OPTS
+    assert mock_cmp.opts == opts
     assert mock_cmp.required_app_configs == mock_constants.MOCK_REQUIRED_APP_CONFIGS
     assert isinstance(mock_cmp.rc, RequestsCommon)
     assert mock_cmp.app_configs.url == "https://www.mockexample.com"
     assert mock_cmp.options == mock_cmp._app_configs_as_dict
 
 def test_basic_instantiation_rc_without_session(circuits_app):
-    opts = mock_constants.MOCK_OPTS
+    opts = AppConfigManager(mock_constants.MOCK_OPTS)
     opts[constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS] = "False"
     mock_cmp = AppFunctionMockComponent(
         opts=opts,

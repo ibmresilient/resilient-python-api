@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import logging
 import os
@@ -49,6 +49,55 @@ def error_connecting_to_soar(host, reason="Unknown", status_code=20):
     LOG.info("\nERROR: could not connect to SOAR at '{0}'.\nReason: {1}\nError Code: {2}".format(host, reason, ERROR_EXIT_CODES_MAP.get(status_code, 1)))
     exit(ERROR_EXIT_CODES_MAP.get(status_code, 1))
 
+
+def check_pam_plugin_selftest(app_configs):
+    """
+    Run PAM plugin's 'selftest' function which will check if the plugin
+    is properly configured.
+
+    Some plugins may not have a selftest or some app configurations may
+    not have a plugin -- in either of those cases, let it go with simply
+    a log message.
+
+    In the case the the plugin exists, and has a selftest, run it.
+    The function should return a tuple of bool, str where the first
+    element is True if the plugin is correctly configured and
+    the second element is a reason if it is incorrectly configured.
+
+    :param app_configs: app configs for the app -- should contain a .pam_plugin object
+    :type app_configs: ``resilient.app_config.AppConfigManager``
+    """
+    LOG.info("{0}Testing PAM Plugin details{0}".format(constants.LOG_DIVIDER))
+
+    if not app_configs or not hasattr(app_configs, "pam_plugin"):
+        LOG.info("{0}No Plugin specified. Skipping test{0}".format(constants.LOG_DIVIDER))
+        return
+
+    try:
+        LOG.info("- Running pam plugin selftest")
+        result = app_configs.pam_plugin.selftest()
+    except NotImplementedError:
+        LOG.warning("{0}PAM Plugin selftest not implemented for custom plugin. Skipping test{0}".format(constants.LOG_DIVIDER))
+        return
+    except Exception as err:
+        LOG.warning("Unknown error while running PAM Plugin selftest: {0}".format(str(err)))
+        return
+
+    # result should be a tuple of (bool, str),
+    # but in the case that something is improperly implemented,
+    # assume that if not a tuple that the result is the bool portion
+    # and use that bool and "REASON UNKNOWN"
+    if isinstance(result, tuple):
+        selftest_pass, reason = result
+    else:
+        LOG.warning("PAM Plugin selftest did not return the expected tuple. Make sure selftest is properly implemented")
+        selftest_pass, reason = (result, "REASON UNKNOWN")
+
+    if not selftest_pass:
+        LOG.error("\nERROR: PAM Plugin test failed. Reason: {0}.\nError Code: {1}".format(reason, ERROR_EXIT_CODES_MAP.get(1, 1)))
+        exit(ERROR_EXIT_CODES_MAP.get(1, 1))
+    else:
+        LOG.info("{0}PAM Plugin correctly configured{0}".format(constants.LOG_DIVIDER))
 
 def check_soar_rest_connection(cmd_line_args, app_configs):
     """
@@ -306,6 +355,7 @@ def execute_command(cmd_line_args):
     LOG.info("- Getting app.configs")
     app_configs = helpers.get_configs(ALLOW_UNRECOGNIZED=True)
 
+    check_pam_plugin_selftest(app_configs)
     check_soar_rest_connection(cmd_line_args, app_configs)
     check_soar_stomp_connection(cmd_line_args, app_configs)
     run_apps_selftest(cmd_line_args, app_configs)
