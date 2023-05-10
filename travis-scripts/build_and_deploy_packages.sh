@@ -44,6 +44,10 @@ fi
 ## Start ##
 ###########
 
+print_msg "Installing app config plugins package"
+pip install $TRAVIS_BUILD_DIR/resilient-app-config-plugins
+
+
 print_msg "Writing .pypirc file"
 
 # Write .pypirc file
