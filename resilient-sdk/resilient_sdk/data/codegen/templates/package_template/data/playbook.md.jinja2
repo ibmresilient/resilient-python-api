@@ -4,8 +4,35 @@
     Generated with resilient-sdk v{{ sdk_version }}
 -->
 
-# {{ name }}
+# Playbook - {{ display_name }}
 
+{% if name %}
+### API Name
+`{{ name }}`
+
+{% endif %}
+{% if status %}
+### Status
+`{{ status }}`
+
+{% endif %}
+{% if activation_type %}
+### Activation Type
+`{{ activation_type }}`
+
+{% endif %}
+{% if object_type %}
+### Object Type
+`{{ object_type }}`
+
+{% endif %}
+{% if description %}
+### Description
+{{ description.content }}
+
+{% endif %}
+
+---
 {% for fn in pb_functions %}
 ## Function - {{ fn.display_name }}
 
@@ -30,15 +57,15 @@
 ## {{ script.script_type }} - {{ script.name }}
 
 ### Description
-`{{ script.description }}`
+{{ script.description }}
 
-### Script type
+### Script Type
 `{{ script.script_type }}`
 
-### Objet type
+### Objet Type
 `{{ script.object_type }}`
 
-### Script text
+### Script Content
 ```python
 {{ script.script_text }}
 ```
