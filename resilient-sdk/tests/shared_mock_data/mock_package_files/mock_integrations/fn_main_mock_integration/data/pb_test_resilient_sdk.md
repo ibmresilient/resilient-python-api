@@ -4,8 +4,25 @@
     Generated with resilient-sdk v49.0.1.dev12+g8a41dd63
 -->
 
-# test_resilient_sdk
+# Playbook - test_resilient_sdk
 
+### API Name
+`test_resilient_sdk`
+
+### Status
+`draft`
+
+### Activation Type
+`manual`
+
+### Object Type
+`incident`
+
+### Description
+Schedule a rule/playbook to run in the future for a given incident
+
+
+---
 ## Function - Scheduled Rule Create
 
 ### API Name
@@ -66,15 +83,15 @@ PREPROCESSING FUNCTION
 ## Global script - Write scheduled job to DataTable
 
 ### Description
-`Write out scheduled job information to a datatable`
+Write out scheduled job information to a datatable
 
-### Script type
+### Script Type
 `Global script`
 
-### Objet type
+### Objet Type
 `incident`
 
-### Script text
+### Script Content
 ```python
 from datetime import datetime
 
@@ -109,15 +126,15 @@ else:
 ## Local script - limestone_script
 
 ### Description
-`ASCII art : limestone`
+ASCII art : limestone
 
-### Script type
+### Script Type
 `Local script`
 
-### Objet type
+### Objet Type
 `incident`
 
-### Script text
+### Script Content
 ```python
 '''
   \/________________        
@@ -141,15 +158,15 @@ __|_________\______/
 ## Local script - syl_script
 
 ### Description
-`ASCII art : syl`
+ASCII art : syl
 
-### Script type
+### Script Type
 `Local script`
 
-### Objet type
+### Objet Type
 `incident`
 
-### Script text
+### Script Content
 ```python
 '''
                / ,
@@ -171,15 +188,15 @@ __|_________\______/
 ## Global script - workflow_sample_global_Script
 
 ### Description
-``
 
-### Script type
+
+### Script Type
 `Global script`
 
-### Objet type
+### Objet Type
 `incident`
 
-### Script text
+### Script Content
 ```python
 '''
   \/________________        
