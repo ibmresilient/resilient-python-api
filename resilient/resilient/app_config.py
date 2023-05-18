@@ -32,6 +32,15 @@ class ConfigDict(UserDict, dict):
         except KeyError:
             raise AttributeError()
 
+    # __getstate__ and __setstate__ are required
+    # for any context in which this object might be "pickled"
+    # which currently is necessary for our fn_scheduler app
+    def __getstate__(self):
+        return self.data
+
+    def __setstate__(self, state):
+        self.data = state
+
 class ProtectedSecretsManager:
     """
     Class to manage all protected secrets and env variables.
