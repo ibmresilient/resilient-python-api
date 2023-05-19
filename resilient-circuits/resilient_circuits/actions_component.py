@@ -1240,7 +1240,7 @@ class Actions(ResilientComponent):
                 if function_result:
                     LOG.debug("[%s] Result: %s", function_result.name, function_result.value)
                     reply_dto["results"] = function_result.value
-                reply_message = json.dumps(reply_dto, indent=2)
+                reply_message = json.dumps(reply_dto, indent=2, default=lambda o: "<<non-serializable: {0}>>".format(type(o).__qualname__))
                 if not fevent.test:
                     self.fire(Send(headers={'correlation-id': correlation_id},
                                    body=reply_message,
