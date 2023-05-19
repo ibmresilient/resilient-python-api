@@ -56,6 +56,8 @@ def test_app_config_manager_no_plugin():
 
     acm = AppConfigManager(original_dict)
 
+    assert isinstance(acm, dict)
+
     # AppConfigManager objects have to support many ways of attribute accessing
     # for backward compatbility with existing app.config usages
     assert acm["a"] == original_dict["a"]
@@ -104,6 +106,11 @@ def test_app_config_manager_with_plugin():
 
     os.environ["IN_ENV"] = "FOUND"
     assert acm["d"]["a"] == "FOUND"
+
+    # check that __repr__ is not substituting in the protected values
+    assert "^secret" in repr(acm)
+    assert "^{secret1} and ^{secret1}" in repr(acm)
+    assert "MOCK" not in repr(acm)
 
 @pytest.mark.parametrize("item, prefix, expected", [
     # basic, old usage

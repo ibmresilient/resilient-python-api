@@ -8,13 +8,12 @@ from resilient_app_config_plugins.constants import (
     PAM_SECRET_PREFIX, PAM_SECRET_PREFIX_WITH_BRACKET)
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 from six import string_types
-from six.moves import UserDict
 
 from resilient import constants, helpers
 
 LOG = logging.getLogger(__name__)
 
-class ConfigDict(UserDict, dict):
+class ConfigDict(dict):
     """A dictionary, with property-based accessor
 
     >>> opts = {"one": 1}
@@ -31,15 +30,6 @@ class ConfigDict(UserDict, dict):
             return self[name]
         except KeyError:
             raise AttributeError()
-
-    # __getstate__ and __setstate__ are required
-    # for any context in which this object might be "pickled"
-    # which currently is necessary for our fn_scheduler app
-    def __getstate__(self):
-        return self.data
-
-    def __setstate__(self, state):
-        self.data = state
 
 class ProtectedSecretsManager:
     """
@@ -109,7 +99,7 @@ class AppConfigManager(ConfigDict):
     # any plugins that need access to protected secrets
     protected_secrets_manager = ProtectedSecretsManager()
 
-    def __init__(self, dict=None, pam_plugin_type=None, key="_"):
+    def __init__(self, dict={}, pam_plugin_type=None, key="_"):
         super(AppConfigManager, self).__init__(dict)
 
         if pam_plugin_type:
@@ -120,6 +110,95 @@ class AppConfigManager(ConfigDict):
             self.pam_plugin = None
 
         self._convert_sub_dicts_to_obj(pam_plugin_type)
+
+    ########################################
+    ##### superclass 'dict' overrides ######
+    ########################################
+
+    def get(self, key, default=None):
+        # must override the default 'get' because we need it to use the
+        # custom '__getitem__' which will use the PAM logic when necessary
+        try:
+            return self[key]
+        except KeyError:
+            return default
+        
+    def __repr__(self):
+        # overriding the default '__repr__' will allow
+        # for hiding the credentials that are meant to be hidden
+        data = {}
+        for key in self:
+            # have to bypass this class' logic which incorporates
+            # pam and protected secret substitution
+            data[key] = super(AppConfigManager, self).__getitem__(key)
+        return str(data)
+
+    def __getitem__(self, key):
+        """
+        This is the key part -- overwrite the behavior of the dictionary
+        for retrieving items. The dictionary's item is retrieved. This item
+        may or may not start with a protected prefix. If it does, use either the
+        protected secrets manager or the pam secrets manager is to resolve the
+        item that is to be returned
+
+        NOTE: either ``get()`` methods called here could throw errors. That is
+        by design that we don't trap them as we want those managers themselves to
+        be able to communicate to the original caller of this method.
+
+        :param key: key to search for in the underlying dict
+        :type key: object
+        :return: item from the dictionary, protected secret, or the pam plugin
+        """
+        item = super(AppConfigManager, self).__getitem__(key)
+
+        # NOTE: the order of these checks is important -- the check for the version
+        # with bracket has to be checked first, as otherwise the bracket won't be
+        # removed from the item
+        # also NOTE: there can be a mix of ^{} and ${} items in the secret or any
+        # number of {} secrets in the configs
+
+        # handle protected secrets
+        if isinstance(item, string_types) and constants.PROTECTED_SECRET_PREFIX_WITH_BRACKET in item:
+            item = self.replace_secret_in_config(item, AppConfigManager.protected_secrets_manager, constants.PROTECTED_SECRET_PREFIX_WITH_BRACKET)
+        elif isinstance(item, string_types) and item.startswith(constants.PROTECTED_SECRET_PREFIX):
+            item = self.replace_secret_in_config(item, AppConfigManager.protected_secrets_manager, constants.PROTECTED_SECRET_PREFIX)
+
+        # handle pam plugin secrets
+        if self.pam_plugin and isinstance(item, string_types) and PAM_SECRET_PREFIX_WITH_BRACKET in item:
+            item = self.replace_secret_in_config(item, self.pam_plugin, PAM_SECRET_PREFIX_WITH_BRACKET)
+        elif self.pam_plugin and isinstance(item, string_types) and item.startswith(PAM_SECRET_PREFIX):
+            item = self.replace_secret_in_config(item, self.pam_plugin, PAM_SECRET_PREFIX)
+
+        return item
+
+    def _convert_sub_dicts_to_obj(self, plugin_type):
+        """
+        Recursively create AppConfigManagers for any sub-dictionaries of the top-level
+        dict. Using the underlying dict (which is iterable via ``self``), we can
+        iterate over the data of the underlying dictionary.
+
+        Plugin type is not persisted for the whole AppConfigManager class -- thus it
+        must be provided here to propagate to sub-dictionaries.
+
+        :param plugin_type: plugin type for the app config manager
+        :type plugin_type: ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
+        """
+        for key in self:
+            if isinstance(self[key], dict):
+                # for deeper levels of dictionaries, pass through their "key"
+                # so that future uses might maintain that information
+                self[key] = AppConfigManager(dict=self[key], pam_plugin_type=plugin_type, key=key)
+
+    def _asdict(self):
+        """
+        This method is needed to maintain backwards compatibility with
+        the way that AppFunctionComponent.app_configs used to work.
+
+        :return: simply returns itself as AppConfigs behave like namedtuples and dicts
+        :rtype: AppConfig
+        """
+        return self
+
 
     @staticmethod
     def replace_secret_in_config(item, secret_manager, secret_prefix):
@@ -183,68 +262,4 @@ class AppConfigManager(ConfigDict):
             start = item.index(secret_prefix, start+1) if secret_prefix in item[start+1:] else len(item)
         return item
 
-    def __getitem__(self, key):
-        """
-        This is the key part -- overwrite the behavior of the dictionary
-        for retrieving items. The dictionary's item is retrieved. This item
-        may or may not start with a protected prefix. If it does, use either the
-        protected secrets manager or the pam secrets manager is to resolve the
-        item that is to be returned
 
-        NOTE: either ``get()`` methods called here could throw errors. That is
-        by design that we don't trap them as we want those managers themselves to
-        be able to communicate to the original caller of this method.
-
-        :param key: key to search for in the underlying dict
-        :type key: object
-        :return: item from the dictionary, protected secret, or the pam plugin
-        """
-        item = super(AppConfigManager, self).__getitem__(key)
-
-        # NOTE: the order of these checks is important -- the check for the version
-        # with bracket has to be checked first, as otherwise the bracket won't be
-        # removed from the item
-        # also NOTE: there can be a mix of ^{} and ${} items in the secret or any
-        # number of {} secrets in the configs
-
-        # handle protected secrets
-        if isinstance(item, string_types) and constants.PROTECTED_SECRET_PREFIX_WITH_BRACKET in item:
-            item = self.replace_secret_in_config(item, AppConfigManager.protected_secrets_manager, constants.PROTECTED_SECRET_PREFIX_WITH_BRACKET)
-        elif isinstance(item, string_types) and item.startswith(constants.PROTECTED_SECRET_PREFIX):
-            item = self.replace_secret_in_config(item, AppConfigManager.protected_secrets_manager, constants.PROTECTED_SECRET_PREFIX)
-
-        # handle pam plugin secrets
-        if self.pam_plugin and isinstance(item, string_types) and PAM_SECRET_PREFIX_WITH_BRACKET in item:
-            item = self.replace_secret_in_config(item, self.pam_plugin, PAM_SECRET_PREFIX_WITH_BRACKET)
-        elif self.pam_plugin and isinstance(item, string_types) and item.startswith(PAM_SECRET_PREFIX):
-            item = self.replace_secret_in_config(item, self.pam_plugin, PAM_SECRET_PREFIX)
-
-        return item
-
-    def _convert_sub_dicts_to_obj(self, plugin_type):
-        """
-        Recursively create AppConfigManagers for any sub-dictionaries of the top-level
-        data. Using the ``data`` object exposed by the ``UserDict`` class, we can
-        iterate over the data of the underlying dictionary.
-
-        Plugin type is not persisted for the whole AppConfigManager class -- thus it
-        must be provided here to propagate to sub-dictionaries.
-
-        :param plugin_type: plugin type for the app config manager
-        :type plugin_type: ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
-        """
-        for key in self.data:
-            if isinstance(self.data[key], dict):
-                # for deeper levels of dictionaries, pass through their "key"
-                # so that future uses might maintain that information
-                self.data[key] = AppConfigManager(dict=self.data[key], pam_plugin_type=plugin_type, key=key)
-
-    def _asdict(self):
-        """
-        This method is needed to maintain backwards compatibility with
-        the way that AppFunctionComponent.app_configs used to work.
-
-        :return: simply returns itself as AppConfigs behave like namedtuples and dicts
-        :rtype: AppConfig
-        """
-        return self
