@@ -7,7 +7,7 @@ import logging
 
 import requests_pkcs12 as requests  # required as this allows for .p12 cert files
 from cachetools import TTLCache, cached
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, SSLError
 from resilient_app_config_plugins import constants
 from resilient_app_config_plugins.plugin_base import (PAMPluginInterface,
                                                       get_verify_from_string)
@@ -99,16 +99,21 @@ class Cyberark(PAMPluginInterface):
 
         pkcs12_stream, pkcs12_password = self._get_cert_details()
 
-        return requests.get(
-            urljoin(
-                base_url,
-                self.CYBERARK_ACCOUNTS_URI.format(app_id, safe, obj)
-            ),
-            pkcs12_data=pkcs12_stream,
-            pkcs12_password=pkcs12_password,
-            verify=verify,
-            timeout=constants.DEFAULT_TIMEOUT
-        )
+        try:
+            return requests.get(
+                urljoin(
+                    base_url,
+                    self.CYBERARK_ACCOUNTS_URI.format(app_id, safe, obj)
+                ),
+                pkcs12_data=pkcs12_stream,
+                pkcs12_password=pkcs12_password,
+                verify=verify,
+                timeout=constants.DEFAULT_TIMEOUT
+            )
+        except SSLError:
+            LOG.error("Unable to verify connection to Cyberark. PAM connection will not be able to be used. If you have a self-signed cert for you Cyberark server, set {0}=false".format(self.PAM_VERIFY_SERVER_CERT))
+        except Exception as e:
+            LOG.error("Unable to connect to Cyberark. Error: {0}".format(str(e)))
 
     @cached(cache=TTLCache(maxsize=constants.CACHE_SIZE, ttl=constants.CACHE_TTL))
     def get(self, plain_text_value, default=None):
@@ -133,9 +138,12 @@ class Cyberark(PAMPluginInterface):
             LOG.error("Cyberark value '%s' was not properly formatted. Please review the formatting guide for this plugin in the documentation", plain_text_value)
             return default
 
-        response = self._get_account_details(safe, obj).json()
+        response = self._get_account_details(safe, obj)
 
-        return response.get("Content", default)
+        if not response or not hasattr(response, "json"):
+            return default
+
+        return response.json().get("Content", default)
 
     def selftest(self):
         """

@@ -70,28 +70,33 @@ class HashiCorpVault(PAMPluginInterface):
         # The only error handling that takes place is in the search for
         # "errors" in the response, which are server-side and can be handled as
         # needed
-        response = requests.post(
-            urljoin(vault_address, self.VAULT_LOGON_URI),
-            data={
-                "role_id": role_id,
-                "secret_id": secret_id
-            },
-            timeout=constants.DEFAULT_TIMEOUT,
-            verify=verify
-        ).json()
+        try:
+            response = requests.post(
+                urljoin(vault_address, self.VAULT_LOGON_URI),
+                data={
+                    "role_id": role_id,
+                    "secret_id": secret_id
+                },
+                timeout=constants.DEFAULT_TIMEOUT,
+                verify=verify
+            ).json()
 
-        # there may be errors returned from the endpoint
-        # those are fatal in this case as the client token
-        # is required to run the app, but the endpoint was not
-        # able to provide the token thus we need to stop circuits
-        if "errors" in response:
-            raise ValueError("Unable to login to HashiCorp approle endpoint. Error(s): {0}".format(response.get("errors")))
+            # there may be errors returned from the endpoint
+            # those are fatal in this case as the client token
+            # is required to run the app, but the endpoint was not
+            # able to provide the token thus we need to stop circuits
+            if "errors" in response:
+                raise ValueError("Unable to login to HashiCorp approle endpoint. Error(s): {0}".format(response.get("errors")))
 
-        # if no errors, capture client token and lease duration information
-        # NOTE: lease duration is harder to parse in a useful way so we
-        # calculate the expiration time given the duration information
-        self.client_token = response.get("auth").get("client_token")
-        self.lease_expiration = time_now + timedelta(0, response.get("auth").get("lease_duration"))
+            # if no errors, capture client token and lease duration information
+            # NOTE: lease duration is harder to parse in a useful way so we
+            # calculate the expiration time given the duration information
+            self.client_token = response.get("auth").get("client_token")
+            self.lease_expiration = time_now + timedelta(0, response.get("auth").get("lease_duration"))
+        except requests.exceptions.SSLError as e:
+            LOG.error("Unable to verify connection to HashiCorp. PAM connection will not be able to be used. If you have a self-signed cert for you HashiCorp server, set {0}=false".format(self.PAM_VERIFY_SERVER_CERT))
+        except Exception as e:
+            LOG.error("Unable to login to HashiCorp Vault. Error: {0}".format(str(e)))
 
     def _get_pv_vault_data(self, secrets_engine, path):
         """
