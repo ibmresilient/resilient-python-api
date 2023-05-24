@@ -220,6 +220,8 @@ class HashiCorpVault(PAMPluginInterface):
         """
         try:
             self._get_access_token()
+            if not self.client_token:
+                return False, str("Couldn't authenticate to HashiCorp Vault")
         except ValueError as err:
             return False, str(err)
         except requests.exceptions.RequestException as err:
