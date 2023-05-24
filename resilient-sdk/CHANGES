@@ -1,3 +1,9 @@
+**2023-05: version 49.0**
+
+* Added support to create markdown files for Playbooks as they would have been created with Workflows.
+  Includes automatic detection of global scripts in ``codegen`` when exporting playbooks. Expanded support for
+  playbooks with ``docgen`` will be included in a future release
+
 **2023-04: version 48.1**
 
 * Added new ``init`` functionality to the SDK

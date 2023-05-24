@@ -1,6 +1,7 @@
 **2023-05: version 49.0**
 
 * Added logic to skip retry logic for failed API calls in :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>`, :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>` and :class:`resilient.SimpleClient.getput() <resilient.co3.SimpleClient.getput>`
+* Added ``resilient-app-config-plugins`` as a new package to manage third party credentials within SOAR apps
 
 **2023-05: version 48.2**
 
