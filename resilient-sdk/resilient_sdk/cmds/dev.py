@@ -131,7 +131,8 @@ class CmdDev(BaseCmd):
                                                      artifact_types=old_params.get("incident_artifact_types"),
                                                      datatables=old_params.get("datatables"),
                                                      tasks=old_params.get("automatic_tasks"),
-                                                     scripts=old_params.get("scripts"))
+                                                     scripts=old_params.get("scripts"),
+                                                     playbooks=old_params.get("playbooks"))
 
             jinja_data["export_data"] = sdk_helpers.minify_export(customize_py_import_definition,
                                                                   message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
@@ -143,13 +144,16 @@ class CmdDev(BaseCmd):
                                                                   datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                                                   tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
                                                                   phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
-                                                                  scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+                                                                  scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")),
+                                                                  playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, jinja_data.get("playbooks")))
 
             # Add package_name to jinja_data
             jinja_data["package_name"] = package_name
 
             # Add version
             jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
+            # add current SDK version to jinja data
+            jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 
             # Instansiate Jinja2 Environment with path to Jinja2 templates for customize.py
             jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util")
