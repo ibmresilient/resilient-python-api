@@ -602,6 +602,29 @@ class SOARCommon():
         # filter entity comments with our SOAR header
         return self._filter_comments(soar_comment_list, entity_comments, filter_soar_header=soar_header)
 
+    def get_case_tasks(self, case_id, want_layouts=False, want_notes=False, handle_format="names"):
+        """
+        Get all the tasks from a SOAR case
+
+        :param case_id: IBM SOAR case id
+        :type case_id: str|int
+        :param want_layouts: If the task layout should be returned. Default is False.
+        :type want_layouts: bool
+        :param want_notes: If the task notes should be returned. Default is False.
+        :type want_notes: bool
+        :param handle_format: The format to return can be names, ids, or objects. Default is names.
+        :type handle_format: str
+        :return: A list of all the tasks for the given SOAR case
+        :rtype: list
+        """
+        uri = "/incidents/{}/tasks?want_layouts={}&want_notes={}&handle_format={}".format(case_id, want_layouts, want_notes, handle_format)
+        try:
+            tasks = self.rest_client.get(uri=uri)
+        except Exception as err:
+            LOG.error(str(err))
+            raise_from(IntegrationError("get_case_tasks failed to get SOAR case tasks"), err)
+
+        return tasks
 
 @cached(cache=LRUCache(maxsize=100))
 def eval_mapping(eval_value, wrapper=None):

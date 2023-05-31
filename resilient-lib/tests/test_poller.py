@@ -296,6 +296,18 @@ def test_filter_soar_comments(fx_mock_resilient_client):
     assert resp == ["comment to add"]
 
 
+@pytest.mark.livetest
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
+def test_get_case_tasks(fx_mock_resilient_client):
+    soar_common = SOARCommon(fx_mock_resilient_client)
+
+    resp = soar_common.get_case_tasks(2314)
+
+    assert isinstance(resp, list)
+    # If list returned is greater than 0 then a list of tasks was returned
+    assert len(resp) > 0
+
+
 
 def test_eval_mapping(caplog):
     # test convert str to dict
