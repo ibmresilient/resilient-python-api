@@ -45,7 +45,7 @@ class HashiCorpVault(PAMPluginInterface):
         reach out to HashiCorp to get client token using
         role_id and secret_id provided in protected secrets.
         """
-        time_now = datetime.utcnow()
+        time_before_request = datetime.utcnow()
 
 
         # check if any configs are missing from the required list
@@ -92,7 +92,7 @@ class HashiCorpVault(PAMPluginInterface):
             # NOTE: lease duration is harder to parse in a useful way so we
             # calculate the expiration time given the duration information
             self.client_token = response.get("auth").get("client_token")
-            self.lease_expiration = time_now + timedelta(0, response.get("auth").get("lease_duration"))
+            self.lease_expiration = time_before_request + timedelta(0, response.get("auth").get("lease_duration"))
         except requests.exceptions.SSLError as e:
             LOG.error("Unable to verify connection to HashiCorp. PAM connection will not be able to be used. If you have a self-signed cert for you HashiCorp server, set {0}=false".format(self.PAM_VERIFY_SERVER_CERT))
         except Exception as e:
@@ -221,7 +221,7 @@ class HashiCorpVault(PAMPluginInterface):
         try:
             self._get_access_token()
             if not self.client_token:
-                return False, str("Couldn't authenticate to HashiCorp Vault")
+                return False, "Couldn't authenticate to HashiCorp Vault"
         except ValueError as err:
             return False, str(err)
         except requests.exceptions.RequestException as err:
