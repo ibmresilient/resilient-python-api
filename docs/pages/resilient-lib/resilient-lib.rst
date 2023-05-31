@@ -121,7 +121,7 @@ Common Poller Methods
 .. autofunction:: resilient_lib.components.poller_common::poller
 .. automodule:: resilient_lib.components.poller_common
    :members:
-   :exclude-members: s_to_b, b_to_s, get_last_poller_date, _get_timestamp, poller, get_template_dir
+   :exclude-members: s_to_b, b_to_s, get_last_poller_date, _get_timestamp, poller, get_template_dir, update_soar_cases
 
 
 --------------------
