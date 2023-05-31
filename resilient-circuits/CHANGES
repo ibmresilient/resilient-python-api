@@ -1,3 +1,10 @@
+**2023-05: version 49.0**
+
+* Improved logging on restarts
+* Improved obfuscation of sensitive information from app.config in logs
+* Added ability to disable persistent sessions for ``resilient-lib.RequestsCommon`` in app functions using new optional ``rc_use_persistent_sessions`` configuration parameter
+* Added ``resilient-app-config-plugins`` as a new package to manage third party credentials within SOAR apps
+
 **2023-04: version 48.1**
 
 * Better log handling for errors upon restart
