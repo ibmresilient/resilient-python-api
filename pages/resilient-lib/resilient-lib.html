@@ -1300,6 +1300,28 @@ This will be a mix of comments sync’d from SOAR and new comments</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="resilient_lib.components.poller_common.SOARCommon.get_case_tasks">
+<span class="sig-name descname"><span class="pre">get_case_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">case_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">want_layouts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">want_notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'names'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon.get_case_tasks" title="Permalink to this definition">#</a></dt>
+<dd><p>Get all the tasks from a SOAR case</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>case_id</strong> (<em>str</em><em>|</em><em>int</em>) – IBM SOAR case id</p></li>
+<li><p><strong>want_layouts</strong> (<em>bool</em>) – If the task layout should be returned. Default is False.</p></li>
+<li><p><strong>want_notes</strong> (<em>bool</em>) – If the task notes should be returned. Default is False.</p></li>
+<li><p><strong>handle_format</strong> (<em>str</em>) – The format to return can be names, ids, or objects. Default is names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of all the tasks for the given SOAR case</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="resilient_lib.components.poller_common.SOARCommon.get_soar_case">
 <span class="sig-name descname"><span class="pre">get_soar_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uri_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'return_level=normal'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_case" title="Permalink to this definition">#</a></dt>
 <dd><p>Find a SOAR case which contains custom field(s) associated with the associated endpoint.
@@ -2430,6 +2452,7 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_case_attachment"><code class="docutils literal notranslate"><span class="pre">SOARCommon.get_case_attachment()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_case_attachments"><code class="docutils literal notranslate"><span class="pre">SOARCommon.get_case_attachments()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_case_comments"><code class="docutils literal notranslate"><span class="pre">SOARCommon.get_case_comments()</span></code></a></li>
+<li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_case_tasks"><code class="docutils literal notranslate"><span class="pre">SOARCommon.get_case_tasks()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_case"><code class="docutils literal notranslate"><span class="pre">SOARCommon.get_soar_case()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.get_soar_cases"><code class="docutils literal notranslate"><span class="pre">SOARCommon.get_soar_cases()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.poller_common.SOARCommon.lookup_artifact_type"><code class="docutils literal notranslate"><span class="pre">SOARCommon.lookup_artifact_type()</span></code></a></li>
