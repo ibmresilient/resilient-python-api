@@ -408,6 +408,13 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
+<p><strong>2023-05: version 49.0</strong></p>
+<ul class="simple">
+<li><p>Improved logging on restarts</p></li>
+<li><p>Improved obfuscation of sensitive information from app.config in logs</p></li>
+<li><p>Added ability to disable persistent sessions for <code class="docutils literal notranslate"><span class="pre">resilient-lib.RequestsCommon</span></code> in app functions using new optional <code class="docutils literal notranslate"><span class="pre">rc_use_persistent_sessions</span></code> configuration parameter</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">resilient-app-config-plugins</span></code> as a new package to manage third party credentials within SOAR apps</p></li>
+</ul>
 <p><strong>2023-04: version 48.1</strong></p>
 <ul class="simple">
 <li><p>Better log handling for errors upon restart</p></li>
