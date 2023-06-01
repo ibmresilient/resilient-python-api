@@ -215,7 +215,48 @@ def test_update_soar_case_failure(fx_mock_resilient_client):
     fx_mock_resilient_client.patch = old_patch
 
 
+@pytest.mark.livetest
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
+def test_update_soar_cases(fx_mock_resilient_client):
+    soar_common = SOARCommon(fx_mock_resilient_client)
 
+    payload = {
+        "patches": {
+            "2314": {
+                "changes": [
+                    {
+                        "field": {"name": "severity_code"},
+                        "old_value": {"text": "Low"},
+                        "new_value": {"text": "High"}
+                    },
+                    {
+                        "field": {"name": "addr"},
+                        "old_value": {"text": None},
+                        "new_value": {"text": "123 street"}
+                    }
+                ],
+                "version": 12
+            },
+            "2315": {
+                "changes": [
+                    {
+                        "field": {"name": "start_date"},
+                        "old_value": {"date": None},
+                        "new_value": {"date": 1681753245000}
+                    },
+                    {
+                        "field": {"name": "zip"},
+                        "old_value": {"text": None},
+                        "new_value": {"text": "14294"}
+                    }
+                ],
+                "version": 14
+            }
+        }
+    }
+
+    updated_cases = soar_common.update_soar_cases(payload)
+    assert not updated_cases.get("failures")
 
 @pytest.mark.livetest
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
@@ -294,6 +335,18 @@ def test_filter_soar_comments(fx_mock_resilient_client):
     resp = soar_common._filter_comments(mock_soar_comments, mock_entity_comments)
 
     assert resp == ["comment to add"]
+
+
+@pytest.mark.livetest
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="poller common requires python3.6 or higher")
+def test_get_case_tasks(fx_mock_resilient_client):
+    soar_common = SOARCommon(fx_mock_resilient_client)
+
+    resp = soar_common.get_case_tasks(2314)
+
+    assert isinstance(resp, list)
+    # If list returned is greater than 0 then a list of tasks was returned
+    assert len(resp) > 0
 
 
 

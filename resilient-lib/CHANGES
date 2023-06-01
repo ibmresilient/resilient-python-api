@@ -1,3 +1,7 @@
+**2023-05: version 49.0**
+
+* Added new functions for pollers to interact with SOAR
+
 **2023-04: version 48.1**
 
 * Updated SOAR case default filters for poller helper methods

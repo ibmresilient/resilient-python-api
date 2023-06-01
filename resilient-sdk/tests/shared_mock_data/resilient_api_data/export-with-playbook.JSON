@@ -12681,7 +12681,61 @@
   "export_date" : 1653058684702,
   "export_format_version" : 2,
   "export_type" : "ORG",
-  "fields" : [ {
+  "fields" : [ 
+    {
+      "allow_default_value": false,
+      "blank_option": false,
+      "calculated": false,
+      "changeable": true,
+      "chosen": false,
+      "default_chosen_by_server": false,
+      "deprecated": false,
+      "export_key": "__function/scheduler_label",
+      "hide_notification": false,
+      "id": 420,
+      "input_type": "text",
+      "internal": false,
+      "is_tracked": false,
+      "name": "scheduler_label",
+      "operation_perms": {},
+      "operations": [],
+      "placeholder": "",
+      "prefix": null,
+      "read_only": false,
+      "rich_text": false,
+      "tags": [
+        {
+          "tag_handle": "fn_scheduler",
+          "value": null
+        },
+        {
+          "tag_handle": "playbook_16c168c0_628f_4f50_9523_ae5c0287b76d",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_19f67260_22c1_4871_9a9f_31b6889ab9ea",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_3da68bad_7a31_4e0d_bb23_36ddf5303fb6",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_cb82c8f1_c294_4a01_8a3a_12e581bca983",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_e6557d98_6d8b_4fa3_bad3_cf0e61d1ad04",
+          "value": "Playbook Tag"
+        }
+      ],
+      "templates": [],
+      "text": "scheduler_label",
+      "tooltip": "Scheduled job name for identification",
+      "type_id": 11,
+      "uuid": "a8315456-7803-4a4d-a482-aeec5ca91c4e",
+      "values": []
+    }, {
     "allow_default_value" : false,
     "blank_option" : false,
     "calculated" : false,
@@ -30209,6 +30263,103 @@
     "values" : [ ]
   } ],
   "functions" : [ {
+    "created_date": 1682677405132,
+    "creator": {
+      "display_name": "Admin User",
+      "id": 1,
+      "name": "admin@example.com",
+      "type": "user"
+    },
+    "description": {
+      "format": "text",
+      "content": "Pause a scheduled rule"
+    },
+    "destination_handle": "fn_scheduler",
+    "display_name": "Scheduled Rule Pause",
+    "export_key": "scheduled_rule_pause",
+    "id": 19,
+    "last_modified_by": {
+      "display_name": "Admin User",
+      "id": 1,
+      "name": "admin@example.com",
+      "type": "user"
+    },
+    "last_modified_time": 1682677405160,
+    "name": "scheduled_rule_pause",
+    "output_json_example": "{\"version\": \"1.0\", \"success\": true, \"reason\": null, \"content\": {\"id\": \"domain2-5640\", \"args\": [5640, null, null, \"domain2-5640\", \"test scheduled rule\", 212, 0, {\"artifact_value\": \"abc.com\", \"artifact_type\": \"domain\"}, null, {\"timezone\": \"America/New_York\", \"thread_max\": \"20\", \"datastore_dir\": \"/tmp/scheduler.sqlite\"}], \"next_run_time\": \"Apr 27 2022 05:00AM\", \"type\": \"date\", \"value\": \"Apr 28 2022 04:05AM\"}, \"raw\": \"{\\\"id\\\": \\\"domain2-5640\\\", \\\"args\\\": [5640, null, null, \\\"domain2-5640\\\", \\\"test scheduled rule\\\", 212, 0, {\\\"artifact_value\\\": \\\"abc.com\\\", \\\"artifact_type\\\": \\\"domain\\\"}, null, {\\\"timezone\\\": \\\"America/New_York\\\", \\\"thread_max\\\": \\\"20\\\", \\\"datastore_dir\\\": \\\"/tmp/scheduler.sqlite\\\"}], \\\"next_run_time\\\": \\\"Apr 27 2022 05:00AM\\\", \\\"type\\\": \\\"date\\\", \\\"value\\\": \\\"Apr 28 2022 04:05AM\\\"}\", \"inputs\": {\"scheduler_label\": \"domain2-5640\"}, \"metrics\": {\"version\": \"1.0\", \"package\": \"fn-scheduler\", \"package_version\": \"1.2.0\", \"host\": \"local\", \"execution_time_ms\": 14, \"timestamp\": \"2022-04-26 09:07:44\"}}",
+    "output_json_schema": "{\"$schema\": \"http://json-schema.org/draft-06/schema\", \"type\": \"object\", \"properties\": {\"version\": {\"type\": \"string\"}, \"success\": {\"type\": \"boolean\"}, \"reason\": {}, \"content\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}, \"args\": {\"type\": \"array\", \"items\": {\"anyOf\": [{\"type\": [\"integer\", \"null\", \"string\"]}, {\"type\": \"object\", \"properties\": {\"artifact_value\": {\"type\": \"string\"}, \"artifact_type\": {\"type\": \"string\"}, \"timezone\": {\"type\": \"string\"}, \"thread_max\": {\"type\": \"string\"}, \"datastore_dir\": {\"type\": \"string\"}}}]}}, \"next_run_time\": {\"type\": \"string\"}, \"type\": {\"type\": \"string\"}, \"value\": {\"type\": \"string\"}}}, \"raw\": {\"type\": \"string\"}, \"inputs\": {\"type\": \"object\", \"properties\": {\"scheduler_label\": {\"type\": \"string\"}}}, \"metrics\": {\"type\": \"object\", \"properties\": {\"version\": {\"type\": \"string\"}, \"package\": {\"type\": \"string\"}, \"package_version\": {\"type\": \"string\"}, \"host\": {\"type\": \"string\"}, \"execution_time_ms\": {\"type\": \"integer\"}, \"timestamp\": {\"type\": \"string\"}}}}}",
+    "tags": [
+      {
+        "tag_handle": "fn_scheduler",
+        "value": null
+      },
+      {
+        "tag_handle": "playbook_e6557d98_6d8b_4fa3_bad3_cf0e61d1ad04",
+        "value": "Playbook Tag"
+      }
+    ],
+    "uuid": "aa278752-98c2-4866-b477-0eb19fd81b34",
+    "version": 1,
+    "view_items": [
+      {
+        "content": "a8315456-7803-4a4d-a482-aeec5ca91c4e",
+        "element": "field_uuid",
+        "field_type": "__function",
+        "show_if": null,
+        "show_link_header": false,
+        "step_label": null
+      }
+    ],
+    "workflows": []
+  }, {
+    "created_date": 1682677404972,
+    "creator": {
+      "display_name": "Admin User",
+      "id": 1,
+      "name": "admin@example.com",
+      "type": "user"
+    },
+    "description": {
+      "format": "text",
+      "content": "Schedule a rule to run on a schedule. This rule will be executed for a given incident, artifact, task, etc."
+    },
+    "destination_handle": "fn_scheduler",
+    "display_name": "Scheduled Rule Create",
+    "export_key": "create_a_scheduled_rule",
+    "id": 14,
+    "last_modified_by": {
+      "display_name": "Admin User",
+      "id": 1,
+      "name": "admin@example.com",
+      "type": "user"
+    },
+    "last_modified_time": 1682677405000,
+    "name": "create_a_scheduled_rule",
+    "output_json_example": "{\"version\": \"1.0\", \"success\": true, \"reason\": null, \"content\": {\"version\": 1, \"id\": \"domain2-5640\", \"func\": \"fn_scheduler.components.create_a_scheduled_rule:triggered_job\", \"trigger\": null, \"executor\": \"default\", \"args\": [5640, null, null, \"domain2-5640\", \"test scheduled rule\", 212, 0, {\"artifact_value\": \"abc.com\", \"artifact_type\": \"domain\"}, null, {\"timezone\": \"America/New_York\", \"thread_max\": \"20\", \"datastore_dir\": \"/tmp/scheduler.sqlite\"}], \"kwargs\": {\"artifact_value\": \"abc.com\", \"artifact_type\": \"domain\"}, \"name\": \"triggered_job\", \"misfire_grace_time\": 1, \"coalesce\": false, \"max_instances\": 1, \"next_run_time\": \"Apr 27 2022 05:00AM\"}, \"raw\": \"{\\\"version\\\": 1, \\\"id\\\": \\\"domain2-5640\\\", \\\"func\\\": \\\"fn_scheduler.components.create_a_scheduled_rule:triggered_job\\\", \\\"trigger\\\": null, \\\"executor\\\": \\\"default\\\", \\\"args\\\": [5640, null, null, \\\"domain2-5640\\\", \\\"test scheduled rule\\\", 212, 0, {\\\"artifact_value\\\": \\\"abc.com\\\", \\\"artifact_type\\\": \\\"domain\\\"}, null, {\\\"timezone\\\": \\\"America/New_York\\\", \\\"thread_max\\\": \\\"20\\\", \\\"datastore_dir\\\": \\\"/tmp/scheduler.sqlite\\\"}], \\\"kwargs\\\": {\\\"artifact_value\\\": \\\"abc.com\\\", \\\"artifact_type\\\": \\\"domain\\\"}, \\\"name\\\": \\\"triggered_job\\\", \\\"misfire_grace_time\\\": 1, \\\"coalesce\\\": false, \\\"max_instances\\\": 1, \\\"next_run_time\\\": \\\"Apr 27 2022 05:00AM\\\"}\", \"inputs\": {\"scheduler_type_value\": \"* 5 * * *\", \"incident_id\": 5640, \"scheduler_type\": {\"id\": 2109, \"name\": \"cron\"}, \"scheduler_label_prefix\": \"domain2\", \"scheduler_rule_name\": \"test scheduled rule\", \"scheduler_rule_parameters\": \"artifact_value=abc.com;artifact_type=domain\", \"scheduler_is_playbook\": false}, \"metrics\": {\"version\": \"1.0\", \"package\": \"fn-scheduler\", \"package_version\": \"1.2.0\", \"host\": \"local\", \"execution_time_ms\": 21, \"timestamp\": \"2022-04-26 08:38:13\"}}",
+    "output_json_schema": "{\"$schema\": \"http://json-schema.org/draft-06/schema\", \"type\": \"object\", \"properties\": {\"version\": {\"type\": \"string\"}, \"success\": {\"type\": \"boolean\"}, \"reason\": {}, \"content\": {\"type\": \"object\", \"properties\": {\"version\": {\"type\": \"integer\"}, \"id\": {\"type\": \"string\"}, \"func\": {\"type\": \"string\"}, \"trigger\": {}, \"executor\": {\"type\": \"string\"}, \"args\": {\"type\": \"array\", \"items\": {\"anyOf\": [{\"type\": [\"integer\", \"null\", \"string\"]}, {\"type\": \"object\", \"properties\": {\"artifact_value\": {\"type\": \"string\"}, \"artifact_type\": {\"type\": \"string\"}, \"timezone\": {\"type\": \"string\"}, \"thread_max\": {\"type\": \"string\"}, \"datastore_dir\": {\"type\": \"string\"}}}]}}, \"kwargs\": {\"type\": \"object\", \"properties\": {\"artifact_value\": {\"type\": \"string\"}, \"artifact_type\": {\"type\": \"string\"}}}, \"name\": {\"type\": \"string\"}, \"misfire_grace_time\": {\"type\": \"integer\"}, \"coalesce\": {\"type\": \"boolean\"}, \"max_instances\": {\"type\": \"integer\"}, \"next_run_time\": {\"type\": \"string\"}}}, \"raw\": {\"type\": \"string\"}, \"inputs\": {\"type\": \"object\", \"properties\": {\"scheduler_type_value\": {\"type\": \"string\"}, \"incident_id\": {\"type\": \"integer\"}, \"scheduler_type\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}, \"name\": {\"type\": \"string\"}}}, \"scheduler_label_prefix\": {\"type\": \"string\"}, \"scheduler_rule_name\": {\"type\": \"string\"}, \"scheduler_rule_parameters\": {\"type\": \"string\"}, \"scheduler_is_playbook\": {\"type\": \"boolean\"}}}, \"metrics\": {\"type\": \"object\", \"properties\": {\"version\": {\"type\": \"string\"}, \"package\": {\"type\": \"string\"}, \"package_version\": {\"type\": \"string\"}, \"host\": {\"type\": \"string\"}, \"execution_time_ms\": {\"type\": \"integer\"}, \"timestamp\": {\"type\": \"string\"}}}}}",
+    "tags": [
+      {
+        "tag_handle": "fn_scheduler",
+        "value": null
+      },
+      {
+        "tag_handle": "playbook_1881ad3e_e539_47e1_b6e5_6f1c84df0864",
+        "value": "Playbook Tag"
+      },
+      {
+        "tag_handle": "playbook_2405a12b_1f53_4ebf_b87e_d2f91866635a",
+        "value": "Playbook Tag"
+      },
+      {
+        "tag_handle": "playbook_a486c165_85d1_4d15_ac7a_e6b8352efc05",
+        "value": "Playbook Tag"
+      }
+    ],
+    "uuid": "bde7b5b2-f454-4435-9103-de31d991b924",
+    "version": 1,
+    "view_items": [],
+    "workflows": []
+  }, {
     "created_date" : 1652112576323,
     "creator" : {
       "display_name" : "all",
@@ -41004,7 +41155,61 @@
     "uuid" : "e6c2d3f4-194b-4dc5-84da-1756a63ca6c1"
   } ],
   "locale" : "en",
-  "message_destinations" : [ {
+  "message_destinations" : [ 
+    {
+      "api_keys": [
+        "75a0ad62-5cdc-4889-b2f4-66cf88d32e89"
+      ],
+      "destination_type": 0,
+      "expect_ack": true,
+      "export_key": "fn_scheduler",
+      "name": "fn_scheduler",
+      "programmatic_name": "fn_scheduler",
+      "tags": [
+        {
+          "tag_handle": "fn_scheduler",
+          "value": null
+        },
+        {
+          "tag_handle": "playbook_16c168c0_628f_4f50_9523_ae5c0287b76d",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_1881ad3e_e539_47e1_b6e5_6f1c84df0864",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_19f67260_22c1_4871_9a9f_31b6889ab9ea",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_2405a12b_1f53_4ebf_b87e_d2f91866635a",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_3da68bad_7a31_4e0d_bb23_36ddf5303fb6",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_a486c165_85d1_4d15_ac7a_e6b8352efc05",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_cb82c8f1_c294_4a01_8a3a_12e581bca983",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_e6557d98_6d8b_4fa3_bad3_cf0e61d1ad04",
+          "value": "Playbook Tag"
+        },
+        {
+          "tag_handle": "playbook_f48af589_3237_4bf3_8b34_8a35d56dfcf0",
+          "value": "Playbook Tag"
+        }
+      ],
+      "users": [],
+      "uuid": "02927d03-a71c-4662-9520-4010fa2ac284"
+    }, {
     "api_keys" : [ "f318f499-94f9-4a25-aefb-c8e06a19712f" ],
     "destination_type" : 0,
     "expect_ack" : true,
@@ -41860,7 +42065,389 @@
     "type" : "default",
     "uuid" : "f880d96f-839b-47cd-9956-be7125f8273c",
     "version" : 7
-  } ],
+  }, {
+    "activation_type": "manual",
+    "content": {
+      "content_version": 8,
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" targetNamespace=\"http://www.camunda.org/test\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:omgdc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:omgdi=\"http://www.omg.org/spec/DD/20100524/DI\" xmlns:resilient=\"http://resilient.ibm.com/bpmn\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><process id=\"playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7\" isExecutable=\"true\" name=\"playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7\"><documentation/><startEvent id=\"StartEvent_155asxm\"><outgoing>Flow_162tnn7</outgoing></startEvent><serviceTask id=\"ServiceTask_1\" name=\"Scheduled Rule Create\" resilient:type=\"function\"><extensionElements><resilient:function uuid=\"bde7b5b2-f454-4435-9103-de31d991b924\">{\"inputs\":{\"6742aa35-eb76-4fa4-85f8-a86015cf888a\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"bfacefb1-5b39-4e7f-919c-84ccc54442f0\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"a5074a34-6d40-4d03-8bf0-a8ad65b31f59\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"6b4b65f3-a243-48b5-8fea-e412bf2cf9f7\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"0e1330b2-0b91-462b-acf2-2772a02299f8\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"select_value\":\"eb8f0588-a416-4bf9-9154-665ed20bcdf9\"}},\"4d308c31-9056-4d34-b977-99d58f89076c\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"5eaaeb87-cb70-4877-aa5e-0a5b10f73f3a\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"8690362f-626a-4c93-a68e-c2fb3b746003\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"5ad21089-a73c-4408-ae52-d636e154351c\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}}},\"pre_processing_script\":\"inputs.scheduler_type = getattr(playbook.inputs, \\\"schedule_type\\\", \\\"cron\\\")\\n\\nif getattr(playbook.inputs, \\\"schedule_type\\\", \\\"cron\\\") == \\\"date\\\":\\n  # date format converted to use dashes\\n  inputs.scheduler_type_value = getattr(playbook.inputs, \\\"schedule_type_value\\\", \\\"\\\").replace(\\\"/\\\", \\\"-\\\")\\nelse:\\n  inputs.scheduler_type_value = getattr(playbook.inputs, \\\"schedule_type_value\\\", \\\"\\\")\\n\\ninputs.scheduler_rule_name = getattr(playbook.inputs, \\\"schedule_rule_name\\\", None)\\ninputs.scheduler_rule_parameters = getattr(playbook.inputs, \\\"schedule_rule_parameters\\\", None)\\ninputs.scheduler_label_prefix = getattr(playbook.inputs, \\\"schedule_label_prefix\\\", None)\\ninputs.incident_id = incident.id\\ninputs.scheduler_is_playbook = getattr(playbook.inputs, \\\"schedule_is_playbook\\\", False)\\n\",\"pre_processing_script_language\":\"python3\",\"result_name\":\"output_scheduled_rule_create\"}</resilient:function></extensionElements><incoming>Flow_162tnn7</incoming><outgoing>Flow_00vaatr</outgoing></serviceTask><sequenceFlow id=\"Flow_162tnn7\" sourceRef=\"StartEvent_155asxm\" targetRef=\"ServiceTask_1\"/><sequenceFlow id=\"Flow_00vaatr\" sourceRef=\"ServiceTask_1\" targetRef=\"ScriptTask_4\"/><endEvent id=\"EndPoint_3\" resilient:documentation=\"End point\"><incoming>Flow_1u0jgw1</incoming></endEvent><scriptTask id=\"ScriptTask_4\" name=\"Write scheduled job to DataTable\"><extensionElements><resilient:script uuid=\"38d9b9df-35c7-48ec-adec-8a082f5be517\"/></extensionElements><incoming>Flow_00vaatr</incoming><outgoing>Flow_1m4jj08</outgoing><script>script</script></scriptTask><sequenceFlow id=\"Flow_1m4jj08\" sourceRef=\"ScriptTask_4\" targetRef=\"ServiceTask_7\"/><scriptTask id=\"ScriptTask_5\" name=\"limestone_script\"><extensionElements><resilient:script uuid=\"8486e707-2ad9-48bb-b995-0cd81788dc2d\"/></extensionElements><incoming>Flow_12srssw</incoming><outgoing>Flow_0cf7sfi</outgoing><script>script</script></scriptTask><scriptTask id=\"ScriptTask_6\" name=\"syl_script\"><extensionElements><resilient:script uuid=\"9bcaae01-3521-4385-bee3-2c078e76d053\"/></extensionElements><incoming>Flow_0cf7sfi</incoming><outgoing>Flow_0i0zmgt</outgoing><script>script</script></scriptTask><sequenceFlow id=\"Flow_0cf7sfi\" sourceRef=\"ScriptTask_5\" targetRef=\"ScriptTask_6\"/><sequenceFlow id=\"Flow_0i0zmgt\" sourceRef=\"ScriptTask_6\" targetRef=\"ScriptTask_8\"/><serviceTask id=\"ServiceTask_7\" name=\"Scheduled Rule Pause\" resilient:type=\"function\"><extensionElements><resilient:function uuid=\"aa278752-98c2-4866-b477-0eb19fd81b34\">{\"inputs\":{},\"pre_processing_script\":\"'''\\n\\n\\n\\nPREPROCESSING FUNCTION\\n\\n\\n\\n\\n'''\",\"pre_processing_script_language\":\"python3\",\"result_name\":\"output_scheduler_pause\"}</resilient:function></extensionElements><incoming>Flow_1m4jj08</incoming><outgoing>Flow_12srssw</outgoing></serviceTask><sequenceFlow id=\"Flow_12srssw\" sourceRef=\"ServiceTask_7\" targetRef=\"ScriptTask_5\"/><scriptTask id=\"ScriptTask_8\" name=\"workflow_calvin_global_Script\"><extensionElements><resilient:script uuid=\"c423148c-c842-43e6-ae32-bb763f72cecf\"/></extensionElements><incoming>Flow_0i0zmgt</incoming><outgoing>Flow_1u0jgw1</outgoing><script>script</script></scriptTask><sequenceFlow id=\"Flow_1u0jgw1\" sourceRef=\"ScriptTask_8\" targetRef=\"EndPoint_3\"/></process><bpmndi:BPMNDiagram id=\"BPMNDiagram_1\"><bpmndi:BPMNPlane bpmnElement=\"playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7\" id=\"BPMNPlane_1\"><bpmndi:BPMNEdge bpmnElement=\"Flow_12srssw\" id=\"Flow_12srssw_di\"><omgdi:waypoint x=\"700\" y=\"552\"/><omgdi:waypoint x=\"700\" y=\"588\"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bpmnElement=\"Flow_0i0zmgt\" id=\"Flow_0i0zmgt_di\"><omgdi:waypoint x=\"700\" y=\"782\"/><omgdi:waypoint x=\"700\" y=\"808\"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bpmnElement=\"Flow_0cf7sfi\" id=\"Flow_0cf7sfi_di\"><omgdi:waypoint x=\"700\" y=\"672\"/><omgdi:waypoint x=\"700\" y=\"698\"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bpmnElement=\"Flow_1m4jj08\" id=\"Flow_1m4jj08_di\"><omgdi:waypoint x=\"700\" y=\"422\"/><omgdi:waypoint x=\"700\" y=\"468\"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bpmnElement=\"Flow_00vaatr\" id=\"Flow_00vaatr_di\"><omgdi:waypoint x=\"700\" y=\"272\"/><omgdi:waypoint x=\"700\" y=\"338\"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bpmnElement=\"Flow_162tnn7\" id=\"Flow_162tnn7_di\"><omgdi:waypoint x=\"700\" y=\"117\"/><omgdi:waypoint x=\"700\" y=\"188\"/></bpmndi:BPMNEdge><bpmndi:BPMNEdge bpmnElement=\"Flow_1u0jgw1\" id=\"Flow_1u0jgw1_di\"><omgdi:waypoint x=\"700\" y=\"892\"/><omgdi:waypoint x=\"700\" y=\"918\"/><omgdi:waypoint x=\"694\" y=\"918\"/><omgdi:waypoint x=\"694\" y=\"944\"/></bpmndi:BPMNEdge><bpmndi:BPMNShape bpmnElement=\"StartEvent_155asxm\" id=\"StartEvent_155asxm_di\"><omgdc:Bounds height=\"52\" width=\"187.083\" x=\"600\" y=\"65\"/><bpmndi:BPMNLabel><omgdc:Bounds height=\"0\" width=\"90\" x=\"616\" y=\"100\"/></bpmndi:BPMNLabel></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"ServiceTask_1\" id=\"ServiceTask_1_di\"><omgdc:Bounds height=\"84\" width=\"196\" x=\"602\" y=\"188\"/></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"ScriptTask_4\" id=\"ScriptTask_4_di\"><omgdc:Bounds height=\"84\" width=\"196\" x=\"602\" y=\"338\"/></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"ScriptTask_5\" id=\"ScriptTask_5_di\"><omgdc:Bounds height=\"84\" width=\"196\" x=\"602\" y=\"588\"/></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"ScriptTask_6\" id=\"ScriptTask_6_di\"><omgdc:Bounds height=\"84\" width=\"196\" x=\"602\" y=\"698\"/></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"ServiceTask_7\" id=\"ServiceTask_7_di\"><omgdc:Bounds height=\"84\" width=\"196\" x=\"601.5\" y=\"467.5\"/></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"ScriptTask_8\" id=\"ScriptTask_8_di\"><omgdc:Bounds height=\"84\" width=\"196\" x=\"601.5\" y=\"807.5\"/></bpmndi:BPMNShape><bpmndi:BPMNShape bpmnElement=\"EndPoint_3\" id=\"EndPoint_3_di\"><omgdc:Bounds height=\"52\" width=\"132.15\" x=\"628\" y=\"944\"/></bpmndi:BPMNShape></bpmndi:BPMNPlane></bpmndi:BPMNDiagram></definitions>"
+    },
+    "create_date": 1682673556531,
+    "creator_principal": {
+      "display_name": "Admin User",
+      "id": 1,
+      "name": "admin@example.com",
+      "type": "user"
+    },
+    "deployment_id": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+    "description": {
+      "format": "text",
+      "content": "Schedule a rule/playbook to run in the future for a given incident"
+    },
+    "display_name": "test_resilient_sdk",
+    "export_key": "test_resilient_sdk",
+    "field_type_handle": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+    "fields_type": {
+      "actions": [],
+      "display_name": "test_resilient_sdk",
+      "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+      "fields": {
+        "schedule_is_playbook": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7/schedule_is_playbook",
+          "hide_notification": false,
+          "id": 816,
+          "input_type": "boolean",
+          "internal": false,
+          "is_tracked": false,
+          "name": "schedule_is_playbook",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "",
+          "prefix": null,
+          "read_only": false,
+          "required": "always",
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "Is Playbook",
+          "tooltip": "Yes - Playbook, No - Rule",
+          "type_id": 1044,
+          "uuid": "ab04da71-366c-4362-a918-52207f34efc1",
+          "values": []
+        },
+        "schedule_label_prefix": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7/schedule_label_prefix",
+          "hide_notification": false,
+          "id": 817,
+          "input_type": "text",
+          "internal": false,
+          "is_tracked": false,
+          "name": "schedule_label_prefix",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "",
+          "prefix": null,
+          "read_only": false,
+          "required": "always",
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "Schedule Label Prefix",
+          "tooltip": "name of schedule for future reference",
+          "type_id": 1044,
+          "uuid": "acfcc667-5781-423f-88a7-b70b480229ad",
+          "values": []
+        },
+        "schedule_rule_name": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7/schedule_rule_name",
+          "hide_notification": false,
+          "id": 818,
+          "input_type": "text",
+          "internal": false,
+          "is_tracked": false,
+          "name": "schedule_rule_name",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "",
+          "prefix": null,
+          "read_only": false,
+          "required": "always",
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "Schedule Rule Name",
+          "tooltip": "Name of Rule to schedule",
+          "type_id": 1044,
+          "uuid": "f1ee326f-bd1f-44a8-bd6b-91461ca201d7",
+          "values": []
+        },
+        "schedule_rule_parameters": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7/schedule_rule_parameters",
+          "hide_notification": false,
+          "id": 819,
+          "input_type": "text",
+          "internal": false,
+          "is_tracked": false,
+          "name": "schedule_rule_parameters",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "schedule_type=cron; schedule_value= * 5 * * *",
+          "prefix": null,
+          "read_only": false,
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "Schedule Rule Parameters",
+          "tooltip": "field1=value;field2=value format of optional rule parameters",
+          "type_id": 1044,
+          "uuid": "51a05941-e06f-4ff1-8f33-c876f43efc17",
+          "values": []
+        },
+        "schedule_type": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7/schedule_type",
+          "hide_notification": false,
+          "id": 820,
+          "input_type": "select",
+          "internal": false,
+          "is_tracked": false,
+          "name": "schedule_type",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "",
+          "prefix": null,
+          "read_only": false,
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "Schedule Type",
+          "tooltip": "",
+          "type_id": 1044,
+          "uuid": "6b5e8cd7-78c2-4acd-9b8a-a27bcac9cb0e",
+          "values": [
+            {
+              "default": false,
+              "enabled": true,
+              "hidden": false,
+              "label": "cron",
+              "properties": null,
+              "uuid": "7700f03e-af26-4379-b3f5-a8f4739f7605",
+              "value": 136
+            },
+            {
+              "default": false,
+              "enabled": true,
+              "hidden": false,
+              "label": "date",
+              "properties": null,
+              "uuid": "dc31d35b-9751-4f5e-a395-ce79d791582d",
+              "value": 137
+            },
+            {
+              "default": false,
+              "enabled": true,
+              "hidden": false,
+              "label": "delta",
+              "properties": null,
+              "uuid": "64097d31-caa8-48a5-b7af-db5a5740e44a",
+              "value": 138
+            },
+            {
+              "default": false,
+              "enabled": true,
+              "hidden": false,
+              "label": "interval",
+              "properties": null,
+              "uuid": "98bbe7c0-37d0-4350-bdcf-24867ab158ca",
+              "value": 139
+            }
+          ]
+        },
+        "schedule_type_value": {
+          "allow_default_value": false,
+          "blank_option": false,
+          "calculated": false,
+          "changeable": true,
+          "chosen": false,
+          "default_chosen_by_server": false,
+          "deprecated": false,
+          "export_key": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7/schedule_type_value",
+          "hide_notification": false,
+          "id": 821,
+          "input_type": "text",
+          "internal": false,
+          "is_tracked": false,
+          "name": "schedule_type_value",
+          "operation_perms": {},
+          "operations": [],
+          "placeholder": "cron (* 5 * * *); date (yyyy/mm/dd hh:mm:ss) ; interval (10m)",
+          "prefix": null,
+          "read_only": false,
+          "required": "always",
+          "rich_text": false,
+          "tags": [],
+          "templates": [],
+          "text": "Schedule Type Value",
+          "tooltip": "cron (* 5 * * *); date (yyyy/mm/dd hh:mm:ss) ; interval (10m)",
+          "type_id": 1044,
+          "uuid": "d51de07e-eaac-47cf-8bc8-e92276c1d879",
+          "values": []
+        }
+      },
+      "for_actions": false,
+      "for_custom_fields": false,
+      "for_notifications": false,
+      "for_workflows": false,
+      "id": null,
+      "parent_types": [
+        "__playbook"
+      ],
+      "properties": {
+        "can_create": false,
+        "can_destroy": false,
+        "for_who": []
+      },
+      "scripts": [],
+      "tags": [],
+      "type_id": 28,
+      "type_name": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+      "uuid": "945c6914-4efc-4ff3-b904-5c2ed885c89d"
+    },
+    "has_logical_errors": false,
+    "id": 42,
+    "is_deleted": false,
+    "is_locked": false,
+    "last_modified_principal": {
+      "display_name": "Admin User",
+      "id": 1,
+      "name": "admin@example.com",
+      "type": "user"
+    },
+    "last_modified_time": 1683119617190,
+    "local_scripts": [
+      {
+        "actions": [],
+        "created_date": 1682673556664,
+        "creator_id": "admin@example.com",
+        "description": "ASCII art : limestone",
+        "enabled": false,
+        "export_key": "limestone_script",
+        "id": 41,
+        "language": "python3",
+        "last_modified_by": "admin@example.com",
+        "last_modified_time": 1682673556673,
+        "name": "limestone_script",
+        "object_type": "incident",
+        "playbook_handle": "test_resilient_sdk",
+        "programmatic_name": "test_resilient_sdk_limestone_script",
+        "script_text": "'''\n  \\/________________        \n /     _____________)\n/     /     /   \\ |         \n\\/\\/\\/     (O) (O)|           \n  |           ------, \n  |  _       ______/ \n  | (_      /   \\  \\\n  |        /  ___\\_ \\       \n  |        \\      / / \n__|_________\\______/\n\\______________\\./__\\   \n /     .       | \\  |\n \\    /_\\   .  |  \\ |\\     \n |`\\       /_\\ |   \\| \\\n'''",
+        "tags": [],
+        "uuid": "8486e707-2ad9-48bb-b995-0cd81788dc2d"
+      },
+      {
+        "actions": [],
+        "created_date": 1682673556675,
+        "creator_id": "admin@example.com",
+        "description": "ASCII art : syl",
+        "enabled": false,
+        "export_key": "syl_script",
+        "id": 42,
+        "language": "python3",
+        "last_modified_by": "admin@example.com",
+        "last_modified_time": 1682673556684,
+        "name": "syl_script",
+        "object_type": "incident",
+        "playbook_handle": "test_resilient_sdk",
+        "programmatic_name": "test_resilient_sdk_syl_script",
+        "script_text": "'''\n               / ,\n          /\\  \\|/  /\\\n          |\\\\_;=._//|\n           \\.\"   \"./\n           //^\\ /^\\\\\n    .'``\",/ |0| |0| \\,\"``'.\n   /   ,  `'\\.---./'`  ,   \\\n  /`  /`\\,.\"(     )\".,/`\\  `\\\n  /`     ( '.'-.-'.' )     `\\\n  /\"`     \"._  :  _.\"     `\"\\\n   `/.'`\"=.,_``=``_,.=\"`'.\\`\n             )   (\n'''",
+        "tags": [],
+        "uuid": "9bcaae01-3521-4385-bee3-2c078e76d053"
+      }
+    ],
+    "manual_settings": {
+      "activation_conditions": {
+        "conditions": [],
+        "logic_type": "all"
+      },
+      "view_items": [
+        {
+          "content": "6b5e8cd7-78c2-4acd-9b8a-a27bcac9cb0e",
+          "element": "field_uuid",
+          "field_type": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        },
+        {
+          "content": "d51de07e-eaac-47cf-8bc8-e92276c1d879",
+          "element": "field_uuid",
+          "field_type": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        },
+        {
+          "content": "f1ee326f-bd1f-44a8-bd6b-91461ca201d7",
+          "element": "field_uuid",
+          "field_type": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        },
+        {
+          "content": "ab04da71-366c-4362-a918-52207f34efc1",
+          "element": "field_uuid",
+          "field_type": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        },
+        {
+          "content": "51a05941-e06f-4ff1-8f33-c876f43efc17",
+          "element": "field_uuid",
+          "field_type": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        },
+        {
+          "content": "acfcc667-5781-423f-88a7-b70b480229ad",
+          "element": "field_uuid",
+          "field_type": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+          "show_if": null,
+          "show_link_header": false,
+          "step_label": null
+        }
+      ]
+    },
+    "name": "test_resilient_sdk",
+    "object_type": "incident",
+    "status": "draft",
+    "tag": {
+      "display_name": "Playbook_f9bcb3b9-fe40-40e8-87eb-f761ed94a4a7",
+      "id": 44,
+      "name": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+      "type": "playbook",
+      "uuid": "83744eb7-bf95-4e2b-a0ca-c39c2f691a58"
+    },
+    "tags": [],
+    "type": "default",
+    "uuid": "f9bcb3b9-fe40-40e8-87eb-f761ed94a4a7",
+    "version": 13
+  }],
   "regulators" : null,
   "roles" : [ {
     "description" : "Manage all incidents and run simulations.",
@@ -42097,6 +42684,68 @@
     "script_text" : "import json\n\ndef test_results():\n    # is object non null\n    if not results:\n        helper.fail(\"results object is None\")\n    # does object contain the success property\n    if not isinstance(results.get('success', None), bool):\n      helper.fail(\"results.success not found or not bool\")\n     # does the object have a content property\n    if not isinstance(results.get('content', None), (str, dict, list)):\n      helper.fail(\"results.content not found or not string, dict or list\")\n    # if success if False, is there a reason\n    if not results.success and not results.reason:\n      helper.fail(\"results.success = False and missing results.reason\")\n    # is the content json string encoded (BAD)\n    if isinstance(results.content, str):\n      try:\n        json.loads(results.content)\n        helper.fail(\"results.content appears to be string encoded json. Return json instead\")\n      except Exception:\n        pass\n    # does the content return the api content or the python requests response object (bad)\n    if isinstance(results.content, bool) and results.content.get('apparent_encoding'):\n        helper.fail(\"request response object returned. Return response.json() or response.text instead\")\n\n\nresults = workflow.properties.test_results\ntest_results()\n\n# return the results in a note for review\ncontent = json.dumps(results.content, indent=3) if isinstance(results.content, bool) else results.content\nnote = \"success: {}\\nreason: {}\\ncontent type: {}\\ncontent: {}\".format(results.success, results.reason, type(results.content), content)\nincident.addNote(helper.createPlainText(note))\nnote1= workflow.properties.name\nincident.addNote(helper.createPlainText(note1))",
     "tags" : [ ],
     "uuid" : "4751e689-4f49-45e0-8f72-041b622440b8"
+  }, {
+    "actions": [],
+    "created_date": 1681819042470,
+    "creator_id": "admin@example.com",
+    "description": "Write out scheduled job information to a datatable",
+    "enabled": false,
+    "export_key": "Write scheduled job to DataTable",
+    "id": 29,
+    "language": "python3",
+    "last_modified_by": "admin@example.com",
+    "last_modified_time": 1681819042473,
+    "name": "Write scheduled job to DataTable",
+    "object_type": "incident",
+    "playbook_handle": null,
+    "programmatic_name": "write_scheduled_job_to_datatable",
+    "script_text": "from datetime import datetime\n\nresults = playbook.functions.results.output_scheduled_rule_create\nnow = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\") # '2023-03-24 11:28:34'\nTYPE_LOOKUP = {\n  0: 'Incident',\n  1: \"Task\",\n  4: \"Artifact\",\n  5: \"Attachment\"}\n\nif results.get(\"success\"):\n  job = results.get(\"content\")\n  row = incident.addRow(\"scheduler_rules\")\n  row['reported_on'] = now\n  row['schedule_label'] = job['id']\n  row['schedule_type'] = job['type']\n  row['incident_id'] = job['args'][0]\n  row['schedule'] = job['value']\n  row['status'] = 'Active'\n  row['next_run_time'] = job['next_run_time']\n  row['rule_type'] = TYPE_LOOKUP.get(job['args'][6], \"Datatable\")\n  if job['args'][8]:\n    row['rule'] = \"<a href='#playbooks/designer/{}'>{}</a>\".format(job['args'][5], job['args'][4])\n  else:\n    row['rule'] = \"<a href='#customize?tab=actions&id={}'>{}</a>\".format(job['args'][5], job['args'][4])\nelse:\n  incident.addNote(\"Schedule a Rule/Playbook failed: {}\".format(result.get(\"reason\")))",
+    "tags": [
+      {
+        "tag_handle": "playbook_1881ad3e_e539_47e1_b6e5_6f1c84df0864",
+        "value": "Playbook Tag"
+      },
+      {
+        "tag_handle": "playbook_2405a12b_1f53_4ebf_b87e_d2f91866635a",
+        "value": "Playbook Tag"
+      },
+      {
+        "tag_handle": "playbook_a486c165_85d1_4d15_ac7a_e6b8352efc05",
+        "value": "Playbook Tag"
+      },
+      {
+        "tag_handle": "playbook_cb82c8f1_c294_4a01_8a3a_12e581bca983",
+        "value": "Playbook Tag"
+      },
+      {
+        "tag_handle": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+        "value": "Playbook Tag"
+      }
+    ],
+    "uuid": "38d9b9df-35c7-48ec-adec-8a082f5be517"
+  }, {
+    "actions": [],
+    "created_date": 1682519277706,
+    "creator_id": "admin@example.com",
+    "description": "",
+    "enabled": false,
+    "export_key": "workflow_sample_global_Script",
+    "id": 39,
+    "language": "python3",
+    "last_modified_by": "admin@example.com",
+    "last_modified_time": 1682519277709,
+    "name": "workflow_sample_global_Script",
+    "object_type": "incident",
+    "playbook_handle": null,
+    "programmatic_name": "workflow_sample_global_script",
+    "script_text": "'''\n  \\/________________        \n /     _____________)\n/     /     /   \\ |         \n\\/\\/\\/     (O) (O)|           \n  |           ------, \n  |  _       ______/ \n  | (_      /   \\  \\\n  |        /  ___\\_ \\       \n  |        \\      / / \n__|_________\\______/\n\\______________\\./__\\   \n /     .       | \\  |\n \\    /_\\   .  |  \\ |\\     \n |`\\       /_\\ |   \\| \\\n'''",
+    "tags": [
+      {
+        "tag_handle": "playbook_f9bcb3b9_fe40_40e8_87eb_f761ed94a4a7",
+        "value": "Playbook Tag"
+      }
+    ],
+    "uuid": "c423148c-c842-43e6-ae32-bb763f72cecf"
   } ],
   "server_version" : {
     "build_number" : 7888,

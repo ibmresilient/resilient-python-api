@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """
 Shared pytest fixtures
@@ -30,7 +30,7 @@ from tests.shared_mock_data import mock_paths
 
 def _mk_temp_dir():
     if os.path.exists(mock_paths.TEST_TEMP_DIR):
-        shutil.rmtree(mock_paths.TEST_TEMP_DIR)
+        shutil.rmtree(mock_paths.TEST_TEMP_DIR, ignore_errors=True)
 
     os.makedirs(mock_paths.TEST_TEMP_DIR)
 

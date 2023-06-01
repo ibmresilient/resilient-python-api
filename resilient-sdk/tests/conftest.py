@@ -403,6 +403,20 @@ def fx_cmd_line_args_init():
 
     sys.argv = original_cmd_line
 
+
+@pytest.fixture
+def fx_reset_argv():
+    """
+    Before: Takes a copy of sys.argv and allows functions to add args to it
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
 @pytest.fixture
 def fx_mock_settings_file_path():
     """

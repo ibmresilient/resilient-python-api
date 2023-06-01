@@ -398,6 +398,62 @@ class SOARCommon():
             LOG.error(str(err))
             raise_from(IntegrationError("update_soar_case failed to update case in SOAR"), err)
 
+    def update_soar_cases(self, payload):
+        """
+        Update mulitple IBM SOAR cases (usually from a rendered Jinja template).
+
+        **Example:**
+
+        .. code-block:: python
+
+            payload = {
+                "patches": {
+                    "incidentID1": {
+                        "changes": [
+                            {
+                                "field": {"name": "incident_field_name"},
+                                "old_value": {"field_type": "current_value"},
+                                "new_value": {"field_type": "new_value"}
+                            },
+                            {
+                                "field": {"name": "incident_field_name"},
+                                "old_value": {"id": 1},
+                                "new_value": {"id": 2}
+                            }
+                        ],
+                        "version": 12345 #Current version + 1
+                    },
+                    "2315": {
+                        "changes": [
+                            {
+                                "field": {"name": "start_date"},
+                                "old_value": {"date": None},
+                                "new_value": {"date": 1681753245000}
+                            },
+                            {
+                                "field": {"name": "zip"},
+                                "old_value": {"text": None},
+                                "new_value": {"text": "14294"}
+                            }
+                        ],
+                        "version": 14
+                    }
+                }
+            }
+
+        :param payload: Dictionary that contains changes to make to SOAR cases
+        :type payload: dict
+        :return: Dictionary of failures if any occur
+        :rtype: dict
+        """
+        try:
+            result = self.rest_client.put("/incidents/patch", payload)
+        except Exception as err:
+            LOG.error(str(err))
+            raise_from(IntegrationError("update_soar_cases failed to update cases in SOAR"), err)
+
+        return result
+
     def create_case_comment(self, case_id, note, entity_comment_id=None, entity_comment_header=None):
         """
         Add a comment to the specified SOAR case by ID.
@@ -602,6 +658,29 @@ class SOARCommon():
         # filter entity comments with our SOAR header
         return self._filter_comments(soar_comment_list, entity_comments, filter_soar_header=soar_header)
 
+    def get_case_tasks(self, case_id, want_layouts=False, want_notes=False, handle_format="names"):
+        """
+        Get all the tasks from a SOAR case
+
+        :param case_id: IBM SOAR case id
+        :type case_id: str|int
+        :param want_layouts: If the task layout should be returned. Default is False.
+        :type want_layouts: bool
+        :param want_notes: If the task notes should be returned. Default is False.
+        :type want_notes: bool
+        :param handle_format: The format to return can be names, ids, or objects. Default is names.
+        :type handle_format: str
+        :return: A list of all the tasks for the given SOAR case
+        :rtype: list
+        """
+        uri = "/incidents/{}/tasks?want_layouts={}&want_notes={}&handle_format={}".format(case_id, want_layouts, want_notes, handle_format)
+        try:
+            tasks = self.rest_client.get(uri=uri)
+        except Exception as err:
+            LOG.error(str(err))
+            raise_from(IntegrationError("get_case_tasks failed to get SOAR case tasks"), err)
+
+        return tasks
 
 @cached(cache=LRUCache(maxsize=100))
 def eval_mapping(eval_value, wrapper=None):

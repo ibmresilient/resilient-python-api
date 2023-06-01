@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Implementation of AppFunctionComponent"""
 
 import logging
 import threading
 from collections import namedtuple
-from resilient_circuits import ResilientComponent, handler, StatusMessage
-from resilient_lib import RequestsCommon, validate_fields
+
+from resilient_circuits import (ResilientComponent, StatusMessage, constants,
+                                handler)
+from resilient_circuits.app_argument_parser import AppArgumentParser
+from resilient_lib import (RequestsCommon, RequestsCommonWithoutSession,
+                           str_to_bool, validate_fields)
 
 
 class AppFunctionComponent(ResilientComponent):
@@ -60,11 +64,20 @@ class AppFunctionComponent(ResilientComponent):
         # This variable also is used to get the app.configs
         self.options = self._app_configs_as_dict
 
-        # Instansiate RequestsCommon with dictionary of _app_configs_as_dict
-        self.rc = RequestsCommon(opts=opts, function_opts=self._app_configs_as_dict)
+        # Instantiate RequestsCommon with dictionary of _app_configs_as_dict
+        if str_to_bool(opts.get(constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS, AppArgumentParser.DEFAULT_RC_USE_PERSISTENT_SESSIONS)):
+            requests_common_type = RequestsCommon
+        else:
+            requests_common_type = RequestsCommonWithoutSession
 
-        # Convert _app_configs_as_dict to namedtuple
-        self.app_configs = namedtuple("app_configs", self._app_configs_as_dict.keys())(*self._app_configs_as_dict.values())
+        self.rc = requests_common_type(opts=opts, function_opts=self._app_configs_as_dict)
+
+        # NOTE: self.app_configs used to be a namedtuple.
+        # Since v49 this is no longer a namedtuple.
+        # It behaves the same way that a namedtuple would, but
+        # instead is a resilient.app_config.AppConfig object.
+        # This allows for pluggable PAM connectors/plugins
+        self.app_configs = self._app_configs_as_dict
 
         self._local_storage = threading.local()
 

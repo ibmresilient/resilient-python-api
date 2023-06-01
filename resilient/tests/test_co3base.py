@@ -10,7 +10,7 @@ import sys
 import pytest
 from mock import patch
 from resilient import constants
-from resilient.co3base import BasicHTTPException
+from resilient.co3base import RetryHTTPException, BasicHTTPException
 
 from tests import helpers
 from tests.shared_mock_data import mock_paths
@@ -57,12 +57,11 @@ def test_set_api_key_retry(fx_base_client, caplog):
     mock_uri = "{0}/rest/session".format(base_client.base_url)
     requests_adapter.register_uri('GET', mock_uri, status_code=300)
 
-    with pytest.raises(BasicHTTPException):
-        with patch("resilient.co3base.requests.Session.get") as mock_session_get:
-            base_client.set_api_key("123", "456")
+    with pytest.raises(RetryHTTPException):
+        base_client.set_api_key("123", "456")
 
     assert "retrying in 1 seconds" in caplog.text
-    assert mock_session_get.call_count == base_client.max_connection_retries
+    assert len(requests_adapter.request_history) == base_client.max_connection_retries
 
 
 def test_extract_org_id_cloud_account(fx_base_client):
@@ -161,12 +160,11 @@ def test_connect_retry(fx_base_client, caplog):
     mock_uri = "{0}/rest/session".format(base_client.base_url)
     requests_adapter.register_uri("POST", mock_uri, status_code=300)
 
-    with pytest.raises(BasicHTTPException):
-        with patch("resilient.co3base.requests.Session.post") as mock_session_get:
-            base_client._connect()
+    with pytest.raises(RetryHTTPException):
+        base_client._connect()
 
     assert "retrying in 1 seconds" in caplog.text
-    assert mock_session_get.call_count == base_client.max_connection_retries
+    assert len(requests_adapter.request_history) == base_client.max_connection_retries
 
 
 def test_get(fx_base_client):
@@ -193,10 +191,25 @@ def test_get_retry(fx_base_client, caplog):
     mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
     requests_adapter.register_uri('GET', mock_uri, status_code=300)
 
-    with pytest.raises(BasicHTTPException, match=r"Response Code: 300"):
+    with pytest.raises(RetryHTTPException, match=r"Response Code: 300"):
         base_client.get("/incidents/1001")
 
     assert "retrying in 1 seconds" in caplog.text
+
+def test_get_retry_skip(fx_base_client, caplog):
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    base_client.request_max_retries = 2
+    base_client.request_retry_backoff = 1
+    base_client.request_retry_delay = 1
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
+    requests_adapter.register_uri('GET', mock_uri, status_code=404)
+
+    with pytest.raises(BasicHTTPException, match=r"Response Code: 404"):
+        base_client.get("/incidents/1001", skip_retry=[404])
+
 
 
 def test_get_const(fx_base_client):
@@ -235,11 +248,32 @@ def test_post_retry(fx_base_client, caplog):
     mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
     requests_adapter.register_uri('POST', mock_uri, status_code=300)
 
-    with pytest.raises(BasicHTTPException, match=r"Response Code: 300"):
+    with pytest.raises(RetryHTTPException, match=r"Response Code: 300"):
         base_client.post("/incidents/1001", {"incident_name": "Mock Incident"})
 
     assert "retrying in 1 seconds" in caplog.text
 
+    # test skip which isn't part of the list
+    with pytest.raises(RetryHTTPException, match=r"Response Code: 300"):
+        base_client.post("/incidents/1001", {"incident_name": "Mock Incident"}, skip_retry=404)
+
+def test_post_retry_skip(fx_base_client, caplog):
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    base_client.request_max_retries = 2
+    base_client.request_retry_backoff = 1
+    base_client.request_retry_delay = 1
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
+    requests_adapter.register_uri('POST', mock_uri, status_code=404)
+
+    with pytest.raises(BasicHTTPException, match=r"Response Code: 404"):
+        base_client.post("/incidents/1001", {"incident_name": "Mock Incident"}, skip_retry=[404, 410])
+
+    # single value
+    with pytest.raises(BasicHTTPException, match=r"Response Code: 404"):
+        base_client.post("/incidents/1001", {"incident_name": "Mock Incident"}, skip_retry=404)
 
 def test_client_has_base_headers(fx_base_client):
     base_client = fx_base_client[0]
@@ -507,7 +541,7 @@ def test_post_attachment_bytes_handle_retry(fx_base_client, caplog):
     temp_file_name = "mock_attachment.txt"
     bytes_handle = io.BytesIO(b"these are mock bytes")
 
-    with pytest.raises(BasicHTTPException, match=r"Response Code: 300"):
+    with pytest.raises(RetryHTTPException, match=r"Response Code: 300"):
         base_client.post_attachment(
             uri=uri,
             filepath=None,
@@ -554,7 +588,7 @@ def test_delete_retry(fx_base_client, caplog):
     mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
     requests_adapter.register_uri('DELETE', mock_uri, status_code=300)
 
-    with pytest.raises(BasicHTTPException, match=r"Response Code: 300"):
+    with pytest.raises(RetryHTTPException, match=r"Response Code: 300"):
         base_client.delete("/incidents/1001")
 
     assert "retrying in 1 seconds" in caplog.text

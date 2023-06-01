@@ -42,12 +42,17 @@ DEFAULT_INCIDENT_FIELD = {
     "uuid": str(DEFAULT_INCIDENT_FIELD_UUID)
 }
 
+# Used to determine if a script is local or global in a playbook (codegen)
+SCRIPT_TYPE_MAP = {
+    "local"  : "Local script",
+    "global" : "Global script"
+}
+
 # Default field names we should ignore (mainly in docgen)
 IGNORED_INCIDENT_FIELDS = [
     u"incident/internal_customizations_field",
     u"incident/inc_training"
 ]
-
 
 class ResilientObjMap(object):
     """
@@ -93,3 +98,19 @@ class ResilientFieldTypes(object):
 
     ACTIVITY_FIELD = "actioninvocation"
     FUNCTION_INPUT = "__function"
+
+
+MD_FILE_PROPERTIES = {
+    "workflows" : {
+        "prefix_pattern"  : r"^wf_",
+        "obj_file_name"   : u"wf_{0}.md",
+        "ResilientObj"    : ResilientObjMap.WORKFLOWS,
+        "jinja_file_path" : "data/workflow.md.jinja2",
+    },
+    "playbooks" : {
+        "prefix_pattern"  : r"^pb_",
+        "obj_file_name"   : u"pb_{0}.md",
+        "ResilientObj"    : ResilientObjMap.PLAYBOOKS,
+        "jinja_file_path" : "data/playbook.md.jinja2",
+    }
+}
