@@ -30,11 +30,14 @@ def test_protected_secrets_manager(fx_write_protected_secrets, fx_reset_environm
 
 def test_protected_secrets_manager_PY27(fx_reset_environmental_variables):
     os.environ["UNPROTECTED_API_KEY"] = "passw0rd"
+    os.environ["UNPROTECTED_SECRET_WITH_BRACKETS"] = "A[xyz)e}K,/MabS1}:NbJ$("
     psm = ProtectedSecretsManager()
 
     key = psm.get("$UNPROTECTED_API_KEY")
+    key2 = psm.get("$UNPROTECTED_SECRET_WITH_BRACKETS")
 
     assert key == "passw0rd"
+    assert key2 == "A[xyz)e}K,/MabS1}:NbJ$("
 
 def test_app_config_manager_no_plugin():
     original_dict = {
@@ -129,6 +132,21 @@ def test_replace_secret_in_config_pam_plugin(item, prefix, expected):
     replaced = AppConfigManager.replace_secret_in_config(item, manager, prefix)
 
     assert replaced == expected
+
+@pytest.mark.parametrize("item, prefix, secret, expected", [
+    ("$SECRET", "$", "A[xyz)e}K,/MabS1}:NbJ$(}$", "A[xyz)e}K,/MabS1}:NbJ$(}$"),
+    ("${SECRET}${SECRET_2}", "${", "A[xyz)e}K,/MabS1}:NbJ$(}${", "A[xyz)e}K,/MabS1}:NbJ$(}${2")
+])
+def test_replace_secret_in_config_protected_secret_env_only(item, prefix, secret, expected, fx_reset_environmental_variables, caplog):
+    manager = ProtectedSecretsManager()
+    os.environ["SECRET"] = secret
+    os.environ["SECRET_2"] = "2"
+
+    replaced = AppConfigManager.replace_secret_in_config(item, manager, prefix)
+
+    assert replaced == expected
+    assert "Failed to find" not in caplog.text
+
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_replace_secret_in_config_protected_secret(fx_write_protected_secrets, fx_reset_environmental_variables):
