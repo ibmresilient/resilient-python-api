@@ -259,7 +259,8 @@ class AppConfigManager(ConfigDict):
             item = u"{0}{1}{2}".format(item[0:start], secret_value, item[end+1:])
 
             # restart the search from the one beyond where we just subbed in the found value
-            start = item.index(secret_prefix, start+len(secret_value)) if secret_prefix in item[start+len(secret_value):] else len(item)
+            length_secret = len(secret_value) if secret_value else 0
+            start = item.index(secret_prefix, start+length_secret) if secret_prefix in item[start+length_secret:] else len(item)
         return item
 
 
