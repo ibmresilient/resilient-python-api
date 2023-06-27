@@ -241,7 +241,7 @@ class AppConfigManager(ConfigDict):
         # loop through any prefixed values in the item and substitute them
         # the loop here is required for multiple values in a line
         while start < len(item):
-            end = item.index("}", start) if "}" in item else len(item)
+            end = item.index("}", start) if "}" in item[start:] else len(item)
             prefixed_item = item[start:end+1]
             unprefixed_item = prefixed_item.replace(secret_prefix, "").replace("}", "")
             secret_value = secret_manager.get(unprefixed_item, prefixed_item)
@@ -259,7 +259,8 @@ class AppConfigManager(ConfigDict):
             item = u"{0}{1}{2}".format(item[0:start], secret_value, item[end+1:])
 
             # restart the search from the one beyond where we just subbed in the found value
-            start = item.index(secret_prefix, start+1) if secret_prefix in item[start+1:] else len(item)
+            length_secret = len(secret_value) if secret_value else 0
+            start = item.index(secret_prefix, start+length_secret) if secret_prefix in item[start+length_secret:] else len(item)
         return item
 
 
