@@ -296,6 +296,8 @@ class BaseClient(object):
         Raises:
           RetryHTTPException - if an HTTP exception occurs.
         """
+        LOG.warning("Authenticating to SOAR with email and password is now deprecated and will be removed in a future version. " +
+                    "Please migrate to using SOAR API Keys as soon as possible.")
         self.authdata = {
             u'email': ensure_unicode(email),
             u'password': ensure_unicode(password)
