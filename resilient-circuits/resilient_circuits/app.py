@@ -97,7 +97,7 @@ class App(Component):
                         "api key settings.")
         LOG.info("Resilient org: %s", self.opts.get("org"))
         LOG.info("Logging Level: %s", self.opts.get("loglevel"))
-        LOG.info("App Config plugin: %s", self.opts.pam_plugin.__class__.__name__)
+        LOG.info("App Config plugin: %s", self.opts.pam_plugin.__class__.__name__ if self.opts.pam_plugin else "None")
         if self.opts.get("test_actions", False):
             # Make all components aware that we are in test mode
             ResilientComponent.test_mode = True

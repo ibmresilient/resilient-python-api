@@ -69,7 +69,7 @@ def check_pam_plugin_selftest(app_configs):
     """
     LOG.info("{0}Testing PAM Plugin details{0}".format(constants.LOG_DIVIDER))
 
-    if not app_configs or not hasattr(app_configs, "pam_plugin"):
+    if not app_configs or not hasattr(app_configs, "pam_plugin") or not app_configs.pam_plugin:
         LOG.info("{0}No Plugin specified. Skipping test{0}".format(constants.LOG_DIVIDER))
         return
 
