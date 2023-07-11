@@ -26,7 +26,7 @@ sync_branch() {
     target_branch=$2
 
     print_msg "Syncing INTERNAL '$source_branch' branch with PUBLIC '$target_branch' branch"
-    git clone --branch=$source_branch git@github.ibm.com:Resilient/resilient-python-api.git "$source_branch-dir"
+    git clone --branch=$source_branch "https://$GITHUB_AUTH_TOKEN@github.ibm.com:/Resilient/resilient-python-api.git" "$source_branch-dir"
     cd "$source_branch-dir"
     git checkout $source_branch
     git fetch && git pull
