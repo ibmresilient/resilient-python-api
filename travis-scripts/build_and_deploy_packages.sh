@@ -5,7 +5,7 @@ cd $TRAVIS_BUILD_DIR
 paths_all_dists=()
 
 readonly package_names=(
-    "resilient-app-config-plugins"
+    # "resilient-app-config-plugins" # uncomment if there are app-config-plugin updates to release
     "resilient"
     "resilient-lib"
     "resilient-circuits"
