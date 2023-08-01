@@ -251,7 +251,7 @@ class AppConfigManager(ConfigDict):
             # user that their value wasn't found
             if secret_value == prefixed_item:
                 manager_type_str = "PAM Plugin" if isinstance(secret_manager, PAMPluginInterface) else "Protected Secrets"
-                LOG.warning("Failed to find '%s' in %s. To properly deploy your app, please make sure '%s' is correctly configured",
+                LOG.debug("Failed to find '%s' in %s. To properly deploy your app, please make sure '%s' is correctly configured",
                           prefixed_item, manager_type_str, prefixed_item)
             else:
                 LOG.debug("Substituting value for '%s' in %s", prefixed_item, original_item)
@@ -262,5 +262,3 @@ class AppConfigManager(ConfigDict):
             length_secret = len(secret_value) if secret_value else 0
             start = item.index(secret_prefix, start+length_secret) if secret_prefix in item[start+length_secret:] else len(item)
         return item
-
-
