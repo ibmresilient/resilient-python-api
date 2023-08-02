@@ -239,7 +239,7 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     package_path = os.path.join(output_path, args.package)
     compare_playbooks_md_file(package_name, package_path)
     
-    constants.CURRENT_SOAR_SERVER_VERSION = 39.0 # resetting SOAR server version back to 39.0
+    constants.CURRENT_SOAR_SERVER_VERSION = None
 
 
 def test_run_tests_with_settings_file(fx_get_sub_parser, fx_mk_temp_dir, fx_mock_res_client, fx_cmd_line_args_codegen_package):

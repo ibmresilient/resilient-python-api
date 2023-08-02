@@ -7,7 +7,7 @@ import sys
 
 from resilient_sdk.cmds import CmdDocgen, base_cmd
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util import sdk_helpers, constants
 from tests.shared_mock_data import mock_paths
 
 
@@ -60,14 +60,39 @@ def test_get_function_details():
 
     functions = import_def_data.get("functions")
     workflows = import_def_data.get("workflows")
+    playbooks = import_def_data.get("playbooks")
+    scripts = import_def_data.get("scripts")
 
-    function_details = CmdDocgen._get_function_details(functions, workflows)
+    function_details = CmdDocgen._get_function_details(import_def_data)
     the_function = function_details[0]
 
     assert the_function.get("name") == u"mock function  ล ฦ ว ศ ษ ส ห ฬ อ two"
     assert the_function.get("pre_processing_script") in u"""# mock pre script of function  ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ two:\n\ninputs.mock_input_boolean = False\ninputs.mock_input_number = 1001\ninputs.mock_input_text = u" ล ฦ ว ศ ษ ส ห ฬ อ ล ฦ ว ศ ษ ส ห ฬ อ ramdom text" """
     assert the_function.get("post_processing_script") is None
 
+def test_get_function_details_w_playbook():
+    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+
+    import_definition = package_helpers.get_import_definition_from_local_export_res(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
+
+    import_def_data = sdk_helpers.get_from_export(import_definition,
+                                                  functions=["fn_test_dynamic_input"],
+                                                  playbooks=["fn_test_dynamic_input"],
+                                                  scripts=["handle output for playbook readme"])
+
+    functions = import_def_data.get("functions")
+    workflows = import_def_data.get("workflows")
+    playbooks = import_def_data.get("playbooks")
+    scripts = import_def_data.get("scripts")
+
+    function_details = CmdDocgen._get_function_details(import_def_data)
+    the_function = function_details[0]
+
+    assert the_function.get("name") == u"fn_test_dynamic_input"
+    assert the_function.get("pre_processing_script") == '"""pre script\n"""' 
+    assert the_function.get("post_processing_script") == u"""a_variable = \"a string\"\nb_variable = \"b string\"\nc_variable = 12345\n# d_variable = playbook.functions.results.output\nd_variable = playbook.functions.results.output2\no = \"output\""""
+
+    constants.CURRENT_SOAR_SERVER_VERSION = None # setting SOAR server version to 46.0
 
 def test_get_script_details():
     import_definition = package_helpers.get_import_definition_from_customize_py(mock_paths.MOCK_CUSTOMIZE_PY)

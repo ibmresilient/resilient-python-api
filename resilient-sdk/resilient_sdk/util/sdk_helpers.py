@@ -555,7 +555,7 @@ def get_object_api_names(api_name, list_objs):
         return []
 
 
-def _get_script_info(each_script_in_playbook, scripts_in_location, script_type):
+def get_script_info(each_script_in_playbook, scripts_in_location, script_type):
     '''
     Extracts script related information for playbooks. Scripts can be of 2 types: local or global.
     Local scripts live within the playbook itself, while global scripts are stored in the global_export dict.
@@ -846,10 +846,10 @@ def get_from_export(export,
                 # if not, the script's information has to be extracted from the global scripts
                 for pb_sc in pb_objects.get("scripts", []):
                     # If the script is a local script, then we need to find the script in the Playbook
-                    found_script = _get_script_info(pb_sc, playbook.get("local_scripts"), SCRIPT_TYPE_MAP.get("local"))
+                    found_script = get_script_info(pb_sc, playbook.get("local_scripts"), SCRIPT_TYPE_MAP.get("local"))
 
                     # If script not found in playbook, searching Global Scripts
-                    found_script = _get_script_info(pb_sc, return_dict["scripts"], SCRIPT_TYPE_MAP.get("global")) if not found_script else True
+                    found_script = get_script_info(pb_sc, return_dict["scripts"], SCRIPT_TYPE_MAP.get("global")) if not found_script else True
 
                     # If the script is not found in the Playbook or Global Scripts, then its UUID is used to find the script form the org export
                     if not found_script:
@@ -857,7 +857,7 @@ def get_from_export(export,
                         for script in _unfound_scripts:
                             # Renaming the x_api_name to name. Since the script was fetched with UUID, the x_api_name is the UUID
                             script["x_api_name"] = script["name"]
-                        found_script = _get_script_info(pb_sc, _unfound_scripts, SCRIPT_TYPE_MAP.get("global"))
+                        found_script = get_script_info(pb_sc, _unfound_scripts, SCRIPT_TYPE_MAP.get("global"))
                         # Adding script to return_dict. This is to make sure that its included in the export.res and customize.py
                         return_dict["scripts"].extend(_unfound_scripts)
 
