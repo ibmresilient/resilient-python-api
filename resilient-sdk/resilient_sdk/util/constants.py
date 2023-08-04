@@ -113,6 +113,8 @@ ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 # resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
+SALT_HASH_MAP = {"0": ")","1": "!","2": "@","3": "#","4": "$","5": "%","6": "^","7": "&","8": "*","9": "("}
+DOCGEN_SALT_PREFIX = "docgen_{0}_salt"
 
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
