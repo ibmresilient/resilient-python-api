@@ -6,9 +6,9 @@
 
 import logging
 import os
+import re
 import shutil
 
-from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
@@ -16,6 +16,8 @@ from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.resilient_objects import (IGNORED_INCIDENT_FIELDS,
                                                   ResilientObjMap)
 from resilient_sdk.util.sdk_exception import SDKException
+
+from resilient import ensure_unicode
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -81,12 +83,24 @@ class CmdDocgen(BaseCmd):
         return fn_inputs
 
     @classmethod
-    def _get_function_details(cls, functions, workflows):
-        """Return a List of Functions which are Dictionaries with
+    def _get_function_details(cls, export):
+        """
+        Return a List of Functions which are Dictionaries with
         the attributes: name, simple_name, anchor, description, uuid, inputs,
-        workflows, pre_processing_script, post_processing_script"""
+        workflows, pre_processing_script, post_processing_script.
+
+        The scripts are looked for first in playbooks as since v50
+        that is the preferred way for apps to use functions now.
+        If playbook scripts associated with the function are not found,
+        they are searched for in workflows.
+        """
 
         return_list = []
+
+        functions = export.get("functions")
+        workflows = export.get("workflows")
+        playbooks = export.get("playbooks")
+        scripts = export.get("scripts")
 
         for fn in functions:
             the_function = {}
@@ -101,49 +115,137 @@ class CmdDocgen(BaseCmd):
             the_function["workflows"] = fn.get("workflows", [])
             the_function["x_api_name"] = fn.get("x_api_name", "")
 
-            scripts_found = False
-            pre_script = None
-            post_script = None
+            # look for pre/post scripts in playbooks first
+            pre_script, post_script = cls._get_pre_and_post_processing_scripts_from_playbooks(the_function, playbooks, scripts, export)
+            # if not found in playbooks, then look in workflows
+            if not pre_script and not post_script:
+                pre_script, post_script = cls._get_pre_and_post_processing_scripts_from_workflows(the_function, workflows)
 
-            # Loop the Function's associated Workflows
-            for fn_wf in the_function.get("workflows"):
-
-                fn_wf_name = fn_wf.get(ResilientObjMap.WORKFLOWS)
-
-                # Loop all Workflow Objects
-                for wf in workflows:
-
-                    # Find a match
-                    if fn_wf_name == wf.get(ResilientObjMap.WORKFLOWS):
-
-                        # Get List of Function details from Workflow XML
-                        workflow_functions = sdk_helpers.get_workflow_functions(wf, the_function.get("uuid"))
-
-                        # Get a valid pre and post process script, then break
-                        for a_fn in workflow_functions:
-
-                            if not pre_script:
-                                pre_script = a_fn.get("pre_processing_script")
-
-                            if not post_script:
-                                post_script = a_fn.get("post_processing_script")
-
-                            if pre_script and post_script:
-                                scripts_found = True
-                                break
-
-                    if scripts_found:
-                        break
-
-                if scripts_found:
-                    break
-
+            # save the scripts for jinja to use later
             the_function["pre_processing_script"] = pre_script
             the_function["post_processing_script"] = post_script
 
             return_list.append(the_function)
 
         return return_list
+
+    @staticmethod
+    def _get_pre_and_post_processing_scripts_from_playbooks(the_function, playbooks, scripts, export):
+        """
+        Look through all playbooks in the export, searching for any that
+        use the function in question. If any do, if the function instance
+        uses a pre-processing script, use that as the pre-processing script.
+        If any scripts in the playbook reference the output of the function
+        in their script (we do a very specific search which looks for Python
+        code (not comments) that reference the specific string 
+        ``playbook.functions.results.<output_name>``), then use that script
+        as an example post-processing script. If none are found in local
+        scripts, search the global scripts of the export
+
+        :param the_function: the function in question for which we want example scripts
+        :type the_function: dict
+        :param playbooks: list of playbooks in the export
+        :type playbooks: list[dict]
+        :param playbooks: list of global scripts in the export
+        :type playbooks: list[dict]
+        :return: pre and post processing scripts as text
+        :rtype: tuple(str, str)
+        """
+        pre_script, post_script = None, None
+
+        for playbook in playbooks:
+            # This gets all the functions and scripts in the Playbooks's XML
+            pb_objects = sdk_helpers.get_playbook_objects(playbook)
+
+            # loop through the playbook to find its functions
+            for pb_fn in pb_objects.get("functions", []):
+                # the best proxy we have for "post processing" script is
+                # if the output name of the function is used in the script's
+                # code. we check for that there and if so, we've found a
+                # "post processing" script
+
+                # This regex searches for Python code instances of the 
+                # output. It is relatively robust and will not match commented code
+                # nor non-exact matches
+                # For examples on this regex, see: https://regex101.com/r/Fv5AQm
+                regex_str = r"^(?!#).*playbook\.functions\.results\.{0}\b.*".format(pb_fn.get("result_name"))
+                regex_compiled = re.compile(regex_str, re.MULTILINE)
+
+
+                # if the pb_fn matches our goal fn:
+                if pb_fn.get("uuid", "uuid_not_found_pb") == the_function.get("uuid", "uuid_not_found_fn"):
+                    if not pre_script: # use the first pre-script found
+                        pre_script = pb_fn["pre_processing_script"]
+
+                    # loop through local scripts looking for a match
+                    for pb_sc in pb_objects.get("scripts", []):
+                        script_is_found = sdk_helpers.get_script_info(pb_sc, playbook.get("local_scripts"), sdk_helpers.SCRIPT_TYPE_MAP.get("local"))
+
+                        if not post_script and script_is_found and regex_compiled.search(pb_sc.get("script_text")) is not None:
+                            post_script = pb_sc.get("script_text")
+
+                        # if we didn't find a local script, we can run the same search on
+                        # global scripts and we might get a hit
+                        if not script_is_found:
+                            for g_sc in sdk_helpers.get_res_obj("scripts", "uuid", "Script", [pb_sc.get("uuid")], export):
+                                if not post_script and regex_compiled.search(g_sc.get("script_text")) is not None:
+                                    post_script = g_sc.get("script_text")
+
+                    # short the searching if we've already found both
+                    if pre_script and post_script:
+                        return pre_script, post_script
+
+        return pre_script, post_script
+
+    @staticmethod
+    def _get_pre_and_post_processing_scripts_from_workflows(the_function, workflows):
+        """
+        Get pre and post processing scripts from workflows.
+        Search the list of workflows for a match with the function in question.
+        If found, return the pre and post processing scripts. Note that it will
+        only "short-circuit" return if both are found. So that could mean that
+        if a function is used twice in an export, but only has a post processing
+        script in the second workflow, docgen would take the pre processing
+        script of the first instance and the post script of the second.
+
+        :param the_function: the function in question for which we want example scripts
+        :type the_function: dict
+        :param workflows: list of workflows in the export
+        :type workflows: list[dict]
+        :return: pre and post processing scripts as text
+        :rtype: tuple(str, str)
+        """
+        pre_script, post_script = None, None
+
+        # Loop the Function's associated Workflows
+        for fn_wf in the_function.get("workflows"):
+
+            fn_wf_name = fn_wf.get(ResilientObjMap.WORKFLOWS)
+
+            # Loop all Workflow Objects
+            for wf in workflows:
+
+                # Find a match
+                if fn_wf_name == wf.get(ResilientObjMap.WORKFLOWS):
+
+                    # Get List of Function details from Workflow XML
+                    workflow_functions = sdk_helpers.get_workflow_functions(wf, the_function.get("uuid"))
+
+                    # Get a valid pre and post process script, then break
+                    for a_fn in workflow_functions:
+
+                        if not pre_script:
+                            pre_script = a_fn.get("pre_processing_script")
+
+                        if not post_script:
+                            post_script = a_fn.get("post_processing_script")
+
+                        if pre_script and post_script:
+                            return pre_script, post_script
+
+        # return one or the other (or both None) if not both were found
+        # here to maintain same functionality that was there before this was moved out. see PR #643
+        return pre_script, post_script
 
     @staticmethod
     def _get_script_details(scripts):
@@ -182,6 +284,8 @@ class CmdDocgen(BaseCmd):
             rule_workflows = rule.get("workflows", [])
             the_rule["workflow_triggered"] = rule_workflows[0] if rule_workflows else "-"
 
+            the_rule["conditions"] = sdk_helpers.str_repr_activation_conditions(rule) or "-"
+
             return_list.append(the_rule)
 
         return return_list
@@ -201,6 +305,18 @@ class CmdDocgen(BaseCmd):
             the_playbook["object_type"] = playbook.get("object_type", "")
             the_playbook["status"] = playbook.get("status", "")
             the_playbook["description"] = playbook.get("description", {}).get("content", "")
+
+            activation_type = playbook.get("activation_type", "")
+            if playbook.get("type") == "subplaybook":
+                the_playbook["activation_type"] = "Sub-playbook"
+            else:
+                the_playbook["activation_type"] = activation_type.capitalize()
+
+            if activation_type == "manual":
+                activation_conditions = playbook.get("manual_settings", {}).get("activation_conditions", {})
+            else:
+                activation_conditions = playbook.get("activation_details", {}).get("activation_conditions", {})
+            the_playbook["conditions"] = sdk_helpers.str_repr_activation_conditions(activation_conditions) or "-"
 
             return_list.append(the_playbook)
 
@@ -391,7 +507,7 @@ class CmdDocgen(BaseCmd):
                                                       playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, customize_py_import_def.get("playbooks", [])))
 
         # Lists we use in Jinja Templates
-        jinja_functions = self._get_function_details(import_def_data.get("functions", []), import_def_data.get("workflows", []))
+        jinja_functions = self._get_function_details(import_def_data)
         jinja_scripts = self._get_script_details(import_def_data.get("scripts", []))
         jinja_rules = self._get_rule_details(import_def_data.get("rules", []))
         jinja_datatables = self._get_datatable_details(import_def_data.get("datatables", []))

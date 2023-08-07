@@ -23,6 +23,7 @@ import time
 import uuid
 import xml.etree.ElementTree as ET
 from argparse import SUPPRESS
+from collections import OrderedDict
 from zipfile import BadZipfile, ZipFile, is_zipfile
 
 import pkg_resources
@@ -555,7 +556,7 @@ def get_object_api_names(api_name, list_objs):
         return []
 
 
-def _get_script_info(each_script_in_playbook, scripts_in_location, script_type):
+def get_script_info(each_script_in_playbook, scripts_in_location, script_type):
     '''
     Extracts script related information for playbooks. Scripts can be of 2 types: local or global.
     Local scripts live within the playbook itself, while global scripts are stored in the global_export dict.
@@ -846,10 +847,10 @@ def get_from_export(export,
                 # if not, the script's information has to be extracted from the global scripts
                 for pb_sc in pb_objects.get("scripts", []):
                     # If the script is a local script, then we need to find the script in the Playbook
-                    found_script = _get_script_info(pb_sc, playbook.get("local_scripts"), SCRIPT_TYPE_MAP.get("local"))
+                    found_script = get_script_info(pb_sc, playbook.get("local_scripts"), SCRIPT_TYPE_MAP.get("local"))
 
                     # If script not found in playbook, searching Global Scripts
-                    found_script = _get_script_info(pb_sc, return_dict["scripts"], SCRIPT_TYPE_MAP.get("global")) if not found_script else True
+                    found_script = get_script_info(pb_sc, return_dict["scripts"], SCRIPT_TYPE_MAP.get("global")) if not found_script else True
 
                     # If the script is not found in the Playbook or Global Scripts, then its UUID is used to find the script form the org export
                     if not found_script:
@@ -857,7 +858,7 @@ def get_from_export(export,
                         for script in _unfound_scripts:
                             # Renaming the x_api_name to name. Since the script was fetched with UUID, the x_api_name is the UUID
                             script["x_api_name"] = script["name"]
-                        found_script = _get_script_info(pb_sc, _unfound_scripts, SCRIPT_TYPE_MAP.get("global"))
+                        found_script = get_script_info(pb_sc, _unfound_scripts, SCRIPT_TYPE_MAP.get("global"))
                         # Adding script to return_dict. This is to make sure that its included in the export.res and customize.py
                         return_dict["scripts"].extend(_unfound_scripts)
 
@@ -1710,13 +1711,80 @@ def handle_file_not_found_error(e, msg):
     else:
         raise e
 
+def str_repr_activation_conditions(activation_conditions):
+    """
+    Represent "activation conditions" as a string.
+
+    Example:
+        activation_conditions = {
+            "conditions": [
+                {
+                    "evaluation_id": None,
+                    "field_name": "incident.id",
+                    "method": "not_equals",
+                    "type": None,
+                    "value": 123456
+                }
+            ],
+            "logic_type": "all"
+        }
+    
+
+    :param activation_conditions: _description_
+    :type activation_conditions: _type_
+    """
+    conditions = OrderedDict()
+    for i, condition in enumerate(activation_conditions.get("conditions", []), start=1):
+        field_name = condition.get("field_name") or ""
+        method = condition.get("method") or ""
+        value = condition.get("value") or ""
+
+        # index into the dictionary by the evaluation ID which is only present
+        # if the logic_type is "advanced". If not present (i.e. logic_type==any or all),
+        # then we just keep track with the index in which it was found in the list
+        # NOTE: use ``filter(None, [...items...])`` here to drop any elements that might
+        # be None. This would occur in the case that a condition doesn't have
+        # all three elements. Example: "incident_created" doesn't have any method or value
+        conditions[condition.get("evaluation_id") or i] = " ".join(filter(None, [str(field_name), str(method), str(value)]))
+
+    if str(activation_conditions.get("logic_type", "")).lower() == "all":
+        return " AND ".join(conditions.values())
+    elif str(activation_conditions.get("logic_type", "")).lower() == "any":
+        return " OR ".join(conditions.values())
+    else:
+        condition_str = activation_conditions.get("custom_condition")
+        # here we do two passes to perform a kind of "salting"
+        # this is necessary to avoid the condition where in one iteration
+        # we replace "1" with "1234" and on the next iteration we replace
+        # "2" with something else; in this kind of scenario, we'd be
+        # replacing a "2" which we didn't want to
+        # So instead, we generate a unique salt and 
+        # we replace the original number with that. then on the second pass,
+        # we replace the salt with the intended value
+        # It is also CRUCIAL that the keys are processed in reverse order
+        # to properly handle double digit evaluation IDs
+        salts = {}
+        for evaluation_id in sorted(conditions.keys(), reverse=True):
+            # numbers here are the enemy -- so first we need to map each individual digit to
+            # a special string value (I decided to use the corresponding values on the keyboard)
+            hashed_eval_id = "".join(constants.SALT_HASH_MAP[id] for id in str(evaluation_id))
+            # then add our unique "docgen_{}_salt" prefix to add extra uniqueness
+            # NOTE: uniqueness is not guaranteed here from other possible values
+            # which we'll be substituting in, but it is unlikely that anyone has
+            # "docgen_!@#$_salt" in their system... so uniqueness is practically guaranteed
+            salts[evaluation_id] = constants.DOCGEN_SALT_PREFIX.format(hashed_eval_id)
+            condition_str = condition_str.replace(str(evaluation_id), salts.get(evaluation_id))
+        for evaluation_id in conditions:
+            condition_str = condition_str.replace(salts.get(evaluation_id), conditions.get(evaluation_id))
+        return condition_str
+
 class ContextMangerForTemporaryDirectory():
     """
     This is a small class for safe use of ``tempfile.mkdtemp()`` which requires cleanup after
     use. The class effectively is the same as ``tempfile.TemporaryDirectory``, however, 
     that class isn't available before python 3 thus the implementation here.
     On enter, ``tempfile.mkdtemp(*args, **kwargs)`` is called and on exit ``shutil.rmtree(path_to_dir)`` is called.
-    
+
     Example:
 
     .. code-block:: python
@@ -1729,7 +1797,7 @@ class ContextMangerForTemporaryDirectory():
             # ...
 
         # on exit of context manager, path_to_tmp_dir will be cleaned up by implicit call of the ``__exit__`` method
-    
+
     :param args: any ordered args that are relevant to calling ``tempfile.mkdtemp()``
     :param kwargs: any keyword arguments relevant to calling ``tempfile.mkdtemp()``
     """
