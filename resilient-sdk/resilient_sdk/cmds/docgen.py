@@ -305,18 +305,8 @@ class CmdDocgen(BaseCmd):
             the_playbook["object_type"] = playbook.get("object_type", "")
             the_playbook["status"] = playbook.get("status", "")
             the_playbook["description"] = playbook.get("description", {}).get("content", "")
-
-            activation_type = playbook.get("activation_type", "")
-            if playbook.get("type") == "subplaybook":
-                the_playbook["activation_type"] = "Sub-playbook"
-            else:
-                the_playbook["activation_type"] = activation_type.capitalize()
-
-            if activation_type == "manual":
-                activation_conditions = playbook.get("manual_settings", {}).get("activation_conditions", {})
-            else:
-                activation_conditions = playbook.get("activation_details", {}).get("activation_conditions", {})
-            the_playbook["conditions"] = sdk_helpers.str_repr_activation_conditions(activation_conditions) or "-"
+            the_playbook["activation_type"] = playbook.get("activation_type", "")
+            the_playbook["conditions"] = playbook.get("conditions", "")
 
             return_list.append(the_playbook)
 
