@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+{% if copyright %}
+# {{ copyright }}
+{% endif %}
 # Generated with resilient-sdk v{{ sdk_version }}
 
 from setuptools import setup, find_packages

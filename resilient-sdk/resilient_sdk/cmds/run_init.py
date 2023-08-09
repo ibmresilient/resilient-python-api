@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-""" Implemention of 'resilient-sdk init' """
+""" Implementation of 'resilient-sdk init' """
 
 import logging
 import os
@@ -13,7 +13,6 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -77,16 +76,16 @@ class CmdRunInit(BaseCmd):
     def execute_command(self, args):
 
         LOG.debug("called: CmdRunInit.execute_command()")
-        
+
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
         settings_file = args.file or constants.SDK_SETTINGS_FILE_PATH
-        
+
         # Check the provided path
         settings_dir = os.path.dirname(settings_file)
         if not os.path.exists(settings_dir):
             LOG.info("{} does not exist... Creating.".format(settings_dir))
             os.makedirs(settings_dir)
-        
+
         overwrite = "y"
         # Check if the settings_file exists, if it does, prompt if we should overwrite
         # If --no-input is used, we should skip the prompt
@@ -95,12 +94,12 @@ class CmdRunInit(BaseCmd):
                 overwrite = raw_input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))    
             else:
                 overwrite = input("{} exists already. Would you like to overwrite (y/n)? ".format(settings_file))
-        
+
         if overwrite.lower() != "y":
             LOG.info("Will not overwrite {}... Exiting CmdRunInit.execute_command().".format(settings_file))
             return
-        
-        # Instansiate Jinja2 Environment with path to Jinja2 templates
+
+        # Instantiate Jinja2 Environment with path to Jinja2 templates
         jinja_env = sdk_helpers.setup_jinja_env(constants.SETTINGS_TEMPLATE_PATH)
 
         # Load the Jinja2 Template
@@ -114,12 +113,11 @@ class CmdRunInit(BaseCmd):
             "license": constants.INIT_INTERNAL_LICENSE if args.internal else (args.license or constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE),
             "supported_app": "true" if args.internal else "false",
             "long_description": constants.INIT_INTERNAL_LONG_DESC if args.internal else constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC,
-            "license_content": constants.INIT_INTERNAL_LICENSE_CONTENT if args.internal else constants.CODEGEN_DEFAULT_LICENSE_CONTENT
+            "license_content": constants.INIT_INTERNAL_LICENSE_CONTENT if args.internal else constants.CODEGEN_DEFAULT_LICENSE_CONTENT,
+            "copyright": constants.INIT_INTERNAL_COPYRIGHT if args.internal else constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT
         })
 
         LOG.info("Writing settings to: {}".format(settings_file))
 
         # Write the new settings.json
         sdk_helpers.write_file(settings_file, rendered_settings)
-
-        return
