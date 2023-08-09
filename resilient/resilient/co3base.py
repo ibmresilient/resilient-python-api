@@ -296,6 +296,7 @@ class BaseClient(object):
         Raises:
           RetryHTTPException - if an HTTP exception occurs.
         """
+        LOG.warning(constants.WARNING_DEPRECATE_EMAIL_PASS)
         self.authdata = {
             u'email': ensure_unicode(email),
             u'password': ensure_unicode(password)
