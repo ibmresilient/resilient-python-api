@@ -1339,6 +1339,7 @@ def replace_uuids_in_subplaybook_data(playbook_data, export):
                 if field.get("uuid", "uuid_not_found") in playbook_data.get("inputs", {}):
                     # convert input uuid to input_name
                     playbook_data["inputs"][field.get("uuid")]["input_name"] = field.get("text")
+                    playbook_data["inputs"][field.get("uuid")]["input_api_name"] = field_name
                     # add input type
                     playbook_data["inputs"][field.get("uuid")]["input_type_name"] = field.get("input_type")
                     # selects and multiselects reference their UUID in the data extracted from xml,
