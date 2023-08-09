@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import copy
 import datetime
 import json
 import os
@@ -760,3 +761,16 @@ def test_str_repr_activation_conditions(activation_conditions, expected_output):
     output = sdk_helpers.str_repr_activation_conditions(activation_conditions)
 
     assert output == expected_output
+
+def test_replace_uuids_in_subplaybook_data():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
+
+    for playbook in org_export.get("playbooks", []):
+        pb_objects = sdk_helpers.get_playbook_objects(playbook)
+
+        for pb_sub_pb in pb_objects.get("sub_pbs", []):
+            sub_pb_inputs_before = copy.deepcopy(pb_sub_pb["inputs"])
+            sdk_helpers.replace_uuids_in_subplaybook_data(pb_sub_pb, org_export)
+            sub_pb_inputs_after = copy.deepcopy(pb_sub_pb["inputs"])
+
+            assert sub_pb_inputs_before != sub_pb_inputs_after
