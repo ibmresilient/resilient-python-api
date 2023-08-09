@@ -862,8 +862,24 @@ def get_from_export(export,
                         # Adding script to return_dict. This is to make sure that its included in the export.res and customize.py
                         return_dict["scripts"].extend(_unfound_scripts)
 
+                # add name to each sub playbook input
+                for pb_sub_pb in pb_objects.get("sub_pbs", []):
+                    replace_uuids_in_subplaybook_data(pb_sub_pb, export)
+
+                activation_type = playbook.get("activation_type", "")
+                if playbook.get("type") == "subplaybook":
+                    playbook["activation_type"] = "Sub-playbook"
+                else:
+                    playbook["activation_type"] = activation_type.capitalize()
+
+                if activation_type.lower() == "manual":
+                    activation_conditions = playbook.get("manual_settings", {}).get("activation_conditions", {})
+                else:
+                    activation_conditions = playbook.get("activation_details", {}).get("activation_conditions", {})
+                playbook["conditions"] = str_repr_activation_conditions(activation_conditions) or "-"
                 playbook["pb_functions"] = pb_objects.get("functions")
                 playbook["pb_scripts"]   = pb_objects.get("scripts")
+                playbook["pb_sub_pbs"]   = pb_objects.get("sub_pbs")
 
     return return_dict
 
@@ -1247,7 +1263,7 @@ def get_playbook_objects(playbook, function_uuid=None):
     Script Attributes:
     - uuid: String
     """
-    playbook_elements = {"functions": [], "scripts": []}
+    playbook_elements = {"functions": [], "scripts": [], "sub_pbs": []}
 
     # Playbook XML text
     pb_xml = playbook.get("content", {}).get("xml", None)
@@ -1262,7 +1278,8 @@ def get_playbook_objects(playbook, function_uuid=None):
     tag_prefix = root.tag.replace("definitions", "")
 
     xml_function_path = "./{0}process/{0}serviceTask/{0}extensionElements/*".format(tag_prefix)
-    xml_script_path   = "./{0}process/{0}scriptTask/{0}extensionElements/*".format(tag_prefix)
+    xml_script_path = "./{0}process/{0}scriptTask/{0}extensionElements/*".format(tag_prefix)
+    xml_sub_playbook_path = "./{0}process/{0}callActivity/{0}extensionElements/*".format(tag_prefix)
 
     if function_uuid is not None:
         xml_function_path = "{0}[@uuid='{1}']".format(xml_function_path, function_uuid)
@@ -1270,9 +1287,10 @@ def get_playbook_objects(playbook, function_uuid=None):
         # Get all elements at xml_path that have the uuid of the function
         playbook_elements += root.findall(xml_function_path)
     else:
-        # Paths to functions and scripts in the XML
+        # Paths to functions, scripts, and subplaybooks in the XML
         the_extension_elements  = root.findall(xml_function_path)
         the_extension_elements += root.findall(xml_script_path)
+        the_extension_elements += root.findall(xml_sub_playbook_path)
 
         for extension_element in the_extension_elements:
             return_function = {}
@@ -1289,8 +1307,61 @@ def get_playbook_objects(playbook, function_uuid=None):
                 return_function["uuid"] = extension_element.get("uuid", "")
                 playbook_elements["scripts"].append(return_function)
 
+            # Extracting Subplaybook related data from the XML
+            if "sub-playbook" in extension_element.tag:
+                sub_pb = json.loads(extension_element.text)
+                sub_pb["uuid"] = extension_element.attrib.get("uuid", "")
+                sub_pb["name"] = extension_element.attrib.get("name", "")
+                playbook_elements["sub_pbs"].append(sub_pb)
+
     return playbook_elements
 
+
+def replace_uuids_in_subplaybook_data(playbook_data, export):
+    """
+    When processing a subplaybook within a playbook, it is possible that there are
+    references to objects only through UUIDs. Those are not useful for
+    generating Markdown files where a user wants to read through in plain text
+    the values of the objects referenced. This function replaces any relevant
+    UUIDs with their true value from the export. The replacement is in place
+
+    :param playbook_data: sub playbook to process
+    :type playbook_data: dict
+    :param export: full export data
+    :type export: dict
+    """
+
+    # add name to each sub playbook input
+    for sub_pb in export.get("playbooks", []):
+        if playbook_data.get("uuid", "uuid_not_found_pb") == sub_pb.get("uuid", "uuid_not_found_fn"):
+            fields = sub_pb.get("fields_type", {}).get("fields", {})
+            for field_name, field in fields.items():
+                if field.get("uuid", "uuid_not_found") in playbook_data.get("inputs", {}):
+                    # convert input uuid to input_name
+                    playbook_data["inputs"][field.get("uuid")]["input_name"] = field.get("text")
+                    playbook_data["inputs"][field.get("uuid")]["input_api_name"] = field_name
+                    # add input type
+                    playbook_data["inputs"][field.get("uuid")]["input_type_name"] = field.get("input_type")
+                    # selects and multiselects reference their UUID in the data extracted from xml,
+                    # so we need to replace that with the true value found in the sub_pb
+                    if field.get("input_type") == "select":
+                        select_input_uuid = playbook_data["inputs"][field.get("uuid")]["static_input"]["select_value"]
+                        playbook_data["inputs"][field.get("uuid")]["static_input"]["select_value"] = next(value.get("label") for value in field.get("values") if value.get("uuid") == select_input_uuid)
+                    elif field.get("input_type") == "multiselect":
+                        select_input_uuids = playbook_data["inputs"][field.get("uuid")]["static_input"]["multiselect_value"]
+                        playbook_data["inputs"][field.get("uuid")]["static_input"]["multiselect_value"] = ", ".join(value.get("label") for value in field.get("values") if value.get("uuid") in select_input_uuids)
+
+    # make input easier to get in jinja2
+    for _, input in playbook_data.get("inputs", {}).items():
+        input_str_repr = ""
+        if "expression_input" in input:
+            input_str_repr = input.get("expression_input", {}).get("expression", "UNKNOWN")
+        elif "static_input" in input:
+            in_content = input.get("static_input")
+            # there's only one item ever in in_content so we can use ``next()``
+            # on the generator below to get the item's value
+            input_str_repr = next(value for _, value in in_content.items())
+        input["input_as_str"] = input_str_repr
 
 def get_main_cmd():
     """
@@ -1745,12 +1816,12 @@ def str_repr_activation_conditions(activation_conditions):
         # NOTE: use ``filter(None, [...items...])`` here to drop any elements that might
         # be None. This would occur in the case that a condition doesn't have
         # all three elements. Example: "incident_created" doesn't have any method or value
-        conditions[condition.get("evaluation_id") or i] = " ".join(filter(None, [str(field_name), str(method), str(value)]))
+        conditions[condition.get("evaluation_id") or i] = u" ".join(filter(None, [str(field_name), str(method), str(value)]))
 
     if str(activation_conditions.get("logic_type", "")).lower() == "all":
-        return " AND ".join(conditions.values())
+        return u" AND ".join(conditions.values())
     elif str(activation_conditions.get("logic_type", "")).lower() == "any":
-        return " OR ".join(conditions.values())
+        return u" OR ".join(conditions.values())
     else:
         condition_str = activation_conditions.get("custom_condition")
         # here we do two passes to perform a kind of "salting"
