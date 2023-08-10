@@ -2,16 +2,19 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
+import os
 import time
 
 import pkg_resources
 import pytest
+from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 from resilient_circuits import ResilientComponent, constants, function, helpers
 from resilient_circuits.stomp_events import HeartbeatTimeout
-
 from tests import (AppFunctionMockComponent, MockInboundAppComponent,
                    mock_constants)
 from tests.shared_mock_data import mock_paths
+
+from resilient.app_config import AppConfigManager
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
@@ -227,3 +230,47 @@ def test_filter_heartbeat_timeout_events():
 
 def test_filter_heartbeat_timeout_events_empty():
     assert helpers.filter_heartbeat_timeout_events([]) == []
+
+def test_sub_fn_inputs_from_protected_secrets(fx_reset_environmental_variables):
+    class MyMockPlugin(PAMPluginInterface):
+        def __init__(self, *args, **kwargs):
+            pass
+        def get(self, key, default=None):
+            return "PAM secret found"
+        def selftest(self):
+            return True, ""
+
+    # set mock env value for normal secret
+    os.environ["STANDARD_SECRET"] = "standard secret found"
+
+    fn_inputs = {
+        "fn_test_app_input_1": "Normal",
+        "fn_test_app_input_2": "$STANDARD_SECRET",
+        "fn_test_app_input_3": "^PAM_SECRET",
+        "fn_test_app_input_4": "Some words, dynamically insert secret here: ${STANDARD_SECRET}",
+        "fn_test_app_input_5": "Mix up PAM (^{PAM_SECRET}) and STANDARD (${STANDARD_SECRET})",
+        "fn_test_app_input_6": "Here's a (found) PAM Secret: ^{PAM_SECRET} and a not found secret: ${NOT_FOUND}",
+        "fn_test_app_input_7": "And here's one that would be found, but its in the middle without brackets: $STANDARD_SECRET",
+        "fn_test_app_input_8": "$NOT_FOUND",
+        "multiselect": ["A", "B", "$STANDARD_SECRET"],
+        "number": 1234,
+
+    }
+
+    opts = AppConfigManager(pam_plugin_type=MyMockPlugin)
+
+    subbed_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, opts)
+
+    assert subbed_inputs == {
+        "fn_test_app_input_1": "Normal",
+        "fn_test_app_input_2": "standard secret found",
+        "fn_test_app_input_3": "PAM secret found",
+        "fn_test_app_input_4": "Some words, dynamically insert secret here: standard secret found",
+        "fn_test_app_input_5": "Mix up PAM (PAM secret found) and STANDARD (standard secret found)",
+        "fn_test_app_input_6": "Here's a (found) PAM Secret: PAM secret found and a not found secret: ${NOT_FOUND}",
+        "fn_test_app_input_7": "And here's one that would be found, but its in the middle without brackets: $STANDARD_SECRET",
+        "fn_test_app_input_8": "$NOT_FOUND",
+        "multiselect": ["A", "B", "$STANDARD_SECRET"], # NOTE that multiselects won't work and this is by design
+        "number": 1234,
+    }
+

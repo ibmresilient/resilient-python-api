@@ -8,7 +8,7 @@ from six import string_types
 
 LOG = logging.getLogger(__name__)
 
-class PAMPluginInterface():
+class PAMPluginInterface(object):
     """
     Base abstract class to outline required methods to be implemented by
     all app config plugins.
