@@ -1,3 +1,9 @@
+**2023-08: version 50.0**
+
+* Adding a deprecation warning for use of Email and Password for authentication.
+  This is still supported but will become unsupported in the future. Any integration servers using
+  email and password to authenticate should consider moving to API Keys as soon as possible
+
 **2023-07: version 49.1**
 
 * Bug fix for protected secrets which ended in ``$}``
