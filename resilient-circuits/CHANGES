@@ -1,3 +1,15 @@
+**2023-08: version 50.0**
+
+* Added support for app secrets in function inputs. Use the syntax similar to using app secrets in app.config
+  by referencing app secrets in text within a function input. Example:
+
+  .. code-block::
+
+      inputs.fn_my_fn_input_1 = "$SECRET_FROM_APP_HOST_PROTECTED_SECRETS"
+      inputs.fn_my_fn_input_2 = "Here we can insert our ${SECRET_FROM_APP_HOST} in the middle of the string"
+      inputs.fn_my_fn_input_3 = "^SECRET_FROM_PAM"
+
+
 **2023-07: version 49.1**
 
 * No major changes. Just bumping build number to coincide with other builds
