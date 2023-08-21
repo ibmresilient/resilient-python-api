@@ -1,11 +1,11 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-lib" href="../resilient-lib/resilient-lib.html" /><link rel="prev" title="resilient" href="../resilient/resilient.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.07.26 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.2.2 and Furo 2023.08.19 -->
         <title>resilient-circuits - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -199,14 +199,14 @@
         </div>
         <article role="main">
           <section id="resilient-circuits">
-<h1>resilient-circuits<a class="headerlink" href="#resilient-circuits" title="Permalink to this heading">#</a></h1>
+<h1>resilient-circuits<a class="headerlink" href="#resilient-circuits" title="Link to this heading">#</a></h1>
 <p>Framework used to run IBM SOAR Apps and Integrations. Contains the class <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a>
 that gets generated using the <code class="docutils literal notranslate"><span class="pre">codegen</span></code> command in the <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code></p>
 <section id="components">
-<h2>Components<a class="headerlink" href="#components" title="Permalink to this heading">#</a></h2>
+<h2>Components<a class="headerlink" href="#components" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AppFunctionComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AppFunctionComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="Link to this definition">#</a></dt>
 <dd><p>Each package that has been generated with the <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span> <span class="pre">codegen</span></code> command
 that contains a SOAR Function, an <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> will be generated
 in the package’s <code class="docutils literal notranslate"><span class="pre">components</span></code> directory</p>
@@ -214,7 +214,7 @@ in the package’s <code class="docutils literal notranslate"><span class="pre">
 and listens for messages on it’s <code class="docutils literal notranslate"><span class="pre">Message</span> <span class="pre">Destination</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_app_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_app_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.__init__" title="Link to this definition">#</a></dt>
 <dd><dl>
 <dt>Sets and exposes 4 properties:</dt><dd><ol class="arabic">
 <li><p><strong>self.PACKAGE_NAME</strong>: the name of this App, the parameter passed in</p></li>
@@ -251,7 +251,7 @@ that are required to run this App</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent.get_fn_msg">
-<span class="sig-name descname"><span class="pre">get_fn_msg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.get_fn_msg" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_fn_msg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.get_fn_msg" title="Link to this definition">#</a></dt>
 <dd><p>Get the STOMP Message that has been sent from
 SOAR as a dict. The contents of the Message
 can include:</p>
@@ -306,7 +306,7 @@ can include:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent.status_message">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.status_message" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.status_message" title="Link to this definition">#</a></dt>
 <dd><p>Returns the message encapsulated in a
 <code class="docutils literal notranslate"><span class="pre">resilient_circuits.StatusMessage</span></code> object</p>
 <p><strong>Usage:</strong></p>
@@ -330,7 +330,7 @@ can include:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_circuits.actions_component.ResilientComponent.rest_client">
-<span class="sig-prename descclassname"><span class="pre">ResilientComponent.</span></span><span class="sig-name descname"><span class="pre">rest_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.actions_component.ResilientComponent.rest_client" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">ResilientComponent.</span></span><span class="sig-name descname"><span class="pre">rest_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.actions_component.ResilientComponent.rest_client" title="Link to this definition">#</a></dt>
 <dd><p>Return a connected instance of the <a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a>
 that can be used to access the IBM SOAR REST API.</p>
 <div class="admonition note">
@@ -376,10 +376,10 @@ that can be used to access the IBM SOAR REST API.</p>
 
 </section>
 <section id="decorators">
-<h2>Decorators<a class="headerlink" href="#decorators" title="Permalink to this heading">#</a></h2>
+<h2>Decorators<a class="headerlink" href="#decorators" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_circuits.decorators.app_function">
-<span class="sig-prename descclassname"><span class="pre">&#64;</span></span><span class="sig-name descname"><span class="pre">app_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.decorators.app_function" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">&#64;</span></span><span class="sig-name descname"><span class="pre">app_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.decorators.app_function" title="Link to this definition">#</a></dt>
 <dd><p>Creates a new <a class="reference internal" href="#resilient_circuits.decorators.app_function" title="resilient_circuits.decorators.app_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">&#64;app_function</span></code></a> decorator.</p>
 <p>This decorator can be applied to methods of the <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> class.</p>
 <p>It marks the method as a handler for the events passed as arguments to the decorator.</p>
@@ -389,10 +389,10 @@ that can be used to access the IBM SOAR REST API.</p>
 
 </section>
 <section id="helpers">
-<h2>Helpers<a class="headerlink" href="#helpers" title="Permalink to this heading">#</a></h2>
+<h2>Helpers<a class="headerlink" href="#helpers" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_circuits.helpers.is_this_a_selftest">
-<span class="sig-name descname"><span class="pre">is_this_a_selftest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.helpers.is_this_a_selftest" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_this_a_selftest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.helpers.is_this_a_selftest" title="Link to this definition">#</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> if this instantiation of
 <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> is from selftest or not.</p>
 <dl class="field-list simple">
@@ -407,7 +407,18 @@ that can be used to access the IBM SOAR REST API.</p>
 
 </section>
 <section id="change-log">
-<h2>Change Log<a class="headerlink" href="#change-log" title="Permalink to this heading">#</a></h2>
+<h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2023-08: version 50.0</strong></p>
+<ul>
+<li><p>Added support for app secrets in function inputs. Use the syntax similar to using app secrets in app.config
+by referencing app secrets in text within a function input. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span><span class="o">.</span><span class="n">fn_my_fn_input_1</span> <span class="o">=</span> <span class="s2">&quot;$SECRET_FROM_APP_HOST_PROTECTED_SECRETS&quot;</span>
+<span class="n">inputs</span><span class="o">.</span><span class="n">fn_my_fn_input_2</span> <span class="o">=</span> <span class="s2">&quot;Here we can insert our $</span><span class="si">{SECRET_FROM_APP_HOST}</span><span class="s2"> in the middle of the string&quot;</span>
+<span class="n">inputs</span><span class="o">.</span><span class="n">fn_my_fn_input_3</span> <span class="o">=</span> <span class="s2">&quot;^SECRET_FROM_PAM&quot;</span>
+</pre></div>
+</div>
+</li>
+</ul>
 <p><strong>2023-07: version 49.1</strong></p>
 <ul class="simple">
 <li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
@@ -817,9 +828,9 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d4d0a635"></script>
+</div><script src="../../_static/documentation_options.js?v=48160787"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=a56c686a"></script>
