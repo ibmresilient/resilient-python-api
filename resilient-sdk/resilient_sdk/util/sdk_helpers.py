@@ -1311,7 +1311,6 @@ def get_playbook_objects(playbook, function_uuid=None):
             if "sub-playbook" in extension_element.tag:
                 sub_pb = json.loads(extension_element.text)
                 sub_pb["uuid"] = extension_element.attrib.get("uuid", "")
-                sub_pb["name"] = extension_element.attrib.get("name", "")
                 playbook_elements["sub_pbs"].append(sub_pb)
 
     return playbook_elements
@@ -1335,6 +1334,9 @@ def replace_uuids_in_subplaybook_data(playbook_data, export):
     for sub_pb in export.get("playbooks", []):
         if playbook_data.get("uuid", "uuid_not_found_pb") == sub_pb.get("uuid", "uuid_not_found_fn"):
             fields = sub_pb.get("fields_type", {}).get("fields", {})
+
+            # update sub playbook's name
+            playbook_data["name"] = sub_pb.get("display_name")
             for field_name, field in fields.items():
                 if field.get("uuid", "uuid_not_found") in playbook_data.get("inputs", {}):
                     # convert input uuid to input_name
