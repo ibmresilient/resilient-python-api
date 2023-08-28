@@ -153,7 +153,7 @@ matrix:
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
-        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_TOKEN>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
     - stage: release to pypi
       install:
