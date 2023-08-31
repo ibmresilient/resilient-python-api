@@ -289,7 +289,7 @@ results = {
 </p>
 </details>
 
-<details><summary>Example Pre-Process Script:</summary>
+<details><summary>Example Function Input Script:</summary>
 <p>
 
 ```python
@@ -299,7 +299,7 @@ results = {
 </p>
 </details>
 
-<details><summary>Example Post-Process Script:</summary>
+<details><summary>Example Function Post Process Script:</summary>
 <p>
 
 ```python
@@ -373,10 +373,10 @@ results = {
 
 {% if rules %}
 ## Rules
-| Rule Name | Object | Workflow Triggered |
-| --------- | ------ | ------------------ |
+| Rule Name | Object | Workflow Triggered | Condition |
+| --------- | ------ | ------------------ | ---------- |
 {% for rule in rules|sort(attribute="name") %}
-| {{ rule.name }} | {{ rule.object_type }} | `{{ rule.workflow_triggered }}` |
+| {{ rule.name }} | {{ rule.object_type }} | `{{ rule.workflow_triggered }}` | `{{ rule.conditions }}` |
 {% endfor %}
 
 ---
@@ -384,10 +384,10 @@ results = {
 
 {% if playbooks %}
 ## Playbooks
-| Playbook Name | Description | Object | Status |
-| ------------- | ----------- | ------ | ------ |
+| Playbook Name | Description | Activation Type | Object | Status | Condition |
+| ------------- | ----------- | --------------- | ------ | ------ | ---------- |
 {% for playbook in playbooks|sort(attribute="api_name") %}
-| {{ playbook.name }} | {{ playbook.description }} | {{ playbook.object_type }} | `{{ playbook.status }}` |
+| {{ playbook.name }} | {{ playbook.description }} | {{ playbook.activation_type }} | {{ playbook.object_type }} | `{{ playbook.status }}` | `{{ playbook.conditions }}` |
 {% endfor %}
 
 ---

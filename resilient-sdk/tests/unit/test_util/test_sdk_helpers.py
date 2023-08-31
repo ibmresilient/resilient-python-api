@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
 
+import copy
 import datetime
 import json
 import os
@@ -724,3 +725,52 @@ def test_handle_file_not_found_error(caplog):
         sdk_helpers.handle_file_not_found_error(e, error_msg)
 
     assert u"WARNING: {0}".format(error_msg) in caplog.text
+
+@pytest.mark.parametrize("activation_conditions, expected_output", [
+    ({
+        "conditions": [
+            { "evaluation_id": None, "field_name": "incident.id", "method": "not_equals", "type": None, "value": 123456 },
+            { "evaluation_id": None, "field_name": None, "method": "object_added", "type": None, "value": None },
+            { "evaluation_id": None, "field_name": "incident.city", "method": "not_has_a_value", "type": None, "value": None }
+        ],
+        "logic_type": "all"
+    }, "incident.id not_equals 123456 AND object_added AND incident.city not_has_a_value"),
+    ({
+        "conditions": [
+            { "evaluation_id": None, "field_name": "incident.id", "method": "not_equals", "type": None, "value": 123456 },
+            { "evaluation_id": None, "field_name": None, "method": "object_added", "type": None, "value": None },
+            { "evaluation_id": None, "field_name": "incident.city", "method": "not_has_a_value", "type": None, "value": None }
+        ],
+        "logic_type": "any",
+        "custom_condition": None
+    }, "incident.id not_equals 123456 OR object_added OR incident.city not_has_a_value"),
+    ({
+        "conditions": [
+            { "evaluation_id": 1, "field_name": "incident.id", "method": "not_equals", "type": None, "value": 123456 },
+            { "evaluation_id": 2, "field_name": None, "method": "object_added", "type": None, "value": None },
+            { "evaluation_id": 3, "field_name": "incident.city", "method": "not_has_a_value", "type": None, "value": None },
+            # mock add in a multi-digit evaluation ID
+            { "evaluation_id": 123, "field_name": "incident.description", "method": "equals", "type": None, "value": "123456" }
+        ],
+        "logic_type": "advanced",
+        "custom_condition": "1 OR (2 AND 3) AND 2 OR 3 OR (1 AND 2 AND 3) AND 123"
+    }, "incident.id not_equals 123456 OR (object_added AND incident.city not_has_a_value) AND object_added OR incident.city not_has_a_value OR (incident.id not_equals 123456 AND object_added AND incident.city not_has_a_value) AND incident.description equals 123456")
+])
+def test_str_repr_activation_conditions(activation_conditions, expected_output):
+
+    output = sdk_helpers.str_repr_activation_conditions(activation_conditions)
+
+    assert output == expected_output
+
+def test_replace_uuids_in_subplaybook_data():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
+
+    for playbook in org_export.get("playbooks", []):
+        pb_objects = sdk_helpers.get_playbook_objects(playbook)
+
+        for pb_sub_pb in pb_objects.get("sub_pbs", []):
+            sub_pb_inputs_before = copy.deepcopy(pb_sub_pb["inputs"])
+            sdk_helpers.replace_uuids_in_subplaybook_data(pb_sub_pb, org_export)
+            sub_pb_inputs_after = copy.deepcopy(pb_sub_pb["inputs"])
+
+            assert sub_pb_inputs_before != sub_pb_inputs_after

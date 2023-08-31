@@ -31,6 +31,7 @@ MOCK_CUSTOMIZE_PY_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_custom
 MOCK_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.res")
 MOCK_EXPORT_RES_CORRUPT = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export_corrupt.res")
 MOCK_EXPORT_RES_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_export_w_playbook.res")
+MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_export_w_playbook_w_scripts.res")
 MOCK_RELOAD_EXPORT_RES_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_reload_export_w_playbook.res")
 MOCK_RELOAD_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_reload_export.res")
 MOCK_ZIP = os.path.join(SHARED_MOCK_DATA_DIR, "mock.zip")

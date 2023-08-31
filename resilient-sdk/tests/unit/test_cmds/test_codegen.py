@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import os
 import shutil
@@ -210,7 +210,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert files_in_components == ['__init__.py']
 
     customize_py = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util", "customize.py"))
-    assert '        "functions": [u"fn_mock_function_1", u"fn_mock_function_2"],\n' in customize_py
+    assert set(['        "functions": [\n','            u"fn_mock_function_1",\n','            u"fn_mock_function_2"\n','        ],\n']).issubset(set(customize_py))
 
 
 def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp_dir, fx_add_dev_env_var):
@@ -239,7 +239,7 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     package_path = os.path.join(output_path, args.package)
     compare_playbooks_md_file(package_name, package_path)
     
-    constants.CURRENT_SOAR_SERVER_VERSION = 39.0 # resetting SOAR server version back to 39.0
+    constants.CURRENT_SOAR_SERVER_VERSION = None
 
 
 def test_run_tests_with_settings_file(fx_get_sub_parser, fx_mk_temp_dir, fx_mock_res_client, fx_cmd_line_args_codegen_package):

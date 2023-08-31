@@ -3,12 +3,8 @@
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import os
-from datetime import date
 
 import pkg_resources
-
-TODAY = date.today()
-YEAR = TODAY.year
 
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
@@ -19,8 +15,10 @@ LOG_DIVIDER = "\n------------------------\n"
 ENV_VAR_DEV = "RES_SDK_DEV"
 ENV_VAR_APP_CONFIG_FILE = "APP_CONFIG_FILE"
 
-RESILIENT_LIBRARIES_VERSION = "49.1.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "49.1.0"
+# UPDATE BEFORE RELEASING NEW VERSION
+RESILIENT_LIBRARIES_VERSION = "50.0.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "50.0.0"
+
 RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
 MIN_SOAR_SERVER_VERSION_PLAYBOOKS = 44.0
@@ -113,6 +111,8 @@ ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 # resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
+SALT_HASH_MAP = {"0": ")","1": "!","2": "@","3": "#","4": "$","5": "%","6": "^","7": "&","8": "*","9": "("}
+DOCGEN_SALT_PREFIX = "docgen_{0}_salt"
 
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
@@ -122,6 +122,7 @@ CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
 CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
 CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \\\\\\nMultiple continuation lines are supported with a backslash. Line breaks are supported too:\\n<br>- This will be rendered like a list\\n<br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
+CODEGEN_DEFAULT_COPYRIGHT_CONTENT = "<<PUT YOUR COPYRIGHT TEXT HERE>>"
 
 # resilient-sdk init internal defaults
 INIT_INTERNAL_AUTHOR = "IBM SOAR"
@@ -146,7 +147,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\\n\
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\\n\
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\\n\
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\\n\
-IN THE SOFTWARE.".format(YEAR)
+IN THE SOFTWARE."
+INIT_INTERNAL_COPYRIGHT = u"(c) Copyright IBM Corp. 2010, {0}. All Rights Reserved."
 
 
 # resilient-sdk validate

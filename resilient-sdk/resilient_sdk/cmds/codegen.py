@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """ Implementation of `resilient-sdk codegen` """
 
@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import shutil
+from datetime import datetime
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -393,10 +394,15 @@ class CmdCodegen(BaseCmd):
         jinja_data["url"] = settings_file_contents_setup.get("url", constants.CODEGEN_DEFAULT_SETUP_PY_URL)
         jinja_data["long_description"] = settings_file_contents_setup.get("long_description", constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC)
 
-        # add license_content to jinja_data
-        jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT)
+        # add license_content to jinja_data and format in year if applicable
+        year = datetime.now().year
+        jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT).format(year)
         # add current SDK version to jinja data
         jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+        # add copyright info with year to jinja_data if present in settings_file
+        # and left-strip any leading "#" so that it fits well in the jinja template
+        copyright_str = str(settings_file_contents.get("copyright", constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT)).lstrip("#").format(year)
+        jinja_data["copyright"] = copyright_str
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
@@ -485,6 +491,7 @@ class CmdCodegen(BaseCmd):
 
             # add sdk version to function data
             f["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+            f["copyright"] = copyright_str
 
             # Get function name
             fn_name = f.get(ResilientObjMap.FUNCTIONS)

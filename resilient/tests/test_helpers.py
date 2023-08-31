@@ -130,7 +130,7 @@ def test_protected_secret_exists_unsupported_python_version(fx_reset_environment
 
     os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
     assert helpers.protected_secret_exists("API_KEY", "mock_path", "mock_path") is False
-    assert "Protected secrets are only Python >= 3 supported" in caplog.text
+    assert "Protected secrets are only supported for Python >= 3" in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
@@ -188,7 +188,7 @@ def test_get_protected_secret_wrong_key(fx_write_protected_secrets, caplog):
 def test_get_protected_secret_unsupported_python_version(caplog):
 
     assert helpers.get_protected_secret_token_and_key("API_KEY", "mock_path", "mock_path") is None
-    assert "Protected secrets are only Python >= 3 supported" in caplog.text
+    assert "Protected secrets are only supported for Python >= 3" in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")

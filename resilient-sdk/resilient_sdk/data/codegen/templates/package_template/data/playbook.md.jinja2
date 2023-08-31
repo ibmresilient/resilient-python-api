@@ -4,7 +4,11 @@
     Generated with resilient-sdk v{{ sdk_version }}
 -->
 
+{% if type == "subplaybook" %}
+# Sub-Playbook - {{ display_name }}
+{% else %}
 # Playbook - {{ display_name }}
+{% endif %}
 
 {% if name %}
 ### API Name
@@ -19,6 +23,20 @@
 {% if activation_type %}
 ### Activation Type
 `{{ activation_type }}`
+
+{% endif %}
+{% if conditions %}
+### Activation Conditions
+`{{ conditions }}`
+
+{% endif %}
+{% if fields_type.fields %}
+### Activation Form Elements
+| Input Field Label | API Name | Element Type | Tooltip | Requirement |
+| ----------------- | -------- | ------------ | ------- | ----------- |
+{% for field_api_name, field_data in fields_type.fields.items()|sort(attribute='1.text') %}
+| {{ field_data.text }} | `{{ field_api_name }}` | {{ field_data.input_type }} | {{ field_data.tooltip|default("-", true) }} | {{ field_data.required|default("Optional", true)|capitalize }} |
+{% endfor %}
 
 {% endif %}
 {% if object_type %}
@@ -62,13 +80,40 @@
 ### Script Type
 `{{ script.script_type }}`
 
-### Objet Type
+### Object Type
 `{{ script.object_type }}`
 
 ### Script Content
 ```python
 {{ script.script_text }}
 ```
+
+---
+{% endfor %}
+
+{% for sub_pb in pb_sub_pbs %}
+## Sub-Playbook - {{ sub_pb.name }}
+
+### Output Name
+`{{ sub_pb.result_name }}`
+
+{% if sub_pb.inputs %}
+### Static Inputs
+| Input Name | Input API Name | Input Value | Input Type |
+| ---------- | -------------- | ----------- | ---------- |
+{% for in_uuid, in_content in sub_pb.inputs.items() if in_content.input_as_str != None %}
+{% if in_content.static_input %}
+| {{ in_content.input_name }} | {{ in_content.input_api_name }} | {{ in_content.input_as_str }} | `{{ in_content.input_type_name }}` |
+{% elif in_content.expression_input %}
+| {{ in_content.input_name }} | {{ in_content.input_api_name }} | `{{ in_content.input_as_str }}` | `{{ in_content.input_type_name }}` |
+{% endif %}
+{% endfor %}
+{% else %} {# there can only be one of inputs or pre-processing script #}
+### Input Script
+```python
+{{ sub_pb.pre_processing_script }}
+```
+{% endif %}
 
 ---
 {% endfor %}
