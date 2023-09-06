@@ -66,6 +66,28 @@ def test_client_put(fx_simple_client):
 
     assert r['content-type'] == test_headers['content-type']
 
+def test_client_put_with_error(fx_simple_client):
+
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+
+    test_headers = {"content-type": "application/octet-stream"}
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+
+    requests_adapter.register_uri('PUT',
+                                  mock_uri,
+                                  status_code=403)
+
+    uri = "/playbooks/imports"
+
+    with pytest.raises(SimpleHTTPException):
+        base_client.put(
+            uri,
+            "payload",
+            headers=test_headers
+        )
+
 def test_client_post(fx_simple_client):
     base_client = fx_simple_client[0]
     requests_adapter = fx_simple_client[1]
@@ -74,9 +96,83 @@ def test_client_post(fx_simple_client):
     mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
     mock_response = {"incident_id": incident_id}
     requests_adapter.register_uri('POST', mock_uri, status_code=200, text=json.dumps(mock_response))
-    r = base_client.post("/incidents/1001", {"incident_name": "Mock Incident"})
+    r = base_client.post("/incidents/{}".format(incident_id), {"incident_name": "Mock Incident"})
 
-    assert r.get("incident_id") == 1001
+    assert r.get("incident_id") == incident_id
+
+def test_client_delete(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    mock_response = {"success": True,"title": "title","message": "done","hints": [],"error_code": "","error_payload": { }}
+    requests_adapter.register_uri('DELETE', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.delete("/incidents/{}".format(incident_id))
+
+    assert r.get("success") == True
+
+def test_client_delete_with_204(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    requests_adapter.register_uri('DELETE', mock_uri, status_code=204)
+    r = base_client.delete("/incidents/{}".format(incident_id))
+
+    assert r == None
+
+def test_client_delete_with_error(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    requests_adapter.register_uri('DELETE', mock_uri, status_code=404)
+
+    with pytest.raises(SimpleHTTPException):
+        base_client.delete("/incidents/{}".format(incident_id), skip_retry=[404])
+
+def test_simple_client_get_cached(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    mock_response = {"incident_id": incident_id}
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(mock_response))
+
+    # make one call
+    r = base_client.cached_get("/incidents/{}".format(incident_id))
+    assert r.get("incident_id") == incident_id
+
+    # make five more calls but now check the adapter to ensure only called once
+    for _ in range(5):
+        base_client.cached_get("/incidents/{}".format(incident_id))
+    assert requests_adapter.call_count == 1
+
+def test_simple_client_get_content(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, content=json.dumps({"content": "content"}).encode("ascii"))
+
+    r = base_client.cached_get("/incidents/{}".format(incident_id))
+    assert r == {"content": "content"}
+
+def test_simple_client_get_content_with_error(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    requests_adapter.register_uri('GET', mock_uri, status_code=404)
+
+    with pytest.raises(SimpleHTTPException):
+        base_client.cached_get("/incidents/{}".format(incident_id), skip_retry=[404])
 
 def test_simple_client_get_const(fx_simple_client):
     base_client = fx_simple_client[0]
@@ -96,7 +192,7 @@ def test_simple_client_raises_error_with_normal_retry(fx_simple_client):
     old_backoff, old_delay = base_client.request_retry_backoff, base_client.request_retry_delay
     base_client.request_retry_backoff, base_client.request_retry_delay = 0, 0
 
-    mock_uri = '{0}/rest/orgs/201/test'.format(base_client.base_url)
+    mock_uri = '{0}/rest/orgs/{1}/test'.format(base_client.base_url, base_client.org_id)
     requests_adapter.register_uri('GET', mock_uri, status_code=404, reason="An error occurred")
 
     # make sure that SimpleHTTPException is still the exception raised, despite
@@ -114,7 +210,7 @@ def test_simple_client_raises_error_with_skip_retry(fx_simple_client):
     base_client = fx_simple_client[0]
     requests_adapter = fx_simple_client[1]
 
-    mock_uri = '{0}/rest/orgs/201/test'.format(base_client.base_url)
+    mock_uri = '{0}/rest/orgs/{1}/test'.format(base_client.base_url, base_client.org_id)
     requests_adapter.register_uri('GET', mock_uri, status_code=404, reason="An error occurred")
 
     # when skip_retry is met, a BasicHTTPException is raised in co3base, but a
