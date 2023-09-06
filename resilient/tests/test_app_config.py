@@ -4,6 +4,7 @@
 
 import os
 import sys
+import logging
 
 import pytest
 from mock import patch
@@ -134,10 +135,13 @@ def test_replace_secret_in_config_pam_plugin(item, prefix, expected):
     assert replaced == expected
 
 @pytest.mark.parametrize("item, prefix, secret, expected", [
-    ("$SECRET", "$", "A[xyz)e}K,/MabS1}:NbJ$(}$", "A[xyz)e}K,/MabS1}:NbJ$(}$"),
+    ("$SECRET", "$", "$A[xyz)e}K,/MabS1}:NbJ$(}$", "$A[xyz)e}K,/MabS1}:NbJ$(}$"),
+    ("$SECRET", "$", "A[xyz)e}K,/MabS1}:NbJ$(}", "A[xyz)e}K,/MabS1}:NbJ$(}"), # check against endings with $}
+    ("$SECRET", "$", "$test_with_$", "$test_with_$"),
     ("${SECRET}${SECRET_2}", "${", "A[xyz)e}K,/MabS1}:NbJ$(}${", "A[xyz)e}K,/MabS1}:NbJ$(}${2")
 ])
 def test_replace_secret_in_config_protected_secret_env_only(item, prefix, secret, expected, fx_reset_environmental_variables, caplog):
+    caplog.set_level(logging.DEBUG)
     manager = ProtectedSecretsManager()
     os.environ["SECRET"] = secret
     os.environ["SECRET_2"] = "2"
@@ -146,6 +150,18 @@ def test_replace_secret_in_config_protected_secret_env_only(item, prefix, secret
 
     assert replaced == expected
     assert "Failed to find" not in caplog.text
+    assert secret not in caplog.text
+
+def test_dont_log_secret_if_not_found(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    original_dict = {"not_found": "$NOT_FOUND_STARTS_WITH$"}
+    acm = AppConfigManager(original_dict)
+
+    # test logging around a not-found item
+    assert acm.get("not_found") == original_dict.get("not_found")
+    assert "Failed to find a secret in Protected Secrets" in caplog.text
+    assert "$NOT_FOUND_STARTS_WITH$" not in caplog.text # don't want to log the secret if not found in case it is a secret
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
