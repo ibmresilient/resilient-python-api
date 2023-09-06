@@ -33,7 +33,7 @@ def get_main_app_parser():
         prog=constants.SDK_PACKAGE_NAME,
         description="""Python SDK for developing IBM SOAR Apps that
         provides various subcommands to help with development""",
-        epilog="For support, please visit ibm.biz/soarcommunity")
+        epilog="For support, please visit https://ibm.biz/soarcommunity")
 
     parser.usage = """
     $ resilient-sdk <subcommand> ...
