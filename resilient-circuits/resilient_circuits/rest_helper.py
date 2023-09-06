@@ -9,6 +9,7 @@ import logging
 from resilient_circuits import constants
 
 import resilient
+from resilient import SimpleHTTPException
 from resilient import constants as res_constants
 
 LOG = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ def get_resilient_server_version(res_client):
     LOG.debug("Getting server version")
     try:
         server_version = res_client.get_const().get("server_version", {})
-    except Exception:
+    except SimpleHTTPException:
         # fine to ignore any exceptions here as this is
         # not critical to get the server info if something goes wrong
         server_version = {}

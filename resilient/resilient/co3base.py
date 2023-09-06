@@ -47,6 +47,7 @@ class TLSHttpAdapter(HTTPAdapter):
 
 
 class BasicHTTPException(Exception):
+    """Base exception for HTTP errors."""
     def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
@@ -69,32 +70,32 @@ class BasicHTTPException(Exception):
         return self.response
 
 
-class RetryHTTPException(Exception):
+class RetryHTTPException(BasicHTTPException):
     """Exception for HTTP errors that should be retried."""
     def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
           response - the Response object from the get/put/etc.
         """
-
-        err_reason = response.reason if response.reason else err_reason
-        err_text = response.text if response.text else err_text
-
-        err_message = u"'resilient' API Request Retry:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
-
-        # Add a __qualname__ attribute if does not exist - needed for PY27
-        if not hasattr(RetryHTTPException, "__qualname__"):
-            setattr(RetryHTTPException, "__qualname__", RetryHTTPException.__name__)
-
-        super(RetryHTTPException, self).__init__(err_message)
-
-        self.response = response
-
-    def get_response(self):
-        return self.response
+        super(RetryHTTPException, self).__init__(response, err_reason=err_reason, err_text=err_text)
 
     @staticmethod
     def raise_if_error(response, skip_retry=[]):
+        """
+        Raise a RetryError if a non-401 status is returned
+        AND the status is not in the set of statuses to skip retry on.
+
+        NOTE: 401 errors are unrecoverable as they indicated an unauthorized
+        connection. These errors result in circuits stopping itself. This is
+        achieved by capturing the stack trace and sending a sys.exit().
+
+        :param response: requests.Response object
+        :type response: requests.Response
+        :param skip_retry: list of status codes to not retry, defaults to []
+        :type skip_retry: list[int], optional
+        :raises RetryHTTPException: if error status and should be retried
+        :raises BasicHTTPException: if error but should not be retried
+        """
 
         if response.status_code == 401:
             try:
@@ -524,7 +525,7 @@ class BaseClient(object):
         RetryHTTPException.raise_if_error(response)
         return response.json()
 
-    def get_content(self, uri, co3_context_token=None, timeout=None, skip_exceptions=[]):
+    def get_content(self, uri, co3_context_token=None, timeout=None, skip_retry=[]):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -549,7 +550,7 @@ class BaseClient(object):
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
-        RetryHTTPException.raise_if_error(response, skip_retry=skip_exceptions)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         return response.content
 
     def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None,
