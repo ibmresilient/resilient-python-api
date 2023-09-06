@@ -162,6 +162,7 @@ def test_dont_log_secret_if_not_found(caplog):
     assert acm.get("not_found") == original_dict.get("not_found")
     assert "Failed to find a secret in Protected Secrets" in caplog.text
     assert "$NOT_FOUND_STARTS_WITH$" not in caplog.text # don't want to log the secret if not found in case it is a secret
+    assert "NOT_FOUND_STARTS_WITH" not in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")

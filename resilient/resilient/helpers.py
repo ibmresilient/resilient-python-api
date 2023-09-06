@@ -450,7 +450,6 @@ def get_config_from_env(config_name, default=None):
     :return: The value of the env var
     :rtype: str
     """
-    LOG.debug("Getting environmental variable '%s'", config_name)
     return os.environ.get(config_name, default)
 
 
