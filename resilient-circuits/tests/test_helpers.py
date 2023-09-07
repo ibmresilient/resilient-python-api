@@ -273,4 +273,5 @@ def test_sub_fn_inputs_from_protected_secrets(fx_reset_environmental_variables):
         "multiselect": ["A", "B", "$STANDARD_SECRET"], # NOTE that multiselects won't work and this is by design
         "number": 1234,
     }
+    assert fn_inputs != subbed_inputs # assert not modified original object
 

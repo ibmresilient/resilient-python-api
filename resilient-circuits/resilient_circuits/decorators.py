@@ -255,15 +255,18 @@ class app_function(object):
                 result_list = []
 
                 # Validate the fn_inputs in the Message
-                # substitute any secrets denoted with $, ^, ${}, or ^{} in the function inputs.
-                # NOTE: it is crucial to first "validate_fields" as that function will convert any
-                # non-string fields that should be strings to strings (like select)
-                fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(validate_fields([], kwds), itself.opts)
+                fn_inputs = validate_fields([], kwds)
                 LOG.info("[%s] Validated function inputs", evt.name)
                 LOG.debug("[%s] fn_inputs: %s", evt.name, fn_inputs)
 
                 rp = ResultPayload(itself.PACKAGE_NAME, version=constants.APP_FUNCTION_PAYLOAD_VERSION, **fn_inputs)
 
+                # make sure to sub AFTER the ResultPayload is instantiated so that any subbed values
+                # won't be logged or included in the returned inputs.
+                # substitute any secrets denoted with $, ^, ${}, or ^{} in the function inputs.
+                # NOTE: it is crucial to first "validate_fields" as that function will convert any
+                # non-string fields that should be strings to strings (like select)
+                fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, itself.opts)
                 fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
 
                 # Set evt.message in local thread storage
