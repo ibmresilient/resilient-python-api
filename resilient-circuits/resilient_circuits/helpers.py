@@ -260,21 +260,27 @@ def get_queue(destination):
     :return: queue: (queue_type, org_id, queue_name) e.g. ('actions', '201', 'fn_main_mock_integration')
     :rtype: tuple
     """
+    destination_str = destination
 
     try:
-        assert isinstance(destination, str)
+        assert isinstance(destination_str, str)
 
+        # regex.sub to remove any /queue/ in the start
         regex = re.compile(r'\/.+\/')
+        destination_str = re.sub(regex, "", destination_str, count=1)
 
-        destination = re.sub(regex, "", destination, count=1)
-        q = destination.split(".")
+        # split on periods to get the type, org_id, and queue name
+        # use maxsplit=2 to only split on the first two periods,
+        # as the third item might be a queue_name with a period in it
+        # note in PY2 maxsplit is a positional arg so we don't label it here for compatiblity
+        q = destination_str.split(".", 2)
 
         assert len(q) == 3
 
         return (tuple(q))
 
     except AssertionError as e:
-        LOG.error("Could not get queue name\n%s", str(e))
+        LOG.error("Could not get queue name from destination: '%s'\n%s", destination, str(e))
         return None
 
 

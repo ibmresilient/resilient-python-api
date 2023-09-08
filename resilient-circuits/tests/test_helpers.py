@@ -158,12 +158,17 @@ def test_env_str_with_env_var(fx_add_proxy_env_var):
 
 def test_get_queue(caplog):
     assert helpers.get_queue("/queue/actions.201.fn_main_mock_integration") == ("actions", "201", "fn_main_mock_integration")
+    assert helpers.get_queue("actions.201.fn_main_mock_integration") == ("actions", "201", "fn_main_mock_integration")
     assert helpers.get_queue("/queue/inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
     assert helpers.get_queue("inbound_destination.111.inbound_app_mock") == ("inbound_destination", "111", "inbound_app_mock")
-    assert helpers.get_queue("111.inbound_app_mock") is None
-    assert helpers.get_queue("") is None
-    assert helpers.get_queue(None) is None
-    assert "Could not get queue name" in caplog.text
+    # make sure works with queue name that has a period in it
+    assert helpers.get_queue("/queue/inbound_destination.111.inbound_app_mock.with_one_period_in_name") == ("inbound_destination", "111", "inbound_app_mock.with_one_period_in_name")
+    assert helpers.get_queue("inbound_destination.111.inbound_app_mock.with_one_period_in_name") == ("inbound_destination", "111", "inbound_app_mock.with_one_period_in_name")
+
+    # all these should be None and their names should be logged in the error message
+    for queue_name in ["111.inbound_app_mock", "", None]:
+        assert helpers.get_queue(queue_name) is None
+        assert "Could not get queue name from destination: '{}'".format(queue_name) in caplog.text
 
 
 class TestIsASelftestActionsComponent:
