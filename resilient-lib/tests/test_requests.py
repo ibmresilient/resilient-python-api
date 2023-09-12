@@ -731,7 +731,7 @@ class TestFunctionRequests(unittest.TestCase):
         self.assertEqual(verify, expected_verify)
 
     @parameterized.expand([
-        # mostly here for backward compatibility with older instances of apps using of self.retry(rc.execute, )
+        # mostly here for backward compatibility with older instances of apps using of rc.execute()
         # with a value of `verify` passed in
         # and make sure that the value passed in directly is used over any configs
         ["https://example.com", {}, {"verify": "False"}, True, True, RequestsCommon],
@@ -754,10 +754,10 @@ class TestFunctionRequests(unittest.TestCase):
         ["https://example.com", {"integrations": {"verify": True}}, {"verify": "False"}, None, False, RequestsCommonWithoutSession]
     ])
     def test_execute_request_with_verify(self, url, opts, function_opts, verify, expected_verify, RCObjectType):
-        # this check is to ensure that calling self.retry(rc.execute, ) is properly grabbing
+        # this check is to ensure that calling rc.execute() is properly grabbing
         # the value that is given directly to it.
-        # The main reason to run this test, is to ensure backward compatiblity
-        # with apps already using self.retry(rc.execute, ) with the `verify` parameter set.
+        # The main reason to run this test, is to ensure backward compatibility
+        # with apps already using rc.execute() with the `verify` parameter set.
         # in those cases, we want to make sure that we don't override anything with
         # in the app.config, but instead continue to use it as the developer of that
         # app expected it to work
