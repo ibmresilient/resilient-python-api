@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Common Helper Functions for resilient-circuits"""
+import copy
 import logging
 import re
 import sys
@@ -391,6 +392,7 @@ def sub_fn_inputs_from_protected_secrets(fn_inputs, opts):
     :return: fn_inputs unchanged except where secrets referenced are replaced
     :rtype: dict
     """
+    fn_inputs = copy.deepcopy(fn_inputs)
 
     # find the pam_plugin type if necessary
     if isinstance(opts, AppConfigManager) and opts.pam_plugin:
