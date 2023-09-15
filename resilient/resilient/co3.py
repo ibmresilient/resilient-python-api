@@ -445,7 +445,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return response
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None, skip_retry=[]):
+    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None, skip_retry=[], **kwargs):
         """
         Posts to the specified URI.
 
@@ -471,7 +471,7 @@ class SimpleClient(co3base.BaseClient):
         # Call post of BaseClient. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout, headers=headers, skip_retry=skip_retry)
+            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout, headers=headers, skip_retry=skip_retry, **kwargs)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
