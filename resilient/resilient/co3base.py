@@ -553,8 +553,8 @@ class BaseClient(object):
         RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None,
-             skip_retry=[]):
+    def post(self, uri, payload=None, co3_context_token=None, timeout=None, headers=None,
+             skip_retry=[], is_uri_absolute=None, get_response_object=None, **kwargs):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -568,12 +568,18 @@ class BaseClient(object):
            timeout: number of seconds to wait for response
            headers: optional headers to include
            skip_retry: list of HTTP responses to skip throwing an exception
+           is_uri_absolute: if True, does not insert /org/{org_id} into the uri
+           get_response_object: if True, returns the response object rather than the json of the response.text or response.content
+           **kwargs: any other keyword-arguments to pass through to the ``requests.post()`` method
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           RetryHTTPException - if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        if is_uri_absolute:
+            url = u"{0}/rest{1}".format(self.base_url, ensure_unicode(uri))
+        else:
+            url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
 
         # payloads which aren't convertable to json are passed asis
         payload_json = json.dumps(payload) if isinstance(payload, (list, dict)) else payload
@@ -590,7 +596,8 @@ class BaseClient(object):
                                       headers=self.make_headers(co3_context_token, additional_headers=headers),
                                       verify=self.verify,
                                       timeout=timeout,
-                                      cert=self.cert)
+                                      cert=self.cert,
+                                      **kwargs)
             RetryHTTPException.raise_if_error(r, skip_retry=skip_retry)
             return r
 
@@ -601,6 +608,9 @@ class BaseClient(object):
                               backoff=self.request_retry_backoff)
 
         RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
+
+        if get_response_object:
+            return response
         try:
             return json.loads(response.text)
         except json.decoder.JSONDecodeError:
