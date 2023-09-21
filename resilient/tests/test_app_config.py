@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-import os
-import sys
+import copy
 import logging
+import os
+import pickle
+import sys
 
 import pytest
+from jinja2 import Environment, select_autoescape
 from mock import patch
 from tests.shared_mock_data.mock_plugins.mock_plugins import (MyBadMockPlugin,
                                                               MyMockPlugin)
@@ -14,6 +17,7 @@ from tests.shared_mock_data.mock_plugins.mock_plugins import (MyBadMockPlugin,
 from resilient import constants
 from resilient.app_config import AppConfigManager, ProtectedSecretsManager
 
+# this value is the decrypted value of the example protected secret "$API_KEY"
 MOCK_API_KEY_VALUE = "JbkOxTInUg1aIRGxXI8zOG1A25opU39lDKP1_0rfeVQ"
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
@@ -197,3 +201,43 @@ def test_app_config_manager_bad_plugin():
         AppConfigManager({}, MyBadMockPlugin)
 
     assert "'pam_plugin_type' must be a subclass of 'PAMPluginInterface'" in str(captured_err)
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher to cast to dict and maintain secrets")
+def test_cast_to_dict(fx_reset_environmental_variables):
+    os.environ["TEST"] = "secretvalue"
+    x = AppConfigManager({"1": "!", "2": "@", "3": "#", "4": "$TEST"})
+
+    assert x.get("1") == "!"
+    assert x.get("4") == "secretvalue"
+    dict(x)
+    assert dict(x).get("1") == "!"
+    assert dict(x).get("4") == "secretvalue"
+
+    # we want this so that when the dict is print from the high level,
+    # secrets aren't exposed
+    assert "$TEST" in repr(x)
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher to cast to dict and maintain secrets")
+def test_render_with_jinja(fx_reset_environmental_variables):
+    os.environ["TEST"] = "secretvalue"
+
+    env = Environment(autoescape=select_autoescape(default_for_string=False))
+    template = env.from_string("Substitute a secret in {{here}} and a normal value {{there}}")
+    manager = AppConfigManager({"here": "$TEST", "there": "plaintext"})
+    result = template.render(manager)
+
+    assert result == "Substitute a secret in secretvalue and a normal value plaintext"
+
+def test_pickle_app_config():
+    # we had an issue with an app which implicitly was pickling the object.
+    # the solution was to implement __reduce__ in the AppConfigManager.
+    # This unit test is to ensure that any future AppConfigManagers are pickle-able
+
+    x = AppConfigManager()
+    s = pickle.dumps(x, protocol=-1)
+    y = pickle.loads(s)
+    assert x == y
+
+    # also make sure copyable
+    z = copy.copy(x)
+    assert z == x
