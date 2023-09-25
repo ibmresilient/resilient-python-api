@@ -521,7 +521,8 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         RetryHTTPException.raise_if_error(response)
         return response.json()
 

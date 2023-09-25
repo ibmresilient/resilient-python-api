@@ -667,7 +667,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return response
 
-    def search(self, payload, co3_context_token=None, timeout=None, skip_retry=[]):
+    def search(self, payload, co3_context_token=None, timeout=None):
         """
         Posts to the ``SearchExREST`` endpoint.
 
@@ -694,8 +694,7 @@ class SimpleClient(co3base.BaseClient):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout,
-                                         skip_retry=skip_retry)
+                                         timeout=timeout)
         _raise_if_error(response)
         return json.loads(response.text)
 
