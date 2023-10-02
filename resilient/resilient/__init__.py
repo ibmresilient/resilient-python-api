@@ -19,6 +19,7 @@ from .helpers import is_env_proxies_set, get_and_parse_proxy_env_var
 from .co3base import ensure_unicode, \
     get_proxy_dict, \
     BasicHTTPException, \
+    RetryHTTPException, \
     NoChange
 from .co3argparse import parse_parameters, ArgumentParser
 from .co3sslutil import match_hostname
