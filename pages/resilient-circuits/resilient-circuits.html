@@ -408,6 +408,12 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2023-10: version 50.1</strong></p>
+<ul class="simple">
+<li><p>Allow for <code class="docutils literal notranslate"><span class="pre">.</span></code> character in message queue names and improved logging around queues not found on startup</p></li>
+<li><p>Merged external <a class="reference external" href="https://github.com/ibmresilient/resilient-python-api/pull/27">PR</a> to improve
+support for multiple circuits services running in Windows</p></li>
+</ul>
 <p><strong>2023-08: version 50.0</strong></p>
 <ul>
 <li><p>Added support for app secrets in function inputs. Use the syntax similar to using app secrets in app.config
@@ -828,7 +834,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=742ebc04"></script>
+</div><script src="../../_static/documentation_options.js?v=c207d1b7"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
