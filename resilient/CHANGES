@@ -1,3 +1,12 @@
+**2023-10: version 50.1**
+
+* Improved options for skipping retry with certain exit codes received by REST methods in :class:`SimpleClient <resilient.co3.SimpleClient>`
+* :class:`resilient.RetryHTTPException <resilient.co3base.RetryHTTPException>` now inherits from :class:`resilient.BasicHTTPException <resilient.co3base.BasicHTTPException>`
+  for improved error handling
+* Bug fix for :class:`resilient.app_config.AppConfigManager <resilient.app_config.AppConfigManager>` when using Jinja2 to render values from app.config.
+  This fix is only applicable to Python 3 and cannot be fixed in Python 2
+* Improved obfuscation of potential secrets in logs
+
 **2023-08: version 50.0**
 
 * Adding a deprecation warning for use of Email and Password for authentication.
@@ -10,7 +19,7 @@
 
 **2023-05: version 49.0**
 
-* Added logic to skip retry logic for failed API calls in :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>`, :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>` and :class:`resilient.SimpleClient.getput() <resilient.co3.SimpleClient.getput>`
+* Added logic to skip retry logic for failed API calls in :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>`, :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>` and :class:`resilient.SimpleClient.get_put() <resilient.co3.SimpleClient.get_put>`
 * Added ``resilient-app-config-plugins`` as a new package to manage third party credentials within SOAR apps
 
 **2023-05: version 48.2**
