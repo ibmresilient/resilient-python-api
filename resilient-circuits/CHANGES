@@ -1,3 +1,9 @@
+**2023-10: version 50.1**
+
+* Allow for ``.`` character in message queue names and improved logging around queues not found on startup
+* Merged external `PR <https://github.com/ibmresilient/resilient-python-api/pull/27>`_ to improve
+  support for multiple circuits services running in Windows
+
 **2023-08: version 50.0**
 
 * Added support for app secrets in function inputs. Use the syntax similar to using app secrets in app.config

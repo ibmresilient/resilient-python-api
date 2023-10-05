@@ -8,6 +8,7 @@ from resilient_app_config_plugins.constants import (
     PAM_SECRET_PREFIX, PAM_SECRET_PREFIX_WITH_BRACKET)
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 from six import string_types
+from six.moves import UserDict
 
 from resilient import constants, helpers
 
@@ -76,7 +77,7 @@ class ProtectedSecretsManager:
 
         return protected_secret
 
-class AppConfigManager(ConfigDict):
+class AppConfigManager(UserDict, ConfigDict):
     """
     Intermediary to manage plain-text configs, $-prefixed protected secrets/env vars,
     and ^-prefixed PAM secrets.
@@ -100,7 +101,7 @@ class AppConfigManager(ConfigDict):
     protected_secrets_manager = ProtectedSecretsManager()
 
     def __init__(self, dict={}, pam_plugin_type=None, key="_"):
-        super(AppConfigManager, self).__init__(dict)
+        UserDict.__init__(self, dict) # need to use old-style super for Python 2
 
         if pam_plugin_type:
             if not issubclass(pam_plugin_type, PAMPluginInterface):
@@ -122,16 +123,21 @@ class AppConfigManager(ConfigDict):
             return self[key]
         except KeyError:
             return default
-        
+
     def __repr__(self):
         # overriding the default '__repr__' will allow
         # for hiding the credentials that are meant to be hidden
         data = {}
-        for key in self:
+        for key in self.data:
             # have to bypass this class' logic which incorporates
             # pam and protected secret substitution
-            data[key] = super(AppConfigManager, self).__getitem__(key)
+            data[key] = self.data[key]
         return str(data)
+
+    def __reduce__(self):
+        """Return state information for pickling"""
+        inst_dict = vars(self).copy()
+        return self.__class__, (), inst_dict or None, None, iter(self.data.items())
 
     def __getitem__(self, key):
         """
@@ -149,7 +155,7 @@ class AppConfigManager(ConfigDict):
         :type key: object
         :return: item from the dictionary, protected secret, or the pam plugin
         """
-        item = super(AppConfigManager, self).__getitem__(key)
+        item = UserDict.__getitem__(self, key)
 
         # NOTE: the order of these checks is important -- the check for the version
         # with bracket has to be checked first, as otherwise the bracket won't be
@@ -183,11 +189,11 @@ class AppConfigManager(ConfigDict):
         :param plugin_type: plugin type for the app config manager
         :type plugin_type: ``resilient_app_config_plugins.plugin_base.PAMPluginInterface``
         """
-        for key in self:
-            if isinstance(self[key], dict):
+        for key in self.data:
+            if isinstance(self.data[key], dict) or isinstance(self.data[key], AppConfigManager):
                 # for deeper levels of dictionaries, pass through their "key"
                 # so that future uses might maintain that information
-                self[key] = AppConfigManager(dict=self[key], pam_plugin_type=plugin_type, key=key)
+                self.data[key] = AppConfigManager(dict=self.data[key], pam_plugin_type=plugin_type, key=key)
 
     def _asdict(self):
         """
@@ -199,6 +205,9 @@ class AppConfigManager(ConfigDict):
         """
         return self
 
+    def update(self, mapping=(), **kwargs):
+        UserDict.update(self, mapping, **kwargs)
+        ConfigDict.update(self, mapping, **kwargs)
 
     @staticmethod
     def replace_secret_in_config(item, secret_manager, secret_prefix):
@@ -251,10 +260,10 @@ class AppConfigManager(ConfigDict):
             # user that their value wasn't found
             if secret_value == prefixed_item:
                 manager_type_str = "PAM Plugin" if isinstance(secret_manager, PAMPluginInterface) else "Protected Secrets"
-                LOG.debug("Failed to find '%s' in %s. To properly deploy your app, please make sure '%s' is correctly configured",
-                          prefixed_item, manager_type_str, prefixed_item)
+                LOG.debug("Failed to find a secret in %s. To properly deploy your app, please make sure that the secret is correctly configured",
+                          manager_type_str)
             else:
-                LOG.debug("Substituting value for '%s' in %s", prefixed_item, original_item)
+                LOG.debug("Value found for %s", original_item)
 
             item = u"{0}{1}{2}".format(item[0:start], secret_value, item[end+1:])
 

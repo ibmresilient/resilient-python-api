@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import io
 import json
@@ -8,12 +8,12 @@ import os
 import sys
 
 import pytest
-from mock import patch
-from resilient import constants
-from resilient.co3base import RetryHTTPException, BasicHTTPException
-
+import requests
 from tests import helpers
 from tests.shared_mock_data import mock_paths
+
+from resilient import constants
+from resilient.co3base import BasicHTTPException, RetryHTTPException
 
 
 def test_set_api_key_authorized(fx_base_client):
@@ -236,6 +236,19 @@ def test_post(fx_base_client):
 
     assert r.get("incident_id") == 1001
 
+def test_post_with_absolute_uri(fx_base_client):
+    # test again with URI absolute
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    mock_response = {"incident_id": incident_id}
+    requests_adapter.register_uri('POST', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.post("/orgs/201/incidents/1001", {"incident_name": "Mock Incident"}, is_uri_absolute=True)
+
+    assert r.get("incident_id") == 1001
+
 
 def test_post_retry(fx_base_client, caplog):
     base_client = fx_base_client[0]
@@ -257,7 +270,7 @@ def test_post_retry(fx_base_client, caplog):
     with pytest.raises(RetryHTTPException, match=r"Response Code: 300"):
         base_client.post("/incidents/1001", {"incident_name": "Mock Incident"}, skip_retry=404)
 
-def test_post_retry_skip(fx_base_client, caplog):
+def test_post_retry_skip(fx_base_client):
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
 
@@ -274,6 +287,25 @@ def test_post_retry_skip(fx_base_client, caplog):
     # single value
     with pytest.raises(BasicHTTPException, match=r"Response Code: 404"):
         base_client.post("/incidents/1001", {"incident_name": "Mock Incident"}, skip_retry=404)
+
+def test_post_with_file(fx_base_client):
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    export_id = 1234
+
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/exports/{2}'.format(base_client.base_url, base_client.org_id, export_id)
+    requests_adapter.register_uri('POST', mock_uri, status_code=200, content=b"12345")
+    r = base_client.post(
+        "/orgs/201/playbooks/exports/1234",
+        is_uri_absolute=True,
+        get_response_object=True,
+        files={'file_name': (None, "playbook_export.resz")}
+    )
+
+    assert isinstance(r, requests.Response)
+    assert "file_name" in requests_adapter.request_history[-1].text
+    assert "playbook_export.resz" in requests_adapter.request_history[-1].text
 
 def test_client_has_base_headers(fx_base_client):
     base_client = fx_base_client[0]

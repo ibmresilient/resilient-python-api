@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+
+import os
 
 from resilient_circuits import StatusMessage, constants
 from resilient_lib import RequestsCommon, RequestsCommonWithoutSession
@@ -12,7 +14,8 @@ resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
 
 
-def test_basic_instantiation(circuits_app):
+def test_basic_instantiation(circuits_app, fx_reset_environmental_variables):
+    os.environ["SECRET"] = "supersecret"
     opts = AppConfigManager(mock_constants.MOCK_OPTS)
     mock_cmp = AppFunctionMockComponent(
         opts=opts,
@@ -25,6 +28,7 @@ def test_basic_instantiation(circuits_app):
     assert isinstance(mock_cmp.rc, RequestsCommon)
     assert mock_cmp.app_configs.url == "https://www.mockexample.com"
     assert mock_cmp.options == mock_cmp._app_configs_as_dict
+    assert mock_cmp.options["secret"] == mock_cmp._app_configs_as_dict["secret"] == "supersecret"
 
 def test_basic_instantiation_rc_without_session(circuits_app):
     opts = AppConfigManager(mock_constants.MOCK_OPTS)

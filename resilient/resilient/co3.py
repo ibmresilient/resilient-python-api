@@ -358,7 +358,7 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None):
+    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None, skip_retry=[]):
         """Gets the specified URI.
 
         .. note::
@@ -383,15 +383,15 @@ class SimpleClient(co3base.BaseClient):
         # Call get from BaseClient, convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute, get_response_object)
+            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute, get_response_object, skip_retry=skip_retry)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
     @cachedmethod(_get_cache, key=_keyfunc)
-    def cached_get(self, uri, co3_context_token=None, timeout=None):
+    def cached_get(self, uri, co3_context_token=None, timeout=None, skip_retry=[]):
         """ Same as :meth:`get()`, but checks cache first """
-        return self.get(uri, co3_context_token, timeout)
+        return self.get(uri, co3_context_token, timeout, skip_retry=skip_retry)
 
     def get_const(self, co3_context_token=None, timeout=None):
         """
@@ -419,7 +419,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return response
 
-    def get_content(self, uri, co3_context_token=None, timeout=None):
+    def get_content(self, uri, co3_context_token=None, timeout=None, skip_retry=[]):
         """Gets the specified URI.
 
         .. note::
@@ -440,12 +440,12 @@ class SimpleClient(co3base.BaseClient):
         # Call get_content from BaseClient. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get_content(uri, co3_context_token, timeout)
+            response = super(SimpleClient, self).get_content(uri, co3_context_token, timeout, skip_retry=skip_retry)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
+    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None, skip_retry=[], **kwargs):
         """
         Posts to the specified URI.
 
@@ -471,7 +471,7 @@ class SimpleClient(co3base.BaseClient):
         # Call post of BaseClient. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout, headers=headers)
+            response = super(SimpleClient, self).post(uri, payload, co3_context_token, timeout, headers=headers, skip_retry=skip_retry, **kwargs)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -624,7 +624,7 @@ class SimpleClient(co3base.BaseClient):
 
     def post_attachment(self, uri, filepath, filename=None,
                         mimetype=None, data=None, co3_context_token=None, timeout=None,
-                        bytes_handle=None):
+                        bytes_handle=None, skip_retry=[]):
         """
         Upload a file to the specified URI
         e.g. ``/incidents/<id>/attachments`` (for incident attachments)
@@ -661,7 +661,8 @@ class SimpleClient(co3base.BaseClient):
                                                                  data=data,
                                                                  co3_context_token=co3_context_token,
                                                                  timeout=timeout,
-                                                                 bytes_handle=bytes_handle)
+                                                                 bytes_handle=bytes_handle,
+                                                                 skip_retry=skip_retry)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -729,7 +730,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return res
 
-    def put(self, uri, payload, co3_context_token=None, timeout=None, headers=None):
+    def put(self, uri, payload, co3_context_token=None, timeout=None, headers=None, skip_retry=[]):
         """
         Directly performs an update operation by PUT to the specified URI.
 
@@ -756,12 +757,12 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient put. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).put(uri, payload, co3_context_token, timeout, headers=headers)
+            response = super(SimpleClient, self).put(uri, payload, co3_context_token, timeout, headers=headers, skip_retry=skip_retry)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
 
-    def delete(self, uri, co3_context_token=None, timeout=None):
+    def delete(self, uri, co3_context_token=None, timeout=None, skip_retry=[]):
         """
         Deletes the specified URI.
 
@@ -781,7 +782,7 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient delete. Convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).delete(uri, co3_context_token, timeout)
+            response = super(SimpleClient, self).delete(uri, co3_context_token, timeout, skip_retry=skip_retry)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response

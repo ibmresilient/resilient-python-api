@@ -37,7 +37,8 @@ MOCK_REQUIRED_APP_CONFIGS = [
 ]
 
 MOCK_APP_CONFIGS = {
-    "url": "https://www.mockexample.com"
+    "url": "https://www.mockexample.com",
+    "secret": "$SECRET"
 }
 
 MOCK_OPTS = {
@@ -46,5 +47,6 @@ MOCK_OPTS = {
     "email": "admin@example.com",
     "password": "123",
     "resilient_mock": RESILIENT_MOCK,
-    MOCK_PACKAGE_NAME: MOCK_APP_CONFIGS
+    MOCK_PACKAGE_NAME: MOCK_APP_CONFIGS,
+
 }
