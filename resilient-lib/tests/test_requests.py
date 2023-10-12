@@ -916,3 +916,18 @@ class TestFunctionRequests(unittest.TestCase):
                        callback=lambda x: x.raise_for_status())
 
         assert self.caplog.text.count("retrying in") == 2
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(not PY2, reason="make a test for PY2 that ensures retry not engaged")
+    def test_retry_PY2_doesnt_retry(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # should immediately call and fail in PY2
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3)
+
+        assert "Cannot use retry in resilient_lib.RequestsCommon.execute in Python 2.7" in self.caplog.text
+        assert "retrying in" not in self.caplog.text
