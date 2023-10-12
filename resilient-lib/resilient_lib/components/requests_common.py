@@ -341,7 +341,7 @@ class RequestsCommon(object):
             
             # NOTE: because retry library requires PY3 style exceptions,
             # if version running on is PY2, retries won't be allowed
-            if PY2:
+            if PY2 and retry_tries != 1:
                 LOG.warning("Cannot use retry in resilient_lib.RequestsCommon.execute in Python 2.7. Please upgrade your app to run on Python 3.9 or greater")
                 retry_tries = 1
 
