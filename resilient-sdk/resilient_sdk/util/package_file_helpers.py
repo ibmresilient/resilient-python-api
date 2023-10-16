@@ -448,7 +448,7 @@ def get_export_from_zip(path_zip, format_str="zip"):
     try:
         with zipfile.ZipFile(path_zip, "r") as myzip:
             myzip.extractall(temp_dir)
-    except zipfile.BadZipFile as err:
+    except zipfile.BadZipfile as err:
         raise SDKException(str(err))
 
     for file_path in os.listdir(temp_dir):
