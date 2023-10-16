@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
@@ -429,6 +429,37 @@ def get_import_definition_from_local_export_res(path_export_res_file):
     import_definition = remove_default_incident_type_from_import_definition(import_definition)
 
     return import_definition
+
+def get_export_from_zip(path_zip, format_str="zip"):
+    """
+    Given a path to an export.resz (zip file), extract the export.res file from within.
+    This applies to System exports from the UI or Playbook exports from the UI.
+
+    :param path_zip: absolute path to the .resz file
+    :type path_zip: str
+    :param format: format of the .resz file, always "zip", defaults to "zip"
+    :type format: str, optional (other options are "tar", "gztar", "bztar", "xztar")
+    :raises SDKException: if given file is not a zip file or if the zip file doesn't have an export.res in it
+    :return: the contents of the export.res file within the zip
+    :rtype: dict
+    """
+    temp_dir = tempfile.mkdtemp()
+    try:
+        shutil.unpack_archive(path_zip, extract_dir=temp_dir, format=format_str)
+    except shutil.ReadError as err:
+        raise SDKException(str(err))
+
+    for file_path in os.listdir(temp_dir):
+        if file_path.endswith(".res"):
+            export_file_path = os.path.join(temp_dir, file_path)
+            break
+    else:
+        raise SDKException("No export.res found in {0}".format(path_zip))
+    export_content = get_import_definition_from_local_export_res(export_file_path)
+
+    shutil.rmtree(temp_dir)
+
+    return export_content
 
 def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
