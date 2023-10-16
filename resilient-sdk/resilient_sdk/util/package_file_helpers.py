@@ -15,6 +15,7 @@ import shutil
 import struct
 import sys
 import tempfile
+import zipfile
 from collections import defaultdict
 
 import pkg_resources
@@ -445,8 +446,9 @@ def get_export_from_zip(path_zip, format_str="zip"):
     """
     temp_dir = tempfile.mkdtemp()
     try:
-        shutil.unpack_archive(path_zip, extract_dir=temp_dir, format=format_str)
-    except shutil.ReadError as err:
+        with zipfile.ZipFile(path_zip, "r") as myzip:
+            myzip.extractall(temp_dir)
+    except zipfile.BadZipFile as err:
         raise SDKException(str(err))
 
     for file_path in os.listdir(temp_dir):

@@ -401,3 +401,14 @@ def test_print_latest_version_warning(caplog):
 'v41.0.0' is available on https://pypi.org/project/resilient-sdk/\n\n\
 To update run:\n\t$ pip install -U resilient-sdk"
     assert msg in caplog.text
+
+def test_get_export_from_zip():
+    export_content = package_helpers.get_export_from_zip(mock_paths.MOCK_EXPORT_RESZ)
+
+    assert export_content
+    assert len(export_content["workflows"]) == 2 # just a simple check
+
+def test_get_export_from_zip_not_found():
+    with pytest.raises(SDKException):
+        package_helpers.get_export_from_zip(mock_paths.MOCK_EXPORT_RES) # not a zip file
+
