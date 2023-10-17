@@ -77,6 +77,7 @@ resilient_mock={0}""".format(resilient_mock)
 
 def _add_to_cmd_line_args(args_to_add):
     sys.argv.extend(args_to_add)
+    return sys.argv
 
 
 def _pip_install(package):
@@ -454,9 +455,28 @@ def fx_cmd_line_args_docgen():
         "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
     ]
 
-    _add_to_cmd_line_args(args_to_add)
+    args = _add_to_cmd_line_args(args_to_add)
 
-    yield
+    yield args
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_cmd_line_args_docgen_export_file():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "docgen",
+        "-e", mock_paths.MOCK_EXPORT_RES, mock_paths.MOCK_PYTEST_XML_REPORT_PATH
+    ]
+
+    args = _add_to_cmd_line_args(args_to_add)
+
+    yield args
 
     sys.argv = original_cmd_line
 

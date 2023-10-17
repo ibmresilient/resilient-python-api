@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """ TODO: module docstring """
 
@@ -111,6 +111,8 @@ def main():
         # Add 'dev' command if environment var set
         cmd_dev = CmdDev(sub_parser)
         LOG.info("{0}Running SDK in Developer Mode{0}".format(constants.LOG_DIVIDER))
+    else:
+        cmd_dev = None
 
     # Add any subcommands to main app parser here
     cmd_validate = CmdValidate(sub_parser)
