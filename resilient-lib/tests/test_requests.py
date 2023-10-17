@@ -4,8 +4,6 @@ import os
 import time
 import unittest
 
-from retry.api import retry_call
-
 import pytest
 import requests
 import requests_mock
@@ -14,8 +12,15 @@ from resilient_lib import (IntegrationError, RequestsCommon,
                            RequestsCommonWithoutSession)
 from resilient_lib.components.requests_common import (
     get_case_insensitive_key_value, is_payload_in_json)
+from retry.api import retry_call
+from six import PY2
 from tests.shared_mock_data import mock_paths
 
+# USE THIS TO TEST BOTH VERSIONS OF REQUESTSCOMMON
+# Ex:
+# @parameterized.expand(REQUESTS_COMMON_CLASSES)
+# def test_x(self, RCObjectType):
+#    ...
 REQUESTS_COMMON_CLASSES = [[RequestsCommon], [RequestsCommonWithoutSession]]
 RETRY_TRIES_COUNT = 3
 RETRY_DELAY = 2
@@ -825,3 +830,104 @@ class TestFunctionRequests(unittest.TestCase):
         standard_time = end - start
 
         assert session_time < standard_time
+
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry(self, RCObjectType):
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3, retry_delay=0.1, retry_backoff=2)
+
+        assert self.caplog.text.count("retrying in") == 2
+        assert "retrying in 0.1 seconds..." in self.caplog.text
+        assert "retrying in 0.2 seconds..." in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_retry_skipped(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # notice that the callback skips the retry logic. this is documented
+        # for the callback parameter of rc.execute that when callback doesn't
+        # raise an HTTPError, the retry logic is skipped
+        rc.execute("GET", url, retry_tries=3, retry_backoff=2, retry_delay=2,
+                   callback=lambda x: x)
+
+        assert "retrying in" not in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_retry_custom_exception(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        def callback_raise_non_default_exception(x):
+            raise ValueError(x.status_code)
+        # compared to above test, this still raises
+        # IntegrationError because of try-except in function
+        # but because that isn't in the retry exceptions, it immediately fails.
+        # see below how we could make a ValueError raised in a callback trigger a retry
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3, retry_backoff=2, retry_delay=2,
+                    callback=callback_raise_non_default_exception)
+
+        assert "retrying in" not in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_retry_custom_exception_expected(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        def callback_raise_non_default_exception(x):
+            raise ValueError(x.status_code)
+        # still raises IntegrationError because of try-except in function
+        # but compared to above, the ValueError (inner exception) is listed
+        # on the retry list so we see that retries take place
+        with pytest.raises(IntegrationError):
+            # overwrite the default exception to retry on with ValueError
+            # which would be raised in our custom callback
+            rc.execute("GET", url, retry_tries=3, retry_exceptions=(ValueError),
+                    callback=callback_raise_non_default_exception)
+
+        assert self.caplog.text.count("retrying in") == 2
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_still_retries(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # try again where the retry should kick in because call back DOES raise HTTPError
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3,
+                       callback=lambda x: x.raise_for_status())
+
+        assert self.caplog.text.count("retrying in") == 2
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(not PY2, reason="make a test for PY2 that ensures retry not engaged")
+    def test_retry_PY2_doesnt_retry(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # should immediately call and fail in PY2
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3)
+
+        assert "Cannot use retry in resilient_lib.RequestsCommon.execute in Python 2.7" in self.caplog.text
+        assert "retrying in" not in self.caplog.text
