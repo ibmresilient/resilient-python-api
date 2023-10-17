@@ -876,13 +876,14 @@ in a class that inherits <a class="reference internal" href="../resilient-circui
 
 <dl class="py function">
 <dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon.execute">
-<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clientauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">RequestsCommon.</span></span><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clientauth=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_tries=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_delay=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_max_delay=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_backoff=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_jitter=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_exceptions=&lt;class</span> <span class="pre">'requests.exceptions.HTTPError'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="Link to this definition">#</a></dt>
 <dd><p>Constructs and sends a request. Returns a
 <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Response">requests.Response</a> object.</p>
 <p>This uses the <code class="docutils literal notranslate"><span class="pre">requests.request()</span></code> function to
 make a call. The inputs are mapped to this function.
 See <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.request">requests.request()</a>
 for information on any parameters available, but not documented here.</p>
+<p>Retries can be achieved through the parameters prefixed with <code class="docutils literal notranslate"><span class="pre">retry_</span></code>. Retry is only available in PY3+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -903,7 +904,10 @@ The mapping protocol must be in the format:</p>
 </p></li>
 <li><p><strong>callback</strong> (<em>function</em>) – (Optional) Once a response is received from the endpoint,
 return this callback function passing in the <code class="docutils literal notranslate"><span class="pre">response</span></code> as its
-only parameter. Can be used to specifically handle errors.</p></li>
+only parameter. Can be used to specifically handle errors.
+If <code class="docutils literal notranslate"><span class="pre">callback</span></code> is given, any retry parameters will be ignored
+unless the <code class="docutils literal notranslate"><span class="pre">callback</span></code> function raises an error in the parameter
+<code class="docutils literal notranslate"><span class="pre">retry_exceptions</span></code> (see below) in which case the retry logic will kick in.</p></li>
 <li><p><strong>clientauth</strong> (<em>str</em><em> or </em><em>tuple</em><em>(</em><em>str</em><em>, </em><em>str</em><em>)</em>) – <p>(Optional) Equivalent to the <code class="docutils literal notranslate"><span class="pre">cert</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">requests</span></code>.
 Client-side certificates can be configured automatically in
 the app’s section of the app.config. These values will be read in automatically by
@@ -938,8 +942,29 @@ completely.</p>
 <span class="n">verify</span><span class="o">=&lt;</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">CA</span><span class="o">/</span><span class="n">bundle</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">use</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>NOTE: The value held in the app’s config will be overwritten if a value is passed in by the call
-to <code class="docutils literal notranslate"><span class="pre">execute</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value held in the app’s config will be overwritten if a value is passed in by the call to <code class="docutils literal notranslate"><span class="pre">execute</span></code>.</p>
+</div>
+</p></li>
+<li><p><strong>retry_tries</strong> (<em>int</em>) – (PY3 only) The maximum number of attempts. Default: <code class="docutils literal notranslate"><span class="pre">1</span></code> (no retry). Use <code class="docutils literal notranslate"><span class="pre">-1</span></code> for unlimited retries.
+Matches <code class="docutils literal notranslate"><span class="pre">tries</span></code> parameter of <a class="reference external" href="https://github.com/eSAMTrade/retry#retry_call">retry.api.retry_call</a>.</p></li>
+<li><p><strong>retry_delay</strong> (<em>int</em>) – <p>(PY3 only) Initial delay between attempts. Default: <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+Matches <code class="docutils literal notranslate"><span class="pre">delay</span></code> parameter of <a class="reference external" href="https://github.com/eSAMTrade/retry#retry_call">retry.api.retry_call</a>.</p>
+</p></li>
+<li><p><strong>retry_max_delay</strong> (<em>int</em>) – <p>(PY3 only) The maximum value of delay. Default: <code class="docutils literal notranslate"><span class="pre">None</span></code> (no limit).
+Matches <code class="docutils literal notranslate"><span class="pre">max_delay</span></code> parameter of <a class="reference external" href="https://github.com/eSAMTrade/retry#retry_call">retry.api.retry_call</a>.</p>
+</p></li>
+<li><p><strong>retry_backoff</strong> (<em>int</em>) – <p>(PY3 only) Multiplier applied to delay between attempts. Default: <code class="docutils literal notranslate"><span class="pre">1</span></code> (no backoff).
+Matches <code class="docutils literal notranslate"><span class="pre">backoff</span></code> parameter of <a class="reference external" href="https://github.com/eSAMTrade/retry#retry_call">retry.api.retry_call</a>.</p>
+</p></li>
+<li><p><strong>retry_jitter</strong> (<em>int</em><em> | </em><em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) – <p>(PY3 only) Extra seconds added to delay between attempts. Default: <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+Fixed if a number, random if a range tuple (min, max).
+Matches <code class="docutils literal notranslate"><span class="pre">jitter</span></code> parameter of <a class="reference external" href="https://github.com/eSAMTrade/retry#retry_call">retry.api.retry_call</a>.</p>
+</p></li>
+<li><p><strong>retry_exceptions</strong> (<em>Exception</em><em> | </em><em>tuple</em><em>(</em><em>Exception</em><em>)</em>) – <p>(PY3 only) An exception or a tuple of exceptions to catch.
+Default: <code class="docutils literal notranslate"><span class="pre">requests.exceptions.HTTPError</span></code>.
+Matches <code class="docutils literal notranslate"><span class="pre">exceptions</span></code> parameter of <a class="reference external" href="https://github.com/eSAMTrade/retry#retry_call">retry.api.retry_call</a>.</p>
 </p></li>
 </ul>
 </dd>
@@ -2518,7 +2543,7 @@ adding the ability to validate fields in app.config</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=8e1711d4"></script>
+</div><script src="../../_static/documentation_options.js?v=2a6f95cd"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
