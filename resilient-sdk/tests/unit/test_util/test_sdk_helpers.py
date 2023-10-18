@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import copy
 import datetime
@@ -17,12 +17,14 @@ import pkg_resources
 import pytest
 import requests_mock
 from mock import patch
-from resilient import SimpleClient
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds import CmdCodegen, CmdValidate
 from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
 from tests.shared_mock_data import mock_data, mock_paths
+
+from resilient import SimpleClient
 
 
 def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
@@ -100,6 +102,9 @@ def test_is_valid_version_syntax():
     assert sdk_helpers.is_valid_version_syntax("0") is False
     assert sdk_helpers.is_valid_version_syntax("1.0.0") is True
     assert sdk_helpers.is_valid_version_syntax("abc") is False
+    assert sdk_helpers.is_valid_version_syntax("51.0.0.1234.567") is True
+    assert sdk_helpers.is_valid_version_syntax("51.0.0.1234") is True
+    assert sdk_helpers.is_valid_version_syntax("51.0.0.1234.more") is False
 
 
 def test_is_valid_url():
@@ -181,10 +186,28 @@ def test_get_resilient_server_info(fx_mock_res_client):
     assert server_info.get("non_exist") == {}
 
 
-def test_get_resilient_server_version(fx_mock_res_client):
-    mock_version = 39.0
-    assert sdk_helpers.get_resilient_server_version(fx_mock_res_client) == mock_version
-    assert constants.CURRENT_SOAR_SERVER_VERSION == mock_version
+def test_get_resilient_server_version_old_style(fx_mock_res_client):
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+    mock_version = "39.0.6328"
+    assert str(sdk_helpers.get_resilient_server_version(fx_mock_res_client)) == mock_version
+    assert str(constants.CURRENT_SOAR_SERVER_VERSION) == mock_version
+
+
+def test_get_resilient_server_version_new_style(fx_mock_res_client):
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+    mock_version = "51.2.3.4.5678"
+    with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_info") as patch_server_info:
+        patch_server_info.return_value = { "server_version": {"v": 51,
+            "r": 2,
+            "m": 3,
+            "f": 4,
+            "build_number": 5678,
+            "major": 0,
+            "minor": 0,
+            "version": "51.2.3.4.5678"
+        }}
+        assert str(sdk_helpers.get_resilient_server_version(fx_mock_res_client)) == mock_version
+        assert str(constants.CURRENT_SOAR_SERVER_VERSION) == mock_version
 
 
 def test_read_local_exportfile():
@@ -281,8 +304,8 @@ def test_get_message_destination_from_export(fx_mock_res_client):
 def test_get_playbooks_from_export(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
 
-        mock_server_version.return_value = 44.0
-        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        mock_server_version.return_value = parse_version("44.0")
+        constants.CURRENT_SOAR_SERVER_VERSION = parse_version("44.0")
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
         export_data = sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
 
@@ -292,8 +315,8 @@ def test_get_playbooks_from_export(fx_mock_res_client):
 def test_get_playbooks_with_functions_and_script(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
 
-        mock_server_version.return_value = 44.0
-        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        mock_server_version.return_value = parse_version("44.0")
+        constants.CURRENT_SOAR_SERVER_VERSION = parse_version("44.0")
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
         export_data = sdk_helpers.get_from_export(org_export, playbooks=["test_resilient_sdk"])
 
@@ -472,8 +495,8 @@ def test_get_workflow_functions():
 def test_get_playbook_objects(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
         playbook = None
-        mock_server_version.return_value = 44.0
-        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        mock_server_version.return_value = parse_version("44.0")
+        constants.CURRENT_SOAR_SERVER_VERSION = parse_version("44.0")
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
         for pb in org_export.get("playbooks"):
@@ -494,6 +517,8 @@ def test_get_playbook_objects(fx_mock_res_client):
         for script in pb_elements.get("scripts"):
             assert "uuid" in script
 
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+
 
 def test_get_main_cmd(monkeypatch):
     mock_args = ["resilient-sdk", "codegen", "-p", "fn_mock_package"]
@@ -509,7 +534,7 @@ def test_get_timestamp():
 
 def test_get_timestamp_from_timestamp():
     ts = sdk_helpers.get_timestamp(1579258053.728)
-    assert ts == "20200117104733"
+    assert ts == "20200117104733" or ts == "20200117054733" # one for Cambridge timezone, one for Ireland timezone to let it work with local dev in Cambridge
 
 
 def test_str_to_bool():

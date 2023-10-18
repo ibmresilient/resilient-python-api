@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import copy
 
-from .shared_mock_data import mock_constants
-from resilient import constants as res_constants
+from mock import patch
 from resilient_circuits import constants, rest_helper
+
+from resilient import constants as res_constants
+
+from .shared_mock_data import mock_constants
 
 
 def test_resilient_client_has_custom_headers(fx_mock_resilient_client):
@@ -45,8 +48,27 @@ def test_resilient_client_retry_args():
     assert res_client.request_retry_delay == 10
     assert res_client.request_retry_backoff == 10
 
-def test_get_resilient_server_version(fx_mock_resilient_client):
+def test_get_resilient_server_version_old_style(fx_mock_resilient_client):
 
-    const = fx_mock_resilient_client.get_const()
-    assert "major" in const.get("server_version", {})
-    assert "minor" in const.get("server_version", {})
+    version = rest_helper.get_resilient_server_version(fx_mock_resilient_client)
+    assert version == "47.0.8304"
+
+def test_get_resilient_server_version_new_style(fx_mock_resilient_client):
+
+    with patch("resilient.co3.SimpleClient.get_const") as mock_const:
+        # for now, leaving default test value at 47.0 so we need to patch in the new style
+        # server_version to test with. only patching that, not the whole get_const() object
+        mock_const.return_value = {
+            "server_version": {
+                "v": "51",
+                "r": "2",
+                "m": "3",
+                "f": "4",
+                "build_number": "5678",
+                "major": "0",
+                "minor": "0",
+                "version": "51.2.3.4.5678"
+            }
+        }
+        version = rest_helper.get_resilient_server_version(fx_mock_resilient_client)
+        assert version == "51.2.3.4.5678"

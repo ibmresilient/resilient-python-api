@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Simple client for Resilient REST API"""
 import datetime
@@ -234,7 +234,7 @@ class SimpleClient(co3base.BaseClient):
         incidents with IBM Security SOAR
 
         Example Usage:
-        $ python sample_connect.py "https://<host>", "<org_name>", "<api_key_id>", "<api_key_secret>", "<path_to_ca_file>|False"
+        python sample_connect.py "https://<host>", "<org_name>", "<api_key_id>", "<api_key_secret>", "<path_to_ca_file>|False"
         '''
 
         import sys

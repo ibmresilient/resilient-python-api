@@ -5,9 +5,11 @@
 import os
 import sys
 
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds import CmdDocgen, base_cmd
-from resilient_sdk.util import constants, sdk_helpers
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
 
 
@@ -66,7 +68,7 @@ def test_get_function_details():
     assert the_function.get("post_processing_script") is None
 
 def test_get_function_details_w_playbook():
-    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version("46.0") # setting SOAR server version to 46.0
 
     import_definition = package_helpers.get_import_definition_from_local_export_res(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
 
@@ -111,7 +113,7 @@ def test_get_rule_details():
     assert the_rule == mock_rule
 
 def test_get_playbook_details():
-    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version("46.0") # setting SOAR server version to 46.0
 
     import_definition = package_helpers.get_import_definition_from_local_export_res(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
     import_def_data = sdk_helpers.get_from_export(import_definition, playbooks=["fn_test_dynamic_input"])

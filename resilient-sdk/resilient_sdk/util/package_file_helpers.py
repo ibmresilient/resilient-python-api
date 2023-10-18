@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
@@ -778,7 +778,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     if path_customize_py_file:
         import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
-        # No 'customize.py' file found generate import definition with just mimimum server version.
+        # No 'customize.py' file found generate import definition with just minimum server version.
         import_definition = {
             'server_version':
                 IMPORT_MIN_SERVER_VERSION
@@ -889,12 +889,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "content": u"<div>{0}</div>".format(setup_py_attributes.get("long_description")),
                 "format": "html"
             },
-            "minimum_resilient_version": {
-                "major": import_definition.get("server_version").get("major", None),
-                "minor": import_definition.get("server_version").get("minor", None),
-                "build_number": import_definition.get("server_version").get("build_number", None),
-                "version": import_definition.get("server_version").get("version", None)
-            },
+            "minimum_resilient_version": import_definition.get("server_version", {}),
             "name": setup_py_attributes.get("name"),
             "tag": {
                 "prefix": tag_name,
