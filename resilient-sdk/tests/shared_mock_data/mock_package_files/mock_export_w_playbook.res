@@ -9622,10 +9622,14 @@
     "uuid" : "66ab02f1-d4ab-4239-98ce-312daebf8197"
   } ],
   "server_version" : {
-    "build_number" : 49,
-    "major" : 43,
-    "minor" : 1,
-    "version" : "43.1.49"
+    "v": 51,
+    "r": 2,
+    "m": 3,
+    "f": 4,
+    "build_number": 5678,
+    "major": 0,
+    "minor": 0,
+    "version": "51.2.3.4.5678"
   },
   "tags" : [ {
     "created" : 1644407261998,

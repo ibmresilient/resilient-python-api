@@ -784,7 +784,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 IMPORT_MIN_SERVER_VERSION
         }
 
-    # Add the tag to the import defintion
+    # Add the tag to the import definition
     import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, import_definition)
 
     # Parse the app.configs from the discovered config file
