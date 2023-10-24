@@ -39,26 +39,29 @@ class RedactingFilter(logging.Filter):
         super(RedactingFilter, self).__init__()
 
     def filter(self, record):
-        # Best effort regex filter pattern to redact password logging.
-        if PY3: # struggles to convert unicode dicts in PY2 -- so PY3 only
-            record.msg = str(record.msg)
-        if isinstance(record.msg, string_types):
-            pattern = "|".join(constants.PASSWORD_PATTERNS)
-            # see https://regex101.com/r/ssoH91/1 for detailed test
-            # this is the more performant version where only one regex is checked
-            regex = re.compile(r"""
-                ((?:{0})           # start capturing group for password pattern from constants.PASSWORD_PATTERNS
-                \w*?[\'\"]?    # match any word characters (lazy) and zero or one quotation marks
-                \W*?u?[\'\"]   # match any non-word characters (lazy) up until exactly one quotation mark
-                                # and potentially a u'' situation for PY27
-                                # (this quotation mark indicates the beginning of the secret value)
-                )              # end first capturing group
-                (.+?)          # capture the problematic content (lazy capture up until end quotation mark)
-                ([\'\"])       # capturing group to end the regex match
-            """.format(pattern), re.X)
+        try:
+            # Best effort regex filter pattern to redact password logging.
+            if PY3: # struggles to convert unicode dicts in PY2 -- so PY3 only
+                record.msg = str(record.msg)
+            if isinstance(record.msg, string_types):
+                pattern = "|".join(constants.PASSWORD_PATTERNS)
+                # see https://regex101.com/r/ssoH91/1 for detailed test
+                # this is the more performant version where only one regex is checked
+                regex = re.compile(r"""
+                    ((?:{0})       # start capturing group for password pattern from constants.PASSWORD_PATTERNS
+                    \w*?[\'\"]?    # match any word characters (lazy) and zero or one quotation marks
+                    \W*?u?[\'\"]   # match any non-word characters (lazy) up until exactly one quotation mark
+                                   # and potentially a u'' situation for PY27
+                                   # (this quotation mark indicates the beginning of the secret value)
+                    )              # end first capturing group
+                    (.+?)          # capture the problematic content (lazy capture up until end quotation mark)
+                    ([\'\"])       # capturing group to end the regex match
+                """.format(pattern), re.X)
 
-            # keep first and third capturing groups, but replace inner group with "***"
-            record.msg = regex.sub(r"\1***\3", record.msg)
+                # keep first and third capturing groups, but replace inner group with "***"
+                record.msg = regex.sub(r"\1***\3", record.msg)
+        except Exception:
+            return True
 
         return True
 
