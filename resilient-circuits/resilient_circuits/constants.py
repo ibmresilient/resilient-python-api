@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import os
 
@@ -8,7 +8,8 @@ import pkg_resources
 
 PACKAGE_NAME = "resilient-circuits"
 
-PASSWD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'id']
+# list compiled from ideas in https://stackoverflow.com/a/43369417
+PASSWORD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'session', 'connection', 'jwt']
 
 INBOUND_MSG_DEST_PREFIX = "inbound_destinations"
 

@@ -43,10 +43,10 @@ class RedactingFilter(logging.Filter):
         if PY3: # struggles to convert unicode dicts in PY2 -- so PY3 only
             record.msg = str(record.msg)
         if isinstance(record.msg, string_types):
-            for p in constants.PASSWD_PATTERNS:
+            for p in constants.PASSWORD_PATTERNS:
                 if p in record.msg.lower():
                     regex = re.compile(r"""
-                        ({0}           # start capturing group for password pattern from constants.PASSWD_PATTERNS
+                        ({0}           # start capturing group for password pattern from constants.PASSWORD_PATTERNS
                         \w*?[\'\"]?    # match any word characters (lazy) and zero or one quotation marks
                         \W*?u?[\'\"]   # match any non-word characters (lazy) up until exactly one quotation mark
                                        # and potentially a u'' situation for PY27
