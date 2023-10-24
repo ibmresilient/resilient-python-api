@@ -46,7 +46,6 @@ class RedactingFilter(logging.Filter):
             pattern = "|".join(constants.PASSWORD_PATTERNS)
             # see https://regex101.com/r/ssoH91/1 for detailed test
             # this is the more performant version where only one regex is checked
-            # 
             regex = re.compile(r"""
                 ((?:{0})           # start capturing group for password pattern from constants.PASSWORD_PATTERNS
                 \w*?[\'\"]?    # match any word characters (lazy) and zero or one quotation marks
