@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-import sys
 import os
 import shutil
+import sys
+
 import pytest
+from resilient_sdk.cmds import CmdDev, base_cmd
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.cmds import base_cmd, CmdDev
 from tests.shared_mock_data import mock_paths
 
 

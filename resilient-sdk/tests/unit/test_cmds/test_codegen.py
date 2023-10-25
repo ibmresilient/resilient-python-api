@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from mock import patch
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds import CmdCodegen, base_cmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
@@ -221,7 +222,7 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     just that it exists
     """
     output_path = mock_paths.TEST_TEMP_DIR
-    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version("46.0") # setting SOAR server version to 46.0
 
     # Add paths to an output base and an export.res file
     sys.argv.extend(["codegen"])

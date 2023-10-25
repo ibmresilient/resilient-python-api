@@ -1,5 +1,5 @@
 language: python
-python: 3.9.14
+python: 3.9.18
 os: linux
 dist: xenial
 
@@ -34,7 +34,7 @@ env:
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
   - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
   - IS_RELEASE=$([[ "$TRAVIS_BRANCH" != *"release/"* ]]; echo $?)
-  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2); fi`
+  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2,3,4); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2,3,4); fi`
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
   - ARTIFACTORY_LIB_LOCATION=$ARTIFACTORY_REPO_URL/$LIB_VERSION/$NEW_VERSION
@@ -93,7 +93,7 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Unit Tests
-      python: 3.9.14
+      python: 3.9.18
       env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install:
         - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
@@ -110,7 +110,7 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Integration Tests
-      python: 3.9.14
+      python: 3.9.18
       env: RUN_TYPE=int_test TOXENV=py39
       install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
@@ -138,7 +138,7 @@ matrix:
 
     - stage: build packages
       name: Build Packages in Python 3.9
-      python: 3.9.14
+      python: 3.9.18
       install:
         - pip install twine build
       script:
@@ -153,7 +153,7 @@ matrix:
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
-        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_TOKEN>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_ACCESS_TOKEN>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
     - stage: release to pypi
       install:

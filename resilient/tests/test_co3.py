@@ -174,7 +174,7 @@ def test_simple_client_get_content_with_error(fx_simple_client):
     with pytest.raises(SimpleHTTPException):
         base_client.cached_get("/incidents/{}".format(incident_id), skip_retry=[404])
 
-def test_simple_client_get_const(fx_simple_client):
+def test_simple_client_get_const_old_style_version(fx_simple_client):
     base_client = fx_simple_client[0]
     requests_adapter = fx_simple_client[1]
 
@@ -184,6 +184,32 @@ def test_simple_client_get_const(fx_simple_client):
     r = base_client.get_const()
 
     assert r.get("server_version", {}).get("major") == 47
+    assert r.get("server_version", {}).get("minor") == 0
+    assert r.get("server_version", {}).get("build_number") == 8304
+    assert r.get("server_version", {}).get("version") == "47.0.8304"
+
+def test_get_const_new_style_version(fx_simple_client):
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+
+    mock_uri = '{0}/rest/const'.format(base_client.base_url)
+    mock_response = {"server_version": {"v": 51,
+            "r": 2,
+            "m": 3,
+            "f": 4,
+            "build_number": 5678,
+            "major": 0,
+            "minor": 0,
+            "version": "51.2.3.4.5678"}}
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.get_const()
+
+    assert r.get("server_version", {}).get("v") == 51
+    assert r.get("server_version", {}).get("r") == 2
+    assert r.get("server_version", {}).get("m") == 3
+    assert r.get("server_version", {}).get("f") == 4
+    assert r.get("server_version", {}).get("build_number") == 5678
+    assert r.get("server_version", {}).get("version") == "51.2.3.4.5678"
 
 def test_simple_client_raises_error_with_normal_retry(fx_simple_client):
     base_client = fx_simple_client[0]

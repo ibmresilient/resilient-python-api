@@ -211,8 +211,7 @@ def test_get_retry_skip(fx_base_client, caplog):
         base_client.get("/incidents/1001", skip_retry=[404])
 
 
-
-def test_get_const(fx_base_client):
+def test_get_const_old_style_version(fx_base_client):
     base_client = fx_base_client[0]
     requests_adapter = fx_base_client[1]
 
@@ -222,6 +221,32 @@ def test_get_const(fx_base_client):
     r = base_client.get_const()
 
     assert r.get("server_version", {}).get("major") == 47
+    assert r.get("server_version", {}).get("minor") == 0
+    assert r.get("server_version", {}).get("build_number") == 8304
+    assert r.get("server_version", {}).get("version") == "47.0.8304"
+
+def test_get_const_new_style_version(fx_base_client):
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    mock_uri = '{0}/rest/const'.format(base_client.base_url)
+    mock_response = {"server_version": {"v": 51,
+            "r": 2,
+            "m": 3,
+            "f": 4,
+            "build_number": 5678,
+            "major": 0,
+            "minor": 0,
+            "version": "51.2.3.4.5678"}}
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, text=json.dumps(mock_response))
+    r = base_client.get_const()
+
+    assert r.get("server_version", {}).get("v") == 51
+    assert r.get("server_version", {}).get("r") == 2
+    assert r.get("server_version", {}).get("m") == 3
+    assert r.get("server_version", {}).get("f") == 4
+    assert r.get("server_version", {}).get("build_number") == 5678
+    assert r.get("server_version", {}).get("version") == "51.2.3.4.5678"
 
 
 def test_post(fx_base_client):
