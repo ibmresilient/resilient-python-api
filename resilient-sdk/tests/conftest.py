@@ -552,6 +552,27 @@ def fx_cmd_line_args_dev_set_version():
 
 
 @pytest.fixture
+def fx_cmd_line_args_dev_set_version_51():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "dev",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
+        "--set-version", "51.0.0.0.0"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
 def fx_cmd_line_args_dev_set_bad_version():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
@@ -563,6 +584,26 @@ def fx_cmd_line_args_dev_set_bad_version():
         "dev",
         "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "--set-version", "35.x.0"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_cmd_line_args_dev_set_bad_version_51():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "dev",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
+        "--set-version", "51.0.0"
     ]
 
     _add_to_cmd_line_args(args_to_add)
