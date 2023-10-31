@@ -45,7 +45,7 @@ class RedactingFilter(logging.Filter):
                 record.msg = str(record.msg)
             if isinstance(record.msg, string_types):
                 pattern = "|".join(constants.PASSWORD_PATTERNS)
-                # see https://regex101.com/r/ssoH91/1 for detailed test
+                # see https://regex101.com/r/ssoH91 for detailed test
                 # this is the more performant version where only one regex is checked
                 regex = re.compile(r"""
                     ((?:{0})       # start capturing group for password pattern from constants.PASSWORD_PATTERNS
@@ -54,7 +54,7 @@ class RedactingFilter(logging.Filter):
                                    # and potentially a u'' situation for PY27
                                    # (this quotation mark indicates the beginning of the secret value)
                     )              # end first capturing group
-                    (.+?)          # capture the problematic content (lazy capture up until end quotation mark)
+                    (.*?)          # capture the problematic content (lazy capture up until end quotation mark)
                     ([\'\"])       # capturing group to end the regex match
                 """.format(pattern), re.X)
 
