@@ -77,9 +77,8 @@ Basic Usage
 ^^^^^^^^^^^
 
 The ``codegen`` command is your entry point with ``resilient-sdk`` to creating apps.
-Once at least one message destination and associated function are created in the SOAR UI,
-``resilient-sdk codegen`` can be run to generate templated python code which will allow
-you to develop the app in full.
+Once one or more functions and an associated message destination are created in the SOAR UI, running
+``resilient-sdk codegen`` will generate templated python code for your app development.
 
 The following assumes a function ``fn_my_function`` on destination ``fn_my_app`` exists in your
 SOAR system. It also assumes that you've already completed the :ref:`Configuration`
@@ -107,7 +106,9 @@ In the subdirectory ``fn_my_app`` you'll find the python files which make up the
 directory holds the function code. It is currently templated as an outline and will require that you fill it in
 to fully take advantage of the function. The ``util`` directory holds the configuration information for
 the app. Fill in the appropriate data in ``config.py`` to determine how the configuration section of
-your app will be rendered. This document omits the details of implementing your code and testing it.
+your app will be rendered and the ``selftest.py`` file should implement a basic connectivity check
+to the endpoint, verifying proper configuration.
+This document omits the details of implementing your code and testing it.
 For more information on that, please seek learning resources through IBM support.
 
 During the process, you may decide that certain elements in the UI need to be updated and pulled
