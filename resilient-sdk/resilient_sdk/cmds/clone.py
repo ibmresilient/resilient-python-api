@@ -53,7 +53,7 @@ class CmdClone(BaseCmd):
     and make an configuration import request to complete the cloning process"""
 
     CMD_NAME = "clone"
-    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
+    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow, or Playbook) with a new api or display name"
     CMD_USAGE = """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
