@@ -113,6 +113,7 @@ Common Request Methods
 .. autofunction:: resilient_lib.components.requests_common::RequestsCommon.get_timeout
 .. autoclass:: resilient_lib.components.requests_common::RequestsCommonWithoutSession
 
+.. _Common Poller Methods:
 
 ---------------------
 Common Poller Methods

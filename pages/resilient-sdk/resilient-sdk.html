@@ -199,7 +199,7 @@
         </div>
         <article role="main">
           <section id="resilient-sdk">
-<h1>resilient-sdk<a class="headerlink" href="#resilient-sdk" title="Link to this heading">#</a></h1>
+<span id="id1"></span><h1>resilient-sdk<a class="headerlink" href="#resilient-sdk" title="Link to this heading">#</a></h1>
 <p>Python SDK for developing Apps for IBM SOAR</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
@@ -208,7 +208,7 @@
 </pre></div>
 </div>
 <section id="configuration">
-<h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h3>
+<span id="id2"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h3>
 <p>Similar to our <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> library, the SDK requires an <code class="docutils literal notranslate"><span class="pre">app.config</span></code>
 created in the default location: <code class="docutils literal notranslate"><span class="pre">~/.resilient</span></code> with the following minimum configurations:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">resilient</span><span class="p">]</span>
@@ -242,7 +242,7 @@ options:
 -h, --help			show this help message and exit
 -v, --verbose			Set the log level to DEBUG</pre>
 <section id="codegen">
-<h3>codegen<a class="headerlink" href="#codegen" title="Link to this heading">#</a></h3>
+<span id="id3"></span><h3>codegen<a class="headerlink" href="#codegen" title="Link to this heading">#</a></h3>
 <p>Generates boilerplate code used to begin developing an app.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
@@ -274,9 +274,77 @@ options:
 -re, --reload			Reload customizations and create new customize.py 
 -pr, --poller			Build template files for a poller 
 --gather-results		Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results. Only Python &gt;= 3.6 supported</pre>
+<section id="basic-usage">
+<h4>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">codegen</span></code> command is your entry point with <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code> to creating apps.
+Once one or more functions and an associated message destination are created in the SOAR UI, running
+<code class="docutils literal notranslate"><span class="pre">resilient-sdk</span> <span class="pre">codegen</span></code> will generate templated python code for your app development.</p>
+<p>The following assumes a function <code class="docutils literal notranslate"><span class="pre">fn_my_function</span></code> on destination <code class="docutils literal notranslate"><span class="pre">fn_my_app</span></code> exists in your
+SOAR system. It also assumes that you’ve already completed the <a class="reference internal" href="#configuration"><span class="std std-ref">Configuration</span></a>
+section above and have a fresh Python environment to work in.</p>
+<p>To generate an app to implement <code class="docutils literal notranslate"><span class="pre">fn_my_function</span></code> in a new app called <code class="docutils literal notranslate"><span class="pre">fn_my_app</span></code>, run the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>resilient-sdk<span class="w"> </span>codegen<span class="w"> </span>-p<span class="w"> </span>fn_my_app<span class="w"> </span>-f<span class="w"> </span>fn_my_function<span class="w"> </span>-m<span class="w"> </span>fn_my_app
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Notice the <code class="docutils literal notranslate"><span class="pre">-p</span></code> or <code class="docutils literal notranslate"><span class="pre">--package</span></code> argument in the command above. This argument specifies the path
+to the package and is used throughout the <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code> suite of commands. When used here to
+generate a new app, it will create a new directory in your working directory and will generate the
+contents of the app within that newly created directory.</p>
+</div>
+<p>Navigate to the newly created <code class="docutils literal notranslate"><span class="pre">fn_my_app</span></code> directory and have a look around. Notice that some files
+at the root level pertain to app details. In particular, the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file should get strong
+attention. The <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file is where the app’s details are defined and govern much of what will
+appear when the app is installed in SOAR.</p>
+<p>In the subdirectory <code class="docutils literal notranslate"><span class="pre">fn_my_app</span></code> you’ll find the python files which make up the app. The <code class="docutils literal notranslate"><span class="pre">components</span></code>
+directory holds the function code. It is currently templated as an outline and will require that you fill it in
+to fully take advantage of the function. The <code class="docutils literal notranslate"><span class="pre">util</span></code> directory holds the configuration information for
+the app. Fill in the appropriate data in <code class="docutils literal notranslate"><span class="pre">config.py</span></code> to determine how the configuration section of
+your app will be rendered and the <code class="docutils literal notranslate"><span class="pre">selftest.py</span></code> file should implement a basic connectivity check
+to the endpoint, verifying proper configuration.
+This document omits the details of implementing your code and testing it.
+For more information on that, please seek learning resources through IBM support.</p>
+<p>During the process, you may decide that certain elements in the UI need to be updated and pulled
+into the app’s package. You can achieve this with the <code class="docutils literal notranslate"><span class="pre">--reload</span></code> flag which automatically refreshes
+any components from SOAR that have already been included in your app. You can also pull in new
+components by referencing them in the command. Example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>resilient-sdk<span class="w"> </span>codegen<span class="w"> </span>-p<span class="w"> </span>fn_my_app<span class="w"> </span>-pb<span class="w"> </span>pb_to_add_to_package<span class="w"> </span>--reload
+</pre></div>
+</div>
+<p>After you feel comfortable with the contents of your app, you can do a validation
+to make sure you’re not missing anything. Run <a class="reference internal" href="#validate"><span class="std std-ref">validate</span></a> on your app:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>resilient-sdk<span class="w"> </span>validate<span class="w"> </span>-p<span class="w"> </span>fn_my_app<span class="w"> </span>--validate
+</pre></div>
+</div>
+<p>Once you’ve completed the implementation of the app, run <a class="reference internal" href="#docgen"><span class="std std-ref">docgen</span></a> to generate the README:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>resilient-sdk<span class="w"> </span>docgen<span class="w"> </span>-p<span class="w"> </span>fn_my_app
+</pre></div>
+</div>
+<p>Then run <a class="reference internal" href="#package"><span class="std std-ref">package</span></a> to zip the app up so that you can then publish for use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>resilient-sdk<span class="w"> </span>package<span class="w"> </span>-p<span class="w"> </span>fn_my_app
+</pre></div>
+</div>
+</section>
+<section id="advanced-usage">
+<h4>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading">#</a></h4>
+<p>Certain apps may wish to take advantage of the ability to “poll” on an endpoint. This
+is useful in creating apps that bidirectionally sync between SOAR and a third party
+system. Adding a poller to an app is achieved by adding the <code class="docutils literal notranslate"><span class="pre">--poller</span></code> flag to the
+<code class="docutils literal notranslate"><span class="pre">codegen</span></code> command when creating a new app.
+This flag will generate new files in the <code class="docutils literal notranslate"><span class="pre">/lib</span></code> and <code class="docutils literal notranslate"><span class="pre">/poller</span></code>
+directories of the package which are intended to help you start on your way to building
+a poller. In particular, find and modify the <code class="docutils literal notranslate"><span class="pre">/poller/poller.py</span></code> file and its associated
+template files in the <code class="docutils literal notranslate"><span class="pre">/poller/data</span></code> subdirectory. The <code class="docutils literal notranslate"><span class="pre">/lib/app_common.py</span></code> file is
+where common code between the poller and function files can be shared for accessing the
+endpoints of the third party solution.</p>
+<p>See <a class="reference internal" href="../resilient-lib/resilient-lib.html#common-poller-methods"><span class="std std-ref">Common Poller Methods</span></a> for a guide on how to implement a poller app and
+see examples of poller apps in our public
+<a class="reference external" href="https://github.com/ibmresilient/resilient-community-apps">GitHub repository</a>.</p>
+</section>
 </section>
 <section id="docgen">
-<h3>docgen<a class="headerlink" href="#docgen" title="Link to this heading">#</a></h3>
+<span id="id4"></span><h3>docgen<a class="headerlink" href="#docgen" title="Link to this heading">#</a></h3>
 <p>Generates boilerplate documentation for an app.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk docgen -p &lt;path_to_package&gt;
@@ -295,7 +363,7 @@ options:
 -pr, --poller			Include poller section in README generated by docgen</pre>
 </section>
 <section id="package">
-<h3>package<a class="headerlink" href="#package" title="Link to this heading">#</a></h3>
+<span id="id5"></span><h3>package<a class="headerlink" href="#package" title="Link to this heading">#</a></h3>
 <p>Package your Python Package into a SOAR app format.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk package -p &lt;path_to_directory&gt;
@@ -314,65 +382,8 @@ options:
 --no-samples			Do not look for the payload_samples directory or try add them to the export.res file 
 --validate			Run the 'validate' command and generate the validation report to include in packaging</pre>
 </section>
-<section id="clone">
-<h3>clone<a class="headerlink" href="#clone" title="Link to this heading">#</a></h3>
-<p>Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name</p>
-<pre class="literal-block">usage:
-$ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt;
-$ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt; --changetype artifact
-$ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt;
-$ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --draft-playbook
-$ resilient-sdk clone --playbook &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --changetype artifact
-$ resilient-sdk clone -f &lt;function_to_be_cloned&gt; &lt;new_function_name&gt;
-$ resilient-sdk clone -r &quot;Display name of Rule&quot; &quot;Cloned Rule display name&quot;
-$ resilient-sdk clone -s &quot;Display name of Script&quot; &quot;Cloned Script display name&quot;
-$ resilient-sdk clone -s &quot;Display name of Script&quot; &quot;Cloned Script display name&quot; --changetype task
-$ resilient-sdk clone -pre version2 -r &quot;Display name of Rule 1&quot; &quot;Display name of Rule 2&quot; -f &lt;function_to_be_cloned&gt; &lt;function2_to_be_cloned&gt;
-
-options:
--h, --help			show this help message and exit
--c, --config			Path to app.config file. Default is ~/.resilient/app.config 
--f, --function			API names of functions to include 
--m, --messagedestination	API names of message destinations to include 
--pb, --playbook			API names of playbooks to include. Only IBM SOAR &gt;= v44.0 supported 
---draft-playbook		If specified with the '--playbook' option will clone the Playbook into a Draft state, allowing you to change it's Activation Type. Only IBM SOAR &gt;= v44.0 supported 
--r, --rule			Display names of rules to include (surrounded by &quot;&quot;) 
--s, --script			Display names of scripts to include (surrounded by &quot;&quot;) 
--w, --workflow			API names of workflows to include 
--pre, --prefix			The prefix to be placed at the start of cloned Action Objects. Used when cloning more than 1 of each Action Object Type. 
--type, --changetype		The new type of the clone action object. Used when cloning a workflow or script to have the newly cloned workflow at a different object type.</pre>
-</section>
-<section id="extract">
-<h3>extract<a class="headerlink" href="#extract" title="Link to this heading">#</a></h3>
-<p>Extract data in order to publish a .res export file</p>
-<pre class="literal-block">usage:
-$ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
-$ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
-$ resilient-sdk extract --script 'custom_script' --zip
-$ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
-$ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'
-
-options:
--h, --help			show this help message and exit
--a, --artifacttype		API names of artifact types to include 
--d, --datatable			API names of datatables to include 
--f, --function			API names of functions to include 
--fd, --field			API names of custom fields to include 
--i, --incidenttype		Display names of custom incident types to include (surrounded by &quot;&quot;) 
--m, --messagedestination	API names of message destinations to include 
--pb, --playbook			API names of playbooks to include. Only SOAR &gt;= v44.0 supported 
--r, --rule			Display names of rules to include (surrounded by &quot;&quot;) 
--s, --script			Display names of scripts to include (surrounded by &quot;&quot;) 
--t, --task			API names of custom tasks to include 
--w, --workflow			API names of workflows to include 
--e, --exportfile		Path to a local (.res or .resz) export file 
--o, --output			Path to output directory. Uses current dir by default 
--z, --zip			Generate a .zip of the generated file 
--c, --config			Path to app.config file. Default is ~/.resilient/app.config 
--n, --name			Name to prepend to generated file</pre>
-</section>
 <section id="validate">
-<h3>validate<a class="headerlink" href="#validate" title="Link to this heading">#</a></h3>
+<span id="id6"></span><h3>validate<a class="headerlink" href="#validate" title="Link to this heading">#</a></h3>
 <p>Tests the content of all files associated with the app, including code, before packaging it. Only Python &gt;= 3.6 supported.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk validate -p &lt;name_of_package&gt;
@@ -431,8 +442,65 @@ options:
 </div>
 </section>
 </section>
+<section id="clone">
+<span id="id7"></span><h3>clone<a class="headerlink" href="#clone" title="Link to this heading">#</a></h3>
+<p>Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow, or Playbook) with a new api or display name</p>
+<pre class="literal-block">usage:
+$ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt;
+$ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt; --changetype artifact
+$ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt;
+$ resilient-sdk clone -pb &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --draft-playbook
+$ resilient-sdk clone --playbook &lt;playbook_to_be_cloned&gt; &lt;new_playbook_name&gt; --changetype artifact
+$ resilient-sdk clone -f &lt;function_to_be_cloned&gt; &lt;new_function_name&gt;
+$ resilient-sdk clone -r &quot;Display name of Rule&quot; &quot;Cloned Rule display name&quot;
+$ resilient-sdk clone -s &quot;Display name of Script&quot; &quot;Cloned Script display name&quot;
+$ resilient-sdk clone -s &quot;Display name of Script&quot; &quot;Cloned Script display name&quot; --changetype task
+$ resilient-sdk clone -pre version2 -r &quot;Display name of Rule 1&quot; &quot;Display name of Rule 2&quot; -f &lt;function_to_be_cloned&gt; &lt;function2_to_be_cloned&gt;
+
+options:
+-h, --help			show this help message and exit
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
+-f, --function			API names of functions to include 
+-m, --messagedestination	API names of message destinations to include 
+-pb, --playbook			API names of playbooks to include. Only IBM SOAR &gt;= v44.0 supported 
+--draft-playbook		If specified with the '--playbook' option will clone the Playbook into a Draft state, allowing you to change it's Activation Type. Only IBM SOAR &gt;= v44.0 supported 
+-r, --rule			Display names of rules to include (surrounded by &quot;&quot;) 
+-s, --script			Display names of scripts to include (surrounded by &quot;&quot;) 
+-w, --workflow			API names of workflows to include 
+-pre, --prefix			The prefix to be placed at the start of cloned Action Objects. Used when cloning more than 1 of each Action Object Type. 
+-type, --changetype		The new type of the clone action object. Used when cloning a workflow or script to have the newly cloned workflow at a different object type.</pre>
+</section>
+<section id="extract">
+<span id="id8"></span><h3>extract<a class="headerlink" href="#extract" title="Link to this heading">#</a></h3>
+<p>Extract data in order to publish a .res export file</p>
+<pre class="literal-block">usage:
+$ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
+$ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
+$ resilient-sdk extract --script 'custom_script' --zip
+$ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
+$ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'
+
+options:
+-h, --help			show this help message and exit
+-a, --artifacttype		API names of artifact types to include 
+-d, --datatable			API names of datatables to include 
+-f, --function			API names of functions to include 
+-fd, --field			API names of custom fields to include 
+-i, --incidenttype		Display names of custom incident types to include (surrounded by &quot;&quot;) 
+-m, --messagedestination	API names of message destinations to include 
+-pb, --playbook			API names of playbooks to include. Only SOAR &gt;= v44.0 supported 
+-r, --rule			Display names of rules to include (surrounded by &quot;&quot;) 
+-s, --script			Display names of scripts to include (surrounded by &quot;&quot;) 
+-t, --task			API names of custom tasks to include 
+-w, --workflow			API names of workflows to include 
+-e, --exportfile		Path to a local (.res or .resz) export file 
+-o, --output			Path to output directory. Uses current dir by default 
+-z, --zip			Generate a .zip of the generated file 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
+-n, --name			Name to prepend to generated file</pre>
+</section>
 <section id="init">
-<h3>init<a class="headerlink" href="#init" title="Link to this heading">#</a></h3>
+<span id="id9"></span><h3>init<a class="headerlink" href="#init" title="Link to this heading">#</a></h3>
 <p>Generates sdk_settings.json to store default settings.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk init
@@ -721,15 +789,19 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
 </ul>
 </li>
 <li><a class="reference internal" href="#using-the-sdk">Using the SDK</a><ul>
-<li><a class="reference internal" href="#codegen">codegen</a></li>
+<li><a class="reference internal" href="#codegen">codegen</a><ul>
+<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li><a class="reference internal" href="#advanced-usage">Advanced Usage</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#docgen">docgen</a></li>
 <li><a class="reference internal" href="#package">package</a></li>
-<li><a class="reference internal" href="#clone">clone</a></li>
-<li><a class="reference internal" href="#extract">extract</a></li>
 <li><a class="reference internal" href="#validate">validate</a><ul>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#clone">clone</a></li>
+<li><a class="reference internal" href="#extract">extract</a></li>
 <li><a class="reference internal" href="#init">init</a></li>
 </ul>
 </li>
@@ -745,7 +817,7 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=9ad41f84"></script>
+</div><script src="../../_static/documentation_options.js?v=8ebfa6e1"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>

@@ -200,10 +200,40 @@
         <article role="main">
           <section id="resilient-circuits">
 <h1>resilient-circuits<a class="headerlink" href="#resilient-circuits" title="Link to this heading">#</a></h1>
-<p>Framework used to run IBM SOAR Apps and Integrations. Contains the class <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a>
-that gets generated using the <code class="docutils literal notranslate"><span class="pre">codegen</span></code> command in the <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code></p>
+<p>Framework used to run IBM SOAR Apps and Integrations.</p>
+<section id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> exposes the following commands:</p>
+<section id="run">
+<h3>run<a class="headerlink" href="#run" title="Link to this heading">#</a></h3>
+<p>Start up resilient-circuits in a local integration server environment.</p>
+<p>Run resilient-circuits:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>resilient-circuits<span class="w"> </span>run
+</pre></div>
+</div>
+<p>Run resilient-circuits in DEBUG mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>resilient-circuits<span class="w"> </span>run<span class="w"> </span>--loglevel<span class="o">=</span>DEBUG
+</pre></div>
+</div>
+</section>
+<section id="config">
+<h3>config<a class="headerlink" href="#config" title="Link to this heading">#</a></h3>
+<p>Manage configuration file app.config (integration server only). Default location is <code class="docutils literal notranslate"><span class="pre">~/.resilient/app.config</span></code></p>
+<p>Create the app.config file in the default location:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>resilient-circuits<span class="w"> </span>config<span class="w"> </span>-c
+</pre></div>
+</div>
+<p>Update the app.config file with newly installed apps:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>resilient-circuits<span class="w"> </span>config<span class="w"> </span>-u
+</pre></div>
+</div>
+<p>Contains the class <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a>
+that gets generated using the <a class="reference internal" href="../resilient-sdk/resilient-sdk.html#codegen"><span class="std std-ref">codegen</span></a> command in the <a class="reference internal" href="../resilient-sdk/resilient-sdk.html#resilient-sdk"><span class="std std-ref">resilient-sdk</span></a></p>
+</section>
+</section>
 <section id="components">
 <h2>Components<a class="headerlink" href="#components" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> also provides the high level Python API which each app function is built off of.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AppFunctionComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="Link to this definition">#</a></dt>
@@ -804,6 +834,11 @@ components are instead sent a ‘reload’ event.</p></li>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">resilient-circuits</a><ul>
+<li><a class="reference internal" href="#commands">Commands</a><ul>
+<li><a class="reference internal" href="#run">run</a></li>
+<li><a class="reference internal" href="#config">config</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#components">Components</a><ul>
 <li><a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent"><code class="docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a><ul>
 <li><a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent.__init__"><code class="docutils literal notranslate"><span class="pre">AppFunctionComponent.__init__()</span></code></a></li>
@@ -834,7 +869,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=9ad41f84"></script>
+</div><script src="../../_static/documentation_options.js?v=8ebfa6e1"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
