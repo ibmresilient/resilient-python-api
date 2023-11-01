@@ -186,7 +186,7 @@ class RequestsCommon(object):
         See `requests.request() <https://docs.python-requests.org/en/latest/api/#requests.request>`_
         for information on any parameters available, but not documented here.
 
-        Retries can be achieved through the parameters prefixed with ``retry_``. Retry is only available in PY3+
+        Retries can be achieved through the parameters prefixed with ``retry_<param>``. Retry is only available in PY3+.
 
         :param method: Rest method to execute (``GET``, ``POST``, etc...)
         :type method: str
@@ -213,6 +213,33 @@ class RequestsCommon(object):
             If ``callback`` is given, any retry parameters will be ignored
             unless the ``callback`` function raises an error in the parameter
             ``retry_exceptions`` (see below) in which case the retry logic will kick in.
+
+            **Example:**
+
+            .. code-block:: python
+
+                from resilient_lib import IntegrationError, RequestsCommon
+
+                def custom_callback(response):
+                    \"\"\" custom callback function to handle 400 error codes \"\"\"
+                    if response.status_code >= 400 and response.status_code < 500:
+                        # raise ValueError which will be retried
+                        raise ValueError("retry me")
+                    else:
+                        # all other status codes should return normally
+                        # note this bypasses the normal rc.execute logic which
+                        # would raise an error other 500 errors
+                        return response
+
+                rc = RequestsCommon()
+                try:
+                    # will retry 3 times then will raise IntegrationError
+                    response = rc.execute("GET", "https://postman-echo.com/status/404", 
+                                               callback=custom_callback, retry_tries=3,
+                                               retry_exceptions=ValueError)
+                except IntegrationError as err:
+                    print(err)
+
         :type callback: function
         :param clientauth: (Optional) Equivalent to the ``cert`` parameter of ``requests``.
             Client-side certificates can be configured automatically in
