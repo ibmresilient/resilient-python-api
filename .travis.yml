@@ -17,7 +17,7 @@ stages:
     if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
   - name: deploy documentation
     if: type != cron AND ( branch =~ ^pages\/.+ OR branch =~ ^release\/.+ OR branch = master )
-  - name: release to pypi
+  - name: release to pypi and quay
     if: tag =~ ^release\/pypi\/.+
   - name: sync public repo
     if: tag =~ ^release\/pypi\/.+
@@ -63,6 +63,8 @@ env:
   - SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
   - SONAR_SCANNER_CLI_FILENAME="sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip"
   - SONAR_QUBE_URL="https://sonarqube.secintel.intranet.ibm.com"
+
+  - DOCKER_IMAGE_NAME="soarapps-base-docker-image"
 
 # Install package deps
 before_install:
@@ -146,6 +148,7 @@ matrix:
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
+      name: Deploy packages to Artifactory
       install:
         - pip install twine build
       script:
@@ -155,14 +158,37 @@ matrix:
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
         - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_ACCESS_TOKEN>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
-    - stage: release to pypi
+    - stage: deploy to artifactory
+      name: Deploy Docker base image to Artifactory
+      services:
+        - docker
+      install:
+        - echo "${ARTIFACTORY_API_TOKEN}" | docker login --password-stdin --username "${ARTIFACTORY_USERNAME}" ${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}
+      script:
+        - echo "Building Docker base image and pushing to Artifactory"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_docker_base_image.sh "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}" "${NEW_VERSION}"
+        - echo "Installing and running Twistlock scan"
+        - $PATH_COMMON_SCRIPTS_DIR/run_twistlock.sh "$DOCKER_IMAGE_NAME" "$TRAVIS_BUILD_DIR" "None" "$PATH_COMMON_SCRIPTS_DIR"
+
+    - stage: release to pypi and quay
+      name: Release packages to PyPi
       install:
         - pip install twine build
       script:
         - echo "Building packages in Python 3.9 and releasing to PyPi"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
         - echo "Sending notification to Slack"
-        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Successfully released $NEW_VERSION to PyPi" "success"
+
+    - stage: release to pypi and quay
+      name: Deploy Docker base image to Quay.io
+      services:
+        - docker
+      before_install:
+        - echo "${QUAY_PASSWORD}" | docker login --password-stdin --username "${QUAY_USERNAME}" "${QUAY_DOCKER_REGISTRY_BASE_NAME}"
+      script:
+        - echo "Building Docker base image and pushing to Quay"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_docker_base_image.sh "${QUAY_DOCKER_REGISTRY_BASE_NAME}" "${NEW_VERSION}"
 
     - stage: deploy documentation
       install:
