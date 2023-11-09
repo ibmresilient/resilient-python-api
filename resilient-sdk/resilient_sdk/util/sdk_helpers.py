@@ -674,6 +674,7 @@ def get_from_export(export,
                     tasks=[],
                     scripts=[],
                     playbooks=[],
+                    apps=[],
                     get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
@@ -823,6 +824,9 @@ def get_from_export(export,
 
     # Get Scripts
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
+
+    # Get Apps
+    return_dict["apps"] = get_res_obj("apps", ResilientObjMap.APPS, "Apps", apps, export)
 
     # Get Playbooks
     if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:
