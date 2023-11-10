@@ -245,12 +245,14 @@ Give a description of the customizations included in this export
 -->
 {{ placeholder_string }}
 
+Minimum SOAR version required for this export: `{{ server_version }}` (NOTE: this may be higher than each app's minimum required version).
+
 {% if apps %}
 ### Apps Included with Export
-| App | Version |
-| --- | ------- |
+| App | Version | Minimum SOAR Version |
+| --- | ------- | -------------------- |
 {% for app in apps %}
-| {{ app.display_name }} | {{ app.version }} |
+| {{ app.display_name }} | {{ app.version }} | {{ app.minimum_resilient_version.version }} |
 {% endfor %}
 {% else %} {# else no apps #}
 
