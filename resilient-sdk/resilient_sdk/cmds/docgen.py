@@ -666,7 +666,7 @@ class CmdDocgen(BaseCmd):
         # establish the path where we'll save the generated markdown file
         # this could be given by "-o"/"--output". if not given as a command-line
         # flag, we'll just put a README.md file in the same directory as the export file
-        path_to_where_to_save_new_readme = os.path.abspath(output_path) if output_path else os.path.join(os.path.dirname(path_export_file_or_zip), package_helpers.BASE_NAME_README)
+        path_to_where_to_save_new_readme = os.path.abspath(output_path) if output_path else os.path.join(os.getcwd(), package_helpers.BASE_NAME_README)
 
         # return the details
         return display_name, export_contents, path_to_where_to_save_new_readme
