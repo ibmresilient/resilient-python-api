@@ -701,6 +701,8 @@ class CmdDocgen(BaseCmd):
             jinja_functions, jinja_scripts, jinja_rules, jinja_datatables, jinja_custom_fields, jinja_custom_artifact_types, jinja_playbooks, jinja_apps = [], [], [], [], [], [], [], []
             requirements_obj = {"docgen_export": True}
             export_paths = self._get_export_paths_from_args(args.exportfile)
+            if not export_paths:
+                raise SDKException("Couldn't find any export files in list: {0}".format(args.exportfile))
             for export_path in export_paths:
                 try:
                     package_name, export_contents, path_readme = self._get_export_docgen_details(export_path, args.output)
@@ -722,7 +724,7 @@ class CmdDocgen(BaseCmd):
                 server_versions.append(export_contents.get("server_version", {}).get("version"))
 
             # collect package name and server version details from all exports
-            package_name = ", ".join(package_names)
+            package_name = "".join(args.output.split(".")[:-1]) if args.output else ", ".join(package_names)
             server_version = max(server_versions)
 
         package_name_dash = package_name.replace("_", "-")
