@@ -66,7 +66,7 @@ env:
 
 # Install package deps
 before_install:
-  - pip install -U pip setuptools requests retry2
+  - pip install -U pip setuptools requests retry2 "platformdirs~=3.11"
   - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
 
 matrix:
