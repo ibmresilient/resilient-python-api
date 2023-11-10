@@ -1218,3 +1218,23 @@ def print_latest_version_warning(current_version, latest_available_version):
     w = "{0}\n{1}\n{2}\n\n{3}\n\t{4}\n{0}".format(colored_lines[0], colored_lines[1], colored_lines[2], colored_lines[3], colored_lines[4])
 
     LOG.warning(w)
+
+def make_list_of_dicts_unique(list_of_dicts):
+    """
+    Creates temporary dictionary of schema str(dict):dict
+    for each dict in the list, then captures the values
+    of the temporary dictionary (just the dict side) and
+    returns that list. The crucial part of this is that the
+    temporary dictionary keys are unique -- thus guaranteeing
+    that any two dictionaries whose str() cast would be the same,
+    won't appear more than once in the temporary object.
+
+    :param list_of_dicts: List of dictionaries to make unique
+    :type list_of_dicts: list[dict]
+    :return: same list as started with with any extra duplicates removed
+    :rtype: list[dict]
+    """
+
+    # .values() only grabs each x from the unique, temporary dictionary created in-line
+    unique_list = list({str(x): x for x in list_of_dicts}.values())
+    return unique_list

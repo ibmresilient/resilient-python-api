@@ -245,6 +245,17 @@ Give a description of the customizations included in this export
 -->
 {{ placeholder_string }}
 
+Minimum SOAR version required for this export: `{{ server_version }}` (NOTE: this may be higher than each app's minimum required version).
+
+{% if apps %}
+### Apps Included with Export
+| App | Version | Minimum SOAR Version |
+| --- | ------- | -------------------- |
+{% for app in apps %}
+| {{ app.display_name }} | {{ app.version }} | {{ app.minimum_resilient_version.version }} |
+{% endfor %}
+{% else %} {# else no apps #}
+
 ### Apps Required
 <!--
 List any apps required to install with the exports
@@ -252,6 +263,7 @@ List any apps required to install with the exports
 * App 1 <!-- {{ placeholder_string }} -->
 * App 2 <!-- {{ placeholder_string }} -->
 * App 3 <!-- {{ placeholder_string }} -->
+{% endif %} {# end apps if-statement #}
 
 {% endif %} {# end docgen_export if-statement #}
 ---
@@ -421,8 +433,11 @@ results = {
 ---
 {% endif %}
 
+
+{% if not docgen_export %}
 ## Troubleshooting & Support
 Refer to the documentation listed in the Requirements section for troubleshooting information.
+{% endif %} {# end not docgen_export if #}
 
 ### For Support
 {% if supported_app %}

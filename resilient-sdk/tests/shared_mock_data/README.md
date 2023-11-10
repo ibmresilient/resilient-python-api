@@ -26,6 +26,7 @@ Give a description of the customizations included in this export
 -->
 ::CHANGE_ME::
 
+ 
 ### Apps Required
 <!--
 List any apps required to install with the exports
@@ -33,7 +34,7 @@ List any apps required to install with the exports
 * App 1 <!-- ::CHANGE_ME:: -->
 * App 2 <!-- ::CHANGE_ME:: -->
 * App 3 <!-- ::CHANGE_ME:: -->
-
+ 
  ---
 
 ## Function - mock function  ล ฦ ว ศ ษ ส ห ฬ อ two
@@ -368,8 +369,7 @@ mock_data_table
 
 ---
 
-## Troubleshooting & Support
-Refer to the documentation listed in the Requirements section for troubleshooting information.
 
+ 
 ### For Support
 This is a IBM Community provided app. Please search the Community [ibm.biz/soarcommunity](https://ibm.biz/soarcommunity) for assistance.
