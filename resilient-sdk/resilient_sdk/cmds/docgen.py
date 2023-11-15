@@ -723,6 +723,9 @@ class CmdDocgen(BaseCmd):
                 package_names.append(package_name)
                 server_versions.append(export_contents.get("server_version", {}).get("version"))
 
+            if not package_names: # possible to get here if all skipped in above loop
+                raise SDKException("Couldn't find any export files in list: {0}".format(args.exportfile))
+
             # collect package name and server version details from all exports
             package_name = "".join(args.output.split(".")[:-1]) if args.output else ", ".join(package_names)
             server_version = max(server_versions)
