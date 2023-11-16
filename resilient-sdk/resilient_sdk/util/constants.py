@@ -24,7 +24,9 @@ RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
 MIN_SOAR_SERVER_VERSION_PLAYBOOKS = parse_version("44.0")
 # new SOAR versioning schema introduced in v51.0.0.x
-MIN_SOAR_SERVER_VERSION_NEW_VERSION_SCHEMA = parse_version("51.0.0.0")
+# use "51.0.0" rather than "51.0.0.0" so that sonarqube
+# won't flag as an IP address...
+MIN_SOAR_SERVER_VERSION_NEW_VERSION_SCHEMA = parse_version("51.0.0")
 
 MIN_SUPPORTED_PY_VERSION = (3, 6)
 SDK_PACKAGE_NAME = "resilient-sdk"

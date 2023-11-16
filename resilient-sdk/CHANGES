@@ -1,3 +1,20 @@
+**2023-11: version 51.0.0.0**
+
+* Added support for new SOAR v.r.m.f version scheme. This takes effect with the release of v51.0.0.0 of
+  SOAR and v51.0.0.0 of ``resilient-sdk``. To run SDK commands against SOAR v51.0.0.0 or greater,
+  you must update to the latest SDK. It is important to be up to date with ``resilient-sdk`` when
+  working with SOAR. You will know if you're version of the SDK is out of date by the warning message
+  output when running commands. If you don't see this message you are up to date
+* The ``docgen`` command now supports export files and directories of exports, including Playbooks. Use
+  ``-e`` or ``--exportfile`` followed by a list of .res or .resz files or a directory with .res or .resz
+  files. For example, to generate one README for a playbook export, a .res export and a directory of exports:
+
+  .. code-block::
+
+    $ resilient-sdk docgen -e My_Playbook.resz export.res ../Downloads/all_exports -o MyPB_export_and_all_exports.md
+
+* Added more examples of using the SDK in the API documentation at https://ibm.biz/soar-python-docs
+
 **2023-10: version 50.1**
 
 * No major changes. Just bumping build number to coincide with other builds

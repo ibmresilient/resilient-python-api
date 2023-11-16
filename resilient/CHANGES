@@ -1,3 +1,8 @@
+**2023-11: version 51.0.0.0**
+
+* Changed the version of ``resilient`` (and all other SOAR Python libraries) to match the new v.r.m.f
+  scheme that SOAR v51.0.0.0 introduced
+
 **2023-10: version 50.1**
 
 * Improved options for skipping retry with certain exit codes received by REST methods in :class:`SimpleClient <resilient.co3.SimpleClient>`
