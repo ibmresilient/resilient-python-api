@@ -438,6 +438,18 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2023-11: version 51.0.0.0</strong></p>
+<ul class="simple">
+<li><p>Added support for new SOAR v.r.m.f version scheme. If running an app on <code class="docutils literal notranslate"><span class="pre">resilient-circuits&lt;51.0.0.0</span></code>,
+the incorrect version of the SOAR server may be displayed if connecting to a SOAR server with
+version greater than or equal to 51.x. Please consider upgrading <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> to the
+latest version as soon as you can. A gentle reminder that SOAR python libraries versioning
+is independent of SOAR server versions and any version of circuits works with any version of SOAR
+(i.e. <code class="docutils literal notranslate"><span class="pre">resilient-circuits==v51.0.0.0</span></code> will work fine with SOAR v48.0.0). It is always recommended
+that you use the latest version of all SOAR Python Libraries</p></li>
+<li><p>Removed obfuscation of “id” in logs and made general improvements of log obfuscation to better
+target sensitive information while leaving important information in the logs</p></li>
+</ul>
 <p><strong>2023-10: version 50.1</strong></p>
 <ul class="simple">
 <li><p>Allow for <code class="docutils literal notranslate"><span class="pre">.</span></code> character in message queue names and improved logging around queues not found on startup</p></li>
@@ -869,7 +881,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c47f63f8"></script>
+</div><script src="../../_static/documentation_options.js?v=ecd29467"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>

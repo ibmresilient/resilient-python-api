@@ -518,6 +518,22 @@ options:
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2023-11: version 51.0.0.0</strong></p>
+<ul>
+<li><p>Added support for new SOAR v.r.m.f version scheme. This takes effect with the release of v51.0.0.0 of
+SOAR and v51.0.0.0 of <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code>. To run SDK commands against SOAR v51.0.0.0 or greater,
+you must update to the latest SDK. It is important to be up to date with <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code> when
+working with SOAR. You will know if you’re version of the SDK is out of date by the warning message
+output when running commands. If you don’t see this message you are up to date</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">docgen</span></code> command now supports export files and directories of exports, including Playbooks. Use
+<code class="docutils literal notranslate"><span class="pre">-e</span></code> or <code class="docutils literal notranslate"><span class="pre">--exportfile</span></code> followed by a list of .res or .resz files or a directory with .res or .resz
+files. For example, to generate one README for a playbook export, a .res export and a directory of exports:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk docgen -e My_Playbook.resz export.res ../Downloads/all_exports -o MyPB_export_and_all_exports.md
+</pre></div>
+</div>
+</li>
+<li><p>Added more examples of using the SDK in the API documentation at <a class="reference external" href="https://ibm.biz/soar-python-docs">https://ibm.biz/soar-python-docs</a></p></li>
+</ul>
 <p><strong>2023-10: version 50.1</strong></p>
 <ul class="simple">
 <li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
@@ -817,7 +833,7 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c47f63f8"></script>
+</div><script src="../../_static/documentation_options.js?v=ecd29467"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
