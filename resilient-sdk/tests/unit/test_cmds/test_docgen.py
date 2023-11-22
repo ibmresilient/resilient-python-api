@@ -5,9 +5,11 @@
 import os
 import sys
 
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds import CmdDocgen, base_cmd
-from resilient_sdk.util import constants, sdk_helpers
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
+from resilient_sdk.util import sdk_helpers
 from tests.shared_mock_data import mock_paths
 
 
@@ -19,11 +21,15 @@ def test_cmd_docgen_setup(fx_get_sub_parser, fx_cmd_line_args_docgen):
     assert cmd_docgen.CMD_HELP == "Generates boilerplate documentation for an app."
     assert cmd_docgen.CMD_USAGE == """
     $ resilient-sdk docgen -p <path_to_package>
-    $ resilient-sdk docgen -p <name_of_package> --settings <path_to_custom_sdk_settings_file>"""
+    $ resilient-sdk docgen -p <name_of_package> --settings <path_to_custom_sdk_settings_file>
+    $ resilient-sdk docgen -p <name_of_package> --poller # for a poller app
+    $ resilient-sdk docgen -e export.res
+    $ resilient-sdk docgen -e playbook1.resz playbook2.resz -o /path/to/save/playbooks_readme.md
+    $ resilient-sdk docgen -e . -o README.md # reads all exports in current directory and outputs to README.md"""
     assert cmd_docgen.CMD_DESCRIPTION == cmd_docgen.CMD_HELP
 
     args = cmd_docgen.parser.parse_known_args()[0]
-    assert args.p == "fn_main_mock_integration"
+    assert args.package == "fn_main_mock_integration"
 
 
 def test_get_fn_input_details():
@@ -66,7 +72,7 @@ def test_get_function_details():
     assert the_function.get("post_processing_script") is None
 
 def test_get_function_details_w_playbook():
-    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version("46.0") # setting SOAR server version to 46.0
 
     import_definition = package_helpers.get_import_definition_from_local_export_res(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
 
@@ -111,7 +117,7 @@ def test_get_rule_details():
     assert the_rule == mock_rule
 
 def test_get_playbook_details():
-    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version("46.0") # setting SOAR server version to 46.0
 
     import_definition = package_helpers.get_import_definition_from_local_export_res(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
     import_def_data = sdk_helpers.get_from_export(import_definition, playbooks=["fn_test_dynamic_input"])
@@ -258,8 +264,108 @@ def test_sdk_settings_for_docgen(fx_copy_fn_main_mock_integration, fx_get_sub_pa
 
     readme_file = sdk_helpers.read_file(os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_README))
 
-    assert 'This is an IBM supported app' in "\n".join(readme_file)
+    assert "This is an IBM supported app" in "\n".join(readme_file)
 
-def test_execute_command():
-    # TODO
-    pass
+def test_get_export_paths_from_args(fx_copy_fn_main_mock_integration, caplog):
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # find all files in fn_main_mock_integration, and manually add README.md (which will be found)
+    # just by virtue of being in the directory. we ensure that it isn't counted twice
+    export_files = CmdDocgen._get_export_paths_from_args([path_fn_main_mock_integration, os.path.join(path_fn_main_mock_integration, "README.md"), "doesntexist.resz"])
+
+    assert len(export_files) == 7
+    assert export_files == CmdDocgen._get_export_paths_from_args([path_fn_main_mock_integration])
+    assert "Skipping --export arg" in caplog.text
+
+def test_add_payload_samples_to_functions(fx_copy_fn_main_mock_integration):
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+    path_customize_py_file = os.path.join(path_fn_main_mock_integration, mock_integration_name, "util", "customize.py")
+    path_payload_samples = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+
+    import_definition = package_helpers.get_import_definition_from_customize_py(path_customize_py_file)
+    import_def_data = sdk_helpers.get_from_export(import_definition,
+                                                  functions=["mock_function_one"],
+                                                  workflows=["mock_workflow_one"])
+
+    function_details = CmdDocgen._get_function_details(import_def_data)
+    assert "results" not in function_details[0]
+    CmdDocgen._add_payload_samples_to_functions(function_details, path_payload_samples)
+
+    assert "results" in function_details[0]
+    assert function_details[0]["results"]["custom_results"] == "these are my custom results!"
+
+def test_get_all_objects_for_jinja_render(fx_get_sub_parser, fx_copy_fn_main_mock_integration_w_playbooks):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    mock_integration_name = fx_copy_fn_main_mock_integration_w_playbooks[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration_w_playbooks[1]
+    path_customize_py_file = os.path.join(path_fn_main_mock_integration, mock_integration_name, "util", "customize.py")
+
+    export_contents = package_helpers.get_import_definition_from_customize_py(path_customize_py_file)
+
+    results = cmd_docgen._get_all_objects_for_jinja_render(export_contents)
+
+    assert len(results[0]) == 4 # 4 functions
+    assert len(results[1]) == 3 # 3 scripts
+    assert len(results[2]) == 19 # 19 rules
+    assert len(results[3]) == 1 # 1 datatable
+    assert len(results[4]) == 79 # 79 custom fields
+    assert len(results[5]) == 42 # 42 artifacts
+    assert len(results[6]) == 1 # 1 playbook
+
+def test_get_app_package_docgen_details(fx_get_sub_parser, fx_cmd_line_args_docgen, fx_copy_fn_main_mock_integration_w_playbooks):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    fx_cmd_line_args_docgen[-1] = fx_copy_fn_main_mock_integration_w_playbooks[1]
+    package_details = cmd_docgen._get_app_package_docgen_details(cmd_docgen.parser.parse_known_args()[0])
+
+    assert package_details[0] == "fn_main_mock_integration"
+    assert len(package_details[1]["workflows"]) == 2
+    assert "/payload_samples" in package_details[2]
+    assert "/README.md" in package_details[3]
+    assert all(req in package_details[4] for req in ("setup_py_attributes", "res_circuits_dep_str", "jinja_app_configs", "supported_app", "poller_templates"))
+
+def test_get_export_docgen_details_res_file(fx_get_sub_parser, fx_cmd_line_args_docgen):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    path_export = mock_paths.MOCK_EXPORT_RES
+    export_details = cmd_docgen._get_export_docgen_details(path_export)
+
+    assert export_details[0] == "mock_export"
+    assert len(export_details[1]["workflows"]) == 2
+    assert os.path.basename(export_details[2]) == "README.md"
+
+def test_get_export_docgen_details_res_file_custom_output_path(fx_get_sub_parser, fx_cmd_line_args_docgen):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    path_export = mock_paths.MOCK_EXPORT_RES
+    export_details = cmd_docgen._get_export_docgen_details(path_export, output_path="export.md")
+
+    assert export_details[0] == "mock_export"
+    assert len(export_details[1]["workflows"]) == 2
+    assert os.path.basename(export_details[2]) == "export.md"
+
+def test_get_export_docgen_details_res_zip_file(fx_get_sub_parser, fx_cmd_line_args_docgen):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    path_export = mock_paths.MOCK_EXPORT_RESZ
+    export_details = cmd_docgen._get_export_docgen_details(path_export)
+
+    assert export_details[0] == "mock_export"
+    assert len(export_details[1]["workflows"]) == 2
+    assert os.path.basename(export_details[2]) == "README.md"
+
+
+def test_execute_command_for_app_package(fx_get_sub_parser, fx_cmd_line_args_docgen, fx_copy_fn_main_mock_integration_w_playbooks, caplog):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    fx_cmd_line_args_docgen[-1] = fx_copy_fn_main_mock_integration_w_playbooks[1]
+
+    cmd_docgen.execute_command(cmd_docgen.parser.parse_known_args()[0])
+
+    assert "Rendering README for" in caplog.text
+    assert "Writing README to: {}/README.md".format(fx_copy_fn_main_mock_integration_w_playbooks[1]) in caplog.text
+
+def test_execute_command_for_export(fx_get_sub_parser, fx_cmd_line_args_docgen_export_file, caplog):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+
+    cmd_docgen.execute_command(cmd_docgen.parser.parse_known_args()[0])
+
+    assert "Rendering README for" in caplog.text
+    assert "mock_xml_test_report.xml' was skipped for 'docgen --export' because it was not in the proper" in caplog.text
+    assert "Writing README to" in caplog.text

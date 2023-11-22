@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2023. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
 
-import requests
 import logging
-from resilient import is_env_proxies_set, get_and_parse_proxy_env_var, constants as res_constants
+
+import requests
+from deprecated import deprecated
 from resilient_lib.components.integration_errors import IntegrationError
 from resilient_lib.components.resilient_common import str_to_bool
-from deprecated import deprecated
+from retry.api import retry_call
+from six import PY2
 
+from resilient import constants as res_constants
+from resilient import get_and_parse_proxy_env_var, is_env_proxies_set
 
 LOG = logging.getLogger(__name__)
 
@@ -170,7 +174,9 @@ class RequestsCommon(object):
     get_clientauth = get_client_auth
 
 
-    def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, verify=None, **kwargs):
+    def execute(self, method, url, timeout=None, proxies=None, callback=None, clientauth=None, verify=None,
+                retry_tries=1, retry_delay=1, retry_max_delay=None, retry_backoff=1, retry_jitter=0,
+                retry_exceptions=requests.exceptions.HTTPError, **kwargs):
         """
         Constructs and sends a request. Returns a
         `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object.
@@ -179,6 +185,8 @@ class RequestsCommon(object):
         make a call. The inputs are mapped to this function.
         See `requests.request() <https://docs.python-requests.org/en/latest/api/#requests.request>`_
         for information on any parameters available, but not documented here.
+
+        Retries can be achieved through the parameters prefixed with ``retry_<param>``. Retry is only available in PY3+.
 
         :param method: Rest method to execute (``GET``, ``POST``, etc...)
         :type method: str
@@ -202,6 +210,36 @@ class RequestsCommon(object):
         :param callback: (Optional) Once a response is received from the endpoint,
             return this callback function passing in the ``response`` as its
             only parameter. Can be used to specifically handle errors.
+            If ``callback`` is given, any retry parameters will be ignored
+            unless the ``callback`` function raises an error in the parameter
+            ``retry_exceptions`` (see below) in which case the retry logic will kick in.
+
+            **Example:**
+
+            .. code-block:: python
+
+                from resilient_lib import IntegrationError, RequestsCommon
+
+                def custom_callback(response):
+                    \"\"\" custom callback function to handle 400 error codes \"\"\"
+                    if response.status_code >= 400 and response.status_code < 500:
+                        # raise ValueError which will be retried
+                        raise ValueError("retry me")
+                    else:
+                        # all other status codes should return normally
+                        # note this bypasses the normal rc.execute logic which
+                        # would raise an error other 500 errors
+                        return response
+
+                rc = RequestsCommon()
+                try:
+                    # will retry 3 times then will raise IntegrationError
+                    response = rc.execute("GET", "https://postman-echo.com/status/404", 
+                                               callback=custom_callback, retry_tries=3,
+                                               retry_exceptions=ValueError)
+                except IntegrationError as err:
+                    print(err)
+
         :type callback: function
         :param clientauth: (Optional) Equivalent to the ``cert`` parameter of ``requests``.
             Client-side certificates can be configured automatically in
@@ -243,9 +281,29 @@ class RequestsCommon(object):
                 ... # some other configs
                 verify=<path/to/CA/bundle/to/use>
 
-            NOTE: The value held in the app's config will be overwritten if a value is passed in by the call
-            to ``execute``
+            .. note::
+                The value held in the app's config will be overwritten if a value is passed in by the call to ``execute``.
         :type verify: bool or str
+        :param retry_tries: (PY3 only) The maximum number of attempts. Default: ``1`` (no retry). Use ``-1`` for unlimited retries.
+            Matches ``tries`` parameter of `retry.api.retry_call <https://github.com/eSAMTrade/retry#retry_call>`_.
+        :type retry_tries: int
+        :param retry_delay: (PY3 only) Initial delay between attempts. Default: ``1``.
+            Matches ``delay`` parameter of `retry.api.retry_call <https://github.com/eSAMTrade/retry#retry_call>`_.
+        :type retry_delay: int
+        :param retry_max_delay: (PY3 only) The maximum value of delay. Default: ``None`` (no limit).
+            Matches ``max_delay`` parameter of `retry.api.retry_call <https://github.com/eSAMTrade/retry#retry_call>`_.
+        :type retry_max_delay: int
+        :param retry_backoff: (PY3 only) Multiplier applied to delay between attempts. Default: ``1`` (no backoff).
+            Matches ``backoff`` parameter of `retry.api.retry_call <https://github.com/eSAMTrade/retry#retry_call>`_.
+        :type retry_backoff: int
+        :param retry_jitter: (PY3 only) Extra seconds added to delay between attempts. Default: ``0``.
+            Fixed if a number, random if a range tuple (min, max).
+            Matches ``jitter`` parameter of `retry.api.retry_call <https://github.com/eSAMTrade/retry#retry_call>`_.
+        :type retry_jitter: int | tuple(int, int)
+        :param retry_exceptions: (PY3 only) An exception or a tuple of exceptions to catch.
+            Default: ``requests.exceptions.HTTPError``.
+            Matches ``exceptions`` parameter of `retry.api.retry_call <https://github.com/eSAMTrade/retry#retry_call>`_.
+        :type retry_exceptions: Exception | tuple(Exception)
         :return: the ``response`` from the endpoint or return ``callback`` if defined.
         :rtype: `requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
             or ``callback`` function.
@@ -278,24 +336,55 @@ class RequestsCommon(object):
                 if k != "self" and k != "kwargs" and args_dict[k] is not None:
                     LOG.debug("  %s: %s", k, args_dict[k])
 
-            # Pass request to requests.request() function
-            response = self.request_obj.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, verify=verify, **kwargs)
+            # define inner func to allow for retry
+            # by doing it this way, we don't have to mess with
+            # retry's strange way of passing arguments -- we just
+            # can call it directly because the args are available
+            # from the outer function
+            def __execute_request_retriable():
+                # Pass request to requests.request() function
+                response = self.request_obj.request(method, url, timeout=timeout, proxies=proxies, cert=clientauth, verify=verify, **kwargs)
 
-            # Debug logging
-            LOG.debug(response.status_code)
-            LOG.debug(response.content)
+                # Debug logging
+                LOG.debug(response.status_code)
+                LOG.debug(response.content)
 
-            # custom handler for response handling
-            # set callback to be the name of the method you would like to call
-            # to do your custom error handling and return the response
-            if callback:
-                return callback(response)
+                # custom handler for response handling
+                # set callback to be the name of the method you would like to call
+                # to do your custom error handling and return the response
+                # NOTE: this will potentially bypass any retry if
+                # the error raised in callback is not matched to the
+                # ``retry_exceptions`` parameter. By default, that means
+                # that if HTTPError is not raised in callback, retry
+                # will not behave as expected
+                if callback:
+                    return callback(response)
 
-            # Raise error is bad status code is returned
-            response.raise_for_status()
+                # Raise error is bad status code is returned
+                response.raise_for_status()
 
-            # Return requests.Response object
-            return response
+                # Return requests.Response object
+                return response
+            
+            # NOTE: because retry library requires PY3 style exceptions,
+            # if version running on is PY2, retries won't be allowed
+            if PY2 and retry_tries != 1:
+                LOG.warning("Cannot use retry in resilient_lib.RequestsCommon.execute in Python 2.7. Please upgrade your app to run on Python 3.9 or greater")
+                retry_tries = 1
+
+            # make call with retry wrapper. if tries is set to 1,
+            # will just execute normally. otherwise will engage retry
+            # logic as applicable
+            return retry_call(
+                __execute_request_retriable,
+                exceptions=retry_exceptions,
+                tries=retry_tries,
+                delay=retry_delay,
+                backoff=retry_backoff,
+                max_delay=retry_max_delay,
+                jitter=retry_jitter,
+                logger=LOG
+            )
 
         except Exception as err:
             msg = str(err)

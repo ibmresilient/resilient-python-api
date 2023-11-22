@@ -233,6 +233,37 @@ def test_create_extension_invalid_image_hash(fx_copy_fn_main_mock_integration):
     with pytest.raises(SDKException, match=r"image_hash 'xxx' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long"):
         package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir, image_hash=mock_image_hash)
 
+
+def test_create_extension_minimum_resilient_version(fx_copy_fn_main_mock_integration):
+
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    path_setup_py_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_SETUP_PY)
+    path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
+    output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
+
+    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+    path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir)
+    app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
+
+    assert app_json.get("minimum_resilient_version", {}) == {'build_number': 6783, 'major': 41, 'minor': 0, 'version': '41.0.6783'}
+
+def test_create_extension_minimum_resilient_version_new_style(fx_copy_fn_main_mock_integration_w_playbooks):
+
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration_w_playbooks[1]
+
+    path_setup_py_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_SETUP_PY)
+    path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
+    output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
+
+    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+
+    path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir)
+    app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
+
+    assert app_json.get("minimum_resilient_version", {}) == {'build_number': 5678, 'v': 51, 'r': 2, 'm': 3, 'f': 4, 'major': 0, 'minor': 0, 'version': '51.2.3.4.5678'}
+
 def test_get_required_python_version():
 
     parsed_version = package_helpers.get_required_python_version(">=3")
@@ -401,3 +432,14 @@ def test_print_latest_version_warning(caplog):
 'v41.0.0' is available on https://pypi.org/project/resilient-sdk/\n\n\
 To update run:\n\t$ pip install -U resilient-sdk"
     assert msg in caplog.text
+
+def test_get_export_from_zip():
+    export_content = package_helpers.get_export_from_zip(mock_paths.MOCK_EXPORT_RESZ)
+
+    assert export_content
+    assert len(export_content["workflows"]) == 2 # just a simple check
+
+def test_get_export_from_zip_not_found():
+    with pytest.raises(SDKException):
+        package_helpers.get_export_from_zip(mock_paths.MOCK_EXPORT_RES) # not a zip file
+

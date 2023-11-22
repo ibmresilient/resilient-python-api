@@ -348,6 +348,7 @@ class SOARCommon():
         .. note::
 
             ``search_fields`` only supports custom fields.
+
         :param search_fields: Dictionary containing key/value pairs to search for a case match.
             Field values can be True/False for ``has_a_value`` or ``does_not_have_a_value``,
             otherwise a field will use ``equals`` for the value.
@@ -356,7 +357,6 @@ class SOARCommon():
         :type uri_filters: str
         :param open_cases: True if only querying open cases.
         :type open_cases: bool
-
         :return: A tuple with a list of cases whose values match the ``search_fields`` and any associated error message.
         :rtype: tuple(dict, str)
         """

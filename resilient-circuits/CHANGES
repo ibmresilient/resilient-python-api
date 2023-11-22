@@ -1,3 +1,15 @@
+**2023-11: version 51.0.0.0**
+
+* Added support for new SOAR v.r.m.f version scheme. If running an app on ``resilient-circuits<51.0.0.0``,
+  the incorrect version of the SOAR server may be displayed if connecting to a SOAR server with
+  version greater than or equal to 51.x. Please consider upgrading ``resilient-circuits`` to the
+  latest version as soon as you can. A gentle reminder that SOAR python libraries versioning
+  is independent of SOAR server versions and any version of circuits works with any version of SOAR
+  (i.e. ``resilient-circuits==v51.0.0.0`` will work fine with SOAR v48.0.0). It is always recommended
+  that you use the latest version of all SOAR Python Libraries
+* Removed obfuscation of "id" in logs and made general improvements of log obfuscation to better
+  target sensitive information while leaving important information in the logs
+
 **2023-10: version 50.1**
 
 * Allow for ``.`` character in message queue names and improved logging around queues not found on startup

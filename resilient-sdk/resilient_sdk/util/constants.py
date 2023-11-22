@@ -5,6 +5,7 @@
 import os
 
 import pkg_resources
+from packaging.version import parse as parse_version
 
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
@@ -16,12 +17,16 @@ ENV_VAR_DEV = "RES_SDK_DEV"
 ENV_VAR_APP_CONFIG_FILE = "APP_CONFIG_FILE"
 
 # UPDATE BEFORE RELEASING NEW VERSION
-RESILIENT_LIBRARIES_VERSION = "50.1.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "50.1.0"
+RESILIENT_LIBRARIES_VERSION = "51.0.0.0.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "51.0.0.0.0"
 
 RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
-MIN_SOAR_SERVER_VERSION_PLAYBOOKS = 44.0
+MIN_SOAR_SERVER_VERSION_PLAYBOOKS = parse_version("44.0")
+# new SOAR versioning schema introduced in v51.0.0.x
+# use "51.0.0" rather than "51.0.0.0" so that sonarqube
+# won't flag as an IP address...
+MIN_SOAR_SERVER_VERSION_NEW_VERSION_SCHEMA = parse_version("51.0.0")
 
 MIN_SUPPORTED_PY_VERSION = (3, 6)
 SDK_PACKAGE_NAME = "resilient-sdk"

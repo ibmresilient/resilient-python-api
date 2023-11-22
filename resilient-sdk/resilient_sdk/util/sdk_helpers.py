@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Common Helper Functions for the resilient-sdk"""
 import ast
@@ -30,6 +30,7 @@ import pkg_resources
 import requests
 import requests.exceptions
 from jinja2 import Environment, PackageLoader
+from packaging.version import parse as parse_version
 from resilient_sdk.util import constants
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_FIELD,
@@ -272,7 +273,9 @@ def is_valid_version_syntax(version):
     if not version:
         return False
 
-    regex = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+$')
+    # added in v51.0 the ability to have more than three numbers in the version
+    # (min still 3) since new versioning scheme has 5(!!) numbers
+    regex = re.compile(r'^\d+\.\d+\.\d+(?:\.\d+)*$')
 
     return regex.match(version) is not None
 
@@ -423,12 +426,12 @@ def get_resilient_server_info(res_client, keys_to_get=[]):
 def get_resilient_server_version(res_client):
     """
     Uses get_resilient_server_info to get the "server_version"
-    and converts it into a float of ``major.minor`` and returns it
+    and converts it into a Version object and returns it
 
     :param res_client: required for communication back to resilient
     :type res_client: sdk_helpers.get_resilient_client()
-    :return: the server_version in the form ``major.minor``
-    :rtype: float
+    :return: the server_version.version value
+    :rtype: Version object
     """
     LOG.debug("Getting server version")
 
@@ -437,7 +440,7 @@ def get_resilient_server_version(res_client):
 
     server_version = get_resilient_server_info(res_client, ["server_version"]).get("server_version", {})
 
-    constants.CURRENT_SOAR_SERVER_VERSION = float("{0}.{1}".format(server_version.get("major", 0), server_version.get("minor", 0)))
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version(server_version.get("version", "0.0.0.0"))
 
     LOG.info("IBM Security SOAR version: v%s", constants.CURRENT_SOAR_SERVER_VERSION)
 
@@ -671,6 +674,7 @@ def get_from_export(export,
                     tasks=[],
                     scripts=[],
                     playbooks=[],
+                    apps=[],
                     get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
@@ -820,6 +824,9 @@ def get_from_export(export,
 
     # Get Scripts
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
+
+    # Get Apps
+    return_dict["apps"] = get_res_obj("apps", ResilientObjMap.APPS, "Apps", apps, export)
 
     # Get Playbooks
     if playbooks and constants.CURRENT_SOAR_SERVER_VERSION and constants.CURRENT_SOAR_SERVER_VERSION < constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS:

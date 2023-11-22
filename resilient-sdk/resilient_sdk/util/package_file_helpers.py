@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
@@ -15,6 +15,7 @@ import shutil
 import struct
 import sys
 import tempfile
+import zipfile
 from collections import defaultdict
 
 import pkg_resources
@@ -430,6 +431,38 @@ def get_import_definition_from_local_export_res(path_export_res_file):
 
     return import_definition
 
+def get_export_from_zip(path_zip, format_str="zip"):
+    """
+    Given a path to an export.resz (zip file), extract the export.res file from within.
+    This applies to System exports from the UI or Playbook exports from the UI.
+
+    :param path_zip: absolute path to the .resz file
+    :type path_zip: str
+    :param format: format of the .resz file, always "zip", defaults to "zip"
+    :type format: str, optional (other options are "tar", "gztar", "bztar", "xztar")
+    :raises SDKException: if given file is not a zip file or if the zip file doesn't have an export.res in it
+    :return: the contents of the export.res file within the zip
+    :rtype: dict
+    """
+    temp_dir = tempfile.mkdtemp()
+    try:
+        with zipfile.ZipFile(path_zip, "r") as myzip:
+            myzip.extractall(temp_dir)
+    except zipfile.BadZipfile as err:
+        raise SDKException(str(err))
+
+    for file_path in os.listdir(temp_dir):
+        if file_path.endswith(".res"):
+            export_file_path = os.path.join(temp_dir, file_path)
+            break
+    else:
+        raise SDKException("No export.res found in {0}".format(path_zip))
+    export_content = get_import_definition_from_local_export_res(export_file_path)
+
+    shutil.rmtree(temp_dir)
+
+    return export_content
+
 def get_configs_from_config_py(path_config_py_file):
     """Returns a tuple (config_str, config_list). If no configs found, return ("", []).
     Raises Exception if it fails to parse configs
@@ -778,13 +811,13 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
     if path_customize_py_file:
         import_definition = get_import_definition_from_customize_py(path_customize_py_file)
     else:
-        # No 'customize.py' file found generate import definition with just mimimum server version.
+        # No 'customize.py' file found generate import definition with just minimum server version.
         import_definition = {
             'server_version':
                 IMPORT_MIN_SERVER_VERSION
         }
 
-    # Add the tag to the import defintion
+    # Add the tag to the import definition
     import_definition = add_tag_to_import_definition(tag_name, SUPPORTED_RES_OBJ_NAMES, import_definition)
 
     # Parse the app.configs from the discovered config file
@@ -889,12 +922,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
                 "content": u"<div>{0}</div>".format(setup_py_attributes.get("long_description")),
                 "format": "html"
             },
-            "minimum_resilient_version": {
-                "major": import_definition.get("server_version").get("major", None),
-                "minor": import_definition.get("server_version").get("minor", None),
-                "build_number": import_definition.get("server_version").get("build_number", None),
-                "version": import_definition.get("server_version").get("version", None)
-            },
+            "minimum_resilient_version": import_definition.get("server_version", {}),
             "name": setup_py_attributes.get("name"),
             "tag": {
                 "prefix": tag_name,
@@ -1190,3 +1218,23 @@ def print_latest_version_warning(current_version, latest_available_version):
     w = "{0}\n{1}\n{2}\n\n{3}\n\t{4}\n{0}".format(colored_lines[0], colored_lines[1], colored_lines[2], colored_lines[3], colored_lines[4])
 
     LOG.warning(w)
+
+def make_list_of_dicts_unique(list_of_dicts):
+    """
+    Creates temporary dictionary of schema str(dict):dict
+    for each dict in the list, then captures the values
+    of the temporary dictionary (just the dict side) and
+    returns that list. The crucial part of this is that the
+    temporary dictionary keys are unique -- thus guaranteeing
+    that any two dictionaries whose str() cast would be the same,
+    won't appear more than once in the temporary object.
+
+    :param list_of_dicts: List of dictionaries to make unique
+    :type list_of_dicts: list[dict]
+    :return: same list as started with with any extra duplicates removed
+    :rtype: list[dict]
+    """
+
+    # .values() only grabs each x from the unique, temporary dictionary created in-line
+    unique_list = list({str(x): x for x in list_of_dicts}.values())
+    return unique_list

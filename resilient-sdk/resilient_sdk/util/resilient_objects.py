@@ -74,6 +74,7 @@ class ResilientObjMap(object):
     PHASES = "export_key"
     SCRIPTS = "export_key"
     PLAYBOOKS = "export_key"
+    APPS = "export_key"
 
 
 class ResilientTypeIds(object):
