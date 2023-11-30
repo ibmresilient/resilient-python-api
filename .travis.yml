@@ -163,6 +163,7 @@ matrix:
       services:
         - docker
       install:
+        - pip install jinja2
         - echo "${ARTIFACTORY_API_TOKEN}" | docker login --password-stdin --username "${ARTIFACTORY_USERNAME}" ${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}
       script:
         - echo "Building Docker base image and pushing to Artifactory"
