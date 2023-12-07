@@ -206,6 +206,7 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
     LOG.info("- Checking if we can authenticate a STOMP connection with '{0}' to '{1}'".format(user, host))
 
     try:
+        LOG.info("{0}{1}{0}".format(constants.LOG_DIVIDER, helpers.get_env_str(pkg_resources.working_set)))
         LOG.info("{0}Instantiating instance of resilient-circuits and starting it...{0}".format(constants.LOG_DIVIDER))
         resilient_circuits_instance = app.App(ALLOW_UNRECOGNIZED=True, IS_SELFTEST=True)
 
