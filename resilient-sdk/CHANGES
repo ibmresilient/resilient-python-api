@@ -1,3 +1,7 @@
+**2023-12: version 51.0.0.1**
+* Bug fix to support Keyring with resilient-sdk commands that use app.config to connect to SOAR.
+  This has been broken since v49.0.0. Please upgrade to v51.0.0.1 to continue using SDK with Keyring.
+
 **2023-11: version 51.0.0.0**
 
 * Added support for new SOAR v.r.m.f version scheme. This takes effect with the release of v51.0.0.0 of
@@ -93,8 +97,8 @@
     $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
 
 * ``codegen`` template updates with Python 3 syntax
-* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps 
-  which generates a ``lib`` directory in the package and a ``poller`` directory each with 
+* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps
+  which generates a ``lib`` directory in the package and a ``poller`` directory each with
   items needed to create a poller-based app.
 * ``docgen`` template updated with references to Edge Gateway (formerly App Host)
 * Added support for activation fields in manually activated playbooks in the ``clone`` command
