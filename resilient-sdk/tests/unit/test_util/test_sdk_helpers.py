@@ -30,7 +30,19 @@ from resilient import SimpleClient
 def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
     res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config)
     assert isinstance(res_client, SimpleClient)
-    assert "Connecting to IBM Security SOAR at: " in caplog.text
+    assert "Connecting to IBM Security SOAR at: 192.168.56.1" in caplog.text
+
+@pytest.mark.skip("Run locally, but can't run in Travis because no Linux Keyring backend")
+def test_get_resilient_client_with_keyring(fx_mk_temp_dir, fx_mk_app_config_with_keyring, caplog):
+    res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config_with_keyring[0])
+    assert isinstance(res_client, SimpleClient)
+
+    # make sure keyring was used
+    assert "Connecting to IBM Security SOAR at: 192.168.56.1" in caplog.text
+    assert "^host" not in caplog.text
+    # but also make sure that "^host" still in app.config text
+    assert "^host" in fx_mk_app_config_with_keyring[1]
+    assert "192.168.56.1" not in fx_mk_app_config_with_keyring[1]
 
 
 def test_setup_jinja_env(fx_mk_temp_dir):
@@ -328,7 +340,7 @@ def test_get_playbooks_with_functions_and_script(fx_mock_res_client):
             assert "result_name" in function
             assert "uuid" in function
             assert "post_processing_script" not in function
-            
+
         assert len(export_data.get("playbooks")[0].get("pb_scripts")) == 4
         for script in export_data.get("playbooks")[0].get("pb_scripts"):
             assert "uuid" in script
@@ -431,11 +443,11 @@ def test_minify_export_with_playbooks(fx_mock_res_client):
 def test_rm_pii():
     mock_export = {
         "actions": [{
-            "automations": [], "creator": { "email": "example@example.com", "author": "Example" } }, 
+            "automations": [], "creator": { "email": "example@example.com", "author": "Example" } },
             {"info": [], "info2": "test", "creator_id": "1234abcd5678", "good": {"creator" : ["bad", "bad2", "bad3"]} }],
-        "functions": [{ 
+        "functions": [{
             "creator": { "creator": { "test": "test"} }, "test_obj": { "creator": { "bad_info": "test"} , "test": "test_val" } }],
-        "workflows": 
+        "workflows":
             { "workflow 1" : { "someinfo": "test", "creator_id": "1234abcd5678", "someotherinfo": "test2",
                 "a list": [ 1, 2, 3, { "creator": {"email": "example@example.com", "author": "Example" }, "line 2": "example"}]}},
         "creator": { "creator info": "at base level" },
