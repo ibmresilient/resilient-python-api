@@ -220,7 +220,7 @@ class ArgumentParser(argparse.ArgumentParser):
         # - resilient-circuits is installed and is > 34
         if not v_resc or (v_resc and v_resc.get("major") > 34):
             self.add_argument("--resilient-mock",
-                            default=default_resilient_mock, 
+                            default=default_resilient_mock,
                             help="<path_to_mock_module>.NameOfMockClass")
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
@@ -269,7 +269,7 @@ def _post_process_args(args):
     if args.get("proxy_host"):
         args["proxy"] = get_proxy_dict(args)
 
-    return args
+    return parse_parameters(args)
 
 
 def parse_parameters(options):
