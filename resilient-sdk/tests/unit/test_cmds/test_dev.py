@@ -10,7 +10,7 @@ import pytest
 from resilient_sdk.cmds import CmdDev, base_cmd
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util.sdk_exception import SDKException
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_cmd_dev(fx_get_sub_parser, fx_cmd_line_args_dev_set_version):

@@ -22,7 +22,8 @@ from resilient_sdk.cmds import CmdCodegen, CmdValidate
 from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-from tests.shared_mock_data import mock_data, mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
+import tests.shared_mock_data.mock_data as mock_data
 
 from resilient import SimpleClient
 

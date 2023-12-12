@@ -10,7 +10,7 @@ import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdRunInit, base_cmd
 from resilient_sdk.util import constants
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
@@ -64,7 +64,7 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
         assert settings_json.get("codegen").get("license_content") == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
         assert settings_json.get("codegen").get("copyright") == constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT
         assert settings_json.get("docgen").get("supported_app") == False
-        
+
 
 def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init):
     cmd_init = CmdRunInit(fx_get_sub_parser)

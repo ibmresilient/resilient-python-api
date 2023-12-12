@@ -15,7 +15,7 @@ from resilient_sdk.cmds.validate import CmdValidate
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers, constants
 from tests import helpers
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 EXPECTED_FILES_APP_ZIP = ['app.json', 'export.res', 'fn_main_mock_integration-1.0.0.tar.gz', 'validate_report.md']
 
