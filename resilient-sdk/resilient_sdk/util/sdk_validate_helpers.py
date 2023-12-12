@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import difflib
 import logging
@@ -33,7 +33,8 @@ except ImportError as err:
     LOG.debug("ERROR: %s", err)
 
 # float value in range [0, 1] that determines the cutoff at which two files are a match
-MATCH_THRESHOLD = 1.0
+MATCH_THRESHOLD = 0.9
+MATCH_MINIMUM = 0.2
 
 def check_display_name_not_equal_to_name(display_name, path_setup_py_file):
     """
@@ -106,7 +107,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
             solution=""
         )
     elif res_circuits_version and res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
-        # resilient-circuits installed but version not supported 
+        # resilient-circuits installed but version not supported
         return False, SDKValidateIssue(
             name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(res_circuits_version),
@@ -115,7 +116,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
         )
     elif not res_circuits_version:
         # if 'resilient-circuits' not installed
-        return False, SDKValidateIssue( 
+        return False, SDKValidateIssue(
             name=attr_dict.get("name"),
             description=attr_dict.get("missing_msg"),
             severity=attr_dict.get("severity"),
@@ -200,9 +201,9 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     selftest.py validation helper method.
     Runs selftest.py and validates the output. There are a few paths this method can take.
 
-    * If the ``returncode==1``, selftest failed. 
+    * If the ``returncode==1``, selftest failed.
     * Else if ``returncode==0``
-        * If selftest ``unimplemented`` 
+        * If selftest ``unimplemented``
         * else if 0, then selftest succeeded.
     * Else if ``returncode>1`` there was a connection error while starting up ``resilient-circuits``. The error string is parsed and output in the appropriate ``SDKValidateIssue`` object
 
@@ -240,25 +241,25 @@ def selftest_run_selftestpy(attr_dict, package_name, **kwargs):
     #                   the important part come in the section between the last two '{' '}'
     #                   which is where the 'state' and 'reason' values are output (see below:)
     #                   ...
-    #                   <package_name>: 
+    #                   <package_name>:
     #                       selftest: success
     #                       selftest output:
     #                       {'state': 'failure', 'reason': '<some reason for failure>'}
     #                       Elapsed time: x.xyz seconds
     #                   ...
-    # 
+    #
     # in resilient-circuits <43.1, "unimplemented" returns a error code 0 so:
     # if returncode==0: same as if ==1, except the 'state' is 'success' and there is no 'reason' field
     #                   NOTE (<v43.1 only): it is possible for there to be 'state': 'unimplemented' if which case we fail
     #                   the validation and let the user know that they should implement selftest
-    # 
+    #
     # in resilient-circuits >=43.1, "unimplemented" returns an error code 2 so:
     # if returncode==2: "unimplemented" is the status of the selftest run so we fail and let the user know they
     #                   should implement selftest
     #
     # if returncode>2:  details=<some error about REST or STOMP connection failed to SOAR server>
     #                   the important part occurs after "ERROR: ..." so we parse from there on to the end
-    
+
     # if selftest failed (see details of the return codes @ resilient-circuits.cmds.selftest)
     if returncode == 1:
         details = details[details.rfind("{")+1:details.rfind("}")].strip().replace("\n", ". ").replace("\t", " ")
@@ -350,7 +351,7 @@ def package_files_manifest(package_name, path_file, filename, attr_dict, **_):
 
     # split template file into list of lines
     template_contents = file_rendered.splitlines(True)
-    
+
     # compare given file to template
     diffs = []
     for line in template_contents:
@@ -391,13 +392,13 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
     :return: a passing issue if the file exists and has the minimum permissions; a warning issue if the file doesn't exist or if the base permissions aren't found
     :rtype: list[SDKValidateIssue]
     """
-    
+
     # read package's apikey_permissions.txt file
     file_contents = sdk_helpers.read_file(path_file)
 
     # filter out commented lines
     file_contents = [line.strip() for line in file_contents if not line.startswith("#")]
-    
+
     # compare given file to constant BASE_PERMISSIONS
     missing_permissions = []
     for perm in package_helpers.BASE_PERMISSIONS:
@@ -424,7 +425,7 @@ def package_files_apikey_pem(path_file, attr_dict, **_):
 def package_files_template_match(package_name, package_version, path_file, filename, attr_dict, **_):
     """
     Helper method for package files to validate files against their templates.
-    Designed for use with Dockerfile and entrypoint.sh, however, could be adjusted to work with 
+    Designed for use with Dockerfile, however, could be adjusted to work with
     other jinja2 templated files as long as the goal is to check a full match against the template.
 
     :param package_name: (required) the name of the package
@@ -452,7 +453,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
         resilient_libraries_version=sdk_helpers.get_resilient_libraries_version_to_use(),
         sdk_version=sdk_helpers.get_resilient_sdk_version()
     )
-    
+
     # read the package's file
     # strip each line of its newline but then add it back in for consistency between this and the rendered file
     file_contents = [line.strip("\n") + "\n" for line in sdk_helpers.read_file(path_file)]
@@ -460,7 +461,7 @@ def package_files_template_match(package_name, package_version, path_file, filen
     # split template file into list of lines
     # strip each line of its newline but then add it back in for consistency
     template_contents = [line.strip("\n") + "\n" for line in file_rendered.splitlines()]
-    
+
     # compare given file to template (ignoring blanks and hard tabs)
     s_diff = difflib.SequenceMatcher(lambda x: x in " \t", file_contents, template_contents)
 
@@ -468,14 +469,14 @@ def package_files_template_match(package_name, package_version, path_file, filen
     # if less than a perfect match, the match fails
     comp_ratio = s_diff.ratio()
     if comp_ratio < MATCH_THRESHOLD:
-        diff = difflib.unified_diff(template_contents, file_contents, 
+        diff = difflib.unified_diff(template_contents, file_contents,
                                     fromfile=filename + " template", tofile=filename, n=0) # n is number of context lines
         diff = package_helpers.color_diff_output(diff) # add color to diff output
 
         return [SDKValidateIssue(
             name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(comp_ratio*100, "\t\t".join(diff)),
-            severity=attr_dict.get("fail_severity"),
+            severity=attr_dict.get("fail_severity") if comp_ratio >= MATCH_MINIMUM else SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=attr_dict.get("fail_solution")
         )]
     else:
@@ -559,7 +560,7 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
     :return: a passing issue if the customize.py file can yield a successful ImportDefinition; a critical issue if the parse fails
     :rtype: list[SDKValidateIssue]
     """
-    
+
     try:
         # parse import definition information from customize.py file
         # this will raise an SDKException if something goes wrong
@@ -574,7 +575,7 @@ def package_files_validate_customize_py(path_file, attr_dict, **_):
         # something went wrong in reading the import definition.
         # for more info on what raises an error see the package_helpers
         # method get_import_definition_from_customize_py called above.
-        
+
         # parse out the exception message from "ERROR" to the end
         message = str(e).replace("\n", " ")
         message = message[message.index("ERROR"):]
@@ -842,7 +843,7 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
       - Does the file have any incorrect or ghost links to screenshot files? If so, fail as those need to be correct
       - Else the validation passes
 
-    It is possible for multiple checks to fail in this validation thus the use of the 
+    It is possible for multiple checks to fail in this validation thus the use of the
     list[SDKValidateIssue] return type.
 
     :param path_package: (required) the path to the package
@@ -945,9 +946,9 @@ def package_files_validate_readme(path_package, path_file, filename, attr_dict, 
         # if there is at least one issue in the list
         return issues
 
-def package_files_validate_base_image(path_file, attr_dict,**_):
+def package_files_validate_base_image(path_file, attr_dict, path_package, **_):
     """
-    Validates that the Dockerfile is using the correct base image 
+    Validates that the Dockerfile is using the correct base image
 
     Checks the following:
       - Is a FROM statement missing
@@ -955,14 +956,17 @@ def package_files_validate_base_image(path_file, attr_dict,**_):
       - If there is only one FROM statement, is it pullling from the right repo
       - Else the validation passes
 
-    It is possible for multiple checks to fail in this validation thus the use of the 
+    It is possible for multiple checks to fail in this validation thus the use of the
     list[SDKValidateIssue] return type.
 
-    :param path_file: (required) the path to the file 
+    :param path_file: (required) the path to the file
+    :type path_file: str
+    :param path_package: (required) the path to the package
+    :type path_package: str
+    :return: a list of critical issues or one passing issue
+    :rtype: list[SDKValidateIssue]
     """
 
-    # list of issues found
-    issues = []
     # gets a dictionary that maps Dockercommands to all of their arguments
     # e.g. if the Dockerfile has lines "RUN yum clean", "RUN yum update", "USER 0"
     # then command_dict = {"RUN":["yum clean","yum update"],"USER":["0"]}
@@ -972,7 +976,7 @@ def package_files_validate_base_image(path_file, attr_dict,**_):
 
     if len(command_dict[from_command]) == 0: # if no FROM commands found
 
-        issue = [SDKValidateIssue(
+        issues = [SDKValidateIssue(
             attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format("Cannot find a FROM command in Dockerfile"),
             severity=attr_dict.get("fail_severity"),
@@ -980,8 +984,16 @@ def package_files_validate_base_image(path_file, attr_dict,**_):
         )]
 
     elif len(command_dict[from_command]) == 1:
-        if command_dict[from_command][0] != constants.DOCKER_BASE_REPO: # if only one FROM command found but it is incorrect
-            issue = [SDKValidateIssue(
+        if command_dict[from_command][0] == constants.DOCKER_BASE_REPO_OLD: # found old Docker base image
+            issues = [SDKValidateIssue(
+                attr_dict.get("name"),
+                "This Dockerfile is using the old base image which has been updated in resilient-sdk v51.0.1.0",
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution").format("renaming Dockerfile to Dockerfile.bak and running '''resilient-sdk codegen -p {0} --reload'''").format(path_package)
+            )]
+
+        elif command_dict[from_command][0] != constants.DOCKER_BASE_REPO: # if only one FROM command found but it is incorrect
+            issues = [SDKValidateIssue(
                 attr_dict.get("name"),
                 attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
                 severity=attr_dict.get("fail_severity"),
@@ -989,34 +1001,33 @@ def package_files_validate_base_image(path_file, attr_dict,**_):
             )]
 
         else: # if only one FROM command is found but it is correct
-            issue = [SDKValidateIssue(
+            issues = [SDKValidateIssue(
                 attr_dict.get("name"),
                 attr_dict.get("pass_msg"),
                 severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             )]
-        
+
     elif len(command_dict[from_command]) > 1: # if more than one FROM command found
 
-            issue = [SDKValidateIssue(
+        issues = [SDKValidateIssue(
+            attr_dict.get("name"),
+            attr_dict.get("fail_msg").format("More than one FROM command found"),
+            severity=attr_dict.get("fail_severity"),
+            solution=attr_dict.get("fail_solution").format("removing any extra FROM commands")
+        )]
+
+        for command in command_dict[from_command]:
+            if command != constants.DOCKER_BASE_REPO:
+                issues.extend([SDKValidateIssue(
                 attr_dict.get("name"),
-                attr_dict.get("fail_msg").format("More than one FROM command found"),
+                attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
                 severity=attr_dict.get("fail_severity"),
-                solution=attr_dict.get("fail_solution").format("removing any extra FROM commands")
-            )]
+                solution=attr_dict.get("fail_solution").format("changing the repo to '{0}'").format(constants.DOCKER_BASE_REPO)
+                )])
+                break
 
-            for command in command_dict[from_command]:
-                if command != constants.DOCKER_BASE_REPO:
-                    issue.extend([SDKValidateIssue(
-                    attr_dict.get("name"),
-                    attr_dict.get("fail_msg").format("FROM command found but it is pointing to the wrong repo"),
-                    severity=attr_dict.get("fail_severity"),
-                    solution=attr_dict.get("fail_solution").format("changing the repo to '{0}'").format(constants.DOCKER_BASE_REPO)
-                    )])
-                    break
-
-    issues.extend(issue)
     return issues
-    
+
 def payload_samples_validate_payload_samples(path_package, package_name, attr_dict):
     """
     This function verifies:
@@ -1136,7 +1147,7 @@ def _validate_payload_samples(path_package, func_name, attr_dict):
     # this way we can get message that say something like 'example' and 'schema' are missing
     # rather than just 'schema' is missing
     samples_missing = []
-    try: 
+    try:
         sdk_helpers.validate_file_paths(os.R_OK, path_samples_example)
     except SDKException:
         samples_missing.append(example_str)
@@ -1182,7 +1193,7 @@ def _validate_payload_samples(path_package, func_name, attr_dict):
         samples_empty.append(example_str)
     if not read_schema_json:
         samples_empty.append(schema_str)
-    
+
     if samples_empty:
         msg = " and ".join(samples_empty)
         return SDKValidateIssue(
@@ -1218,7 +1229,7 @@ def tox_tests_validate_tox_installed(attr_dict, **__):
     :rtype: int, SDKValidateIssue
     """
     LOG.debug("Validating that '{0}' is installed in the python env".format(constants.TOX_PACKAGE_NAME))
-    
+
 
     tox_version = sdk_helpers.get_package_version(constants.TOX_PACKAGE_NAME)
 
@@ -1249,7 +1260,7 @@ def tox_tests_validate_tox_file_exists(path_package, attr_dict, **__):
     """
     Helper method for to validate that tox.ini file exists in the package.
 
-    If the file isn't present, return -1 as it is optional to have tests but we 
+    If the file isn't present, return -1 as it is optional to have tests but we
     don't want to continue validating the tests
 
     :param path_package: path to package
@@ -1341,14 +1352,14 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
     There are three ways for the tox arguemnts that are necessary for running resilient apps tests
     to get passed in (these are checked in this order as well):
     1. use the --tox-args (see cmds.validate for details)
-            given in the format: 
+            given in the format:
 
     .. code-block:: bash
         resilient-sdk validate -p . --tests --tox-args arg1="val1" arg2="val2"
 
-    2. use a sdk settings file by either passing the path to the file using --settings or by having a 
+    2. use a sdk settings file by either passing the path to the file using --settings or by having a
        properly configured sdk settings file in the default ~/.resilient/.sdk_settings.json path
-            given in JSON format: 
+            given in JSON format:
 
     .. code-block:: json
         {
@@ -1364,7 +1375,7 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
        provide default tox args using ``constants.TOX_TESTS_DEFAULT_ARGS`` but will warn the user that
        default args are being used
 
-    Whichever way the args are provided, they are all parsed into the correct format that is 
+    Whichever way the args are provided, they are all parsed into the correct format that is
     useable in the subprocess call to tox.
 
     :param path_package: path to package
@@ -1388,7 +1399,7 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
     if tox_args:
         LOG.debug("Reading tox args from command line flag --tox-args")
 
-        # parse --tox-args flag values which come in as <attr1>="<value1>" <attr2>="<value2>" 
+        # parse --tox-args flag values which come in as <attr1>="<value1>" <attr2>="<value2>"
         for arg in tox_args:
             match = re.search(r"(\w+)=[\"\']?(\w+)[\"\']?", arg)
             if not match or len(match.groups()) != 2:
@@ -1440,7 +1451,7 @@ def tox_tests_run_tox_tests(path_package, attr_dict, tox_args=None, path_sdk_set
 
         args = ["tox", "--", "--junitxml", "{0}".format(path_temp_test_report)] + args
 
-        # run tox as a subprocess 
+        # run tox as a subprocess
         _, details = sdk_helpers.run_subprocess(args, change_dir=path_package, cmd_name="tox tests")
 
         if os.path.exists(path_temp_test_report):
@@ -1503,7 +1514,7 @@ def _tox_tests_parse_xml_report(path_xml_file):
     If it is not in the correct format, (-1, -1, -1, "", "") will be returned as a default
 
     If there are errors, a string of [case_name]: [case_error] is created
-    If there are failures, a string of the failure text (usually tracebacks and context code) 
+    If there are failures, a string of the failure text (usually tracebacks and context code)
     is created from the xml report text
 
     :param path_xml_file: path to a pytest xml report
@@ -1526,7 +1537,7 @@ def _tox_tests_parse_xml_report(path_xml_file):
             num_tests += int(attrs.get("tests", 0))
             num_failures += int(attrs.get("failures", 0))
             num_errors += int(attrs.get("errors", 0))
-            
+
             # loop over each test case to get failure and error info
             for case in suite:
                 for elem in case:
@@ -1535,7 +1546,7 @@ def _tox_tests_parse_xml_report(path_xml_file):
                     elif elem.tag == "error":
                         error_str += u"{0}: {1}\n".format(case.attrib.get("classname"), elem.attrib.get("message"))
     else:
-        # if the root wasn't test suites 
+        # if the root wasn't test suites
         LOG.warn("WARNING: XML report generated by tox run was not readable. Consider upgrading tox and pytest to the latest versions")
         return -1, -1, -1, "", ""
 
@@ -1592,7 +1603,7 @@ def pylint_validate_pylint_installed(attr_dict, **__):
 def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_settings=None, **__):
     """
     Run Pylint Scan on whole package using the .pylintrc file in /data/validate as the default settings.
-    Raises a SDKException if ``pylint`` isn't installed. In use with ``validate``, this method should 
+    Raises a SDKException if ``pylint`` isn't installed. In use with ``validate``, this method should
     only be called after successfully calling ``pylint_validate_pylint_installed``. If a call to that method
     returns a failing SDKValidateIssue, this method shouldn't be called
 
@@ -1669,7 +1680,7 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
     # capture score and counts of issues from run
     # error and warnings map directly to CRITICAL and WARNING
     # everything else is treated as INFO
-    # NOTE: the value of each count will only be non-zero if the level was 
+    # NOTE: the value of each count will only be non-zero if the level was
     # included in the run and there was an issue found of that given level
     # (default levels are just [E]rrors and [F]atals)
 
@@ -1702,8 +1713,8 @@ def pylint_run_pylint_scan(path_package, package_name, attr_dict, path_sdk_setti
             name=attr_dict.get("name"),
             description=attr_dict.get("fail_msg").format(score, run_output),
             # severity is based on count of errors/warnings/other
-            severity=SDKValidateIssue.SEVERITY_LEVEL_CRITICAL if error_count > 0 else 
-                     SDKValidateIssue.SEVERITY_LEVEL_WARN if warning_count > 0 else 
+            severity=SDKValidateIssue.SEVERITY_LEVEL_CRITICAL if error_count > 0 else
+                     SDKValidateIssue.SEVERITY_LEVEL_WARN if warning_count > 0 else
                      SDKValidateIssue.SEVERITY_LEVEL_INFO,
             solution=attr_dict.get("fail_solution") if not LOG.isEnabledFor(logging.DEBUG) else ""
         )
@@ -1754,16 +1765,16 @@ def bandit_validate_bandit_installed(attr_dict, **__):
 def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_settings=None, **__):
     """
     Run Bandit Scan on whole package using the settings defined in ``constants.BANDIT_DEFAULT_ARGS``.
-    
-    Raises a SDKException if ``bandit`` isn't installed. In use with ``validate``, this method should 
-    only be called after successfully calling ``bandit_validate_bandit_installed``. If a call to that 
+
+    Raises a SDKException if ``bandit`` isn't installed. In use with ``validate``, this method should
+    only be called after successfully calling ``bandit_validate_bandit_installed``. If a call to that
     method returns a failing SDKValidateIssue, this method shouldn't be called
 
     The default severity level on which the bandit scan fails is "medium" (defined as command line arg "-ll")
 
     The user can overwrite the default settings using an SDK Settings JSON file either in the default
     location or by using the --settings flag to pass in a path. The settings file should have a "bandit"
-    attribute which is a list of bandit command line options. Example (to change level to "low" and 
+    attribute which is a list of bandit command line options. Example (to change level to "low" and
     give 5 context lines):
     .. code-block:: json
         {
@@ -1824,7 +1835,7 @@ def bandit_run_bandit_scan(attr_dict, path_package, package_name, path_sdk_setti
     else:
         bandit_args.extend(constants.BANDIT_DEFAULT_SEVERITY_LEVEL)
 
-    # run bandit as a subprocess 
+    # run bandit as a subprocess
     exit_code, details = sdk_helpers.run_subprocess(bandit_args, cmd_name="bandit scan")
 
 

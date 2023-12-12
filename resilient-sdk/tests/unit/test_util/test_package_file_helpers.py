@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import io
 import json
@@ -268,7 +268,7 @@ def test_get_required_python_version():
 
     parsed_version = package_helpers.get_required_python_version(">=3")
     assert parsed_version == (3, 0, 0)
-    
+
     parsed_version = package_helpers.get_required_python_version(">=2.7")
     assert parsed_version == (2, 7, 0)
 
@@ -276,7 +276,7 @@ def test_get_required_python_version():
         package_helpers.get_required_python_version("<4")
 
 def test_check_package_installed():
-    
+
     # positive case
     assert package_helpers.check_package_installed("resilient-sdk") is True
 
@@ -341,7 +341,7 @@ def test_color_diff_output():
 
 def test_pass_parse_file_paths_from_readme():
 
-    mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
+    mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n",
                     "<!-- ![a commented out link](not.png) -->", "another markdown **line**\n"]
 
     result = package_helpers.parse_file_paths_from_readme(mock_passing_readme_data)
@@ -357,39 +357,59 @@ def test_pass_parse_file_paths_from_readme():
         result = package_helpers.parse_file_paths_from_readme(mock_invalid_readme_data)
 
 
-def test_parse_dockerfile():
-
+def test_parse_dockerfile_new():
     command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH)
 
     from_list = [constants.DOCKER_BASE_REPO]
+    arg_list = [
+        "BASE_IMAGE_REPO=quay.io",
+        "BASE_IMAGE_TAG=latest",
+        "APPLICATION=fn_main_mock_integration"
+    ]
+    env_list = []
+    user_list = []
+    run_list = ["pip install /tmp/packages/${APPLICATION}-*.tar.gz"]
+    copy_list = ["./dist /tmp/packages"]
+    entrypoint_list = []
+
+    assert command_dict[constants.DOCKER_COMMAND_DICT["from_command"]] == from_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["set_argument"]] == arg_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["set_env_var"]] == env_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["user"]] == user_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["run_command"]] == run_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["copy_command"]] == copy_list
+    assert command_dict[constants.DOCKER_COMMAND_DICT["entrypoint"]] == entrypoint_list
+
+def test_parse_dockerfile_old():
+
+    command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH_OLD)
+
+    from_list = [constants.DOCKER_BASE_REPO_OLD]
     arg_list = [
         "APPLICATION=fn_main_mock_integration",
         "RESILIENT_CIRCUITS_VERSION=37",
         "PATH_RESILIENT_CIRCUITS=rescircuits",
         "APP_HOST_CONTAINER=1"
-        ]
+    ]
     env_list = [
-        r"APP_HOST_CONTAINER=${APP_HOST_CONTAINER}",
-        r"APP_CONFIG_FILE /etc/${PATH_RESILIENT_CIRCUITS}/app.config",
-        r"APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}"
+        "APP_HOST_CONTAINER=${APP_HOST_CONTAINER}",
+        "APP_CONFIG_FILE /etc/${PATH_RESILIENT_CIRCUITS}/app.config",
+        "APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}"
     ]
     user_list = ["0","1001"]
     run_list = [
         "pip install --upgrade pip",
-        r'pip install "resilient-circuits>=${RESILIENT_CIRCUITS_VERSION}"',
-        r"pip install /tmp/packages/${APPLICATION}-*.tar.gz",
-        r"mkdir /etc/${PATH_RESILIENT_CIRCUITS}",
+        'pip install "resilient-circuits>=${RESILIENT_CIRCUITS_VERSION}"',
+        "pip install /tmp/packages/${APPLICATION}-*.tar.gz",
+        "mkdir /etc/${PATH_RESILIENT_CIRCUITS}",
         "groupadd -g 1001 default && usermod -g 1001 default",
-        r"mkdir /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
-        r"mkdir /var/${PATH_RESILIENT_CIRCUITS}",
-        r"mkdir /opt/${PATH_RESILIENT_CIRCUITS}"
+        "mkdir /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
+        "mkdir /var/${PATH_RESILIENT_CIRCUITS}",
+        "mkdir /opt/${PATH_RESILIENT_CIRCUITS}"
         ]
-    copy_list = ["./dist /tmp/packages",r"entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh"]
+    copy_list = ["./dist /tmp/packages","entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh"]
     entrypoint_list = ['[ "sh", "/opt/rescircuits/entrypoint.sh" ]']
-    empty_list = [
-        r"chgrp -R 1001 /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
-        r"chmod -R g=u /var/log/${PATH_RESILIENT_CIRCUITS}"]
-    
+
     assert command_dict[constants.DOCKER_COMMAND_DICT["from_command"]] == from_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["set_argument"]] == arg_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["set_env_var"]] == env_list
@@ -407,7 +427,7 @@ def test_parse_dockerfile_unicode():
             "يجري a command!",
             "TIBET ༀ ༁ ༂"
         ]
-        command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH)
+        command_dict = package_helpers.parse_dockerfile(mock_paths.MOCK_DOCKERFILE_PATH_OLD)
 
     assert command_dict["FROM"] == ["unicode testing mock"]
     assert command_dict["RUN"] == ["ɐ ɑ ɒ ɓ ɔ ɕ"]

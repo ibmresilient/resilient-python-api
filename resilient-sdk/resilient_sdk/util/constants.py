@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import os
 
@@ -60,7 +60,8 @@ SETTINGS_TEMPLATE_PATH = os.path.join("data", "run_init")
 SETTINGS_TEMPLATE_NAME = "sdk_settings.json.jinja2"
 
 # docker test constants (used in validate)
-DOCKER_BASE_REPO = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_BASE_REPO_OLD = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_BASE_REPO = "${BASE_IMAGE_REPO}/ibmresilient/soarapps-base-docker-image:${BASE_IMAGE_TAG}"
 DOCKER_COMMAND_DICT = {
     "from_command": "FROM",         # sets base image to build on top of
     "set_argument": "ARG",          # sets variables to use during building of image

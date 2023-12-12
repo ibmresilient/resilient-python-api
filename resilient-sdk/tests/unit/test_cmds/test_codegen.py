@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import os
 import shutil
@@ -25,7 +25,6 @@ EXPECTED_FILES_ROOT_DIR = [
     'apikey_permissions.txt',
     'data',
     'doc',
-    'entrypoint.sh',
     'fn_main_mock_integration',
     'icons',
     'payload_samples',
@@ -96,8 +95,8 @@ def compare_playbooks_md_file(package_name, package_path):
         generated_md = expected_md_file.readlines()
 
     len(generated_md) > 0 # checking if file is not empty
-    assert len(expected_md) == len(generated_md) 
-    
+    assert len(expected_md) == len(generated_md)
+
     expected_md, generated_md = expected_md[7:], generated_md[7:] # removing the first 7 lines of the file as resilient_sdk version can change
     for exp, gen in zip(expected_md, generated_md):
         assert exp == gen
@@ -158,7 +157,6 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         "setup.py": ("setup.py.jinja2", mock_jinja_data),
         "tox.ini": ("tox.ini.jinja2", mock_jinja_data),
         "Dockerfile": ("Dockerfile.jinja2", mock_jinja_data),
-        "entrypoint.sh": ("entrypoint.sh.jinja2", mock_jinja_data),
         "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", mock_jinja_data),
         "data": {},
         "icons": {
@@ -192,7 +190,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR, mock_paths.TEST_TEMP_DIR)
 
     files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
-    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']
+    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'icons', 'setup.py', 'test_package', 'tox.ini']
 
     files_in_icons_dir = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "icons")))
     assert files_in_icons_dir == ['app_logo.png', 'company_logo.png']
@@ -239,7 +237,7 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     package_name = args.package
     package_path = os.path.join(output_path, args.package)
     compare_playbooks_md_file(package_name, package_path)
-    
+
     constants.CURRENT_SOAR_SERVER_VERSION = None
 
 
