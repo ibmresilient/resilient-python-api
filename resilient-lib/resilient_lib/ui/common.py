@@ -260,13 +260,12 @@ def create_tab(tab, opts, update_existing=False):
         LOG.error("Failed to create/update tab in the UI for {}".format(tab.SECTION))
         LOG.error(str(e))
 
-def update_summary_layout(opts, ui_components_to_add, header_of_block_to_add_after="Summary", app_name=None):
+def update_summary_layout(opts, ui_components_to_add, header_of_block_to_add_after=None, app_name=None):
     """
     Add a list of UI components to the Summary Section of the UI customization.
 
     Optional ``header_of_block_to_add_after`` (ex: "Summary" or "Newsfeed")
-    gives you the option to insert your components after the given block's
-    name.
+    gives you the option to insert your components after the given block's name.
     NOTE: ``header_of_block_to_add_after`` only works with "header" elements,
     not "section" elements
 
@@ -294,7 +293,7 @@ def update_summary_layout(opts, ui_components_to_add, header_of_block_to_add_aft
     :type opts: dict|AppConfigManager
     :param ui_components_to_add: list of UIElementBase objs
     :type ui_components_to_add: list[UIElementBase]
-    :param header_of_block_to_add_after: string name of section after which to insert new components, defaults to "Summary"
+    :param header_of_block_to_add_after: string name of section after which to insert new components, defaults to None which goes to the end
     :type header_of_block_to_add_after: str, optional
     :param app_name: app's name for its section in the app.config, defaults to None
     :type app_name: str, optional
