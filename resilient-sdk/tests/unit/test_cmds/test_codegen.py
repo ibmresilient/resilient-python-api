@@ -96,8 +96,8 @@ def compare_playbooks_md_file(package_name, package_path):
         generated_md = expected_md_file.readlines()
 
     len(generated_md) > 0 # checking if file is not empty
-    assert len(expected_md) == len(generated_md) 
-    
+    assert len(expected_md) == len(generated_md)
+
     expected_md, generated_md = expected_md[7:], generated_md[7:] # removing the first 7 lines of the file as resilient_sdk version can change
     for exp, gen in zip(expected_md, generated_md):
         assert exp == gen
@@ -239,7 +239,7 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     package_name = args.package
     package_path = os.path.join(output_path, args.package)
     compare_playbooks_md_file(package_name, package_path)
-    
+
     constants.CURRENT_SOAR_SERVER_VERSION = None
 
 
@@ -418,7 +418,6 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     wf_modified_time = os.path.getmtime(os.path.join(path_package_reloaded, "data", "wf_mock_workflow_one.md"))
 
     # Perform another test reload.
-    cmd_codegen = CmdCodegen(fx_get_sub_parser)
     args = cmd_codegen.parser.parse_known_args()[0]
     path_package_reloaded = cmd_codegen._reload_package(args)
 

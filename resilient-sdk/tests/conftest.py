@@ -694,7 +694,7 @@ def fx_cmd_line_args_extract():
     sys.argv = original_cmd_line
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def fx_get_sub_parser():
     """
     Before: Return a main_parser setup with sub_parser added

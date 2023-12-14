@@ -9,11 +9,11 @@
 
 # Tags Created (assuming NEW_VESRION=v51.0.0.0.1234)
 #  - latest
-#  - python-39
 #  - v51.0.0.0.1234
-#  - v51.0.0.0.1234-python-39
 #  - python-311
 #  - v51.0.0.0.1234-python-311
+#  - python-39
+#  - v51.0.0.0.1234-python-39
 
 DOCKER_REPO_PATH=$1 # ex: docker-eu.artifactory.swg-devops.com/sec-resilient-docker-local OR quay.io
 CIRCUITS_VERSION=$2
@@ -42,14 +42,14 @@ tag_python_39="${tag_base}:python-39"
 tag_version_311="${tag_base}:${CIRCUITS_VERSION}-python-311"
 tag_python_311="${tag_base}:python-311"
 
-# build PY39 and tag appropriately with "<version>", "<version>-python-9", "python-9", "latest"
-docker build -t ${tag_version} -t ${tag_version_39} -t ${tag_python_39} -t ${tag_latest} \
+# build PY311 and tag appropriately with "<version>", "<version>-python-311", "python-311", "latest"
+docker build -t ${tag_version} -t ${tag_version_311} -t ${tag_python_311} -t ${tag_latest} \
     --build-arg RESILIENT_CIRCUITS_VERSION=${CIRCUITS_VERSION} \
     --build-arg PYTHON_VERSION=python-39 \
     ${TRAVIS_BUILD_DIR}
 
-# build PY311 version and tag with "<version>-python-311", "python-311"
-docker build -t ${tag_version_311} -t ${tag_python_311} \
+# build PY39 version and tag with "<version>-python-39", "python-39"
+docker build -t ${tag_version_39} -t ${tag_python_39} \
     --build-arg RESILIENT_CIRCUITS_VERSION=${CIRCUITS_VERSION} \
     --build-arg PYTHON_VERSION=python-311 \
     ${TRAVIS_BUILD_DIR}
