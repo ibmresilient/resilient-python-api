@@ -3,4 +3,4 @@
 # pragma pylint: disable=unused-argument, no-self-use
 from .common import create_tab
 from .tab import Tab
-from .elements import Datatable, Field, View
+from .elements import Datatable, Field, View, Section, HTMLBlock, Header
