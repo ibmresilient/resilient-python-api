@@ -14,7 +14,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from setuptools import sandbox as use_setuptools
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_get_setup_callable():
@@ -268,7 +268,7 @@ def test_get_required_python_version():
 
     parsed_version = package_helpers.get_required_python_version(">=3")
     assert parsed_version == (3, 0, 0)
-    
+
     parsed_version = package_helpers.get_required_python_version(">=2.7")
     assert parsed_version == (2, 7, 0)
 
@@ -276,7 +276,7 @@ def test_get_required_python_version():
         package_helpers.get_required_python_version("<4")
 
 def test_check_package_installed():
-    
+
     # positive case
     assert package_helpers.check_package_installed("resilient-sdk") is True
 
@@ -341,7 +341,7 @@ def test_color_diff_output():
 
 def test_pass_parse_file_paths_from_readme():
 
-    mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n", 
+    mock_passing_readme_data = ["# Header\n", "![this is a file](path.png)\n",
                     "<!-- ![a commented out link](not.png) -->", "another markdown **line**\n"]
 
     result = package_helpers.parse_file_paths_from_readme(mock_passing_readme_data)
@@ -389,7 +389,7 @@ def test_parse_dockerfile():
     empty_list = [
         r"chgrp -R 1001 /var/log/${PATH_RESILIENT_CIRCUITS} && \ ".strip(),
         r"chmod -R g=u /var/log/${PATH_RESILIENT_CIRCUITS}"]
-    
+
     assert command_dict[constants.DOCKER_COMMAND_DICT["from_command"]] == from_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["set_argument"]] == arg_list
     assert command_dict[constants.DOCKER_COMMAND_DICT["set_env_var"]] == env_list

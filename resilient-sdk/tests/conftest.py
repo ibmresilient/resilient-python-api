@@ -26,7 +26,7 @@ import resilient_sdk.app as app
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers, sdk_validate_configs
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 import keyring
 
@@ -436,6 +436,26 @@ def fx_cmd_line_args_init():
 
     args_to_add = [
         "init"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
+def fx_cmd_line_args_list():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "list",
+        "-e", mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK
     ]
 
     _add_to_cmd_line_args(args_to_add)

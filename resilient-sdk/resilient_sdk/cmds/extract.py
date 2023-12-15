@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """ Implementation of 'resilient-sdk extract' """
 
@@ -38,7 +38,7 @@ class CmdExtract(BaseCmd):
     $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     CMD_DESCRIPTION = "Extract data in order to publish a .res export file"
-    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]
+    CMD_ADD_PARSERS = [constants.APP_CONFIG_PARSER_NAME, constants.RESILIENT_OBJECTS_PARSER_NAME, constants.IO_PARSER_NAME, constants.ZIP_PARSER_NAME]
 
     def setup(self):
         # Define docgen usage and description

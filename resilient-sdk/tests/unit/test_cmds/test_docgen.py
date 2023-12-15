@@ -10,7 +10,7 @@ from resilient_sdk.cmds import CmdDocgen, base_cmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_cmd_docgen_setup(fx_get_sub_parser, fx_cmd_line_args_docgen):
@@ -85,7 +85,7 @@ def test_get_function_details_w_playbook():
     the_function = function_details[0]
 
     assert the_function.get("name") == u"fn_test_dynamic_input"
-    assert the_function.get("pre_processing_script") == '"""pre script\n"""' 
+    assert the_function.get("pre_processing_script") == '"""pre script\n"""'
     assert the_function.get("post_processing_script") == u"""a_variable = \"a string\"\nb_variable = \"b string\"\nc_variable = 12345\n# d_variable = playbook.functions.results.output\nd_variable = playbook.functions.results.output2\no = \"output\""""
 
     constants.CURRENT_SOAR_SERVER_VERSION = None # setting SOAR server version to 46.0

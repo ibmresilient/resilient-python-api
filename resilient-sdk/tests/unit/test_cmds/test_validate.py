@@ -10,7 +10,7 @@ from mock import patch
 from resilient_sdk.cmds import CmdValidate, base_cmd
 from resilient_sdk.util import constants, sdk_validate_configs
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_cmd_validate_setup(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_validate):
@@ -92,7 +92,7 @@ def test_fail_validate_setup_py_file(fx_copy_fn_main_mock_integration):
     """Test for failure when calling _validate_setup()"""
 
     mock_package_path = fx_copy_fn_main_mock_integration[1]
-        
+
     mock_data = [
         ("test2", {
             "fail_func": lambda x: True,
@@ -176,7 +176,7 @@ def test_fail_validate_selftest_py_file(fx_get_sub_parser, fx_cmd_line_args_vali
 def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = [ 
+    mock_data = [
         ("mock_valid_file", {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]})
      ]
 
@@ -197,7 +197,7 @@ def test_pass_validate_package_files(fx_copy_fn_main_mock_integration):
 def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = [ 
+    mock_data = [
         ("mock_valid_file", {"func": lambda **_: [SDKValidateIssue("pass", "pass", SDKValidateIssue.SEVERITY_LEVEL_DEBUG)]}),
         ("mock_invalid_file", {"func": lambda **_: [SDKValidateIssue("fail", "fail")]})
      ]
@@ -221,7 +221,7 @@ def test_fail_validate_package_files(fx_copy_fn_main_mock_integration):
 
 def test_file_not_found_validate_package_files(fx_copy_fn_main_mock_integration):
     mock_path_package = fx_copy_fn_main_mock_integration[1]
-    mock_data = [ 
+    mock_data = [
         ("mock_missing_file", {
             "missing_name": "mock_name",
             "missing_msg": "mock_msg {0}",
@@ -496,9 +496,9 @@ def test_generate_report(fx_copy_fn_main_mock_integration, fx_cmd_line_args_vali
         ]
     }
     mock_counts = {
-        SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0, 
-        SDKValidateIssue.SEVERITY_LEVEL_WARN: 0, 
-        SDKValidateIssue.SEVERITY_LEVEL_INFO: 0, 
+        SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
+        SDKValidateIssue.SEVERITY_LEVEL_WARN: 0,
+        SDKValidateIssue.SEVERITY_LEVEL_INFO: 0,
         SDKValidateIssue.SEVERITY_LEVEL_DEBUG: 0
     }
 
