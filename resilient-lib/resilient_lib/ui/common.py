@@ -155,6 +155,19 @@ def add_components_to_summary(client, components_to_add, summary_layout, header_
     return client.put(LAYOUT_FOR.format(summary_layout["id"]), payload=summary_layout)
 
 def _find_index_of_end_of_header_block(summary_fields, header_block_name):
+    """
+    Find index where to insert new block, given current ```summary_fields```
+    and ```header_block_name``` which defines the block after which to insert.
+    If ``header_block_name`` not found, return len(summary_fields) (i.e.
+    insert at the end)
+
+    :param summary_fields: list of current summary fields objects
+    :type summary_fields: list[dict]
+    :param header_block_name: string title of the block to insert after (exact match)
+    :type header_block_name: str
+    :return: index of block after header given
+    :rtype: int
+    """
     # find index of
     found = False
     found_i = len(summary_fields)
