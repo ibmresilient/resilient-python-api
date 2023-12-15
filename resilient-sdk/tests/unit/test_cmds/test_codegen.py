@@ -16,7 +16,7 @@ from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from tests import helpers
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 EXPECTED_FILES_ROOT_DIR = [
     'Dockerfile',
@@ -117,7 +117,7 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     assert cmd_codegen.CMD_DESCRIPTION == cmd_codegen.CMD_HELP
-    assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
+    assert cmd_codegen.CMD_ADD_PARSERS == [constants.APP_CONFIG_PARSER_NAME, constants.RESILIENT_OBJECTS_PARSER_NAME, constants.IO_PARSER_NAME, constants.SDK_SETTINGS_PARSER_NAME]
 
     args = cmd_codegen.parser.parse_known_args()[0]
     assert args.package == "fn_main_mock_integration"

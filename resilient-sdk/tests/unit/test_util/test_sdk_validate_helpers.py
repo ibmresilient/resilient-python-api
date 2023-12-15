@@ -13,7 +13,7 @@ from resilient_sdk.util import (constants, package_file_helpers, sdk_validate_co
                                 sdk_validate_helpers)
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_selftest_validate_resilient_circuits_installed():

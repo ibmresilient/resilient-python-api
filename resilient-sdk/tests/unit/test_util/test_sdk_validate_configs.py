@@ -5,13 +5,13 @@
 import pytest
 from resilient_sdk.util import package_file_helpers, sdk_validate_configs
 from resilient_sdk.util.sdk_exception import SDKException
-from tests.shared_mock_data.mock_paths import MOCK_SETUP_PY
+from tests.shared_mock_data.sdk_mock_paths import MOCK_SETUP_PY
 
 
 def test_name_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[0][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("test_name")
     assert not func("name_with_n0mb3rs")
@@ -20,7 +20,7 @@ def test_name_lambda():
 def test_display_name_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[1][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("This is My Display Name")
     assert not func("This is My Display Name ส ห ฬ ")
@@ -29,7 +29,7 @@ def test_display_name_lambda():
 def test_display_name_not_name_func():
 
     func = sdk_validate_configs.setup_py_attributes[2][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("Main Mock Integration", MOCK_SETUP_PY)
     assert func("fn_main_mock_integration", MOCK_SETUP_PY)
@@ -37,7 +37,7 @@ def test_display_name_not_name_func():
 def test_no_display_name_not_name_func():
 
     func = sdk_validate_configs.setup_py_attributes[2][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("Main Mock Integration", MOCK_SETUP_PY)
     assert func("fn_main_mock_integration", MOCK_SETUP_PY)
@@ -46,7 +46,7 @@ def test_no_display_name_not_name_func():
 def test_license_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[3][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("MIT")
     assert func("<<default license>>")
@@ -54,7 +54,7 @@ def test_license_lambda():
 def test_author_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[5][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("IBM")
     assert func("<<default author>>")
@@ -62,7 +62,7 @@ def test_author_lambda():
 def test_author_email_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[6][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func("ibm@ibm.com")
     assert not func("<<default email>>")
@@ -87,7 +87,7 @@ def test_long_description_lambda():
 def test_install_requires_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[9][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func(['resilient_circuits>=30.0.0', 'boto3'])
     assert not func(['resilient-circuits>=30.0.0', 'fn-utilities'])
@@ -96,7 +96,7 @@ def test_install_requires_lambda():
 def test_install_requires_version_specifier_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[10][1].get("fail_func", None)
-    
+
     assert func is not None
     assert func(['resilient_circuits>=30.0.0', 'boto3'])
     assert not func(['resilient-circuits>=30.0.0', 'fn-utilities~=1.12'])
@@ -105,7 +105,7 @@ def test_install_requires_version_specifier_lambda():
 def test_python_requires_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[11][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func(">=3.6")
     assert func(">=2.0")
@@ -118,7 +118,7 @@ def test_python_requires_lambda():
 def test_entry_points_lambda():
 
     func = sdk_validate_configs.setup_py_attributes[12][1].get("fail_func", None)
-    
+
     assert func is not None
     assert not func(package_file_helpers.SUPPORTED_EP)
     assert func(["only_one_entry_point"])

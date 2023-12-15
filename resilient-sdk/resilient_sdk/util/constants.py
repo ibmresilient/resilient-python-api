@@ -36,8 +36,14 @@ CIRCUITS_PACKAGE_NAME = "resilient-circuits"
 SUB_CMD_OPT_PACKAGE = ("--package", "-p")
 SUB_CMD_OPT_SDK_SETTINGS = ("--settings", )
 
+# sub parser names
+RESILIENT_OBJECTS_PARSER_NAME = "res_obj_parser"
+IO_PARSER_NAME = "io_parser"
+ZIP_PARSER_NAME = "zip_parser"
+APP_CONFIG_PARSER_NAME = "app_config_parser"
+SDK_SETTINGS_PARSER_NAME = "sdk_settings_parser"
+
 # file for SDK settings
-SDK_SETTINGS_PARSER_NAME = "sdk_settings_file"
 SDK_SETTINGS_FILENAME = ".sdk_settings.json"
 SDK_SETTINGS_FILE_PATH = os.path.join(PATH_RES_DEFAULT_DIR, SDK_SETTINGS_FILENAME)
 SDK_SETTINGS_BANDIT_SECTION_NAME = "bandit"

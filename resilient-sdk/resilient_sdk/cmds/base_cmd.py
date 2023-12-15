@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import argparse
 from resilient import ensure_unicode
@@ -28,9 +28,11 @@ class BaseCmd(object):
     CMD_DESCRIPTION = None
 
     # Set this in sub-class. Its a list of strings of parser names that will be included:
-    # - "res_obj_parser"
-    # - "io_parser"
-    # - "zip_parser"
+    # - res_obj_parser
+    # - io_parser
+    # - zip_parser
+    # - app_config_parser
+    # - sdk_settings_parser
     CMD_ADD_PARSERS = []
 
     def __init__(self, sub_parser):
@@ -40,16 +42,16 @@ class BaseCmd(object):
 
         parser_parents = []
 
-        if "res_obj_parser" in self.CMD_ADD_PARSERS:
+        if constants.RESILIENT_OBJECTS_PARSER_NAME in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_res_obj_parser())
 
-        if "io_parser" in self.CMD_ADD_PARSERS:
+        if constants.IO_PARSER_NAME in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_io_parser())
 
-        if "zip_parser" in self.CMD_ADD_PARSERS:
+        if constants.ZIP_PARSER_NAME in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_zip_parser())
 
-        if "app_config_parser" in self.CMD_ADD_PARSERS:
+        if constants.APP_CONFIG_PARSER_NAME in self.CMD_ADD_PARSERS:
             parser_parents.append(self._get_app_config_parser())
 
         if constants.SDK_SETTINGS_PARSER_NAME in self.CMD_ADD_PARSERS:
@@ -115,7 +117,7 @@ class BaseCmd(object):
 
         res_obj_parser.add_argument("-pb", "--playbook",
                                     type=ensure_unicode,
-                                    help="API names of playbooks to include. Only SOAR >= v{0} supported".format(constants.MIN_SOAR_SERVER_VERSION_PLAYBOOKS),
+                                    help="API names of playbooks to include. {0}".format(constants.INFO_MIN_PB_SUPPORT),
                                     nargs="*")
 
         res_obj_parser.add_argument("-r", "--rule",

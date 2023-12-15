@@ -50,7 +50,7 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --selftest"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser", constants.SDK_SETTINGS_PARSER_NAME]
+    CMD_ADD_PARSERS = [constants.APP_CONFIG_PARSER_NAME, constants.SDK_SETTINGS_PARSER_NAME]
 
     VALIDATE_ISSUES = {}
     SUMMARY_LIST = []

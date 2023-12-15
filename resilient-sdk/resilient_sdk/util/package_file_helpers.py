@@ -137,6 +137,7 @@ COLORS = {
     "RED": '\033[91m',
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',
+    "YELLOW": '\033[93m',
     "INFO": '\033[94m',
     "SKIPPED": '\033[94m',
     "BLUE": '\033[94m',

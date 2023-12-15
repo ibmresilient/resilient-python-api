@@ -38,7 +38,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
+    CMD_ADD_PARSERS = [constants.APP_CONFIG_PARSER_NAME, constants.RESILIENT_OBJECTS_PARSER_NAME, constants.IO_PARSER_NAME, constants.SDK_SETTINGS_PARSER_NAME]
 
     def setup(self):
         # Define codegen usage and description
