@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import difflib
 import os
@@ -212,7 +212,7 @@ def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
 
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
-    # becuase there are two Dockerfile tests, the first one will be at index i-1, the second one at index i
+    # because there are two Dockerfile tests, the first one will be at index i-1, the second one at index i
     attr_dict = sdk_validate_configs.package_files[i-1][1]
     package_name = fx_copy_fn_main_mock_integration[0]
     package_version = "fake.version"
@@ -220,7 +220,7 @@ def test_fail_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
 
     # mock the get_close_matches method to return an empty list, which will fail the method
     with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
-        mock_ratio.return_value = 0.0
+        mock_ratio.return_value = 0.2
 
         result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
 
@@ -233,7 +233,7 @@ def test_pass_package_files_template_match_dockerfile(fx_copy_fn_main_mock_integ
 
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
-    # becuase there are two Dockerfile tests, the first one will be at index i-1, the second one at index i
+    # because there are two Dockerfile tests, the first one will be at index i-1, the second one at index i
     attr_dict = sdk_validate_configs.package_files[i-1][1]
     package_name = fx_copy_fn_main_mock_integration[0]
     package_version = "fake.version"
@@ -254,28 +254,47 @@ def test_pass_package_files_base_image_correct_dockerfile(fx_copy_fn_main_mock_i
 
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.package_files[i][1]
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    path_file = os.path.join(path_package,filename)
     with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
         mock_dict.return_value = {"FROM":[constants.DOCKER_BASE_REPO]}
 
-        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict, path_package)
 
         assert len(result) == 1
         result = result[0]
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
+def test_fail_package_files_base_image_old_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+
+    filename = "Dockerfile"
+    i = fx_get_package_files_config[filename]
+    path_package = fx_copy_fn_main_mock_integration[1]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+    path_file = os.path.join(path_package,filename)
+    with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
+        mock_dict.return_value = {"FROM":[constants.DOCKER_BASE_REPO_OLD]}
+
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict, path_package)
+
+        assert len(result) == 1
+        result = result[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
+
 def test_fail_package_files_base_image_incorrect_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.package_files[i][1]
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    path_file = os.path.join(path_package,filename)
     with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
         mock_dict.return_value = {"FROM":["incorrect_repo"]}
 
-        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict, path_package)
 
         assert len(result) == 1
         result = result[0]
@@ -287,12 +306,13 @@ def test_fail_package_files_base_image_missing_dockerfile(fx_copy_fn_main_mock_i
 
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.package_files[i][1]
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    path_file = os.path.join(path_package,filename)
     with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
         mock_dict.return_value = {"FROM":[]}
 
-        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict, path_package)
 
         assert len(result) == 1
         result = result[0]
@@ -304,12 +324,13 @@ def test_fail_package_files_base_image_too_many_dockerfile(fx_copy_fn_main_mock_
 
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.package_files[i][1]
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    path_file = os.path.join(path_package,filename)
     with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
-        mock_dict.return_value = {"FROM":[constants.DOCKER_BASE_REPO,constants.DOCKER_BASE_REPO]}
+        mock_dict.return_value = {"FROM":[constants.DOCKER_BASE_REPO, constants.DOCKER_BASE_REPO]}
 
-        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict, path_package)
 
         assert len(result) == 1
         result = result[0]
@@ -319,56 +340,17 @@ def test_fail_package_files_base_image_too_many_dockerfile(fx_copy_fn_main_mock_
 def test_fail_package_files_base_image_too_many_and_incorrect_dockerfile(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
     filename = "Dockerfile"
     i = fx_get_package_files_config[filename]
+    path_package = fx_copy_fn_main_mock_integration[1]
     attr_dict = sdk_validate_configs.package_files[i][1]
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1],filename)
+    path_file = os.path.join(path_package,filename)
     with patch("resilient_sdk.util.package_file_helpers.parse_dockerfile") as mock_dict:
-        mock_dict.return_value = {"FROM":["repo1","repo2"]}
+        mock_dict.return_value = {"FROM":["repo1", "repo2"]}
 
-        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict)
+        result = sdk_validate_helpers.package_files_validate_base_image(path_file, attr_dict, path_package)
 
         assert len(result) == 2
         assert isinstance(result[0], SDKValidateIssue) and isinstance(result[1], SDKValidateIssue)
         assert result[0].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL and result[1].severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
-
-def test_fail_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
-
-    filename = "entrypoint.sh"
-    i = fx_get_package_files_config[filename]
-    attr_dict = sdk_validate_configs.package_files[i][1]
-    package_name = fx_copy_fn_main_mock_integration[0]
-    package_version = "fake.version"
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
-
-    # mock the get_close_matches method to return an empty list, which will fail the method
-    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
-        mock_ratio.return_value = 0.0
-
-        result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
-
-        assert len(result) == 1
-        result = result[0]
-        assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_WARN
-
-def test_pass_package_files_template_match_entrypoint(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
-
-    filename = "entrypoint.sh"
-    i = fx_get_package_files_config[filename]
-    attr_dict = sdk_validate_configs.package_files[i][1]
-    package_name = fx_copy_fn_main_mock_integration[0]
-    package_version = "fake.version"
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], filename)
-
-    # mock the get_close_matches method to return an empty list, which will fail the method
-    with patch("resilient_sdk.util.sdk_validate_helpers.difflib.SequenceMatcher.ratio") as mock_ratio:
-        mock_ratio.return_value = 1.0
-
-        result = sdk_validate_helpers.package_files_template_match(package_name, package_version, path_file, filename, attr_dict)
-
-        assert len(result) == 1
-        result = result[0]
-        assert isinstance(result, SDKValidateIssue)
-        assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
 
 def test_difflib_unified_diff_used_in_template_match():
     """A quick test to check that difflib.unified_diff works the same as when we wrote

@@ -80,10 +80,12 @@ class CmdCodegen(BaseCmd):
 
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--reload")
             self._reload_package(args)
+            LOG.info("'codegen --reload' complete for '%s'", args.package)
 
         elif args.package:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--package | -p")
             self._gen_package(args)
+            LOG.info("'codegen' complete for '%s'", args.package)
 
         elif not args.package and args.function:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--function | -f")
@@ -425,7 +427,6 @@ class CmdCodegen(BaseCmd):
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
             "Dockerfile": ("Dockerfile.jinja2", jinja_data),
-            "entrypoint.sh": ("entrypoint.sh.jinja2", jinja_data),
             "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", jinja_data),
             "data": {},
             "icons": {
@@ -535,7 +536,7 @@ class CmdCodegen(BaseCmd):
         if skipped_files:
             LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
 
-        LOG.info("'codegen' complete for '%s'", package_name)
+        LOG.debug("'codegen._gen_package' complete for '%s'", package_name)
 
         return output_base
 
@@ -623,8 +624,9 @@ class CmdCodegen(BaseCmd):
             # Regenerate the package
             path_reloaded = CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
-            LOG.info("\nNOTE: Ensure the MANIFEST.in file includes line:\nrecursive-include %s/util *\n", args.package)
-            LOG.info("'codegen --reload' complete for '%s'", args.package)
+            LOG.info("\nNOTE: Ensure the Dockerfile has the latest template introduced in v51.0.1.0")
+            LOG.info("NOTE: Ensure the MANIFEST.in file includes line:\n      recursive-include %s/util *\n", args.package)
+            LOG.debug("'codegen._reload_reload' complete for '%s'", args.package)
 
             return path_reloaded
 

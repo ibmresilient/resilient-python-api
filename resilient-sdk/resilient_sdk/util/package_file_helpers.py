@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
@@ -1166,7 +1166,8 @@ def parse_dockerfile(path):
         split_line = line.strip().split(" ")
         if split_line[0] == "#" or split_line[0] == "": # skip comments
             continue
-        found_commands[split_line[0]].append(' '.join(split_line[1:])) # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
+        # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
+        found_commands[split_line[0]].append(' '.join(split_line[1:]))
 
     return found_commands
 

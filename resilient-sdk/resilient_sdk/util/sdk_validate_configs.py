@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import re
 
@@ -24,7 +24,7 @@ setup_py_attributes = [
     ("display_name", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
-        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
+        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to an appropriate value. This value is displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
@@ -33,14 +33,14 @@ setup_py_attributes = [
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": sdk_validate_helpers.check_display_name_not_equal_to_name,
         "include_setup_py_path_in_fail_func": True,
-        "fail_msg": u"'{0}' should not be the same as 'name'", 
+        "fail_msg": u"'{0}' should not be the same as 'name'",
         "solution": u"Set '{0}' to a value that will be displayed when installed on App Host",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
     }),
     ("license", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
-        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
+        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to a valid license.",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
@@ -56,7 +56,7 @@ setup_py_attributes = [
     ("author", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(DEFAULT_SETUP_ATTR_REGEX, x, re.IGNORECASE),
-        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
+        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the name of the author",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
@@ -64,7 +64,7 @@ setup_py_attributes = [
     ("author_email", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"@example\.com", x, re.IGNORECASE),
-        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'", 
+        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1}'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Set '{0}' to the contact email for the author",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL
@@ -72,7 +72,7 @@ setup_py_attributes = [
     ("description", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: re.findall(r"{0}.*".format(constants.DOCGEN_PLACEHOLDER_STRING), x, re.IGNORECASE),
-        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'", 
+        "fail_msg": u"setup.py attribute '{0}' remains unchanged from the default value '{1:29.29}...'",
         "missing_msg": u"setup.py file is missing attribute '{0}' or missing the value for the attribute",
         "solution": u"Enter a quick description for the app in '{0}'. This will be displayed when the app is installed",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_WARN
@@ -118,7 +118,7 @@ setup_py_attributes = [
     ("entry_points", {
         "parse_func": package_helpers.parse_setup_py,
         "fail_func": lambda x: False if not any([ep not in x for ep in package_helpers.SUPPORTED_EP]) else True,
-        "fail_msg": u"'{0}' is missing {2} which is one of the required entry points", 
+        "fail_msg": u"'{0}' is missing {2} which is one of the required entry points",
         "fail_msg_lambda_supplement": lambda x: [ep for ep in package_helpers.SUPPORTED_EP if ep not in x],
         "missing_msg": u"'{0}' is missing",
         "solution": "Make sure that all of the following values for '{0}' are implemented: " + str(package_helpers.SUPPORTED_EP),
@@ -150,7 +150,7 @@ selftest_attributes = [
         "fail_msg": "'{0}' is not installed in your Python environment",
         "solution": "Install '{0}' by running '''pip install {1}'''",
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        
+
         "pass_msg": "'{0}' is correctly installed in your Python environment",
     },
     { # check 3: validate that the selftest file exists
@@ -188,7 +188,7 @@ selftest_attributes = [
 
 
 # check package files are present
-package_files = [ 
+package_files = [
     ("MANIFEST.in", {
         "func": sdk_validate_helpers.package_files_manifest,
         "name": "'MANIFEST.in'",
@@ -238,26 +238,11 @@ package_files = [
         "func": sdk_validate_helpers.package_files_validate_base_image,
         "name": "'Dockerfile, base image'",
 
-        "fail_msg": "Dockerfile is not using the correct base image: {0}", 
+        "fail_msg": "Dockerfile is not using the correct base image: {0}",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "fail_solution": "This can be fixed by {0}", 
+        "fail_solution": "This can be fixed by {0}",
 
         "pass_msg": "Dockerfile is using the correct base image"
-        }),
-
-    ("entrypoint.sh", {
-        "func": sdk_validate_helpers.package_files_template_match,
-        "name": "'entrypoint.sh'",
-
-        "fail_msg": "'entrypoint.sh' does not match the template file ({0:.0f}% match). Difference from template: \n\n\t\t{1}",
-        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_WARN,
-        "fail_solution": "Ensure that the 'entrypoint.sh' was generated with the latest version of the resilient-sdk...",
-
-        "missing_msg": "'entrypoint.sh' not found in package at path {0}",
-        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
-        "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
-
-        "pass_msg": "'entrypoint.sh' matches the template file"
     }),
 
     ("config.py", {

@@ -56,6 +56,8 @@ class CmdValidate(BaseCmd):
     SUMMARY_LIST = []
 
     def setup(self):
+        SDKException.command_ran = self.CMD_NAME
+
         # Define codegen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
@@ -294,7 +296,6 @@ class CmdValidate(BaseCmd):
         - setup.py - done in _validate_setup()
         - MANIFEST.in - done in _validate_package_files()
         - apikey_permissions.txt - done in _validate_package_files()
-        - entrypoint.sh - done in _validate_package_files()
         - Dockerfile - done in _validate_package_files()
         - fn_package/util/config.py - done in _validate_package_files()
         - fn_package/util/customize.py - done in _validate_package_files()
@@ -462,7 +463,6 @@ class CmdValidate(BaseCmd):
         - apikey_permissions.txt
         - MANIFEST.in
         - Dockerfile
-        - entrypoint.sh
         - config.py
         - customize.py
         - app and company logos
