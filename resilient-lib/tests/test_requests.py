@@ -915,7 +915,29 @@ class TestFunctionRequests(unittest.TestCase):
             rc.execute("GET", url, retry_tries=3,
                        callback=lambda x: x.raise_for_status())
 
+        assert "url: {}".format(url) in self.caplog.text
+        assert "method: {}".format("GET") in self.caplog.text
         assert self.caplog.text.count("retrying in") == 2
+        assert "retry_delay: 1" in self.caplog.text
+        assert "retry_exceptions: <class 'requests.exceptions.HTTPError'>" in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_debug_logs_dont_show_when_retry_tries_is_default(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # try again where the retry should kick in because call back DOES raise HTTPError
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url)
+
+        assert "url: {}".format(url) in self.caplog.text
+        assert "method: {}".format("GET") in self.caplog.text
+        assert "retry_tries" not in self.caplog.text
+        assert "retry_delay: 1" not in self.caplog.text
+        assert "retry_exceptions: <class 'requests.exceptions.HTTPError'>" not in self.caplog.text
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     @pytest.mark.skipif(not PY2, reason="make a test for PY2 that ensures retry not engaged")
