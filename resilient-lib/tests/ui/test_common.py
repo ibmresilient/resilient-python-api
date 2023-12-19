@@ -1,6 +1,6 @@
 import pytest
 from mock import patch
-from resilient_lib.ui import Tab, Datatable, Field
+from resilient_lib.ui import Tab, Datatable, Field, Section, HTMLBlock, Header
 from resilient_lib.ui import create_tab
 
 
@@ -10,7 +10,11 @@ class MockTab(Tab):
     SECTION = "test"
     CONTAINS = [
         Datatable('test'),
-        Field('test')
+        Field('test'),
+        Section(
+            element_list=[HTMLBlock("<h1>HTML Header</h1>"), Header("Built-in Header")],
+            show_if=[Field("id").conditions.has_value()]
+        )
     ]
 
     SHOW_IF = [Field('test').conditions.has_value()]
@@ -20,7 +24,6 @@ class TestSubmittedData(object):
     Tests that payload submitted to the server contains proper tab information.
     """
 
-    @pytest.mark.skip(reason="Needs better mocking")
     @patch("resilient.get_client")
     def test_create_tab(self, get_client):
         # this mocks the requests made to /types and /layout?type_id=xxx
