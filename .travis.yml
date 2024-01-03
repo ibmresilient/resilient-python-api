@@ -1,5 +1,5 @@
 language: python
-python: 3.9.18
+python: 3.11
 os: linux
 dist: xenial
 
@@ -102,6 +102,16 @@ matrix:
       script:
         - echo "Starting Python 3.9 Tests"
         - $PATH_SCRIPTS_DIR/run_unit_tests.sh
+
+    - stage: run tests
+      name: Python 3.11 Unit Tests
+      python: 3.11
+      env: RUN_TYPE=unit_test TOXENV=py311 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install:
+        - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 3.11 Tests"
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
         - >
           python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
           --upload-files
@@ -111,9 +121,9 @@ matrix:
           "$TRAVIS_BUILD_DIR/resilient-sdk/cov_resilient_sdk.xml"
 
     - stage: run tests
-      name: Python 3.9 Integration Tests
-      python: 3.9.18
-      env: RUN_TYPE=int_test TOXENV=py39
+      name: Python 3.11 Integration Tests
+      python: 3.11
+      env: RUN_TYPE=int_test TOXENV=py311
       install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then

@@ -416,7 +416,6 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     wf_modified_time = os.path.getmtime(os.path.join(path_package_reloaded, "data", "wf_mock_workflow_one.md"))
 
     # Perform another test reload.
-    cmd_codegen = CmdCodegen(fx_get_sub_parser)
     args = cmd_codegen.parser.parse_known_args()[0]
     path_package_reloaded = cmd_codegen._reload_package(args)
 
