@@ -1,4 +1,5 @@
 **2024-01: version 51.0.0.2**
+
 * Improve debug logs for retry parameters in :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`
 * Added internal UI components for HTML Blocks and Headers as well as Summary Section functionality
 
