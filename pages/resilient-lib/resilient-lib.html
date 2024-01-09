@@ -925,7 +925,7 @@ unless the <code class="docutils literal notranslate"><span class="pre">callback
 <span class="n">rc</span> <span class="o">=</span> <span class="n">RequestsCommon</span><span class="p">()</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="c1"># will retry 3 times then will raise IntegrationError</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;https://postman-echo.com/status/404&quot;</span><span class="p">,</span> 
+    <span class="n">response</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;https://postman-echo.com/status/404&quot;</span><span class="p">,</span>
                                <span class="n">callback</span><span class="o">=</span><span class="n">custom_callback</span><span class="p">,</span> <span class="n">retry_tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                                <span class="n">retry_exceptions</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
 <span class="k">except</span> <span class="n">IntegrationError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -1095,7 +1095,7 @@ or from the <strong>Integrations Section</strong> (<code class="docutils literal
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommonWithoutSession">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestsCommonWithoutSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommonWithoutSession" title="Link to this definition">#</a></dt>
-<dd><p>This class extends <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> maintaining the behavior of 
+<dd><p>This class extends <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> maintaining the behavior of
 <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> that was present in versions &lt;= 47.1.x.</p>
 <p>The difference is that every time <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommonWithoutSession.execute()</span></code>
 is called, this class will use <code class="docutils literal notranslate"><span class="pre">requests.request</span></code> to execute the request, while
@@ -2211,6 +2211,9 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2024-01: version 51.0.0.2</strong>
+* Improve debug logs for retry parameters in <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="resilient_lib.components.requests_common.RequestsCommon.execute"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon.execute()</span></code></a>
+* Added internal UI components for HTML Blocks and Headers as well as Summary Section functionality</p>
 <p><strong>2023-11: version 51.0.0.0</strong></p>
 <ul class="simple">
 <li><p>Added optional retry to <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon.execute" title="resilient_lib.components.requests_common.RequestsCommon.execute"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon.execute()</span></code></a>.
@@ -2574,7 +2577,7 @@ adding the ability to validate fields in app.config</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2d160263"></script>
+</div><script src="../../_static/documentation_options.js?v=1ed47225"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
