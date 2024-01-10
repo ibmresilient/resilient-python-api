@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2024. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
-from .common import get_incident_tabs
-import six
+
 import logging
+
+import six
+
+from .common import get_incident_tabs
 
 LOG = logging.getLogger(__name__)
 TABS_LABEL = "step_label"
@@ -40,7 +43,7 @@ class Tab(six.with_metaclass(RequiredTabFields)):
 
     Example usage:
 
-    class QRadarTab(UITab):
+    class QRadarTab(Tab):
         UUID = "abcdefg"
         NAME = "QRadar Tab"
         SECTION = "fn_qradar_integration"
@@ -99,7 +102,7 @@ class Tab(six.with_metaclass(RequiredTabFields)):
         required_conditions = cls.SHOW_IF
         tab = cls.get_from_tabs(tabs)
         present_conditions = tab.get("show_if", [])
-        
+
         return [condition for condition in required_conditions if condition not in present_conditions]
 
     @classmethod

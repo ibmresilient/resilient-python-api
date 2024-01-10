@@ -1,4 +1,5 @@
 **2023-12: version 51.0.0.1**
+
 * Bug fix to support Keyring with resilient-sdk commands that use app.config to connect to SOAR.
   This has been broken since v49.0.0. Please upgrade to v51.0.0.1 to continue using SDK with Keyring.
 

@@ -234,7 +234,7 @@ class RequestsCommon(object):
                 rc = RequestsCommon()
                 try:
                     # will retry 3 times then will raise IntegrationError
-                    response = rc.execute("GET", "https://postman-echo.com/status/404", 
+                    response = rc.execute("GET", "https://postman-echo.com/status/404",
                                                callback=custom_callback, retry_tries=3,
                                                retry_exceptions=ValueError)
                 except IntegrationError as err:
@@ -325,16 +325,8 @@ class RequestsCommon(object):
             if verify is None:
                 verify = self.get_verify()
 
-            # Log the parameter inputs that are not None
-            args_dict = locals()
-            # When debugging execute_call_v2 in PyCharm you may get an exception when executing the for-loop:
-            # Dictionary changed size during iteration.
-            # To work around this while debugging you can change the following line to:
-            # args = list(args_dict.keys())
-            args = args_dict.keys()
-            for k in args:
-                if k != "self" and k != "kwargs" and args_dict[k] is not None:
-                    LOG.debug("  %s: %s", k, args_dict[k])
+            # Log the parameter inputs that are not None or non-default retry args
+            debug_log_locals(locals())
 
             # define inner func to allow for retry
             # by doing it this way, we don't have to mess with
@@ -365,7 +357,7 @@ class RequestsCommon(object):
 
                 # Return requests.Response object
                 return response
-            
+
             # NOTE: because retry library requires PY3 style exceptions,
             # if version running on is PY2, retries won't be allowed
             if PY2 and retry_tries != 1:
@@ -478,7 +470,7 @@ class RequestsCommon(object):
 
 class RequestsCommonWithoutSession(RequestsCommon):
     """
-    This class extends :class:`RequestsCommon` maintaining the behavior of 
+    This class extends :class:`RequestsCommon` maintaining the behavior of
     ``RequestsCommon`` that was present in versions <= 47.1.x.
 
     The difference is that every time :class:`RequestsCommonWithoutSession.execute()`
@@ -527,3 +519,22 @@ def get_case_insensitive_key_value(dictionary, key):
         return None
 
     return next((v for k, v in dictionary.items() if k.lower() == key.lower()), None)
+
+def debug_log_locals(args_dict):
+    """
+    Helper method to log at DEBUG level the local args of
+    execute, all wrapped in a try-except to avoid any
+    unnecessary exceptions popping up for this non-critical logic
+
+    :param args_dict: dict of the arguments
+    :type args_dict: dict
+    """
+    try:
+        for k in list(args_dict.keys()):
+            # print if not kwargs, self
+            # AND if non-retry and non-None
+            # OR if retry and retry is enabled (i.e. tries > 1)
+            if k != "self" and k != "kwargs" and ((not k.startswith("retry") and args_dict[k] is not None) or (k.startswith("retry") and args_dict["retry_tries"] > 1)):
+                LOG.debug("  %s: %s", k, args_dict[k])
+    except Exception:
+        pass # ignore anything that goes wrong, this function is just to print so we can ignore issues

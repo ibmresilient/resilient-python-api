@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# (c) Copyright IBM Corp. 2024. All Rights Reserved.
+# pragma pylint: disable=unused-argument, no-self-use
+
 """
 Enables conditions to be used with different UI elements in the Tab definition.
 In a way like:
