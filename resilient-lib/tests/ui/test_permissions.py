@@ -16,7 +16,7 @@ class TestEditPermissions(object):
                 "ui_lock": "True"
             }
         }
-        assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert not permission_to_edit("fn_test", opts)
 
     def test_integration_permissions_lock_ui(self):
         opts = {
@@ -26,7 +26,7 @@ class TestEditPermissions(object):
             "fn_test": {
             }
         }
-        assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert not permission_to_edit("fn_test", opts)
 
     def test_global_permissions_lock_ui(self):
         opts = {
@@ -34,7 +34,7 @@ class TestEditPermissions(object):
                 "ui_lock": "True"
             }
         }
-        assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert not permission_to_edit("fn_test", opts)
 
     def test_function_permissions_override_global_lock(self):
         opts = {
@@ -45,7 +45,7 @@ class TestEditPermissions(object):
                 "ui_lock": "False"
             }
         }
-        assert permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert permission_to_edit("fn_test", opts)
 
     def test_function_permissions_override_global_unlock(self):
         opts = {
@@ -56,7 +56,7 @@ class TestEditPermissions(object):
                 "ui_lock": "True"
             }
         }
-        assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert not permission_to_edit("fn_test", opts)
 
     def test_function_permissions_override_integrations_unlock(self):
         opts = {
@@ -70,7 +70,7 @@ class TestEditPermissions(object):
                 "ui_lock": "True"
             }
         }
-        assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert not permission_to_edit("fn_test", opts)
 
     def test_integrations_permissions_override_global_unlock(self):
         opts = {
@@ -81,4 +81,4 @@ class TestEditPermissions(object):
                 "ui_lock": "True"
             }
         }
-        assert not permission_to_edit(TestEditPermissions.TestTab, opts)
+        assert not permission_to_edit("fn_test", opts)
