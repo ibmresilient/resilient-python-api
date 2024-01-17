@@ -1,0 +1,111 @@
+[
+    {
+        "operations": [
+            "equals", 
+            "not_equals", 
+            "lt", 
+            "lte", 
+            "gt", 
+            "gte", 
+            "changed", 
+            "changed_to", 
+            "not_changed_to", 
+            "has_a_value", 
+            "not_has_a_value"
+        ], 
+        "read_only": false, 
+        "perms": {
+            "sort": true, 
+            "modify_type": [
+                "textarea", 
+                "number", 
+                "text"
+            ], 
+            "modify_required": true, 
+            "show_in_manual_actions": true, 
+            "show_in_notifications": true, 
+            "modify_default": true, 
+            "modify_operations": true, 
+            "modify_name": true, 
+            "modify_chosen": true, 
+            "show_in_auto_actions": true, 
+            "modify_blank": true, 
+            "modify_values": true, 
+            "delete": true
+        }, 
+        "uuid": "8eed3eb6-0e41-4c6a-980c-61e2b49918b8", 
+        "templates": [], 
+        "type_id": 11, 
+        "chosen": false, 
+        "text": "Seconds", 
+        "tooltip": "Number of seconds to wait", 
+        "rich_text": false, 
+        "operation_perms": {
+            "gt": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "not_changed_to": {
+                "show_in_manual_actions": false, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "gte": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "not_equals": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "has_a_value": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "changed_to": {
+                "show_in_manual_actions": false, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "changed": {
+                "show_in_manual_actions": false, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "equals": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "lt": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "lte": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }, 
+            "not_has_a_value": {
+                "show_in_manual_actions": true, 
+                "show_in_notifications": true, 
+                "show_in_auto_actions": true
+            }
+        }, 
+        "prefix": null, 
+        "internal": false, 
+        "values": [], 
+        "blank_option": false, 
+        "input_type": "number", 
+        "changeable": true, 
+        "hide_notification": false, 
+        "placeholder": "", 
+        "id": 169, 
+        "name": "seconds"
+    }
+]

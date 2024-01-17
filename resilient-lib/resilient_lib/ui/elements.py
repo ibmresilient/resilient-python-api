@@ -2,9 +2,10 @@
 # (c) Copyright IBM Corp. 2024. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
 
+from resilient import get_client
 from resilient_lib import clean_html
 
-from .conditions import Conditions, FieldConditions
+from .conditions import Conditions, FieldConditions, SelectFieldCondition
 
 
 class UIElementBase(object):
@@ -42,6 +43,14 @@ class Field(UIElementBase):
             "element": self.ELEMENT_TYPE,
             "field_type": "incident"
         }
+
+
+class SelectField(Field):
+
+    def __init__(self, api_name, opts):
+        super(SelectField, self).__init__(api_name)
+        res_client = get_client(opts)
+        self.conditions = SelectFieldCondition(api_name=api_name, res_client=res_client)
 
 
 class Datatable(UIElementBase):
@@ -151,7 +160,7 @@ class Section(UIElementBase):
             ]
 
             SHOW_IF = [
-                Field("id").conditions.has_value()
+                SelectField("my_select").conditions.has_one_of(["a", "b"])
             ]
 
     """

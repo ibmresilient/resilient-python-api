@@ -1,0 +1,28 @@
+{
+  "entities": [
+    {
+      "logic_type": "all", 
+      "name": "Lookup Value", 
+      "view_items": [], 
+      "type": 0, 
+      "object_type": 0, 
+      "timeout_seconds": 86400, 
+      "uuid": "a2684a9c-70c5-47a2-9ed1-0454ec85369e", 
+      "automations": [], 
+      "export_key": "Lookup Value", 
+      "conditions": [
+        {
+          "type": null, 
+          "evaluation_id": null, 
+          "field_name": "incident.properties.custom1", 
+          "method": "changed", 
+          "value": null
+        }
+      ], 
+      "id": 45, 
+      "message_destinations": [
+        49
+      ]
+    }
+  ]
+}

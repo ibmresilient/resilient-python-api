@@ -239,7 +239,7 @@ def create_tab(tab, opts, update_existing=False):
             ]
 
             SHOW_IF = [
-                Field("id").conditions.has_value()
+                SelectField("my_select").conditions.has_one_of(["a", "b"])
             ]
 
         try:
