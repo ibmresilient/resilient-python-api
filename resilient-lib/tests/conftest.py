@@ -63,19 +63,17 @@ def _load_all_json_files_into_endpoints():
 
     return all_endpoints
 
-def _custom_matcher(request, endpoints):
-    for ep in endpoints:
-        endpoint = endpoints.get(ep)
-        path = endpoint.get("path")
-        status = endpoint.get("status")
-        method = endpoint.get("method")
-        json_data = endpoint.get("json")
-        # soar_mock.register_uri(method, path, status_code=status, json=json_data)
-        if request.method == method and re.search(path, request.url):
-            resp = requests.Response()
-            resp.status_code = status
-            resp.raw = io.BytesIO(str.encode(json.dumps(json_data)))
-            return resp
+def _custom_matcher(request, endpoint):
+    path = endpoint.get("path")
+    status = endpoint.get("status")
+    method = endpoint.get("method")
+    json_data = endpoint.get("json")
+    # soar_mock.register_uri(method, path, status_code=status, json=json_data)
+    if request.method == method and re.search(path, request.url):
+        resp = requests.Response()
+        resp.status_code = status
+        resp.raw = io.BytesIO(str.encode(json.dumps(json_data)))
+        return resp
 
     return None
 
@@ -94,6 +92,8 @@ def fx_soar_adapter():
     with requests_mock.Mocker() as soar_mock:
 
         endpoints = _load_all_json_files_into_endpoints()
-        soar_mock.add_matcher(lambda request: _custom_matcher(request, endpoints))
+        for ep in endpoints:
+            endpoint = endpoints.get(ep)
+            soar_mock.add_matcher(lambda request, endpoint=endpoint: _custom_matcher(request, endpoint))
 
         yield soar_mock

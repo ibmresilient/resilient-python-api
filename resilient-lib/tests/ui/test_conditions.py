@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
-from resilient_lib.ui import Field, Tab, SelectField
 import uuid
+
+from mock import patch
+from resilient_lib.ui import Field, SelectField, Tab
 
 OPTS = {
     "host": "test.example.com",
@@ -29,19 +31,32 @@ def test_conditions_added_to_dto():
     assert TestTab.as_dto()["show_if"] == TestTab.SHOW_IF
 
 
+# @patch.object(SelectField, "res_client")
+# @patch("resilient_lib.resilient.co3.SimpleClient.get")
 def test_select_field_conditions(fx_soar_adapter):
-    assert SelectField("user_id", OPTS).conditions.has_value() == {
-        "field": "incident.user_id", "condition": "has_a_value"
+    fake_field_name = "user_id"
+    fake_label = "Default Group"
+    fake_value = "3"
+
+    # fake_client.cached_get.return_value = {
+    #     "fields": {
+    #         fake_field_name: {
+    #             "values": {"label": fake_label, "value": 1}
+    #         }
+    #     }
+    # }
+    assert SelectField(fake_field_name, OPTS).conditions.has_value() == {
+        "field": "incident.{}".format(fake_field_name), "condition": "has_a_value"
     }
-    assert SelectField("user_id", OPTS).conditions.equals("Default Group") == {
-        "field": "incident.user_id", "condition": "equals", "value": "3"
+    assert SelectField(fake_field_name, OPTS).conditions.equals(fake_label) == {
+        "field": "incident.{}".format(fake_field_name), "condition": "equals", "value": fake_value
     }
-    assert SelectField("user_id", OPTS).conditions.has_one_of(["Default Group"]) == {
-        "field": "incident.user_id", "condition": "in", "value": ["3"]
+    assert SelectField(fake_field_name, OPTS).conditions.has_one_of([fake_label]) == {
+        "field": "incident.{}".format(fake_field_name), "condition": "in", "value": [fake_value]
     }
-    assert SelectField("user_id", OPTS).conditions.doesnt_have_one_of(["Default Group"]) == {
-        "field": "incident.user_id", "condition": "not_in", "value": ["3"]
+    assert SelectField(fake_field_name, OPTS).conditions.doesnt_have_one_of([fake_label]) == {
+        "field": "incident.{}".format(fake_field_name), "condition": "not_in", "value": [fake_value]
     }
-    assert SelectField("user_id", OPTS).conditions.doesnt_equal("Default Group") == {
-        "field": "incident.user_id", "condition": "not_equals", "value": "3"
+    assert SelectField(fake_field_name, OPTS).conditions.doesnt_equal(fake_label) == {
+        "field": "incident.{}".format(fake_field_name), "condition": "not_equals", "value": fake_value
     }
