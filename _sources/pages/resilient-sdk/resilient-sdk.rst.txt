@@ -38,7 +38,7 @@ created in the default location: ``~/.resilient`` with the following minimum con
 .. note::
     Commands that interact with the SOAR platform support the ``--config|-c`` argument, which precedes the default location. For example:
 
-    .. code-block:: 
+    .. code-block::
 
         $ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name" -c path/to/my/custom_file.config
 
@@ -274,6 +274,22 @@ extract
 
     options:
     |cmd_extract_options|
+
+.. list:
+
++++++++
+list
++++++++
+
+|cmd_list_desc|
+
+.. parsed-literal::
+
+    usage:
+    |cmd_list_usage|
+
+    options:
+    |cmd_list_options|
 
 .. _init:
 

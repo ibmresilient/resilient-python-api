@@ -499,6 +499,33 @@ options:
 -c, --config			Path to app.config file. Default is ~/.resilient/app.config 
 -n, --name			Name to prepend to generated file</pre>
 </section>
+<section id="list">
+<h3>list<a class="headerlink" href="#list" title="Link to this heading">#</a></h3>
+<p>List available objects from SOAR. For each of the objects below, either leave blank to list all, provide a prefix string to filter by prefix, or provide a regex to filter matching object names.</p>
+<pre class="literal-block">usage:
+$ resilient-sdk list --function                           # list all functions
+$ resilient-sdk list --function &quot;fn_my_app.*&quot; --playbook  # list all functions that start with fn_my_app and all playbooks
+$ resilient-sdk list --global-filter &quot;.*(?i)cyber.*&quot;      # matches all objects with &quot;cyber&quot; in them (uses '(?i)' for case-insensitive)
+$ resilient-sdk list --function --codegen-format          # list all functions and give output in codegen format
+
+options:
+-h, --help			show this help message and exit
+-a, --artifacttype		API names of artifact types to include 
+-d, --datatable			API names of datatables to include 
+-f, --function			API names of functions to include 
+-fd, --field			API names of custom fields to include 
+-i, --incidenttype		Display names of custom incident types to include (surrounded by &quot;&quot;) 
+-m, --messagedestination	API names of message destinations to include 
+-pb, --playbook			API names of playbooks to include. Only IBM SOAR &gt;= v44.0 supported 
+-r, --rule			Display names of rules to include (surrounded by &quot;&quot;) 
+-s, --script			Display names of scripts to include (surrounded by &quot;&quot;) 
+-t, --task			API names of custom tasks to include 
+-w, --workflow			API names of workflows to include 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
+-g, --global-filter		Regex to filter on all objects. If a specific object filter is provided it overrides the --global-filter filter 
+-e, --exportfile		Path to a local (.res or .resz) export file 
+-cf, --codegen-format		Output results in codegen-friendly format</pre>
+</section>
 <section id="init">
 <span id="id9"></span><h3>init<a class="headerlink" href="#init" title="Link to this heading">#</a></h3>
 <p>Generates sdk_settings.json to store default settings.</p>
@@ -823,6 +850,7 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
 </li>
 <li><a class="reference internal" href="#clone">clone</a></li>
 <li><a class="reference internal" href="#extract">extract</a></li>
+<li><a class="reference internal" href="#list">list</a></li>
 <li><a class="reference internal" href="#init">init</a></li>
 </ul>
 </li>
@@ -838,7 +866,7 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c23c41fa"></script>
+</div><script src="../../_static/documentation_options.js?v=3790cf84"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
