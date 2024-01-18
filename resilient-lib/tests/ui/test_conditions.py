@@ -31,20 +31,12 @@ def test_conditions_added_to_dto():
     assert TestTab.as_dto()["show_if"] == TestTab.SHOW_IF
 
 
-# @patch.object(SelectField, "res_client")
-# @patch("resilient_lib.resilient.co3.SimpleClient.get")
 def test_select_field_conditions(fx_soar_adapter):
+    """fx_soar_adapter required here for adapter which patches SOAR endpoints"""
     fake_field_name = "user_id"
     fake_label = "Default Group"
     fake_value = "3"
 
-    # fake_client.cached_get.return_value = {
-    #     "fields": {
-    #         fake_field_name: {
-    #             "values": {"label": fake_label, "value": 1}
-    #         }
-    #     }
-    # }
     assert SelectField(fake_field_name, OPTS).conditions.has_value() == {
         "field": "incident.{}".format(fake_field_name), "condition": "has_a_value"
     }
