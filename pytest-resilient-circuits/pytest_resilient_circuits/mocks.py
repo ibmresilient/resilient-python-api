@@ -336,8 +336,8 @@ class BasicResilientMock(ResilientMock):
         """ Callback for POST to attachment """
         LOG.debug("attachment_post")
         data = test_data("200_JSON_POST__attachment.json")
-        return requests_mock.create_response(request, 
-                                             status_code=200, 
+        return requests_mock.create_response(request,
+                                             status_code=200,
                                              json=data)
 
 
@@ -346,8 +346,8 @@ class BasicResilientMock(ResilientMock):
         """ Callback for POST to table_data """
         LOG.debug("datatable_cells_post")
         data = test_data("200_JSON_POST__table_data.json")
-        return requests_mock.create_response(request, 
-                                             status_code=200, 
+        return requests_mock.create_response(request,
+                                             status_code=200,
                                              json=data)
 
     @resilient_endpoint("GET", "/wikis")
@@ -400,6 +400,24 @@ class BasicResilientMock(ResilientMock):
         """ Callback for GET to /rest/const """
         LOG.debug("wikis_get_xxx")
         data = test_data("200_JSON_GET__const.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("GET", "/layouts")
+    def get_layouts_for_type(self, request):
+        """ Callback for GET to /layouts?type=<num> """
+        LOG.debug("get layouts")
+        data = test_data("200_JSON_GET__layouts.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
+    @resilient_endpoint("PUT", "/layouts/[0-9]+")
+    def put_layouts_for(self, request):
+        """ Callback for PUT to /layouts?type=<num> """
+        LOG.debug("get layouts")
+        data = test_data("200_JSON_PUT__layouts.json")
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=data)
