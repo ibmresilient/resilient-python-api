@@ -2,16 +2,21 @@
 """py.test config"""
 from __future__ import print_function
 
-import pytest
-
 import sys
 import threading
-import collections
-from time import sleep
 from collections import deque
+from time import sleep
 
+import pytest
+from circuits import BaseComponent, Debugger, Manager, handler
 from circuits.core.manager import TIMEOUT
-from circuits import handler, BaseComponent, Debugger, Manager
+
+# for backward compatibility use collections.Callable
+# but since 3.11 that has been removed
+if sys.version_info.major < 3:
+    from collections import Callable
+else:
+    from collections.abc import Callable
 
 
 class Watcher(BaseComponent):
@@ -101,7 +106,7 @@ class WaitEvent(object):
 def wait_for(obj, attr, value=True, timeout=3.0):
     from circuits.core.manager import TIMEOUT
     for i in range(int(timeout / TIMEOUT)):
-        if isinstance(value, collections.Callable):
+        if isinstance(value, Callable):
             if value(obj, attr):
                 return True
         elif getattr(obj, attr) == value:

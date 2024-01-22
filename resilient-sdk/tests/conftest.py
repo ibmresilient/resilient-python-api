@@ -26,8 +26,9 @@ import resilient_sdk.app as app
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers, sdk_validate_configs
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
-from tests.shared_mock_data import mock_paths
+import keyring
 
 # Set the logging to DEBUG for tests
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -74,9 +75,40 @@ resilient_mock={0}""".format(resilient_mock)
 
     return write_path
 
+def _mk_app_config_with_keyring():
+    write_path = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
+    resilient_mock = "{0}.{1}".format(os.path.join(mock_paths.SHARED_MOCK_DATA_DIR, "resilient_api_mock"), "ResilientAPIMock")
+
+    app_configs = """
+[resilient]
+#api_key_id=xxx
+#api_key_secret=xxx
+
+host=^host
+port=443
+org=Test Organization
+email=integrations@example.com
+password=PassWord_;)
+
+#componentsdir=~/.resilient/components
+logdir=~/.resilient/logs/
+logfile=app.log
+loglevel=DEBUG
+
+cafile=false
+
+resilient_mock={0}""".format(resilient_mock)
+
+    keyring.set_password("_", "host", "192.168.56.1")
+
+    sdk_helpers.write_file(write_path, app_configs)
+
+    return write_path, app_configs
+
 
 def _add_to_cmd_line_args(args_to_add):
     sys.argv.extend(args_to_add)
+    return sys.argv
 
 
 def _pip_install(package):
@@ -143,12 +175,21 @@ def fx_mk_app_config():
     """
     return _mk_app_config()
 
+@pytest.fixture
+def fx_mk_app_config_with_keyring():
+    """
+    Before: Writes the app_configs with keyring used to an app.config file in the TEST_TEMP_DIR
+    After: Nothing (mk_temp_dir will clean up)
+    Note: MUST be called AFTER mk_temp_dir
+    """
+    return _mk_app_config_with_keyring()
+
 
 @pytest.fixture(scope="module")
 def fx_get_package_files_config():
     """
     Before: Maps the name of an attribute to its index, so that the attr_dict can be accessed in tests
-    After: Nothing (there is nothing to clean up) 
+    After: Nothing (there is nothing to clean up)
     """
     d = {}
     for i, (filename,_) in enumerate(sdk_validate_configs.package_files):
@@ -217,7 +258,7 @@ def fx_pip_install_tox():
     Before: if tox not already installed: pip installs tox
     After: if tox wasn't already installed: pip uninstalls tox
     """
-    
+
     # bool values of whether tox was already installed
     tox_installed = False
     if sdk_helpers.get_package_version(constants.TOX_PACKAGE_NAME):
@@ -405,6 +446,26 @@ def fx_cmd_line_args_init():
 
 
 @pytest.fixture
+def fx_cmd_line_args_list():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "list",
+        "-e", mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
 def fx_reset_argv():
     """
     Before: Takes a copy of sys.argv and allows functions to add args to it
@@ -437,9 +498,9 @@ def fx_mock_settings_file_path():
     """
     old_sdk_settings_path = constants.SDK_SETTINGS_FILE_PATH
     constants.SDK_SETTINGS_FILE_PATH = "{}/test_settings.json".format(mock_paths.TEST_TEMP_DIR)
-    
+
     yield
-    
+
     constants.SDK_SETTINGS_FILE_PATH = old_sdk_settings_path
 
 @pytest.fixture
@@ -466,9 +527,28 @@ def fx_cmd_line_args_docgen():
         "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
     ]
 
-    _add_to_cmd_line_args(args_to_add)
+    args = _add_to_cmd_line_args(args_to_add)
 
-    yield
+    yield args
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_cmd_line_args_docgen_export_file():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "docgen",
+        "-e", mock_paths.MOCK_EXPORT_RES, mock_paths.MOCK_PYTEST_XML_REPORT_PATH
+    ]
+
+    args = _add_to_cmd_line_args(args_to_add)
+
+    yield args
 
     sys.argv = original_cmd_line
 
@@ -564,6 +644,27 @@ def fx_cmd_line_args_dev_set_version():
 
 
 @pytest.fixture
+def fx_cmd_line_args_dev_set_version_51():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "dev",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
+        "--set-version", "51.0.0.0.0"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
 def fx_cmd_line_args_dev_set_bad_version():
     """
     Before: adds args_to_add to cmd line so can be accessed by ArgParsers
@@ -575,6 +676,26 @@ def fx_cmd_line_args_dev_set_bad_version():
         "dev",
         "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
         "--set-version", "35.x.0"
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_cmd_line_args_dev_set_bad_version_51():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "dev",
+        "-p", mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME,
+        "--set-version", "51.0.0"
     ]
 
     _add_to_cmd_line_args(args_to_add)
@@ -605,7 +726,7 @@ def fx_cmd_line_args_extract():
     sys.argv = original_cmd_line
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def fx_get_sub_parser():
     """
     Before: Return a main_parser setup with sub_parser added

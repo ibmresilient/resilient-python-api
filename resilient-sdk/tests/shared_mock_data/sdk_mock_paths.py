@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """Common paths used in tests"""
 
@@ -32,6 +32,7 @@ MOCK_CUSTOMIZE_PY_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_custom
 MOCK_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export.res")
 MOCK_EXPORT_RES_CORRUPT = os.path.join(SHARED_MOCK_DATA_DIR, "mock_export_corrupt.res")
 MOCK_EXPORT_RES_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_export_w_playbook.res")
+MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_export_w_playbook_w_scripts.res")
 MOCK_RELOAD_EXPORT_RES_W_PLAYBOOK = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_reload_export_w_playbook.res")
 MOCK_RELOAD_EXPORT_RES = os.path.join(SHARED_MOCK_DATA_DIR, "mock_reload_export.res")
 MOCK_ZIP = os.path.join(SHARED_MOCK_DATA_DIR, "mock.zip")
@@ -41,6 +42,7 @@ MOCK_INT_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_integrations")
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION_UTIL = os.path.join(MOCK_INT_FN_MAIN_MOCK_INTEGRATION, MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, "util")
 
+MOCK_DOCKERFILE_PATH_OLD = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration/Dockerfile.old")
 MOCK_DOCKERFILE_PATH = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration/Dockerfile")
 
 MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_files")

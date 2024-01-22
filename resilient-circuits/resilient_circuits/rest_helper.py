@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Global accessor for the Resilient REST API"""
 
@@ -9,6 +9,7 @@ import logging
 from resilient_circuits import constants
 
 import resilient
+from resilient import SimpleHTTPException
 from resilient import constants as res_constants
 
 LOG = logging.getLogger(__name__)
@@ -80,7 +81,7 @@ def get_resilient_client(opts):
 def get_resilient_server_version(res_client):
     """
     Uses get_const to get the "server_version"
-    and converts it into a float of ``major.minor`` and returns it
+    and gets the ``version`` attribute to print out on startup
 
     :param res_client: required for communication back to SOAR
     :type res_client: resilient.get_client()
@@ -90,12 +91,10 @@ def get_resilient_server_version(res_client):
     LOG.debug("Getting server version")
     try:
         server_version = res_client.get_const().get("server_version", {})
-    except Exception:
+    except SimpleHTTPException:
         # fine to ignore any exceptions here as this is
         # not critical to get the server info if something goes wrong
+        LOG.debug("Failed to retrieve version from SOAR server. Continuing gracefully...")
         server_version = {}
 
-    current_server_version = "{0}.{1}.{2}".format(server_version.get("major", 0),
-            server_version.get("minor", 0), server_version.get("build_number", 0))
-
-    return current_server_version
+    return server_version.get("version")

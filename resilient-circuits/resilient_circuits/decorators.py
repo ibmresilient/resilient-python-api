@@ -3,19 +3,21 @@
 
 """Circuits component for Action Module subscription and message handling"""
 
+import inspect as _inspect
 import logging
 import threading
 from collections import namedtuple
-import inspect as _inspect
 from functools import wraps
 from types import GeneratorType
-from circuits import Timer, task, Event
+
 import circuits.core.handlers
+from circuits import Event, Timer, task
+from resilient_circuits import constants, helpers
+from resilient_circuits.action_message import (FunctionError_,
+                                               FunctionErrorEvent,
+                                               FunctionResult, StatusMessage,
+                                               StatusMessageEvent)
 from resilient_lib import ResultPayload, validate_fields
-from resilient_circuits import constants
-from resilient_circuits.action_message import FunctionResult, \
-    StatusMessage, StatusMessageEvent, \
-    FunctionError_, FunctionErrorEvent
 
 LOG = logging.getLogger(__name__)
 
@@ -259,6 +261,12 @@ class app_function(object):
 
                 rp = ResultPayload(itself.PACKAGE_NAME, version=constants.APP_FUNCTION_PAYLOAD_VERSION, **fn_inputs)
 
+                # make sure to sub AFTER the ResultPayload is instantiated so that any subbed values
+                # won't be logged or included in the returned inputs.
+                # substitute any secrets denoted with $, ^, ${}, or ^{} in the function inputs.
+                # NOTE: it is crucial to first "validate_fields" as that function will convert any
+                # non-string fields that should be strings to strings (like select)
+                fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, itself.opts)
                 fn_inputs_tuple = namedtuple("fn_inputs", fn_inputs.keys())(*fn_inputs.values())
 
                 # Set evt.message in local thread storage

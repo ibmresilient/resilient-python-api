@@ -1,0 +1,7329 @@
+[
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "9540d9b0-2cd9-4347-b013-a1c84b6605b7", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Address", 
+    "tooltip": "Physical location of the incident, if applicable", 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 6, 
+    "name": "addr"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "lt", 
+      "lte", 
+      "gt", 
+      "gte", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "number"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "72c2c73f-620a-4bb6-900a-705a0bdf912d", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Assessed Liability", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "GT": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "GTE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "LT": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "LTE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "number", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 17, 
+    "name": "hard_liability"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "488c24db-25a1-4cda-91d1-3865d3639732", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "City", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 7, 
+    "name": "city"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "f9e3d12e-43b4-43c0-a8ae-89b5df9a5add", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Country", 
+    "blank_option": true, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1017, 
+        "label": "Afghanistan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1018, 
+        "label": "Albania", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1019, 
+        "label": "Algeria", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1020, 
+        "label": "American Samoa", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1021, 
+        "label": "Andorra", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1022, 
+        "label": "Angola", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1023, 
+        "label": "Anguilla", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1024, 
+        "label": "Antarctica", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1025, 
+        "label": "Antigua and Barbuda", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1026, 
+        "label": "Argentina", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1027, 
+        "label": "Armenia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1028, 
+        "label": "Aruba", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1029, 
+        "label": "Ascension and Tristan Da Cunha Saint Helena", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1030, 
+        "label": "Australia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1031, 
+        "label": "Austria", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1032, 
+        "label": "Azerbaijan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1033, 
+        "label": "Bahamas", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1034, 
+        "label": "Bahrain", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1035, 
+        "label": "Bangladesh", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1036, 
+        "label": "Barbados", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1037, 
+        "label": "Belarus", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1038, 
+        "label": "Belgium", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1039, 
+        "label": "Belize", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1040, 
+        "label": "Benin", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1041, 
+        "label": "Bermuda", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1042, 
+        "label": "Bhutan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1043, 
+        "label": "Bolivarian Republic of Venezuela", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1044, 
+        "label": "Bosnia and Herzegovina", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1045, 
+        "label": "Botswana", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1046, 
+        "label": "Bouvet Island", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1047, 
+        "label": "Brazil", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1048, 
+        "label": "British Indian Ocean Territory", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1049, 
+        "label": "British Virgin Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1050, 
+        "label": "Brunei Darussalam", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1051, 
+        "label": "Bulgaria", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1052, 
+        "label": "Burkina Faso", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1053, 
+        "label": "Burundi", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1054, 
+        "label": "Cambodia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1055, 
+        "label": "Cameroon", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1001, 
+        "label": "Canada", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1056, 
+        "label": "Cape Verde", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1057, 
+        "label": "Cayman Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1058, 
+        "label": "Central African Republic", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1059, 
+        "label": "Chad", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1060, 
+        "label": "Chile", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1061, 
+        "label": "China", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1062, 
+        "label": "Christmas Island", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1063, 
+        "label": "Cocos (Keeling) Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1064, 
+        "label": "Colombia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1065, 
+        "label": "Comoros", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1066, 
+        "label": "Congo", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1067, 
+        "label": "Cook Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1068, 
+        "label": "Costa Rica", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1069, 
+        "label": "Croatia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1070, 
+        "label": "Cuba", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1071, 
+        "label": "Cura\u00e7ao", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1072, 
+        "label": "Cyprus", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1073, 
+        "label": "Czech Republic", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1074, 
+        "label": "C\u00f4te D'ivoire", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1075, 
+        "label": "Democratic People's Republic of Korea", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1076, 
+        "label": "Denmark", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1077, 
+        "label": "Djibouti", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1078, 
+        "label": "Dominica", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1079, 
+        "label": "Dominican Republic", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1080, 
+        "label": "Ecuador", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1081, 
+        "label": "Egypt", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1082, 
+        "label": "El Salvador", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1083, 
+        "label": "Equatorial Guinea", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1084, 
+        "label": "Eritrea", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1085, 
+        "label": "Estonia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1086, 
+        "label": "Ethiopia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1087, 
+        "label": "Falkland Islands (Malvinas)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1088, 
+        "label": "Faroe Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1089, 
+        "label": "Federated States of Micronesia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1090, 
+        "label": "Fiji", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1091, 
+        "label": "Finland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1092, 
+        "label": "France", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1093, 
+        "label": "French Guiana", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1094, 
+        "label": "French Polynesia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1095, 
+        "label": "French Southern Territories", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1096, 
+        "label": "Gabon", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1097, 
+        "label": "Gambia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1098, 
+        "label": "Georgia (Country)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1099, 
+        "label": "Germany", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1100, 
+        "label": "Ghana", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1101, 
+        "label": "Gibraltar", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1102, 
+        "label": "Greece", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1103, 
+        "label": "Greenland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1104, 
+        "label": "Grenada", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1105, 
+        "label": "Guadeloupe", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1107, 
+        "label": "Guatemala", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1108, 
+        "label": "Guernsey", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1109, 
+        "label": "Guinea", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1110, 
+        "label": "Guinea-Bissau", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1111, 
+        "label": "Guyana", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1112, 
+        "label": "Haiti", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1113, 
+        "label": "Heard Island and Mcdonald Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1114, 
+        "label": "Holy See (Vatican City State)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1115, 
+        "label": "Honduras", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1116, 
+        "label": "Hong Kong", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1117, 
+        "label": "Hungary", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1118, 
+        "label": "Iceland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1119, 
+        "label": "India", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1120, 
+        "label": "Indonesia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1121, 
+        "label": "Iraq", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1122, 
+        "label": "Ireland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1123, 
+        "label": "Islamic Republic of Iran", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1124, 
+        "label": "Isle of Man", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1125, 
+        "label": "Israel", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1126, 
+        "label": "Italy", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1127, 
+        "label": "Jamaica", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1128, 
+        "label": "Japan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1129, 
+        "label": "Jersey", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1130, 
+        "label": "Jordan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1131, 
+        "label": "Kazakhstan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1132, 
+        "label": "Kenya", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1133, 
+        "label": "Kiribati", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1134, 
+        "label": "Kuwait", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1135, 
+        "label": "Kyrgyzstan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1136, 
+        "label": "Lao People's Democratic Republic", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1137, 
+        "label": "Latvia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1138, 
+        "label": "Lebanon", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1139, 
+        "label": "Lesotho", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1140, 
+        "label": "Liberia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1141, 
+        "label": "Libya", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1142, 
+        "label": "Liechtenstein", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1143, 
+        "label": "Lithuania", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1144, 
+        "label": "Luxembourg", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1145, 
+        "label": "Macao", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1146, 
+        "label": "Madagascar", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1147, 
+        "label": "Malawi", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1148, 
+        "label": "Malaysia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1149, 
+        "label": "Maldives", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1150, 
+        "label": "Mali", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1151, 
+        "label": "Malta", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1152, 
+        "label": "Marshall Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1153, 
+        "label": "Martinique", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1154, 
+        "label": "Mauritania", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1155, 
+        "label": "Mauritius", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1156, 
+        "label": "Mayotte", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1157, 
+        "label": "Mexico", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1158, 
+        "label": "Monaco", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1159, 
+        "label": "Mongolia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1160, 
+        "label": "Montenegro", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1161, 
+        "label": "Montserrat", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1162, 
+        "label": "Morocco", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1163, 
+        "label": "Mozambique", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1164, 
+        "label": "Myanmar", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1165, 
+        "label": "Namibia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1166, 
+        "label": "Nauru", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1167, 
+        "label": "Nepal", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1168, 
+        "label": "Netherlands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1169, 
+        "label": "New Caledonia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1170, 
+        "label": "New Zealand", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1171, 
+        "label": "Nicaragua", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1172, 
+        "label": "Niger", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1173, 
+        "label": "Nigeria", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1174, 
+        "label": "Niue", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1175, 
+        "label": "Norfolk Island", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1177, 
+        "label": "Norway", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1178, 
+        "label": "Oman", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1179, 
+        "label": "Pakistan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1180, 
+        "label": "Palau", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1181, 
+        "label": "Panama", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1182, 
+        "label": "Papua New Guinea", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1183, 
+        "label": "Paraguay", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1184, 
+        "label": "Peru", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1185, 
+        "label": "Philippines", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1186, 
+        "label": "Pitcairn", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1187, 
+        "label": "Plurinational State of Bolivia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1188, 
+        "label": "Poland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1189, 
+        "label": "Portugal", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1190, 
+        "label": "Province of China Taiwan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1191, 
+        "label": "Qatar", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1192, 
+        "label": "Republic of Korea", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1193, 
+        "label": "Republic of Moldova", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1194, 
+        "label": "Romania", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1195, 
+        "label": "Russian Federation", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1196, 
+        "label": "Rwanda", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1197, 
+        "label": "R\u00e9union", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1198, 
+        "label": "Saint Barth\u00e9lemy", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1199, 
+        "label": "Saint Kitts and Nevis", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1200, 
+        "label": "Saint Lucia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1201, 
+        "label": "Saint Martin (French Part)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1202, 
+        "label": "Saint Pierre and Miquelon", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1203, 
+        "label": "Saint Vincent and the Grenadines", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1204, 
+        "label": "Samoa", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1205, 
+        "label": "San Marino", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1206, 
+        "label": "Sao Tome and Principe", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1207, 
+        "label": "Saudi Arabia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1208, 
+        "label": "Senegal", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1209, 
+        "label": "Serbia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1210, 
+        "label": "Seychelles", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1211, 
+        "label": "Sierra Leone", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1212, 
+        "label": "Singapore", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1213, 
+        "label": "Sint Eustatius and Saba Bonaire", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1214, 
+        "label": "Sint Maarten (Dutch Part)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1215, 
+        "label": "Slovakia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1216, 
+        "label": "Slovenia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1217, 
+        "label": "Solomon Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1218, 
+        "label": "Somalia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1219, 
+        "label": "South Africa", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1220, 
+        "label": "South Georgia and the South Sandwich Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1221, 
+        "label": "South Sudan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1222, 
+        "label": "Spain", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1223, 
+        "label": "Sri Lanka", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1224, 
+        "label": "State of Palestine", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1225, 
+        "label": "Sudan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1226, 
+        "label": "Suriname", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1227, 
+        "label": "Svalbard and Jan Mayen", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1228, 
+        "label": "Swaziland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1229, 
+        "label": "Sweden", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1230, 
+        "label": "Switzerland", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1231, 
+        "label": "Syrian Arab Republic", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1232, 
+        "label": "Tajikistan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1233, 
+        "label": "Thailand", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1234, 
+        "label": "The Democratic Republic of the Congo", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1235, 
+        "label": "The Former Yugoslav Republic of Macedonia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1236, 
+        "label": "Timor-Leste", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1237, 
+        "label": "Togo", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1238, 
+        "label": "Tokelau", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1239, 
+        "label": "Tonga", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1240, 
+        "label": "Trinidad and Tobago", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1241, 
+        "label": "Tunisia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1242, 
+        "label": "Turkey", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1243, 
+        "label": "Turkmenistan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1244, 
+        "label": "Turks and Caicos Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1245, 
+        "label": "Tuvalu", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1246, 
+        "label": "Uganda", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1247, 
+        "label": "Ukraine", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1248, 
+        "label": "United Arab Emirates", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1249, 
+        "label": "United Kingdom", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1250, 
+        "label": "United Republic of Tanzania", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1000, 
+        "label": "United States", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1251, 
+        "label": "United States Minor Outlying Islands", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1252, 
+        "label": "Uruguay", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1253, 
+        "label": "Uzbekistan", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1254, 
+        "label": "Vanuatu", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1255, 
+        "label": "Viet Nam", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1256, 
+        "label": "Wallis and Futuna", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1257, 
+        "label": "Western Sahara", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1258, 
+        "label": "Yemen", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1259, 
+        "label": "Zambia", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1260, 
+        "label": "Zimbabwe", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1261, 
+        "label": "\u00c5land Islands", 
+        "properties": null
+      }
+    ], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 26, 
+    "name": "country"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select_owner"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "91f2b232-bb43-4007-ab91-aacfd02d9e7a", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Created By", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Test User (user@example.com)",
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 3, 
+        "label": "API User (api@example.com)",
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 4, 
+        "label": "Security Monitoring (securitymonitoring@example.com)",
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 5, 
+        "label": "Monitoring Security (securitymonitoring@example.com)",
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 7, 
+        "label": "CSIRT Leads", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 9, 
+        "label": "Incident Handling", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 6, 
+        "label": "Security Monitoring", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 10, 
+        "label": "Tuning", 
+        "properties": null
+      }
+    ], 
+    "input_type": "select_owner", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 39, 
+    "name": "creator_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "994180bf-ee21-488e-9b99-3a3159642851", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Criminal Activity", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "No", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 2, 
+        "label": "Yes", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 3, 
+        "label": "Yes - Freeze Tasks", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 4, 
+        "label": "Completed", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 5, 
+        "label": "Unknown", 
+        "properties": null
+      }
+    ], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 31, 
+    "name": "crimestatus_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "textarea", 
+        "text"
+      ], 
+      "modify_required": true, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": true, 
+      "modify_name": true, 
+      "modify_chosen": true, 
+      "show_in_auto_actions": true, 
+      "modify_blank": true, 
+      "modify_values": true, 
+      "delete": true
+    }, 
+    "uuid": "8593017d-bd46-4018-bb40-2adc09cf79ca", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Custom 1", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "properties", 
+    "internal": false, 
+    "values": [], 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 201, 
+    "name": "custom1"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "textarea", 
+        "text"
+      ], 
+      "modify_required": true, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": true, 
+      "modify_name": true, 
+      "modify_chosen": true, 
+      "show_in_auto_actions": true, 
+      "modify_blank": true, 
+      "modify_values": true, 
+      "delete": true
+    }, 
+    "uuid": "a8d841f0-88f3-428d-84ea-40d6f0930521", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Custom 2", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "properties", 
+    "internal": false, 
+    "values": [], 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 202, 
+    "name": "custom2"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "793e1363-79f5-45af-91e2-0e93356cad82", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Data Compromised", 
+    "tooltip": "Whether sensitive or personal data was foreseeably exposed and/or compromised. A value of \"Yes\" or \"Unknown\" indicate that a breach response may be required.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "pii", 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "boolean", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 3, 
+    "name": "data_compromised"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "392851a9-1b28-4913-91cb-2915db7f9d6b", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Data Encrypted", 
+    "tooltip": "Whether the data in question was encrypted.\u2002Data should not be considered encrypted if the encryption keys were also breached.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "pii", 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "boolean", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 20, 
+    "name": "data_encrypted"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "af9cd3c2-ca43-48ab-b37e-e9d7ede15c15", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Data Format", 
+    "tooltip": "Specify the format of the personal information involved", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "pii", 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 0, 
+        "label": "Electronic", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Paper", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 2, 
+        "label": "Verbal", 
+        "properties": null
+      }
+    ], 
+    "blank_option": true, 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 19, 
+    "name": "data_format"
+  }, 
+  {
+    "operations": [
+      "due_within", 
+      "overdue_by", 
+      "changed", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "datetimepicker"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "719d52c7-42a5-4cd6-8ce5-e8cf9317d2d1", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Date Closed", 
+    "tooltip": "The date the incident was closed.  This field is read-only.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "DUE_WITHIN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "OVERDUE_BY": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "datetimepicker", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 38, 
+    "name": "end_date"
+  }, 
+  {
+    "operations": [
+      "due_within", 
+      "overdue_by", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "datetimepicker"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "b4faf728-881a-4e8b-bf0b-d39b720392a1", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Date Created", 
+    "tooltip": "The date the incident was created.  This field is read-only.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "DUE_WITHIN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "OVERDUE_BY": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "datetimepicker", 
+    "changeable": false, 
+    "hide_notification": false, 
+    "id": 37, 
+    "name": "create_date"
+  }, 
+  {
+    "operations": [
+      "due_within", 
+      "overdue_by", 
+      "changed", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "datetimepicker"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "26cb8fa6-32e2-410d-b8e5-c23af0d09263", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Date Discovered", 
+    "required": "always", 
+    "tooltip": "Date the incident was discovered/reported - this is the date upon which most reporting/action timelines are based, so it is important to ensure accuracy for this field", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "DUE_WITHIN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "OVERDUE_BY": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "datetimepicker", 
+    "changeable": true, 
+    "hide_notification": true, 
+    "id": 23, 
+    "name": "discovered_date"
+  }, 
+  {
+    "operations": [
+      "due_within", 
+      "overdue_by", 
+      "changed", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "datetimepicker"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "90f5a419-e126-48db-888c-80fe09444cfe", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Date Occurred", 
+    "tooltip": "Date the incident occurred", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "DUE_WITHIN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "OVERDUE_BY": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "datetimepicker", 
+    "changeable": true, 
+    "hide_notification": true, 
+    "id": 32, 
+    "name": "start_date"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": true, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": true, 
+      "delete": false
+    }, 
+    "uuid": "15c23dae-1d17-49ff-aae0-8cb457e27867", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Department", 
+    "blank_option": true, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 8, 
+    "name": "exposure_dept_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "textarea"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "420d70b1-98f9-4681-a20b-84f36a9e5e48", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Description", 
+    "tooltip": "A free form text description of the incident", 
+    "rich_text": true, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "textarea", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 14, 
+    "name": "description"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "b37923eb-1ade-48d9-a067-c15a313d3264", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Employee Involved", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "boolean", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 30, 
+    "name": "employee_involved"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "ac1398bd-350d-4072-9754-7f8262119ec0", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Exposure Resolved", 
+    "tooltip": "Whether the exposure has been addressed and rectified", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "pii", 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "boolean", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 22, 
+    "name": "data_contained"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "5d88cef9-ce77-4618-b946-e547607a777f", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Exposure Type", 
+    "tooltip": "Origin source of the exposure", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 2, 
+        "label": "External Party", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 3, 
+        "label": "Individual", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Unknown", 
+        "properties": null
+      }
+    ], 
+    "blank_option": false, 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 5, 
+    "name": "exposure_type_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "549e822b-37ac-43c0-8e93-ddcebf533189", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Harm Foreseeable", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "pii", 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "No", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 2, 
+        "label": "Unknown", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 3, 
+        "label": "Yes", 
+        "properties": null
+      }
+    ], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 27, 
+    "name": "harmstatus_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "lt", 
+      "lte", 
+      "gt", 
+      "gte", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "number"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "44d6a6ac-886f-46ff-9683-90a13765862a", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "ID", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "GT": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "GTE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "LT": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "LTE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "number", 
+    "changeable": true, 
+    "hide_notification": true, 
+    "id": 40, 
+    "name": "id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "9b531f7c-d112-4444-8a91-9ea2d5e47162", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Incident Disposition", 
+    "label_true": "Confirmed", 
+    "label_false": "Unconfirmed", 
+    "tooltip": "Tag an issue as an unconfirmed (event) vs a confirmed incident", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "boolean", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 13, 
+    "name": "confirmed"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "value_added", 
+      "has_a_value", 
+      "not_has_a_value", 
+      "not_equals_hierarchical", 
+      "equals_hierarchical"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": false, 
+      "modify_type": [
+        "multiselect"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "11ed8b8a-8ffc-4dea-9699-28a351b4f212", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Incident Type", 
+    "tooltip": "The type of incident", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS_HIERARCHICAL": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS_HIERARCHICAL": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "VALUE_ADDED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 17, 
+        "label": "Communication error (fax; email)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1005, 
+        "label": "DDoS", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 21, 
+        "label": "Denial of Service", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1001, 
+        "label": "Escalated Offense", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 6, 
+        "label": "Improper disposal: digital asset(s)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 7, 
+        "label": "Improper disposal: documents / files", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1004, 
+        "label": "Incident Handling", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 3, 
+        "label": "Lost PC / laptop / tablet", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Lost PDA / smartphone", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 4, 
+        "label": "Lost documents / files / records", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 8, 
+        "label": "Lost storage device / media", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 19, 
+        "label": "Malware", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 23, 
+        "label": "Not an Issue", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 18, 
+        "label": "Other", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 22, 
+        "label": "Phishing", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1002, 
+        "label": "Standar Incident Response Process", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 12, 
+        "label": "Stolen PC / laptop / tablet", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 13, 
+        "label": "Stolen PDA / smartphone", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 11, 
+        "label": "Stolen documents / files / records", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 14, 
+        "label": "Stolen storage device / media", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1006, 
+        "label": "Suspicious Activity", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 20, 
+        "label": "System Intrusion", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 16, 
+        "label": "TBD / Unknown", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1003, 
+        "label": "Tuning", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 15, 
+        "label": "Vendor / 3rd party error", 
+        "properties": null
+      }
+    ], 
+    "blank_option": false, 
+    "input_type": "multiselect", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "Choose Some Types", 
+    "id": 15, 
+    "name": "incident_type_ids"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "77618fd8-ecd9-40e5-b86f-b42eee53498f", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Individual Name", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "Employee name", 
+    "id": 25, 
+    "name": "exposure_individual_name"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "658354fe-3bcd-429e-aa08-5998799cc6d2", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Jurisdiction", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 1, 
+    "name": "jurisdiction_name"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "value_added", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": false, 
+      "modify_type": [
+        "multiselect_members"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "cf473808-ea3b-4e47-833b-3507891bea5e", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Members", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "VALUE_ADDED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Test User (user@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 3,
+        "label": "API User (api@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 4,
+        "label": "Security Monitoring (securitymonitoring@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 5,
+        "label": "Monitoring Security (securitymonitoring@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 7,
+        "label": "CSIRT Leads",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 9,
+        "label": "Incident Handling",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 6,
+        "label": "Security Monitoring",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 10,
+        "label": "Tuning",
+        "properties": null
+      }
+    ],
+    "input_type": "multiselect_members", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 21, 
+    "name": "members"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "ad6ed4f2-8d87-4ba2-81fa-03568a9326cc", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Name", 
+    "required": "always", 
+    "tooltip": "A unique name to identify this particular incident", 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 16, 
+    "name": "name"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "94dbbd0e-3c82-4650-bd17-bddb3003a7e6", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Negative PR", 
+    "tooltip": "If it is foreseeable that the incident might generate any negative public image or publicity for your company or organization.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "boolean", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 28, 
+    "name": "negative_pr_likely"
+  }, 
+  {
+    "operations": [
+      "due_within", 
+      "overdue_by", 
+      "changed", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "datetimepicker"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "f549afb8-eb80-4fbf-96f1-63eac60412c8", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Next Due Date", 
+    "tooltip": "The nearest date for the next task due. This field is read-only.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "DUE_WITHIN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "OVERDUE_BY": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "datetimepicker", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 41, 
+    "name": "due_date"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "value_added", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": false, 
+      "modify_type": [
+        "multiselect"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "6fd423e6-2817-407f-b950-f66cb2e58d2c", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "NIST Attack Vectors", 
+    "tooltip": "NIST Attack Vectors the incident falls under, if applicable", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "VALUE_ADDED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 2, 
+        "label": "Attrition (Denial-of-Service and Brute-Force Attacks)", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 4, 
+        "label": "E-mail", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "External/Removable Media", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 5, 
+        "label": "Impersonation", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 6, 
+        "label": "Improper Usage", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 7, 
+        "label": "Loss or Theft of Equipment", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 8, 
+        "label": "Other", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 3, 
+        "label": "Web", 
+        "properties": null
+      }
+    ], 
+    "blank_option": false, 
+    "input_type": "multiselect", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "Choose Applicable Vectors", 
+    "id": 2, 
+    "name": "nist_attack_vectors"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select_owner"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "97d1d2a1-d25e-4279-9d29-7bc60fd321ce", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Owner", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Test User (user@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 3,
+        "label": "API User (api@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 4,
+        "label": "Security Monitoring (securitymonitoring@example.com)",
+        "properties": null
+      },
+      {
+        "uuid": null,
+        "default": false,
+        "enabled": true,
+        "value": 5,
+        "label": "Monitoring Security (securitymonitoring@example.com)",
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 7, 
+        "label": "CSIRT Leads", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 9, 
+        "label": "Incident Handling", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 6, 
+        "label": "Security Monitoring", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 10, 
+        "label": "Tuning", 
+        "properties": null
+      }
+    ], 
+    "input_type": "select_owner", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 29, 
+    "name": "owner_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "ea47a365-620d-4419-a767-f1b08f2685d7", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Phase", 
+    "tooltip": "The phase of the incident", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1004, 
+        "label": "Initial", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1003, 
+        "label": "Engage", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1005, 
+        "label": "Detect/Analyze", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1002, 
+        "label": "Respond", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1000, 
+        "label": "Post-Incident", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1006, 
+        "label": "Custom", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1001, 
+        "label": "Complete", 
+        "properties": null
+      }
+    ], 
+    "blank_option": false, 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 18, 
+    "name": "phase_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "931afc2e-e09d-48e1-8b71-c1cc50e1eba6", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Reporting Individual", 
+    "tooltip": "Name of person who reported the event, such as a device owner or his/her manager", 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "Employee name", 
+    "id": 9, 
+    "name": "reporter"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": true, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": true, 
+      "delete": false
+    }, 
+    "uuid": "4f9589d1-4828-4841-951e-16179198c518", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Resolution", 
+    "required": "close", 
+    "tooltip": "Select an option that accurately describes the reason for closing this incident.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": "c9c4e0d7-e768-4399-8778-830b8023ad36", 
+        "default": false, 
+        "enabled": false, 
+        "value": 54, 
+        "label": "Duplicate", 
+        "properties": null
+      }, 
+      {
+        "uuid": "7aef309c-4a14-40af-8f13-085f2deefc48", 
+        "default": false, 
+        "enabled": true, 
+        "value": 53, 
+        "label": "Unresolved", 
+        "properties": null
+      }, 
+      {
+        "uuid": "64ad1c62-e664-46d9-82dd-69e077456230", 
+        "default": false, 
+        "enabled": true, 
+        "value": 1050, 
+        "label": "Duplicate2", 
+        "properties": null
+      }, 
+      {
+        "uuid": "128fe350-7d62-4d01-a078-7f491677de57", 
+        "default": false, 
+        "enabled": true, 
+        "value": 55, 
+        "label": "Not an Issue", 
+        "properties": null
+      }, 
+      {
+        "uuid": "88ac1bde-1201-46ae-8f35-3a1af5420c38", 
+        "default": false, 
+        "enabled": true, 
+        "value": 56, 
+        "label": "Resolved", 
+        "properties": null
+      }, 
+      {
+        "uuid": "a07f8336-093e-4165-8476-63b6561186dc", 
+        "default": false, 
+        "enabled": true, 
+        "value": 158, 
+        "label": "Policy Violation", 
+        "properties": null
+      }, 
+      {
+        "uuid": "c56316a1-8ce6-4047-98b1-2e3ecd78eb34", 
+        "default": false, 
+        "enabled": true, 
+        "value": 852, 
+        "label": "Non-Issue", 
+        "properties": null
+      }, 
+      {
+        "uuid": "26f9b925-08eb-4603-9004-306b1a4786ac", 
+        "default": false, 
+        "enabled": true, 
+        "value": 1100, 
+        "label": "False Positive", 
+        "properties": null
+      }
+    ], 
+    "blank_option": true, 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "", 
+    "id": 34, 
+    "name": "resolution_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "textarea"
+      ], 
+      "modify_required": true, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "f5d18473-03f6-4149-b0d9-1ce9006b4a99", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Resolution Summary", 
+    "required": "close", 
+    "tooltip": "Enter a summary which describes how this incident was resolved.", 
+    "rich_text": true, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "textarea", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 35, 
+    "name": "resolution_summary"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": true, 
+      "delete": false
+    }, 
+    "uuid": "153e9e55-d7ba-43b8-8894-e3340935ba99", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Severity", 
+    "tooltip": "Your impression of the events relative severity vs. other events that may be entered into the system", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": "9ff48698-5f40-4b10-96b2-a5d5e2304586", 
+        "default": true, 
+        "enabled": true, 
+        "value": 50, 
+        "label": "Low", 
+        "properties": null
+      }, 
+      {
+        "uuid": "a5caa038-f539-4972-b9f3-75131d8da602", 
+        "default": false, 
+        "enabled": true, 
+        "value": 51, 
+        "label": "Medium", 
+        "properties": null
+      }, 
+      {
+        "uuid": "39aa7b40-b7de-4886-ac8c-186521d34ac9", 
+        "default": false, 
+        "enabled": true, 
+        "value": 52, 
+        "label": "High", 
+        "properties": null
+      }, 
+      {
+        "uuid": "855f629e-a1de-4d70-9a39-1a0c7f52d5a3", 
+        "default": false, 
+        "enabled": true, 
+        "value": 847, 
+        "label": "Severity 1", 
+        "properties": null
+      }, 
+      {
+        "uuid": "31727689-dab9-4df6-8dc1-9c6cc959ef73", 
+        "default": false, 
+        "enabled": true, 
+        "value": 848, 
+        "label": "Severity 2", 
+        "properties": null
+      }, 
+      {
+        "uuid": "1516f500-045c-41c9-aa17-0e9c0cb55767", 
+        "default": false, 
+        "enabled": true, 
+        "value": 849, 
+        "label": "Severity 3", 
+        "properties": null
+      }, 
+      {
+        "uuid": "e578145c-da77-4789-8fb8-ffe11e64c573", 
+        "default": false, 
+        "enabled": true, 
+        "value": 850, 
+        "label": "Severity 4", 
+        "properties": null
+      }, 
+      {
+        "uuid": "c767289b-ce03-4a43-958c-cc08defbaf23", 
+        "default": false, 
+        "enabled": true, 
+        "value": 851, 
+        "label": "Severity 5", 
+        "properties": null
+      }
+    ], 
+    "blank_option": false, 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "", 
+    "id": 33, 
+    "name": "severity_code"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": true, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "boolean"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "c3f0e3ed-21e1-4d53-affb-fe5ca3308cca", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Simulation", 
+    "tooltip": "Whether the incident is a simulation or a regular incident.  This field is read-only.", 
+    "rich_text": false, 
+    "operation_perms": {
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "blank_option": false, 
+    "input_type": "boolean", 
+    "changeable": false, 
+    "hide_notification": false, 
+    "id": 36, 
+    "name": "inc_training"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "value_added", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": false, 
+      "modify_type": [
+        "multiselect"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": true, 
+      "delete": false
+    }, 
+    "uuid": "e4d65b3a-9dca-492b-acb7-d2b33e3d5913", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "Source of Data", 
+    "tooltip": "Original source of the data, such as the name of the database", 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "VALUE_ADDED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": "pii", 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": "082428ad-f20d-43ba-8b3e-46a392e128dd", 
+        "default": false, 
+        "enabled": true, 
+        "value": 100, 
+        "label": "Qradar", 
+        "properties": null
+      }
+    ], 
+    "blank_option": false, 
+    "input_type": "multiselect", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "placeholder": "", 
+    "id": 11, 
+    "name": "data_source_ids"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "37a7f680-9ea3-4703-8e86-3846ef14397f", 
+    "type_id": 0, 
+    "chosen": true, 
+    "text": "State", 
+    "blank_option": true, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1, 
+        "label": "Alabama", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 2, 
+        "label": "Alaska", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1003, 
+        "label": "Alberta", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 4, 
+        "label": "Arizona", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 5, 
+        "label": "Arkansas", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1010, 
+        "label": "British Columbia", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 6, 
+        "label": "California", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 7, 
+        "label": "Colorado", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 8, 
+        "label": "Connecticut", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 9, 
+        "label": "Delaware", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 10, 
+        "label": "District of Columbia", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 12, 
+        "label": "Florida", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 13, 
+        "label": "Georgia", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1106, 
+        "label": "Guam", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 15, 
+        "label": "Hawaii", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 16, 
+        "label": "Idaho", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 17, 
+        "label": "Illinois", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 18, 
+        "label": "Indiana", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 19, 
+        "label": "Iowa", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 20, 
+        "label": "Kansas", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 21, 
+        "label": "Kentucky", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 22, 
+        "label": "Louisiana", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 23, 
+        "label": "Maine", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1007, 
+        "label": "Manitoba", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 25, 
+        "label": "Maryland", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 26, 
+        "label": "Massachusetts", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 27, 
+        "label": "Michigan", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 28, 
+        "label": "Minnesota", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 29, 
+        "label": "Mississippi", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 30, 
+        "label": "Missouri", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 31, 
+        "label": "Montana", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 32, 
+        "label": "Nebraska", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 33, 
+        "label": "Nevada", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1004, 
+        "label": "New Brunswick", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 34, 
+        "label": "New Hampshire", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 35, 
+        "label": "New Jersey", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 36, 
+        "label": "New Mexico", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 37, 
+        "label": "New York", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1005, 
+        "label": "Newfoundland and Labrador", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 38, 
+        "label": "North Carolina", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 39, 
+        "label": "North Dakota", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1176, 
+        "label": "Northern Mariana Islands", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1014, 
+        "label": "Northwest Territories", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1009, 
+        "label": "Nova Scotia", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1015, 
+        "label": "Nunavut", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 41, 
+        "label": "Ohio", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 42, 
+        "label": "Oklahoma", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1006, 
+        "label": "Ontario", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 43, 
+        "label": "Oregon", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 45, 
+        "label": "Pennsylvania", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1011, 
+        "label": "Prince Edward Island", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 77, 
+        "label": "Puerto Rico", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1008, 
+        "label": "Quebec", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 47, 
+        "label": "Rhode Island", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1012, 
+        "label": "Saskatchewan", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 48, 
+        "label": "South Carolina", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 49, 
+        "label": "South Dakota", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 50, 
+        "label": "Tennessee", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 51, 
+        "label": "Texas", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 52, 
+        "label": "Utah", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 53, 
+        "label": "Vermont", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 54, 
+        "label": "Virgin Islands", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 55, 
+        "label": "Virginia", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 56, 
+        "label": "Washington", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 57, 
+        "label": "West Virginia", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 58, 
+        "label": "Wisconsin", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 59, 
+        "label": "Wyoming", 
+        "properties": {
+          "country": 1000, 
+          "type": 1
+        }
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": 1013, 
+        "label": "Yukon", 
+        "properties": {
+          "country": 1001, 
+          "type": 2
+        }
+      }
+    ], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": true, 
+    "id": 4, 
+    "name": "state"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "2df00085-f5f2-4289-844b-6ea014f77ac3", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Status", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": "A", 
+        "label": "Active", 
+        "properties": null
+      }, 
+      {
+        "uuid": null, 
+        "default": false, 
+        "enabled": true, 
+        "value": "C", 
+        "label": "Closed", 
+        "properties": null
+      }
+    ], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 10, 
+    "name": "plan_status"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "in", 
+      "not_in", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "select"
+      ], 
+      "modify_required": true, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": true, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": true, 
+      "delete": false
+    }, 
+    "uuid": "c8f2d2c8-c44b-45c7-b4ff-783a8702b074", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Vendor", 
+    "blank_option": true, 
+    "rich_text": false, 
+    "operation_perms": {
+      "NOT_IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "IN": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "select", 
+    "changeable": true, 
+    "hide_notification": false, 
+    "id": 12, 
+    "name": "exposure_vendor_id"
+  }, 
+  {
+    "operations": [
+      "equals", 
+      "not_equals", 
+      "contains", 
+      "not_contains", 
+      "changed", 
+      "changed_to", 
+      "not_changed_to", 
+      "has_a_value", 
+      "not_has_a_value"
+    ], 
+    "read_only": false, 
+    "perms": {
+      "sort": true, 
+      "modify_type": [
+        "text"
+      ], 
+      "modify_required": false, 
+      "show_in_manual_actions": true, 
+      "show_in_notifications": true, 
+      "modify_default": false, 
+      "modify_operations": false, 
+      "modify_name": false, 
+      "modify_chosen": false, 
+      "show_in_auto_actions": true, 
+      "modify_blank": false, 
+      "modify_values": false, 
+      "delete": false
+    }, 
+    "uuid": "e486619d-b212-43fd-bb1d-785f4cd312ce", 
+    "type_id": 0, 
+    "chosen": false, 
+    "text": "Zip", 
+    "blank_option": false, 
+    "rich_text": false, 
+    "operation_perms": {
+      "CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED_TO": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "CHANGED": {
+        "show_in_manual_actions": false, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "EQUALS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_CONTAINS": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }, 
+      "NOT_HAS_A_VALUE": {
+        "show_in_manual_actions": true, 
+        "show_in_notifications": true, 
+        "show_in_auto_actions": true
+      }
+    }, 
+    "prefix": null, 
+    "internal": true, 
+    "values": [], 
+    "input_type": "text", 
+    "changeable": true, 
+    "hide_notification": true, 
+    "id": 24, 
+    "name": "zip"
+  }
+]

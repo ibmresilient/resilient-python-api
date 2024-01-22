@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+{% if copyright %}
+# {{ copyright }}
+{% endif %}
 # Generated with resilient-sdk v{{ sdk_version }}
 
-"""Generate the Resilient customizations required for {{package_name}}"""
+"""Generate the SOAR customizations required for {{package_name}}"""
 
 import base64
 import os
@@ -21,27 +24,49 @@ def codegen_reload_data():
     """
     return {
         "package": u"{{package_name}}",
-        "message_destinations": {% if message_destinations %}[{% for o in message_destinations|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "message_destinations": {% if not message_destinations %}[],{% else %}[
+            {% for o in message_destinations|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "functions": {% if functions %}[{% for o in functions|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "functions": {% if not functions %}[],{% else %}[
+            {% for o in functions|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "workflows": {% if workflows %}[{% for o in workflows|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "workflows": {% if not workflows %}[],{% else %}[
+            {% for o in workflows|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "actions": {% if rules %}[{% for o in rules|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "actions": {% if not rules %}[],{% else %}[
+            {% for o in rules|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "incident_fields": {% if fields %}[{% for o in fields|sort(attribute="x_api_name") %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "incident_fields": {% if not fields %}[],{% else %}[
+            {% for o in fields|sort(attribute="x_api_name") %}            u"{{o.name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "incident_artifact_types": {% if artifact_types %}[{% for o in artifact_types|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "incident_artifact_types": {% if not artifact_types %}[],{% else %}[
+            {% for o in artifact_types|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "incident_types": {% if incident_types %}[{% for o in incident_types|sort(attribute="name") %}u"{{o.name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "incident_types": {% if not incident_types %}[],{% else %}[
+            {% for o in incident_types|sort(attribute="name") %}            u"{{o.name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "datatables": {% if datatables %}[{% for o in datatables|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "datatables": {% if not datatables %}[],{% else %}[
+            {% for o in datatables|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "automatic_tasks": {% if tasks %}[{% for o in tasks|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "automatic_tasks": {% if not tasks %}[],{% else %}[
+            {% for o in tasks|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "scripts": {% if scripts %}[{% for o in scripts|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}],{% else %}[],{% endif %}
+        "scripts": {% if not scripts %}[],{% else %}[
+            {% for o in scripts|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
 
-        "playbooks": {% if playbooks %}[{% for o in playbooks|sort(attribute="x_api_name") %}u"{{o.x_api_name}}"{{ ", " if not loop.last }}{% endfor %}]{% else %}[]{% endif %}
+        "playbooks": {% if not playbooks %}[],{% else %}[
+            {% for o in playbooks|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ]{% endif %}
 
     }
 

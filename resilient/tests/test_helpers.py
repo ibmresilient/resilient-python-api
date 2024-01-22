@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import logging
 import os
 import sys
 
 import pytest
-from resilient import constants, helpers
+from resilient import constants, helpers, app_config
 
 if sys.version_info.major >= 3:
     # Handle PY 3 specific imports
@@ -105,7 +105,9 @@ def test_is_running_in_app_host(fx_reset_environmental_variables):
     assert helpers.is_running_in_app_host() is True
 
 
-def test_is_not_running_in_app_host(caplog):
+def test_is_not_running_in_app_host(caplog, fx_reset_environmental_variables):
+    if constants.ENV_VAR_APP_HOST_CONTAINER in os.environ:
+        del os.environ[constants.ENV_VAR_APP_HOST_CONTAINER]
     caplog.set_level(logging.DEBUG)
     assert helpers.is_running_in_app_host() is False
     assert "Not running in an App Host environment" in caplog.text
@@ -128,23 +130,38 @@ def test_protected_secret_exists_unsupported_python_version(fx_reset_environment
 
     os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
     assert helpers.protected_secret_exists("API_KEY", "mock_path", "mock_path") is False
-    assert "Protected secrets are only Python >= 3 supported" in caplog.text
+    assert "Protected secrets are only supported for Python >= 3" in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
-def test_protected_secret_exists_env_var_not_set(fx_write_protected_secrets):
+def test_protected_secret_exists_env_var_not_set(fx_write_protected_secrets, fx_reset_environmental_variables):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
 
+    if constants.ENV_VAR_APP_HOST_CONTAINER in os.environ:
+        del os.environ[constants.ENV_VAR_APP_HOST_CONTAINER]
     assert helpers.protected_secret_exists("API_KEY", path_secrets_dir, path_jwk_file) is False
 
+
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
+def test_get_protected_secrets_keys(fx_write_protected_secrets, caplog, fx_reset_environmental_variables):
+    path_secrets_dir = fx_write_protected_secrets
+
+    expected_list = {"API_KEY", "EMAIL", "EMPTY", "PASSWORD", "PASSWORD_WITH_SPECIAL_CHARS", "URL"}
+    keys_list = helpers.get_protected_secrets_keys(path_secrets_dir)
+
+    assert isinstance(keys_list, set)
+    assert expected_list == keys_list
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
 def test_get_protected_secret(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
 
-    assert helpers.get_protected_secret("API_KEY", path_secrets_dir, path_jwk_file) == "JbkOxTInUg1aIRGxXI8zOG1A25opU39lDKP1_0rfeVQ"
+    token, key = helpers.get_protected_secret_token_and_key("API_KEY", path_secrets_dir, path_jwk_file)
+    assert token and key
+
+    assert helpers.decrypt_protected_secret(token, key, "API_KEY") == "JbkOxTInUg1aIRGxXI8zOG1A25opU39lDKP1_0rfeVQ"
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
@@ -152,7 +169,7 @@ def test_get_protected_secret_empty_file(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
 
-    assert helpers.get_protected_secret("EMPTY", path_secrets_dir, path_jwk_file) is None
+    assert helpers.get_protected_secret_token_and_key("EMPTY", path_secrets_dir, path_jwk_file) is None
     assert "File for protected secret 'EMPTY' is empty or corrupt" in caplog.text
 
 
@@ -161,15 +178,17 @@ def test_get_protected_secret_wrong_key(fx_write_protected_secrets, caplog):
     path_secrets_dir = fx_write_protected_secrets
     path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key_unused.jwk")
 
-    assert helpers.get_protected_secret("API_KEY", path_secrets_dir, path_jwk_file) is None
+    token, key = helpers.get_protected_secret_token_and_key("API_KEY", path_secrets_dir, path_jwk_file)
+
+    assert helpers.decrypt_protected_secret(token, key, "API_KEY") is None
     assert "Could not decrypt the secret. Invalid key used to decrypt the protected secret 'API_KEY'." in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info >= constants.MIN_SUPPORTED_PY3_VERSION, reason="only run this test in Python 2.7")
 def test_get_protected_secret_unsupported_python_version(caplog):
 
-    assert helpers.get_protected_secret("API_KEY", "mock_path", "mock_path") is None
-    assert "Protected secrets are only Python >= 3 supported" in caplog.text
+    assert helpers.get_protected_secret_token_and_key("API_KEY", "mock_path", "mock_path") is None
+    assert "Protected secrets are only supported for Python >= 3" in caplog.text
 
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY3_VERSION, reason="requires python3.6 or higher")
@@ -203,3 +222,29 @@ def test_get_config_from_env(fx_reset_environmental_variables):
     os.environ[constants.ENV_VAR_APP_HOST_CONTAINER] = "1"
     assert helpers.get_config_from_env(constants.ENV_VAR_APP_HOST_CONTAINER) == "1"
     assert helpers.get_config_from_env("invalid_env_var") is None
+
+
+def test_load_pam_plugin_success_builtin():
+    plugin_name = "Keyring"
+    plugin = helpers.load_pam_plugin(plugin_name)
+
+    assert plugin.__name__ == "Keyring"
+
+def test_get_pam_type_name(fx_reset_environmental_variables, fx_write_protected_secrets):
+    path_secrets_dir = fx_write_protected_secrets
+    path_jwk_file = os.path.join(path_secrets_dir, ".jwk", "key.jwk")
+    protected_secrets_manager = app_config.ProtectedSecretsManager(path_secrets_dir, path_jwk_file)
+
+    opts = {"pam_type": None}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == None
+
+    opts = {"pam_type": "HashiCorpVault_Custom"}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == "HashiCorpVault_Custom"
+
+    os.environ["MY_PAM"] = "Keyring"
+    opts = {"pam_type": "$MY_PAM"}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == "Keyring"
+
+    os.environ["PAM_TYPE"] = "HigherPrecedence"
+    opts = {"pam_type": "LowerPrecedence"}
+    assert helpers.get_pam_type_name(opts, protected_secrets_manager) == "HigherPrecedence"

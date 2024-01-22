@@ -47,6 +47,7 @@ class TLSHttpAdapter(HTTPAdapter):
 
 
 class BasicHTTPException(Exception):
+    """Base exception for HTTP errors."""
     def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
@@ -69,32 +70,32 @@ class BasicHTTPException(Exception):
         return self.response
 
 
-class RetryHTTPException(Exception):
+class RetryHTTPException(BasicHTTPException):
     """Exception for HTTP errors that should be retried."""
     def __init__(self, response, err_reason=u"Unknown Reason", err_text=u"Unknown Error"):
         """
         Args:
           response - the Response object from the get/put/etc.
         """
-
-        err_reason = response.reason if response.reason else err_reason
-        err_text = response.text if response.text else err_text
-
-        err_message = u"'resilient' API Request Retry:\nResponse Code: {0}\nReason: {1}. {2}".format(response.status_code, err_reason, err_text)
-
-        # Add a __qualname__ attribute if does not exist - needed for PY27
-        if not hasattr(RetryHTTPException, "__qualname__"):
-            setattr(RetryHTTPException, "__qualname__", RetryHTTPException.__name__)
-
-        super(RetryHTTPException, self).__init__(err_message)
-
-        self.response = response
-
-    def get_response(self):
-        return self.response
+        super(RetryHTTPException, self).__init__(response, err_reason=err_reason, err_text=err_text)
 
     @staticmethod
     def raise_if_error(response, skip_retry=[]):
+        """
+        Raise a RetryError if a non-401 status is returned
+        AND the status is not in the set of statuses to skip retry on.
+
+        NOTE: 401 errors are unrecoverable as they indicated an unauthorized
+        connection. These errors result in circuits stopping itself. This is
+        achieved by capturing the stack trace and sending a sys.exit().
+
+        :param response: requests.Response object
+        :type response: requests.Response
+        :param skip_retry: list of status codes to not retry, defaults to []
+        :type skip_retry: list[int], optional
+        :raises RetryHTTPException: if error status and should be retried
+        :raises BasicHTTPException: if error but should not be retried
+        """
 
         if response.status_code == 401:
             try:
@@ -296,6 +297,7 @@ class BaseClient(object):
         Raises:
           RetryHTTPException - if an HTTP exception occurs.
         """
+        LOG.warning(constants.WARNING_DEPRECATE_EMAIL_PASS)
         self.authdata = {
             u'email': ensure_unicode(email),
             u'password': ensure_unicode(password)
@@ -519,11 +521,12 @@ class BaseClient(object):
                                          cookies=self.cookies,
                                          headers=self.make_headers(co3_context_token),
                                          verify=self.verify,
-                                         timeout=timeout)
+                                         timeout=timeout,
+                                         cert=self.cert)
         RetryHTTPException.raise_if_error(response)
         return response.json()
 
-    def get_content(self, uri, co3_context_token=None, timeout=None, skip_exceptions=[]):
+    def get_content(self, uri, co3_context_token=None, timeout=None, skip_retry=[]):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -548,11 +551,11 @@ class BaseClient(object):
                                          verify=self.verify,
                                          timeout=timeout,
                                          cert=self.cert)
-        RetryHTTPException.raise_if_error(response, skip_retry=skip_exceptions)
+        RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         return response.content
 
-    def post(self, uri, payload, co3_context_token=None, timeout=None, headers=None,
-             skip_retry=[]):
+    def post(self, uri, payload=None, co3_context_token=None, timeout=None, headers=None,
+             skip_retry=[], is_uri_absolute=None, get_response_object=None, **kwargs):
         """
         Posts to the specified URI.
         Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So for example, if you
@@ -566,12 +569,18 @@ class BaseClient(object):
            timeout: number of seconds to wait for response
            headers: optional headers to include
            skip_retry: list of HTTP responses to skip throwing an exception
+           is_uri_absolute: if True, does not insert /org/{org_id} into the uri
+           get_response_object: if True, returns the response object rather than the json of the response.text or response.content
+           **kwargs: any other keyword-arguments to pass through to the ``requests.post()`` method
         Returns:
           A dictionary or array with the value returned by the server.
         Raises:
           RetryHTTPException - if an HTTP exception occurs.
         """
-        url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
+        if is_uri_absolute:
+            url = u"{0}/rest{1}".format(self.base_url, ensure_unicode(uri))
+        else:
+            url = u"{0}/rest/orgs/{1}{2}".format(self.base_url, self.org_id, ensure_unicode(uri))
 
         # payloads which aren't convertable to json are passed asis
         payload_json = json.dumps(payload) if isinstance(payload, (list, dict)) else payload
@@ -588,7 +597,8 @@ class BaseClient(object):
                                       headers=self.make_headers(co3_context_token, additional_headers=headers),
                                       verify=self.verify,
                                       timeout=timeout,
-                                      cert=self.cert)
+                                      cert=self.cert,
+                                      **kwargs)
             RetryHTTPException.raise_if_error(r, skip_retry=skip_retry)
             return r
 
@@ -599,6 +609,9 @@ class BaseClient(object):
                               backoff=self.request_retry_backoff)
 
         RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
+
+        if get_response_object:
+            return response
         try:
             return json.loads(response.text)
         except json.decoder.JSONDecodeError:

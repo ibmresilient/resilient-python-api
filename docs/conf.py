@@ -17,8 +17,7 @@ from importlib import metadata
 import resilient_lib
 from resilient_sdk import app as sdk_app
 from resilient_sdk.cmds import (CmdClone, CmdCodegen, CmdDocgen, CmdExtPackage,
-                                CmdExtract, CmdRunInit)
-from resilient_sdk.cmds.validate import CmdValidate
+                                CmdExtract, CmdRunInit, CmdList, CmdValidate)
 from resilient_sdk.util.sdk_helpers import parse_optionals
 
 sys.path.insert(0, os.path.abspath('.'))
@@ -92,6 +91,7 @@ cmd_clone = CmdClone(sdk_sub_parser)
 cmd_extract = CmdExtract(sdk_sub_parser)
 cmd_validate = CmdValidate(sdk_sub_parser)
 cmd_init = CmdRunInit(sdk_sub_parser)
+cmd_list = CmdList(sdk_sub_parser)
 
 # parse the setup.py files
 the_globals = {
@@ -136,4 +136,7 @@ rst_epilog = f"""
 .. |cmd_init_desc| replace:: {cmd_init.parser.description}
 .. |cmd_init_usage| replace:: {cmd_init.parser.usage}
 .. |cmd_init_options| replace:: {parse_optionals(cmd_init.parser._get_optional_actions())}
+.. |cmd_list_desc| replace:: {cmd_list.parser.description}
+.. |cmd_list_usage| replace:: {cmd_list.parser.usage}
+.. |cmd_list_options| replace:: {parse_optionals(cmd_list.parser._get_optional_actions())}
 """

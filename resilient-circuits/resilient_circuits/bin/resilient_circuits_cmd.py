@@ -285,7 +285,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog="resilient-circuits",
         description="Runtime environment for apps used with IBM Security SOAR",
-        epilog="For support, please visit ibm.biz/soarcommunity"
+        epilog="For support, please visit https://ibm.biz/soarcommunity"
     )
 
     parser.usage = """

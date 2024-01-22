@@ -118,3 +118,18 @@ def fx_read_mock_definition():
         b64 = "\n".join(lines)
 
     yield ImportDefinition(b64)
+
+
+@pytest.fixture
+def fx_reset_environmental_variables():
+    """
+    Before: Create a deepcopy of current env variables
+    After: Set the current env variables back to their original
+
+    Used in a test where we want to modify the env vars and avoid leaking into other tests
+    """
+    current_env = copy.deepcopy(os.environ)
+
+    yield
+
+    os.environ = current_env

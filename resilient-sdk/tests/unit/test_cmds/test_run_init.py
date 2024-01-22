@@ -5,13 +5,12 @@
 import json
 import os
 import sys
-from datetime import date
 
 import pytest
 from mock import patch
 from resilient_sdk.cmds import CmdRunInit, base_cmd
 from resilient_sdk.util import constants
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
@@ -76,16 +75,17 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
-        assert settings_json.get('codegen').get('setup').get('author') == constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR
-        assert settings_json.get('codegen').get('setup').get('author_email') == constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL
-        assert settings_json.get('codegen').get('setup').get('url') == constants.CODEGEN_DEFAULT_SETUP_PY_URL
-        assert settings_json.get('codegen').get('setup').get('license') == constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE
-        assert "<<{}>>".format(constants.DOCGEN_PLACEHOLDER_STRING) in settings_json.get('codegen').get('setup').get('long_description')
-        assert '''Enter a long description, including the key features of the App. \\\nMultiple continuation lines are supported with a backslash.''' \
-            in settings_json.get('codegen').get('setup').get('long_description')
-        assert settings_json.get('codegen').get('license_content') == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
-        assert settings_json.get('docgen').get('supported_app') == False
-        
+        assert settings_json.get("codegen").get("setup").get("author") == constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR
+        assert settings_json.get("codegen").get("setup").get("author_email") == constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL
+        assert settings_json.get("codegen").get("setup").get("url") == constants.CODEGEN_DEFAULT_SETUP_PY_URL
+        assert settings_json.get("codegen").get("setup").get("license") == constants.CODEGEN_DEFAULT_SETUP_PY_LICENSE
+        assert "<<{}>>".format(constants.DOCGEN_PLACEHOLDER_STRING) in settings_json.get("codegen").get("setup").get("long_description")
+        assert """Enter a long description, including the key features of the App. \\\nMultiple continuation lines are supported with a backslash.""" \
+            in settings_json.get("codegen").get("setup").get("long_description")
+        assert settings_json.get("codegen").get("license_content") == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
+        assert settings_json.get("codegen").get("copyright") == constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT
+        assert settings_json.get("docgen").get("supported_app") == False
+
 
 def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_config_file_path):
     """
@@ -119,10 +119,10 @@ def test_custom_args(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, f
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
-        assert settings_json.get('codegen').get('setup').get('author') == "test author"
-        assert settings_json.get('codegen').get('setup').get('author_email') == "test@example.com"
-        assert settings_json.get('codegen').get('setup').get('url') == "hello.com"
-        assert settings_json.get('codegen').get('setup').get('license') == "My License"
+        assert settings_json.get("codegen").get("setup").get("author") == "test author"
+        assert settings_json.get("codegen").get("setup").get("author_email") == "test@example.com"
+        assert settings_json.get("codegen").get("setup").get("url") == "hello.com"
+        assert settings_json.get("codegen").get("setup").get("license") == "My License"
 
 def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
     """
@@ -134,11 +134,11 @@ def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, 
     cmd_init.execute_command(args)
     with open(constants.SDK_SETTINGS_FILE_PATH) as f:
         settings_json = json.load(f)
-        year = date.today().year
-        assert settings_json.get('codegen').get('setup').get('author') == constants.INIT_INTERNAL_AUTHOR
-        assert settings_json.get('codegen').get('setup').get('author_email') == constants.INIT_INTERNAL_AUTHOR_EMAIL
-        assert settings_json.get('codegen').get('setup').get('url') == constants.INIT_INTERNAL_URL
-        assert settings_json.get('codegen').get('setup').get('license') == constants.INIT_INTERNAL_LICENSE
-        assert settings_json.get('codegen').get('setup').get('long_description') == constants.INIT_INTERNAL_LONG_DESC
-        assert u"Copyright © IBM Corporation {}".format(year) in settings_json.get("codegen").get('license_content')
-        assert settings_json.get('docgen').get('supported_app') == True
+        assert settings_json.get("codegen").get("setup").get("author") == constants.INIT_INTERNAL_AUTHOR
+        assert settings_json.get("codegen").get("setup").get("author_email") == constants.INIT_INTERNAL_AUTHOR_EMAIL
+        assert settings_json.get("codegen").get("setup").get("url") == constants.INIT_INTERNAL_URL
+        assert settings_json.get("codegen").get("setup").get("license") == constants.INIT_INTERNAL_LICENSE
+        assert settings_json.get("codegen").get("setup").get("long_description") == constants.INIT_INTERNAL_LONG_DESC
+        assert settings_json.get("codegen").get("copyright") == constants.INIT_INTERNAL_COPYRIGHT
+        assert u"Copyright © IBM Corporation {0}" in settings_json.get("codegen").get("license_content")
+        assert settings_json.get("docgen").get("supported_app") == True

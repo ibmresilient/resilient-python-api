@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
 
+import logging
+import os
 import pytest
 from resilient_circuits import (ResilientComponent, app_function, constants,
                                 inbound_app)
@@ -78,8 +80,14 @@ class TestAppFunctionDecorator:
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
         helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, {"input_one": "abc"}, circuits_app)
 
-    def test_handles_FunctionResult(self, circuits_app):
-        mock_fn_inputs = {"input_one": u"abc", "input_two": u"unicode ઠ ડ ઢ ણ ત થ દ ધ ન પ ફ input"}
+    def test_handles_FunctionResult(self, circuits_app, fx_reset_environmental_variables, caplog):
+        caplog.set_level(logging.DEBUG)
+        # set mock env value for normal secret
+        secret_key = "STANDARD_SECRET"
+        secret_value = "superdupersecret"
+        os.environ[secret_key] = secret_value
+
+        mock_fn_inputs = {"input_one": u"abc", "input_two": u"unicode ઠ ડ ઢ ણ ત થ દ ધ ન પ ફ input", "input_three": "$"+secret_key}
         AppFunctionMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
         mock_result_obj = helpers.call_app_function(mock_constants.MOCK_APP_FN_NAME_ONE, mock_fn_inputs, circuits_app, full_result_obj=True)
 
@@ -94,6 +102,10 @@ class TestAppFunctionDecorator:
         assert mock_results["reason"] is None
         assert mock_results["inputs"]["input_one"] == mock_fn_inputs["input_one"]
         assert mock_results["inputs"]["input_two"] == mock_fn_inputs["input_two"]
+        assert mock_results["inputs"]["input_three"] == mock_fn_inputs["input_three"]
+        assert mock_results["inputs"]["input_three"] != secret_value
+        assert "$"+secret_key in caplog.text # original inputs are logged at debug level
+        assert secret_value not in caplog.text # secret, if found, should never be logged
         assert mock_results["content"]["malware"] is True
 
     def test_handles_StatusMessage(self, circuits_app):

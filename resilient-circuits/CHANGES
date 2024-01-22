@@ -1,3 +1,44 @@
+**2023-11: version 51.0.0.0**
+
+* Added support for new SOAR v.r.m.f version scheme. If running an app on ``resilient-circuits<51.0.0.0``,
+  the incorrect version of the SOAR server may be displayed if connecting to a SOAR server with
+  version greater than or equal to 51.x. Please consider upgrading ``resilient-circuits`` to the
+  latest version as soon as you can. A gentle reminder that SOAR python libraries versioning
+  is independent of SOAR server versions and any version of circuits works with any version of SOAR
+  (i.e. ``resilient-circuits==v51.0.0.0`` will work fine with SOAR v48.0.0). It is always recommended
+  that you use the latest version of all SOAR Python Libraries
+* Removed obfuscation of "id" in logs and made general improvements of log obfuscation to better
+  target sensitive information while leaving important information in the logs
+
+**2023-10: version 50.1**
+
+* Allow for ``.`` character in message queue names and improved logging around queues not found on startup
+* Merged external `PR <https://github.com/ibmresilient/resilient-python-api/pull/27>`_ to improve
+  support for multiple circuits services running in Windows
+
+**2023-08: version 50.0**
+
+* Added support for app secrets in function inputs. Use the syntax similar to using app secrets in app.config
+  by referencing app secrets in text within a function input. Example:
+
+  .. code-block::
+
+      inputs.fn_my_fn_input_1 = "$SECRET_FROM_APP_HOST_PROTECTED_SECRETS"
+      inputs.fn_my_fn_input_2 = "Here we can insert our ${SECRET_FROM_APP_HOST} in the middle of the string"
+      inputs.fn_my_fn_input_3 = "^SECRET_FROM_PAM"
+
+
+**2023-07: version 49.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-05: version 49.0**
+
+* Improved logging on restarts
+* Improved obfuscation of sensitive information from app.config in logs
+* Added ability to disable persistent sessions for ``resilient-lib.RequestsCommon`` in app functions using new optional ``rc_use_persistent_sessions`` configuration parameter
+* Added ``resilient-app-config-plugins`` as a new package to manage third party credentials within SOAR apps
+
 **2023-04: version 48.1**
 
 * Better log handling for errors upon restart

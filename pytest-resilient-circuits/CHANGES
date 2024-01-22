@@ -1,3 +1,18 @@
+2023-11: version 51.0.0.0
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-10: version 50.1
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-08: version 50.0
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-07: version 49.1
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-05: version 49.0
+* No major changes. Just bumping build number to coincide with other builds.
+
 2023-02: version 48.0
 * Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
   Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:

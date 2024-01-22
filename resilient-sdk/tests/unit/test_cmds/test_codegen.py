@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import os
 import shutil
@@ -9,13 +9,14 @@ from pathlib import Path
 
 import pytest
 from mock import patch
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds import CmdCodegen, base_cmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from tests import helpers
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 EXPECTED_FILES_ROOT_DIR = [
     'Dockerfile',
@@ -24,7 +25,6 @@ EXPECTED_FILES_ROOT_DIR = [
     'apikey_permissions.txt',
     'data',
     'doc',
-    'entrypoint.sh',
     'fn_main_mock_integration',
     'icons',
     'payload_samples',
@@ -95,8 +95,8 @@ def compare_playbooks_md_file(package_name, package_path):
         generated_md = expected_md_file.readlines()
 
     len(generated_md) > 0 # checking if file is not empty
-    assert len(expected_md) == len(generated_md) 
-    
+    assert len(expected_md) == len(generated_md)
+
     expected_md, generated_md = expected_md[7:], generated_md[7:] # removing the first 7 lines of the file as resilient_sdk version can change
     for exp, gen in zip(expected_md, generated_md):
         assert exp == gen
@@ -117,7 +117,7 @@ def test_cmd_codegen(fx_get_sub_parser, fx_cmd_line_args_codegen_package):
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     assert cmd_codegen.CMD_DESCRIPTION == cmd_codegen.CMD_HELP
-    assert cmd_codegen.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
+    assert cmd_codegen.CMD_ADD_PARSERS == [constants.APP_CONFIG_PARSER_NAME, constants.RESILIENT_OBJECTS_PARSER_NAME, constants.IO_PARSER_NAME, constants.SDK_SETTINGS_PARSER_NAME]
 
     args = cmd_codegen.parser.parse_known_args()[0]
     assert args.package == "fn_main_mock_integration"
@@ -157,7 +157,6 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
         "setup.py": ("setup.py.jinja2", mock_jinja_data),
         "tox.ini": ("tox.ini.jinja2", mock_jinja_data),
         "Dockerfile": ("Dockerfile.jinja2", mock_jinja_data),
-        "entrypoint.sh": ("entrypoint.sh.jinja2", mock_jinja_data),
         "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", mock_jinja_data),
         "data": {},
         "icons": {
@@ -191,7 +190,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     CmdCodegen.render_jinja_mapping(jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR, mock_paths.TEST_TEMP_DIR)
 
     files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
-    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'entrypoint.sh', 'icons', 'setup.py', 'test_package', 'tox.ini']
+    assert files_in_dir == ['Dockerfile', 'MANIFEST.in', 'README.md', 'apikey_permissions.txt', 'data', 'doc', 'icons', 'setup.py', 'test_package', 'tox.ini']
 
     files_in_icons_dir = sorted(os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "icons")))
     assert files_in_icons_dir == ['app_logo.png', 'company_logo.png']
@@ -210,7 +209,7 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert files_in_components == ['__init__.py']
 
     customize_py = sdk_helpers.read_file(os.path.join(mock_paths.TEST_TEMP_DIR, "test_package", "util", "customize.py"))
-    assert '        "functions": [u"fn_mock_function_1", u"fn_mock_function_2"],\n' in customize_py
+    assert set(['        "functions": [\n','            u"fn_mock_function_1",\n','            u"fn_mock_function_2"\n','        ],\n']).issubset(set(customize_py))
 
 
 def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp_dir, fx_add_dev_env_var):
@@ -221,7 +220,7 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     just that it exists
     """
     output_path = mock_paths.TEST_TEMP_DIR
-    constants.CURRENT_SOAR_SERVER_VERSION = 46.0 # setting SOAR server version to 46.0
+    constants.CURRENT_SOAR_SERVER_VERSION = parse_version("46.0") # setting SOAR server version to 46.0
 
     # Add paths to an output base and an export.res file
     sys.argv.extend(["codegen"])
@@ -238,8 +237,8 @@ def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp
     package_name = args.package
     package_path = os.path.join(output_path, args.package)
     compare_playbooks_md_file(package_name, package_path)
-    
-    constants.CURRENT_SOAR_SERVER_VERSION = 39.0 # resetting SOAR server version back to 39.0
+
+    constants.CURRENT_SOAR_SERVER_VERSION = None
 
 
 def test_run_tests_with_settings_file(fx_get_sub_parser, fx_mk_temp_dir, fx_mock_res_client, fx_cmd_line_args_codegen_package):
@@ -417,7 +416,6 @@ def test_reload_package(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_
     wf_modified_time = os.path.getmtime(os.path.join(path_package_reloaded, "data", "wf_mock_workflow_one.md"))
 
     # Perform another test reload.
-    cmd_codegen = CmdCodegen(fx_get_sub_parser)
     args = cmd_codegen.parser.parse_known_args()[0]
     path_package_reloaded = cmd_codegen._reload_package(args)
 

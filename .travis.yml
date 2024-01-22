@@ -1,5 +1,5 @@
 language: python
-python: 3.9.14
+python: 3.11
 os: linux
 dist: xenial
 
@@ -17,15 +17,15 @@ stages:
     if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
   - name: deploy documentation
     if: type != cron AND ( branch =~ ^pages\/.+ OR branch =~ ^release\/.+ OR branch = master )
-  - name: release to pypi
+  - name: release to pypi and quay
     if: tag =~ ^release\/pypi\/.+
   - name: sync public repo
     if: tag =~ ^release\/pypi\/.+
 
 env:
   global:
-  - ARTIFACTORY_BASE_URL=https://na.artifactory.swg-devops.com
-  - ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/artifactory/sec-resilient-team-integrations-generic-local/resilient-python-api
+  - ARTIFACTORY_BASE_URL=https://na.artifactory.swg-devops.com/artifactory
+  - ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/sec-resilient-team-integrations-generic-local/resilient-python-api
   - ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$TRAVIS_BUILD_NUMBER
 
   - TEST_RESILIENT_APPLIANCE=staging2.internal.resilientsystems.com
@@ -34,7 +34,7 @@ env:
   - LATEST_TAG=$(git describe --abbrev=0 --tags)
   - IS_MASTER=$([[ "$TRAVIS_BRANCH" != *"master"* ]]; echo $?)
   - IS_RELEASE=$([[ "$TRAVIS_BRANCH" != *"release/"* ]]; echo $?)
-  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2); fi`
+  - LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${TRAVIS_BRANCH##*/} | cut -d "." -f 1,2,3,4); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2,3,4); fi`
   - NEW_VERSION=$LIB_VERSION.$TRAVIS_BUILD_NUMBER
   - SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
   - ARTIFACTORY_LIB_LOCATION=$ARTIFACTORY_REPO_URL/$LIB_VERSION/$NEW_VERSION
@@ -63,6 +63,8 @@ env:
   - SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
   - SONAR_SCANNER_CLI_FILENAME="sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip"
   - SONAR_QUBE_URL="https://sonarqube.secintel.intranet.ibm.com"
+
+  - DOCKER_IMAGE_NAME="soarapps-base-docker-image"
 
 # Install package deps
 before_install:
@@ -93,12 +95,22 @@ matrix:
 
     - stage: run tests
       name: Python 3.9 Unit Tests
-      python: 3.9.14
+      python: 3.9.18
       env: RUN_TYPE=unit_test TOXENV=py39 TEST_RESILIENT_ORG="Resilient PS - Test2"
       install:
         - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
       script:
         - echo "Starting Python 3.9 Tests"
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
+
+    - stage: run tests
+      name: Python 3.11 Unit Tests
+      python: 3.11
+      env: RUN_TYPE=unit_test TOXENV=py311 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install:
+        - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 3.11 Tests"
         - $PATH_SCRIPTS_DIR/run_unit_tests.sh
         - >
           python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
@@ -109,9 +121,9 @@ matrix:
           "$TRAVIS_BUILD_DIR/resilient-sdk/cov_resilient_sdk.xml"
 
     - stage: run tests
-      name: Python 3.9 Integration Tests
-      python: 3.9.14
-      env: RUN_TYPE=int_test TOXENV=py39
+      name: Python 3.11 Integration Tests
+      python: 3.11
+      env: RUN_TYPE=int_test TOXENV=py311
       install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then
@@ -138,7 +150,7 @@ matrix:
 
     - stage: build packages
       name: Build Packages in Python 3.9
-      python: 3.9.14
+      python: 3.9.18
       install:
         - pip install twine build
       script:
@@ -146,6 +158,7 @@ matrix:
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
+      name: Deploy packages to Artifactory
       install:
         - pip install twine build
       script:
@@ -153,16 +166,40 @@ matrix:
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)
-        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_API_KEY>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_ACCESS_TOKEN>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
 
-    - stage: release to pypi
+    - stage: deploy to artifactory
+      name: Deploy Docker base image to Artifactory
+      services:
+        - docker
+      install:
+        - pip install jinja2
+        - echo "${ARTIFACTORY_API_TOKEN}" | docker login --password-stdin --username "${ARTIFACTORY_USERNAME}" ${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}
+      script:
+        - echo "Building Docker base image and pushing to Artifactory"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_docker_base_image.sh "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}" "${NEW_VERSION}"
+        - echo "Installing and running Twistlock scan"
+        - $PATH_COMMON_SCRIPTS_DIR/run_twistlock.sh "$DOCKER_IMAGE_NAME" "$TRAVIS_BUILD_DIR" "None" "$PATH_COMMON_SCRIPTS_DIR"
+
+    - stage: release to pypi and quay
+      name: Release packages to PyPi
       install:
         - pip install twine build
       script:
         - echo "Building packages in Python 3.9 and releasing to PyPi"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy do_release
         - echo "Sending notification to Slack"
-        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Succesfully released $NEW_VERSION to PyPi" "success"
+        - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Successfully released $NEW_VERSION to PyPi" "success"
+
+    - stage: release to pypi and quay
+      name: Deploy Docker base image to Quay.io
+      services:
+        - docker
+      before_install:
+        - echo "${QUAY_PASSWORD}" | docker login --password-stdin --username "${QUAY_USERNAME}" "${QUAY_DOCKER_REGISTRY_BASE_NAME}"
+      script:
+        - echo "Building Docker base image and pushing to Quay"
+        - $PATH_SCRIPTS_DIR/build_and_deploy_docker_base_image.sh "${QUAY_DOCKER_REGISTRY_BASE_NAME}" "${NEW_VERSION}"
 
     - stage: deploy documentation
       install:

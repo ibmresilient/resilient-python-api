@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Common Helper Functions for resilient-circuits"""
-import sys
-import pkg_resources
-import logging
 import copy
+import logging
 import re
+import sys
 import time
-from resilient_circuits import constants
-from resilient import get_client
-from resilient import is_env_proxies_set, get_and_parse_proxy_env_var
-from resilient import constants as res_constants
 
+import pkg_resources
+from resilient_circuits import constants
+from six import string_types
+
+from resilient import constants as res_constants
+from resilient import (get_and_parse_proxy_env_var, get_client,
+                       is_env_proxies_set)
+from resilient.app_config import AppConfigManager
 
 LOG = logging.getLogger("__name__")
 
@@ -116,10 +119,11 @@ def get_configs(path_config_file=None, ALLOW_UNRECOGNIZED=False):
     :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
     :type ALLOW_UNRECOGNIZED: bool
     :return: dictionary of all the configs in the app.config file
-    :rtype: dict
+    :rtype: ``resilient.app_config.AppConfigManager``
     """
-    from resilient import get_config_file
     from resilient_circuits.app_argument_parser import AppArgumentParser
+
+    from resilient import get_config_file
 
     if not path_config_file:
         path_config_file = get_config_file()
@@ -257,21 +261,27 @@ def get_queue(destination):
     :return: queue: (queue_type, org_id, queue_name) e.g. ('actions', '201', 'fn_main_mock_integration')
     :rtype: tuple
     """
+    destination_str = destination
 
     try:
-        assert isinstance(destination, str)
+        assert isinstance(destination_str, str)
 
+        # regex.sub to remove any /queue/ in the start
         regex = re.compile(r'\/.+\/')
+        destination_str = re.sub(regex, "", destination_str, count=1)
 
-        destination = re.sub(regex, "", destination, count=1)
-        q = destination.split(".")
+        # split on periods to get the type, org_id, and queue name
+        # use maxsplit=2 to only split on the first two periods,
+        # as the third item might be a queue_name with a period in it
+        # note in PY2 maxsplit is a positional arg so we don't label it here for compatiblity
+        q = destination_str.split(".", 2)
 
         assert len(q) == 3
 
         return (tuple(q))
 
     except AssertionError as e:
-        LOG.error("Could not get queue name\n%s", str(e))
+        LOG.error("Could not get queue name from destination: '%s'\n%s", destination, str(e))
         return None
 
 
@@ -348,3 +358,70 @@ def filter_heartbeat_timeout_events(heartbeat_timeouts):
     heartbeat_timeouts.sort()
 
     return heartbeat_timeouts
+
+def sub_fn_inputs_from_protected_secrets(fn_inputs, opts):
+    """
+    Substitute any protected secret *or regular secret
+    into a function input. Requires the ``opts`` dictionary
+    (usually actually a AppConfigManager object) to be 
+    given to properly create a temporary AppConfigManager
+    that will have access to the pam plugin if relevant.
+
+    This supports the same syntax as secrets in app.config:
+      - if $ or ^ starts a string, if the following string
+        is found in secrets, it will be replaced
+      - if ${} or ^{} is found within a string, the value
+        there will be replaced with the appropriate secret
+        if found
+    In either case, if the value following the reserved character
+    is not found in secrets, the original value will remain and no
+    substitution will be made.
+
+    **Example:**
+
+    .. code-block::python
+
+        fn_inputs = {"fn_my_app_input_1": "Sub in ${HERE}"}
+        fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, opts)
+        assert fn_inputs["fn_my_app_input_1"] == "Sub in <value from secrets>"
+
+    :param fn_inputs: function inputs as a dictionary (retrieved from the event message)
+    :type fn_inputs: dict
+    :param opts: app configs from AppFunctionComponent (usually self.opts)
+    :type opts: AppConfigManager | dict
+    :return: fn_inputs unchanged except where secrets referenced are replaced
+    :rtype: dict
+    """
+    fn_inputs = copy.deepcopy(fn_inputs)
+
+    # find the pam_plugin type if necessary
+    if isinstance(opts, AppConfigManager) and opts.pam_plugin:
+        pam_plugin = type(opts.pam_plugin)
+    else:
+        pam_plugin = None
+
+    # use a AppConfigManager temporarily to take advantage of its
+    # protected secrets and PAM secrets substitution capabilities
+    fn_inputs_manager = AppConfigManager(fn_inputs, pam_plugin)
+
+    # since the value for fn_inputs will quickly be translated
+    # to a namedtuple anyway, we simply set the values to the
+    # substituted values from the AppConfigManager here.
+    # This is different from how we'd use the AppConfigManager
+    # within the rest of the function code, where we'd usually
+    # persist the object so that values (especially PAM values)
+    # are guaranteed to be up to date. in this case, these values
+    # will be used relatively quickly within a function so we can
+    # statically save the found value here and we assume it will
+    # be used quickly enough in the function to be up to date.
+    # NOTE: some inputs might not be strings. in that case,
+    # they will not be substituted, they will remain their
+    # original value and structure. This applies to ints,
+    # multiselects, booleans, and date time pickers.
+    # All text, text with string, and select (single) inputs
+    # will attempt to substitute if applicable
+    for key in fn_inputs_manager:
+        if isinstance(fn_inputs[key], string_types):
+            fn_inputs[key] = fn_inputs_manager[key]
+
+    return fn_inputs

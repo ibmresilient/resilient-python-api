@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
+import copy
 import datetime
 import json
 import os
@@ -16,18 +17,33 @@ import pkg_resources
 import pytest
 import requests_mock
 from mock import patch
-from resilient import SimpleClient
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds import CmdCodegen, CmdValidate
 from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import ResilientObjMap
 from resilient_sdk.util.sdk_exception import SDKException
-from tests.shared_mock_data import mock_data, mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
+import tests.shared_mock_data.mock_data as mock_data
+
+from resilient import SimpleClient
 
 
 def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
     res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config)
     assert isinstance(res_client, SimpleClient)
-    assert "Connecting to IBM Security SOAR at: " in caplog.text
+    assert "Connecting to IBM Security SOAR at: 192.168.56.1" in caplog.text
+
+@pytest.mark.skip("Run locally, but can't run in Travis because no Linux Keyring backend")
+def test_get_resilient_client_with_keyring(fx_mk_temp_dir, fx_mk_app_config_with_keyring, caplog):
+    res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config_with_keyring[0])
+    assert isinstance(res_client, SimpleClient)
+
+    # make sure keyring was used
+    assert "Connecting to IBM Security SOAR at: 192.168.56.1" in caplog.text
+    assert "^host" not in caplog.text
+    # but also make sure that "^host" still in app.config text
+    assert "^host" in fx_mk_app_config_with_keyring[1]
+    assert "192.168.56.1" not in fx_mk_app_config_with_keyring[1]
 
 
 def test_setup_jinja_env(fx_mk_temp_dir):
@@ -99,6 +115,9 @@ def test_is_valid_version_syntax():
     assert sdk_helpers.is_valid_version_syntax("0") is False
     assert sdk_helpers.is_valid_version_syntax("1.0.0") is True
     assert sdk_helpers.is_valid_version_syntax("abc") is False
+    assert sdk_helpers.is_valid_version_syntax("51.0.0.1234.567") is True
+    assert sdk_helpers.is_valid_version_syntax("51.0.0.1234") is True
+    assert sdk_helpers.is_valid_version_syntax("51.0.0.1234.more") is False
 
 
 def test_is_valid_url():
@@ -180,10 +199,28 @@ def test_get_resilient_server_info(fx_mock_res_client):
     assert server_info.get("non_exist") == {}
 
 
-def test_get_resilient_server_version(fx_mock_res_client):
-    mock_version = 39.0
-    assert sdk_helpers.get_resilient_server_version(fx_mock_res_client) == mock_version
-    assert constants.CURRENT_SOAR_SERVER_VERSION == mock_version
+def test_get_resilient_server_version_old_style(fx_mock_res_client):
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+    mock_version = "39.0.6328"
+    assert str(sdk_helpers.get_resilient_server_version(fx_mock_res_client)) == mock_version
+    assert str(constants.CURRENT_SOAR_SERVER_VERSION) == mock_version
+
+
+def test_get_resilient_server_version_new_style(fx_mock_res_client):
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+    mock_version = "51.2.3.4.5678"
+    with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_info") as patch_server_info:
+        patch_server_info.return_value = { "server_version": {"v": 51,
+            "r": 2,
+            "m": 3,
+            "f": 4,
+            "build_number": 5678,
+            "major": 0,
+            "minor": 0,
+            "version": "51.2.3.4.5678"
+        }}
+        assert str(sdk_helpers.get_resilient_server_version(fx_mock_res_client)) == mock_version
+        assert str(constants.CURRENT_SOAR_SERVER_VERSION) == mock_version
 
 
 def test_read_local_exportfile():
@@ -280,8 +317,8 @@ def test_get_message_destination_from_export(fx_mock_res_client):
 def test_get_playbooks_from_export(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
 
-        mock_server_version.return_value = 44.0
-        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        mock_server_version.return_value = parse_version("44.0")
+        constants.CURRENT_SOAR_SERVER_VERSION = parse_version("44.0")
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
         export_data = sdk_helpers.get_from_export(org_export, playbooks=["main_mock_playbook"])
 
@@ -291,8 +328,8 @@ def test_get_playbooks_from_export(fx_mock_res_client):
 def test_get_playbooks_with_functions_and_script(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
 
-        mock_server_version.return_value = 44.0
-        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        mock_server_version.return_value = parse_version("44.0")
+        constants.CURRENT_SOAR_SERVER_VERSION = parse_version("44.0")
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
         export_data = sdk_helpers.get_from_export(org_export, playbooks=["test_resilient_sdk"])
 
@@ -304,7 +341,7 @@ def test_get_playbooks_with_functions_and_script(fx_mock_res_client):
             assert "result_name" in function
             assert "uuid" in function
             assert "post_processing_script" not in function
-            
+
         assert len(export_data.get("playbooks")[0].get("pb_scripts")) == 4
         for script in export_data.get("playbooks")[0].get("pb_scripts"):
             assert "uuid" in script
@@ -407,11 +444,11 @@ def test_minify_export_with_playbooks(fx_mock_res_client):
 def test_rm_pii():
     mock_export = {
         "actions": [{
-            "automations": [], "creator": { "email": "example@example.com", "author": "Example" } }, 
+            "automations": [], "creator": { "email": "example@example.com", "author": "Example" } },
             {"info": [], "info2": "test", "creator_id": "1234abcd5678", "good": {"creator" : ["bad", "bad2", "bad3"]} }],
-        "functions": [{ 
+        "functions": [{
             "creator": { "creator": { "test": "test"} }, "test_obj": { "creator": { "bad_info": "test"} , "test": "test_val" } }],
-        "workflows": 
+        "workflows":
             { "workflow 1" : { "someinfo": "test", "creator_id": "1234abcd5678", "someotherinfo": "test2",
                 "a list": [ 1, 2, 3, { "creator": {"email": "example@example.com", "author": "Example" }, "line 2": "example"}]}},
         "creator": { "creator info": "at base level" },
@@ -471,8 +508,8 @@ def test_get_workflow_functions():
 def test_get_playbook_objects(fx_mock_res_client):
     with patch("resilient_sdk.util.sdk_helpers.get_resilient_server_version") as mock_server_version:
         playbook = None
-        mock_server_version.return_value = 44.0
-        constants.CURRENT_SOAR_SERVER_VERSION = 44.0
+        mock_server_version.return_value = parse_version("44.0")
+        constants.CURRENT_SOAR_SERVER_VERSION = parse_version("44.0")
         org_export = sdk_helpers.get_latest_org_export(fx_mock_res_client)
 
         for pb in org_export.get("playbooks"):
@@ -493,6 +530,8 @@ def test_get_playbook_objects(fx_mock_res_client):
         for script in pb_elements.get("scripts"):
             assert "uuid" in script
 
+    constants.CURRENT_SOAR_SERVER_VERSION = None
+
 
 def test_get_main_cmd(monkeypatch):
     mock_args = ["resilient-sdk", "codegen", "-p", "fn_mock_package"]
@@ -508,7 +547,7 @@ def test_get_timestamp():
 
 def test_get_timestamp_from_timestamp():
     ts = sdk_helpers.get_timestamp(1579258053.728)
-    assert ts == "20200117104733"
+    assert ts == "20200117104733" or ts == "20200117054733" # one for Cambridge timezone, one for Ireland timezone to let it work with local dev in Cambridge
 
 
 def test_str_to_bool():
@@ -724,3 +763,52 @@ def test_handle_file_not_found_error(caplog):
         sdk_helpers.handle_file_not_found_error(e, error_msg)
 
     assert u"WARNING: {0}".format(error_msg) in caplog.text
+
+@pytest.mark.parametrize("activation_conditions, expected_output", [
+    ({
+        "conditions": [
+            { "evaluation_id": None, "field_name": "incident.id", "method": "not_equals", "type": None, "value": 123456 },
+            { "evaluation_id": None, "field_name": None, "method": "object_added", "type": None, "value": None },
+            { "evaluation_id": None, "field_name": "incident.city", "method": "not_has_a_value", "type": None, "value": None }
+        ],
+        "logic_type": "all"
+    }, "incident.id not_equals 123456 AND object_added AND incident.city not_has_a_value"),
+    ({
+        "conditions": [
+            { "evaluation_id": None, "field_name": "incident.id", "method": "not_equals", "type": None, "value": 123456 },
+            { "evaluation_id": None, "field_name": None, "method": "object_added", "type": None, "value": None },
+            { "evaluation_id": None, "field_name": "incident.city", "method": "not_has_a_value", "type": None, "value": None }
+        ],
+        "logic_type": "any",
+        "custom_condition": None
+    }, "incident.id not_equals 123456 OR object_added OR incident.city not_has_a_value"),
+    ({
+        "conditions": [
+            { "evaluation_id": 1, "field_name": "incident.id", "method": "not_equals", "type": None, "value": 123456 },
+            { "evaluation_id": 2, "field_name": None, "method": "object_added", "type": None, "value": None },
+            { "evaluation_id": 3, "field_name": "incident.city", "method": "not_has_a_value", "type": None, "value": None },
+            # mock add in a multi-digit evaluation ID
+            { "evaluation_id": 123, "field_name": "incident.description", "method": "equals", "type": None, "value": "123456" }
+        ],
+        "logic_type": "advanced",
+        "custom_condition": "1 OR (2 AND 3) AND 2 OR 3 OR (1 AND 2 AND 3) AND 123"
+    }, "incident.id not_equals 123456 OR (object_added AND incident.city not_has_a_value) AND object_added OR incident.city not_has_a_value OR (incident.id not_equals 123456 AND object_added AND incident.city not_has_a_value) AND incident.description equals 123456")
+])
+def test_str_repr_activation_conditions(activation_conditions, expected_output):
+
+    output = sdk_helpers.str_repr_activation_conditions(activation_conditions)
+
+    assert output == expected_output
+
+def test_replace_uuids_in_subplaybook_data():
+    org_export = sdk_helpers.read_json_file(mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK_W_SCRIPTS)
+
+    for playbook in org_export.get("playbooks", []):
+        pb_objects = sdk_helpers.get_playbook_objects(playbook)
+
+        for pb_sub_pb in pb_objects.get("sub_pbs", []):
+            sub_pb_inputs_before = copy.deepcopy(pb_sub_pb["inputs"])
+            sdk_helpers.replace_uuids_in_subplaybook_data(pb_sub_pb, org_export)
+            sub_pb_inputs_after = copy.deepcopy(pb_sub_pb["inputs"])
+
+            assert sub_pb_inputs_before != sub_pb_inputs_after

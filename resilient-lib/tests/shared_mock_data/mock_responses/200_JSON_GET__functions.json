@@ -1,0 +1,28 @@
+{
+    "entities": [
+        {
+            "display_name": "testing",
+            "uuid": "d1e2000f-0b9f-4b84-ad95-a512a028b8b7",
+            "creator": {
+                "display_name": "A User",
+                "type": "user",
+                "id": 4,
+                "name": "user@example.com"
+            },
+            "view_items": [],
+            "last_modified_by": {
+                "display_name": "A User",
+                "type": "user",
+                "id": 4,
+                "name": "user@example.com"
+            },
+            "name": "testing",
+            "version": 0,
+            "workflows": [],
+            "last_modified_time": 1518304787877,
+            "destination_handle": "utility_functions",
+            "id": 18,
+            "description": "A test"
+        }
+    ]
+}

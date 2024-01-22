@@ -8,6 +8,7 @@ import os
 
 SHARED_MOCK_DATA_DIR = os.path.dirname(os.path.realpath(__file__))
 MOCK_CERTS_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_certs")
+MOCK_RESPONSES_DIR = os.path.join(SHARED_MOCK_DATA_DIR, "mock_responses")
 
 MOCK_CLIENT_CERT_FILE = os.path.join(MOCK_CERTS_DIR, "cert.pem")
 MOCK_CLIENT_KEY_FILE = os.path.join(MOCK_CERTS_DIR, "key.open.pem")

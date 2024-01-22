@@ -1,0 +1,65 @@
+{
+    "saml_alias": null,
+    "csrf_token": "79945884c2e6f2339cbffbbaba01f17b",
+    "user_lname": "Doe",
+    "user_id": 1,
+    "is_ldap": false,
+    "is_saml": false,
+    "orgs": [
+        {
+            "city": "AnyCity",
+            "addr": null,
+            "zip": null,
+            "has_available_twofactor": false,
+            "perms": {
+                "create_shared_layout": true,
+                "administrator": false,
+                "create_incs": true,
+                "master_administrator": true,
+                "observer": false
+            },
+            "supports_ldap": false,
+            "enabled": true,
+            "twofactor_auth_domain": null,
+            "attachments_enabled": true,
+            "has_saml": false,
+            "state": null,
+            "addr2": null,
+            "twofactor_cookie_lifetime_secs": 0,
+            "require_saml": false,
+            "tasks_private": false,
+            "authorized_ldap_group": null,
+            "id": 201,
+            "name": "Test Organization"
+        },
+        {
+            "city": null,
+            "addr": null,
+            "zip": null,
+            "has_available_twofactor": false,
+            "perms": {
+                "create_shared_layout": true,
+                "administrator": false,
+                "create_incs": true,
+                "master_administrator": true,
+                "observer": false
+            },
+            "supports_ldap": false,
+            "enabled": true,
+            "twofactor_auth_domain": null,
+            "attachments_enabled": true,
+            "has_saml": false,
+            "state": null,
+            "addr2": null,
+            "twofactor_cookie_lifetime_secs": 0,
+            "require_saml": false,
+            "tasks_private": false,
+            "authorized_ldap_group": null,
+            "id": 202,
+            "name": "Mock Org"
+        }
+    ],
+    "session_ip": "192.168.56.1",
+    "user_fname": "John",
+    "user_email": "example@example.com"
+}

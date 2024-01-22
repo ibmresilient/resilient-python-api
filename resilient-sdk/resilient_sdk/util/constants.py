@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import os
-from datetime import date
 
 import pkg_resources
-
-TODAY = date.today()
-YEAR = TODAY.year
+from packaging.version import parse as parse_version
 
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
@@ -20,11 +17,17 @@ LOG_DIVIDER = "\n------------------------\n"
 ENV_VAR_DEV = "RES_SDK_DEV"
 ENV_VAR_APP_CONFIG_FILE = "APP_CONFIG_FILE"
 
-RESILIENT_LIBRARIES_VERSION = "48.1.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "48.1.0"
+# UPDATE BEFORE RELEASING NEW VERSION
+RESILIENT_LIBRARIES_VERSION = "51.0.0.2.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "51.0.0.2.0"
+
 RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
-MIN_SOAR_SERVER_VERSION_PLAYBOOKS = 44.0
+MIN_SOAR_SERVER_VERSION_PLAYBOOKS = parse_version("44.0")
+# new SOAR versioning schema introduced in v51.0.0.x
+# use "51.0.0" rather than "51.0.0.0" so that sonarqube
+# won't flag as an IP address...
+MIN_SOAR_SERVER_VERSION_NEW_VERSION_SCHEMA = parse_version("51.0.0")
 
 MIN_SUPPORTED_PY_VERSION = (3, 6)
 SDK_PACKAGE_NAME = "resilient-sdk"
@@ -34,8 +37,14 @@ CIRCUITS_PACKAGE_NAME = "resilient-circuits"
 SUB_CMD_OPT_PACKAGE = ("--package", "-p")
 SUB_CMD_OPT_SDK_SETTINGS = ("--settings", )
 
+# sub parser names
+RESILIENT_OBJECTS_PARSER_NAME = "res_obj_parser"
+IO_PARSER_NAME = "io_parser"
+ZIP_PARSER_NAME = "zip_parser"
+APP_CONFIG_PARSER_NAME = "app_config_parser"
+SDK_SETTINGS_PARSER_NAME = "sdk_settings_parser"
+
 # file for SDK settings
-SDK_SETTINGS_PARSER_NAME = "sdk_settings_file"
 SDK_SETTINGS_FILENAME = ".sdk_settings.json"
 SDK_SETTINGS_FILE_PATH = os.path.join(PATH_RES_DEFAULT_DIR, SDK_SETTINGS_FILENAME)
 SDK_SETTINGS_BANDIT_SECTION_NAME = "bandit"
@@ -60,7 +69,8 @@ CONFIG_TEMPLATE_PATH = os.path.join("data", "run_init")
 CONFIG_TEMPLATE_NAME = "app.config.jinja2"
 
 # docker test constants (used in validate)
-DOCKER_BASE_REPO = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_BASE_REPO_OLD = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_BASE_REPO = "${BASE_IMAGE_REPO}/ibmresilient/soarapps-base-docker-image:${BASE_IMAGE_TAG}"
 DOCKER_COMMAND_DICT = {
     "from_command": "FROM",         # sets base image to build on top of
     "set_argument": "ARG",          # sets variables to use during building of image
@@ -116,6 +126,8 @@ ICON_COMPANY_LOGO_REQUIRED_HEIGHT = 100
 
 # resilient-sdk docgen
 DOCGEN_PLACEHOLDER_STRING = "::CHANGE_ME::"
+SALT_HASH_MAP = {"0": ")","1": "!","2": "@","3": "#","4": "$","5": "%","6": "^","7": "&","8": "*","9": "("}
+DOCGEN_SALT_PREFIX = "docgen_{0}_salt"
 
 # resilient-sdk codegen
 CODEGEN_JSON_SCHEMA_URI = "http://json-schema.org/draft-06/schema"
@@ -125,6 +137,7 @@ CODEGEN_DEFAULT_SETUP_PY_EMAIL = "you@example.com"
 CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
 CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \\\\\\nMultiple continuation lines are supported with a backslash. Line breaks are supported too:\\n<br>- This will be rendered like a list\\n<br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
+CODEGEN_DEFAULT_COPYRIGHT_CONTENT = "<<PUT YOUR COPYRIGHT TEXT HERE>>"
 
 # resilient-sdk init internal defaults
 INIT_INTERNAL_AUTHOR = "IBM SOAR"
@@ -149,7 +162,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\\n\
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\\n\
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\\n\
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\\n\
-IN THE SOFTWARE.".format(YEAR)
+IN THE SOFTWARE."
+INIT_INTERNAL_COPYRIGHT = u"(c) Copyright IBM Corp. 2010, {0}. All Rights Reserved."
 
 
 # resilient-sdk validate

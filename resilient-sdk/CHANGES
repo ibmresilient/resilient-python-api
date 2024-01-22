@@ -1,3 +1,61 @@
+**2023-12: version 51.0.0.1**
+
+* Bug fix to support Keyring with resilient-sdk commands that use app.config to connect to SOAR.
+  This has been broken since v49.0.0. Please upgrade to v51.0.0.1 to continue using SDK with Keyring.
+
+**2023-11: version 51.0.0.0**
+
+* Added support for new SOAR v.r.m.f version scheme. This takes effect with the release of v51.0.0.0 of
+  SOAR and v51.0.0.0 of ``resilient-sdk``. To run SDK commands against SOAR v51.0.0.0 or greater,
+  you must update to the latest SDK. It is important to be up to date with ``resilient-sdk`` when
+  working with SOAR. You will know if you're version of the SDK is out of date by the warning message
+  output when running commands. If you don't see this message you are up to date
+* The ``docgen`` command now supports export files and directories of exports, including Playbooks. Use
+  ``-e`` or ``--exportfile`` followed by a list of .res or .resz files or a directory with .res or .resz
+  files. For example, to generate one README for a playbook export, a .res export and a directory of exports:
+
+  .. code-block::
+
+    $ resilient-sdk docgen -e My_Playbook.resz export.res ../Downloads/all_exports -o MyPB_export_and_all_exports.md
+
+* Added more examples of using the SDK in the API documentation at https://ibm.biz/soar-python-docs
+
+**2023-10: version 50.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-08: version 50.0**
+
+* The ``docgen`` command now fully supports Playbooks, including function script examples
+  and extended details for each Playbook including activation conditions
+* The ``codegen`` command better supports Playbooks and Subplaybooks in the markdown files created.
+  Specifically, support was added for function inputs, activation conditions, and subplaybook
+  details for each playbook generate. Subplaybooks are still also described in a separate markdown
+  file for full details
+* The ``init`` command now includes a setting to set copyright in ``.sdk_settings.json`` file.
+  ``codegen`` will now automatically read this setting and set the copyright at the top of each Python file generated.
+  The setting for ``copyright`` lives in the ``codegen`` section of the settings file and can be formatted
+  with the current year by placing ``{0}`` in the location which you wish to include the year. Example:
+
+  .. code-block::
+
+      // .sdk_settings.json:
+      {
+        "codegen": {
+            "copyright": "(c) Copyright My Inc. {0}. All Rights Reserved."
+        }
+      }
+
+**2023-07: version 49.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-05: version 49.0**
+
+* Added support to create markdown files for Playbooks as they would have been created with Workflows.
+  Includes automatic detection of global scripts in ``codegen`` when exporting playbooks. Expanded support for
+  playbooks with ``docgen`` will be included in a future release
+
 **2023-04: version 48.1**
 
 * Added new ``init`` functionality to the SDK
@@ -40,8 +98,8 @@
     $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
 
 * ``codegen`` template updates with Python 3 syntax
-* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps 
-  which generates a ``lib`` directory in the package and a ``poller`` directory each with 
+* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps
+  which generates a ``lib`` directory in the package and a ``poller`` directory each with
   items needed to create a poller-based app.
 * ``docgen`` template updated with references to Edge Gateway (formerly App Host)
 * Added support for activation fields in manually activated playbooks in the ``clone`` command

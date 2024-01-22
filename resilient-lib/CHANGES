@@ -1,3 +1,30 @@
+**2024-01: version 51.0.0.2**
+
+* Improve debug logs for retry parameters in :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`
+* Added internal UI components for HTML Blocks and Headers as well as Summary Section functionality
+
+**2023-11: version 51.0.0.0**
+
+* Added optional retry to :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`.
+  This allows developers to control the retry behavior of failed requests. See
+  :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>` for more details and examples
+
+**2023-10: version 50.1**
+
+* Unit test improvements to better handle flaky ``requests`` tests
+
+**2023-08: version 50.0**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-07: version 49.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-05: version 49.0**
+
+* Added new functions for pollers to interact with SOAR
+
 **2023-04: version 48.1**
 
 * Updated SOAR case default filters for poller helper methods
@@ -10,8 +37,8 @@
   when verifying SSL certificates. This change is backward compatible with any apps that use ``RequestsCommon.execute()``
   so any apps updated to run on v48.0 will pull in these changes and the ``verify`` configuration will be supported for that app
 * Updated :class:`resilient_lib.RequestsCommon <resilient_lib.components.requests_common.RequestsCommon>` to take advantage
-  of persistent sessions from the ``requests`` library using ``requests.Session()``. This has multiple advantages, 
-  including cookies persisting from the endpoint and significant performance increases when connecting to the same host. 
+  of persistent sessions from the ``requests`` library using ``requests.Session()``. This has multiple advantages,
+  including cookies persisting from the endpoint and significant performance increases when connecting to the same host.
   If non-session objects are desired, switch your code to use the new class
   :class:`resilient_lib.RequestsCommonWithoutSession <resilient_lib.components.requests_common.RequestsCommonWithoutSession>`
   which behaves the same as the old ``RequestsCommon`` would
@@ -29,8 +56,8 @@
 
 **2022-11: version 47.0**
 
-* Support for poller-based apps added with new `Common Poller Methods`_, 
-  including ``resilient_lib.poller()`` decorator and ``resilient_lib.SOARCommon`` 
+* Support for poller-based apps added with new `Common Poller Methods`_,
+  including ``resilient_lib.poller()`` decorator and ``resilient_lib.SOARCommon``
   class of common SOAR methods
 
 **2022-08: version 46.0**
@@ -45,8 +72,8 @@
 
 * Added ``build_task_url`` to build direct links to incident Tasks
 * Updated ``build_incident_url`` to support appending Organization ID queries
-* Added ``client_auth_cert`` and ``client_auth_key`` options for client side certificates. 
-  These can be specified per app in the relevant [fn_some_app] section of the app.config 
+* Added ``client_auth_cert`` and ``client_auth_key`` options for client side certificates.
+  These can be specified per app in the relevant [fn_some_app] section of the app.config
   and will be used in any requests made through ``resilient_lib.RequestsCommon``.
 
 **2022-04: version 44.1**
@@ -117,11 +144,11 @@
 **2020-05: version 37**
 
 * ``execute_call_v2``
-* might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
+* might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs.
 
 **2020-04: version 36.2.dev**
 
-* ``execute_call_v2`` might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs. 
+* ``execute_call_v2`` might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs.
 
 **2020-01-16: version 35.0.195**
 

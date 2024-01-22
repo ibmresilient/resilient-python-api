@@ -12,9 +12,18 @@ from resilient_lib import (IntegrationError, RequestsCommon,
                            RequestsCommonWithoutSession)
 from resilient_lib.components.requests_common import (
     get_case_insensitive_key_value, is_payload_in_json)
+from retry.api import retry_call
+from six import PY2
 from tests.shared_mock_data import mock_paths
 
+# USE THIS TO TEST BOTH VERSIONS OF REQUESTSCOMMON
+# Ex:
+# @parameterized.expand(REQUESTS_COMMON_CLASSES)
+# def test_x(self, RCObjectType):
+#    ...
 REQUESTS_COMMON_CLASSES = [[RequestsCommon], [RequestsCommonWithoutSession]]
+RETRY_TRIES_COUNT = 3
+RETRY_DELAY = 2
 
 class TestFunctionRequests(unittest.TestCase):
     """ Tests for the attachment_hash function
@@ -27,9 +36,32 @@ class TestFunctionRequests(unittest.TestCase):
     URL_TEST_HTTP_STATUS_CODES = "http://httpstat.us"
     URL_TEST_PROXY = "https://gimmeproxy.com/api/getProxy"
 
-    #rc.execute_call(verb, url, payload, log=None, basicauth=None, verify_flag=True, headers=None,
-    #            proxies=None, timeout=None, resp_type=json, callback=None):
     LOG = logging.getLogger(__name__)
+
+    @staticmethod
+    def retry_function(f, *fargs, **fkwargs):
+        """
+        FOR ANY FUTURE DEVS HERE: please use this ``retry_function`` to wrap any live RequestsCommon.execute
+        calls in retry logic. The goal is to avoid any live tests that fail with server errors.
+        See SOARAPPS-7122 for details.
+        """
+        return retry_call(f=f, fargs=fargs, fkwargs=fkwargs, exceptions=(IntegrationError), tries=RETRY_TRIES_COUNT, delay=RETRY_DELAY)
+
+    @pytest.fixture(autouse=True)
+    def init_caplog_fixture(self, caplog):
+        self.caplog = caplog
+
+    def test_retry_helper_is_working(self):
+        self.caplog.clear() # clear caplog
+        # just to test that the above retry helper method is working properly
+        rc = RequestsCommon()
+
+        with pytest.raises(IntegrationError):
+            self.retry_function(rc.execute, "GET", "https://postman-echo.com/status/404")
+
+        assert self.caplog.text.count("retrying in") == (RETRY_TRIES_COUNT-1)
+
+        self.caplog.clear() # clear caplog
 
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
@@ -85,14 +117,14 @@ class TestFunctionRequests(unittest.TestCase):
         url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "10"))
 
         with self.assertRaises(IntegrationError):
-            rc.execute_call_v2("get", url)
+            self.retry_function(rc.execute_call_v2, "get", url)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_timeout_success(self, RCObjectType):
         integrations_fourty = { "integrations": { "timeout": "5" } }
         rc = RCObjectType(integrations_fourty, None)
         url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "delay", "1"))
-        resp = rc.execute_call_v2("get", url)
+        resp = self.retry_function(rc.execute_call_v2, "get", url)
         assert resp.json() == {"delay": "1"}
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
@@ -133,7 +165,7 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon(None, None)
 
         # R E S P O N S E  Object
-        response = rc.execute_call_v2("get", "{}?format=json".format(IPIFY))
+        response = self.retry_function(rc.execute_call_v2, "get", "{}?format=json".format(IPIFY))
 
         self.assertTrue(isinstance(response, requests.models.Response))
 
@@ -226,12 +258,12 @@ class TestFunctionRequests(unittest.TestCase):
 
         # P O S T
         # test json argument without headers
-        resp = rc.execute("post", "/".join((URL, "post")), json=payload)
+        resp = self.retry_function(rc.execute, "post", "/".join((URL, "post")), json=payload)
         print (resp.json())
         self.assertEqual(resp.json()["json"].get("body"), "bar")
 
         # test json argument with headers
-        resp = rc.execute_call_v2("post", "/".join((URL, "post")), json=payload, headers=headers)
+        resp = self.retry_function(rc.execute_call_v2, "post", "/".join((URL, "post")), json=payload, headers=headers)
         print (resp.json())
         self.assertEqual(resp.json()['json'].get("body"), "bar")
 
@@ -239,24 +271,24 @@ class TestFunctionRequests(unittest.TestCase):
         headers_data = {
             "Content-type": "application/x-www-form-urlencoded"
         }
-        resp = rc.execute("post", "/".join((URL, "post")), data=payload, headers=headers_data)
+        resp = self.retry_function(rc.execute, "post", "/".join((URL, "post")), data=payload, headers=headers_data)
         print (resp.json())
         self.assertEqual(resp.json()['json'].get("body"), "bar")
 
         # G E T
-        resp = rc.execute_call_v2("get", "/".join((URL, "get")), params=payload)
+        resp = self.retry_function(rc.execute_call_v2, "get", "/".join((URL, "get")), params=payload)
         self.assertTrue(resp.json()['args'].get("userId"))
         self.assertEqual(resp.json()['args'].get("userId"), '1')
 
         # P U T
         # With params
-        resp = rc.execute("put", "/".join((URL, "put")), params=payload, headers=headers)
+        resp = self.retry_function(rc.execute, "put", "/".join((URL, "put")), params=payload, headers=headers)
         TestFunctionRequests.LOG.info(resp)
         self.assertTrue(resp.json()['args'].get("title"))
         self.assertEqual(resp.json()['args'].get("title"), 'foo')
 
         # With json body
-        resp = rc.execute_call_v2("put", "/".join((URL, "put")), json=payload, headers=headers)
+        resp = self.retry_function(rc.execute_call_v2, "put", "/".join((URL, "put")), json=payload, headers=headers)
         TestFunctionRequests.LOG.info(resp)
         self.assertTrue(resp.json()['json'].get("title"))
         self.assertEqual(resp.json()['json'].get("title"), 'foo')
@@ -266,25 +298,25 @@ class TestFunctionRequests(unittest.TestCase):
             'title': 'patch'
         }
         # With params
-        resp = rc.execute_call_v2("patch", "/".join((URL, "patch")), params=patch, headers=headers)
+        resp = self.retry_function(rc.execute_call_v2, "patch", "/".join((URL, "patch")), params=patch, headers=headers)
         print ("resp {}".format(resp.json()))
         self.assertTrue(resp.json()['args'].get("title"))
         self.assertEqual(resp.json()['args'].get("title"), 'patch')
 
         # With json body
-        resp = rc.execute_call_v2("patch", "/".join((URL, "patch")), json=patch, headers=headers)
+        resp = self.retry_function(rc.execute_call_v2, "patch", "/".join((URL, "patch")), json=patch, headers=headers)
         print ("resp {}".format(resp.json()))
         self.assertTrue(resp.json()['json'].get("title"))
         self.assertEqual(resp.json()['json'].get("title"), 'patch')
 
         # D E L E T E
         DEL_URL = "/".join((URL, "delete"))
-        resp = rc.execute_call_v2("delete", DEL_URL)
+        resp = self.retry_function(rc.execute_call_v2, "delete", DEL_URL)
         self.assertEqual(resp.json().get("url"), DEL_URL)
 
         # bad verb
         with self.assertRaises(IntegrationError):
-            resp = rc.execute_call_v2("bad", URL)
+            resp = self.retry_function(rc.execute_call_v2, "bad", URL)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     @pytest.mark.livetest
@@ -305,10 +337,10 @@ class TestFunctionRequests(unittest.TestCase):
 
         rc = RCObjectType(None, None)
 
-        resp = rc.execute_call_v2("get", "/".join((URL, "200")))
+        resp = self.retry_function(rc.execute_call_v2, "get", "/".join((URL, "200")))
 
         with self.assertRaises(IntegrationError):
-            resp = rc.execute_call_v2("get", "/".join((URL, "400")))
+            resp = self.retry_function(rc.execute_call_v2, "get", "/".join((URL, "400")))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     @pytest.mark.livetest
@@ -334,7 +366,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         rc = RCObjectType(None, None)
 
-        resp = rc.execute_call_v2("get", URL, callback=callback)
+        resp = self.retry_function(rc.execute_call_v2, "get", URL, callback=callback)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     @pytest.mark.livetest
@@ -354,7 +386,7 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RCObjectType(None, None)
 
         with self.assertRaises(IntegrationError):
-            resp = rc.execute_call_v2("get", URL, timeout=2)
+            resp = self.retry_function(rc.execute_call_v2, "get", URL, timeout=2)
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     @pytest.mark.livetest
@@ -375,7 +407,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         rc = RCObjectType(None, None)
 
-        resp = rc.execute_call_v2("get", URL, auth=basicauth)
+        resp = self.retry_function(rc.execute_call_v2, "get", URL, auth=basicauth)
         self.assertTrue(resp.json().get("authenticated"))
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
@@ -472,7 +504,7 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon()
 
         proxy_url = TestFunctionRequests.URL_TEST_PROXY
-        proxy_result = rc.execute_call_v2("get", proxy_url)
+        proxy_result = self.retry_function(rc.execute_call_v2, "get", proxy_url)
         proxy_result_json = proxy_result.json()
 
         proxies = {
@@ -483,7 +515,7 @@ class TestFunctionRequests(unittest.TestCase):
         URL = "?".join((TestFunctionRequests.URL_TEST_DATA_RESULTS, "format=json"))
 
         # J S O N
-        response = rc.execute_call_v2("get", URL, proxies=proxies)
+        response = self.retry_function(rc.execute_call_v2, "get", URL, proxies=proxies)
         json_result = response.json()
 
         self.assertTrue(json_result.get("ip"))
@@ -495,7 +527,7 @@ class TestFunctionRequests(unittest.TestCase):
         }
 
         rc = RequestsCommon(opts=integrations)
-        response = rc.execute_call_v2("get", URL)
+        response = self.retry_function(rc.execute_call_v2, "get", URL)
         json_result = response.json()
         self.assertTrue(json_result.get("ip"))
 
@@ -526,7 +558,7 @@ class TestFunctionRequests(unittest.TestCase):
 
         rc = RCObjectType()
 
-        json_result = rc.execute_call_v2("get", URL, headers=headers)
+        json_result = self.retry_function(rc.execute_call_v2, "get", URL, headers=headers)
         self.assertEqual(json_result.json()['headers'].get("my-sample-header"), "my header")
 
 
@@ -651,14 +683,14 @@ class TestFunctionRequests(unittest.TestCase):
         }
         rc = RCObjectType(opts=None, function_opts=mock_fn_section)
         # make sure can still make call to execute with no issues
-        resp = rc.execute("get", self.URL_TEST_HTTP_VERBS)
+        resp = self.retry_function(rc.execute, "get", self.URL_TEST_HTTP_VERBS)
         self.assertEqual(resp.status_code, 200)
 
 
         rc = RCObjectType()
         # make sure can call execute with clientauth optional parameter
         # but doesn't set the cert value for the whole object
-        resp = rc.execute("get", self.URL_TEST_HTTP_VERBS, clientauth=(mock_paths.MOCK_CLIENT_CERT_FILE, mock_paths.MOCK_CLIENT_KEY_FILE))
+        resp = self.retry_function(rc.execute, "get", self.URL_TEST_HTTP_VERBS, clientauth=(mock_paths.MOCK_CLIENT_CERT_FILE, mock_paths.MOCK_CLIENT_KEY_FILE))
         self.assertEqual(resp.status_code, 200)
         cert = rc.get_client_auth()
         self.assertIsNone(cert)
@@ -729,7 +761,7 @@ class TestFunctionRequests(unittest.TestCase):
     def test_execute_request_with_verify(self, url, opts, function_opts, verify, expected_verify, RCObjectType):
         # this check is to ensure that calling rc.execute() is properly grabbing
         # the value that is given directly to it.
-        # The main reason to run this test, is to ensure backward compatiblity
+        # The main reason to run this test, is to ensure backward compatibility
         # with apps already using rc.execute() with the `verify` parameter set.
         # in those cases, we want to make sure that we don't override anything with
         # in the app.config, but instead continue to use it as the developer of that
@@ -740,7 +772,7 @@ class TestFunctionRequests(unittest.TestCase):
         with requests_mock.Mocker() as m:
             m.get(url)
             rc = RCObjectType(opts=opts, function_opts=function_opts)
-            rc.execute("GET", url, verify=verify)
+            self.retry_function(rc.execute, "GET", url, verify=verify)
 
             # assert that the used value for verify was what we expected
             assert m.request_history[0].verify == expected_verify
@@ -755,16 +787,16 @@ class TestFunctionRequests(unittest.TestCase):
 
         # Test with session, where cookies should persist
         rc = RequestsCommon()
-        rc.execute("GET", "{0}/cookies/set?foo=bar&jon=snow".format(self.URL_TEST_HTTP_VERBS))
-        resp = rc.execute("GET", "{0}/cookies".format(self.URL_TEST_HTTP_VERBS))
+        self.retry_function(rc.execute, "GET", "{0}/cookies/set?foo=bar&jon=snow".format(self.URL_TEST_HTTP_VERBS))
+        resp = self.retry_function(rc.execute, "GET", "{0}/cookies".format(self.URL_TEST_HTTP_VERBS))
 
         assert "cookies" in resp.json()
         assert resp.json()["cookies"] == {"foo": "bar", "jon": "snow"}
 
         # Test again with normal RC object, where cookies won't persist
         rc = RequestsCommonWithoutSession()
-        rc.execute("GET", "{0}/cookies/set?foo=bar&jon=snow".format(self.URL_TEST_HTTP_VERBS))
-        resp = rc.execute("GET", "{0}/cookies".format(self.URL_TEST_HTTP_VERBS))
+        self.retry_function(rc.execute, "GET", "{0}/cookies/set?foo=bar&jon=snow".format(self.URL_TEST_HTTP_VERBS))
+        resp = self.retry_function(rc.execute, "GET", "{0}/cookies".format(self.URL_TEST_HTTP_VERBS))
 
         assert "cookies" in resp.json()
         assert resp.json()["cookies"] == {}
@@ -784,7 +816,7 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommon()
         start = time.time()
         for i in range(N):
-            rc.execute("GET", "{0}/basic-auth".format(self.URL_TEST_HTTP_VERBS),
+            self.retry_function(rc.execute, "GET", "{0}/basic-auth".format(self.URL_TEST_HTTP_VERBS),
                         headers={"Authorization": "Basic cG9zdG1hbjpwYXNzd29yZA=="})
         end = time.time()
         session_time = end - start
@@ -792,9 +824,132 @@ class TestFunctionRequests(unittest.TestCase):
         rc = RequestsCommonWithoutSession()
         start = time.time()
         for i in range(N):
-            rc.execute("GET", "{0}/basic-auth".format(self.URL_TEST_HTTP_VERBS),
+            self.retry_function(rc.execute, "GET", "{0}/basic-auth".format(self.URL_TEST_HTTP_VERBS),
                         headers={"Authorization": "Basic cG9zdG1hbjpwYXNzd29yZA=="})
         end = time.time()
         standard_time = end - start
 
         assert session_time < standard_time
+
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry(self, RCObjectType):
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3, retry_delay=0.1, retry_backoff=2)
+
+        assert self.caplog.text.count("retrying in") == 2
+        assert "retrying in 0.1 seconds..." in self.caplog.text
+        assert "retrying in 0.2 seconds..." in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_retry_skipped(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # notice that the callback skips the retry logic. this is documented
+        # for the callback parameter of rc.execute that when callback doesn't
+        # raise an HTTPError, the retry logic is skipped
+        rc.execute("GET", url, retry_tries=3, retry_backoff=2, retry_delay=2,
+                   callback=lambda x: x)
+
+        assert "retrying in" not in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_retry_custom_exception(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        def callback_raise_non_default_exception(x):
+            raise ValueError(x.status_code)
+        # compared to above test, this still raises
+        # IntegrationError because of try-except in function
+        # but because that isn't in the retry exceptions, it immediately fails.
+        # see below how we could make a ValueError raised in a callback trigger a retry
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3, retry_backoff=2, retry_delay=2,
+                    callback=callback_raise_non_default_exception)
+
+        assert "retrying in" not in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_retry_custom_exception_expected(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        def callback_raise_non_default_exception(x):
+            raise ValueError(x.status_code)
+        # still raises IntegrationError because of try-except in function
+        # but compared to above, the ValueError (inner exception) is listed
+        # on the retry list so we see that retries take place
+        with pytest.raises(IntegrationError):
+            # overwrite the default exception to retry on with ValueError
+            # which would be raised in our custom callback
+            rc.execute("GET", url, retry_tries=3, retry_exceptions=(ValueError),
+                    callback=callback_raise_non_default_exception)
+
+        assert self.caplog.text.count("retrying in") == 2
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_with_callback_still_retries(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # try again where the retry should kick in because call back DOES raise HTTPError
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3,
+                       callback=lambda x: x.raise_for_status())
+
+        assert "url: {}".format(url) in self.caplog.text
+        assert "method: {}".format("GET") in self.caplog.text
+        assert self.caplog.text.count("retrying in") == 2
+        assert "retry_delay: 1" in self.caplog.text
+        assert "retry_exceptions: <class 'requests.exceptions.HTTPError'>" in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(PY2, reason="retry requires python3.6 or higher")
+    def test_retry_debug_logs_dont_show_when_retry_tries_is_default(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # try again where the retry should kick in because call back DOES raise HTTPError
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url)
+
+        assert "url: {}".format(url) in self.caplog.text
+        assert "method: {}".format("GET") in self.caplog.text
+        assert "retry_tries" not in self.caplog.text
+        assert "retry_delay: 1" not in self.caplog.text
+        assert "retry_exceptions: <class 'requests.exceptions.HTTPError'>" not in self.caplog.text
+
+    @parameterized.expand(REQUESTS_COMMON_CLASSES)
+    @pytest.mark.skipif(not PY2, reason="make a test for PY2 that ensures retry not engaged")
+    def test_retry_PY2_doesnt_retry(self, RCObjectType):
+        self.caplog.clear()
+        self.caplog.set_level(logging.DEBUG)
+        rc = RCObjectType()
+        url = "/".join((TestFunctionRequests.URL_TEST_HTTP_VERBS, "status", "401"))
+
+        # should immediately call and fail in PY2
+        with pytest.raises(IntegrationError):
+            rc.execute("GET", url, retry_tries=3)
+
+        assert "Cannot use retry in resilient_lib.RequestsCommon.execute in Python 2.7" in self.caplog.text
+        assert "retrying in" not in self.caplog.text

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-""" Implemention of 'resilient-sdk init' """
+""" Implementation of 'resilient-sdk init' """
 
 import logging
 import os
@@ -13,7 +13,6 @@ from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import sdk_helpers
-from resilient_sdk.util.sdk_exception import SDKException
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -84,7 +83,7 @@ class CmdRunInit(BaseCmd):
     def execute_command(self, args):
 
         LOG.debug("called: CmdRunInit.execute_command()")
-        
+
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
         LOG.info("Checking for settings file")
         settings_file = args.settings_file or constants.SDK_SETTINGS_FILE_PATH

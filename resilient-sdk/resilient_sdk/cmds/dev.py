@@ -1,18 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """ Implementation of `resilient-sdk dev` """
 
 import logging
 import os
 import re
-from resilient import ensure_unicode
+
+from packaging.version import parse as parse_version
 from resilient_sdk.cmds.base_cmd import BaseCmd
-from resilient_sdk.util.sdk_exception import SDKException
-from resilient_sdk.util.resilient_objects import ResilientObjMap
+from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
-from resilient_sdk.util import sdk_helpers, constants
+from resilient_sdk.util import sdk_helpers
+from resilient_sdk.util.resilient_objects import ResilientObjMap
+from resilient_sdk.util.sdk_exception import SDKException
+
+from resilient import ensure_unicode
 
 # Get the same logger object that is used in app.py
 LOG = logging.getLogger(constants.LOGGER_NAME)
@@ -88,16 +92,32 @@ class CmdDev(BaseCmd):
         # Get customize.py ImportDefinition
         customize_py_import_definition = package_helpers.get_import_definition_from_customize_py(path_customize_py)
 
-        old_version = customize_py_import_definition["server_version"]["version"]
+        server_version_obj = customize_py_import_definition["server_version"]
+        old_version = server_version_obj["version"]
 
         LOG.info("Old Version: %s", old_version)
         LOG.info("New Version: %s", new_version)
 
         # Set the new version
-        customize_py_import_definition["server_version"]["version"] = new_version
-        customize_py_import_definition["server_version"]["major"] = new_version_int[0]
-        customize_py_import_definition["server_version"]["minor"] = new_version_int[1]
-        customize_py_import_definition["server_version"]["build_number"] = new_version_int[2]
+        # Need to handle differently for v51+ or <= v50
+        if parse_version(new_version) >= constants.MIN_SOAR_SERVER_VERSION_NEW_VERSION_SCHEMA:
+            if len(new_version_int) < 4:
+                raise SDKException("for v51+ version must include five numbers, in the format: v.r.m.f.build_number")
+            server_version_obj["version"] = new_version
+            server_version_obj["v"] = new_version_int[0]
+            server_version_obj["r"] = new_version_int[1]
+            server_version_obj["m"] = new_version_int[2]
+            server_version_obj["f"] = new_version_int[3]
+            # quietly allow for missing build_number if not given -- default to 0
+            server_version_obj["build_number"] = new_version_int[4] if len(new_version_int) == 5 else 0
+            # server does "major" and "minor" still for backwards compatibility so we will too
+            server_version_obj["major"] = 0
+            server_version_obj["minor"] = 0
+        else:
+            server_version_obj["version"] = new_version
+            server_version_obj["major"] = new_version_int[0]
+            server_version_obj["minor"] = new_version_int[1]
+            server_version_obj["build_number"] = new_version_int[2]
 
         LOG.info("Loading old customize.py file")
 
@@ -131,7 +151,8 @@ class CmdDev(BaseCmd):
                                                      artifact_types=old_params.get("incident_artifact_types"),
                                                      datatables=old_params.get("datatables"),
                                                      tasks=old_params.get("automatic_tasks"),
-                                                     scripts=old_params.get("scripts"))
+                                                     scripts=old_params.get("scripts"),
+                                                     playbooks=old_params.get("playbooks"))
 
             jinja_data["export_data"] = sdk_helpers.minify_export(customize_py_import_definition,
                                                                   message_destinations=sdk_helpers.get_object_api_names(ResilientObjMap.MESSAGE_DESTINATIONS, jinja_data.get("message_destinations")),
@@ -143,13 +164,16 @@ class CmdDev(BaseCmd):
                                                                   datatables=sdk_helpers.get_object_api_names(ResilientObjMap.DATATABLES, jinja_data.get("datatables")),
                                                                   tasks=sdk_helpers.get_object_api_names(ResilientObjMap.TASKS, jinja_data.get("tasks")),
                                                                   phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, jinja_data.get("phases")),
-                                                                  scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")))
+                                                                  scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, jinja_data.get("scripts")),
+                                                                  playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, jinja_data.get("playbooks")))
 
             # Add package_name to jinja_data
             jinja_data["package_name"] = package_name
 
             # Add version
             jinja_data["version"] = setup_py_attributes.get("version", package_helpers.MIN_SETUP_PY_VERSION)
+            # add current SDK version to jinja data
+            jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
 
             # Instansiate Jinja2 Environment with path to Jinja2 templates for customize.py
             jinja_env = sdk_helpers.setup_jinja_env("data/codegen/templates/package_template/package/util")

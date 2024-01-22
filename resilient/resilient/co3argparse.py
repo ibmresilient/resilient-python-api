@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 """Command-line argument parser for Resilient apps"""
 
@@ -9,10 +9,8 @@ import logging
 import os
 import sys
 
-import keyring
-from six import string_types
-
 from resilient import constants, helpers
+from resilient.app_config import AppConfigManager, ProtectedSecretsManager
 
 if sys.version_info.major == 2:
     from io import open
@@ -30,25 +28,6 @@ except ImportError:
     import configparser
 
 logger = logging.getLogger(__name__)
-
-
-class ConfigDict(dict):
-    """A dictionary, with property-based accessor
-
-    >>> opts = {"one": 1}
-    >>> cd = ConfigDict(opts)
-    >>> cd["one"]
-    1
-    >>> cd.one
-    1
-
-    """
-    def __getattr__(self, name):
-        """Attributes are made accessible as properties"""
-        try:
-            return self[name]
-        except KeyError:
-            raise AttributeError()
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -132,6 +111,14 @@ class ArgumentParser(argparse.ArgumentParser):
         default_max_request_retries = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_MAX_RETRIES) or constants.APP_CONFIG_REQUEST_MAX_RETRIES_DEFAULT
         default_request_retry_delay = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_DELAY) or constants.APP_CONFIG_REQUEST_RETRY_DELAY_DEFAULT
         default_request_retry_backoff = self.getopt(constants.PACKAGE_NAME, constants.APP_CONFIG_REQUEST_RETRY_BACKOFF) or constants.APP_CONFIG_REQUEST_RETRY_BACKOFF_DEFAULT
+
+        # PAM plugin configurations
+        if helpers.is_running_in_app_host(constants.ENV_VAR_APP_HOST_CONTAINER):
+            # no default in app host
+            default_pam_type = None
+        else:
+            # integration server defaults to Keyring
+            default_pam_type = self.getopt(constants.PACKAGE_NAME, constants.PAM_TYPE_CONFIG) or constants.PAM_DEFAULT_PAM_TYPE
 
         self.add_argument("--email",
                           default=default_email,
@@ -221,6 +208,10 @@ class ArgumentParser(argparse.ArgumentParser):
                           default=default_request_retry_backoff,
                           help="Multiplier applied to delay between retry attempts. Defaults to 2")
 
+        self.add_argument("--{0}".format(constants.PAM_TYPE_CONFIG),
+                          default=default_pam_type,
+                          help="PAM plugin type to use for pulling secrets. Defaults to Keyring")
+
         v_resc = get_resilient_circuits_version()
 
         # Having --resilient-mock here allows us to run unit tests for resilient-circuits and resilient-sdk
@@ -229,7 +220,7 @@ class ArgumentParser(argparse.ArgumentParser):
         # - resilient-circuits is installed and is > 34
         if not v_resc or (v_resc and v_resc.get("major") > 34):
             self.add_argument("--resilient-mock",
-                            default=default_resilient_mock, 
+                            default=default_resilient_mock,
                             help="<path_to_mock_module>.NameOfMockClass")
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
@@ -259,8 +250,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
 def _post_process_args(args):
     # Post-process any options that reference keyring or environment variables
-    opts = parse_parameters(vars(args))
-    args = ConfigDict(opts)
+    args = AppConfigManager(vars(args))
 
     # Post-processing for other special options
     password = args.password
@@ -279,82 +269,23 @@ def _post_process_args(args):
     if args.get("proxy_host"):
         args["proxy"] = get_proxy_dict(args)
 
-    return args
+    return parse_parameters(args)
 
 
 def parse_parameters(options):
-    """Given a dict that has configuration keys mapped to values,
-       - If a value begins with '^', redirect to fetch the value from
-         the secret key stored in the keyring.
-         The keyring service name is always just an underscore
-         (so keys must be unique in the whole options dict)
-       - If a value begins with '$', fetch the value from environment.
-
-    >>> opts = {
-    ...    "thing": u"value",
-    ...    "key3": "^val3",
-    ...    "key4": u"$val4",
-    ...    "key5": "$val5",
-    ...    "deep1": {"key1": "val1", "key2": u"^val2"}
-    ... }
-
-    >>> keyring.set_password("_", "val3", "key3password")
-    >>> keyring.set_password("_", "val2", "")
-    >>> keyring.set_password("deep1", "val2", "key2password")
-    >>> os.environ["val4"] = "key4param"
-    >>> os.environ["val5"] = "key5param"
-
-    >>> str(parse_parameters(opts)["key3"])
-    'key3password'
-
-    >>> parse_parameters(opts)["deep1"]["key1"]
-    'val1'
-
-    >>> str(parse_parameters(opts)["deep1"]["key2"])
-    'key2password'
-
-    >>> parse_parameters(opts)["deep1"]["key1"]
-    'val1'
-
-    >>> parse_parameters(opts)["key4"]
-    'key4param'
-
-    >>> parse_parameters(opts)["key5"]
-    'key5param'
-
     """
-    names = ()
-    return _parse_parameters(names, options)
+    Given a dict that has configuration keys mapped to values,
+       - If a value begins with '^', redirect to fetch the value from
+         the secret key stored in the plugin provided by pam_type.
+       - If a value begins with '$', fetch the value from environment or protected secret
+    """
 
+    plugin_type_str = helpers.get_pam_type_name(options, ProtectedSecretsManager())
+    plugin_type = helpers.load_pam_plugin(plugin_type_str) if plugin_type_str else None
 
-def _parse_parameters(names, options):
-    """Parse parameters, with a tuple of names for keyring context"""
-    for key in options.keys():
-        val = options[key]
-        if isinstance(val, dict):
-            val = _parse_parameters(names + (key,), val)
-        if isinstance(val, string_types) and len(val) > 1 and val[0] == "^":
-            # Decode a secret from the keystore
-            val = val[1:]
-            service = ".".join(names) or "_"
-            if service == "resilient":
-                # Special case, becuase of the way we parse commandlines, treat this as root
-                service = "_"
-            logger.debug("keyring get('%s', '%s')", service, val)
-            val = keyring.get_password(service, val)
-
-        if isinstance(val, string_types) and val.startswith(constants.PROTECTED_SECRET_PREFIX):
-            config_name = val[1:]
-
-            if helpers.protected_secret_exists(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE):
-
-                protected_secret = helpers.get_protected_secret(config_name, constants.PATH_SECRETS_DIR, constants.PATH_JWK_FILE)
-
-                val = protected_secret if protected_secret else helpers.get_config_from_env(config_name)
-
-            else:
-                val = helpers.get_config_from_env(config_name)
-
-        options[key] = val
+    # though options is already an AppConfigManager object, the plugin_type was not available
+    # when the options object was initially created -- it was created with the default value.
+    # we need to recreate it with the new pam plugin
+    options = AppConfigManager(options, pam_plugin_type=plugin_type)
 
     return options

@@ -5,6 +5,7 @@ cd $TRAVIS_BUILD_DIR
 paths_all_dists=()
 
 readonly package_names=(
+    # "resilient-app-config-plugins" # uncomment if there are app-config-plugin updates to release
     "resilient"
     "resilient-lib"
     "resilient-circuits"
@@ -43,6 +44,10 @@ fi
 ###########
 ## Start ##
 ###########
+
+print_msg "Installing app config plugins package"
+pip install $TRAVIS_BUILD_DIR/resilient-app-config-plugins
+
 
 print_msg "Writing .pypirc file"
 

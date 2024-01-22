@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import copy
 import sys
@@ -45,7 +45,7 @@ def test_cmd_clone_setup(fx_get_sub_parser):
 
     assert isinstance(cmd_clone, base_cmd.BaseCmd)
     assert cmd_clone.CMD_NAME == "clone"
-    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
+    assert cmd_clone.CMD_HELP == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow, or Playbook) with a new api or display name"
     assert cmd_clone.CMD_USAGE == """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
@@ -57,8 +57,8 @@ def test_cmd_clone_setup(fx_get_sub_parser):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name"
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
-    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
-    assert cmd_clone.CMD_ADD_PARSERS == ["app_config_parser"]
+    assert cmd_clone.CMD_DESCRIPTION == "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow, or Playbook) with a new api or display name"
+    assert cmd_clone.CMD_ADD_PARSERS == [constants.APP_CONFIG_PARSER_NAME]
 
 
 def test_execute_command(fx_get_sub_parser, fx_mock_res_client, caplog):
@@ -410,7 +410,7 @@ def test_clone_workflow_failure(fx_get_sub_parser, fx_cmd_line_args_clone_prefix
 def test_clone_action_obj_failure(fx_get_sub_parser, input_args, obj_type, obj_identifier, obj_name, replace_fn):
     """
     Parametrized tests to confirm for each scenario if a non-existant action object is provided
-    an appropriate exception is raised with the expected message 
+    an appropriate exception is raised with the expected message
     """
     # Get sub_parser object, its dest is cmd
     cmd_clone = CmdClone(fx_get_sub_parser)

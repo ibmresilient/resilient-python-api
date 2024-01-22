@@ -1,5 +1,4 @@
 #!/bin/sh
-# Generated with resilient-sdk v{{ sdk_version }}
 # Script watches for changes in app.config and kills circuits when it changes
 # This is useful when using this image to run circuits in a Kubernetes Deployment because Kubernetes will start a new
 # container in the Pod and this new container will use the new configuration
@@ -14,6 +13,8 @@ do
     kill -9 $CIRCUITS_PID
     break
   fi
-  if [ "$CIRCUITS_PID" != "`ps -o pid= -p $CIRCUITS_PID|xargs`" ]; then break; fi
+  if [ "$CIRCUITS_PID" != "`ps -o pid= -p $CIRCUITS_PID|xargs`" ]
+    then break
+  fi
   sleep 60
 done

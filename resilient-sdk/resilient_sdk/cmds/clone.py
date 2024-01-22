@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """ Implementation of `resilient-sdk clone` """
 
@@ -53,7 +53,7 @@ class CmdClone(BaseCmd):
     and make an configuration import request to complete the cloning process"""
 
     CMD_NAME = "clone"
-    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow) or Playbook with a new api or display name"
+    CMD_HELP = "Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow, or Playbook) with a new api or display name"
     CMD_USAGE = """
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name>
     $ resilient-sdk clone --workflow <workflow_to_be_cloned> <new_workflow_name> --changetype artifact
@@ -66,7 +66,7 @@ class CmdClone(BaseCmd):
     $ resilient-sdk clone -s "Display name of Script" "Cloned Script display name" --changetype task
     $ resilient-sdk clone -pre version2 -r "Display name of Rule 1" "Display name of Rule 2" -f <function_to_be_cloned> <function2_to_be_cloned>"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser"]
+    CMD_ADD_PARSERS = [constants.APP_CONFIG_PARSER_NAME]
 
     def setup(self):
         # Define codegen usage and description
@@ -222,12 +222,12 @@ class CmdClone(BaseCmd):
         LOG.info("'clone' command finished in {} seconds".format(time_delta))
 
     def add_authorised_info_to_md(self, new_export_data):
-        """ 
+        """
         Function which takes a ConfigurationDTO and makes an API call to get all created message destinations
-        For any created message destinations which are found in the configuration export iterate over it 
-        and add either an API Key or a User ID to each. 
+        For any created message destinations which are found in the configuration export iterate over it
+        and add either an API Key or a User ID to each.
         Then make a PUT API call to attach this auth info to each destination that
-        was created by the ConfigurationDTO 
+        was created by the ConfigurationDTO
         :param new_export_data: A ConfigurationDTO specifying objects which were imported into resilient
         :type new_export_data: dict
         """
@@ -239,7 +239,7 @@ class CmdClone(BaseCmd):
         for cloned_object in destination_objects:
             # Inner function used with the get_put api call
             def update_user(dest):
-                # Gather the API keys and users for the original copy of this cloned destination 
+                # Gather the API keys and users for the original copy of this cloned destination
                 # and append to the destination object
                 if resilient_msg_dest_auth_info['api_keys'].get(cloned_object['name']):
                     dest["api_keys"].extend(resilient_msg_dest_auth_info['api_keys'].get(cloned_object['name']))
@@ -285,7 +285,7 @@ class CmdClone(BaseCmd):
                 if self.action_obj_was_specified(args, obj):
                     # Ensure the new_api_name for each object is unique, raise an Exception otherwise
                     CmdClone.perform_duplication_check(object_type, resilient_export_obj_mapping.get(object_type), "Object", new_api_name, org_export)
-                        
+
                     # Handle functions for cloning
                     if obj.get('display_name', False):
                         new_function = CmdClone.replace_function_object_attrs(
@@ -358,7 +358,7 @@ class CmdClone(BaseCmd):
             resilient_msg_dest_auth_info['api_keys'].update({
                 cloned_object['name']: original_obj['api_keys']
             })
-        
+
         return [cloned_object]
 
     @staticmethod
@@ -389,9 +389,9 @@ class CmdClone(BaseCmd):
         """Attempt to get the referenced object from the org_export
         If the object is not found, return True.
         If the object is found, raise an SDK Exception specifying the provided object name is not unique
-        and already exists on the system. 
+        and already exists on the system.
 
-        :param obj_type: The type name in the org export to search 
+        :param obj_type: The type name in the org export to search
         :type obj_type: str
         :param obj_identifier: The identifier for the given object
         :type obj_identifier: str
@@ -401,7 +401,7 @@ class CmdClone(BaseCmd):
         :type new_object_api_name: str
         :param export: The org export to search through
         :type export: dict
-        :raises SDKException: If the provided object name is found then this function raises a SDK exception specifying this must be unique. 
+        :raises SDKException: If the provided object name is found then this function raises a SDK exception specifying this must be unique.
         """
         # Perform a duplication check with the provided new name
         try:
@@ -527,7 +527,7 @@ class CmdClone(BaseCmd):
             obj_to_modify.update({
                 ResilientObjMap.DATATABLES: new_obj_api_name
             })
-        
+
 
         return obj_to_modify
 

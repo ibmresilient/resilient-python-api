@@ -10,7 +10,7 @@ import io
 import os
 import json
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def read_mock_json(template_name):

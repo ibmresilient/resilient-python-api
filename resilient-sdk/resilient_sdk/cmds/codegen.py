@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """ Implementation of `resilient-sdk codegen` """
 
@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import shutil
+from datetime import datetime
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -37,7 +38,7 @@ class CmdCodegen(BaseCmd):
     $ resilient-sdk codegen -p <path_current_package> --gather-results
     $ resilient-sdk codegen -p <path_current_package> --gather-results '/usr/custom_app.log' -f 'func_one' 'func_two'"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser", "res_obj_parser", "io_parser", constants.SDK_SETTINGS_PARSER_NAME]
+    CMD_ADD_PARSERS = [constants.APP_CONFIG_PARSER_NAME, constants.RESILIENT_OBJECTS_PARSER_NAME, constants.IO_PARSER_NAME, constants.SDK_SETTINGS_PARSER_NAME]
 
     def setup(self):
         # Define codegen usage and description
@@ -79,10 +80,12 @@ class CmdCodegen(BaseCmd):
 
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--reload")
             self._reload_package(args)
+            LOG.info("'codegen --reload' complete for '%s'", args.package)
 
         elif args.package:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--package | -p")
             self._gen_package(args)
+            LOG.info("'codegen' complete for '%s'", args.package)
 
         elif not args.package and args.function:
             SDKException.command_ran = "{0} {1}".format(self.CMD_NAME, "--function | -f")
@@ -258,10 +261,10 @@ class CmdCodegen(BaseCmd):
     def _check_and_create_md_files(package_mapping_dict, object_type, jinja_data):
         """
         Creates md files for workflows and playbooks using jinja2 templates.
-        
+
         Note: as the mapping_dict is passed by reference,
         there is no need to return it.
-        
+
         :param package_mapping_dict: Dictionary of all the files to render
         :type package_mapping_dict: dict
         :param object_type: Type of object to create md files for (workflow or playbook)
@@ -393,10 +396,15 @@ class CmdCodegen(BaseCmd):
         jinja_data["url"] = settings_file_contents_setup.get("url", constants.CODEGEN_DEFAULT_SETUP_PY_URL)
         jinja_data["long_description"] = settings_file_contents_setup.get("long_description", constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC)
 
-        # add license_content to jinja_data
-        jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT)
+        # add license_content to jinja_data and format in year if applicable
+        year = datetime.now().year
+        jinja_data["license_content"] = settings_file_contents.get("license_content", constants.CODEGEN_DEFAULT_LICENSE_CONTENT).format(year)
         # add current SDK version to jinja data
         jinja_data["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+        # add copyright info with year to jinja_data if present in settings_file
+        # and left-strip any leading "#" so that it fits well in the jinja template
+        copyright_str = str(settings_file_contents.get("copyright", constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT)).lstrip("#").format(year)
+        jinja_data["copyright"] = copyright_str
 
         # Validate we have write permissions
         sdk_helpers.validate_dir_paths(os.W_OK, output_base)
@@ -419,7 +427,6 @@ class CmdCodegen(BaseCmd):
             "setup.py": ("setup.py.jinja2", jinja_data),
             "tox.ini": ("tox.ini.jinja2", jinja_data),
             "Dockerfile": ("Dockerfile.jinja2", jinja_data),
-            "entrypoint.sh": ("entrypoint.sh.jinja2", jinja_data),
             "apikey_permissions.txt": ("apikey_permissions.txt.jinja2", jinja_data),
             "data": {},
             "icons": {
@@ -485,6 +492,7 @@ class CmdCodegen(BaseCmd):
 
             # add sdk version to function data
             f["sdk_version"] = sdk_helpers.get_resilient_sdk_version()
+            f["copyright"] = copyright_str
 
             # Get function name
             fn_name = f.get(ResilientObjMap.FUNCTIONS)
@@ -528,7 +536,7 @@ class CmdCodegen(BaseCmd):
         if skipped_files:
             LOG.debug("Files Skipped:\n\t> %s", "\n\t> ".join(skipped_files))
 
-        LOG.info("'codegen' complete for '%s'", package_name)
+        LOG.debug("'codegen._gen_package' complete for '%s'", package_name)
 
         return output_base
 
@@ -616,8 +624,9 @@ class CmdCodegen(BaseCmd):
             # Regenerate the package
             path_reloaded = CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
-            LOG.info("\nNOTE: Ensure the MANIFEST.in file includes line:\nrecursive-include %s/util *\n", args.package)
-            LOG.info("'codegen --reload' complete for '%s'", args.package)
+            LOG.info("\nNOTE: Ensure the Dockerfile has the latest template introduced in v51.0.1.0")
+            LOG.info("NOTE: Ensure the MANIFEST.in file includes line:\n      recursive-include %s/util *\n", args.package)
+            LOG.debug("'codegen._reload_reload' complete for '%s'", args.package)
 
             return path_reloaded
 
