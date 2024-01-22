@@ -45,16 +45,16 @@ def test_check_overwrite_py3(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args
     """ 
     Test entering different values to specify whether or not to overwrite the specified file
     """
-    # Check if specifying "n" to overwrite returns false
-    with patch("resilient_sdk.cmds.run_init.input", return_value="n"):
-        cmd_init = CmdRunInit(fx_get_sub_parser)
-        ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
-        assert ret is False
-
     # Check if default, "y" to overwrite returns true
     cmd_init = CmdRunInit(fx_get_sub_parser)
     ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, True)
     assert ret is True
+
+    # Check if specifying "n" to overwrite returns false
+    with patch("resilient_sdk.cmds.run_init.input", return_value="n"):
+        ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
+        assert ret is False
+
 
 @pytest.mark.skipif(sys.version_info.major > 2, reason="requires python 2")
 def test_check_overwrite_py2(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
