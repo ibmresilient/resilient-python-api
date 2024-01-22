@@ -124,7 +124,7 @@ def test_custom_args(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, f
         assert settings_json.get("codegen").get("setup").get("url") == "hello.com"
         assert settings_json.get("codegen").get("setup").get("license") == "My License"
 
-def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
     """
     Test the internal flag that supplies the default IBM Supported fields for apps developed by the Hydra team
     """
