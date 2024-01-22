@@ -15,41 +15,62 @@ from tests.shared_mock_data import mock_paths
 
 
 def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
+    """
+    Test that basic information about the command gets initialized properly, like name, help, usage, and description
+    """
     cmd_init = CmdRunInit(fx_get_sub_parser)
 
     assert isinstance(cmd_init, base_cmd.BaseCmd)
     assert cmd_init.CMD_NAME == "init"
-    assert cmd_init.CMD_HELP == "Generates sdk_settings.json to store default settings."
+    assert cmd_init.CMD_HELP == "Generates sdk_settings.json to store default settings and app.config."
     assert cmd_init.CMD_USAGE == """
     $ resilient-sdk init
     $ resilient-sdk init -sf/--file <path to settings json>
     $ resilient-sdk init -sf/--file <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -cf/--config-file <path to app.config>
     """
     assert cmd_init.CMD_DESCRIPTION == cmd_init.CMD_HELP
 
-def test_file_creation(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+def test_file_creation(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
+    """
+    Test creating an SDK settings file and a config file in default locations as defined in constants.py with `resilient-sdk init`
+    """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
     assert os.path.exists(constants.SDK_SETTINGS_FILE_PATH)
-
-@pytest.mark.skipif(sys.version_info.major > 2, reason="requires python 2")
-def test_input_py2(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
-    with patch("resilient_sdk.cmds.run_init.raw_input", return_value="n"):
-        cmd_init = CmdRunInit(fx_get_sub_parser)
-        args = cmd_init.parser.parse_known_args()[0]
-        cmd_init.execute_command(args)
-        assert "Will not overwrite" in caplog.text
+    assert os.path.exists(constants.PATH_RES_DEFAULT_APP_CONFIG)
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
-def test_input_py3(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+def test_check_overwrite_py3(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+    """ 
+    Test entering different values to specify whether or not to overwrite the specified file
+    """
+    # Check if specifying "n" to overwrite returns false
     with patch("resilient_sdk.cmds.run_init.input", return_value="n"):
         cmd_init = CmdRunInit(fx_get_sub_parser)
-        args = cmd_init.parser.parse_known_args()[0]
-        cmd_init.execute_command(args)
-        assert "Will not overwrite" in caplog.text
+        ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
+        assert ret is False
 
-def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+    # Check if default, "y" to overwrite returns true
+    cmd_init = CmdRunInit(fx_get_sub_parser)
+    ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, True)
+    assert ret is True
+
+@pytest.mark.skipif(sys.version_info.major > 2, reason="requires python 2")
+def test_check_overwrite_py2(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_create_mock_settings_file, caplog):
+    """ 
+    Test entering 'n' to skip overwriting a file
+    """
+    with patch("resilient_sdk.cmds.run_init.raw_input", return_value="n"):
+        cmd_init = CmdRunInit(fx_get_sub_parser)
+        ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
+        assert ret is False
+
+def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
+    """
+    Test filling out sdk_settings.json with default values (because none are passed in via the command line)
+    """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
@@ -66,7 +87,10 @@ def test_default_settings(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_in
         assert settings_json.get('docgen').get('supported_app') == False
         
 
-def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init):
+def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_config_file_path):
+    """
+    Test supplying a custom filepath for the settings file
+    """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     my_new_path = "{}/my_test.json".format(mock_paths.TEST_TEMP_DIR)
     sys.argv.extend(["--settings_file", my_new_path])
@@ -74,7 +98,21 @@ def test_custom_settings_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_arg
     cmd_init.execute_command(args)
     assert os.path.exists(my_new_path)
 
-def test_custom_args(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+def test_custom_app_config_path(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+    """
+    Test supplying a custom filepath for the app file
+    """
+    cmd_init = CmdRunInit(fx_get_sub_parser)
+    my_new_path = "{}/app.config.test".format(mock_paths.TEST_TEMP_DIR)
+    sys.argv.extend(["--config_file", my_new_path])
+    args = cmd_init.parser.parse_known_args()[0]
+    cmd_init.execute_command(args)
+    assert os.path.exists(my_new_path)
+
+def test_custom_args(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
+    """
+    Test customizing the sdk_settings.json file with custom fields specified by the command line arguments
+    """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     sys.argv.extend(["-a", "test author", "-ae", "test@example.com", "-u", "hello.com", "-l", "My License"])
     args = cmd_init.parser.parse_known_args()[0]
@@ -87,6 +125,9 @@ def test_custom_args(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, f
         assert settings_json.get('codegen').get('setup').get('license') == "My License"
 
 def test_internal_use(fx_mk_temp_dir, fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+    """
+    Test the internal flag that supplies the default IBM Supported fields for apps developed by the Hydra team
+    """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     sys.argv.extend(["-i"])
     args = cmd_init.parser.parse_known_args()[0]
