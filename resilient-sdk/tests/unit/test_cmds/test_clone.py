@@ -73,7 +73,7 @@ def test_execute_command(fx_get_sub_parser, fx_mock_res_client, caplog):
         assert "'clone' command finished in" in caplog.text
 
 
-def test_execute_command_with_custom_config_file(fx_get_sub_parser, fx_mock_res_client, caplog):
+def test_execute_command_with_custom_config_file(fx_get_sub_parser, fx_mock_res_client, fx_reset_argv, caplog):
 
     mock_app_config_path = "mock_path"
     sys.argv.extend(["-c", mock_app_config_path])

@@ -24,9 +24,9 @@ def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
     assert cmd_init.CMD_HELP == "Generates sdk_settings.json to store default settings and app.config."
     assert cmd_init.CMD_USAGE == """
     $ resilient-sdk init
-    $ resilient-sdk init -sf/--file <path to settings json>
-    $ resilient-sdk init -sf/--file <path to settings json> -a/--author you@example.com
-    $ resilient-sdk init -cf/--config-file <path to app.config>
+    $ resilient-sdk init -sf/--settings_file <path to settings json>
+    $ resilient-sdk init -sf/--settings_file <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -cf/--config_file <path to app.config>
     """
     assert cmd_init.CMD_DESCRIPTION == cmd_init.CMD_HELP
 
@@ -87,7 +87,7 @@ def test_default_settings(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_sett
         assert settings_json.get("docgen").get("supported_app") == False
 
 
-def test_custom_settings_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_config_file_path):
+def test_custom_settings_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_config_file_path, fx_reset_argv):
     """
     Test supplying a custom filepath for the settings file
     """
@@ -98,7 +98,7 @@ def test_custom_settings_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_
     cmd_init.execute_command(args)
     assert os.path.exists(my_new_path)
 
-def test_custom_app_config_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path):
+def test_custom_app_config_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_reset_argv):
     """
     Test supplying a custom filepath for the app file
     """
@@ -109,7 +109,7 @@ def test_custom_app_config_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_moc
     cmd_init.execute_command(args)
     assert os.path.exists(my_new_path)
 
-def test_custom_args(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
+def test_custom_args(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path, fx_reset_argv):
     """
     Test customizing the sdk_settings.json file with custom fields specified by the command line arguments
     """
@@ -124,7 +124,7 @@ def test_custom_args(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_
         assert settings_json.get("codegen").get("setup").get("url") == "hello.com"
         assert settings_json.get("codegen").get("setup").get("license") == "My License"
 
-def test_internal_use(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
+def test_internal_use(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path, fx_reset_argv):
     """
     Test the internal flag that supplies the default IBM Supported fields for apps developed by the Hydra team
     """

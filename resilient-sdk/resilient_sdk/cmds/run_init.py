@@ -27,9 +27,9 @@ class CmdRunInit(BaseCmd):
     CMD_HELP = "Generates sdk_settings.json to store default settings and app.config."
     CMD_USAGE = """
     $ resilient-sdk init
-    $ resilient-sdk init -sf/--file <path to settings json>
-    $ resilient-sdk init -sf/--file <path to settings json> -a/--author you@example.com
-    $ resilient-sdk init -cf/--config-file <path to app.config>
+    $ resilient-sdk init -sf/--settings_file <path to settings json>
+    $ resilient-sdk init -sf/--settings_file <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -cf/--config_file <path to app.config>
     """
     CMD_DESCRIPTION = CMD_HELP
     
