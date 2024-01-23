@@ -47,12 +47,12 @@ def test_check_overwrite_py3(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_s
     """
     # Check if default, "y" to overwrite returns true
     cmd_init = CmdRunInit(fx_get_sub_parser)
-    ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, True)
+    ret = cmd_init._check_overwrite(constants.SDK_SETTINGS_FILE_PATH, True)
     assert ret is True
 
     # Check if specifying "n" to overwrite returns false
     with patch("resilient_sdk.cmds.run_init.input", return_value="n"):
-        ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
+        ret = cmd_init._check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
         assert ret is False
 
 
@@ -63,7 +63,7 @@ def test_check_overwrite_py2(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_s
     """
     with patch("resilient_sdk.cmds.run_init.raw_input", return_value="n"):
         cmd_init = CmdRunInit(fx_get_sub_parser)
-        ret = cmd_init.check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
+        ret = cmd_init._check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
         assert ret is False
 
 def test_default_settings(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
@@ -92,7 +92,7 @@ def test_custom_settings_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_
     Test supplying a custom filepath for the settings file
     """
     cmd_init = CmdRunInit(fx_get_sub_parser)
-    my_new_path = "{}/my_test.json".format(mock_paths.TEST_TEMP_DIR)
+    my_new_path = os.path.join(mock_paths.TEST_TEMP_DIR, "my_test.json")
     sys.argv.extend(["--settings_file", my_new_path])
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
@@ -103,7 +103,7 @@ def test_custom_app_config_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_moc
     Test supplying a custom filepath for the app file
     """
     cmd_init = CmdRunInit(fx_get_sub_parser)
-    my_new_path = "{}/app.config.test".format(mock_paths.TEST_TEMP_DIR)
+    my_new_path =os.path.join(mock_paths.TEST_TEMP_DIR, "app.config.test")
     sys.argv.extend(["--config_file", my_new_path])
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)

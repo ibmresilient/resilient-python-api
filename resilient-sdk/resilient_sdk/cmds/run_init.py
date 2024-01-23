@@ -85,20 +85,20 @@ class CmdRunInit(BaseCmd):
         LOG.debug("called: CmdRunInit.execute_command()")
 
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
-        LOG.info("Checking for settings file")
         settings_file = args.settings_file or constants.SDK_SETTINGS_FILE_PATH
+        LOG.debug("Checking for settings file at {}".format(settings_file))
         
         # Check the provided path
         settings_dir = os.path.dirname(settings_file)
         if not os.path.exists(settings_dir):
-            LOG.info("{} does not exist... Creating.".format(settings_dir))
+            LOG.info("Directory {} does not exist. Creating new directory to store settings file.".format(settings_dir))
             os.makedirs(settings_dir)
         
-        write_settings = self.check_overwrite(settings_file, args.no_input)
+        write_settings = self._check_overwrite(settings_file, args.no_input)
 
         if write_settings:
             # Instantiate Jinja2 Environment with path to Jinja2 templates
-            jinja_env = sdk_helpers.setup_jinja_env(constants.SETTINGS_TEMPLATE_PATH)
+            jinja_env = sdk_helpers.setup_jinja_env(constants.INIT_TEMPLATES_PATH)
 
             # Load the Jinja2 Template
             settings_template = jinja_env.get_template(constants.SETTINGS_TEMPLATE_NAME)
@@ -120,23 +120,22 @@ class CmdRunInit(BaseCmd):
             # Write the new settings.json
             sdk_helpers.write_file(settings_file, rendered_settings)
 
-        LOG.info("Checking for config file")
         # If filename is provided in args, use that, otherwise use default app.config
-        
         # TODO: is this too risky? User might overwrite app.config by default...?
         config_file = args.config_file or constants.PATH_RES_DEFAULT_APP_CONFIG
+        LOG.debug("Checking for config file at {}".format(config_file))
         
         # Check the provided path
         config_dir = os.path.dirname(config_file)
         if not os.path.exists(config_dir):
-            LOG.info("{} does not exist... Creating.".format(config_dir))
+            LOG.info("Directory {} does not exist. Creating new directory to store config file.".format(config_dir))
             os.makedirs(config_dir)
         
-        write_config = self.check_overwrite(config_file, args.no_input)
+        write_config = self._check_overwrite(config_file, args.no_input)
 
         if write_config:
             # Instantiate Jinja2 Environment with path to Jinja2 templates
-            jinja_env = sdk_helpers.setup_jinja_env(constants.CONFIG_TEMPLATE_PATH)
+            jinja_env = sdk_helpers.setup_jinja_env(constants.INIT_TEMPLATES_PATH)
 
             # Load the Jinja2 Template
             config_template = jinja_env.get_template(constants.CONFIG_TEMPLATE_NAME)
@@ -151,7 +150,7 @@ class CmdRunInit(BaseCmd):
 
 
     @staticmethod
-    def check_overwrite(filename, no_input):
+    def _check_overwrite(filename, no_input):
         """ Check if the file we're looking for (settings file or config file) exists.
             If it does, prompt the user if we should overwrite.
             If --no-input is used, we should skip the prompt, this is passed into the function with the `no_input` param

@@ -63,9 +63,8 @@ DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 BASE_PATH_VALIDATE_DATA = os.path.join("data", "validate")
 VALIDATE_TEMPLATE_PATH = os.path.join(BASE_PATH_VALIDATE_DATA, "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
-SETTINGS_TEMPLATE_PATH = os.path.join("data", "run_init")
+INIT_TEMPLATES_PATH = os.path.join("data", "run_init")
 SETTINGS_TEMPLATE_NAME = "sdk_settings.json.jinja2"
-CONFIG_TEMPLATE_PATH = os.path.join("data", "run_init")
 CONFIG_TEMPLATE_NAME = "app.config.jinja2"
 
 # docker test constants (used in validate)

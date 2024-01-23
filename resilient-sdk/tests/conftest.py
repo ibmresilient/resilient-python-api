@@ -485,7 +485,7 @@ def fx_mock_config_file_path():
     """
     _mk_temp_dir()
     old_config_file_path = constants.PATH_RES_DEFAULT_APP_CONFIG
-    constants.PATH_RES_DEFAULT_APP_CONFIG = "{}/app.config".format(mock_paths.TEST_TEMP_DIR)
+    constants.PATH_RES_DEFAULT_APP_CONFIG = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
     
     yield
     
