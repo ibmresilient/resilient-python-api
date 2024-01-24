@@ -24,9 +24,9 @@ def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
     assert cmd_init.CMD_HELP == "Generates sdk_settings.json to store default settings and app.config."
     assert cmd_init.CMD_USAGE == """
     $ resilient-sdk init
-    $ resilient-sdk init -sf/--settings_file <path to settings json>
-    $ resilient-sdk init -sf/--settings_file <path to settings json> -a/--author you@example.com
-    $ resilient-sdk init -cf/--config_file <path to app.config>
+    $ resilient-sdk init -s/--settings <path to settings json>
+    $ resilient-sdk init -s/--settings <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -c/--config <path to app.config>
     """
     assert cmd_init.CMD_DESCRIPTION == cmd_init.CMD_HELP
 
@@ -125,7 +125,7 @@ def test_custom_settings_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_
     """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     my_new_path = os.path.join(mock_paths.TEST_TEMP_DIR, "my_test.json")
-    sys.argv.extend(["--settings_file", my_new_path])
+    sys.argv.extend(["--settings", my_new_path])
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
     assert os.path.exists(my_new_path)
@@ -136,7 +136,7 @@ def test_custom_app_config_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_moc
     """
     cmd_init = CmdRunInit(fx_get_sub_parser)
     my_new_path =os.path.join(mock_paths.TEST_TEMP_DIR, "app.config.test")
-    sys.argv.extend(["--config_file", my_new_path])
+    sys.argv.extend(["-c", my_new_path])
     args = cmd_init.parser.parse_known_args()[0]
     cmd_init.execute_command(args)
     assert os.path.exists(my_new_path)

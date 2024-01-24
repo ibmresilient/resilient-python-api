@@ -27,28 +27,17 @@ class CmdRunInit(BaseCmd):
     CMD_HELP = "Generates sdk_settings.json to store default settings and app.config."
     CMD_USAGE = """
     $ resilient-sdk init
-    $ resilient-sdk init -sf/--settings_file <path to settings json>
-    $ resilient-sdk init -sf/--settings_file <path to settings json> -a/--author you@example.com
-    $ resilient-sdk init -cf/--config_file <path to app.config>
+    $ resilient-sdk init -s/--settings <path to settings json>
+    $ resilient-sdk init -s/--settings <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init -c/--config <path to app.config>
     """
     CMD_DESCRIPTION = CMD_HELP
+    CMD_ADD_PARSERS = [constants.SDK_SETTINGS_PARSER_NAME, constants.APP_CONFIG_PARSER_NAME]
     
     def setup(self):
         # Define init usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
-
-        # Argument to specify a filepath for sdk_settings.json
-        self.parser.add_argument("-sf", "--settings_file",
-                                 type=ensure_unicode,
-                                 required=False,
-                                 help="Optional path to settings file.")
-        
-        # Argument to specify a filepath for app.config
-        self.parser.add_argument("-cf", "--config_file",
-                            type=ensure_unicode,
-                            required=False,
-                            help="Optional path to app.config file.")
         
         # Optional args for different fields in the settings file
         self.parser.add_argument("-a", "--author",
@@ -85,7 +74,7 @@ class CmdRunInit(BaseCmd):
         LOG.debug("called: CmdRunInit.execute_command()")
 
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
-        settings_file = args.settings_file or constants.SDK_SETTINGS_FILE_PATH
+        settings_file = args.settings or constants.SDK_SETTINGS_FILE_PATH
         LOG.debug("Checking for settings file at {}".format(settings_file))
         
         # Check the provided path
@@ -111,8 +100,7 @@ class CmdRunInit(BaseCmd):
             self._render_template(constants.SETTINGS_TEMPLATE_NAME, settings_file, template_args)
 
         # If filename is provided in args, use that, otherwise use default app.config
-        # TODO: is this too risky? User might overwrite app.config by default...?
-        config_file = args.config_file or constants.PATH_RES_DEFAULT_APP_CONFIG
+        config_file = args.config or constants.PATH_RES_DEFAULT_APP_CONFIG
         LOG.debug("Checking for config file at {}".format(config_file))
         
         # Check the provided path
@@ -124,6 +112,9 @@ class CmdRunInit(BaseCmd):
         write_config = self._check_overwrite(config_file, args.no_input)
 
         if write_config:
+            if os.path.exists(config_file):
+                sdk_helpers.rename_to_bak_file(config_file)
+
             LOG.debug("Rendering config file")
             self._render_template(constants.CONFIG_TEMPLATE_NAME, config_file)
             
