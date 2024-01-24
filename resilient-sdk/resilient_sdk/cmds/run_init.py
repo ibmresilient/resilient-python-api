@@ -97,14 +97,8 @@ class CmdRunInit(BaseCmd):
         write_settings = self._check_overwrite(settings_file, args.no_input)
 
         if write_settings:
-            # Instantiate Jinja2 Environment with path to Jinja2 templates
-            jinja_env = sdk_helpers.setup_jinja_env(constants.INIT_TEMPLATES_PATH)
-
-            # Load the Jinja2 Template
-            settings_template = jinja_env.get_template(constants.SETTINGS_TEMPLATE_NAME)
-
             LOG.debug("Rendering settings file with provided args")
-            rendered_settings = settings_template.render({
+            template_args = {
                 "author": constants.INIT_INTERNAL_AUTHOR if args.internal else (args.author or constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR),
                 "author_email": constants.INIT_INTERNAL_AUTHOR_EMAIL if args.internal else (args.author_email or constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL),
                 "url": constants.INIT_INTERNAL_URL if args.internal else (args.url or constants.CODEGEN_DEFAULT_SETUP_PY_URL),
@@ -113,12 +107,8 @@ class CmdRunInit(BaseCmd):
                 "long_description": constants.INIT_INTERNAL_LONG_DESC if args.internal else constants.CODEGEN_DEFAULT_SETUP_PY_LONG_DESC,
                 "license_content": constants.INIT_INTERNAL_LICENSE_CONTENT if args.internal else constants.CODEGEN_DEFAULT_LICENSE_CONTENT,
                 "copyright": constants.INIT_INTERNAL_COPYRIGHT if args.internal else constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT
-            })
-
-            LOG.info("Writing settings to: {}".format(settings_file))
-
-            # Write the new settings.json
-            sdk_helpers.write_file(settings_file, rendered_settings)
+            }
+            self._render_template(constants.SETTINGS_TEMPLATE_NAME, settings_file, template_args)
 
         # If filename is provided in args, use that, otherwise use default app.config
         # TODO: is this too risky? User might overwrite app.config by default...?
@@ -134,19 +124,9 @@ class CmdRunInit(BaseCmd):
         write_config = self._check_overwrite(config_file, args.no_input)
 
         if write_config:
-            # Instantiate Jinja2 Environment with path to Jinja2 templates
-            jinja_env = sdk_helpers.setup_jinja_env(constants.INIT_TEMPLATES_PATH)
-
-            # Load the Jinja2 Template
-            config_template = jinja_env.get_template(constants.CONFIG_TEMPLATE_NAME)
-
             LOG.debug("Rendering config file")
-            rendered_config = config_template.render()
-
-            LOG.info("Writing config to: {}".format(config_file))
-
-            # Write the new settings.json
-            sdk_helpers.write_file(config_file, rendered_config)
+            self._render_template(constants.CONFIG_TEMPLATE_NAME, config_file)
+            
 
 
     @staticmethod
@@ -178,3 +158,31 @@ class CmdRunInit(BaseCmd):
             return False
         
         return True
+
+    @staticmethod
+    def _render_template(template_name, output_file, template_args={}):
+        """ Helper function to render jinja templates and write them out to the specified file
+
+        Args:
+            :param template_name: template filename in constants.INIT_TEMPLATES_PATH (data/run_init)
+            :type template_name: str
+
+            :param output_file: path to file where to write the rendered Jinja content
+            :param output_file: str
+
+            :param templates_args: any values that need to be rendered in the Jinja environment, default {}
+            :type template_args: dict
+        """
+        # Instantiate Jinja2 Environment with path to Jinja2 templates
+        jinja_env = sdk_helpers.setup_jinja_env(constants.INIT_TEMPLATES_PATH)
+
+        # Load the Jinja2 Template
+        jinja_template = jinja_env.get_template(template_name)
+
+        # Render template with provided values
+        rendered_settings = jinja_template.render(template_args)
+
+        LOG.info("Writing to: {}".format(output_file))
+
+        # Write the new file
+        sdk_helpers.write_file(output_file, rendered_settings)

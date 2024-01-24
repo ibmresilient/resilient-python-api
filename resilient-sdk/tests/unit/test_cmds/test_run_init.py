@@ -66,6 +66,39 @@ def test_check_overwrite_py2(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_s
         ret = cmd_init._check_overwrite(constants.SDK_SETTINGS_FILE_PATH, False)
         assert ret is False
 
+def test_render_template(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
+    """
+    Test for private method to render a specific template. So far, the init command can create app.config and sdk_settings.json
+    so those are the two tests to try out here
+    """
+    # check sdk settings file
+    cmd_init = CmdRunInit(fx_get_sub_parser)
+    template_args = {
+                "author": "IBM dev",
+                "author_email": "a@example.com",
+                "url": "test.com",
+                "license": "MIT",
+                "supported_app": "true",
+                "long_description": "This is a long description",
+                "license_content": "abcdefg",
+                "copyright": "IBM 2024"
+            }
+    cmd_init._render_template(constants.SETTINGS_TEMPLATE_NAME, constants.SDK_SETTINGS_FILE_PATH, template_args)
+    with open(constants.SDK_SETTINGS_FILE_PATH) as f:
+        settings_json = json.load(f)
+        assert settings_json.get("codegen").get("setup").get("author_email") == "a@example.com"
+        assert settings_json.get("codegen").get("setup").get("url") == "test.com"
+        assert settings_json.get("codegen").get("setup").get("long_description") == "This is a long description"
+        assert settings_json.get("codegen").get("copyright") == "IBM 2024"
+        assert settings_json.get("docgen").get("supported_app") == True
+
+    # Check config file
+    cmd_init._render_template(constants.CONFIG_TEMPLATE_NAME, constants.PATH_RES_DEFAULT_APP_CONFIG, {})
+    with open(constants.PATH_RES_DEFAULT_APP_CONFIG) as f:
+        contents = f.read()
+        assert "[resilient]\nhost=my_soar_instance.ibm.com" in contents
+        assert "cafile=false" in contents
+
 def test_default_settings(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_settings_file_path, fx_mock_config_file_path):
     """
     Test filling out sdk_settings.json with default values (because none are passed in via the command line)
@@ -85,7 +118,6 @@ def test_default_settings(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_sett
         assert settings_json.get("codegen").get("license_content") == constants.CODEGEN_DEFAULT_LICENSE_CONTENT
         assert settings_json.get("codegen").get("copyright") == constants.CODEGEN_DEFAULT_COPYRIGHT_CONTENT
         assert settings_json.get("docgen").get("supported_app") == False
-
 
 def test_custom_settings_path(fx_get_sub_parser, fx_cmd_line_args_init, fx_mock_config_file_path, fx_reset_argv):
     """
