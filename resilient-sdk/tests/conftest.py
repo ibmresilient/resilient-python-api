@@ -477,6 +477,20 @@ def fx_reset_argv():
 
     sys.argv = original_cmd_line
 
+@pytest.fixture
+def fx_mock_config_file_path():
+    """
+    Before: Change the app.config file path to point to the test temp directory
+    After: Change the app.config file path back to the original value
+    """
+    _mk_temp_dir()
+    old_config_file_path = constants.PATH_RES_DEFAULT_APP_CONFIG
+    constants.PATH_RES_DEFAULT_APP_CONFIG = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
+    
+    yield
+    
+    _rm_temp_dir()
+    constants.PATH_RES_DEFAULT_APP_CONFIG = old_config_file_path
 
 @pytest.fixture
 def fx_mock_settings_file_path():
@@ -484,11 +498,13 @@ def fx_mock_settings_file_path():
     Before: Change the settings file path to point to the test temp directory
     After: Change the settings file path back to the original value
     """
+    _mk_temp_dir()
     old_sdk_settings_path = constants.SDK_SETTINGS_FILE_PATH
     constants.SDK_SETTINGS_FILE_PATH = "{}/test_settings.json".format(mock_paths.TEST_TEMP_DIR)
 
     yield
 
+    _rm_temp_dir()
     constants.SDK_SETTINGS_FILE_PATH = old_sdk_settings_path
 
 @pytest.fixture

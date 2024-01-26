@@ -10,6 +10,7 @@ from packaging.version import parse as parse_version
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
 PATH_RES_DEFAULT_LOG_FILE = os.path.join(PATH_RES_DEFAULT_LOG_DIR, "app.log")
+PATH_RES_DEFAULT_APP_CONFIG = os.path.join(PATH_RES_DEFAULT_DIR, "app.config")
 
 LOGGER_NAME = "resilient_sdk_log"
 LOG_DIVIDER = "\n------------------------\n"
@@ -62,8 +63,9 @@ DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 BASE_PATH_VALIDATE_DATA = os.path.join("data", "validate")
 VALIDATE_TEMPLATE_PATH = os.path.join(BASE_PATH_VALIDATE_DATA, "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
-SETTINGS_TEMPLATE_PATH = os.path.join("data", "run_init")
+INIT_TEMPLATES_PATH = os.path.join("data", "run_init")
 SETTINGS_TEMPLATE_NAME = "sdk_settings.json.jinja2"
+CONFIG_TEMPLATE_NAME = "app.config.jinja2"
 
 # docker test constants (used in validate)
 DOCKER_BASE_REPO_OLD = "registry.access.redhat.com/ubi8/python-39:latest"

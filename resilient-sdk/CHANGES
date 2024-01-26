@@ -1,3 +1,17 @@
+**2024-01: version 51.0.1.0**
+
+* The ``init`` command now includes an option to create an ``app.config`` file:
+
+  .. code-block::
+
+    $ resilient-sdk init -c /my_path/app.config
+
+* The ``init`` command option to create an ``.sdk_settings.json`` file has changed to be ``--settings``:
+
+  .. code-block::
+
+    $ resilient-sdk init --settings /my_path/.sdk_settings.json
+
 **2023-12: version 51.0.0.1**
 
 * Bug fix to support Keyring with resilient-sdk commands that use app.config to connect to SOAR.
