@@ -528,15 +528,18 @@ options:
 </section>
 <section id="init">
 <span id="id9"></span><h3>init<a class="headerlink" href="#init" title="Link to this heading">#</a></h3>
-<p>Generates sdk_settings.json to store default settings.</p>
+<p>Generates sdk_settings.json file to store default settings and generates app.config file to store connection details.         Providing a flag will override the default paths.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk init
-$ resilient-sdk init -f/--file &lt;path to settings json&gt;
-$ resilient-sdk init -f/--file &lt;path to settings json&gt; -a/--author <a class="reference external" href="mailto:you&#37;&#52;&#48;example&#46;com">you<span>&#64;</span>example<span>&#46;</span>com</a>
+$ resilient-sdk init --settings &lt;path to settings json&gt;
+$ resilient-sdk init --settings &lt;path to settings json&gt; -a/--author <a class="reference external" href="mailto:you&#37;&#52;&#48;example&#46;com">you<span>&#64;</span>example<span>&#46;</span>com</a>
+$ resilient-sdk init -c/--config &lt;path to app.config&gt;
+$ resilient-sdk init --settings &lt;path to settings json&gt; -c/--config &lt;path to app.config&gt;
 
 options:
 -h, --help			show this help message and exit
--f, --file			Optional path to settings file. 
+-c, --config			Path to app.config file. Default is ~/.resilient/app.config 
+--settings			Path to .sdk_settings.json file. Default is ~/.resilient/.sdk_settings.json 
 -a, --author			setup.py author name 
 -ae, --author_email		setup.py author email 
 -u, --url			setup.py company URL 
@@ -545,6 +548,19 @@ options:
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2024-01: version 51.0.1.0</strong></p>
+<ul>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> command now includes an option to create an <code class="docutils literal notranslate"><span class="pre">app.config</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk init -c /my_path/app.config
+</pre></div>
+</div>
+</li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> command option to create an <code class="docutils literal notranslate"><span class="pre">.sdk_settings.json</span></code> file has changed to be <code class="docutils literal notranslate"><span class="pre">--settings</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk init --settings /my_path/.sdk_settings.json
+</pre></div>
+</div>
+</li>
+</ul>
 <p><strong>2023-12: version 51.0.0.1</strong></p>
 <ul class="simple">
 <li><p>Bug fix to support Keyring with resilient-sdk commands that use app.config to connect to SOAR.
@@ -866,7 +882,7 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a606f1b2"></script>
+</div><script src="../../_static/documentation_options.js?v=72da1c8a"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
