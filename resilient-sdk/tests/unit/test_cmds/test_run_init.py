@@ -21,12 +21,14 @@ def test_cmd_init_setup(fx_get_sub_parser, fx_cmd_line_args_init):
 
     assert isinstance(cmd_init, base_cmd.BaseCmd)
     assert cmd_init.CMD_NAME == "init"
-    assert cmd_init.CMD_HELP == "Generates sdk_settings.json to store default settings and app.config."
+    assert cmd_init.CMD_HELP == "Generates sdk_settings.json file to store default settings and generates app.config file to store connection details. \
+        Providing a flag will override the default paths."
     assert cmd_init.CMD_USAGE == """
     $ resilient-sdk init
-    $ resilient-sdk init -s/--settings <path to settings json>
-    $ resilient-sdk init -s/--settings <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init --settings <path to settings json>
+    $ resilient-sdk init --settings <path to settings json> -a/--author you@example.com
     $ resilient-sdk init -c/--config <path to app.config>
+    $ resilient-sdk init --settings <path to settings json> -c/--config <path to app.config>
     """
     assert cmd_init.CMD_DESCRIPTION == cmd_init.CMD_HELP
 

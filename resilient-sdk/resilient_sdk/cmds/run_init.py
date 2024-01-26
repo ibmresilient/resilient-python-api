@@ -24,12 +24,14 @@ class CmdRunInit(BaseCmd):
     """
 
     CMD_NAME = "init"
-    CMD_HELP = "Generates sdk_settings.json to store default settings and app.config."
+    CMD_HELP = "Generates sdk_settings.json file to store default settings and generates app.config file to store connection details. \
+        Providing a flag will override the default paths."
     CMD_USAGE = """
     $ resilient-sdk init
-    $ resilient-sdk init -s/--settings <path to settings json>
-    $ resilient-sdk init -s/--settings <path to settings json> -a/--author you@example.com
+    $ resilient-sdk init --settings <path to settings json>
+    $ resilient-sdk init --settings <path to settings json> -a/--author you@example.com
     $ resilient-sdk init -c/--config <path to app.config>
+    $ resilient-sdk init --settings <path to settings json> -c/--config <path to app.config>
     """
     CMD_DESCRIPTION = CMD_HELP
     CMD_ADD_PARSERS = [constants.SDK_SETTINGS_PARSER_NAME, constants.APP_CONFIG_PARSER_NAME]
@@ -75,6 +77,7 @@ class CmdRunInit(BaseCmd):
 
         # If filename is provided in args, use that, otherwise use default .sdk_settings.json
         settings_file = args.settings or constants.SDK_SETTINGS_FILE_PATH
+        settings_file = os.path.abspath(settings_file)
         LOG.debug("Checking for settings file at {}".format(settings_file))
         
         # Check the provided path
@@ -86,7 +89,7 @@ class CmdRunInit(BaseCmd):
         write_settings = self._check_overwrite(settings_file, args.no_input)
 
         if write_settings:
-            LOG.debug("Rendering settings file with provided args")
+            LOG.debug("Rendering settings file...")
             template_args = {
                 "author": constants.INIT_INTERNAL_AUTHOR if args.internal else (args.author or constants.CODEGEN_DEFAULT_SETUP_PY_AUTHOR),
                 "author_email": constants.INIT_INTERNAL_AUTHOR_EMAIL if args.internal else (args.author_email or constants.CODEGEN_DEFAULT_SETUP_PY_EMAIL),
@@ -101,6 +104,7 @@ class CmdRunInit(BaseCmd):
 
         # If filename is provided in args, use that, otherwise use default app.config
         config_file = args.config or constants.PATH_RES_DEFAULT_APP_CONFIG
+        config_file = os.path.abspath(config_file)
         LOG.debug("Checking for config file at {}".format(config_file))
         
         # Check the provided path
@@ -115,7 +119,7 @@ class CmdRunInit(BaseCmd):
             if os.path.exists(config_file):
                 sdk_helpers.rename_to_bak_file(config_file)
 
-            LOG.debug("Rendering config file")
+            LOG.debug("Rendering config file...")
             self._render_template(constants.CONFIG_TEMPLATE_NAME, config_file)
             
 

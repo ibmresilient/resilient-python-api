@@ -6,10 +6,10 @@
 
     $ resilient-sdk init -c /my_path/app.config
 
-* The ``init`` command option to create an ``.sdk_settings.json`` file has changed to be ``-s/--settings``:
+* The ``init`` command option to create an ``.sdk_settings.json`` file has changed to be ``--settings``:
   .. code-block::
 
-    $ resilient-sdk init -s /my_path/.sdk_settings.json
+    $ resilient-sdk init --settings /my_path/.sdk_settings.json
 
 **2023-12: version 51.0.0.1**
 
