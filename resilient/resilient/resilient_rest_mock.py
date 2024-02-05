@@ -37,15 +37,17 @@ class ResilientMockType(type):
 class ResilientMock(object):
     """ Base class for creating Resilient Rest API Mock definitions """
 
-    def __init__(self, org_name=None, email=None):
+    def __init__(self, org_name=None, email=None, log_registration=True):
         self.email = email or "api@example.com"
         self.org_name = org_name or "Test Org"
-        LOG.info("Initialize ResilientMock %s %s", self.email, self.org_name)
+        if log_registration:
+            LOG.info("Initialize ResilientMock %s %s", self.email, self.org_name)
 
         self.adapter = requests_mock.Adapter()
         for endpoint, handler in self.registered_endpoints.items():
             # Register with regex since some endpoints embed the org_id in the path
-            LOG.debug("Registering %s %s to %s", endpoint.type,
+            if log_registration:
+                LOG.debug("Registering %s %s to %s", endpoint.type,
                       endpoint.uri, str(handler))
             self.adapter.add_matcher(lambda request,
                                      method=endpoint.type,

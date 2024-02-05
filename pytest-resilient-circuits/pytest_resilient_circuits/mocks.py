@@ -421,3 +421,8 @@ class BasicResilientMock(ResilientMock):
         return requests_mock.create_response(request,
                                              status_code=200,
                                              json=data)
+
+class BasicResilientMockNoRegisterLog(BasicResilientMock):
+    def __init__(self, *args, **kwargs):
+        kwargs["log_registration"] = False
+        super(BasicResilientMockNoRegisterLog, self).__init__(*args, **kwargs)

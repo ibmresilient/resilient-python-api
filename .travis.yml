@@ -71,6 +71,14 @@ before_install:
   - pip install -U pip setuptools requests retry2
   - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
 
+notifications:
+  slack:
+    rooms:
+      - secure: "BGKGt6vf+dmhGSchcrPuiexuZS8Ajz6x2kWHLGtAExf3Sx5pRb8KKVnL64GaglYWHplBela1XjGwE8g+8vLufsgAjtAeglWdEEMN/I/I8pQlKy/SZuFv9MSBR1WiM0DU+Xc0w2tFm6tvY73sDtnIRbT9Sjc3mJ6fmUAr4dg5BQ0SaqLQYF8f5G2RDP4B3MHIZAncYKj4WK/7VqizBxXWgs9R2caPkQLmfXjc2qvK1uYE9BDWRYs5lBeZkMLcv6rZV9Ra91wF4vUy8tNfwPmbTuc82PEx6LgJ+D6WdUWSZfEXyNc/FKRDKBaDYSXdHKmh9YQJAISpl8odDcaJOVoImZBtf+GfvHgdrUgfrE0mXyGhW54sUWxMWHkiBNk3BgkszOvWctknyjEfMlmuU/xaWUuJ1Oxj379RbtDlaZpbnoe8oxHyStGryGTkYc74OrUbttFWPZq1WD7qg70WfiHKhmmXiw+7BV9+vgPcvGf5F9pXpd+2kKCDClT1R6YEu3cePnkjyiIekUaqP052B3AFwUWfv8hWKXMp18Apgnh4+ZMtLaIqKBn6FwieTvNxPuKioa10T6g92ZlpKZYsOQUvJpaeaifC5Vf8g5uwepWaR0Xnci1h579BNvibZfPqg4UUS1LOtw8N6ZqQsnmEJfz5GZDT5g2C9Am+ezZ6XmJE04I="
+    on_success: never
+    on_failure: always
+
+
 matrix:
   fast_finish: true
 
@@ -233,4 +241,3 @@ matrix:
 after_failure:
   - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
   - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
-  - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"
