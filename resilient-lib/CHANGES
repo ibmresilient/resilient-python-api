@@ -1,5 +1,10 @@
 **2024-01: version 51.0.0.2**
 
+* Update `pytz` dependency requirement to `~= 2024.1`
+* Update `jinja2` dependency requirement to `~= 3.1` to address CVE-2024-22195
+
+**2024-01: version 51.0.0.2**
+
 * Improve debug logs for retry parameters in :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`
 * Added internal UI components for HTML Blocks and Headers as well as Summary Section functionality
 
