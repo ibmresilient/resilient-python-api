@@ -39,11 +39,10 @@ def reset_resilient_client(opts=None):
         with CACHE_LOCK:
             CACHE.pop(_client_cache_key(opts), None)
     else:
-        # brute force for some cases where opts aren't given or
+        # brute force clear for some cases where opts aren't given or
         # we want to fully reset the whole cache.
         # this means next time a client is requested, it will
         # be created from scratch -- that's ok
-        # NOTE: no need for cache_lock here as cache_clear() takes care of that itself
         with CACHE_LOCK:
             CACHE.clear()
 
