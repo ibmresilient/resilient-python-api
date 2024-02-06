@@ -1,3 +1,20 @@
+**2024-02: version 51.0.1.0**
+
+* All SOAR Python libraries now officially support Python 3.11
+* All SOAR Python libraries are now published in a docker container format on Quay.io.
+  This is to better support our apps build process to include the latest SOAR libraries
+  in the base image. This also allows us to better control the OS and Python dependencies
+  that appear in the eventual app container. To take advantage of this new image in your app
+  see the SDK :ref:`SDK Changes`. The new base image is hosted on quay.io. The default Python
+  version is 3.11 and the image can be pulled manually with:
+
+  .. code-block:: bash
+
+    $ docker pull quay.io/ibmresilient/soarapps-base-docker-image:latest # latest libraries with Python 3.11
+    $ docker pull quay.io/ibmresilient/soarapps-base-docker-image:python-39 # latest libraries with Python 3.9
+
+* Updated ``jwcrypto`` dependency requirement to ``~= 1.5.1`` to address CVE-2023-6681
+
 **2023-11: version 51.0.0.0**
 
 * Changed the version of ``resilient`` (and all other SOAR Python libraries) to match the new v.r.m.f
@@ -52,7 +69,7 @@
 
 **2022-11: version 47.0**
 
-* Added more general retry logic to our ``get``, ``post`` and ``delete`` request methods. All of which 
+* Added more general retry logic to our ``get``, ``post`` and ``delete`` request methods. All of which
   can be configured by specifying any of the following parameters in the :class:`SimpleClient <resilient.co3.SimpleClient>`
   class
 

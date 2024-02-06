@@ -1,7 +1,8 @@
-**2024-01: version 51.0.0.2**
+**2024-02: version 51.0.1.0**
 
-* Update `pytz` dependency requirement to `~= 2024.1`
-* Update `jinja2` dependency requirement to `~= 3.1` to address CVE-2024-22195
+* All SOAR Python libraries now officially support Python 3.11
+* Updated ``pytz`` dependency requirement to ``~= 2024.1``
+* Updated ``jinja2`` dependency requirement to ``~= 3.1`` to address CVE-2024-22195
 
 **2024-01: version 51.0.0.2**
 
