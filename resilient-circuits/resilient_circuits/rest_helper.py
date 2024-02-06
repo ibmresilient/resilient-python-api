@@ -16,8 +16,7 @@ from resilient import constants as res_constants
 
 LOG = logging.getLogger(__name__)
 
-# per SOARAPPS-7699 we've started using a cache --
-# the use case there is to support many different clients
+# the use case here is to support many different clients
 # in the same threaded application. for the most part this
 # will be used for just one rest client, so I wanted to keep
 # the size reasonably small, while still meeting that use case;
