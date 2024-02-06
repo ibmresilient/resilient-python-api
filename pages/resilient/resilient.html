@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-circuits" href="../resilient-circuits/resilient-circuits.html" /><link rel="prev" title="IBM SOAR Python Libraries" href="../../index.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
         <title>resilient - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -688,6 +688,22 @@ to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2024-02: version 51.0.1.0</strong></p>
+<ul>
+<li><p>All SOAR Python libraries now officially support Python 3.11</p></li>
+<li><p>All SOAR Python libraries are now published in a docker container format on Quay.io.
+This is to better support our apps build process to include the latest SOAR libraries
+in the base image. This also allows us to better control the OS and Python dependencies
+that appear in the eventual app container. To take advantage of this new image in your app
+see the SDK <a class="reference internal" href="../resilient-sdk/resilient-sdk.html#sdk-changes"><span class="std std-ref">Change Log</span></a>. The new base image is hosted on quay.io. The default Python
+version is 3.11 and the image can be pulled manually with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>pull<span class="w"> </span>quay.io/ibmresilient/soarapps-base-docker-image:latest<span class="w"> </span><span class="c1"># latest libraries with Python 3.11</span>
+$<span class="w"> </span>docker<span class="w"> </span>pull<span class="w"> </span>quay.io/ibmresilient/soarapps-base-docker-image:python-39<span class="w"> </span><span class="c1"># latest libraries with Python 3.9</span>
+</pre></div>
+</div>
+</li>
+<li><p>Updated <code class="docutils literal notranslate"><span class="pre">jwcrypto</span></code> dependency requirement to <code class="docutils literal notranslate"><span class="pre">~=</span> <span class="pre">1.5.1</span></code> to address CVE-2023-6681</p></li>
+</ul>
 <p><strong>2023-11: version 51.0.0.0</strong></p>
 <ul class="simple">
 <li><p>Changed the version of <code class="docutils literal notranslate"><span class="pre">resilient</span></code> (and all other SOAR Python libraries) to match the new v.r.m.f
@@ -1045,7 +1061,7 @@ must be changed to import from <code class="docutils literal notranslate"><span 
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=72da1c8a"></script>
+</div><script src="../../_static/documentation_options.js?v=8a8766a7"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>

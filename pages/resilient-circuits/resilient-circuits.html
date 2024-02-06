@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-lib" href="../resilient-lib/resilient-lib.html" /><link rel="prev" title="resilient" href="../resilient/resilient.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
         <title>resilient-circuits - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -438,6 +438,14 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2024-02: version 51.0.1.0</strong></p>
+<ul class="simple">
+<li><p>All SOAR Python libraries now officially support Python 3.11</p></li>
+<li><p>Selftest now outputs <code class="docutils literal notranslate"><span class="pre">pip</span></code> environment details to better debug failing tests by quickly seeing the dependency versions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resilient_circuits.rest_helper.get_resilient_client</span></code> now uses a cache rather than a global variable to store
+previously fetched clients. This is an improvement for threaded applications using this logic to store multiple
+client objects for different instances</p></li>
+</ul>
 <p><strong>2023-11: version 51.0.0.0</strong></p>
 <ul class="simple">
 <li><p>Added support for new SOAR v.r.m.f version scheme. If running an app on <code class="docutils literal notranslate"><span class="pre">resilient-circuits&lt;51.0.0.0</span></code>,
@@ -881,7 +889,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=72da1c8a"></script>
+</div><script src="../../_static/documentation_options.js?v=8a8766a7"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
