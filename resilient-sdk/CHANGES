@@ -1,16 +1,38 @@
-**2024-01: version 51.0.1.0**
+**2024-02: version 51.0.1.0**
 
+* All SOAR Python libraries now officially support Python 3.11
 * The ``init`` command now includes an option to create an ``app.config`` file:
 
-  .. code-block::
+  .. code-block:: bash
 
     $ resilient-sdk init -c /my_path/app.config
 
 * The ``init`` command option to create an ``.sdk_settings.json`` file has changed to be ``--settings``:
 
-  .. code-block::
+  .. code-block:: bash
 
     $ resilient-sdk init --settings /my_path/.sdk_settings.json
+
+* Added new ``list`` command to list objects available to use in other resilient-sdk commands.
+  The command supports all common SOAR objects and can be used with regex filters to filter
+  list results.
+
+  Example:
+
+  .. code-block:: bash
+
+    $ resilient-sdk list -f # to list all functions
+
+
+  .. code-block:: bash
+
+    $ resilient-sk list -pb .*my_pb --codegen-format # to list all playbooks that end with my_pb in codegen-format
+
+* The ``codegen`` command uses a new Dockerfile template which takes advantage of the new ``soarapps-base-docker-image``.
+  It is recommended that you update your apps to use this new template. To bring in the new template, simply rename the current
+  ``Dockerfile`` to ``Dockerfile.bak`` so that your changes are not lost. Then run ``resilient-sdk codegen --reload``.
+  You will notice the new Dockerfile which you can now use to build container images for your apps. The base image has both 3.11
+  and 3.9 versions to work off of. We recommend you build your apps with 3.11 to take advantage of the latest Python features
 
 **2023-12: version 51.0.0.1**
 

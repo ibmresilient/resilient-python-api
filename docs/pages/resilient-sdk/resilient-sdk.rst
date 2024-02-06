@@ -307,6 +307,8 @@ init
     options:
     |cmd_init_options|
 
+.. _SDK Changes:
+
 ----------
 Change Log
 ----------
