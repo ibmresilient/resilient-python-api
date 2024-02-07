@@ -13,7 +13,8 @@
     $ docker pull quay.io/ibmresilient/soarapps-base-docker-image:latest # latest libraries with Python 3.11
     $ docker pull quay.io/ibmresilient/soarapps-base-docker-image:python-39 # latest libraries with Python 3.9
 
-* Updated ``jwcrypto`` dependency requirement to ``~= 1.5.1`` to address CVE-2023-6681
+* Updated ``jwcrypto`` dependency requirement to ``~= 1.5.2`` (for Python 3.9 and 3.11) to address CVE-2023-6681
+* Pinned ``jwcrypto`` to ``== 1.5.1`` for Python 3.6 since ``1.5.2`` is no longer 3.6 compatible
 
 **2023-11: version 51.0.0.0**
 
