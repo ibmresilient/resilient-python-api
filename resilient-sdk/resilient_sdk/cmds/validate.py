@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """ Implementation of `resilient-sdk validate` """
 
@@ -50,16 +50,18 @@ class CmdValidate(BaseCmd):
     $ resilient-sdk validate -p <name_of_package> --tests --settings <path_to_custom_sdk_settings_file>
     $ resilient-sdk validate -p <name_of_package> --pylint --bandit --selftest"""
     CMD_DESCRIPTION = CMD_HELP
-    CMD_ADD_PARSERS = ["app_config_parser", constants.SDK_SETTINGS_PARSER_NAME]
+    CMD_ADD_PARSERS = [constants.APP_CONFIG_PARSER_NAME, constants.SDK_SETTINGS_PARSER_NAME]
 
     VALIDATE_ISSUES = {}
     SUMMARY_LIST = []
 
     def setup(self):
+        SDKException.command_ran = self.CMD_NAME
+
         # Define codegen usage and description
         self.parser.usage = self.CMD_USAGE
         self.parser.description = self.CMD_DESCRIPTION
-        
+
         # output not suppressed by default
         self.output_suppressed = False
 
@@ -96,7 +98,7 @@ class CmdValidate(BaseCmd):
 
     def execute_command(self, args, output_suppressed=False, run_from_package=False):
         """
-        Runs validate. Can be any of: 
+        Runs validate. Can be any of:
           - static validation,
           - selftest,
           - tox tests,
@@ -225,7 +227,7 @@ class CmdValidate(BaseCmd):
         # parse all supported attributes from setup.py
         parsed_setup_file = package_helpers.parse_setup_py(path_setup_py_file, package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES)
 
-        # check through setup.py file parse 
+        # check through setup.py file parse
         # (including values that are in 'skips' here, though they will not be output at the end of this method)
         for attr in package_helpers.SUPPORTED_SETUP_PY_ATTRIBUTE_NAMES:
             attr_val = parsed_setup_file.get(attr)
@@ -294,7 +296,6 @@ class CmdValidate(BaseCmd):
         - setup.py - done in _validate_setup()
         - MANIFEST.in - done in _validate_package_files()
         - apikey_permissions.txt - done in _validate_package_files()
-        - entrypoint.sh - done in _validate_package_files()
         - Dockerfile - done in _validate_package_files()
         - fn_package/util/config.py - done in _validate_package_files()
         - fn_package/util/customize.py - done in _validate_package_files()
@@ -366,7 +367,7 @@ class CmdValidate(BaseCmd):
         :return: Returns boolean value of whether or not the run passed and a sorted list of SDKValidateIssue
         :rtype: (bool, list[SDKValidateIssue])
         """
-        
+
         # empty list of SDKValidateIssues
         issues = []
         # boolean to determine if setup passes validation
@@ -407,7 +408,7 @@ class CmdValidate(BaseCmd):
                 # is checked twice, so on the second one we skip the handling of it not being found
                 if not missing_msg:
                     continue
-                
+
                 name = "{0} not found".format(attr)
                 description = missing_msg.format(attr)
             else:
@@ -452,7 +453,7 @@ class CmdValidate(BaseCmd):
         # the any method will short circuit once the condition evaluates to true at least once
         # and then flip the value to indicate whether or not the validation passed
         setup_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
-        
+
         return setup_valid, issues
 
     @staticmethod
@@ -462,13 +463,12 @@ class CmdValidate(BaseCmd):
         - apikey_permissions.txt
         - MANIFEST.in
         - Dockerfile
-        - entrypoint.sh
         - config.py
         - customize.py
         - app and company logos
         - README
         - LICENSE
-        
+
         It validates first that each file exists.
         If the file doesn't exist, issue with CRITICAL is created
         If the file exists, check the validation of that given file by running the given "func" for it
@@ -501,14 +501,14 @@ class CmdValidate(BaseCmd):
                 path_file = os.path.join(path_package, filename)
 
             # check that the file exists
-            try: 
+            try:
                 sdk_helpers.validate_file_paths(os.R_OK, path_file)
                 LOG.debug("{0} file found at path {1}\n".format(filename, path_file))
             except SDKException:
                 # file not found: create issue with given "missing_..." info included
                 # note that width and height are taken for the missing solution, however,
                 # are only used when a logo is missing; the value should be None otherwise
-                # be aware of this if a dev ever wants to add infomation to the missing 
+                # be aware of this if a dev ever wants to add infomation to the missing
                 # solution for other package files
 
                 if not attr_dict.get("missing_msg"):
@@ -526,7 +526,7 @@ class CmdValidate(BaseCmd):
                 if not attr_dict.get("func"):
                     raise SDKException("'func' not defined in attr_dict={0}".format(attr_dict))
 
-                    
+
                 # run given "func"
                 issue_list = attr_dict.get("func")(
                     filename=filename,
@@ -584,7 +584,7 @@ class CmdValidate(BaseCmd):
     def _validate_selftest(path_package, path_app_config=None):
         """
         Validate the contents of the selftest.py file in the given package:
-        - check if the package resilient-circuits>=42.0.0 is installed on this Python environment 
+        - check if the package resilient-circuits>=42.0.0 is installed on this Python environment
           and WARN the user that it is not installed, tell them how to get it
         - verify that this package is installed
         - verify that a util/selftest.py file is present
@@ -684,7 +684,7 @@ class CmdValidate(BaseCmd):
             if issue_pass_num <= 0:
                 issues.sort()
                 return issue_pass_num, issues
-            
+
         # sort and look for and invalid issues
         issues.sort()
         tests_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
@@ -733,7 +733,7 @@ class CmdValidate(BaseCmd):
             if issue_pass_num <= 0:
                 issues.sort()
                 return issue_pass_num, issues
-            
+
         # sort and look for and invalid issues
         issues.sort()
         scan_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
@@ -784,7 +784,7 @@ class CmdValidate(BaseCmd):
             if issue_pass_num <= 0:
                 issues.sort()
                 return issue_pass_num, issues
-            
+
         # sort and look for and invalid issues
         issues.sort()
         scan_valid = not any(issue.severity == SDKValidateIssue.SEVERITY_LEVEL_CRITICAL for issue in issues)
@@ -993,7 +993,7 @@ class CmdValidate(BaseCmd):
         :rtype: None
         """
         counts = self._get_counts()
-        
+
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Validation Results{0}".format(constants.LOG_DIVIDER))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "Critical Issues: {0:>14}".format(
             package_helpers.color_output(counts[SDKValidateIssue.SEVERITY_LEVEL_CRITICAL], "CRITICAL")
@@ -1004,7 +1004,7 @@ class CmdValidate(BaseCmd):
         ))
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, constants.LOG_DIVIDER)
 
-    
+
     def _get_counts(self):
         counts = {
             SDKValidateIssue.SEVERITY_LEVEL_CRITICAL: 0,
@@ -1021,7 +1021,7 @@ class CmdValidate(BaseCmd):
     def _print_status(self, level, msg, run_pass):
         """
         Class helper method for logging the status of a specific validation with formatting and color added in
-        
+
         :param level: level to log (from constants.VALIDATE_LOG_LEVEL_<level>)
         :type level: str
         :param msg: message to be formatted and printed
@@ -1049,7 +1049,7 @@ class CmdValidate(BaseCmd):
     def _get_log_level(level, output_suppressed=False):
         """
         Returns logging level to use with logger
-        
+
         50=LOG.critical
         40=LOG.error
         30=LOG.warning
@@ -1060,7 +1060,7 @@ class CmdValidate(BaseCmd):
 
         :param level: string value of DEBUG, INFO, WARNING, or ERROR; this value is used if output_suppressed==False
         :type level: str
-        :param output_suppressed: (optional) value to suppress output; designed for use when calling validate 
+        :param output_suppressed: (optional) value to suppress output; designed for use when calling validate
                                   from another sdk cmd when output is suppressed, DEBUG level is returned
         :type output_suppressed: bool
         :return: value corresponding to the appropriate log level
@@ -1084,6 +1084,6 @@ class CmdValidate(BaseCmd):
             return 40
         if level == constants.VALIDATE_LOG_LEVEL_CRITICAL:
             return 50
-        
+
         # default returns 10==DEBUG
         return 10

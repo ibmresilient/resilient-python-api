@@ -78,7 +78,7 @@ class StompClient(BaseComponent):
         # Configure failover options so it only tries based on settings
         # build any parameters passed
         # every connection has at least these two: maxReconnectAttempts, startupMaxReconnectAttempts
-        items = [item.split("=", 2) for item in stomp_params.split(",")] if stomp_params else None
+        items = [item.split("=", 2) for item in stomp_params.split(",")] if stomp_params else []
         connection_params = {item[0].strip():item[1].strip() for item in items} if items else {}
 
         if "maxReconnectAttempts" not in connection_params:

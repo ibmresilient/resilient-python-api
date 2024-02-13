@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """ Implementation of `resilient-sdk package` """
 
@@ -35,7 +35,7 @@ class CmdExtPackage(BaseCmd):
     def __init__(self, sub_parser, cmd_validate=None):
         """
         Create a constructor for the package command as it needs to save
-        the cmd_validate variable for use when creating and calling the 
+        the cmd_validate variable for use when creating and calling the
         validate command object. For use with the --validate flag
         """
         self.cmd_validate = cmd_validate
@@ -126,7 +126,6 @@ class CmdExtPackage(BaseCmd):
 
         # Generate paths to files required to create app
         path_docker_file = os.path.join(path_to_src, package_helpers.BASE_NAME_DOCKER_FILE)
-        path_entry_point = os.path.join(path_to_src, package_helpers.BASE_NAME_ENTRY_POINT)
         path_apikey_permissions_file = os.path.join(path_to_src, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
         path_output_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_DIST_DIR)
         path_extension_logo = os.path.join(path_to_src, package_helpers.PATH_ICON_EXTENSION_LOGO)
@@ -148,8 +147,8 @@ class CmdExtPackage(BaseCmd):
         else:
             path_validate_report = package_helpers.check_validate_report_exists()
 
-        # Ensure the 'Dockerfile' and 'entrypoint.sh' files exist and we have READ access
-        sdk_helpers.validate_file_paths(os.R_OK, path_docker_file, path_entry_point)
+        # Ensure the 'Dockerfile' exists and we have READ access
+        sdk_helpers.validate_file_paths(os.R_OK, path_docker_file)
 
         LOG.info("\nBuild Distribution starting\n")
 

@@ -30,3 +30,4 @@ _build
 !/resilient-sdk/tests/shared_mock_data/mock_package_files/mock_integrations/fn_main_mock_integration/fn_main_mock_integration/**/*.bak
 !/resilient-sdk/tests/shared_mock_data/*.log
 dist
+.sdk_settings.json

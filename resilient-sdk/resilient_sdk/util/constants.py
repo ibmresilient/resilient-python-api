@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import os
 
@@ -10,6 +10,7 @@ from packaging.version import parse as parse_version
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
 PATH_RES_DEFAULT_LOG_DIR = os.path.join(PATH_RES_DEFAULT_DIR, "logs")
 PATH_RES_DEFAULT_LOG_FILE = os.path.join(PATH_RES_DEFAULT_LOG_DIR, "app.log")
+PATH_RES_DEFAULT_APP_CONFIG = os.path.join(PATH_RES_DEFAULT_DIR, "app.config")
 
 LOGGER_NAME = "resilient_sdk_log"
 LOG_DIVIDER = "\n------------------------\n"
@@ -17,8 +18,8 @@ ENV_VAR_DEV = "RES_SDK_DEV"
 ENV_VAR_APP_CONFIG_FILE = "APP_CONFIG_FILE"
 
 # UPDATE BEFORE RELEASING NEW VERSION
-RESILIENT_LIBRARIES_VERSION = "51.0.0.2.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "51.0.0.2.0"
+RESILIENT_LIBRARIES_VERSION = "51.0.1.0.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "51.0.1.0.0"
 
 RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
@@ -36,8 +37,14 @@ CIRCUITS_PACKAGE_NAME = "resilient-circuits"
 SUB_CMD_OPT_PACKAGE = ("--package", "-p")
 SUB_CMD_OPT_SDK_SETTINGS = ("--settings", )
 
+# sub parser names
+RESILIENT_OBJECTS_PARSER_NAME = "res_obj_parser"
+IO_PARSER_NAME = "io_parser"
+ZIP_PARSER_NAME = "zip_parser"
+APP_CONFIG_PARSER_NAME = "app_config_parser"
+SDK_SETTINGS_PARSER_NAME = "sdk_settings_parser"
+
 # file for SDK settings
-SDK_SETTINGS_PARSER_NAME = "sdk_settings_file"
 SDK_SETTINGS_FILENAME = ".sdk_settings.json"
 SDK_SETTINGS_FILE_PATH = os.path.join(PATH_RES_DEFAULT_DIR, SDK_SETTINGS_FILENAME)
 SDK_SETTINGS_BANDIT_SECTION_NAME = "bandit"
@@ -56,11 +63,13 @@ DOCGEN_TEMPLATE_PATH = os.path.join("data", "docgen", "templates")
 BASE_PATH_VALIDATE_DATA = os.path.join("data", "validate")
 VALIDATE_TEMPLATE_PATH = os.path.join(BASE_PATH_VALIDATE_DATA, "templates")
 VALIDATE_REPORT_TEMPLATE_NAME = "validate_report.md.jinja2"
-SETTINGS_TEMPLATE_PATH = os.path.join("data", "run_init")
+INIT_TEMPLATES_PATH = os.path.join("data", "run_init")
 SETTINGS_TEMPLATE_NAME = "sdk_settings.json.jinja2"
+CONFIG_TEMPLATE_NAME = "app.config.jinja2"
 
 # docker test constants (used in validate)
-DOCKER_BASE_REPO = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_BASE_REPO_OLD = "registry.access.redhat.com/ubi8/python-39:latest"
+DOCKER_BASE_REPO = "${BASE_IMAGE_REPO}/ibmresilient/soarapps-base-docker-image:${BASE_IMAGE_TAG}"
 DOCKER_COMMAND_DICT = {
     "from_command": "FROM",         # sets base image to build on top of
     "set_argument": "ARG",          # sets variables to use during building of image

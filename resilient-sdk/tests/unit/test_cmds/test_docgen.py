@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 import os
 import sys
@@ -10,7 +10,7 @@ from resilient_sdk.cmds import CmdDocgen, base_cmd
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_cmd_docgen_setup(fx_get_sub_parser, fx_cmd_line_args_docgen):
@@ -85,7 +85,7 @@ def test_get_function_details_w_playbook():
     the_function = function_details[0]
 
     assert the_function.get("name") == u"fn_test_dynamic_input"
-    assert the_function.get("pre_processing_script") == '"""pre script\n"""' 
+    assert the_function.get("pre_processing_script") == '"""pre script\n"""'
     assert the_function.get("post_processing_script") == u"""a_variable = \"a string\"\nb_variable = \"b string\"\nc_variable = 12345\n# d_variable = playbook.functions.results.output\nd_variable = playbook.functions.results.output2\no = \"output\""""
 
     constants.CURRENT_SOAR_SERVER_VERSION = None # setting SOAR server version to 46.0
@@ -273,7 +273,7 @@ def test_get_export_paths_from_args(fx_copy_fn_main_mock_integration, caplog):
     # just by virtue of being in the directory. we ensure that it isn't counted twice
     export_files = CmdDocgen._get_export_paths_from_args([path_fn_main_mock_integration, os.path.join(path_fn_main_mock_integration, "README.md"), "doesntexist.resz"])
 
-    assert len(export_files) == 7
+    assert len(export_files) == 8
     assert export_files == CmdDocgen._get_export_paths_from_args([path_fn_main_mock_integration])
     assert "Skipping --export arg" in caplog.text
 
@@ -361,8 +361,10 @@ def test_execute_command_for_app_package(fx_get_sub_parser, fx_cmd_line_args_doc
     assert "Rendering README for" in caplog.text
     assert "Writing README to: {}/README.md".format(fx_copy_fn_main_mock_integration_w_playbooks[1]) in caplog.text
 
-def test_execute_command_for_export(fx_get_sub_parser, fx_cmd_line_args_docgen_export_file, caplog):
+def test_execute_command_for_export(fx_get_sub_parser, fx_cmd_line_args_docgen_export_file, fx_mk_os_tmp_dir, caplog):
     cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    # create tmp directory so that we don't overwrite repo's default README when we run this locally
+    fx_cmd_line_args_docgen_export_file.extend(["-o", os.path.join(fx_mk_os_tmp_dir, "README.md")])
 
     cmd_docgen.execute_command(cmd_docgen.parser.parse_known_args()[0])
 

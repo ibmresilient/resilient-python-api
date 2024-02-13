@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """Common paths used in tests"""
 
@@ -41,6 +41,7 @@ MOCK_INT_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_integrations")
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION = os.path.join(MOCK_INT_DIR, MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
 MOCK_INT_FN_MAIN_MOCK_INTEGRATION_UTIL = os.path.join(MOCK_INT_FN_MAIN_MOCK_INTEGRATION, MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, "util")
 
+MOCK_DOCKERFILE_PATH_OLD = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration/Dockerfile.old")
 MOCK_DOCKERFILE_PATH = os.path.join(MOCK_INT_DIR, "fn_main_mock_integration/Dockerfile")
 
 MOCK_APP_ZIP_FILES_DIR = os.path.join(MOCK_PACKAGE_FILES_DIR, "mock_app_zip_files")

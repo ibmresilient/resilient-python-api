@@ -1,3 +1,11 @@
+**2024-02: version 51.0.1.0**
+
+* All SOAR Python libraries now officially support Python 3.11
+* Selftest now outputs ``pip`` environment details to better debug failing tests by quickly seeing the dependency versions
+* ``resilient_circuits.rest_helper.get_resilient_client`` now uses a cache rather than a global variable to store
+  previously fetched clients. This is an improvement for threaded applications using this logic to store multiple
+  client objects for different instances
+
 **2023-11: version 51.0.0.0**
 
 * Added support for new SOAR v.r.m.f version scheme. If running an app on ``resilient-circuits<51.0.0.0``,
@@ -42,7 +50,7 @@
 **2023-04: version 48.1**
 
 * Better log handling for errors upon restart
-* Added new configs for log rotation. ``log_max_bytes`` sets the maximum bytes per log file; defaults to ``10000000``. 
+* Added new configs for log rotation. ``log_max_bytes`` sets the maximum bytes per log file; defaults to ``10000000``.
   ``log_backup_count`` sets the maximum number of log files to keep as backups while files rotate; defaults to ``10``
 * Improved log filtering for sensitive values
 

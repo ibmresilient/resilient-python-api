@@ -1,5 +1,5 @@
 language: python
-python: 3.9.18
+python: 3.11
 os: linux
 dist: xenial
 
@@ -24,8 +24,8 @@ stages:
 
 env:
   global:
-  - ARTIFACTORY_BASE_URL=https://na.artifactory.swg-devops.com
-  - ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/artifactory/sec-resilient-team-integrations-generic-local/resilient-python-api
+  - ARTIFACTORY_BASE_URL=https://na.artifactory.swg-devops.com/artifactory
+  - ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/sec-resilient-team-integrations-generic-local/resilient-python-api
   - ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$TRAVIS_BUILD_NUMBER
 
   - TEST_RESILIENT_APPLIANCE=staging2.internal.resilientsystems.com
@@ -71,6 +71,14 @@ before_install:
   - pip install -U pip setuptools requests retry2
   - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
 
+notifications:
+  slack:
+    rooms:
+      - secure: "BGKGt6vf+dmhGSchcrPuiexuZS8Ajz6x2kWHLGtAExf3Sx5pRb8KKVnL64GaglYWHplBela1XjGwE8g+8vLufsgAjtAeglWdEEMN/I/I8pQlKy/SZuFv9MSBR1WiM0DU+Xc0w2tFm6tvY73sDtnIRbT9Sjc3mJ6fmUAr4dg5BQ0SaqLQYF8f5G2RDP4B3MHIZAncYKj4WK/7VqizBxXWgs9R2caPkQLmfXjc2qvK1uYE9BDWRYs5lBeZkMLcv6rZV9Ra91wF4vUy8tNfwPmbTuc82PEx6LgJ+D6WdUWSZfEXyNc/FKRDKBaDYSXdHKmh9YQJAISpl8odDcaJOVoImZBtf+GfvHgdrUgfrE0mXyGhW54sUWxMWHkiBNk3BgkszOvWctknyjEfMlmuU/xaWUuJ1Oxj379RbtDlaZpbnoe8oxHyStGryGTkYc74OrUbttFWPZq1WD7qg70WfiHKhmmXiw+7BV9+vgPcvGf5F9pXpd+2kKCDClT1R6YEu3cePnkjyiIekUaqP052B3AFwUWfv8hWKXMp18Apgnh4+ZMtLaIqKBn6FwieTvNxPuKioa10T6g92ZlpKZYsOQUvJpaeaifC5Vf8g5uwepWaR0Xnci1h579BNvibZfPqg4UUS1LOtw8N6ZqQsnmEJfz5GZDT5g2C9Am+ezZ6XmJE04I="
+    on_success: never
+    on_failure: always
+
+
 matrix:
   fast_finish: true
 
@@ -102,6 +110,16 @@ matrix:
       script:
         - echo "Starting Python 3.9 Tests"
         - $PATH_SCRIPTS_DIR/run_unit_tests.sh
+
+    - stage: run tests
+      name: Python 3.11 Unit Tests
+      python: 3.11
+      env: RUN_TYPE=unit_test TOXENV=py311 TEST_RESILIENT_ORG="Resilient PS - Test2"
+      install:
+        - $PATH_SCRIPTS_DIR/install_unit_tests_deps.sh
+      script:
+        - echo "Starting Python 3.11 Tests"
+        - $PATH_SCRIPTS_DIR/run_unit_tests.sh
         - >
           python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "UPLOAD" "$ARTIFACTORY_COV_LOCATION"
           --upload-files
@@ -111,9 +129,9 @@ matrix:
           "$TRAVIS_BUILD_DIR/resilient-sdk/cov_resilient_sdk.xml"
 
     - stage: run tests
-      name: Python 3.9 Integration Tests
-      python: 3.9.18
-      env: RUN_TYPE=int_test TOXENV=py39
+      name: Python 3.11 Integration Tests
+      python: 3.11
+      env: RUN_TYPE=int_test TOXENV=py311
       install: $PATH_SCRIPTS_DIR/install_int_tests_deps.sh
       script:
         - if [ $RUN_INT_TESTS == 1 ]; then
@@ -223,4 +241,3 @@ matrix:
 after_failure:
   - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
   - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
-  - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "resilient-python-api failed to build" "failure"

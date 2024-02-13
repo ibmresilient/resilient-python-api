@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2019. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """Circuits component for Action Module subscription and message handling"""
 
@@ -612,7 +612,7 @@ class Actions(ResilientComponent):
     @handler("idle_reset")
     def idle_reset(self, event):
         LOG.debug("Idle reset")
-        reset_resilient_client()
+        reset_resilient_client(self.opts) # send opts to know which client to reset
 
     def _setup_stomp(self):
         rest_client = self.rest_client()

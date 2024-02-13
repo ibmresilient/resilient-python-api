@@ -1,7 +1,6 @@
 include README.md
 include Dockerfile
 include apikey_permissions.txt
-include entrypoint.sh
 recursive-include {{package_name}}/util *
 {% if poller_flag %}
 recursive-include {{package_name}}/lib *

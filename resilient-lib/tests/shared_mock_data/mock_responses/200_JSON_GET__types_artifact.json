@@ -1,0 +1,37 @@
+{
+  "id": 12345,
+  "type_id": 12345,
+  "type_name": "artifact",
+  "fields": {
+    "type": {
+      "type_id": 12345,
+      "tooltip": "...",
+      "placeholder": "...",
+      "input_type": "multiselect_incident",
+      "required": "always",
+      "hide_notification": true,
+      "chosen": true,
+      "default_chosen_by_server": true,
+      "blank_option": true,
+      "internal": true,
+      "operations": [
+        "script",
+        "not_in"
+      ],
+      "values": [
+        {
+          "default": true,
+          "enabled": true,
+          "hidden": true,
+          "properties": {
+            "property1": {},
+            "property2": {}
+          },
+          "uuid": "...",
+          "value": "artifact",
+          "label": "my artifact"
+        }
+      ]
+    }
+  }
+}

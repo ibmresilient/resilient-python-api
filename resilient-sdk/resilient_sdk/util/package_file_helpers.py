@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
 """
 Common Helper Functions specific to customize.py, config.py and setup.py files for the resilient-sdk
@@ -73,7 +73,7 @@ PATH_DEFAULT_POLLER_CREATE_TEMPLATE = pkg_resources.resource_filename("resilient
                     "data/codegen/templates/package_template/package/poller/data/soar_create_case.jinja2")
 PATH_DEFAULT_POLLER_CLOSE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
                     "data/codegen/templates/package_template/package/poller/data/soar_close_case.jinja2")
-PATH_DEFAULT_POLLER_UPDATE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk", 
+PATH_DEFAULT_POLLER_UPDATE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
                     "data/codegen/templates/package_template/package/poller/data/soar_update_case.jinja2")
 
 
@@ -137,6 +137,7 @@ COLORS = {
     "RED": '\033[91m',
     "CRITICAL": '\033[91m',
     "WARNING": '\033[93m',
+    "YELLOW": '\033[93m',
     "INFO": '\033[94m',
     "SKIPPED": '\033[94m',
     "BLUE": '\033[94m',
@@ -1028,7 +1029,7 @@ def get_required_python_version(python_requires_str):
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
         version = pkg_resources.parse_version(version_str)
-        
+
         return sdk_helpers.parse_version_object(version)
     except AttributeError as e:
         raise SDKException("'python_requires' version not given in correct format.")
@@ -1036,7 +1037,7 @@ def get_required_python_version(python_requires_str):
 def check_package_installed(package_name):
     """
     Uses pkg_resources.require to certify that a package is installed
-    
+
     :param package_name: name of package
     :type package_name: str
     :return: boolean value whether or not package is installed in current python env
@@ -1099,7 +1100,7 @@ def color_diff_output(diff):
 
 def parse_file_paths_from_readme(readme_line_list):
     """
-    Takes a list of strings and looks through to find the links characters in markdown: 
+    Takes a list of strings and looks through to find the links characters in markdown:
     ![<fall_back_name>](<link_to_screenshot>)
     The method will raise an SDKException if there is a link started without the provided parenthetical
     link in correct syntax.
@@ -1147,12 +1148,12 @@ def check_validate_report_exists():
 
 
 def parse_dockerfile(path):
-    """ 
+    """
     Reads through a Dockerfile line by line and adds commands to a dictionary
     The dictionary has the following format - {"COMMAND":[list_of_arguments]}.
     This means that if line 1 is "RUN yum clean" and line 2 is "RUN yum install", the resulting dictionary would be
     {"RUN":["yum clean","yum install"]}
-    
+
     Does not yet support multi-line commands
 
     :param path: Path to dockerfile
@@ -1160,12 +1161,13 @@ def parse_dockerfile(path):
 
     found_commands = defaultdict(lambda: [])
     lines = sdk_helpers.read_file(path)
-    for line in lines: 
+    for line in lines:
         # split the line into the command and the argument, and strip any extra characters
         split_line = line.strip().split(" ")
         if split_line[0] == "#" or split_line[0] == "": # skip comments
             continue
-        found_commands[split_line[0]].append(' '.join(split_line[1:])) # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
+        # makes a list of arguments per command i.e. maps "RUN" to all RUN commands
+        found_commands[split_line[0]].append(' '.join(split_line[1:]))
 
     return found_commands
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2020. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
+from resilient_sdk.util import constants
 from resilient_sdk.cmds import base_cmd, CmdExtract
-
 
 def test_cmd_extract_setup(fx_get_sub_parser, fx_cmd_line_args_extract):
     cmd_extract = CmdExtract(fx_get_sub_parser)
@@ -19,7 +19,7 @@ def test_cmd_extract_setup(fx_get_sub_parser, fx_cmd_line_args_extract):
     $ resilient-sdk extract --script 'custom_script' --zip -c '/usr/custom_app.config'
     $ resilient-sdk extract --script 'custom_script' --name 'my_custom_export'"""
     assert cmd_extract.CMD_DESCRIPTION == "Extract data in order to publish a .res export file"
-    assert cmd_extract.CMD_ADD_PARSERS == ["app_config_parser", "res_obj_parser", "io_parser", "zip_parser"]
+    assert cmd_extract.CMD_ADD_PARSERS == [constants.APP_CONFIG_PARSER_NAME, constants.RESILIENT_OBJECTS_PARSER_NAME, constants.IO_PARSER_NAME, constants.ZIP_PARSER_NAME]
 
 
 def test_execute_command():

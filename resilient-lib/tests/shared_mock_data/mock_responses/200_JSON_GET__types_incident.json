@@ -1,0 +1,449 @@
+{
+    "fields": {
+        "create_date": {
+            "id": 106,
+            "name": "create_date",
+            "text": "Date Created",
+            "prefix": null,
+            "type_id": 2,
+            "tooltip": "The date the note was created.  This field is read-only.",
+            "input_type": "datetimepicker",
+            "hide_notification": false,
+            "chosen": false,
+            "default_chosen_by_server": false,
+            "blank_option": false,
+            "internal": true,
+            "uuid": "5d311cf9-67b6-4865-881a-9a0aafcb60e0",
+            "operations": [
+                "due_within",
+                "has_a_value",
+                "not_has_a_value",
+                "overdue_by"
+            ],
+            "operation_perms": {
+                "due_within": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "overdue_by": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                }
+            },
+            "values": [],
+            "perms": {
+                "delete": false,
+                "modify_name": false,
+                "modify_values": false,
+                "modify_blank": false,
+                "modify_required": false,
+                "modify_operations": false,
+                "modify_chosen": false,
+                "modify_default": false,
+                "show_in_manual_actions": true,
+                "show_in_auto_actions": true,
+                "show_in_notifications": true,
+                "show_in_scripts": true,
+                "modify_type": [
+                    "datetimepicker"
+                ],
+                "sort": true
+            },
+            "read_only": true,
+            "changeable": false,
+            "rich_text": false,
+            "templates": [],
+            "deprecated": false,
+            "tags": [],
+            "calculated": false,
+            "is_tracked": false,
+            "allow_default_value": false
+        },
+        "mentioned_users": {
+            "id": 104,
+            "name": "mentioned_users",
+            "text": "Mentioned users",
+            "prefix": null,
+            "type_id": 2,
+            "input_type": "multiselect_members",
+            "hide_notification": false,
+            "chosen": false,
+            "default_chosen_by_server": false,
+            "blank_option": false,
+            "internal": true,
+            "uuid": "e1fb1869-bc4e-45a7-aa74-1a485d88fab9",
+            "operations": [
+                "contains",
+                "contains_user",
+                "equals",
+                "has_a_value",
+                "in",
+                "not_contains",
+                "not_equals",
+                "not_has_a_value",
+                "not_in"
+            ],
+            "operation_perms": {
+                "contains": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "contains_user": {
+                    "show_in_manual_actions": false,
+                    "show_in_auto_actions": false,
+                    "show_in_notifications": true
+                },
+                "equals": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "in": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_contains": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_equals": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_in": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                }
+            },
+            "values": [
+                {
+                    "value": 1,
+                    "label": "Admin User (admin@example.com)",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "b0c30373-0117-41c6-aea1-40f66e825db3",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 3,
+                    "label": "Default Group",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "6f52ab7d-cbca-41ad-ab43-6ee779fe066e",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 5,
+                    "label": "Rapid7 InsightVM",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "8a7a238e-8f98-4bee-a832-f72ec72bcab4",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 0,
+                    "label": "System User",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "d82191c4-8171-4110-91db-0c1aa3235a88",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 4,
+                    "label": "Local Integration Server",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "221c00d1-1b5a-45af-811e-7b0cb0ef11d0",
+                    "hidden": false,
+                    "default": false
+                }
+            ],
+            "perms": {
+                "delete": false,
+                "modify_name": false,
+                "modify_values": false,
+                "modify_blank": false,
+                "modify_required": false,
+                "modify_operations": false,
+                "modify_chosen": false,
+                "modify_default": false,
+                "show_in_manual_actions": false,
+                "show_in_auto_actions": false,
+                "show_in_notifications": true,
+                "show_in_scripts": true,
+                "modify_type": [
+                    "multiselect_members"
+                ],
+                "sort": false
+            },
+            "read_only": true,
+            "changeable": false,
+            "rich_text": false,
+            "templates": [],
+            "deprecated": false,
+            "tags": [],
+            "calculated": false,
+            "is_tracked": false,
+            "allow_default_value": false
+        },
+        "text": {
+            "id": 103,
+            "name": "text",
+            "text": "Text",
+            "prefix": null,
+            "type_id": 2,
+            "input_type": "textarea",
+            "hide_notification": false,
+            "chosen": false,
+            "default_chosen_by_server": false,
+            "blank_option": false,
+            "internal": true,
+            "uuid": "7f66a598-f83c-402b-84e1-763698b00fc5",
+            "operations": [
+                "changed",
+                "changed_to",
+                "contains",
+                "equals",
+                "has_a_value",
+                "not_changed_to",
+                "not_contains",
+                "not_equals",
+                "not_has_a_value"
+            ],
+            "operation_perms": {
+                "changed": {
+                    "show_in_manual_actions": false,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "changed_to": {
+                    "show_in_manual_actions": false,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "contains": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "equals": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_changed_to": {
+                    "show_in_manual_actions": false,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_contains": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_equals": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                }
+            },
+            "values": [],
+            "perms": {
+                "delete": false,
+                "modify_name": false,
+                "modify_values": false,
+                "modify_blank": false,
+                "modify_required": false,
+                "modify_operations": false,
+                "modify_chosen": false,
+                "modify_default": false,
+                "show_in_manual_actions": true,
+                "show_in_auto_actions": true,
+                "show_in_notifications": true,
+                "show_in_scripts": true,
+                "modify_type": [
+                    "textarea"
+                ],
+                "sort": true
+            },
+            "read_only": false,
+            "changeable": true,
+            "rich_text": true,
+            "templates": [],
+            "deprecated": false,
+            "tags": [],
+            "calculated": false,
+            "is_tracked": false,
+            "allow_default_value": false
+        },
+        "user_id": {
+            "id": 105,
+            "name": "user_id",
+            "text": "User",
+            "prefix": null,
+            "type_id": 2,
+            "input_type": "select_user",
+            "hide_notification": false,
+            "chosen": false,
+            "default_chosen_by_server": false,
+            "blank_option": false,
+            "internal": true,
+            "uuid": "870ab4c2-d3ab-492c-b72f-f477b4685276",
+            "operations": [
+                "equals",
+                "has_a_value",
+                "in",
+                "not_equals",
+                "not_has_a_value",
+                "not_in"
+            ],
+            "operation_perms": {
+                "equals": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "in": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_equals": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_has_a_value": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                },
+                "not_in": {
+                    "show_in_manual_actions": true,
+                    "show_in_auto_actions": true,
+                    "show_in_notifications": true
+                }
+            },
+            "values": [
+                {
+                    "value": 1,
+                    "label": "Admin User (admin@example.com)",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "b0c30373-0117-41c6-aea1-40f66e825db3",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 3,
+                    "label": "Default Group",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "6f52ab7d-cbca-41ad-ab43-6ee779fe066e",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 5,
+                    "label": "Rapid7 InsightVM",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "8a7a238e-8f98-4bee-a832-f72ec72bcab4",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 0,
+                    "label": "System User",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "d82191c4-8171-4110-91db-0c1aa3235a88",
+                    "hidden": false,
+                    "default": false
+                },
+                {
+                    "value": 4,
+                    "label": "Local Integration Server",
+                    "enabled": true,
+                    "properties": null,
+                    "uuid": "221c00d1-1b5a-45af-811e-7b0cb0ef11d0",
+                    "hidden": false,
+                    "default": false
+                }
+            ],
+            "perms": {
+                "delete": false,
+                "modify_name": false,
+                "modify_values": false,
+                "modify_blank": false,
+                "modify_required": false,
+                "modify_operations": false,
+                "modify_chosen": false,
+                "modify_default": false,
+                "show_in_manual_actions": true,
+                "show_in_auto_actions": true,
+                "show_in_notifications": true,
+                "show_in_scripts": true,
+                "modify_type": [
+                    "select_user"
+                ],
+                "sort": false
+            },
+            "read_only": true,
+            "changeable": false,
+            "rich_text": false,
+            "templates": [],
+            "deprecated": false,
+            "tags": [],
+            "calculated": false,
+            "is_tracked": false,
+            "allow_default_value": false
+        }
+    }
+}

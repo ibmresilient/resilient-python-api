@@ -26,7 +26,7 @@ import resilient_sdk.app as app
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers, sdk_validate_configs
-from tests.shared_mock_data import mock_paths
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 import keyring
 
@@ -446,6 +446,26 @@ def fx_cmd_line_args_init():
 
 
 @pytest.fixture
+def fx_cmd_line_args_list():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "list",
+        "-e", mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK
+    ]
+
+    _add_to_cmd_line_args(args_to_add)
+
+    yield
+
+    sys.argv = original_cmd_line
+
+
+@pytest.fixture
 def fx_reset_argv():
     """
     Before: Takes a copy of sys.argv and allows functions to add args to it
@@ -457,6 +477,20 @@ def fx_reset_argv():
 
     sys.argv = original_cmd_line
 
+@pytest.fixture
+def fx_mock_config_file_path():
+    """
+    Before: Change the app.config file path to point to the test temp directory
+    After: Change the app.config file path back to the original value
+    """
+    _mk_temp_dir()
+    old_config_file_path = constants.PATH_RES_DEFAULT_APP_CONFIG
+    constants.PATH_RES_DEFAULT_APP_CONFIG = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
+    
+    yield
+    
+    _rm_temp_dir()
+    constants.PATH_RES_DEFAULT_APP_CONFIG = old_config_file_path
 
 @pytest.fixture
 def fx_mock_settings_file_path():
@@ -464,11 +498,13 @@ def fx_mock_settings_file_path():
     Before: Change the settings file path to point to the test temp directory
     After: Change the settings file path back to the original value
     """
+    _mk_temp_dir()
     old_sdk_settings_path = constants.SDK_SETTINGS_FILE_PATH
     constants.SDK_SETTINGS_FILE_PATH = "{}/test_settings.json".format(mock_paths.TEST_TEMP_DIR)
 
     yield
 
+    _rm_temp_dir()
     constants.SDK_SETTINGS_FILE_PATH = old_sdk_settings_path
 
 @pytest.fixture
@@ -694,7 +730,7 @@ def fx_cmd_line_args_extract():
     sys.argv = original_cmd_line
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def fx_get_sub_parser():
     """
     Before: Return a main_parser setup with sub_parser added
