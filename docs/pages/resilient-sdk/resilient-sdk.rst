@@ -102,6 +102,40 @@ at the root level pertain to app details. In particular, the ``setup.py`` file s
 attention. The ``setup.py`` file is where the app's details are defined and govern much of what will
 appear when the app is installed in SOAR.
 
+Here is a full overview of the app's structure with highlights given to the files that require manual edits:
+
+.. code-block::
+
+    .
+    ├── data
+    ├── doc
+    │   └── screenshots
+    │       └── main.png
+    ├── entrypoint.sh
+    ├── fn_my_app
+    │   ├── LICENSE                     // LICENSE file for your project
+    │   ├── __init__.py
+    │   ├── components
+    │   │   ├── __init__.py
+    │   │   └── func_fn_my_function.py  // the function's implementation
+    │   └── util
+    │       ├── __init__.py
+    │       ├── config.py               // the configuration section of this app in app.config
+    │       ├── customize.py
+    │       ├── data
+    │       │   └── export.res
+    │       └── selftest.py             // implementation of this app's configuration test
+    ├── icons
+    │   ├── app_logo.png                // icons displayed when installed on app host
+    │   └── company_logo.png
+    ├── tests                           // optional unit tests
+    ├── Dockerfile
+    ├── MANIFEST.in
+    ├── README.md                       // updated via resilient-sdk docgen to document use of the app
+    ├── apikey_permissions.txt          // defines the API key permissions that will be generated when the app is installed
+    ├── setup.py                        // app details; this file is key in defining the appearance of your app
+    └── tox.ini
+
 In the subdirectory ``fn_my_app`` you'll find the python files which make up the app. The ``components``
 directory holds the function code. It is currently templated as an outline and will require that you fill it in
 to fully take advantage of the function. The ``util`` directory holds the configuration information for
