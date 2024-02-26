@@ -136,7 +136,7 @@ def check_soar_rest_connection(cmd_line_args, app_configs):
         LOG.info("- Using a '{0}' Proxy with Host '{1}' and Port '{2}'".format(proxy_details.get("scheme"), proxy_details.get("hostname"), proxy_details.get("port")))
 
     try:
-        res_client = helpers.get_resilient_client(ALLOW_UNRECOGNIZED=True)
+        res_client = helpers.get_resilient_client_for_selftest(ALLOW_UNRECOGNIZED=True)
 
     except BasicHTTPException as e:
         # Connection unauthorized
