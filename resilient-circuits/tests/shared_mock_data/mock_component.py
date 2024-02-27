@@ -27,7 +27,7 @@ class MockInboundAppComponent(ResilientComponent):
         self.app_configs = opts.get(PACKAGE_NAME, {})
 
     @inbound_app(QUEUE_NAME)
-    def _inbound_app_mock_one(self, message, inbound_action):
+    def _inbound_app_mock_one(self, message, headers, inbound_action):
 
         if inbound_action == "create":
             msg_content = message.get("content", {})
@@ -48,16 +48,20 @@ class MockInboundAppComponent(ResilientComponent):
         yield "Done!"
 
     @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME)
-    def inbound_app_mock(self, message, inbound_action):
+    def inbound_app_mock(self, message, headers, inbound_action):
         assert isinstance(message, dict)
+        assert isinstance(headers, dict)
+        assert headers["destination"] == "/queue/inbound_destinations.201.{0}".format(mock_constants.MOCK_INBOUND_Q_NAME)
         yield inbound_action
 
     @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME_CREATE)
-    def inbound_app_mock_create(self, message, inbound_action):
+    def inbound_app_mock_create(self, message, headers, inbound_action):
         assert inbound_action == "create"
         assert isinstance(message, dict)
+        assert isinstance(headers, dict)
+        assert headers["destination"] == "/queue/inbound_destinations.201.{0}".format(mock_constants.MOCK_INBOUND_Q_NAME_CREATE)
         yield u"Mock incident created with unicode զ է ը թ"
 
     @inbound_app(mock_constants.MOCK_INBOUND_Q_NAME_EX)
-    def inbound_app_mock_raise_exception(self, message, inbound_action):
+    def inbound_app_mock_raise_exception(self, message, headers, inbound_action):
         raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")

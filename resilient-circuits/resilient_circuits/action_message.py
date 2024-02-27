@@ -36,6 +36,7 @@ class ActionMessageBase(Event):
 
         self.deferred = False
         self.message = message
+        self.headers = headers
         self.frame = frame
         self.context = headers.get("Co3ContextToken")
         self.action_id = message.get("action_id")
