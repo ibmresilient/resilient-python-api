@@ -162,6 +162,28 @@ class inbound_app(object):
                     -  E.g:
                         `yield "Processing Complete!"`
 
+                The method that is wrapped with this handler should will receive three items:
+                    - message
+                    - headers
+                    - inbound action
+
+                The subclass of ``ResilientComponent`` is also required to set the
+                ``app_configs`` attribute.
+
+                Example:
+
+                .. code-block:: python
+
+                    class SoarInboundConsumer(ResilientComponent):
+                        def __init__(self, opts):
+                            super(SoarInboundConsumer, self).__init__(opts)
+                            self.opts = opts
+                            self.app_configs = opts.get(PACKAGE_NAME, {})
+
+                        @inbound_app(QUEUE_NAME)
+                        def _inbound_soar_escalator(self, message, headers, inbound_action):
+                            pass
+
                 :param evt: The Event with the StompFrame and the Message read off the Message Destination
                 :type ia: resilient_circuits.action_message.FunctionMessage
                 """
