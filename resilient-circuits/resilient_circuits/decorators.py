@@ -53,8 +53,8 @@ class function(object):
         func.priority = self.kwargs.get("priority", 0)
         func.channel = self.kwargs.get("channel", ",".join(["functions.{}".format(name) for name in self.names]))
         func.override = self.kwargs.get("override", False)
-        
-        # If getfullargspec if available to us 
+
+        # If getfullargspec if available to us
         if hasattr(_inspect, 'getfullargspec'):
             args = _inspect.getfullargspec(func)[0]
         else:  # fall back to deprecated getargspec
@@ -162,6 +162,28 @@ class inbound_app(object):
                     -  E.g:
                         `yield "Processing Complete!"`
 
+                The method that is wrapped with this handler should will receive three items:
+                    - message
+                    - headers
+                    - inbound action
+
+                The subclass of ``ResilientComponent`` is also required to set the
+                ``app_configs`` attribute.
+
+                Example:
+
+                .. code-block:: python
+
+                    class SoarInboundConsumer(ResilientComponent):
+                        def __init__(self, opts):
+                            super(SoarInboundConsumer, self).__init__(opts)
+                            self.opts = opts
+                            self.app_configs = opts.get(PACKAGE_NAME, {})
+
+                        @inbound_app(QUEUE_NAME)
+                        def _inbound_soar_escalator(self, message, headers, inbound_action):
+                            pass
+
                 :param evt: The Event with the StompFrame and the Message read off the Message Destination
                 :type ia: resilient_circuits.action_message.FunctionMessage
                 """
@@ -169,7 +191,8 @@ class inbound_app(object):
                 LOG.debug("Running _invoke_inbound_app in Thread: %s", threading.currentThread().name)
 
                 # Invoke the actual Function
-                ia_results = ia(itself, evt.message, evt.message.get("action", "Unknown"))
+                # Pass along the message, the headers, and the action if present in the message
+                ia_results = ia(itself, evt.message, evt.headers, evt.message.get("action", "Unknown"))
 
                 for r in ia_results:
                     LOG.debug(r)

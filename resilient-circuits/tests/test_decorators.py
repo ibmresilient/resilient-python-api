@@ -61,7 +61,7 @@ class TestInboundAppDecorator:
         with pytest.raises(ValueError, match=r"Usage: @inbound_app\(<inbound_destination_api_name>\)"):
             class MockInboundAppComponent2(ResilientComponent):
                 @inbound_app("mock_q_2", "mock_q_3")
-                def inbound_app_mock_2(self, message, *args, **kwargs):
+                def inbound_app_mock_2(self, message, headers, *args, **kwargs):
                     return
 
 
