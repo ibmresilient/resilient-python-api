@@ -132,19 +132,32 @@ def get_configs(path_config_file=None, ALLOW_UNRECOGNIZED=False):
     return configs
 
 
-def get_resilient_client(path_config_file=None, ALLOW_UNRECOGNIZED=False):
+def get_resilient_client_for_selftest(path_config_file=None, ALLOW_UNRECOGNIZED=False, default_connection_retries=3):
     """
     Return a SimpleClient for Resilient REST API using configurations
-    options from provided path_config_file or from ~/.resilient/app.config
+    options from provided path_config_file or from ~/.resilient/app.config.
+
+    This method is only intended for use in selftest. For other use cases, use
+    ``from resilient_circuits.rest_helper import get_resilient_client``
 
     :param path_config_file: path to the app.config to parse
     :type path_config_file: str
     :param ALLOW_UNRECOGNIZED: bool to specify if AppArgumentParser will allow unknown comandline args or not. Default is False
     :type ALLOW_UNRECOGNIZED: bool
+    :param default_connection_retries: used for selftest limiting the number of retries when connecting. Default is 3 tries
+    :type default_connection_retries: int
     :return: SimpleClient for Resilient REST API
     :rtype: SimpleClient
     """
-    client = get_client(get_configs(path_config_file=path_config_file, ALLOW_UNRECOGNIZED=ALLOW_UNRECOGNIZED))
+
+    # if default_connection_retries is provided or default
+    if default_connection_retries is not None:
+        # add retry configs
+        kwargs = {res_constants.APP_CONFIG_MAX_CONNECTION_RETRIES: default_connection_retries}
+    else:
+        kwargs = {}
+
+    client = get_client(get_configs(path_config_file=path_config_file, ALLOW_UNRECOGNIZED=ALLOW_UNRECOGNIZED), **kwargs)
     return client
 
 
@@ -363,7 +376,7 @@ def sub_fn_inputs_from_protected_secrets(fn_inputs, opts):
     """
     Substitute any protected secret *or regular secret
     into a function input. Requires the ``opts`` dictionary
-    (usually actually a AppConfigManager object) to be 
+    (usually actually a AppConfigManager object) to be
     given to properly create a temporary AppConfigManager
     that will have access to the pam plugin if relevant.
 
