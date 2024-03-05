@@ -5,6 +5,7 @@
 import os
 import time
 
+from mock import patch
 import pkg_resources
 import pytest
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
@@ -235,6 +236,30 @@ def test_filter_heartbeat_timeout_events():
 
 def test_filter_heartbeat_timeout_events_empty():
     assert helpers.filter_heartbeat_timeout_events([]) == []
+
+@patch("resilient_circuits.helpers.get_client")
+@patch("resilient_circuits.helpers.get_configs")
+def test_get_resilient_client_for_selftest(patch_get_configs, patch_co3_get_client):
+    patch_get_configs.return_value = {}
+
+    helpers.get_resilient_client_for_selftest(ALLOW_UNRECOGNIZED=True)
+    patch_co3_get_client.assert_called_with({}, max_connection_retries=3)
+
+@patch("resilient_circuits.helpers.get_client")
+@patch("resilient_circuits.helpers.get_configs")
+def test_get_resilient_client_for_selftest_overwrite_retries(patch_get_configs, patch_co3_get_client):
+    patch_get_configs.return_value = {}
+
+    helpers.get_resilient_client_for_selftest(ALLOW_UNRECOGNIZED=True, default_connection_retries=5)
+    patch_co3_get_client.assert_called_with({}, max_connection_retries=5)
+
+@patch("resilient_circuits.helpers.get_client")
+@patch("resilient_circuits.helpers.get_configs")
+def test_get_resilient_client_for_selftest_set_no_retries(patch_get_configs, patch_co3_get_client):
+    patch_get_configs.return_value = {}
+
+    helpers.get_resilient_client_for_selftest(ALLOW_UNRECOGNIZED=True, default_connection_retries=None)
+    patch_co3_get_client.assert_called_with({})
 
 def test_sub_fn_inputs_from_protected_secrets(fx_reset_environmental_variables):
     class MyMockPlugin(PAMPluginInterface):
