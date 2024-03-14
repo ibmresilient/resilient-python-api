@@ -157,12 +157,11 @@ matrix:
         - python $PATH_COMMON_SCRIPTS_DIR/manage_artifactory.py "DELETE" "$ARTIFACTORY_COV_LOCATION"
 
     - stage: build packages
-      name: Build Packages in Python 3.9
-      python: 3.9.18
+      name: Build Packages in Python 3.11
       install:
         - pip install twine build
       script:
-        - echo "Building packages in Python 3.9"
+        - echo "Building packages in Python 3.11"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
 
     - stage: deploy to artifactory
@@ -170,7 +169,7 @@ matrix:
       install:
         - pip install twine build
       script:
-        - echo "Building packages in Python 3.9 and Deploying to Artifactory"
+        - echo "Building packages in Python 3.11 and Deploying to Artifactory"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh do_deploy
         - echo "Sending notification to Slack"
         - PARSED_VERSION=$(echo $NEW_VERSION | cut -d "v" -f 2)

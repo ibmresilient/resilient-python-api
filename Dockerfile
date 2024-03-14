@@ -7,8 +7,8 @@
 # REQUIRED: set RESILIENT_CIRCUITS_VERSION when you build by passing: --build-arg RESILIENT_CIRCUITS_VERSION=<version>
 ARG RESILIENT_CIRCUITS_VERSION
 # OPTIONAL: set PYTHON_VERSION when you build by passing: --build-arg PYTHON_VERSION=python-39|python-311
-# default: python-39
-ARG PYTHON_VERSION=python-39
+# default: python-311
+ARG PYTHON_VERSION=python-311
 # OPTIONAL: set UBI_VERSION when you build by passing: --build-arg UBI_VERSION=ubi8|ubi9|ubi10
 # default: ubi9
 ARG UBI_VERSION=ubi9

@@ -45,13 +45,13 @@ tag_python_311="${tag_base}:python-311"
 # build PY311 and tag appropriately with "<version>", "<version>-python-311", "python-311", "latest"
 docker build -t ${tag_version} -t ${tag_version_311} -t ${tag_python_311} -t ${tag_latest} \
     --build-arg RESILIENT_CIRCUITS_VERSION=${CIRCUITS_VERSION} \
-    --build-arg PYTHON_VERSION=python-39 \
+    --build-arg PYTHON_VERSION=python-311 \
     ${TRAVIS_BUILD_DIR}
 
 # build PY39 version and tag with "<version>-python-39", "python-39"
 docker build -t ${tag_version_39} -t ${tag_python_39} \
     --build-arg RESILIENT_CIRCUITS_VERSION=${CIRCUITS_VERSION} \
-    --build-arg PYTHON_VERSION=python-311 \
+    --build-arg PYTHON_VERSION=python-39 \
     ${TRAVIS_BUILD_DIR}
 
 # push all versions to their tagged location
