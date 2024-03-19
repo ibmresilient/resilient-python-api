@@ -438,6 +438,15 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<p><strong>2024-04: version 51.0.1.1</strong></p>
+<ul class="simple">
+<li><p>Updated selftest to better handle connection issues when running in App Host</p></li>
+<li><p>Modified <code class="docutils literal notranslate"><span class="pre">stomp_prefetch_limit</span></code> configuration option to default to the same value as <code class="docutils literal notranslate"><span class="pre">num_workers</span></code>.
+The prefetch limit can still be manually adjusted by changing <code class="docutils literal notranslate"><span class="pre">stomp_prefetch_limit</span></code> in the <code class="docutils literal notranslate"><span class="pre">[resilient]</span></code>
+section of app.config if you desire the prefetch and workers to have different values</p></li>
+<li><p>Inbound app decorator now expects headers as the second parameter for the decorated function. This is intended
+for better debugging with mor inbound message information passed to the handler</p></li>
+</ul>
 <p><strong>2024-02: version 51.0.1.0</strong></p>
 <ul class="simple">
 <li><p>All SOAR Python libraries now officially support Python 3.11</p></li>
@@ -889,7 +898,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=9e9cd95b"></script>
+</div><script src="../../_static/documentation_options.js?v=d7d82e9e"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
