@@ -1,3 +1,9 @@
+**2024-04: version 51.0.1.1**
+
+* Updated ``jwcrypto`` dependency requirement to ``~= 1.5.6`` (for Python 3.9 and 3.11) to address CVE-2024-28102
+  Note that Python 3.6 and Python 2.7 are no longer receiving security updates and should be moved away from immediately.
+  See previous release below for details on our support for Python 3.11
+
 **2024-02: version 51.0.1.0**
 
 * All SOAR Python libraries now officially support Python 3.11

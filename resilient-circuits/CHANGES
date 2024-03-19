@@ -1,3 +1,12 @@
+**2024-04: version 51.0.1.1**
+
+* Updated selftest to better handle connection issues when running in App Host
+* Modified ``stomp_prefetch_limit`` configuration option to default to the same value as ``num_workers``.
+  The prefetch limit can still be manually adjusted by changing ``stomp_prefetch_limit`` in the ``[resilient]``
+  section of app.config if you desire the prefetch and workers to have different values
+* Inbound app decorator now expects headers as the second parameter for the decorated function. This is intended
+  for better debugging with mor inbound message information passed to the handler
+
 **2024-02: version 51.0.1.0**
 
 * All SOAR Python libraries now officially support Python 3.11
