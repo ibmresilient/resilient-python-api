@@ -55,7 +55,7 @@ loglevel=INFO
 #log_max_bytes=10000000
 #log_backup_count=10
 
-# The number of Functions to run concurrently (within the range: 1 <= 500)
+# The number of Functions to run concurrently (within the range: 1 <= 2000)
 num_workers=50
 
 # Timeout value in seconds for selftest to wait for a response from SOAR
