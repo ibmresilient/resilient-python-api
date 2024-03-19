@@ -223,6 +223,7 @@ class StompClient(BaseComponent):
     @handler("ServerHeartbeat")
     def check_server_heartbeat(self, event):
         """ Confirm that heartbeat from server hasn't timed out """
+        LOG.debug("Checking server heartbeat")
         now = time.time()
         self.last_heartbeat = self._client.lastReceived or self.last_heartbeat
         if self.last_heartbeat:
@@ -237,7 +238,7 @@ class StompClient(BaseComponent):
     @handler("ClientHeartbeat")
     def send_heartbeat(self, event):
         if self.connected:
-            LOG.debug("Sending heartbeat")
+            LOG.debug("Sending client heartbeat")
             try:
                 self._client.beat()
             except (StompConnectionError, StompError) as err:
@@ -252,7 +253,7 @@ class StompClient(BaseComponent):
         try:
             if self._client.canRead(0):
                 frame = self._client.receiveFrame()
-                LOG.debug("Recieved frame %s", frame)
+                LOG.debug("Received frame %s", frame)
                 if frame.command == StompSpec.ERROR:
                     self.fire(OnStompError(frame, None))
                 else:
@@ -268,7 +269,7 @@ class StompClient(BaseComponent):
             self._client.send(destination, body=body.encode('utf-8'), headers=headers, receipt=receipt)
             LOG.debug("Message sent")
         except (StompConnectionError, StompError) as err:
-            LOG.error("Error sending frame")
+            LOG.error("Error sending frame. %s", err)
             event.success = False
             self.fire(OnStompError(None, err))
             raise  # To fire Send_failure event
@@ -328,7 +329,7 @@ class StompClient(BaseComponent):
             self._client.ack(frame)
             LOG.debug("Ack Sent")
         except (StompConnectionError, StompError) as err:
-            LOG.error("Error sending ack")
+            LOG.error("Error sending ack. %s", err)
             event.success = False
             self.fire(OnStompError(frame, err))
             raise  # To fire Ack_failure event

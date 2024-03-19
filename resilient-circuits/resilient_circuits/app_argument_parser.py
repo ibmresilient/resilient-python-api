@@ -70,6 +70,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                                             "log_http_responses") or ""
         default_resource_prefix = self.getopt(self.DEFAULT_APP_SECTION, "resource_prefix") or None
         default_num_workers = self.getopt(self.DEFAULT_APP_SECTION, "num_workers") or self.DEFAULT_NUM_WORKERS
+        default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or default_num_workers)
         default_trap_exception = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_TRAP_EXCEPTION) or self.DEFAULT_APP_EXCEPTION
         default_trap_exception = self._is_true(default_trap_exception)
 
@@ -171,6 +172,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           default=default_num_workers,
                           help=("Number of FunctionWorkers to use. "
                                 "Number of Functions that can run in parallel"))
+        self.add_argument("--stomp-prefetch-limit",
+                          default=default_stomp_prefetch_limit,
+                          type=int,
+                          help="MAX number of Action Module messages to send before ACK is required")
         self.add_argument("--trap-exception",
                           type=bool,
                           default=default_trap_exception,
