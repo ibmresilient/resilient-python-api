@@ -84,9 +84,6 @@ RUN pip install /tmp/packages/*${RESILIENT_CIRCUITS_VERSION}*.whl && \
 COPY docker_template_entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh
 ENTRYPOINT [ "sh", "/opt/rescircuits/entrypoint.sh" ]
 
-# set user to 1001
-USER 1001
-
 ######################
 ### END MAIN IMAGE ###
 ######################

@@ -11,3 +11,5 @@ ARG APPLICATION={{package_name}}
 
 COPY ./dist /tmp/packages
 RUN pip install /tmp/packages/${APPLICATION}-*.tar.gz
+
+USER 1001

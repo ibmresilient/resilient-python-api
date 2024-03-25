@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import pytest
+import logging
 from mock import MagicMock, patch
 
 from resilient_circuits.stomp_component import StompClient, StompConnectionError
@@ -64,3 +65,77 @@ def test_stomp_reconnect_one_failure_followed_by_successful_reconnect(caplog):
             patch_stomp_library_connect.side_effect = None
             client.connect(mock_evt)
             assert client._stomp_connection_errors == 0
+
+def test_stomp_client_logging_check_server_heartbeat(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+
+    client.check_server_heartbeat(mock_evt)
+    assert "Checking server heartbeat" in caplog.text
+
+def test_stomp_client_logging_send_heartbeat(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+
+    with patch("resilient_circuits.stomp_component.StompClient.connected") as patch_connected_state:
+        patch_connected_state.return_value = True
+
+        client.send_heartbeat(mock_evt)
+        assert "Sending client heartbeat" in caplog.text
+
+def test_stomp_client_logging_generate_events(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+
+    with patch("resilient_circuits.stomp_component.StompClient.connected") as patch_connected_state:
+        with patch("resilient_circuits.stomp_component.Stomp.canRead") as patch_can_read:
+            with patch("resilient_circuits.stomp_component.Stomp.receiveFrame") as patch_receive_frame:
+                patch_connected_state.return_value = True
+                patch_can_read.return_value = True
+                patch_receive_frame.side_effect = None
+
+                client.generate_events(mock_evt)
+                assert "Received frame" in caplog.text
+
+def test_stomp_client_logging_send_error(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+
+    with patch("resilient_circuits.stomp_component.Stomp.send") as patch_send:
+        patch_send.side_effect = StompConnectionError("A different STOMP error")
+
+        with pytest.raises(StompConnectionError):
+            client.send(mock_evt, "dest", "")
+        assert "Error sending frame" in caplog.text
+
+def test_stomp_client_logging_ack_frame(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+
+    with patch("resilient_circuits.stomp_component.Stomp.send") as patch_send:
+        patch_send.side_effect = StompConnectionError("A different STOMP error")
+
+        with pytest.raises(StompConnectionError):
+            client.ack_frame(mock_evt, {})
+        assert "Error sending ack" in caplog.text
+
