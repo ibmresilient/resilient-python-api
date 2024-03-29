@@ -202,25 +202,36 @@ class ResilientComponent(BaseComponent):
 
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
-        client = self.rest_client()
-        self._fields = dict((field["name"], field)
-                            for field in client.cached_get("/types/incident/fields"))
-        self._action_fields = dict((field["name"], field)
-                                   for field in client.cached_get("/types/actioninvocation/fields"))
+        multitenancy = self.opts.get('resilient', ()).get("multitenancy", "false")
+        if multitenancy.strip().lower() == "false":
+            LOG.info("Not multitenant: " + str(self.opts))
+            client = self.rest_client()
+            self._fields = dict((field["name"], field)
+                                for field in client.cached_get("/types/incident/fields"))
+            self._action_fields = dict((field["name"], field)
+                                       for field in client.cached_get("/types/actioninvocation/fields"))
 
-        if fn_names:
+            fn_names = ()
+            if fn_names:
 
-            try:
+                try:
 
-                for fn_name in fn_names:
-                    self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name))
+                    for fn_name in fn_names:
+                        self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name))
 
-                self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
+                    self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
 
-            except resilient.SimpleHTTPException:
-                # functions are not available, pre-v30 server
-                self._functions = None
-                self._function_fields = None
+
+                except resilient.SimpleHTTPException:
+                    # functions are not available, pre-v30 server
+                    self._functions = None
+                    self._function_fields = None
+        else:
+            LOG.info("==> Multitenant")
+            self._fields = dict()
+            self._function_fields = dict()
+            self._action_fields = dict()
+            self._functions['gen_ai_call_data_api'] = json.loads('{"id": 9, "name": "gen_ai_call_data_api", "display_name": "Gen AI call data API", "description": "Call an api and get the JSON result", "destination_handle": "genai", "output_description": null, "uuid": "5ee66d0b-7ce2-47b1-ad7f-4fb988423043", "version": 0}')
 
     def rest_client(self):
         """
@@ -416,12 +427,18 @@ class Actions(ResilientComponent):
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
                                 "proxy_password": opts.get("proxy_password")}
+        LOG.info("opts"  + str(opts))
+        multitenancy = opts.get("multitenancy")
+        if multitenancy is not None and multitenancy.strip().lower() == "false":
+            rest_client = self.rest_client()
+            self.org_id = rest_client.org_id
 
-        rest_client = self.rest_client()
-        self.org_id = rest_client.org_id
-
-        list_action_defs = rest_client.get("/actions")["entities"]
-        self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+            list_action_defs = rest_client.get("/actions")["entities"]
+        
+            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+        else:
+            self.org_id = "*"
+            self.action_defs[9]=dict()
 
         self.subscribe_headers = {"activemq.prefetchSize": opts["stomp_prefetch_limit"]}
         LOG.info("stomp_prefetch_limit set to %s", opts["stomp_prefetch_limit"])
@@ -616,12 +633,14 @@ class Actions(ResilientComponent):
         reset_resilient_client(self.opts) # send opts to know which client to reset
 
     def _setup_stomp(self):
-        rest_client = self.rest_client()
-        if not rest_client.actions_enabled:
-            # Don't create stomp connection b/c action module is not enabled.
-            LOG.warning(("Resilient action module not enabled."
-                        "No stomp connection attempted."))
-            return
+        multitenancy = self.opts.get('resilient', ()).get("multitenancy", "false")
+        if multitenancy.strip().lower() == "false":
+            rest_client = self.rest_client()
+            if not rest_client.actions_enabled:
+                # Don't create stomp connection b/c action module is not enabled.
+                LOG.warning(("Resilient action module not enabled."
+                            "No stomp connection attempted."))
+                return
 
         self.resilient_mock = self.opts["resilient_mock"] or False
         if self.resilient_mock:
