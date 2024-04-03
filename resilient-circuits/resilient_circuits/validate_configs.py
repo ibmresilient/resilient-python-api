@@ -14,6 +14,11 @@ VALIDATE_DICT = {
         "valid_condition": lambda c: True if c >= MIN_NUM_WORKERS and c <= MAX_NUM_WORKERS else False,
         "invalid_msg": "num_workers must be in the range {} <= {}".format(MIN_NUM_WORKERS, MAX_NUM_WORKERS)
     },
+    "stomp_prefetch_limit": {
+        "required": False,
+        "valid_condition": lambda c: True if c >= MIN_NUM_WORKERS and c <= MAX_NUM_WORKERS else False,
+        "invalid_msg": "stomp_prefetch_limit must be in the range {} <= {}".format(MIN_NUM_WORKERS, MAX_NUM_WORKERS)
+    },
     APP_CONFIG_LOG_MAX_BYTES: {
         "required": False,
         "valid_condition": lambda c: True if c == 0 or c >= MIN_LOG_BYTES else False,

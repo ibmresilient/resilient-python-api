@@ -389,9 +389,9 @@ class Actions(ResilientComponent):
         _retry_timer.register(self)
 
         # Make a worker thread-pool that will run functions
-        LOG.debug("num_workers set to %s", opts.get("num_workers"))
         self._num_workers = opts.get("num_workers")
         self._functionworker = FunctionWorker(process=False, channel="functionworker", workers=opts.get("num_workers"))
+        LOG.info("num_workers set to %s", opts.get("num_workers"))
         self._functionworker.register(self.root)
 
         if opts.get("test_actions", False):
@@ -424,6 +424,7 @@ class Actions(ResilientComponent):
         self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
 
         self.subscribe_headers = {"activemq.prefetchSize": opts["stomp_prefetch_limit"]}
+        LOG.info("stomp_prefetch_limit set to %s", opts["stomp_prefetch_limit"])
 
     # Public Utility methods
 

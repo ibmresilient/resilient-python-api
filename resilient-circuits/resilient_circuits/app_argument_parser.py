@@ -70,11 +70,14 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                                             "log_http_responses") or ""
         default_resource_prefix = self.getopt(self.DEFAULT_APP_SECTION, "resource_prefix") or None
         default_num_workers = self.getopt(self.DEFAULT_APP_SECTION, "num_workers") or self.DEFAULT_NUM_WORKERS
+        default_stomp_prefetch_limit = int(self.getopt("resilient", "stomp_prefetch_limit") or default_num_workers)
         default_trap_exception = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_TRAP_EXCEPTION) or self.DEFAULT_APP_EXCEPTION
         default_trap_exception = self._is_true(default_trap_exception)
 
         default_heartbeat_timeout_threshold = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_HEARTBEAT_TIMEOUT_THRESHOLD) or self.DEFAULT_HEARTBEAT_TIMEOUT_THRESHOLD
         default_rc_use_persistent_sessions = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_RC_USE_PERSISTENT_SESSIONS) or self.DEFAULT_RC_USE_PERSISTENT_SESSIONS
+
+        default_selftest_timeout = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_SELFTEST_TIMEOUT) or constants.DEFAULT_SELFTEST_TIMEOUT_VALUE
 
         self._unset_temp_logger()
 
@@ -169,6 +172,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           default=default_num_workers,
                           help=("Number of FunctionWorkers to use. "
                                 "Number of Functions that can run in parallel"))
+        self.add_argument("--stomp-prefetch-limit",
+                          default=default_stomp_prefetch_limit,
+                          type=int,
+                          help="MAX number of Action Module messages to send before ACK is required")
         self.add_argument("--trap-exception",
                           type=bool,
                           default=default_trap_exception,
@@ -181,6 +188,10 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=str,
                           default=default_rc_use_persistent_sessions,
                           help=("Set to False to disable the use of persistent sessions with RequestsCommon in app functions"))
+        self.add_argument("--{0}".format(constants.APP_CONFIG_SELFTEST_TIMEOUT),
+                          type=int,
+                          default=default_selftest_timeout,
+                          help=("Selftest timeout. Defaults to {0}".format(default_selftest_timeout)))
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""

@@ -1,3 +1,7 @@
+**2024-04: version 51.0.1.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
 **2024-02: version 51.0.1.0**
 
 * All SOAR Python libraries now officially support Python 3.11
