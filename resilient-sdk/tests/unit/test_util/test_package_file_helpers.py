@@ -6,15 +6,16 @@ import io
 import json
 import os
 import shutil
+import sys
 
 import pytest
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 from mock import patch
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
 from setuptools import sandbox as use_setuptools
-import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_get_setup_callable():
@@ -464,6 +465,7 @@ def test_get_export_from_zip_not_found():
         package_helpers.get_export_from_zip(mock_paths.MOCK_EXPORT_RES) # not a zip file
 
 
+@pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher to do list of dictionary == check")
 @pytest.mark.parametrize("list_dicts, has_duplicates, optional_lambda",
     [([
         {"x": 1, "y": 2, "z": 3},
