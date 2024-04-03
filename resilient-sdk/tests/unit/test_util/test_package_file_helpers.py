@@ -463,3 +463,24 @@ def test_get_export_from_zip_not_found():
     with pytest.raises(SDKException):
         package_helpers.get_export_from_zip(mock_paths.MOCK_EXPORT_RES) # not a zip file
 
+
+@pytest.mark.parametrize("list_dicts, has_duplicates, optional_lambda",
+    [([
+        {"x": 1, "y": 2, "z": 3},
+        {"a": 4, "b": 5, "c": 6},
+        {"x": 1, "y": 2, "z": 3}
+    ], True, None),
+    ([
+        {"x": 1, "y": 2, "z": 3},
+        {"a": 4, "b": 5, "c": 6}
+    ], False, None),
+    ([
+        {"x": 1, "y": 2, "z": 3},
+        {"x": 4, "b": 5, "c": 6},
+        {"x": 10, "y": 2, "z": 3}
+    ], False, lambda x: x["x"])
+])
+def test_make_list_of_dicts_unique(list_dicts, has_duplicates, optional_lambda):
+
+    result = package_helpers.make_list_of_dicts_unique(list_dicts, optional_lambda)
+    assert (result != list_dicts) == has_duplicates

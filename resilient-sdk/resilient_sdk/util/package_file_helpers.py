@@ -1221,7 +1221,7 @@ def print_latest_version_warning(current_version, latest_available_version):
 
     LOG.warning(w)
 
-def make_list_of_dicts_unique(list_of_dicts):
+def make_list_of_dicts_unique(list_of_dicts, uniqueness_key_func = None):
     """
     Creates temporary dictionary of schema str(dict):dict
     for each dict in the list, then captures the values
@@ -1233,10 +1233,15 @@ def make_list_of_dicts_unique(list_of_dicts):
 
     :param list_of_dicts: List of dictionaries to make unique
     :type list_of_dicts: list[dict]
+    :param uniqueness_key_func: key func to determine uniqueness of a given dict; defaults to str(x)
+    :type uniqueness_key_func: Callable
     :return: same list as started with with any extra duplicates removed
     :rtype: list[dict]
     """
+    if uniqueness_key_func is None:
+        # set default uniqueness function to: str(x)
+        uniqueness_key_func = str # no need for a lambda here as str(x) will work just fine
 
     # .values() only grabs each x from the unique, temporary dictionary created in-line
-    unique_list = list({str(x): x for x in list_of_dicts}.values())
+    unique_list = list({uniqueness_key_func(x): x for x in list_of_dicts}.values())
     return unique_list
