@@ -188,7 +188,7 @@ def read_json_file(path, section=None):
     if section:
         if section in file_contents:
             return file_contents.get(section, {})
-        else: 
+        else:
             LOG.debug("Section {} not found in provided JSON.".format(section))
             return {}
     else:
@@ -563,7 +563,7 @@ def get_script_info(each_script_in_playbook, scripts_in_location, script_type):
     '''
     Extracts script related information for playbooks. Scripts can be of 2 types: local or global.
     Local scripts live within the playbook itself, while global scripts are stored in the global_export dict.
-    
+
     Note: The scripts are passed by reference. They need not be returned. They are directly updated.
     :param each_script_in_playbook: Individual scripts found in the playbook
     :type each_script_in_playbook: dict
@@ -1034,7 +1034,7 @@ def rm_pii(pii_key_list, export):
     """
     Remove any keys from 'export' that are in 'pii_key_list'.
     Recursively searches the export object.
-    
+
     :param pii_key_list: list of str keys to be removed from 'export'. ex: ["creator", "creator_id"]
     :type pii_key_list: [str]
     :param export: the result of calling get_latest_org_export() or minified_export from calling minify_export()
@@ -1059,7 +1059,7 @@ def rm_pii(pii_key_list, export):
                 export_copy[key] = rm_pii(pii_key_list, content)
             elif isinstance(content, list):
                 # recreates the list where any dict elements of the list are recursively scrubbed
-                # if list item is not a dictionary, don't 
+                # if list item is not a dictionary, don't
                 export_copy[key] = [rm_pii(pii_key_list, list_content) if isinstance(list_content, dict) else list_content for list_content in content]
 
         return export_copy
@@ -1603,11 +1603,11 @@ def parse_version_object(version_obj):
     :rypte: (int, int, int)
     """
 
-    if sys.version_info[0] >= 3: # python 3 
+    if sys.version_info[0] >= 3: # python 3
         return (version_obj.major, version_obj.minor, version_obj.micro)
     else: # python 2.7
         major_minor_micro = tuple(int(i) for i in str(version_obj).split("."))
-        
+
         # if version is only one number (i.e. '3'), then add a 0 to the end
         if len(major_minor_micro) == 1:
             major_minor_micro = (major_minor_micro[0], 0, 0)
@@ -1710,7 +1710,7 @@ def run_subprocess(args, change_dir=None, cmd_name="", log_level_threshold=loggi
         proc.wait() # additional wait to make sure process is complete
     else:
         # if debugging not enabled, use communicate as that has the
-        # greatest ability to deal with large buffers of output 
+        # greatest ability to deal with large buffers of output
         # being stored in subprocess.PIPE
         stdout, _ = proc.communicate()
         sys.stdout.write(" {0} complete\n\n".format(cmd_name))
@@ -1768,10 +1768,27 @@ def scrape_results_from_log_file(path_log_file):
             if fn_name not in results_scraped.keys():
                 # Convert str into dict
                 results = ast.literal_eval(results_from_l)
+                results = _remove_pii_from_payload_samples(results)
                 results_scraped[fn_name] = results
 
     return results_scraped
 
+def _remove_pii_from_payload_samples(results):
+    """
+    Helper method to remove personal information in payload samples.
+
+    As of this commit, this only removes the host value in the metrics section.
+    But in the future this could support more PII removal
+
+    :param results: payload results
+    :type results: dict
+    :return: same results given except with any identifiable pii removed
+    :rtype: dict
+    """
+    if "metrics" in results and "host" in results["metrics"]:
+        results["metrics"]["host"] = ""
+
+    return results
 
 def handle_file_not_found_error(e, msg):
     """
@@ -1783,7 +1800,7 @@ def handle_file_not_found_error(e, msg):
     :type e: Exception
     :param msg: (required) the custom error message to print as a WARNING in the logs
     :type msg: str
-    :raises: The exception that is passed unless it contains 
+    :raises: The exception that is passed unless it contains
     ERROR_NOT_FIND_DIR or ERROR_NOT_FIND_FILE in its e.message
     """
     if constants.ERROR_NOT_FIND_DIR or constants.ERROR_NOT_FIND_FILE in e.message:
@@ -1808,7 +1825,7 @@ def str_repr_activation_conditions(activation_conditions):
             ],
             "logic_type": "all"
         }
-    
+
 
     :param activation_conditions: _description_
     :type activation_conditions: _type_
@@ -1838,7 +1855,7 @@ def str_repr_activation_conditions(activation_conditions):
         # we replace "1" with "1234" and on the next iteration we replace
         # "2" with something else; in this kind of scenario, we'd be
         # replacing a "2" which we didn't want to
-        # So instead, we generate a unique salt and 
+        # So instead, we generate a unique salt and
         # we replace the original number with that. then on the second pass,
         # we replace the salt with the intended value
         # It is also CRUCIAL that the keys are processed in reverse order
@@ -1861,7 +1878,7 @@ def str_repr_activation_conditions(activation_conditions):
 class ContextMangerForTemporaryDirectory():
     """
     This is a small class for safe use of ``tempfile.mkdtemp()`` which requires cleanup after
-    use. The class effectively is the same as ``tempfile.TemporaryDirectory``, however, 
+    use. The class effectively is the same as ``tempfile.TemporaryDirectory``, however,
     that class isn't available before python 3 thus the implementation here.
     On enter, ``tempfile.mkdtemp(*args, **kwargs)`` is called and on exit ``shutil.rmtree(path_to_dir)`` is called.
 

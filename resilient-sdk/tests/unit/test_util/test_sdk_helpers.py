@@ -726,8 +726,29 @@ def test_scrape_results_from_log_file():
 
     # There are two Results for mock_function_one
     # in the mock_app.log file, so this ensures we get the latest
-    assert mock_function_one_results.get("version") == 2.1
-    assert mock_function_one_results.get("reason") == None
+    assert mock_function_one_results == {
+        "version": 2.1,
+        "success": True,
+        "reason": None,
+        "content": {"mock_key": "Mock Value!"},
+        "raw": None,
+        "inputs": {
+            "mock_input_text_with_value_string": "data value one  ล ฦ ว ศ ษ ส ห ฬ อ",
+            "mock_input_text": "abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc",
+            "mock_input_boolean": True,
+            "mock_input_multiselect": ["value one", "value two"],
+            "mock_input_select": "select two",
+            "mock_input_number": 1630407352685
+        },
+        "metrics": {
+            "version": "1.0",
+            "package": "fn-main-mock-integration",
+            "package_version": "1.0.3",
+            "host": "",
+            "execution_time_ms": 3233,
+            "timestamp": "2021-12-02 14:48:45"
+        }
+    }
 
 def test_scrape_results_really_long_function_name():
 
@@ -740,6 +761,17 @@ def test_scrape_results_really_long_function_name():
     # in the mock_app.log file, so this ensures we get the latest
     assert mock_function_one_results.get("version") == 2.1
     assert mock_function_one_results.get("reason") == None
+    assert mock_function_one_results.get("metrics", {}).get("host") == ""
+
+def test_scrape_results_clears_metrics_host_value():
+
+    results_scraped = sdk_helpers.scrape_results_from_log_file(mock_paths.MOCK_APP_LOG_PATH)
+    mock_function_one_results = results_scraped.get("mock_function_one")
+
+    assert isinstance(mock_function_one_results, dict)
+
+    # specifically test that the host was cleared out
+    assert mock_function_one_results["metrics"]["host"] == ""
 
 
 def test_scrape_results_from_log_file_not_found():
