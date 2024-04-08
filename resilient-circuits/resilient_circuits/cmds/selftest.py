@@ -292,7 +292,7 @@ def run_apps_selftest(cmd_line_args, app_configs):
                 # load the entry point
                 try:
                     f_selftest = ep.load()
-                except ModuleNotFoundError:
+                except ImportError:
                     selftest_not_found_count += 1
                     continue
 

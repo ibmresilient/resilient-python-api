@@ -13,7 +13,6 @@ import sys
 import tempfile
 
 import jinja2
-import pkg_resources
 import pytest
 import requests_mock
 from mock import patch
@@ -63,7 +62,7 @@ def test_read_write_file(fx_mk_temp_dir):
 
 def test_write_latest_pypi_tmp_file(fx_mk_temp_dir):
     mock_file_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path_sdk_tmp_pypi_version.json")
-    mock_version = pkg_resources.parse_version("45.0.0")
+    mock_version = parse_version("45.0.0")
     sdk_helpers.write_latest_pypi_tmp_file(mock_version, mock_file_path)
 
     file_contents = sdk_helpers.read_json_file(mock_file_path)
@@ -578,12 +577,12 @@ def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
 def test_get_resilient_sdk_version():
     parsed_version = sdk_helpers.get_resilient_sdk_version()
     assert parsed_version is not None
-    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+    assert parsed_version >= parse_version(constants.RESILIENT_LIBRARIES_VERSION)
 
 def test_get_package_version_found_in_env():
     parsed_version = sdk_helpers.get_package_version("resilient-sdk")
     assert parsed_version is not None
-    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+    assert parsed_version >= parse_version(constants.RESILIENT_LIBRARIES_VERSION)
 
 def test_get_package_version_not_found():
     not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
@@ -600,7 +599,7 @@ def test_get_latest_version_on_pypi_legacy_version():
     mock_releases = {"releases": ["41.0.0", "#$%^&*mock_legacy_version"]}
     with requests_mock.Mocker() as m:
         m.get(constants.URL_PYPI_VERSION, json=mock_releases)
-        assert pkg_resources.parse_version("41.0.0") == sdk_helpers.get_latest_version_on_pypi()
+        assert parse_version("41.0.0") == sdk_helpers.get_latest_version_on_pypi()
 
 
 def test_get_latest_available_version_pypi(fx_mk_os_tmp_dir):
@@ -614,7 +613,7 @@ def test_get_latest_available_version_pypi(fx_mk_os_tmp_dir):
 def test_get_latest_available_version_tmp_file(fx_mk_os_tmp_dir):
 
     path_sdk_tmp_pypi_version = os.path.join(fx_mk_os_tmp_dir, constants.TMP_PYPI_VERSION)
-    mock_version = pkg_resources.parse_version("45.0.0")
+    mock_version = parse_version("45.0.0")
 
     sdk_helpers.write_latest_pypi_tmp_file(mock_version, path_sdk_tmp_pypi_version)
     latest_version = sdk_helpers.get_latest_available_version()

@@ -16,7 +16,7 @@ if sys.version_info.major < 3:
 else:
     from io import StringIO
 
-import pkg_resources
+from packaging.version import parse
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
@@ -98,7 +98,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
 
     res_circuits_version = sdk_helpers.get_package_version(constants.CIRCUITS_PACKAGE_NAME)
 
-    if res_circuits_version and res_circuits_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
+    if res_circuits_version and res_circuits_version >= parse(constants.RESILIENT_LIBRARIES_VERSION):
         # installed and correct version
         return True, SDKValidateIssue(
             name=attr_dict.get("name"),
@@ -106,7 +106,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
         )
-    elif res_circuits_version and res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
+    elif res_circuits_version and res_circuits_version < parse(constants.RESILIENT_LIBRARIES_VERSION):
         # resilient-circuits installed but version not supported
         return False, SDKValidateIssue(
             name=attr_dict.get("name"),
