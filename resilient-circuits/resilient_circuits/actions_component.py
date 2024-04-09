@@ -231,7 +231,9 @@ class ResilientComponent(BaseComponent):
             self._fields = dict()
             self._function_fields = dict()
             self._action_fields = dict()
-            self._functions['gen_ai_call_data_api'] = json.loads('{"id": 9, "name": "gen_ai_call_data_api", "display_name": "Gen AI call data API", "description": "Call an api and get the JSON result", "destination_handle": "genai", "output_description": null, "uuid": "5ee66d0b-7ce2-47b1-ad7f-4fb988423043", "version": 0}')
+            opts = self.opts
+            opts_resilient = opts.get('resilient')
+            self._functions = json.loads( str(opts_resilient.get('functions')))
 
     def rest_client(self):
         """
