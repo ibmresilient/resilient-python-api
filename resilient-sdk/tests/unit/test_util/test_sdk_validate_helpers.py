@@ -475,7 +475,7 @@ def test_package_files_validate_python_versions_in_scripts_fail(fx_copy_fn_main_
 
     filename = "export.res"
     i = fx_get_package_files_config[filename]
-    attr_dict = sdk_validate_configs.package_files[i][1]
+    attr_dict = sdk_validate_configs.package_files[i-1][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock export.res
@@ -546,7 +546,7 @@ def test_package_files_validate_python_versions_in_scripts_pass(playbook_input, 
 
     filename = "export.res"
     i = fx_get_package_files_config[filename]
-    attr_dict = sdk_validate_configs.package_files[i][1]
+    attr_dict = sdk_validate_configs.package_files[i-1][1]
     path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
 
     # mock export.res
@@ -572,6 +572,56 @@ def test_package_files_validate_python_versions_in_scripts_pass(playbook_input, 
         assert isinstance(result, SDKValidateIssue)
         assert result.severity == SDKValidateIssue.SEVERITY_LEVEL_DEBUG
         assert "Scripts in app use valid versions of Python" in result.description
+
+@pytest.mark.parametrize("playbook_input, expected_severity", [
+    ([{"display_name": "My PB",
+        "activation_details": {
+            "activation_conditions": {
+                "conditions": [
+                    {"field_name": "incident.properties.my_custom_field_1"}]}
+        },
+        "auto_cancelation_details": {
+            "cancelation_conditions": {
+                "conditions": [
+                    {"field_name": "incident.properties.my_custom_field_2"}]}
+        }
+    }], SDKValidateIssue.SEVERITY_LEVEL_CRITICAL),
+    ([{"display_name": "My PB",
+        "activation_details": {
+            "activation_conditions": {
+                "conditions": [{"field_name": "incident.properties.my_custom_field_1"}]}
+        }
+    }], SDKValidateIssue.SEVERITY_LEVEL_CRITICAL),
+    ([{"display_name": "My PB",
+        "auto_cancelation_details": {
+            "cancelation_conditions": {
+                "conditions": [
+                    {"field_name": "incident.properties.my_custom_field_2"}]}
+        }
+    }], SDKValidateIssue.SEVERITY_LEVEL_CRITICAL),
+    ([], SDKValidateIssue.SEVERITY_LEVEL_DEBUG), # ensure empty playbook list works
+    (None, SDKValidateIssue.SEVERITY_LEVEL_DEBUG) # ensure None playbook object works
+])
+def test_package_files_validate_no_playbook_dependencies_missing(playbook_input, expected_severity, fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+    filename = "export.res"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i-1][1]
+    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+
+    # mock export.res
+    with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_import_definition_from_customize_py") as mock_export_res:
+
+        mock_export_res.return_value = {
+            "fields": [],
+            "playbooks": playbook_input
+        }
+
+        results = sdk_validate_helpers.package_files_validate_no_playbook_dependencies_missing(path_file, fx_copy_fn_main_mock_integration[0], attr_dict)
+
+        assert len(results) == 1
+        result = results[0]
+        assert isinstance(result, SDKValidateIssue)
+        assert result.severity == expected_severity
 
 def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 

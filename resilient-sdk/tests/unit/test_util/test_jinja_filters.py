@@ -43,11 +43,19 @@ def test_scrub_ansi():
 
 
 def test_convert_to_code():
-    mock_text = "'''pip install -U 'resilient-circuits''''"
+    mock_text = "'''pip install -U resilient-circuits'''"
 
     filtered_text = jinja2_filters._convert_to_code(mock_text)
 
-    assert "```shell\n$ pip install -U \"resilient-circuits\"\n```" in filtered_text
+    assert filtered_text == "\n\n```shell\n$ pip install -U resilient-circuits\n```\n"
+
+
+def test_convert_to_code_long_block():
+    mock_text = "Resilient-circuits is out of date. You can upgrade it by running: '''pip install -U resilient-circuits''' and making sure that it is the latest version"
+
+    filtered_text = jinja2_filters._convert_to_code(mock_text)
+
+    assert filtered_text == "Resilient-circuits is out of date. You can upgrade it by running: \n\n```shell\n$ pip install -U resilient-circuits\n```\n and making sure that it is the latest version"
 
 
 def test_defaults_to_code():
