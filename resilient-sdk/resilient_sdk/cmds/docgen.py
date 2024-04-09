@@ -151,7 +151,7 @@ class CmdDocgen(BaseCmd):
         uses a pre-processing script, use that as the pre-processing script.
         If any scripts in the playbook reference the output of the function
         in their script (we do a very specific search which looks for Python
-        code (not comments) that reference the specific string 
+        code (not comments) that reference the specific string
         ``playbook.functions.results.<output_name>``), then use that script
         as an example post-processing script. If none are found in local
         scripts, search the global scripts of the export
@@ -178,7 +178,7 @@ class CmdDocgen(BaseCmd):
                 # code. we check for that there and if so, we've found a
                 # "post processing" script
 
-                # This regex searches for Python code instances of the 
+                # This regex searches for Python code instances of the
                 # output. It is relatively robust and will not match commented code
                 # nor non-exact matches
                 # For examples on this regex, see: https://regex101.com/r/Fv5AQm
@@ -754,14 +754,14 @@ class CmdDocgen(BaseCmd):
             "app_configs": requirements_obj.get("jinja_app_configs", [{},{}])[1],
 
             # lists of customizations (make unique)
-            "functions": package_helpers.make_list_of_dicts_unique(jinja_functions),
-            "scripts": package_helpers.make_list_of_dicts_unique(jinja_scripts),
-            "rules": package_helpers.make_list_of_dicts_unique(jinja_rules),
-            "datatables": package_helpers.make_list_of_dicts_unique(jinja_datatables),
-            "custom_fields": package_helpers.make_list_of_dicts_unique(jinja_custom_fields),
-            "custom_artifact_types": package_helpers.make_list_of_dicts_unique(jinja_custom_artifact_types),
-            "playbooks": package_helpers.make_list_of_dicts_unique(jinja_playbooks),
-            "apps": package_helpers.make_list_of_dicts_unique(jinja_apps),
+            "functions": package_helpers.make_list_of_dicts_unique(jinja_functions, lambda x: x["anchor"]),
+            "scripts": package_helpers.make_list_of_dicts_unique(jinja_scripts, lambda x: x["anchor"]),
+            "rules": package_helpers.make_list_of_dicts_unique(jinja_rules, lambda x: x["name"]),
+            "datatables": package_helpers.make_list_of_dicts_unique(jinja_datatables, lambda x: x["anchor"]),
+            "custom_fields": package_helpers.make_list_of_dicts_unique(jinja_custom_fields, lambda x: x["api_name"]),
+            "custom_artifact_types": package_helpers.make_list_of_dicts_unique(jinja_custom_artifact_types, lambda x: x["api_name"]),
+            "playbooks": package_helpers.make_list_of_dicts_unique(jinja_playbooks, lambda x: x["api_name"]),
+            "apps": package_helpers.make_list_of_dicts_unique(jinja_apps, lambda x: x["export_key"]),
 
             # constants
             "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING,

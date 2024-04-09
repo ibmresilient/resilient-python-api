@@ -486,9 +486,9 @@ def fx_mock_config_file_path():
     _mk_temp_dir()
     old_config_file_path = constants.PATH_RES_DEFAULT_APP_CONFIG
     constants.PATH_RES_DEFAULT_APP_CONFIG = os.path.join(mock_paths.TEST_TEMP_DIR, "app.config")
-    
+
     yield
-    
+
     _rm_temp_dir()
     constants.PATH_RES_DEFAULT_APP_CONFIG = old_config_file_path
 
@@ -548,6 +548,25 @@ def fx_cmd_line_args_docgen_export_file():
     args_to_add = [
         "docgen",
         "-e", mock_paths.MOCK_EXPORT_RES, mock_paths.MOCK_PYTEST_XML_REPORT_PATH
+    ]
+
+    args = _add_to_cmd_line_args(args_to_add)
+
+    yield args
+
+    sys.argv = original_cmd_line
+
+@pytest.fixture
+def fx_cmd_line_args_docgen_two_export_files():
+    """
+    Before: adds args_to_add to cmd line so can be accessed by ArgParsers
+    After: Set the cmd line args back to its original value
+    """
+    original_cmd_line = copy.deepcopy(sys.argv)
+
+    args_to_add = [
+        "docgen",
+        "-e", mock_paths.MOCK_EXPORT_RES, mock_paths.MOCK_EXPORT_RES_W_PLAYBOOK, mock_paths.MOCK_PYTEST_XML_REPORT_PATH
     ]
 
     args = _add_to_cmd_line_args(args_to_add)
