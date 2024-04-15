@@ -6,20 +6,20 @@ import difflib
 import os
 import sys
 
-import pkg_resources
 import pytest
+import tests.shared_mock_data.sdk_mock_paths as mock_paths
 from mock import patch
-from resilient_sdk.util import (constants, package_file_helpers, sdk_validate_configs,
+from packaging.version import parse
+from resilient_sdk.util import (constants, sdk_validate_configs,
                                 sdk_validate_helpers)
 from resilient_sdk.util.sdk_exception import SDKException
 from resilient_sdk.util.sdk_validate_issue import SDKValidateIssue
-import tests.shared_mock_data.sdk_mock_paths as mock_paths
 
 
 def test_selftest_validate_resilient_circuits_installed():
 
     with patch("resilient_sdk.util.sdk_validate_helpers.sdk_helpers.get_package_version") as mock_package_version:
-        mock_package_version.return_value = pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+        mock_package_version.return_value = parse(constants.RESILIENT_LIBRARIES_VERSION)
 
         result = sdk_validate_helpers.selftest_validate_resilient_circuits_installed(sdk_validate_configs.selftest_attributes[0])
         assert isinstance(result[0], bool)

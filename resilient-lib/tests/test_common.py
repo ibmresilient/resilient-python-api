@@ -108,22 +108,22 @@ class TestFunctionMetrics(unittest.TestCase):
             validate_fields(("empty_input"), inputs)
 
         # Test no mandatory fields
-        self.assertEquals(validate_fields([], inputs), expected_output)
+        self.assertEqual(validate_fields([], inputs), expected_output)
 
         # Test getting single input from returned dict
-        self.assertEquals(validate_fields(("bool_input_true"), inputs).get("bool_input_true"), True)
-        self.assertEquals(validate_fields([], inputs).get("bool_input_true"), True)
+        self.assertEqual(validate_fields(("bool_input_true"), inputs).get("bool_input_true"), True)
+        self.assertEqual(validate_fields([], inputs).get("bool_input_true"), True)
 
         # Test getting value defined as False
-        self.assertEquals(validate_fields(["bool_input_false"], inputs).get("bool_input_false"), False)
+        self.assertEqual(validate_fields(["bool_input_false"], inputs).get("bool_input_false"), False)
 
         # Test select + multi-select type fields
-        self.assertEquals(validate_fields(["select_input"], inputs).get("select_input"), "select choice")
-        self.assertEquals(validate_fields([], inputs).get("multi_select_input"),
+        self.assertEqual(validate_fields(["select_input"], inputs).get("select_input"), "select choice")
+        self.assertEqual(validate_fields([], inputs).get("multi_select_input"),
                           ["select choice one", "select choice two"])
 
         # Test 'Text with value string Input' type
-        self.assertEquals(validate_fields(["text_with_value_string"], inputs).get("text_with_value_string"),
+        self.assertEqual(validate_fields(["text_with_value_string"], inputs).get("text_with_value_string"),
                           "mock text")
 
         # Test placeholder
@@ -133,14 +133,14 @@ class TestFunctionMetrics(unittest.TestCase):
 
         # Test works with a namedtuple
         inputs_as_named_tuple = namedtuple("fn_inputs", inputs.keys())(*inputs.values())
-        self.assertEquals(validate_fields(("bool_input_true"), inputs_as_named_tuple).get("bool_input_true"), True)
+        self.assertEqual(validate_fields(("bool_input_true"), inputs_as_named_tuple).get("bool_input_true"), True)
 
         validated_named_tuple_inputs_i = validate_fields([], inputs_as_named_tuple)
-        self.assertEquals(validated_named_tuple_inputs_i, expected_output)
+        self.assertEqual(validated_named_tuple_inputs_i, expected_output)
 
         # Test called again on a normalized dict
         validated_named_tuple_inputs_ii = validate_fields([], validated_named_tuple_inputs_i)
-        self.assertEquals(validated_named_tuple_inputs_ii, expected_output)
+        self.assertEqual(validated_named_tuple_inputs_ii, expected_output)
 
     def test_unescape(self):
         # unescape(data)

@@ -30,6 +30,7 @@ import pkg_resources
 import requests
 import requests.exceptions
 from jinja2 import Environment, PackageLoader
+from packaging.version import InvalidVersion
 from packaging.version import parse as parse_version
 from resilient_sdk.util import constants
 from resilient_sdk.util.jinja2_filters import add_filters_to_jinja_env
@@ -1458,7 +1459,7 @@ def get_package_version(package_name):
     :rtype: Version or None
     """
     try:
-        return pkg_resources.parse_version(pkg_resources.require(package_name)[0].version)
+        return parse_version(pkg_resources.require(package_name)[0].version)
     except pkg_resources.DistributionNotFound:
         return None
 
@@ -1482,10 +1483,11 @@ def get_latest_version_on_pypi():
 
     for the_version in res_json.get("releases", {}):
 
-        v = pkg_resources.parse_version(the_version)
-
-        if not isinstance(v, pkg_resources.extern.packaging.version.LegacyVersion):
+        try:
+            v = parse_version(the_version)
             available_versions.append(v)
+        except InvalidVersion:
+            continue # skip if can't parse
 
     available_versions = sorted(available_versions)
 
@@ -1518,7 +1520,7 @@ def get_latest_available_version():
             write_latest_pypi_tmp_file(latest_available_version, path_sdk_tmp_pypi_version)
 
         else:
-            return pkg_resources.parse_version(pypi_version_data.get("version", ""))
+            return parse_version(pypi_version_data.get("version", ""))
 
     else:
         latest_available_version = get_latest_version_on_pypi()

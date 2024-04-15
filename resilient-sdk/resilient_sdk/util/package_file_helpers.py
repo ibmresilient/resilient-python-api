@@ -19,6 +19,7 @@ import zipfile
 from collections import defaultdict
 
 import pkg_resources
+from packaging.version import parse
 from resilient import ImportDefinition
 from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
@@ -1028,7 +1029,7 @@ def get_required_python_version(python_requires_str):
     """
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
-        version = pkg_resources.parse_version(version_str)
+        version = parse(version_str)
 
         return sdk_helpers.parse_version_object(version)
     except AttributeError as e:
