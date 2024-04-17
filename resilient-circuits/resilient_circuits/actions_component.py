@@ -10,6 +10,7 @@ import os.path
 import ssl
 import sys
 import traceback
+import re
 from signal import SIGINT, SIGTERM
 
 if sys.version_info.major < 3:
@@ -686,6 +687,10 @@ class Actions(ResilientComponent):
         else:
             stomp_email = self.opts["email"]
             stomp_password = self.opts["password"]
+            if re.match(r'^env{.*}$', stomp_password):
+                logging.info("Getting password from environment")
+                env_var = stomp_password[4:-1]
+                stomp_password = os.environ[env_var]
 
         # Set up a STOMP connection to the Resilient action services
         stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
