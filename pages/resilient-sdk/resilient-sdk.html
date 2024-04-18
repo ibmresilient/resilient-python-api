@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="prev" title="resilient-lib" href="../resilient-lib/resilient-lib.html" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.3.6 and Furo 2024.01.29 -->
         <title>resilient-sdk - IBM SOAR Python Documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -199,16 +199,16 @@
         </div>
         <article role="main">
           <section id="resilient-sdk">
-<span id="id1"></span><h1>resilient-sdk<a class="headerlink" href="#resilient-sdk" title="Link to this heading">#</a></h1>
+<span id="id1"></span><h1>resilient-sdk<a class="headerlink" href="#resilient-sdk" title="Link to this heading">¶</a></h1>
 <p>Python SDK for developing Apps for IBM SOAR</p>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
 <p>To install the IBM SOAR SDK, execute the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install resilient-sdk
 </pre></div>
 </div>
 <section id="configuration">
-<span id="id2"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h3>
+<span id="id2"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h3>
 <p>Similar to our <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> library, the SDK requires an <code class="docutils literal notranslate"><span class="pre">app.config</span></code>
 created in the default location: <code class="docutils literal notranslate"><span class="pre">~/.resilient</span></code> with the following minimum configurations:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">resilient</span><span class="p">]</span>
@@ -229,7 +229,7 @@ created in the default location: <code class="docutils literal notranslate"><spa
 </section>
 </section>
 <section id="using-the-sdk">
-<h2>Using the SDK<a class="headerlink" href="#using-the-sdk" title="Link to this heading">#</a></h2>
+<h2>Using the SDK<a class="headerlink" href="#using-the-sdk" title="Link to this heading">¶</a></h2>
 <p>Python SDK for developing IBM SOAR Apps that
 provides various subcommands to help with development</p>
 <pre class="literal-block">usage:
@@ -242,7 +242,7 @@ options:
 -h, --help			show this help message and exit
 -v, --verbose			Set the log level to DEBUG</pre>
 <section id="codegen">
-<span id="id3"></span><h3>codegen<a class="headerlink" href="#codegen" title="Link to this heading">#</a></h3>
+<span id="id3"></span><h3>codegen<a class="headerlink" href="#codegen" title="Link to this heading">¶</a></h3>
 <p>Generates boilerplate code used to begin developing an app.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk codegen -p &lt;name_of_package&gt; -m 'fn_custom_md' --rule 'Rule One' 'Rule Two' -i 'custom incident type'
@@ -275,7 +275,7 @@ options:
 -pr, --poller			Build template files for a poller 
 --gather-results		Uses the log file specified or if no path specified use the default at '~/.resilient/logs/app.log' to try gather results. Only Python &gt;= 3.6 supported</pre>
 <section id="basic-usage">
-<h4>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h4>
+<h4>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">codegen</span></code> command is your entry point with <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code> to creating apps.
 Once one or more functions and an associated message destination are created in the SOAR UI, running
 <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span> <span class="pre">codegen</span></code> will generate templated python code for your app development.</p>
@@ -359,7 +359,7 @@ to make sure you’re not missing anything. Run <a class="reference internal" hr
 </div>
 </section>
 <section id="advanced-usage">
-<h4>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading">#</a></h4>
+<h4>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading">¶</a></h4>
 <p>Certain apps may wish to take advantage of the ability to “poll” on an endpoint. This
 is useful in creating apps that bidirectionally sync between SOAR and a third party
 system. Adding a poller to an app is achieved by adding the <code class="docutils literal notranslate"><span class="pre">--poller</span></code> flag to the
@@ -376,7 +376,7 @@ see examples of poller apps in our public
 </section>
 </section>
 <section id="docgen">
-<span id="id4"></span><h3>docgen<a class="headerlink" href="#docgen" title="Link to this heading">#</a></h3>
+<span id="id4"></span><h3>docgen<a class="headerlink" href="#docgen" title="Link to this heading">¶</a></h3>
 <p>Generates boilerplate documentation for an app.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk docgen -p &lt;path_to_package&gt;
@@ -395,7 +395,7 @@ options:
 -pr, --poller			Include poller section in README generated by docgen</pre>
 </section>
 <section id="package">
-<span id="id5"></span><h3>package<a class="headerlink" href="#package" title="Link to this heading">#</a></h3>
+<span id="id5"></span><h3>package<a class="headerlink" href="#package" title="Link to this heading">¶</a></h3>
 <p>Package your Python Package into a SOAR app format.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk package -p &lt;path_to_directory&gt;
@@ -415,7 +415,7 @@ options:
 --validate			Run the 'validate' command and generate the validation report to include in packaging</pre>
 </section>
 <section id="validate">
-<span id="id6"></span><h3>validate<a class="headerlink" href="#validate" title="Link to this heading">#</a></h3>
+<span id="id6"></span><h3>validate<a class="headerlink" href="#validate" title="Link to this heading">¶</a></h3>
 <p>Tests the content of all files associated with the app, including code, before packaging it. Only Python &gt;= 3.6 supported.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk validate -p &lt;name_of_package&gt;
@@ -438,7 +438,7 @@ options:
 --selftest			Validate and run the selftest.py file in the package directory. 'resilient-circuits' and the package must be installed in Python environment) 
 --tox-args			Pytest arguments to pass to tox when validating tests. Format is &lt;attr1&gt;=&quot;&lt;value&gt;&quot;. Example: '--tox-args my_arg1=&quot;value1&quot; my_arg2=&quot;value2&quot;'</pre>
 <section id="usage">
-<h4>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h4>
+<h4>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h4>
 <p>Run <code class="docutils literal notranslate"><span class="pre">validate</span></code> without any options to:</p>
 <ol class="arabic simple">
 <li><p>Verify that App files conform to our latest standard</p></li>
@@ -475,7 +475,7 @@ options:
 </section>
 </section>
 <section id="clone">
-<span id="id7"></span><h3>clone<a class="headerlink" href="#clone" title="Link to this heading">#</a></h3>
+<span id="id7"></span><h3>clone<a class="headerlink" href="#clone" title="Link to this heading">¶</a></h3>
 <p>Duplicate an existing Action related object (Function, Rule, Script, Message Destination, Workflow, or Playbook) with a new api or display name</p>
 <pre class="literal-block">usage:
 $ resilient-sdk clone --workflow &lt;workflow_to_be_cloned&gt; &lt;new_workflow_name&gt;
@@ -503,7 +503,7 @@ options:
 -type, --changetype		The new type of the clone action object. Used when cloning a workflow or script to have the newly cloned workflow at a different object type.</pre>
 </section>
 <section id="extract">
-<span id="id8"></span><h3>extract<a class="headerlink" href="#extract" title="Link to this heading">#</a></h3>
+<span id="id8"></span><h3>extract<a class="headerlink" href="#extract" title="Link to this heading">¶</a></h3>
 <p>Extract data in order to publish a .res export file</p>
 <pre class="literal-block">usage:
 $ resilient-sdk extract -m 'fn_custom_md' --rule 'Rule One' 'Rule Two'
@@ -532,7 +532,7 @@ options:
 -n, --name			Name to prepend to generated file</pre>
 </section>
 <section id="list">
-<h3>list<a class="headerlink" href="#list" title="Link to this heading">#</a></h3>
+<h3>list<a class="headerlink" href="#list" title="Link to this heading">¶</a></h3>
 <p>List available objects from SOAR. For each of the objects below, either leave blank to list all, provide a prefix string to filter by prefix, or provide a regex to filter matching object names.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk list --function                           # list all functions
@@ -559,7 +559,7 @@ options:
 -cf, --codegen-format		Output results in codegen-friendly format</pre>
 </section>
 <section id="init">
-<span id="id9"></span><h3>init<a class="headerlink" href="#init" title="Link to this heading">#</a></h3>
+<span id="id9"></span><h3>init<a class="headerlink" href="#init" title="Link to this heading">¶</a></h3>
 <p>Generates sdk_settings.json file to store default settings and generates app.config file to store connection details.         Providing a flag will override the default paths.</p>
 <pre class="literal-block">usage:
 $ resilient-sdk init
@@ -579,7 +579,7 @@ options:
 </section>
 </section>
 <section id="change-log">
-<span id="sdk-changes"></span><h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h2>
+<span id="sdk-changes"></span><h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
 <p><strong>2024-04: version 51.0.1.1</strong></p>
 <ul class="simple">
 <li><p>No major changes. Just bumping build number to coincide with other builds</p></li>
@@ -935,8 +935,8 @@ will clone the Playbook into a <strong>Draft</strong> state, allowing you to cha
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=ee0ec45b"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
+</div><script src="../../_static/documentation_options.js?v=cd9df754"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
