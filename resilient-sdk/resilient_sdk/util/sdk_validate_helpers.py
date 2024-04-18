@@ -745,18 +745,15 @@ def _validate_playbook_conditions_all_fields_included(export_res, attr_dict, pat
         missing_fields_for_pb = []
 
         # run through the fields in the activation conditions
-        pb_conditions = playbook.get("activation_details", {}).get("activation_conditions", {}).get("conditions", []) or []
-        for condition in pb_conditions:
-            field_name = condition.get("field_name", "").split(".", 2)[-1]
-            if field_name not in packaged_field_names:
-                missing_fields_for_pb.append(field_name)
-
-        # run through the fields in the cancelation conditions
-        pb_conditions = playbook.get("auto_cancelation_details", {}).get("cancelation_conditions", {}).get("conditions", []) or []
-        for condition in pb_conditions:
-            field_name = condition.get("field_name", "").split(".", 2)[-1]
-            if field_name not in packaged_field_names:
-                missing_fields_for_pb.append(field_name)
+        activation_details = playbook.get("activation_details", {}).get("activation_conditions", {}).get("conditions", []) or []
+        cancellation_details = playbook.get("auto_cancelation_details", {}).get("cancelation_conditions", {}).get("conditions", []) or []
+        details = [activation_details, cancellation_details]
+        for pb_conditions in details:
+            for condition in pb_conditions:
+                field_name = condition.get("field_name") or ""
+                field_name = field_name.split(".", 2)[-1]
+                if field_name not in packaged_field_names:
+                    missing_fields_for_pb.append(field_name)
 
         # if any missing fields, create validate issue for them
         if missing_fields_for_pb:
