@@ -529,7 +529,7 @@ class Actions(ResilientComponent):
         # Find the queue name from the subscription id (stomp_listener_xxx)
         msg_id = event.frame.headers.get("message-id")
         if not msg_id:
-            LOG.error("Received message with no message id. %s", event.frame.info())
+            LOG.error("Received message with no message id. %s", event.frame)
             raise ValueError("Stomp message with no message id received")
         elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
@@ -548,25 +548,23 @@ class Actions(ResilientComponent):
                 self._stomp_ack_delivery_failures.pop(msg_id)
 
         else:
-            subscription = self.stomp_component.get_subscription(event.frame)
-            LOG.debug('STOMP listener: message for %s', subscription)
-            queue_name = subscription.split(".", 2)[2]
-            channel = "actions." + queue_name
+            LOG.debug('STOMP listener: message for %s', ".".join(queue))
 
-            LOG.debug("Got Message: %s", event.frame.info())
+            LOG.debug("Got Message: %s", event.frame)
 
             try:
                 # Expect the message payload to always be UTF8 JSON.
                 # However, it may contain surrogate pairs, and in Python 3 that causes problems:
                 # - surrogate pairs are not allowed by the default (strict) utf8 decoder,
                 # - if we pass them, it will cause downstream issues, so we should re-encode.
-                try:
-                    mstr = message.decode('utf-8')
-                except UnicodeDecodeError:
-                    LOG.debug("Failed utf8 decode, trying surrogate")
-                    mstr = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
+                if hasattr(message, "decode"):
+                    try:
+                        message = message.decode('utf-8')
+                    except UnicodeDecodeError:
+                        LOG.debug("Failed utf8 decode, trying surrogate")
+                        message = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
 
-                message = json.loads(mstr)
+                message = json.loads(message)
                 # Construct a Circuits event with the message, and fire it on the channel
                 if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
                     channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
@@ -585,6 +583,7 @@ class Actions(ResilientComponent):
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
                 else:
+                    channel = "{0}.{1}".format("actions", queue[-1])
                     event = ActionMessage(source=self,
                                           headers=headers,
                                           message=message,
@@ -837,7 +836,7 @@ class Actions(ResilientComponent):
         elif self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
-            LOG.info("Subscribe to message destination '%s'", queue_name)
+            LOG.info("Subscribing to message destination '%s'", queue_name)
 
             if helpers.is_this_a_selftest(self):
                 SELFTEST_SUBSCRIPTIONS.append(queue_name)
@@ -870,17 +869,19 @@ class Actions(ResilientComponent):
             return
         if self.stomp_component and self.stomp_component.connected and self.stomp_component.socket_connected:
             LOG.debug("STOMP reconnect requested when already connected")
-        elif self.opts["resilient"].get("stomp") == "0":
+            return
+        if self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
-        else:
-            if self.stomp_component.socket_connected:
-                LOG.warning("Disconnecting socket before Connect attempt")
-                disconnect_event = Disconnect(reconnect=False, flush=False)
-                self.fire(disconnect_event)
-                yield self.wait(disconnect_event)
+            return
 
-            LOG.info("STOMP attempting to connect")
-            self.fire(Connect(subscribe=subscribe))
+        if self.stomp_component.socket_connected:
+            LOG.warning("Disconnecting socket before Connect attempt")
+            disconnect_event = Disconnect(reconnect=False, flush=False)
+            self.fire(disconnect_event)
+            yield self.wait(disconnect_event)
+
+        LOG.info("STOMP attempting to connect")
+        self.fire(Connect(subscribe=subscribe))
 
     @handler("Connect_success")
     def connected_succesfully(self, event, *args, **kwargs):
@@ -898,7 +899,9 @@ class Actions(ResilientComponent):
         # Try again later
         reloading = getattr(self.parent, "reloading", False)
         if event.reconnect and not reloading:
-            Timer(60, Event.create("reconnect")).register(self)
+            wait_time = 60
+            LOG.info("STOMP disconnected or connection failed. Connection will retry in %s seconds", wait_time)
+            Timer(wait_time, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
@@ -1036,7 +1039,7 @@ class Actions(ResilientComponent):
             # Retries not applicable, probably using a mocked appliance
             return
         if not self.stomp_component.connected:
-            LOG.info("Skipping retry of any failed messages because STOMP connection is down")
+            LOG.debug("Skipping retry of any failed messages because STOMP connection is down")
             return
 
         to_retry = {key: value for key, value in self._stomp_ack_delivery_failures.items()
