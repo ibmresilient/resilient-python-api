@@ -29,23 +29,13 @@ class StompClient(BaseComponent):
 
     def init(self, host, port,
              username=None, password=None,
-             connect_timeout=3, connected_timeout=3,
-             version="1.2", accept_versions=None,
-             heartbeats=(0, 0), ssl_context=None,
-             use_ssl=True,
+             heartbeats=(0, 0),
              ca_certs=None,
-             proxy_host=None,
-             proxy_port=None,
-             proxy_user=None,
-             proxy_password=None,
              stomp_params=None,
-             stomp_max_connection_errors=constants.STOMP_MAX_CONNECTION_ERRORS):
+             stomp_max_connection_errors=constants.STOMP_MAX_CONNECTION_ERRORS, *_args, **_kwargs):
 
         # TODO! Figure out if stomp-py can work with a proxy through a similar mechanism that we're currently using with the stomp_transport.py file
-        if proxy_host:
-            LOG.info("Connect to '%s:%s' through proxy '%s:%d'", host, port, proxy_host, proxy_port)
-        else:
-            LOG.info("Connect to stomp at '%s:%s'", host, port)
+        LOG.info("Connect to stomp at '%s:%s'", host, port)
 
 
         # Configure failover options so it only tries based on settings
@@ -64,20 +54,19 @@ class StompClient(BaseComponent):
         self.stomp_host = [(host, port)]
         self._stomp_client = stomp.StompConnection12(
             self.stomp_host,
-            reconnect_attempts_max=3,
-            # reconnect_sleep_initial=connection_params.get("initialReconnectDelay") or 0.1,
-            # timeout=connect_timeout,
+            reconnect_attempts_max=-1,
+            reconnect_sleep_initial=1,
+            reconnect_sleep_increase=1,
             keepalive=True,
-            heartbeats=(40000, 40000)
-
+            heartbeats=heartbeats
         )
         self._stomp_client.set_ssl(for_hosts=self.stomp_host, ca_certs=ca_certs)
         self._stomp_client.set_listener("", SOARStompListener(self))
 
         self.subscribe_list = []
 
-        # self.reconnect_timer = Timer(60, Event.create("reconnect"), persist=True)
-        # self.reconnect_timer.register(self)
+        self.stomp_connection_errors = 0
+        self.stomp_max_connection_errors = stomp_max_connection_errors
 
 
     @property
@@ -105,7 +94,7 @@ class StompClient(BaseComponent):
             self._stomp_client.connect(username=self.api_key, passcode=self.api_secret, wait=True, with_connect_command=True)
             # LOG.debug("State after Connection Attempt: %s", self._client.session.state)
             if self.connected:
-                LOG.info("Connected to STOMP")
+                LOG.info("Connected to STOMP at %s", self.stomp_host)
                 self.fire(Connected())
                 self.stomp_connection_errors = 0 # restart counter
                 return "success"
@@ -115,7 +104,7 @@ class StompClient(BaseComponent):
             # is this error unrecoverable?
             if "no more data" in str(err).lower():
                 self.stomp_connection_errors += 1
-                if self._stomp_max_connection_errors and self.stomp_connection_errors >= self._stomp_max_connection_errors:
+                if self.stomp_max_connection_errors and self.stomp_connection_errors >= self.stomp_max_connection_errors:
                     LOG.error("Exiting due to unrecoverable error")
                     sys.exit(1) # this will exit resilient-circuits
 
@@ -128,10 +117,8 @@ class StompClient(BaseComponent):
             LOG.error("Exiting due to unrecoverable error")
             sys.exit(1) # this will exit resilient-circuits
         # return "fail"
-        # self.fire(ConnectionFailed(self.stomp_host))
         event.success = False
-        event.failure = True
-
+        self.fire(ConnectionFailed(self.stomp_host))
 
     @handler("Disconnect")
     def _disconnect(self, receipt=None, flush=True, reconnect=False):
@@ -144,20 +131,6 @@ class StompClient(BaseComponent):
         self.fire(Disconnected(reconnect=reconnect))
 
         return "disconnected"
-
-
-    @handler("Ack")
-    def ack_frame(self, event, frame):
-        LOG.debug("ack_frame()")
-        try:
-            # TODO figure args for ack
-            self._stomp_client.ack(frame.headers.get("ack"))
-            LOG.debug("Ack Sent")
-        except stomp.exception.StompException as err:
-            LOG.error("Error sending ack. %s", err)
-            event.success = False
-            self.fire(OnStompError(frame, err))
-            raise  # To fire Ack_failure event
 
     @handler("Unsubscribe")
     def _unsubscribe(self, event, destination):
@@ -202,6 +175,19 @@ class StompClient(BaseComponent):
 
         LOG.info("Subscribed to message destination %s", destination)
 
+    @handler("Ack")
+    def ack_frame(self, event, frame):
+        LOG.debug("ack_frame()")
+        try:
+            # TODO figure args for ack
+            self._stomp_client.ack(frame.headers.get("ack"))
+            LOG.debug("Ack Sent")
+        except stomp.exception.StompException as err:
+            LOG.error("Error sending ack. %s", err)
+            event.success = False
+            self.fire(OnStompError(frame, err))
+            raise  # To fire Ack_failure event
+
     @handler("Send")
     def send(self, event, destination, body, headers=None, receipt=None):
         LOG.debug("send()")
@@ -213,7 +199,6 @@ class StompClient(BaseComponent):
             event.success = False
             self.fire(OnStompError(None, err))
             raise  # To fire Send_failure event
-
 
     @handler("Message")
     def on_message(self, *_args, **_kwargs):
@@ -228,8 +213,11 @@ class SOARStompListener(stomp.ConnectionListener):
         self.component = component
 
     def on_error(self, frame):
-        LOG.info("Received an error '%s'", frame.body)
-        self.component.fire(OnStompError(frame, frame.body))
+        LOG.info("Received an error '%s'", frame.headers.get("message", "UNKNOWN"))
+        if "Unable to connect to authentication service" not in frame.headers.get("message"):
+            self.component.fire(OnStompError(frame, frame.body))
+        else:
+            LOG.info("Messaging service is up but authentication service is not. Disconnect to retry...")
 
     def on_message(self, frame):
         LOG.info("Received message from '%s'", frame.headers.get("reply-to"))
