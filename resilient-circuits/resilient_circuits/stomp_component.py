@@ -10,7 +10,7 @@ import time
 import traceback
 
 import stomp
-from circuits import BaseComponent, Timer
+from circuits import BaseComponent
 from circuits.core.handlers import handler
 
 from resilient_circuits import constants
@@ -56,9 +56,10 @@ class StompClient(BaseComponent):
             self.stomp_host,
             reconnect_attempts_max=-1,
             reconnect_sleep_initial=1,
-            reconnect_sleep_increase=1,
+            reconnect_sleep_increase=3,
             keepalive=True,
-            heartbeats=heartbeats
+            heartbeats=heartbeats,
+            heart_beat_receive_scale=2
         )
         self._stomp_client.set_ssl(for_hosts=self.stomp_host, ca_certs=ca_certs)
         self._stomp_client.set_listener("", SOARStompListener(self))
@@ -99,7 +100,7 @@ class StompClient(BaseComponent):
                 self.stomp_connection_errors = 0 # restart counter
                 return "success"
 
-        except stomp.exception.ConnectFailedException as err:
+        except (stomp.exception.ConnectFailedException, stomp.exception.NotConnectedException) as err:
             LOG.debug(traceback.format_exc())
             # is this error unrecoverable?
             if "no more data" in str(err).lower():
@@ -214,9 +215,13 @@ class SOARStompListener(stomp.ConnectionListener):
 
     def on_error(self, frame):
         LOG.info("Received an error '%s'", frame.headers.get("message", "UNKNOWN"))
-        if "Unable to connect to authentication service" not in frame.headers.get("message"):
+        if "unable to connect to authentication service" not in frame.headers.get("message", "").lower():
             self.component.fire(OnStompError(frame, frame.body))
         else:
+            # ignore "unable to connect to authentication service" error
+            # because it just means that ActiveMQ is up, but not authenticatable;
+            # stomp client will automatically disconnect and reconnect once the authentication
+            # service is back up
             LOG.info("Messaging service is up but authentication service is not. Disconnect to retry...")
 
     def on_message(self, frame):
@@ -228,7 +233,7 @@ class SOARStompListener(stomp.ConnectionListener):
         self.component.fire(Disconnect(reconnect=True))
 
     def on_connected(self, frame):
-        LOG.info("Connected! Frame: '%s'", frame.headers.get("reply-to"))
+        LOG.info("Connected!")
 
     def on_connecting(self, host_and_port):
         LOG.info("Connecting to '%s'", host_and_port)

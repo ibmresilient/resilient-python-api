@@ -899,9 +899,8 @@ class Actions(ResilientComponent):
         # Try again later
         reloading = getattr(self.parent, "reloading", False)
         if event.reconnect and not reloading:
-            wait_time = 10
-            LOG.info("STOMP disconnected or connection failed. Connection will retry in %s seconds", wait_time)
-            Timer(wait_time, Event.create("reconnect")).register(self)
+            LOG.info("STOMP disconnected or connection failed. Connection will retry in %s seconds", constants.STOMP_RECONNECT_INITIAL_DELAY)
+            Timer(constants.STOMP_RECONNECT_INITIAL_DELAY, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):

@@ -66,3 +66,4 @@ EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatT
 
 # STOMP connection constants
 STOMP_MAX_CONNECTION_ERRORS = 1     # default number of errors when heartbeat is lost
+STOMP_RECONNECT_INITIAL_DELAY = 60
