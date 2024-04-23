@@ -751,9 +751,9 @@ def _validate_playbook_conditions_all_fields_included(export_res, attr_dict, pat
         for pb_conditions in details:
             for condition in pb_conditions:
                 field_name = condition.get("field_name") or ""
-                field_name = field_name.split(".", 2)[-1]
-                if field_name not in packaged_field_names:
-                    missing_fields_for_pb.append(field_name)
+                field_name_split = field_name.split(".", 2)
+                if field_name_split[1] == "properties" and field_name_split[-1] not in packaged_field_names:
+                    missing_fields_for_pb.append(field_name_split[-1])
 
         # if any missing fields, create validate issue for them
         if missing_fields_for_pb:
