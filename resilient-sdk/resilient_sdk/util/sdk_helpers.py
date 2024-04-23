@@ -1786,7 +1786,7 @@ def _remove_pii_from_payload_samples(results):
     :rtype: dict
     """
     if "metrics" in results and "host" in results["metrics"]:
-        results["metrics"]["host"] = ""
+        results["metrics"]["host"] = "my.app.host"
 
     return results
 
