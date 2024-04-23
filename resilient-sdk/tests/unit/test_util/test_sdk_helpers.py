@@ -743,7 +743,7 @@ def test_scrape_results_from_log_file():
             "version": "1.0",
             "package": "fn-main-mock-integration",
             "package_version": "1.0.3",
-            "host": "",
+            "host": constants.CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE,
             "execution_time_ms": 3233,
             "timestamp": "2021-12-02 14:48:45"
         }
@@ -760,7 +760,7 @@ def test_scrape_results_really_long_function_name():
     # in the mock_app.log file, so this ensures we get the latest
     assert mock_function_one_results.get("version") == 2.1
     assert mock_function_one_results.get("reason") == None
-    assert mock_function_one_results.get("metrics", {}).get("host") == ""
+    assert mock_function_one_results.get("metrics", {}).get("host") == constants.CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE
 
 def test_scrape_results_clears_metrics_host_value():
 
@@ -770,7 +770,7 @@ def test_scrape_results_clears_metrics_host_value():
     assert isinstance(mock_function_one_results, dict)
 
     # specifically test that the host was cleared out
-    assert mock_function_one_results["metrics"]["host"] == ""
+    assert mock_function_one_results["metrics"]["host"] == constants.CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE
 
 
 def test_scrape_results_from_log_file_not_found():
