@@ -599,6 +599,18 @@ def test_package_files_validate_python_versions_in_scripts_pass(playbook_input, 
                     {"field_name": "incident.properties.my_custom_field_2"}]}
         }
     }], SDKValidateIssue.SEVERITY_LEVEL_CRITICAL),
+    ([{"display_name": "My PB",
+       "activation_details": {
+            "activation_conditions": {
+                "conditions": [
+                    {"field_name": "task.id"}]}
+        },
+        "auto_cancelation_details": {
+            "cancelation_conditions": {
+                "conditions": [
+                    {"field_name": "incident.id"}]}
+        }
+    }], SDKValidateIssue.SEVERITY_LEVEL_DEBUG), # ensure non-custom properties works
     ([], SDKValidateIssue.SEVERITY_LEVEL_DEBUG), # ensure empty playbook list works
     (None, SDKValidateIssue.SEVERITY_LEVEL_DEBUG) # ensure None playbook object works
 ])
