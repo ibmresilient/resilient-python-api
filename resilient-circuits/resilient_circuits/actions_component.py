@@ -534,12 +534,12 @@ class Actions(ResilientComponent):
         elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
             # Don't process it again, just acknowledge it
-            LOG.info("Skipping reprocess of message %s.  Sending saved ack now.", msg_id)
+            LOG.info("Skipping reprocess of message '%s'. Sending saved ack now.", msg_id)
             failure_info = self._resilient_ack_delivery_failures.get(msg_id)
             if failure_info:
-                self.fire(Send(headers={'correlation-id': headers['correlation-id']},
+                self.fire(Send(headers={"correlation-id": headers["correlation-id"]},
                                body=failure_info["result"]["body"],
-                               destination=headers['reply-to'],
+                               destination=headers["reply-to"],
                                message_id=msg_id))
                 self._resilient_ack_delivery_failures.pop(msg_id)
             failure_info = self._stomp_ack_delivery_failures.get(msg_id)
@@ -984,18 +984,30 @@ class Actions(ResilientComponent):
     @handler("Ack_failure")
     def _on_ack_failure(self, event, err, *args, **kwargs):
         """STOMP Ack failed to send, add to delivery failures"""
+        LOG.debug("Handling STOMP 'Ack' event failure")
+        retry_count = 1
+        from_prev_conn = False
+
         message_id = event.parent.message_id
         failure = self._stomp_ack_delivery_failures.get(message_id)
         if failure:
-            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
+            LOG.debug("STOMP message id '%s' already exists in ack retry queue")
+            retry_count = failure["retry_count"]
+            from_prev_conn = failure["from_prev_conn"]
+            if self.max_retry_count != 0 and retry_count > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of STOMP ACK for message %s",
-                          failure["retry_count"], message_id)
+                          retry_count, message_id)
                 self._stomp_ack_delivery_failures.pop(message_id)
-        else:
-            failure = {"retry_count": 1,
-                       "from_prev_conn": False,
-                       "message_frame": event.parent.frame}
-            self._stomp_ack_delivery_failures[message_id] = failure
+                return
+
+        # overwrite any existing failure object because there might be a new failure
+        # (i.e. a failed status message) could be immediately followed by a failed FunctionResult.
+        # but save the retry_count and from_prev_conn details from previous failure as the
+        # message_id is still the same
+        failure = {"retry_count": retry_count,
+                    "from_prev_conn": from_prev_conn,
+                    "message_frame": event.parent.frame}
+        self._stomp_ack_delivery_failures[message_id] = failure
 
         LOG.warning("Failed %d times to deliver stomp ack for message %s", failure["retry_count"], message_id)
 
@@ -1014,22 +1026,35 @@ class Actions(ResilientComponent):
     @handler("Send_failure")
     def _on_send_failure(self, event, err, *args, **kwargs):
         """Resilient Ack failed to send, add to delivery failures"""
+        LOG.debug("Handling STOMP 'Send' event failure")
+        retry_count = 1
+        from_prev_conn = False
+
         message_id = event.parent.message_id
 
         failure = self._resilient_ack_delivery_failures.get(message_id)
         if failure:
-            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
+            LOG.debug("STOMP message id '%s' already exists in send retry queue")
+            retry_count = failure["retry_count"]
+            from_prev_conn = failure["from_prev_conn"]
+            if self.max_retry_count != 0 and retry_count > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of Resilient ACK for message %s",
-                          failure["retry_count"], message_id)
+                          retry_count, message_id)
                 self._resilient_ack_delivery_failures.pop(message_id)
-        else:
-            failure = {"retry_count": 1,
-                       "from_prev_conn": False,
-                       "result":  {"headers": event.parent.headers,
-                                   "body": event.parent.body,
-                                   "destination": event.parent.destination}}
-            self._resilient_ack_delivery_failures[message_id] = failure
-        LOG.warning("Failed %d times to deliver Resilient ack for message %s", failure["retry_count"], message_id)
+                return
+
+        # overwrite any existing failure object because there might be a new failure
+        # (i.e. a failed status message) could be immediately followed by a failed FunctionResult.
+        # but save the retry_count and from_prev_conn details from previous failure as the
+        # message_id is still the same
+        failure = {"retry_count": retry_count,
+                    "from_prev_conn": from_prev_conn,
+                    "result":  {
+                        "headers": event.parent.headers,
+                        "body": event.parent.body,
+                        "destination": event.parent.destination}}
+        self._resilient_ack_delivery_failures[message_id] = failure
+        LOG.warning("Failed %d times to deliver stomp send for message %s", failure["retry_count"], message_id)
 
     @handler("retry_failed_deliveries")
     def _retry_send_failures(self, event):
@@ -1044,8 +1069,7 @@ class Actions(ResilientComponent):
         to_retry = {key: value for key, value in self._stomp_ack_delivery_failures.items()
                     if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
-            self._stomp_ack_delivery_failures[msgid]["retry_count"] = \
-                self._stomp_ack_delivery_failures[msgid]["retry_count"] + 1
+            self._stomp_ack_delivery_failures[msgid]["retry_count"] += 1
             LOG.info("Retrying failed STOMP ACK for message %s", msgid)
             self.fire(Ack(failure_info["message_frame"]))
 
@@ -1053,8 +1077,7 @@ class Actions(ResilientComponent):
                     if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
             LOG.info("Retrying failed Resilient ACK for message %s", msgid)
-            self._resilient_ack_delivery_failures[msgid]["retry_count"] = \
-                self._resilient_ack_delivery_failures[msgid]["retry_count"] + 1
+            self._resilient_ack_delivery_failures[msgid]["retry_count"] += 1
             self.fire(Send(headers=failure_info["result"]["headers"],
                            body=failure_info["result"]["body"],
                            destination=failure_info["result"]["destination"],
