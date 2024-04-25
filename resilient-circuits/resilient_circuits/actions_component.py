@@ -17,15 +17,15 @@ if sys.version_info.major < 3:
 else:
     from collections.abc import Callable
 
+import resilient
 from circuits import BaseComponent, Worker
 from circuits.core.handlers import handler
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-from six import string_types
-
-import resilient
 from resilient import ensure_unicode
 from resilient_lib import IntegrationError
+from six import string_types
+
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
@@ -867,14 +867,14 @@ class Actions(ResilientComponent):
         """Try (re)connect to the STOMP server"""
         if self.resilient_mock:
             return
-        if self.stomp_component and self.stomp_component.connected and self.stomp_component.socket_connected:
+        if self.stomp_component and self.stomp_component.connected:
             LOG.debug("STOMP reconnect requested when already connected")
             return
         if self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
             return
 
-        if self.stomp_component.socket_connected:
+        if self.stomp_component.connected:
             LOG.warning("Disconnecting socket before Connect attempt")
             disconnect_event = Disconnect(reconnect=False, flush=False)
             self.fire(disconnect_event)

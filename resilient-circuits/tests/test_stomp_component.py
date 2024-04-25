@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-import pytest
 import logging
-from mock import MagicMock, patch
 
-from resilient_circuits.stomp_component import StompClient
-from resilient_circuits.stomp_events import ConnectionFailed
+import pytest
+from mock import MagicMock, patch
 from stomp.exception import ConnectFailedException, StompException
+
 from resilient_circuits import constants
+from resilient_circuits.stomp_component import StompClient
+
 
 def test_stomp_reconnect_two_consecutive_failures(caplog):
 

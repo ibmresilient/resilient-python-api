@@ -100,10 +100,6 @@ class StompClient(BaseComponent):
         return self._stomp_client.is_connected()
 
     @property
-    def socket_connected(self):
-        return self.connected
-
-    @property
     def subscribed(self):
         return self._subscribed
 
