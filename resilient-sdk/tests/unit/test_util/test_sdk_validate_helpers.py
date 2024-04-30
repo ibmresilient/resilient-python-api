@@ -598,7 +598,27 @@ def test_package_files_validate_python_versions_in_scripts_pass(playbook_input, 
                 "conditions": [
                     {"field_name": "incident.properties.my_custom_field_2"}]}
         }
-    }], SDKValidateIssue.SEVERITY_LEVEL_CRITICAL),
+    }], SDKValidateIssue.SEVERITY_LEVEL_CRITICAL)
+])
+def test_validate_playbook_conditions_all_fields_included(playbook_input, expected_severity, fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+    filename = "export.res"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
+
+
+    mock_export_res = {
+        "fields": [],
+        "playbooks": playbook_input
+    }
+
+    results = sdk_validate_helpers._validate_playbook_conditions_all_fields_included(mock_export_res, attr_dict, fx_copy_fn_main_mock_integration[0])
+
+    assert len(results) == 1
+    result = results[0]
+    assert isinstance(result, SDKValidateIssue)
+    assert result.severity == expected_severity
+
+@pytest.mark.parametrize("playbook_input", [
     ([{"display_name": "My PB",
        "activation_details": {
             "activation_conditions": {
@@ -610,30 +630,53 @@ def test_package_files_validate_python_versions_in_scripts_pass(playbook_input, 
                 "conditions": [
                     {"field_name": "incident.id"}]}
         }
-    }], SDKValidateIssue.SEVERITY_LEVEL_DEBUG), # ensure non-custom properties works
-    ([], SDKValidateIssue.SEVERITY_LEVEL_DEBUG), # ensure empty playbook list works
-    (None, SDKValidateIssue.SEVERITY_LEVEL_DEBUG) # ensure None playbook object works
+    }]),
+    ([]),
+    (None)
 ])
-def test_package_files_validate_no_playbook_dependencies_missing(playbook_input, expected_severity, fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+def test_validate_playbook_conditions_all_fields_included_no_issues(playbook_input, fx_copy_fn_main_mock_integration, fx_get_package_files_config):
+
     filename = "export.res"
     i = fx_get_package_files_config[filename]
-    attr_dict = sdk_validate_configs.package_files[i-1][1]
-    path_file = os.path.join(fx_copy_fn_main_mock_integration[1], attr_dict.get("path").format(fx_copy_fn_main_mock_integration[0]))
+    attr_dict = sdk_validate_configs.package_files[i][1]
+
+
+    mock_export_res = {
+        "fields": [],
+        "playbooks": playbook_input
+    }
+
+    results = sdk_validate_helpers._validate_playbook_conditions_all_fields_included(mock_export_res, attr_dict, fx_copy_fn_main_mock_integration[0])
+
+    assert len(results) == 0
+
+def test_package_files_validate_no_playbook_dependencies_missing(fx_get_package_files_config):
+    filename = "export.res"
+    i = fx_get_package_files_config[filename]
+    attr_dict = sdk_validate_configs.package_files[i][1]
 
     # mock export.res
     with patch("resilient_sdk.util.sdk_validate_helpers.package_helpers.get_import_definition_from_customize_py") as mock_export_res:
 
         mock_export_res.return_value = {
             "fields": [],
-            "playbooks": playbook_input
+            "playbooks": [{
+                "activation_type": "manual",
+                "display_name": "pb_test",
+                "content": {
+                    "content_version": 4,
+                    "xml": u"\u003c?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\u003e\u003cdefinitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:omgdc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:omgdi=\"http://www.omg.org/spec/DD/20100524/DI\" xmlns:resilient=\"http://resilient.ibm.com/bpmn\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" targetNamespace=\"http://www.camunda.org/test\"\u003e\u003cprocess id=\"playbook_b28ea799_5c4b_44ae_9b59_e1c2318ae5a8\" isExecutable=\"true\" name=\"playbook_b28ea799_5c4b_44ae_9b59_e1c2318ae5a8\"\u003e\u003cdocumentation/\u003e\u003cstartEvent id=\"StartEvent_155asxm\"\u003e\u003coutgoing\u003eFlow_0mg86rd\u003c/outgoing\u003e\u003coutgoing\u003eFlow_1bc4xwb\u003c/outgoing\u003e\u003coutgoing\u003eFlow_17y1ve2\u003c/outgoing\u003e\u003coutgoing\u003eFlow_1itd994\u003c/outgoing\u003e\u003c/startEvent\u003e\u003cserviceTask id=\"ServiceTask_1\" name=\"mock_function_one\" resilient:type=\"function\"\u003e\u003cextensionElements\u003e\u003cresilient:function uuid=\"9b180887-4ff6-4d13-82a6-cb0a5d8718f1\"\u003e{\"inputs\":{\"49f10172-309a-4829-a5fe-1de71cdb4efb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"number_value\":1}},\"01147ebf-ce3d-4cfb-814b-16145af4e511\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"92eb3b7a-8859-4846-81a3-2995aec74bdb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"e40b9d9e-7ca1-45bc-913b-ce2a77e9b687\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"866625eb-8b46-4cc9-b713-cdfa548a1189\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_content_value\":{\"format\":\"unknown\",\"content\":\"\"}}},\"b6dfde6d-7516-4509-a5a2-54e72df9e0cd\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"select_value\":\"0a30d6ad-914a-47b1-83bf-c5667dbee974\"}},\"df7df8ba-cb65-4400-8290-070b155d28d4\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"69dc0e78-a74b-4ccc-8d82-33b51780a569\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"result_name\":\"mf1\"}\u003c/resilient:function\u003e\u003c/extensionElements\u003e\u003cincoming\u003eFlow_0mg86rd\u003c/incoming\u003e\u003coutgoing\u003eFlow_1rmlnxf\u003c/outgoing\u003e\u003c/serviceTask\u003e\u003csequenceFlow id=\"Flow_0mg86rd\" sourceRef=\"StartEvent_155asxm\" targetRef=\"ServiceTask_1\"/\u003e\u003cendEvent id=\"EndPoint_2\" resilient:documentation=\"End point\"\u003e\u003cincoming\u003eFlow_0txnjrd\u003c/incoming\u003e\u003c/endEvent\u003e\u003csequenceFlow id=\"Flow_1rmlnxf\" sourceRef=\"ServiceTask_1\" targetRef=\"CollectionPoint_6\"/\u003e\u003cserviceTask id=\"ServiceTask_3\" name=\"mock_function_one\" resilient:type=\"function\"\u003e\u003cextensionElements\u003e\u003cresilient:function uuid=\"9b180887-4ff6-4d13-82a6-cb0a5d8718f1\"\u003e{\"inputs\":{\"49f10172-309a-4829-a5fe-1de71cdb4efb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"number_value\":3}},\"01147ebf-ce3d-4cfb-814b-16145af4e511\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"92eb3b7a-8859-4846-81a3-2995aec74bdb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"e40b9d9e-7ca1-45bc-913b-ce2a77e9b687\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"866625eb-8b46-4cc9-b713-cdfa548a1189\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_content_value\":{\"format\":\"unknown\",\"content\":\"\"}}},\"b6dfde6d-7516-4509-a5a2-54e72df9e0cd\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"select_value\":\"0a30d6ad-914a-47b1-83bf-c5667dbee974\"}},\"df7df8ba-cb65-4400-8290-070b155d28d4\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"69dc0e78-a74b-4ccc-8d82-33b51780a569\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"result_name\":\"mf3\"}\u003c/resilient:function\u003e\u003c/extensionElements\u003e\u003cincoming\u003eFlow_1itd994\u003c/incoming\u003e\u003coutgoing\u003eFlow_1dl94rl\u003c/outgoing\u003e\u003c/serviceTask\u003e\u003cserviceTask id=\"ServiceTask_4\" name=\"mock_function_one\" resilient:type=\"function\"\u003e\u003cextensionElements\u003e\u003cresilient:function uuid=\"9b180887-4ff6-4d13-82a6-cb0a5d8718f1\"\u003e{\"inputs\":{\"49f10172-309a-4829-a5fe-1de71cdb4efb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"number_value\":2}},\"01147ebf-ce3d-4cfb-814b-16145af4e511\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"92eb3b7a-8859-4846-81a3-2995aec74bdb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"e40b9d9e-7ca1-45bc-913b-ce2a77e9b687\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"866625eb-8b46-4cc9-b713-cdfa548a1189\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_content_value\":{\"format\":\"unknown\",\"content\":\"\"}}},\"b6dfde6d-7516-4509-a5a2-54e72df9e0cd\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"select_value\":\"0a30d6ad-914a-47b1-83bf-c5667dbee974\"}},\"df7df8ba-cb65-4400-8290-070b155d28d4\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"69dc0e78-a74b-4ccc-8d82-33b51780a569\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"result_name\":\"mf2\"}\u003c/resilient:function\u003e\u003c/extensionElements\u003e\u003cincoming\u003eFlow_17y1ve2\u003c/incoming\u003e\u003coutgoing\u003eFlow_1yx00x3\u003c/outgoing\u003e\u003c/serviceTask\u003e\u003cserviceTask id=\"ServiceTask_5\" name=\"mock_function_one\" resilient:type=\"function\"\u003e\u003cextensionElements\u003e\u003cresilient:function uuid=\"9b180887-4ff6-4d13-82a6-cb0a5d8718f1\"\u003e{\"inputs\":{\"49f10172-309a-4829-a5fe-1de71cdb4efb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"number_value\":4}},\"01147ebf-ce3d-4cfb-814b-16145af4e511\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"92eb3b7a-8859-4846-81a3-2995aec74bdb\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"e40b9d9e-7ca1-45bc-913b-ce2a77e9b687\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_value\":\"\"}},\"866625eb-8b46-4cc9-b713-cdfa548a1189\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"text_content_value\":{\"format\":\"unknown\",\"content\":\"\"}}},\"b6dfde6d-7516-4509-a5a2-54e72df9e0cd\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[],\"select_value\":\"0a30d6ad-914a-47b1-83bf-c5667dbee974\"}},\"df7df8ba-cb65-4400-8290-070b155d28d4\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[]}},\"69dc0e78-a74b-4ccc-8d82-33b51780a569\":{\"input_type\":\"static\",\"static_input\":{\"multiselect_value\":[\"8b8b22d4-b20c-4d10-abac-a65211a5b9cd\",\"bf8e34a8-79aa-4ec4-b4c9-b8f1f0f7135e\"]}}},\"result_name\":\"mf4\"}\u003c/resilient:function\u003e\u003c/extensionElements\u003e\u003cincoming\u003eFlow_1bc4xwb\u003c/incoming\u003e\u003coutgoing\u003eFlow_057wv06\u003c/outgoing\u003e\u003c/serviceTask\u003e\u003csequenceFlow id=\"Flow_1bc4xwb\" sourceRef=\"StartEvent_155asxm\" targetRef=\"ServiceTask_5\"/\u003e\u003csequenceFlow id=\"Flow_17y1ve2\" sourceRef=\"StartEvent_155asxm\" targetRef=\"ServiceTask_4\"/\u003e\u003csequenceFlow id=\"Flow_1itd994\" sourceRef=\"StartEvent_155asxm\" targetRef=\"ServiceTask_3\"/\u003e\u003cparallelGateway id=\"CollectionPoint_6\" resilient:documentation=\"Wait point\"\u003e\u003cincoming\u003eFlow_1rmlnxf\u003c/incoming\u003e\u003cincoming\u003eFlow_057wv06\u003c/incoming\u003e\u003cincoming\u003eFlow_1yx00x3\u003c/incoming\u003e\u003cincoming\u003eFlow_1dl94rl\u003c/incoming\u003e\u003coutgoing\u003eFlow_1s6hjr5\u003c/outgoing\u003e\u003c/parallelGateway\u003e\u003csequenceFlow id=\"Flow_1s6hjr5\" sourceRef=\"CollectionPoint_6\" targetRef=\"ScriptTask_7\"/\u003e\u003csequenceFlow id=\"Flow_057wv06\" sourceRef=\"ServiceTask_5\" targetRef=\"CollectionPoint_6\"/\u003e\u003csequenceFlow id=\"Flow_1yx00x3\" sourceRef=\"ServiceTask_4\" targetRef=\"CollectionPoint_6\"/\u003e\u003csequenceFlow id=\"Flow_1dl94rl\" sourceRef=\"ServiceTask_3\" targetRef=\"CollectionPoint_6\"/\u003e\u003cscriptTask id=\"ScriptTask_7\" name=\"Mock Incident Script\"\u003e\u003cextensionElements\u003e\u003cresilient:script uuid=\"52e88afe-0ca8-4bac-823f-980bc8ba2931\"/\u003e\u003c/extensionElements\u003e\u003cincoming\u003eFlow_1s6hjr5\u003c/incoming\u003e\u003coutgoing\u003eFlow_0txnjrd\u003c/outgoing\u003e\u003cscript\u003escript\u003c/script\u003e\u003c/scriptTask\u003e\u003csequenceFlow id=\"Flow_0txnjrd\" sourceRef=\"ScriptTask_7\" targetRef=\"EndPoint_2\"/\u003e\u003c/process\u003e\u003cbpmndi:BPMNDiagram id=\"BPMNDiagram_1\"\u003e\u003cbpmndi:BPMNPlane bpmnElement=\"playbook_b28ea799_5c4b_44ae_9b59_e1c2318ae5a8\" id=\"BPMNPlane_1\"\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_1dl94rl\" id=\"Flow_1dl94rl_di\"\u003e\u003comgdi:waypoint x=\"1180\" y=\"402\"/\u003e\u003comgdi:waypoint x=\"1180\" y=\"620\"/\u003e\u003comgdi:waypoint x=\"789\" y=\"620\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_1yx00x3\" id=\"Flow_1yx00x3_di\"\u003e\u003comgdi:waypoint x=\"950\" y=\"402\"/\u003e\u003comgdi:waypoint x=\"950\" y=\"620\"/\u003e\u003comgdi:waypoint x=\"789\" y=\"620\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_057wv06\" id=\"Flow_057wv06_di\"\u003e\u003comgdi:waypoint x=\"490\" y=\"402\"/\u003e\u003comgdi:waypoint x=\"490\" y=\"620\"/\u003e\u003comgdi:waypoint x=\"652\" y=\"620\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_1s6hjr5\" id=\"Flow_1s6hjr5_di\"\u003e\u003comgdi:waypoint x=\"721\" y=\"646\"/\u003e\u003comgdi:waypoint x=\"721\" y=\"738\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_1itd994\" id=\"Flow_1itd994_di\"\u003e\u003comgdi:waypoint x=\"814\" y=\"91\"/\u003e\u003comgdi:waypoint x=\"1180\" y=\"91\"/\u003e\u003comgdi:waypoint x=\"1180\" y=\"318\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_17y1ve2\" id=\"Flow_17y1ve2_di\"\u003e\u003comgdi:waypoint x=\"814\" y=\"91\"/\u003e\u003comgdi:waypoint x=\"950\" y=\"91\"/\u003e\u003comgdi:waypoint x=\"950\" y=\"318\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_1bc4xwb\" id=\"Flow_1bc4xwb_di\"\u003e\u003comgdi:waypoint x=\"627\" y=\"91\"/\u003e\u003comgdi:waypoint x=\"490\" y=\"91\"/\u003e\u003comgdi:waypoint x=\"490\" y=\"318\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_1rmlnxf\" id=\"Flow_1rmlnxf_di\"\u003e\u003comgdi:waypoint x=\"721\" y=\"402\"/\u003e\u003comgdi:waypoint x=\"721\" y=\"594\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_0mg86rd\" id=\"Flow_0mg86rd_di\"\u003e\u003comgdi:waypoint x=\"721\" y=\"117\"/\u003e\u003comgdi:waypoint x=\"721\" y=\"318\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNEdge bpmnElement=\"Flow_0txnjrd\" id=\"Flow_0txnjrd_di\"\u003e\u003comgdi:waypoint x=\"721\" y=\"822\"/\u003e\u003comgdi:waypoint x=\"721\" y=\"894\"/\u003e\u003c/bpmndi:BPMNEdge\u003e\u003cbpmndi:BPMNShape bpmnElement=\"StartEvent_155asxm\" id=\"StartEvent_155asxm_di\"\u003e\u003comgdc:Bounds height=\"52\" width=\"187.083\" x=\"627\" y=\"65\"/\u003e\u003cbpmndi:BPMNLabel\u003e\u003comgdc:Bounds height=\"0\" width=\"90\" x=\"616\" y=\"100\"/\u003e\u003c/bpmndi:BPMNLabel\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"ServiceTask_1\" id=\"ServiceTask_1_di\"\u003e\u003comgdc:Bounds height=\"84\" width=\"196\" x=\"623\" y=\"318\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"ServiceTask_3\" id=\"ServiceTask_3_di\"\u003e\u003comgdc:Bounds height=\"84\" width=\"196\" x=\"1082\" y=\"318\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"ServiceTask_4\" id=\"ServiceTask_4_di\"\u003e\u003comgdc:Bounds height=\"84\" width=\"196\" x=\"852\" y=\"318\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"ServiceTask_5\" id=\"ServiceTask_5_di\"\u003e\u003comgdc:Bounds height=\"84\" width=\"196\" x=\"392\" y=\"318\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"CollectionPoint_6\" id=\"CollectionPoint_6_di\"\u003e\u003comgdc:Bounds height=\"52\" width=\"137.13330000000002\" x=\"652\" y=\"594\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"EndPoint_2\" id=\"EndPoint_2_di\"\u003e\u003comgdc:Bounds height=\"52\" width=\"132.15\" x=\"655\" y=\"894\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003cbpmndi:BPMNShape bpmnElement=\"ScriptTask_7\" id=\"ScriptTask_7_di\"\u003e\u003comgdc:Bounds height=\"84\" width=\"196\" x=\"623\" y=\"737.5\"/\u003e\u003c/bpmndi:BPMNShape\u003e\u003c/bpmndi:BPMNPlane\u003e\u003c/bpmndi:BPMNDiagram\u003e\u003c/definitions\u003e"
+                },
+            }],
+            "functions": []
         }
 
-        results = sdk_validate_helpers.package_files_validate_no_playbook_dependencies_missing(path_file, fx_copy_fn_main_mock_integration[0], attr_dict)
+        results = sdk_validate_helpers.package_files_validate_no_playbook_dependencies_missing("fake/package/file", "fake/package", attr_dict)
 
         assert len(results) == 1
         result = results[0]
         assert isinstance(result, SDKValidateIssue)
-        assert result.severity == expected_severity
+        assert result.description == "App includes playbook 'pb_test' which references function UUID(s) '9b180887-4ff6-4d13-82a6-cb0a5d8718f1, 9b180887-4ff6-4d13-82a6-cb0a5d8718f1, 9b180887-4ff6-4d13-82a6-cb0a5d8718f1, 9b180887-4ff6-4d13-82a6-cb0a5d8718f1' that are not included in the package"
 
 def test_package_files_validate_found_unique_icon(fx_copy_fn_main_mock_integration, fx_get_package_files_config):
 
