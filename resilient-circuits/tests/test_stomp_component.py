@@ -47,7 +47,7 @@ def test_stomp_reconnect_one_failure_followed_by_successful_reconnect(caplog):
 
     assert client._stomp_max_connection_errors == max_connection_errors_override
 
-    # standard successfull connection
+    # standard successful connection
     mock_evt = MagicMock()
     with patch("resilient_circuits.stomp_component.stomp.StompConnection12.connect") as patch_stomp_library_connect:
         with patch("resilient_circuits.stomp_component.StompClient.connected") as patch_connected_state:
@@ -111,6 +111,21 @@ def test_stomp_reconnect_one_failure_followed_by_successful_reconnect(caplog):
 #                 client.generate_events(mock_evt)
 #                 assert "Received frame" in caplog.text
 
+def test_stomp_client_logging_send_success(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+
+    with patch("resilient_circuits.stomp_component.stomp.StompConnection12.send") as patch_send:
+
+        client.send(mock_evt, "dest", "")
+        patch_send.assert_called()
+        patch_send.assert_called_once_with("dest", body=b"", headers=None, receipt=None)
+
+
 def test_stomp_client_logging_send_error(caplog):
     caplog.set_level(logging.DEBUG)
 
@@ -126,7 +141,25 @@ def test_stomp_client_logging_send_error(caplog):
             client.send(mock_evt, "dest", "")
         assert "Error sending frame" in caplog.text
 
-def test_stomp_client_logging_ack_frame(caplog):
+def test_stomp_client_logging_ack_frame_success(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    client = StompClient(host="example.com", port=443)
+
+    # standard successfull connection
+    mock_evt = MagicMock()
+    mock_frame = MagicMock()
+
+    mock_ack_dest = "actions.201.fn_mock"
+    mock_frame.headers.get.return_value = mock_ack_dest
+
+    with patch("resilient_circuits.stomp_component.stomp.StompConnection12.ack") as patch_send:
+
+        client.ack_frame(mock_evt, mock_frame)
+        patch_send.assert_called()
+        patch_send.assert_called_once_with(mock_ack_dest)
+
+def test_stomp_client_logging_ack_frame_error(caplog):
     caplog.set_level(logging.DEBUG)
 
     client = StompClient(host="example.com", port=443)
