@@ -4,27 +4,17 @@
 """ Circuits component for handling Stomp Connection """
 
 import logging
-import ssl
-import time
 import sys
 import traceback
-from circuits import BaseComponent, Timer
+
+import stomp
+from circuits import BaseComponent
 from circuits.core.handlers import handler
-from stompest.config import StompConfig
-from stompest.protocol import StompSpec, StompSession
-from stompest.sync import Stomp
-from stompest.error import StompConnectionError, StompError, StompProtocolError
-from stompest.sync.client import LOG_CATEGORY
-from resilient_circuits.stomp_events import *
-from resilient_circuits.stomp_transport import EnhancedStompFrameTransport
+
 from resilient_circuits import constants
-
-
-StompSpec.DEFAULT_VERSION = '1.2'
-ACK_CLIENT_INDIVIDUAL = StompSpec.ACK_CLIENT_INDIVIDUAL
-ACK_AUTO = StompSpec.ACK_AUTO
-ACK_CLIENT = StompSpec.ACK_CLIENT
-ACK_MODES = (ACK_CLIENT_INDIVIDUAL, ACK_AUTO, ACK_CLIENT)
+from resilient_circuits.stomp_events import (Connected, ConnectionFailed,
+                                             Disconnect, Disconnected, Message,
+                                             OnStompError)
 
 DEFAULT_MAX_RECONNECT_ATTEMPTS = 3
 DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS = 3
@@ -33,108 +23,127 @@ LOG = logging.getLogger(__name__)
 
 
 class StompClient(BaseComponent):
+    """
+    STOMP Component. Implements the circuits base component and is registered to the component
+    tree to handle events, mostly those events fired from Action component.
+
+    Uses the stomp.py library to implement STOMP connections. The SOARStompListener implements
+    the events triggered by the stomp.py library to handle stomp events from the server.
+    """
 
     channel = "stomp"
 
-    def init(self, host, port, username=None, password=None,
-             connect_timeout=3, connected_timeout=3,
-             version=StompSpec.VERSION_1_2, accept_versions=["1.0", "1.1", "1.2"],
-             heartbeats=(0, 0), ssl_context=None,
-             use_ssl=True,
-             key_file=None,
-             cert_file=None,
-             ca_certs=None,
-             ssl_version=ssl.PROTOCOL_TLS if sys.version_info.major == 2 else ssl.PROTOCOL_TLS_CLIENT,
-             key_file_password=None,
-             proxy_host=None,
-             proxy_port=None,
-             proxy_user=None,
-             proxy_password=None,
-             channel=channel,
-             stomp_params=None,
-             stomp_max_connection_errors=constants.STOMP_MAX_CONNECTION_ERRORS):
-        """ Initialize StompClient.  Called after __init__ """
-        self.channel = channel
-        if proxy_host:
-            LOG.info("Connect to %s:%s through proxy %s:%d", host, port, proxy_host, proxy_port)
-        else:
-            LOG.info("Connect to %s:%s", host, port)
-
-        if use_ssl and not ssl_context:
-
-            ssl_params = dict(key_file=key_file,
-                              cert_file=cert_file,
-                              ca_certs=ca_certs,
-                              ssl_version=ssl_version,
-                              password=key_file_password)
-            LOG.info("Request to use old-style socket wrapper: %s", ssl_params)
-            ssl_context = ssl_params
-
-        if use_ssl:
-            uri = "ssl://%s:%s" % (host, port)
-        else:
-            uri = "tcp://%s:%s" % (host, port)
-
-        # Configure failover options so it only tries based on settings
-        # build any parameters passed
-        # every connection has at least these two: maxReconnectAttempts, startupMaxReconnectAttempts
-        items = [item.split("=", 2) for item in stomp_params.split(",")] if stomp_params else []
-        connection_params = {item[0].strip():item[1].strip() for item in items} if items else {}
-
-        if "maxReconnectAttempts" not in connection_params:
-            connection_params['maxReconnectAttempts'] = DEFAULT_MAX_RECONNECT_ATTEMPTS
-        if "startupMaxReconnectAttempts" not in connection_params:
-            connection_params['startupMaxReconnectAttempts'] = DEFAULT_STARTUP_MAX_RECONNECT_ATTEMPTS
-
-        self._stomp_server = "failover:({0})?{1}".format(uri, ",".join(["{}={}".format(k, v) for k, v in connection_params.items()]))
-        LOG.debug("Stomp uri: {}".format(self._stomp_server))
-
-        self._stomp_config = StompConfig(uri=self._stomp_server, sslContext=ssl_context,
-                                         version=version,
-                                         login=username,
-                                         passcode=password)
-
-        self._heartbeats = heartbeats
-        self._accept_versions = accept_versions
-        self._connect_timeout = connect_timeout
-        self._connected_timeout = connected_timeout
-        Stomp._transportFactory = EnhancedStompFrameTransport
-        Stomp._transportFactory.proxy_host = proxy_host
-        Stomp._transportFactory.proxy_port = proxy_port
-        Stomp._transportFactory.proxy_user = proxy_user
-        Stomp._transportFactory.proxy_password = proxy_password
-        self._client = Stomp(self._stomp_config)
+    def __init__(self, *args, **kwargs):
+        # define all class variables with initials here, to be actually filled in the 'init' method
         self._subscribed = {}
-        self.server_heartbeat = None
-        self.client_heartbeat = None
-        self.last_heartbeat = 0
-        self.ALLOWANCE = 2  # multiplier for heartbeat timeouts
-        self._stomp_max_connection_errors =  stomp_max_connection_errors # count the number of consecutive errors
         self._stomp_connection_errors = 0
+        self._stomp_max_connection_errors = None
+        self._api_key = None
+        self._api_secret = None
+        self._stomp_host = tuple()
+        self._stomp_client = None
+
+        # call to super.__init__ must happen at the end so that 'init' method is called
+        # from BaseComponent constructor
+        super(StompClient, self).__init__(*args, **kwargs)
+
+    def init(self, host, port,
+             *_args,
+             username=None, password=None,
+             heartbeats=(0, 0),
+             ca_certs=None,
+             connect_timeout=120,
+             stomp_max_connection_errors=constants.STOMP_MAX_CONNECTION_ERRORS,
+             heart_beat_receive_scale=2,
+             **_kwargs):
+
+        # TODO! Figure out if stomp-py can work with a proxy through a similar mechanism that we're currently using with the stomp_transport.py file
+        # TODO: we removed the 'stomp_params' app.config option. do we need to bring back?
+
+        # connect timeout has to be greater than the heartbeat scale
+        # multiplied by the heartbeat for server. otherwise we would get
+        # continuous timeouts on connect (see https://github.com/jasonrbriggs/stomp.py/issues/366)
+        heart_beat_true_seconds = heart_beat_receive_scale * heartbeats[1]/1000 # divide by 1000 to get seconds
+        if heart_beat_true_seconds > connect_timeout:
+            LOG.warning("'stomp_timeout' set to a value lower than heartbeats")
+            connect_timeout = 1.5 * heart_beat_true_seconds # 1.5 scale here to be sure in the clear
+            LOG.info("Automatically adjusting STOMP timeout to '%s' so that it fits outside of heartbeats", connect_timeout)
+
+        self._subscribed = {}
+
+        self._stomp_connection_errors = 0
+        self._stomp_max_connection_errors = stomp_max_connection_errors
+
+        self._api_key = username
+        self._api_secret = password
+        self._stomp_host = [(host, port)]
+
+
+        LOG.info("Connect to STOMP at '%s:%s'", host, port)
+        self._stomp_client = stomp.StompConnection12(
+            self._stomp_host,
+            reconnect_attempts_max=-1,
+            reconnect_sleep_initial=1,
+            reconnect_sleep_increase=3,
+            timeout=connect_timeout,
+            keepalive=True,
+            heartbeats=heartbeats,
+            heart_beat_receive_scale=2
+        )
+        LOG.debug("Set SSL for STOMP client for hosts '%s' and certs '%s'", self._stomp_host, ca_certs)
+        self._stomp_client.set_ssl(for_hosts=self._stomp_host, ca_certs=ca_certs)
+        self._stomp_client.set_listener("", SOARStompListener(self))
+
 
     @property
     def connected(self):
-        if self._client.session:
-            return self._client.session.state == StompSession.CONNECTED
-        else:
-            return False
-
-    @property
-    def socket_connected(self):
-        try:
-            if self._client._transport:
-                return True
-        except:
-            pass
-        return False
+        return self._stomp_client.is_connected()
 
     @property
     def subscribed(self):
-        return self._subscribed.keys()
+        return self._subscribed
 
-    @property
-    def stomp_logger(self):
-        return LOG_CATEGORY
+
+    @handler("Connect")
+    def connect(self, event, host=None, _subscribe=None):
+        """ connect to Stomp server """
+        LOG.info("Connect to STOMP...")
+        try:
+            self._stomp_client.connect(
+                username=self._api_key,
+                passcode=self._api_secret,
+                wait=True,
+                with_connect_command=True
+            )
+            # LOG.debug("State after Connection Attempt: %s", self._client.session.state)
+            if self.connected:
+                LOG.info("Connected to STOMP at %s", self._stomp_host)
+                self.fire(Connected())
+                self._stomp_connection_errors = 0 # restart counter
+                return "success"
+
+        except (stomp.exception.ConnectFailedException, stomp.exception.NotConnectedException) as err:
+            LOG.debug(traceback.format_exc())
+            # Since switching to stomp.py library, this error hasn't been seen
+            # but we're keeping around just in case it pops up somewhere...
+            if "no more data" in str(err).lower():
+                self._stomp_connection_errors += 1
+                if self._stomp_max_connection_errors and self._stomp_connection_errors >= self._stomp_max_connection_errors:
+                    LOG.error("Exiting due to unrecoverable error")
+                    sys.exit(1) # this will exit resilient-circuits
+
+
+        # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
+        #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
+        #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
+        except stomp.exception.StompException:
+            LOG.error(traceback.format_exc())
+            LOG.error("Exiting due to unrecoverable error")
+            sys.exit(1) # this will exit resilient-circuits
+
+        event.success = False
+        self.fire(ConnectionFailed(self._stomp_host))
+        return "fail"
 
     @handler("Disconnect")
     def _disconnect(self, receipt=None, flush=True, reconnect=False):
@@ -142,156 +151,42 @@ class StompClient(BaseComponent):
             if flush:
                 self._subscribed = {}
             if self.connected:
-                self._client.disconnect(receipt=receipt)
-        except Exception as e:
+                self._stomp_client.disconnect(receipt=receipt)
+        except stomp.exception.StompException:
             LOG.error("Failed to disconnect client")
-        try:
-            self.fire(Disconnected(reconnect=reconnect))
-            self._client.close(flush=flush)
-        except Exception as e:
-            LOG.error("Failed to close client connection")
+
+        self.fire(Disconnected(reconnect=reconnect))
 
         return "disconnected"
 
-    def start_heartbeats(self):
-        LOG.info("Client HB: %s  Server HB: %s", self._client.clientHeartBeat, self._client.serverHeartBeat)
-        if self._client.clientHeartBeat:
-            if self.client_heartbeat:
-                # Timer already exists, just reset it
-                self.client_heartbeat.reset()
-            else:
-                LOG.info("Client will send heartbeats to server")
-                # Send heartbeats at 80% of agreed rate
-                self.client_heartbeat = Timer((self._client.clientHeartBeat / 1000.0) * 0.8,
-                                              ClientHeartbeat(), persist=True)
-                self.client_heartbeat.register(self)
-        else:
-            LOG.info("No Client heartbeats will be sent")
-
-        if self._client.serverHeartBeat:
-            if self.server_heartbeat:
-                # Timer already exists, just reset it
-                self.server_heartbeat.reset()
-            else:
-                LOG.info("Requested heartbeats from server.")
-                # Allow a grace period on server heartbeats
-                self.server_heartbeat = Timer((self._client.serverHeartBeat / 1000.0) * self.ALLOWANCE,
-                                              ServerHeartbeat(), persist=True)
-                self.server_heartbeat.register(self)
-        else:
-            LOG.info("Expecting no heartbeats from Server")
-
-    @handler("Connect")
-    def connect(self, event, host=None, *args, **kwargs):
-        """ connect to Stomp server """
-        LOG.info("Connect to Stomp...")
-        try:
-            self._client.connect(heartBeats=self._heartbeats,
-                                 host=host,
-                                 versions=self._accept_versions,
-                                 connectTimeout=self._connect_timeout,
-                                 connectedTimeout=self._connected_timeout)
-            LOG.debug("State after Connection Attempt: %s", self._client.session.state)
-            if self.connected:
-                LOG.info("Connected to %s", self._stomp_server)
-                self.fire(Connected())
-                self.start_heartbeats()
-                self._stomp_connection_errors = 0 # restart counter
-                return "success"
-
-        except StompConnectionError as err:
-            LOG.debug(traceback.format_exc())
-            # is this error unrecoverable?
-            if "no more data" in str(err).lower():
-                self._stomp_connection_errors += 1
-                if self._stomp_max_connection_errors and self._stomp_connection_errors >= self._stomp_max_connection_errors:
-                    LOG.error("Exiting due to unrecoverable error")
-                    sys.exit(1) # this will exit resilient-circuits
-
-            self.fire(ConnectionFailed(self._stomp_server))
-            event.success = False
-
-        # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
-        #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
-        #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
-        except StompProtocolError as err:
-            LOG.error(traceback.format_exc())
-            LOG.error("Exiting due to unrecoverable error")
-            sys.exit(1) # this will exit resilient-circuits
-        return "fail"
-
-    @handler("ServerHeartbeat")
-    def check_server_heartbeat(self, event):
-        """ Confirm that heartbeat from server hasn't timed out """
-        LOG.debug("Checking server heartbeat")
-        now = time.time()
-        self.last_heartbeat = self._client.lastReceived or self.last_heartbeat
-        if self.last_heartbeat:
-            elapsed = now-self.last_heartbeat
-        else:
-            elapsed = -1
-        if ((self._client.serverHeartBeat / 1000.0) * self.ALLOWANCE + self.last_heartbeat) < now:
-            LOG.error("Server heartbeat timeout. %d seconds since last heartbeat.", elapsed)
-            event.success = False
-            self.fire(HeartbeatTimeout(now))
-
-    @handler("ClientHeartbeat")
-    def send_heartbeat(self, event):
-        if self.connected:
-            LOG.debug("Sending client heartbeat")
-            try:
-                self._client.beat()
-            except (StompConnectionError, StompError) as err:
-                event.success = False
-                self.fire(OnStompError(None, err))
-
-    @handler("generate_events")
-    def generate_events(self, event):
-        event.reduce_time_left(0.1)
-        if not self.connected:
+    @handler("Unsubscribe")
+    def _unsubscribe(self, event, destination):
+        if destination not in self._subscribed:
+            LOG.error("Unsubscribe request ignored. Not subscribed to '%s'", destination)
             return
         try:
-            if self._client.canRead(0):
-                frame = self._client.receiveFrame()
-                LOG.debug("Received frame %s", frame)
-                if frame.command == StompSpec.ERROR:
-                    self.fire(OnStompError(frame, None))
-                else:
-                    self.fire(Message(frame))
-        except (StompConnectionError, StompError) as err:
-            LOG.error("Failed attempt to generate events.")
-            self.fire(OnStompError(None, err))
-
-    @handler("Send")
-    def send(self, event, destination, body, headers=None, receipt=None):
-        LOG.debug("send()")
-        try:
-            self._client.send(destination, body=body.encode('utf-8'), headers=headers, receipt=receipt)
-            LOG.debug("Message sent")
-        except (StompConnectionError, StompError) as err:
-            LOG.error("Error sending frame. %s", err)
+            self._stomp_client.unsubscribe(destination)
+            self._subscribed.pop(destination)
+            LOG.debug("Unsubscribed: %s", destination)
+        except stomp.exception.StompException:
             event.success = False
-            self.fire(OnStompError(None, err))
-            raise  # To fire Send_failure event
+            LOG.error("Unsubscribe Failed.")
+            # self.fire(OnStompError(frame, err))
 
     @handler("Subscribe")
-    def _subscribe(self, event, destination, additional_headers=None, ack=ACK_CLIENT_INDIVIDUAL):
-        if ack not in ACK_MODES:
-            raise ValueError("Invalid client ack mode specified")
-        if destination in self._client.session._subscriptions:
+    def _subscribe(self, event, destination, additional_headers=None):
+        if destination in self._subscribed:
             LOG.debug("Ignoring subscribe request to %s. Already subscribed.", destination)
-        LOG.info("Subscribe to message destination %s", destination)
         try:
-            headers = {StompSpec.ACK_HEADER: ack,
-                       'id': destination}
+            headers = {"ack": "client-individual",
+                       "id": destination}
             if additional_headers:
                 headers.update(additional_headers)
 
             # Set ID to match destination name for easy reference later
-            frame, token = self._client.subscribe(destination,
-                                                  headers)
-            self._subscribed[destination] = token
-        except (StompConnectionError, StompError) as err:
+            self._stomp_client.subscribe(destination=destination, id=destination, ack="client-individual", headers=headers)
+            self._subscribed[destination] = True
+        except stomp.exception.StompException as err:
             LOG.error("Failed to subscribe to queue.")
             event.success = False
             LOG.debug(traceback.format_exc())
@@ -299,42 +194,79 @@ class StompClient(BaseComponent):
         # This logic is added to trap the situation where resilient-circuits does not reconnect from a loss of connection
         #   with the resilient server. In these cases, this error is not survivable and it's best to kill resilient-circuits.
         #   If resilient-circuits is running as a service, it will restart and state would clear for a new stomp connection.
-        except StompProtocolError as err:
+        except Exception:
             LOG.error(traceback.format_exc())
             LOG.error("Exiting due to unrecoverable error")
             sys.exit(1) # this will exit resilient-circuits
 
-    @handler("Unsubscribe")
-    def _unsubscribe(self, event, destination):
-        if destination not in self._subscribed:
-            LOG.error("Unsubscribe Request Ignored. Not subscribed to %s", destination)
-            return
-        try:
-            token = self._subscribed.pop(destination)
-            frame = self._client.unsubscribe(token)
-            LOG.debug("Unsubscribed: %s", frame)
-        except (StompConnectionError, StompError) as err:
-            event.success = False
-            LOG.error("Unsubscribe Failed.")
-            self.fire(OnStompError(frame, err))
-
-    @handler("Message")
-    def on_message(self, event, headers, message, queue):
-        LOG.debug("Stomp message received")
+        LOG.info("Subscribed to message destination %s", destination)
 
     @handler("Ack")
     def ack_frame(self, event, frame):
         LOG.debug("ack_frame()")
         try:
-            self._client.ack(frame)
+            # TODO figure args for ack
+            self._stomp_client.ack(frame.headers.get("ack"))
             LOG.debug("Ack Sent")
-        except (StompConnectionError, StompError) as err:
+        except stomp.exception.StompException as err:
             LOG.error("Error sending ack. %s", err)
             event.success = False
             self.fire(OnStompError(frame, err))
             raise  # To fire Ack_failure event
 
-    def get_subscription(self, frame):
-        """ Get subscription from frame """
-        _, token = self._client.message(frame)
-        return self._subscribed[token]
+    @handler("Send")
+    def send(self, event, destination, body, headers=None, receipt=None):
+        LOG.debug("send()")
+        try:
+            self._stomp_client.send(destination, body=body.encode("utf-8"), headers=headers, receipt=receipt)
+            LOG.debug("Message sent")
+        except stomp.exception.StompException as err:
+            LOG.error("Error sending frame. %s", err)
+            event.success = False
+            self.fire(OnStompError(None, err))
+            raise  # To fire Send_failure event
+
+    @handler("Message")
+    def on_message(self, *_args, **_kwargs):
+        # the rest of this logic is handled in actions_component.on_stomp_message
+        # which handles the same "Message" event
+        LOG.debug("STOMP message received")
+
+class SOARStompListener(stomp.ConnectionListener):
+
+    def __init__(self, component):
+        super(SOARStompListener, self).__init__()
+        self.component = component
+
+        LOG.debug("STOMP listener initiated and listening for STOMP events")
+
+    def on_error(self, frame):
+        LOG.info("Received an error '%s'", frame.headers.get("message", "UNKNOWN"))
+        if "unable to connect to authentication service" not in frame.headers.get("message", "").lower():
+            self.component.fire(OnStompError(frame, frame.body))
+        else:
+            # ignore "unable to connect to authentication service" error
+            # because it just means that ActiveMQ is up, but not authenticatable;
+            # stomp client will automatically disconnect and reconnect once the authentication
+            # service is back up
+            LOG.warning("Messaging service is up but authentication service is not. Disconnect to retry...")
+
+    def on_message(self, frame):
+        LOG.debug("STOMP received message from destination: '%s'", frame.headers.get("reply-to"))
+        self.component.fire(Message(frame))
+
+    def on_disconnected(self):
+        LOG.error("STOMP disconnected. Firing disconnected event with reconnect=True")
+        self.component.fire(Disconnect(reconnect=True))
+
+    def on_connected(self, frame):
+        LOG.debug("STOMP connected!")
+
+    def on_connecting(self, host_and_port):
+        LOG.debug("STOMP connecting to '%s'", host_and_port)
+
+    def on_heartbeat(self):
+        LOG.debug("STOMP heartbeat received")
+
+    def on_heartbeat_timeout(self):
+        LOG.error("STOMP heartbeat timed-out...")
