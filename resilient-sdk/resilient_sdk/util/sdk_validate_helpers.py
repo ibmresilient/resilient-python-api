@@ -724,6 +724,7 @@ def package_files_validate_no_playbook_dependencies_missing(path_file, path_pack
         return []
 
     issues = _validate_playbook_conditions_all_fields_included(export_res, attr_dict, path_package)
+    issues.extend(_validate_playbook_conditions_all_functions_included(export_res, attr_dict, path_package))
 
     if not issues:
         return [SDKValidateIssue(
@@ -762,6 +763,34 @@ def _validate_playbook_conditions_all_fields_included(export_res, attr_dict, pat
                 description=attr_dict.get("fail_msg").format(playbook.get("display_name", "UNKNOWN PLAYBOOK NAME"), ", ".join(missing_fields_for_pb)),
                 severity=attr_dict.get("fail_severity"),
                 solution=attr_dict.get("fail_solution").format(path_package, " ".join(missing_fields_for_pb))
+            ))
+
+    return issues
+
+def _validate_playbook_conditions_all_functions_included(export_res, attr_dict, path_package):
+    issues = []
+
+
+    for playbook in export_res.get("playbooks") or []:
+
+        # This gets all the functions and scripts in the Playbooks's XML
+        pb_objects = sdk_helpers.get_playbook_objects(playbook)
+
+        # find any missing functions
+        missing_fn_uuids = []
+        for pb_fn in pb_objects.get("functions", []):
+            pb_fn_not_found = len([fn for fn in export_res["functions"] if pb_fn.get("uuid", "uuid_not_found_pb") == fn.get("uuid", "uuid_not_found_fn")]) == 0
+
+            if pb_fn_not_found:
+                missing_fn_uuids.append(pb_fn.get("uuid"))
+
+
+        if missing_fn_uuids:
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_functions").format(playbook.get("display_name", "UNKNOWN PLAYBOOK NAME"), ", ".join(missing_fn_uuids)),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution_functions").format(path_package)
             ))
 
     return issues
