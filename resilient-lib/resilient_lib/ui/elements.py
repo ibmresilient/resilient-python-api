@@ -74,23 +74,26 @@ class View(UIElementBase):
 class Header(UIElementBase):
     ELEMENT_TYPE = "header"
 
-    def __init__(self, content):
+    def __init__(self, content, show_link_header=False):
         """
         Headers aren't api_name based, they're "content" based.
         So we use the super class to use its validations but we overwrite
         the Conditions and add a ``content`` variable
 
         :param content: header content to display
+        :param show_link_header: boolean to enable "show link header" in UI for header element; defaults to False
         :type content: str
         """
         super(Header, self).__init__(content)
         self.content = content
+        self.show_link_header = show_link_header if show_link_header else False
         self.conditions = Conditions(self.content)
 
     def as_dto(self):
         return {
             "element": self.ELEMENT_TYPE,
-            "content": self.content
+            "content": self.content,
+            "show_link_header": self.show_link_header
         }
 
 class HTMLBlock(UIElementBase):
@@ -166,7 +169,7 @@ class Section(UIElementBase):
     """
     ELEMENT_TYPE = "section"
 
-    def __init__(self, element_list, show_if=None):
+    def __init__(self, element_list, show_if=None, show_link_header=False):
         """
         We call super init to validate required fields but otherwise we
         implement all our own methods.
@@ -175,10 +178,13 @@ class Section(UIElementBase):
         :type element_list: list[UIElementBase]
         :param show_if: list of condition DTOs, defaults to None (i.e. show always)
         :type show_if: list[dict], optional
+        :param show_link_header: boolean to enable "show link header" in UI for header element; defaults to False
+        :type show_link_header: bool, optional
         """
         super(Section, self).__init__(None)
         self.fields = element_list if element_list else []
         self.show_if = show_if if show_if else []
+        self.show_link_header = show_link_header if show_link_header else False
 
         assert isinstance(self.fields, list), "'element_list' must be a list"
         assert isinstance(self.show_if, list), "'show_if' must be a list"
@@ -189,7 +195,7 @@ class Section(UIElementBase):
             "element": self.ELEMENT_TYPE,
             "fields": [element.as_dto() for element in self.fields] if self.fields else [],
             "show_if": self.show_if,
-            "show_link_header": False
+            "show_link_header": self.show_link_header
         }
 
     def exists_in(self, fields):
