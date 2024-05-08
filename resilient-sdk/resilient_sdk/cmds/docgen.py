@@ -558,7 +558,7 @@ class CmdDocgen(BaseCmd):
         :param settings_file_contents: json contents of settings file if provided
         :type settings_file_contents: dict, optional (default {})
         :raises SDKException: if path to package does not exist or setup.py file can't be read
-        :return: display name, export.res contents, path to payload samples, path to save readme, requirements dict
+        :return: display name, export.res contents, path to payload samples, path to save readme, requirements dict, is_poller_app boolean
         """
         # Get absolute path_to_src
         path_to_src = os.path.abspath(args.package)
@@ -586,6 +586,7 @@ class CmdDocgen(BaseCmd):
         path_readme = os.path.abspath(args.output) if args.output else os.path.join(path_to_src, package_helpers.BASE_NAME_README)
         path_screenshots_dir = os.path.join(path_to_src, package_helpers.PATH_SCREENSHOTS)
         path_payload_samples_dir = os.path.join(path_to_src, package_helpers.BASE_NAME_PAYLOAD_SAMPLES_DIR)
+        path_poller_dir = os.path.join(path_to_src, package_name, package_helpers.BASE_NAME_POLLER_DIR)
 
         # Ensure we have read permissions for each required file and the file exists
         sdk_helpers.validate_file_paths(os.R_OK, path_setup_py_file, path_customize_py_file, path_config_py_file)
@@ -609,9 +610,14 @@ class CmdDocgen(BaseCmd):
         supported_app = settings_file_contents.get("supported_app",
                             sdk_helpers.does_url_contain(setup_py_attributes.get("url", ""), "ibm.com/mysupport"))
 
+        # Check if poller dir exists -- is_poller indicates if the app is a poller app or not, based on the existence of the poller directory
+        is_poller_app = False
+        if os.path.isdir(path_poller_dir):
+            is_poller_app = True
+        
         # If poller flag was given try to find the template details
         poller_templates = {}
-        if args.poller:
+        if args.poller or is_poller_app:
             poller_templates = self._get_poller_details(path_to_src, package_name)
 
         requirements = {
@@ -622,7 +628,8 @@ class CmdDocgen(BaseCmd):
             "poller_templates": poller_templates
         }
 
-        return package_name, customize_py_import_def, path_payload_samples_dir, path_readme, requirements
+
+        return package_name, customize_py_import_def, path_payload_samples_dir, path_readme, requirements, is_poller_app
 
     def _get_export_docgen_details(self, export_path, output_path=None):
         """
@@ -689,7 +696,7 @@ class CmdDocgen(BaseCmd):
 
         # branch off for export file vs standard package docgen by identifying appropriate function to call to get details
         if not args.exportfile:
-            package_name, export_contents, path_payload_samples_dir, path_readme, requirements_obj = self._get_app_package_docgen_details(args, settings_file_contents)
+            package_name, export_contents, path_payload_samples_dir, path_readme, requirements_obj, is_poller_app = self._get_app_package_docgen_details(args, settings_file_contents)
             jinja_functions, jinja_scripts, jinja_rules, jinja_datatables, jinja_custom_fields, jinja_custom_artifact_types, jinja_playbooks, jinja_apps = self._get_all_objects_for_jinja_render(export_contents)
             self._add_payload_samples_to_functions(jinja_functions, path_payload_samples_dir)
 
@@ -765,7 +772,7 @@ class CmdDocgen(BaseCmd):
 
             # constants
             "placeholder_string": constants.DOCGEN_PLACEHOLDER_STRING,
-            "poller_flag": args.poller,
+            "poller_flag": args.poller or is_poller_app,
             "poller_templates": requirements_obj.get("poller_templates", {}),
             "sdk_version": sdk_helpers.get_resilient_sdk_version(),
             "docgen_export": requirements_obj.get("docgen_export", False)

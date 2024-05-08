@@ -323,6 +323,7 @@ def test_get_app_package_docgen_details(fx_get_sub_parser, fx_cmd_line_args_docg
     assert "/payload_samples" in package_details[2]
     assert "/README.md" in package_details[3]
     assert all(req in package_details[4] for req in ("setup_py_attributes", "res_circuits_dep_str", "jinja_app_configs", "supported_app", "poller_templates"))
+    assert package_details[5]       # temp app contains poller/ directory
 
 def test_get_export_docgen_details_res_file(fx_get_sub_parser, fx_cmd_line_args_docgen):
     cmd_docgen = CmdDocgen(fx_get_sub_parser)
