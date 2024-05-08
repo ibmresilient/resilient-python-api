@@ -703,6 +703,7 @@ class CmdDocgen(BaseCmd):
             # Other variables for Jinja Templates
             server_version = export_contents.get("server_version", {}).get("version")
         else:
+            is_poller_app = False   # set is_poller_app to False because the user wants to generate README based off of export, not off of found package contents; user can still pass in --poller if desired
             package_names = []
             server_versions = []
             jinja_functions, jinja_scripts, jinja_rules, jinja_datatables, jinja_custom_fields, jinja_custom_artifact_types, jinja_playbooks, jinja_apps = [], [], [], [], [], [], [], []
