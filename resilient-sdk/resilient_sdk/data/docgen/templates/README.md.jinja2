@@ -251,7 +251,7 @@ Minimum SOAR version required for this export: `{{ server_version }}` (NOTE: thi
 ### Apps Included with Export
 | App | Version | Minimum SOAR Version |
 | --- | ------- | -------------------- |
-{% for app in apps %}
+{% for app in apps|sort(attribute="display_name") %}
 | {{ app.display_name }} | {{ app.version }} | {{ app.minimum_resilient_version.version }} |
 {% endfor %}
 {% else %} {# else no apps #}
@@ -404,7 +404,7 @@ results = {
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-{% for f in custom_fields|sort(attribute="api_name") %}
+{% for f in custom_fields|sort(attribute="label") %}
 | {{ f.label }} | `{{ f.api_name }}` | `{{ f.type }}` | `{{ f.prefix }}` | {{ f.placeholder }} | {{ f.tooltip }} |
 {% endfor %}
 
