@@ -1,4 +1,7 @@
-2023-11: version 51.0.1.0
+2024-05: version 51.0.2.0
+* Added official support for Python 3.12
+
+2024-02: version 51.0.1.0
 * No major changes. Just bumping build number to coincide with other builds
 
 2023-11: version 51.0.0.0

@@ -236,7 +236,6 @@ matrix:
           local_dir: ./docs/_build/
           keep_history: true
           verbose: true
-          edge: true
       after_deploy:
         - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
 

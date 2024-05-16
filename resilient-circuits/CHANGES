@@ -1,3 +1,10 @@
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+* There is a known issue with running ``resilient-circuits`` as a service on Windows in Python 3.12. This is not a
+  problem with ``resilient-circuits``, however, the development team will continue to monitor this for a time when
+  Windows does support Python 3.12 services. Until then, please use Python 3.11 or 3.9 on Windows for integration servers
+
 **2024-04: version 51.0.1.1**
 
 * Updated selftest to better handle connection issues when running in App Host
