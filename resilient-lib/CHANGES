@@ -1,3 +1,7 @@
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+
 **2024-04: version 51.0.1.1**
 
 * No major changes. Just bumping build number to coincide with other builds

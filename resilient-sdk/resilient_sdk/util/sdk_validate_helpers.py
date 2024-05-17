@@ -16,7 +16,7 @@ if sys.version_info.major < 3:
 else:
     from io import StringIO
 
-import pkg_resources
+from packaging.version import parse
 from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
@@ -98,7 +98,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
 
     res_circuits_version = sdk_helpers.get_package_version(constants.CIRCUITS_PACKAGE_NAME)
 
-    if res_circuits_version and res_circuits_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
+    if res_circuits_version and res_circuits_version >= parse(constants.RESILIENT_LIBRARIES_VERSION):
         # installed and correct version
         return True, SDKValidateIssue(
             name=attr_dict.get("name"),
@@ -106,7 +106,7 @@ def selftest_validate_resilient_circuits_installed(attr_dict, **_):
             severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
             solution=""
         )
-    elif res_circuits_version and res_circuits_version < pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION):
+    elif res_circuits_version and res_circuits_version < parse(constants.RESILIENT_LIBRARIES_VERSION):
         # resilient-circuits installed but version not supported
         return False, SDKValidateIssue(
             name=attr_dict.get("name"),
@@ -712,6 +712,89 @@ def package_files_validate_script_python_versions(path_file, attr_dict, **_):
     else:
         return issues
 
+def package_files_validate_no_playbook_dependencies_missing(path_file, path_package, attr_dict, **_):
+    try:
+        # parse import definition information from customize.py file
+        # this will raise an SDKException if something goes wrong
+        export_res = package_helpers.get_import_definition_from_customize_py(path_file)
+    except SDKException:
+        # something went wrong in reading the import definition.
+        # since this is already checked in another function elsewhere,
+        # ignore and return an empty list
+        return []
+
+    issues = _validate_playbook_conditions_all_fields_included(export_res, attr_dict, path_package)
+    issues.extend(_validate_playbook_conditions_all_functions_included(export_res, attr_dict, path_package))
+
+    if not issues:
+        return [SDKValidateIssue(
+            name=attr_dict.get("name"),
+            description=attr_dict.get("pass_msg"),
+            severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+            solution=attr_dict.get("pass_solution")
+        )]
+    else:
+        return issues
+
+def _validate_playbook_conditions_all_fields_included(export_res, attr_dict, path_package):
+    issues = []
+    packaged_field_names = [o.get("export_key").split("/")[-1] for o in export_res.get("fields", [])]
+
+    # validate GLOBAL scripts are all python3 only.
+    # for each non-python3 script we find, create an issue
+    for playbook in export_res.get("playbooks") or []:
+        missing_fields_for_pb = []
+
+        # run through the fields in the activation conditions
+        activation_details = playbook.get("activation_details", {}).get("activation_conditions", {}).get("conditions", []) or []
+        cancellation_details = playbook.get("auto_cancelation_details", {}).get("cancelation_conditions", {}).get("conditions", []) or []
+        details = [activation_details, cancellation_details]
+        for pb_conditions in details:
+            for condition in pb_conditions:
+                field_name = condition.get("field_name") or ""
+                field_name_split = field_name.split(".", 2)
+                if len(field_name_split) > 1 and field_name_split[1] == "properties" and field_name_split[-1] not in packaged_field_names:
+                    missing_fields_for_pb.append(field_name_split[-1])
+
+        # if any missing fields, create validate issue for them
+        if missing_fields_for_pb:
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg").format(playbook.get("display_name", "UNKNOWN PLAYBOOK NAME"), ", ".join(missing_fields_for_pb)),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution").format(path_package, " ".join(missing_fields_for_pb))
+            ))
+
+    return issues
+
+def _validate_playbook_conditions_all_functions_included(export_res, attr_dict, path_package):
+    issues = []
+
+
+    for playbook in export_res.get("playbooks") or []:
+
+        # This gets all the functions and scripts in the Playbooks's XML
+        pb_objects = sdk_helpers.get_playbook_objects(playbook)
+
+        # find any missing functions
+        missing_fn_uuids = []
+        for pb_fn in pb_objects.get("functions", []):
+            pb_fn_not_found = len([fn for fn in export_res["functions"] if pb_fn.get("uuid", "uuid_not_found_pb") == fn.get("uuid", "uuid_not_found_fn")]) == 0
+
+            if pb_fn_not_found:
+                missing_fn_uuids.append(pb_fn.get("uuid"))
+
+
+        if missing_fn_uuids:
+            issues.append(SDKValidateIssue(
+                name=attr_dict.get("name"),
+                description=attr_dict.get("fail_msg_functions").format(playbook.get("display_name", "UNKNOWN PLAYBOOK NAME"), ", ".join(missing_fn_uuids)),
+                severity=attr_dict.get("fail_severity"),
+                solution=attr_dict.get("fail_solution_functions").format(path_package)
+            ))
+
+    return issues
+
 def package_files_validate_icon(path_file, attr_dict, filename, **__):
     """
     Helper method for package files to validate an icon
@@ -1005,6 +1088,7 @@ def package_files_validate_base_image(path_file, attr_dict, path_package, **_):
                 attr_dict.get("name"),
                 attr_dict.get("pass_msg"),
                 severity=SDKValidateIssue.SEVERITY_LEVEL_DEBUG,
+                solution=""
             )]
 
     elif len(command_dict[from_command]) > 1: # if more than one FROM command found
