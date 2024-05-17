@@ -2,7 +2,7 @@
 
 * Added official support for Python 3.12
 * Improved the ``docgen`` command for export files to eliminate duplicate objects
-* The ``gather-reuslts`` feature of the ``codegen`` command now clears out sensitive host values
+* The ``gather-results`` feature of the ``codegen`` command now clears out sensitive host values
 * The ``validate`` command now checks apps for any playbooks which are dependent on SOAR objects
   that might not have been included in during the ``codegen`` process. Developers should still be
   sure to test their apps in a staging environments to ensure that all objects are properly packaged
