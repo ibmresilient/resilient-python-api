@@ -838,7 +838,7 @@ def get_from_export(export,
         if get_related_objects:
             # For Playbooks we attempt to locate related functions and scripts
             # Get Functions in Playbooks
-            for playbook in return_dict.get("playbooks", []):
+            for playbook in return_dict.get("playbooks") or []:
                 # This gets all the functions and scripts in the Playbooks's XML
                 pb_objects = get_playbook_objects(playbook)
 

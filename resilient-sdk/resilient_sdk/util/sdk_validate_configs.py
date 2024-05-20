@@ -311,8 +311,12 @@ package_files = [
         "name": "'Playbooks dependencies'",
 
         "fail_msg": u"App includes playbook '{0}' which references field(s) '{1}' that are not included in the package",
+        "fail_msg_functions": u"App includes playbook '{0}' which references function UUID(s) '{1}' that are not included in the package",
+        "fail_msg_scripts": u"App includes playbook '{0}' which references scripts UUIDs '{1}' that are not included in the package",
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "fail_solution": u"Reload your app to include the missing fields: '''resilient-sdk codegen -p {0} --reload --field {1}'''",
+        "fail_solution_functions": u"Reload your app to include the missing functions: '''resilient-sdk codegen -p {0} --reload'''",
+        "fail_solution_scripts": u"Reload your app to include the missing scripts: '''resilient-sdk codegen -p {0} --reload'''",
 
         "missing_msg": u"'customize.py' or 'export.res' not found in package at path '{0}'",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,

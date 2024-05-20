@@ -1,3 +1,7 @@
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+
 **2024-04: version 51.0.1.1**
 
 * Updated ``jwcrypto`` dependency requirement to ``~= 1.5.6`` (for Python 3.9 and 3.11) to address CVE-2024-28102

@@ -152,7 +152,7 @@ These guides are available on the IBM Documentation website at [ibm.biz/cp4s-doc
 The app **does/does not** <!-- {{ placeholder_string }} --> support a proxy server.
 
 ### Python Environment
-Python 3.9 and 3.11 are officially supported. When deployed as an app, the app runs on Python 3.11.
+Python 3.9, 3.11, and 3.12 are officially supported. When deployed as an app, the app runs on Python 3.11.
 {% if all_dependencies %}
 Additional package dependencies may exist for each of these packages:
 {% for dep in all_dependencies|sort %}
@@ -251,7 +251,7 @@ Minimum SOAR version required for this export: `{{ server_version }}` (NOTE: thi
 ### Apps Included with Export
 | App | Version | Minimum SOAR Version |
 | --- | ------- | -------------------- |
-{% for app in apps %}
+{% for app in apps|sort(attribute="display_name") %}
 | {{ app.display_name }} | {{ app.version }} | {{ app.minimum_resilient_version.version }} |
 {% endfor %}
 {% else %} {# else no apps #}
@@ -404,7 +404,7 @@ results = {
 ## Custom Fields
 | Label | API Access Name | Type | Prefix | Placeholder | Tooltip |
 | ----- | --------------- | ---- | ------ | ----------- | ------- |
-{% for f in custom_fields|sort(attribute="api_name") %}
+{% for f in custom_fields|sort(attribute="label") %}
 | {{ f.label }} | `{{ f.api_name }}` | `{{ f.type }}` | `{{ f.prefix }}` | {{ f.placeholder }} | {{ f.tooltip }} |
 {% endfor %}
 
