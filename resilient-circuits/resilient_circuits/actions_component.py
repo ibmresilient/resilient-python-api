@@ -47,8 +47,11 @@ RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
-IDLE_TIMER_INTERVAL = 600
-_idle_timer = None
+IDLE_TIMER_REST_INTERVAL = 600
+_idle_timer_rest = None
+# Global idle timer for STOMP, fires after 60 minutes to reset the STOMP connection
+IDLE_TIMER_STOMP_INTERVAL = 3600
+_idle_timer_stomp = None
 
 # look for unrecoverable errors
 UNRECOVERABLE_ERRORS = ['Already subscribed']
@@ -267,15 +270,23 @@ class ResilientComponent(BaseComponent):
         return get_resilient_client(self.opts)
 
     def reset_idle_timer(self):
-        """Create an idle-timer that we can use to reset the REST connection"""
-        global _idle_timer
-        if _idle_timer is None:
-            LOG.debug("create idle timer")
-            _idle_timer = Timer(IDLE_TIMER_INTERVAL,
-                                Event.create("idle_reset"), persist=True)
-            _idle_timer.register(self)
+        """Create an idle-timer that we can use to reset the REST and STOMP connection"""
+        global _idle_timer_rest, _idle_timer_stomp
+        if _idle_timer_rest is None:
+            LOG.debug("create REST idle timer")
+            _idle_timer_rest = Timer(IDLE_TIMER_REST_INTERVAL,
+                                Event.create("idle_reset_rest"), persist=True)
+            _idle_timer_rest.register(self)
         else:
-            _idle_timer.reset()
+            _idle_timer_rest.reset()
+
+        if _idle_timer_stomp is None:
+            LOG.debug("create STOMP idle timer")
+            _idle_timer_stomp = Timer(IDLE_TIMER_STOMP_INTERVAL,
+                                Event.create("idle_reset_stomp"), persist=True)
+            _idle_timer_stomp.register(self)
+        else:
+            _idle_timer_stomp.reset()
 
     def get_incident_field(self, fieldname):
         """Get the definition of an incident-field"""
@@ -609,10 +620,21 @@ class Actions(ResilientComponent):
 
     # Circuits event handlers
 
-    @handler("idle_reset")
-    def idle_reset(self, event):
-        LOG.debug("Idle reset")
+    @handler("idle_reset_rest")
+    def idle_reset_rest(self, event):
+        LOG.debug("Idle reset REST connection")
         reset_resilient_client(self.opts) # send opts to know which client to reset
+
+    @handler("idle_reset_stomp")
+    def idle_reset_stomp(self, event):
+        LOG.debug("Idle reset STOMP connection")
+        self.fire(Disconnect(flush=True, reconnect=False))
+        yield self.wait("Disconnect_success")
+        self._setup_stomp()
+        yield self.wait("Connect_success")
+        subscribe_event = Event.create("subscribe_to_all")
+        self.fire(subscribe_event)
+        yield self.wait(subscribe_event)
 
     def _setup_stomp(self):
         rest_client = self.rest_client()
@@ -899,7 +921,7 @@ class Actions(ResilientComponent):
         # Try again later
         reloading = getattr(self.parent, "reloading", False)
         if event.reconnect and not reloading:
-            LOG.info("STOMP disconnected or connection failed. Connection will retry in %s seconds", constants.STOMP_RECONNECT_INITIAL_DELAY)
+            LOG.info("STOMP rest, disconnected, or connection failed. Connection will retry in %s seconds", constants.STOMP_RECONNECT_INITIAL_DELAY)
             Timer(constants.STOMP_RECONNECT_INITIAL_DELAY, Event.create("reconnect")).register(self)
 
     @handler("exception")
