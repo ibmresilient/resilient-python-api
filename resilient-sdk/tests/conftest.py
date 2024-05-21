@@ -211,6 +211,18 @@ def fx_copy_fn_main_mock_integration():
     yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
     _rm_temp_dir()
 
+@pytest.fixture
+def fx_copy_fn_main_mock_integration_no_poller():
+    """
+    Before: Creates temp dir and copies fn_main_mock_integration to it, **but excludes the poller directory**
+    Returns a tuple (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+    After: Removes the temp directory
+    """
+    _mk_temp_dir()
+    path_fn_main_mock_integration = os.path.join(mock_paths.TEST_TEMP_DIR, mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME)
+    shutil.copytree(mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION, path_fn_main_mock_integration, ignore=shutil.ignore_patterns("poller"))
+    yield (mock_paths.MOCK_INT_FN_MAIN_MOCK_INTEGRATION_NAME, path_fn_main_mock_integration)
+    _rm_temp_dir()
 
 @pytest.fixture
 def fx_copy_fn_main_mock_integration_w_playbooks():
