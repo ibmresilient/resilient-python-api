@@ -157,16 +157,14 @@ def get_and_parse_proxy_env_var(var_to_get=constants.ENV_HTTP_PROXY):
     if not var:
         return {}
 
-    var = mask_special_chars(var)
-    var = unquote_str(var)
     parsed_var = urlparse(var)
 
     return {
         "scheme": parsed_var.scheme,
         "hostname": parsed_var.hostname,
         "port": parsed_var.port,
-        "username": unmask_special_chars(parsed_var.username),
-        "password": unmask_special_chars(parsed_var.password)
+        "username": unquote(parsed_var.username) if parsed_var.username else "",
+        "password": unquote(parsed_var.password) if parsed_var.password else ""
     }
 
 

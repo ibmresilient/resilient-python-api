@@ -13,7 +13,6 @@ import sys
 import tempfile
 
 import jinja2
-import pkg_resources
 import pytest
 import requests_mock
 from mock import patch
@@ -63,7 +62,7 @@ def test_read_write_file(fx_mk_temp_dir):
 
 def test_write_latest_pypi_tmp_file(fx_mk_temp_dir):
     mock_file_path = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_path_sdk_tmp_pypi_version.json")
-    mock_version = pkg_resources.parse_version("45.0.0")
+    mock_version = parse_version("45.0.0")
     sdk_helpers.write_latest_pypi_tmp_file(mock_version, mock_file_path)
 
     file_contents = sdk_helpers.read_json_file(mock_file_path)
@@ -578,12 +577,12 @@ def test_get_resilient_libraries_version_to_use_dev(fx_add_dev_env_var):
 def test_get_resilient_sdk_version():
     parsed_version = sdk_helpers.get_resilient_sdk_version()
     assert parsed_version is not None
-    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+    assert parsed_version >= parse_version(constants.RESILIENT_LIBRARIES_VERSION)
 
 def test_get_package_version_found_in_env():
     parsed_version = sdk_helpers.get_package_version("resilient-sdk")
     assert parsed_version is not None
-    assert parsed_version >= pkg_resources.parse_version(constants.RESILIENT_LIBRARIES_VERSION)
+    assert parsed_version >= parse_version(constants.RESILIENT_LIBRARIES_VERSION)
 
 def test_get_package_version_not_found():
     not_found = sdk_helpers.get_package_version("this-package-doesnt-exist")
@@ -600,7 +599,7 @@ def test_get_latest_version_on_pypi_legacy_version():
     mock_releases = {"releases": ["41.0.0", "#$%^&*mock_legacy_version"]}
     with requests_mock.Mocker() as m:
         m.get(constants.URL_PYPI_VERSION, json=mock_releases)
-        assert pkg_resources.parse_version("41.0.0") == sdk_helpers.get_latest_version_on_pypi()
+        assert parse_version("41.0.0") == sdk_helpers.get_latest_version_on_pypi()
 
 
 def test_get_latest_available_version_pypi(fx_mk_os_tmp_dir):
@@ -614,7 +613,7 @@ def test_get_latest_available_version_pypi(fx_mk_os_tmp_dir):
 def test_get_latest_available_version_tmp_file(fx_mk_os_tmp_dir):
 
     path_sdk_tmp_pypi_version = os.path.join(fx_mk_os_tmp_dir, constants.TMP_PYPI_VERSION)
-    mock_version = pkg_resources.parse_version("45.0.0")
+    mock_version = parse_version("45.0.0")
 
     sdk_helpers.write_latest_pypi_tmp_file(mock_version, path_sdk_tmp_pypi_version)
     latest_version = sdk_helpers.get_latest_available_version()
@@ -726,8 +725,29 @@ def test_scrape_results_from_log_file():
 
     # There are two Results for mock_function_one
     # in the mock_app.log file, so this ensures we get the latest
-    assert mock_function_one_results.get("version") == 2.1
-    assert mock_function_one_results.get("reason") == None
+    assert mock_function_one_results == {
+        "version": 2.1,
+        "success": True,
+        "reason": None,
+        "content": {"mock_key": "Mock Value!"},
+        "raw": None,
+        "inputs": {
+            "mock_input_text_with_value_string": "data value one  ล ฦ ว ศ ษ ส ห ฬ อ",
+            "mock_input_text": "abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc",
+            "mock_input_boolean": True,
+            "mock_input_multiselect": ["value one", "value two"],
+            "mock_input_select": "select two",
+            "mock_input_number": 1630407352685
+        },
+        "metrics": {
+            "version": "1.0",
+            "package": "fn-main-mock-integration",
+            "package_version": "1.0.3",
+            "host": constants.CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE,
+            "execution_time_ms": 3233,
+            "timestamp": "2021-12-02 14:48:45"
+        }
+    }
 
 def test_scrape_results_really_long_function_name():
 
@@ -740,6 +760,17 @@ def test_scrape_results_really_long_function_name():
     # in the mock_app.log file, so this ensures we get the latest
     assert mock_function_one_results.get("version") == 2.1
     assert mock_function_one_results.get("reason") == None
+    assert mock_function_one_results.get("metrics", {}).get("host") == constants.CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE
+
+def test_scrape_results_clears_metrics_host_value():
+
+    results_scraped = sdk_helpers.scrape_results_from_log_file(mock_paths.MOCK_APP_LOG_PATH)
+    mock_function_one_results = results_scraped.get("mock_function_one")
+
+    assert isinstance(mock_function_one_results, dict)
+
+    # specifically test that the host was cleared out
+    assert mock_function_one_results["metrics"]["host"] == constants.CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE
 
 
 def test_scrape_results_from_log_file_not_found():

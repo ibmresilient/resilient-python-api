@@ -414,3 +414,14 @@ def test_execute_command_for_export(fx_get_sub_parser, fx_cmd_line_args_docgen_e
     assert "Rendering README for" in caplog.text
     assert "mock_xml_test_report.xml' was skipped for 'docgen --export' because it was not in the proper" in caplog.text
     assert "Writing README to" in caplog.text
+
+def test_execute_command_for_two_exports(fx_get_sub_parser, fx_cmd_line_args_docgen_two_export_files, fx_mk_os_tmp_dir, caplog):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    # create tmp directory so that we don't overwrite repo's default README when we run this locally
+    fx_cmd_line_args_docgen_two_export_files.extend(["-o", os.path.join(fx_mk_os_tmp_dir, "README.md")])
+
+    cmd_docgen.execute_command(cmd_docgen.parser.parse_known_args()[0])
+
+    assert "Rendering README for" in caplog.text
+    assert "mock_xml_test_report.xml' was skipped for 'docgen --export' because it was not in the proper" in caplog.text
+    assert "Writing README to" in caplog.text

@@ -6,7 +6,7 @@
 import argparse
 import sys
 
-import pkg_resources
+from packaging.version import parse
 import pytest
 import resilient_sdk.app as app
 from mock import MagicMock, patch
@@ -40,8 +40,8 @@ def test_get_main_app_sub_parser():
 
 @pytest.mark.skipif(sys.version_info < constants.MIN_SUPPORTED_PY_VERSION, reason="requires python3.6 or higher")
 @patch.multiple("resilient_sdk.app.sdk_helpers",
-                get_resilient_sdk_version=MagicMock(return_value=pkg_resources.parse_version("40.0.0")),
-                get_latest_available_version=MagicMock(return_value=pkg_resources.parse_version("41.0.0")))
+                get_resilient_sdk_version=MagicMock(return_value=parse("40.0.0")),
+                get_latest_available_version=MagicMock(return_value=parse("41.0.0")))
 def test_main_print_version_warning(caplog):
 
     with pytest.raises(SystemExit):

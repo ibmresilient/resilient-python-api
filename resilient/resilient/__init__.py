@@ -1,10 +1,13 @@
 #!/usr/bin/env python
-# (c) Copyright IBM Corp. 2010, 2017. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
 
-import pkg_resources
 try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except pkg_resources.DistributionNotFound:
+    from importlib.metadata import distribution, PackageNotFoundError
+except ImportError:
+    from importlib_metadata import distribution, PackageNotFoundError
+try:
+    __version__ = distribution(__name__).version
+except PackageNotFoundError:
     __version__ = None
 
 from .co3 import SimpleClient, \
