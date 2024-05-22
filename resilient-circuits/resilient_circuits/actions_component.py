@@ -203,7 +203,7 @@ class ResilientComponent(BaseComponent):
 
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
-        multitenancy = self.opts.get('resilient', ()).get("multitenancy", "false")
+        multitenancy = self.opts.get('resilient', {}).get("multitenancy", "false")
         if multitenancy.strip().lower() == "false":
             LOG.info("Not multitenant: %s", str(self.opts))
             client = self.rest_client()
@@ -687,7 +687,7 @@ class Actions(ResilientComponent):
             stomp_email = self.opts["email"]
             stomp_password = self.opts["password"]
             if re.match(r'^env{.*}$', stomp_password):
-                logging.info("Getting password from environment")
+                LOG.info("Getting password from environment")
                 env_var = stomp_password[4:-1]
                 stomp_password = os.environ[env_var]
 
