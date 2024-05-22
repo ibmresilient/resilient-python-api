@@ -212,7 +212,6 @@ class ResilientComponent(BaseComponent):
             self._action_fields = dict((field["name"], field)
                                        for field in client.cached_get("/types/actioninvocation/fields"))
 
-            fn_names = ()
             if fn_names:
 
                 try:
@@ -436,7 +435,6 @@ class Actions(ResilientComponent):
             self.org_id = rest_client.org_id
 
             list_action_defs = rest_client.get("/actions")["entities"]
-
             self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
         else:
             self.org_id = "*"
