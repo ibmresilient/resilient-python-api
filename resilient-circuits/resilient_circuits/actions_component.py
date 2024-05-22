@@ -205,7 +205,7 @@ class ResilientComponent(BaseComponent):
         """Get Incident and Action fields"""
         multitenancy = self.opts.get('resilient', ()).get("multitenancy", "false")
         if multitenancy.strip().lower() == "false":
-            LOG.info("Not multitenant: " + str(self.opts))
+            LOG.info("Not multitenant: %s", str(self.opts))
             client = self.rest_client()
             self._fields = dict((field["name"], field)
                                 for field in client.cached_get("/types/incident/fields"))
@@ -430,18 +430,17 @@ class Actions(ResilientComponent):
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
                                 "proxy_password": opts.get("proxy_password")}
-        LOG.info("opts"  + str(opts))
         multitenancy = opts.get("multitenancy")
         if multitenancy is not None and multitenancy.strip().lower() == "false":
             rest_client = self.rest_client()
             self.org_id = rest_client.org_id
 
             list_action_defs = rest_client.get("/actions")["entities"]
-        
+
             self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
         else:
             self.org_id = "*"
-            self.action_defs[9]=dict()
+            self.action_defs[9] = dict()
 
         self.subscribe_headers = {"activemq.prefetchSize": opts["stomp_prefetch_limit"]}
         LOG.info("stomp_prefetch_limit set to %s", opts["stomp_prefetch_limit"])
