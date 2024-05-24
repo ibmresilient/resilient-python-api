@@ -5,12 +5,10 @@
 
 import base64
 import json
-import logging
 import os.path
 import ssl
 import sys
 import traceback
-import re
 from signal import SIGINT, SIGTERM
 
 if sys.version_info.major < 3:
@@ -19,7 +17,6 @@ else:
     from collections.abc import Callable
 
 from circuits import BaseComponent, Worker
-from circuits.core.handlers import handler
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 from six import string_types
@@ -28,7 +25,6 @@ import resilient
 from resilient import ensure_unicode
 from resilient_lib import IntegrationError
 import resilient_circuits.actions_test_component as actions_test_component
-from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
                                                ActionMessageBase,
                                                BaseFunctionError,
@@ -67,6 +63,9 @@ def validate_cert(cert, hostname):
         return (False, str(exc))
     return (True, "Success")
 
+def isUsingMultitenancy(opts):
+    multitenancy = opts.get('resilient', {}).get("multitenancy", "false")
+    return multitenancy.strip().lower() == 'true'
 
 class FunctionWorker(Worker):
 
@@ -203,8 +202,7 @@ class ResilientComponent(BaseComponent):
 
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
-        multitenancy = self.opts.get('resilient', {}).get("multitenancy", "false")
-        if multitenancy.strip().lower() == "false":
+        if not isUsingMultitenancy(self.opts):
             LOG.info("Not multitenant: %s", str(self.opts))
             client = self.rest_client()
             self._fields = dict((field["name"], field)
@@ -227,7 +225,10 @@ class ResilientComponent(BaseComponent):
                     self._functions = None
                     self._function_fields = None
         else:
-            LOG.info("==> Multitenant")
+            LOG.info(""" Multi-tenant mode was turned on. 
+            This application is not going to connect to any org to get the list of implemented functions.
+            Instead, it is expected that the "functions" parameter is used.
+             E.g.: functions={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
             self._fields = dict()
             self._function_fields = dict()
             self._action_fields = dict()
@@ -429,8 +430,7 @@ class Actions(ResilientComponent):
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
                                 "proxy_password": opts.get("proxy_password")}
-        multitenancy = opts.get("multitenancy")
-        if multitenancy is not None and multitenancy.strip().lower() == "false":
+        if not isUsingMultitenancy(opts):
             rest_client = self.rest_client()
             self.org_id = rest_client.org_id
 
@@ -438,7 +438,6 @@ class Actions(ResilientComponent):
             self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
         else:
             self.org_id = "*"
-            self.action_defs[9] = dict()
 
         self.subscribe_headers = {"activemq.prefetchSize": opts["stomp_prefetch_limit"]}
         LOG.info("stomp_prefetch_limit set to %s", opts["stomp_prefetch_limit"])
@@ -633,8 +632,7 @@ class Actions(ResilientComponent):
         reset_resilient_client(self.opts) # send opts to know which client to reset
 
     def _setup_stomp(self):
-        multitenancy = self.opts.get('resilient', ()).get("multitenancy", "false")
-        if multitenancy.strip().lower() == "false":
+        if not isUsingMultitenancy(self.opts):
             rest_client = self.rest_client()
             if not rest_client.actions_enabled:
                 # Don't create stomp connection b/c action module is not enabled.
@@ -684,10 +682,6 @@ class Actions(ResilientComponent):
         else:
             stomp_email = self.opts["email"]
             stomp_password = self.opts["password"]
-            if re.match(r'^env{.*}$', stomp_password):
-                LOG.info("Getting password from environment")
-                env_var = stomp_password[4:-1]
-                stomp_password = os.environ[env_var]
 
         # Set up a STOMP connection to the Resilient action services
         stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
