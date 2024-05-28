@@ -628,6 +628,9 @@ class Actions(ResilientComponent):
     @handler("idle_reset_stomp")
     def idle_reset_stomp(self, event):
         LOG.debug("Idle reset STOMP connection")
+        self._reset_stomp()
+
+    def _reset_stomp(self):
         self.fire(Disconnect(flush=True, reconnect=False))
         yield self.wait("Disconnect_success")
         self._setup_stomp()
@@ -640,8 +643,7 @@ class Actions(ResilientComponent):
         rest_client = self.rest_client()
         if not rest_client.actions_enabled:
             # Don't create stomp connection b/c action module is not enabled.
-            LOG.warning(("Resilient action module not enabled."
-                        "No stomp connection attempted."))
+            LOG.warning("Resilient action module not enabled. No stomp connection attempted.")
             return
 
         self.resilient_mock = self.opts["resilient_mock"] or False
@@ -921,7 +923,7 @@ class Actions(ResilientComponent):
         # Try again later
         reloading = getattr(self.parent, "reloading", False)
         if event.reconnect and not reloading:
-            LOG.info("STOMP rest, disconnected, or connection failed. Connection will retry in %s seconds", constants.STOMP_RECONNECT_INITIAL_DELAY)
+            LOG.info("STOMP connection reset, disconnected, or failed. Connection will retry in %s seconds", constants.STOMP_RECONNECT_INITIAL_DELAY)
             Timer(constants.STOMP_RECONNECT_INITIAL_DELAY, Event.create("reconnect")).register(self)
 
     @handler("exception")
@@ -1147,13 +1149,7 @@ class Actions(ResilientComponent):
         super(Actions, self).reload(event, opts)
         self._configure_opts(opts)
         if self.stomp_component:
-            self.fire(Disconnect(flush=True, reconnect=False))
-            yield self.wait("Disconnect_success")
-            self._setup_stomp()
-            yield self.wait("Connect_success")
-            subscribe_event = Event.create("subscribe_to_all")
-            self.fire(subscribe_event)
-            yield self.wait(subscribe_event)
+            self._reset_stomp()
         event.success = True
 
     @handler("StatusMessageEvent", "FunctionErrorEvent")
