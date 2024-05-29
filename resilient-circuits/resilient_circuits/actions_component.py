@@ -203,7 +203,7 @@ class ResilientComponent(BaseComponent):
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
         if not isUsingMultitenancy(self.opts):
-            LOG.info("Not multitenant: %s", str(self.opts))
+            LOG.debug("Not multitenant")
             client = self.rest_client()
             self._fields = dict((field["name"], field)
                                 for field in client.cached_get("/types/incident/fields"))
@@ -225,7 +225,7 @@ class ResilientComponent(BaseComponent):
                     self._functions = None
                     self._function_fields = None
         else:
-            LOG.info(""" Multi-tenant mode was turned on. 
+            LOG.info(""" Multi-tenant mode was turned on.
             This application is not going to connect to any org to get the list of implemented functions.
             Instead, it is expected that the "functions" parameter is used.
              E.g.: functions={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
