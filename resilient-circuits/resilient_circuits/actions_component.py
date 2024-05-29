@@ -5,7 +5,6 @@
 
 import base64
 import json
-import logging
 import os.path
 import ssl
 import sys
@@ -18,7 +17,6 @@ else:
     from collections.abc import Callable
 
 from circuits import BaseComponent, Worker
-from circuits.core.handlers import handler
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 from six import string_types
@@ -27,7 +25,6 @@ import resilient
 from resilient import ensure_unicode
 from resilient_lib import IntegrationError
 import resilient_circuits.actions_test_component as actions_test_component
-from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
                                                ActionMessageBase,
                                                BaseFunctionError,
@@ -66,6 +63,9 @@ def validate_cert(cert, hostname):
         return (False, str(exc))
     return (True, "Success")
 
+def isUsingMultitenancy(opts):
+    multitenancy = opts.get('resilient', {}).get("multitenancy", "false")
+    return multitenancy.strip().lower() == 'true'
 
 class FunctionWorker(Worker):
 
@@ -202,25 +202,39 @@ class ResilientComponent(BaseComponent):
 
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
-        client = self.rest_client()
-        self._fields = dict((field["name"], field)
-                            for field in client.cached_get("/types/incident/fields"))
-        self._action_fields = dict((field["name"], field)
-                                   for field in client.cached_get("/types/actioninvocation/fields"))
+        if not isUsingMultitenancy(self.opts):
+            LOG.info("Not multitenant: %s", str(self.opts))
+            client = self.rest_client()
+            self._fields = dict((field["name"], field)
+                                for field in client.cached_get("/types/incident/fields"))
+            self._action_fields = dict((field["name"], field)
+                                       for field in client.cached_get("/types/actioninvocation/fields"))
 
-        if fn_names:
+            if fn_names:
 
-            try:
+                try:
 
-                for fn_name in fn_names:
-                    self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name))
+                    for fn_name in fn_names:
+                        self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name))
 
-                self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
+                    self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
 
-            except resilient.SimpleHTTPException:
-                # functions are not available, pre-v30 server
-                self._functions = None
-                self._function_fields = None
+
+                except resilient.SimpleHTTPException:
+                    # functions are not available, pre-v30 server
+                    self._functions = None
+                    self._function_fields = None
+        else:
+            LOG.info(""" Multi-tenant mode was turned on. 
+            This application is not going to connect to any org to get the list of implemented functions.
+            Instead, it is expected that the "functions" parameter is used.
+             E.g.: functions={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
+            self._fields = dict()
+            self._function_fields = dict()
+            self._action_fields = dict()
+            opts = self.opts
+            opts_resilient = opts.get('resilient')
+            self._functions = json.loads( str(opts_resilient.get('functions')))
 
     def rest_client(self):
         """
@@ -416,12 +430,14 @@ class Actions(ResilientComponent):
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
                                 "proxy_password": opts.get("proxy_password")}
+        if not isUsingMultitenancy(opts):
+            rest_client = self.rest_client()
+            self.org_id = rest_client.org_id
 
-        rest_client = self.rest_client()
-        self.org_id = rest_client.org_id
-
-        list_action_defs = rest_client.get("/actions")["entities"]
-        self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+            list_action_defs = rest_client.get("/actions")["entities"]
+            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+        else:
+            self.org_id = "*"
 
         self.subscribe_headers = {"activemq.prefetchSize": opts["stomp_prefetch_limit"]}
         LOG.info("stomp_prefetch_limit set to %s", opts["stomp_prefetch_limit"])
@@ -616,12 +632,13 @@ class Actions(ResilientComponent):
         reset_resilient_client(self.opts) # send opts to know which client to reset
 
     def _setup_stomp(self):
-        rest_client = self.rest_client()
-        if not rest_client.actions_enabled:
-            # Don't create stomp connection b/c action module is not enabled.
-            LOG.warning(("Resilient action module not enabled."
-                        "No stomp connection attempted."))
-            return
+        if not isUsingMultitenancy(self.opts):
+            rest_client = self.rest_client()
+            if not rest_client.actions_enabled:
+                # Don't create stomp connection b/c action module is not enabled.
+                LOG.warning(("Resilient action module not enabled."
+                            "No stomp connection attempted."))
+                return
 
         self.resilient_mock = self.opts["resilient_mock"] or False
         if self.resilient_mock:
