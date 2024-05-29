@@ -206,7 +206,7 @@ class ResilientComponent(BaseComponent):
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
         if not isUsingMultitenancy(self.opts):
-            LOG.info("Not multitenant: %s", str(self.opts))
+            LOG.debug("Not multitenant")
             client = self.rest_client()
             self._fields = dict((field["name"], field)
                                 for field in client.cached_get("/types/incident/fields"))
