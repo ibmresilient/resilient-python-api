@@ -11,11 +11,12 @@ import sys
 import pytest
 from jinja2 import Environment, select_autoescape
 from mock import patch
-from tests.shared_mock_data.mock_plugins.mock_plugins import (MyBadMockPlugin,
-                                                              MyMockPlugin)
+from resilient_app_config_plugins import Keyring
 
 from resilient import constants
 from resilient.app_config import AppConfigManager, ProtectedSecretsManager
+from tests.shared_mock_data.mock_plugins.mock_plugins import (MyBadMockPlugin,
+                                                              MyMockPlugin)
 
 # this value is the decrypted value of the example protected secret "$API_KEY"
 MOCK_API_KEY_VALUE = "JbkOxTInUg1aIRGxXI8zOG1A25opU39lDKP1_0rfeVQ"
@@ -40,9 +41,11 @@ def test_protected_secrets_manager_PY27(fx_reset_environmental_variables):
 
     key = psm.get("$UNPROTECTED_API_KEY")
     key2 = psm.get("$UNPROTECTED_SECRET_WITH_BRACKETS")
+    key3 = psm.get("$NOT_FOUND")
 
     assert key == "passw0rd"
     assert key2 == "A[xyz)e}K,/MabS1}:NbJ$("
+    assert key3 == None
 
 def test_app_config_manager_no_plugin():
     original_dict = {
@@ -119,6 +122,15 @@ def test_app_config_manager_with_plugin():
     assert "^secret" in repr(acm)
     assert "^{secret1} and ^{secret1}" in repr(acm)
     assert "MOCK" not in repr(acm)
+
+def test_keyring_value_not_found():
+    values = {"key": "^[0-9]+$"} # value starts with ^ but shouldn't be found in Keyring
+    acm = AppConfigManager(values, pam_plugin_type=Keyring)
+
+    value = acm.get("key")
+
+    # make sure original value of ^[0-9]+$ is still the value returned
+    assert value == values.get("key")
 
 @pytest.mark.parametrize("item, prefix, expected", [
     # basic, old usage
