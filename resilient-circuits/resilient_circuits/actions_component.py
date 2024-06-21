@@ -63,7 +63,7 @@ def validate_cert(cert, hostname):
         return (False, str(exc))
     return (True, "Success")
 
-def isUsingMultitenancy(opts):
+def is_multitenant(opts):
     multitenancy = opts.get('resilient', {}).get("multitenancy", "false")
     return multitenancy.strip().lower() == 'true'
 
@@ -202,7 +202,7 @@ class ResilientComponent(BaseComponent):
 
     def _get_fields(self, fn_names=None):
         """Get Incident and Action fields"""
-        if not isUsingMultitenancy(self.opts):
+        if not is_multitenant(self.opts):
             LOG.debug("Not multitenant")
             client = self.rest_client()
             self._fields = dict((field["name"], field)
@@ -225,16 +225,14 @@ class ResilientComponent(BaseComponent):
                     self._functions = None
                     self._function_fields = None
         else:
-            LOG.info(""" Multi-tenant mode was turned on.
+            LOG.info("""Multi-tenant mode was turned on.
             This application is not going to connect to any org to get the list of implemented functions.
-            Instead, it is expected that the "functions" parameter is used.
-             E.g.: functions={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
-            self._fields = dict()
-            self._function_fields = dict()
-            self._action_fields = dict()
-            opts = self.opts
-            opts_resilient = opts.get('resilient')
-            self._functions = json.loads( str(opts_resilient.get('functions')))
+            Instead, it is expected that the "multi_org_function_json" parameter is used.
+             E.g.: multi_org_function_json={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
+            self._fields = {}
+            self._function_fields = {}
+            self._action_fields = {}
+            self._functions = json.loads(str(self.opts.get("resilient", {}).get("multi_org_function_json")))
 
     def rest_client(self):
         """
@@ -430,7 +428,7 @@ class Actions(ResilientComponent):
                                 "proxy_port": opts.get("proxy_port"),
                                 "proxy_user": opts.get("proxy_user"),
                                 "proxy_password": opts.get("proxy_password")}
-        if not isUsingMultitenancy(opts):
+        if not is_multitenant(opts):
             rest_client = self.rest_client()
             self.org_id = rest_client.org_id
 
@@ -632,7 +630,7 @@ class Actions(ResilientComponent):
         reset_resilient_client(self.opts) # send opts to know which client to reset
 
     def _setup_stomp(self):
-        if not isUsingMultitenancy(self.opts):
+        if not is_multitenant(self.opts):
             rest_client = self.rest_client()
             if not rest_client.actions_enabled:
                 # Don't create stomp connection b/c action module is not enabled.
