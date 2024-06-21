@@ -228,7 +228,7 @@ class ResilientComponent(BaseComponent):
             LOG.info("""Multi-tenant mode was turned on.
             This application is not going to connect to any org to get the list of implemented functions.
             Instead, it is expected that the "multi_org_function_json" parameter is used.
-             E.g.: functions={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
+             E.g.: multi_org_function_json={"func_name": {"name": "func_name", "destination_handle": "mess_dest"},...""")
             self._fields = {}
             self._function_fields = {}
             self._action_fields = {}
