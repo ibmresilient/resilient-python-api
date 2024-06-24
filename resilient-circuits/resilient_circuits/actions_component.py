@@ -392,6 +392,7 @@ class Actions(ResilientComponent):
         # messages and acks that failed to send over stomp connection
         self._stomp_ack_delivery_failures = {}
         self._resilient_ack_delivery_failures = {}
+        self._current_msgs_processing = {}
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
@@ -571,11 +572,14 @@ class Actions(ResilientComponent):
             if failure_info:
                 self.fire(Ack(event.frame))
                 self._stomp_ack_delivery_failures.pop(msg_id)
-
+        elif msg_id in self._current_msgs_processing:
+            LOG.info("Skipping reprocess of message '%s' because it is already in progress", msg_id)
+            self._current_msgs_processing[msg_id] = event # save event here because ack destination will change slightly
         else:
-            LOG.debug('STOMP listener: message for %s', ".".join(queue))
+            LOG.debug("STOMP listener: message for %s", ".".join(queue))
 
             LOG.debug("Got Message: %s", event.frame)
+            self._current_msgs_processing[msg_id] = event
 
             try:
                 # Expect the message payload to always be UTF8 JSON.
@@ -1209,6 +1213,10 @@ class Actions(ResilientComponent):
             fevent = event.parent
             headers = fevent.hdr()
             message_id = headers.get("message-id", None)
+            if message_id in self._current_msgs_processing:
+                # if the event has popped up again (i.e. a stomp restart happened),
+                # we need the new frame as that will hold any new ack message ID to use
+                fevent.frame = self._current_msgs_processing.pop(message_id).frame
 
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
@@ -1218,7 +1226,7 @@ class Actions(ResilientComponent):
                     LOG.debug("Acknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame))
             else:
-                value = event.parent.value.getValue()
+                value = fevent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
 

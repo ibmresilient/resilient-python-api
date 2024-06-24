@@ -57,8 +57,6 @@ class StompClient(BaseComponent):
              heart_beat_receive_scale=2,
              **_kwargs):
 
-        # TODO! Figure out if stomp-py can work with a proxy through a similar mechanism that we're currently using with the stomp_transport.py file
-        # TODO: we removed the 'stomp_params' app.config option. do we need to bring back?
 
         # connect timeout has to be greater than the heartbeat scale
         # multiplied by the heartbeat for server. otherwise we would get
@@ -205,7 +203,6 @@ class StompClient(BaseComponent):
     def ack_frame(self, event, frame):
         LOG.debug("ack_frame()")
         try:
-            # TODO figure args for ack
             self._stomp_client.ack(frame.headers.get("ack"))
             LOG.debug("Ack Sent")
         except stomp.exception.StompException as err:
