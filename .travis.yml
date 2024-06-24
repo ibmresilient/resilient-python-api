@@ -9,7 +9,7 @@ git:
 stages:
   - name: run tests
     if: branch !~ ^pages\/.+
-  - name: sonarqube scan
+  - name: sonarqube and detect secrets scan
     if: branch !~ ^pages\/.+
   - name: build packages
     if: branch = master OR branch =~ ^release\/.+
@@ -135,7 +135,7 @@ matrix:
             $PATH_SCRIPTS_DIR/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
           fi
 
-    - stage: sonarqube scan
+    - stage: sonarqube and detect secrets scan
       name: SonarQube Scan
       language: java
       env: RUN_TYPE=sonarqube
@@ -155,6 +155,18 @@ matrix:
       script:
         - echo "Building packages in Python 3.11"
         - $PATH_SCRIPTS_DIR/build_and_deploy_packages.sh no_deploy
+
+    - stage: sonarqube and detect secrets scan
+      name: Detect Secrets Scan
+      services:
+        - docker
+      env:
+        - RUN_TYPE=validate
+      script:
+        - echo "Detect secrets scan"
+        - $PATH_COMMON_SCRIPTS_DIR/detect_secrets_scan.sh
+      on:
+        all_branches: true
 
     - stage: deploy to artifactory
       name: Deploy packages to Artifactory
