@@ -988,6 +988,10 @@ class Actions(ResilientComponent):
             if isinstance(fevent, InboundMessage):
                 headers = fevent.hdr()
                 message_id = headers.get("message-id", None)
+                if message_id in self._current_msgs_processing:
+                    # if the event has popped up again (i.e. a stomp restart happened),
+                    # we need the new frame as that will hold any new ack message ID to use
+                    fevent.frame = self._current_msgs_processing.pop(message_id).frame
                 if not fevent.test:
                     LOG.debug("Exception raised.\nAcknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame))
@@ -1001,6 +1005,10 @@ class Actions(ResilientComponent):
                 headers = fevent.hdr()
                 # Ack the message
                 message_id = headers.get('message-id')
+                if message_id in self._current_msgs_processing:
+                    # if the event has popped up again (i.e. a stomp restart happened),
+                    # we need the new frame as that will hold any new ack message ID to use
+                    fevent.frame = self._current_msgs_processing.pop(message_id).frame
                 if not fevent.test and self.stomp_component:
                     self.fire(Ack(fevent.frame, message_id=message_id))
                     LOG.debug("Ack %s", message_id)
@@ -1114,12 +1122,14 @@ class Actions(ResilientComponent):
         for msgid, failure_info in to_retry.items():
             self._stomp_ack_delivery_failures[msgid]["retry_count"] += 1
             LOG.info("Retrying failed STOMP ACK for message %s", msgid)
+            self._current_msgs_processing.pop(msgid, None) # make sure to remove from current processing list
             self.fire(Ack(failure_info["message_frame"]))
 
         to_retry = {key: value for key, value in self._resilient_ack_delivery_failures.items()
                     if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
             LOG.info("Retrying failed Resilient ACK for message %s", msgid)
+            self._current_msgs_processing.pop(msgid, None) # make sure to remove from current processing list
             self._resilient_ack_delivery_failures[msgid]["retry_count"] += 1
             self.fire(Send(headers=failure_info["result"]["headers"],
                            body=failure_info["result"]["body"],
