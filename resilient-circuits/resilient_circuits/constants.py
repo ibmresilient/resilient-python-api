@@ -59,10 +59,17 @@ EXIT_REST_SSL_ERROR = 23            # REST: SSL Error (Invalid Certificate Error
 EXIT_REST_ORG_ERROR = 24            # REST: Organization Membership Error
 EXIT_REST_INVALID_PW = 25           # REST: Invalid Username or Password
 EXIT_STOMP_ERROR = 30               # STOMP: Generic connection error
-EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instansiate STOMP connection
+EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instantiate STOMP connection
 EXIT_STOMP_UNAUTHORIZED_Q = 32      # STOMP: Not authorized to read from queue
 EXIT_STOMP_Q_TIMEOUT = 33           # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
 EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatTimeout event and the first HeartbeatTimeout event is greater than the 'heartbeat_timeout_threshold'
 
 # STOMP connection constants
 STOMP_MAX_CONNECTION_ERRORS = 1     # default number of errors when heartbeat is lost
+
+
+# LOW CODE constants
+LOW_CODE_PAYLOAD_VERSION = 0.1
+LOW_CODE_MSG_DEST_PREFIX = "low_code"
+LOW_CODE_QUEUES_LIST_APP_CONFIG = "low_code_queues_list"
+LOW_CODE_HANDLER_VAR = "low_code_handler"

@@ -15,9 +15,10 @@ from circuits import Event, Timer, task
 from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (FunctionError_,
                                                FunctionErrorEvent,
-                                               FunctionResult, StatusMessage,
+                                               FunctionResult, LowCodeResult,
+                                               StatusMessage,
                                                StatusMessageEvent)
-from resilient_lib import ResultPayload, validate_fields
+from resilient_lib import LowCodePayload, ResultPayload, validate_fields
 
 LOG = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class function(object):
 
             def _call_the_task(evt, **kwds):
                 # On the worker thread, call the function, and handle a single or generator result.
-                LOG.debug("%s: _call_the_task", threading.currentThread().name)
+                LOG.debug("%s: _call_the_task", threading.current_thread().name)
                 result_list = []
                 task_result_or_gen = _the_task(evt, *args, **kwds)
                 if not isinstance(task_result_or_gen, GeneratorType):
@@ -188,7 +189,7 @@ class inbound_app(object):
                 :type ia: resilient_circuits.action_message.FunctionMessage
                 """
                 result_list = []
-                LOG.debug("Running _invoke_inbound_app in Thread: %s", threading.currentThread().name)
+                LOG.debug("Running _invoke_inbound_app in Thread: %s", threading.current_thread().name)
 
                 # Invoke the actual Function
                 # Pass along the message, the headers, and the action if present in the message
@@ -273,7 +274,7 @@ class app_function(object):
                 :param evt: The Event with the StompFrame and the Message read off the Message Destination
                 :type fn: resilient_circuits.action_message.FunctionMessage
                 """
-                LOG.debug("Running _invoke_app_function in Thread: %s", threading.currentThread().name)
+                LOG.debug("Running _invoke_app_function in Thread: %s", threading.current_thread().name)
 
                 result_list = []
 
@@ -329,6 +330,123 @@ class app_function(object):
 
         return app_function_decorator
 
+
+class low_code_function(object):
+    """
+    Decorator for the low code framework when running through app host.
+    The decorator takes optional low-code queues as arguments, however,
+    generally those queue names are defined in the app.config and loaded
+    in dynamically at component binding time (in component_loader.py).
+
+    NOTE: results from a ``low_code_function`` function can either be of type
+    ``FunctionResult`` or ``LowCodeResult``. The eventual result will be cast to a
+    ``LowCodeResult`` before being built to a ``LowCodePayload`` object
+    and returned to the queue in SOAR.
+
+    Example use:
+
+    .. code-block::
+
+        class FunctionComponent(AppFunctionComponent):
+
+            def __init__(self, opts):
+                super(FunctionComponent, self).__init__(opts, PACKAGE_NAME)
+
+            @low_code_function()
+            def _run_low_code(self, fn_inputs):
+                yield self.status_message("Low Code execution started")
+                ...
+                yield FunctionResult({"results": "value"})
+
+    :param object: _description_
+    :type object: _type_
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+        # because this has to be set dynamically based on app.config values,
+        # names is set in component loader
+        self.names = args
+
+    def __call__(self, fn):
+        """
+        Called at decoration time, with the bare function being decorated
+
+        :param fn: The function to decorate
+        :type fn: resilient_circuits.ResilientComponent
+        """
+        fn.handler = True
+        fn.low_code_handler = True
+
+
+        # Circuits properties
+        fn.names = self.names
+        fn.priority = self.kwargs.get("priority", 0)
+        fn.channel = constants.LOW_CODE_MSG_DEST_PREFIX
+        fn.override = self.kwargs.get("override", False)
+        fn.event = True
+
+        @wraps(fn)
+        def low_code_decorator(itself, event, *args, **kwargs):
+            function_inputs = event.message.get("inputs", {})
+            invoke_low_code_function = task(_invoke_low_code_function, event, itself, fn, **function_inputs)
+            fn_result = yield itself.call(invoke_low_code_function, "functionworker")
+            yield fn_result.value
+
+        return low_code_decorator
+
+def _invoke_low_code_function(event, app_fn_component_obj, the_function, **kwds):
+    LOG.debug("Running _invoke_low_code_function in Thread: %s", threading.current_thread().name)
+
+    result_list = []
+
+    # Validate the fn_inputs in the Message
+    fn_inputs = validate_fields([], kwds)
+    LOG.info("[%s] Validated function inputs", event.name)
+    LOG.debug("[%s] fn_inputs: %s", event.name, fn_inputs)
+
+    lc_payload = LowCodePayload(app_fn_component_obj.PACKAGE_NAME, version=constants.LOW_CODE_PAYLOAD_VERSION, **fn_inputs)
+
+    fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, app_fn_component_obj.opts)
+
+    # Set evt.message in local thread storage
+    app_fn_component_obj.set_fn_msg(event.message)
+
+    # Invoke the actual Function
+    fn_results = the_function(app_fn_component_obj, fn_inputs)
+
+    for result in fn_results:
+        # if a FunctionResult comes through, convert it to a LowCodeResult
+        # first before continuing with the rest of the result processing
+        if isinstance(result, FunctionResult):
+            result = LowCodeResult.from_function_result(result)
+
+        # handle the result as necessary; send status message, or ack result
+        if isinstance(result, StatusMessage):
+            LOG.info("[%s] StatusMessage: %s", event.name, result)
+            app_fn_component_obj.fire(StatusMessageEvent(parent=event, message=result.text))
+
+        elif isinstance(result, LowCodeResult):
+            result.name = event.name
+            if not result.custom_results:
+                result.value = lc_payload.done(
+                    content=result.value,
+                    success=result.success,
+                    reason=result.reason)
+            LOG.info("[%s] Returning results", result.name)
+            result_list.append(result)
+
+        elif isinstance(result, Exception):
+            raise result
+
+        else:
+            # Whatever this is, add it to the results
+            LOG.debug(result)
+            result_list.append(result)
+
+    return result_list
 
 class required_field(object):
     """Decorator, declares a required field for a ResilientComponent or its methods"""

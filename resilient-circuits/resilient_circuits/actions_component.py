@@ -17,27 +17,28 @@ if sys.version_info.major < 3:
 else:
     from collections.abc import Callable
 
+import resilient_circuits.actions_test_component as actions_test_component
 from circuits import BaseComponent, Worker
 from circuits.core.handlers import handler
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-from six import string_types
-
-import resilient
-from resilient import ensure_unicode
-from resilient_lib import IntegrationError
-import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
                                                ActionMessageBase,
                                                BaseFunctionError,
                                                FunctionMessage, FunctionResult,
-                                               InboundMessage, StatusMessage)
+                                               InboundMessage, LowCodeMessage,
+                                               StatusMessage)
 from resilient_circuits.decorators import *  # for back-compatibility, these were previously declared here
 from resilient_circuits.rest_helper import (get_resilient_client,
                                             reset_resilient_client)
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
+from resilient_lib import IntegrationError
+from six import string_types
+
+import resilient
+from resilient import ensure_unicode
 
 LOG = logging.getLogger(__name__)
 
@@ -204,9 +205,9 @@ class ResilientComponent(BaseComponent):
         """Get Incident and Action fields"""
         client = self.rest_client()
         self._fields = dict((field["name"], field)
-                            for field in client.cached_get("/types/incident/fields"))
+                            for field in client.cached_get("/types/incident/fields", skip_retry=[404]))
         self._action_fields = dict((field["name"], field)
-                                   for field in client.cached_get("/types/actioninvocation/fields"))
+                                   for field in client.cached_get("/types/actioninvocation/fields", skip_retry=[404]))
 
         if fn_names:
 
@@ -551,7 +552,6 @@ class Actions(ResilientComponent):
             subscription = self.stomp_component.get_subscription(event.frame)
             LOG.debug('STOMP listener: message for %s', subscription)
             queue_name = subscription.split(".", 2)[2]
-            channel = "actions." + queue_name
 
             LOG.debug("Got Message: %s", event.frame.info())
 
@@ -576,7 +576,14 @@ class Actions(ResilientComponent):
                                            message=message,
                                            frame=event.frame,
                                            log_dir=self.logging_directory)
-
+                elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message
+                    channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
+                    event = LowCodeMessage(source=self,
+                                           queue_name=queue_name,
+                                           headers=headers,
+                                           message=message,
+                                           frame=event.frame,
+                                           log_dir=self.logging_directory)
                 elif message.get("function"):
                     channel = "functions." + message["function"]["name"]
                     event = FunctionMessage(source=self,
@@ -585,6 +592,7 @@ class Actions(ResilientComponent):
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
                 else:
+                    channel = "actions." + queue_name
                     event = ActionMessage(source=self,
                                           headers=headers,
                                           message=message,
@@ -729,9 +737,18 @@ class Actions(ResilientComponent):
         # - the component's channel(s) declared at class level, and
         # - any channel(s) declared at individual handlers
         channels = set(event.channels)
-        for handler in component.handlers():
-            if handler.channel:
-                channels.update(handler.channel.split(","))
+        for comp_handler in component.handlers():
+            # low code all fires on the 'low_code' channel but allows for multiple message destinations
+            # those destinations are stored in the 'names' variable as a comma separated list, all starting with 'low_code.'
+            # each name has to be included in the channels loop below so that it is properly
+            # added to the 'listeners' property of the Actions class which is used later for
+            # subscribing to queues in the 'subscribe_to_queues' stage
+            if getattr(comp_handler, constants.LOW_CODE_HANDLER_VAR, False):
+                names = ["{0}.{1}".format(constants.LOW_CODE_MSG_DEST_PREFIX, name) for name in comp_handler.names]
+                channels.update(set(names))
+            elif comp_handler.channel:
+                # normal functions will just state their queue name in the 'channel' they listen on
+                channels.update(comp_handler.channel.split(","))
         for channel in channels:
             if str(channel).startswith("actions."):
                 # Action module handler, channel "actions.xx" subscribes to "xx"
@@ -765,6 +782,9 @@ class Actions(ResilientComponent):
                 queue_name = u"{0}.{1}.{2}".format(constants.INBOUND_MSG_DEST_PREFIX, self.org_id, handler_name)
                 LOG.info("'%s.%s' inbound handler '%s' registered to '%s'", type(component).__module__, type(component).__name__, handler_name, queue_name)
 
+            elif str(channel).startswith(constants.LOW_CODE_MSG_DEST_PREFIX):
+                queue_name = channel.split(".", 1)[-1]
+                LOG.info("'%s.%s' low code handler registered to '%s'", type(component).__module__, type(component).__name__, queue_name)
             else:
                 continue
 
@@ -832,6 +852,7 @@ class Actions(ResilientComponent):
             return
 
         if queue_name.startswith(constants.INBOUND_MSG_DEST_PREFIX):
+            LOG.info("Subscribe to inbound message destination '%s'", queue_name)
             self.fire(Subscribe(queue_name, additional_headers=self.subscribe_headers))
 
         elif self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:

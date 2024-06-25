@@ -89,6 +89,9 @@ class ComponentLoader(Loader):
         ep = None
         try:
             return_list = []
+
+            low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
+            lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
             # Loop entry points
             for ep in entry_points:
                 if ep.name not in self.noload:
@@ -104,7 +107,7 @@ class ComponentLoader(Loader):
                     custom_q_name = self.opts.get(cmp_module_name, {}).get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME, "")
 
                     if custom_q_name:
-                        # Get the inbound_handlers in this component and overwite their 'channel' and 'names' attributes
+                        # Get the inbound_handlers in this component and overwrite their 'channel' and 'names' attributes
                         inbound_handlers = helpers.get_handlers(cmp_class, handler_type="inbound_handler")
                         for ih in inbound_handlers:
 
@@ -119,6 +122,30 @@ class ComponentLoader(Loader):
                                 # Handle PY >= 3 specific imports
                                 ih[1].channel = new_channel
                                 ih[1].names = new_names
+
+                    # handle all low code handlers
+                    for lc_handler in helpers.get_handlers(cmp_class, handler_type=constants.LOW_CODE_HANDLER_VAR):
+
+                        if sys.version_info.major < 3:
+                            # Handle PY < 3
+                            lc_handler_obj = lc_handler[1].__func__
+                        else:
+                            # Handle PY >= 3 specific imports
+                            lc_handler_obj = lc_handler[1]
+
+                        # extend '.names' tuple with any additional queue names from the config
+                        lc_names_from_handler = lc_handler_obj.names or ()
+                        lc_names = lc_names_from_handler + lc_names_from_config
+                        lc_handler_obj.names = lc_names
+
+                        # if no names provided we need to disable the handler otherwise it will listen on all queues
+                        # this is for a case where a low code handler exists in the components that are registered
+                        # but there are no low code queues to listen to
+                        if not lc_names:
+                            LOG.debug("Low code handler for function '%s' in module '%s' was loaded but had no queues to subscribe to. Disabling handler...", lc_handler_obj.__name__, lc_handler_obj.__module__)
+                            lc_handler_obj.handler = False
+
+
 
                     return_list.append(cmp_class)
             return return_list

@@ -261,6 +261,22 @@ class InboundMessage(ActionMessageBase):
         if message and log_dir:
             self._log_message(log_dir)
 
+class LowCodeMessage(FunctionMessage):
+    """
+    IMPORTANT: in actions_component where it checks ``isinstance(event.parent, FunctionMessage)``
+    these should go through. So this has to inherit from FunctionMessage for now
+    """
+    def __init__(self, source=None, queue_name=None, headers=None, message=None,
+                 test=False, test_msg_id=None, frame=None, log_dir=None):
+
+        super(LowCodeMessage, self).__init__(source=source, headers=headers, message=message,
+                                             test=test, test_msg_id=test_msg_id, frame=frame, log_dir=log_dir)
+
+        # The name of this event has to be the queue name because the handler listens on
+        # the list `names=[queue_1, queue_2, ...]` so the name of the Event here has to match one of those.
+        # you can think of `names` as the same as the values passed to `@handler(name_1, name_2, ...)`
+        self.name = queue_name
+
 
 class StatusMessage(object):
     """Encapsulates a status message yielded from an action or function call"""
@@ -302,6 +318,14 @@ class FunctionResult(object):
         self.name = name
         self.custom_results = custom_results
 
+class LowCodeResult(FunctionResult):
+
+    def __init__(self, value, success=True, reason=None, name="Unknown", custom_results=False):
+        super(LowCodeResult, self).__init__(value, success, reason, name, custom_results)
+
+    @classmethod
+    def from_function_result(cls, fr):
+        return cls(fr.value, fr.success, fr.reason, fr.name, fr.custom_results)
 
 def FunctionError(*args, **kwargs):
     """
