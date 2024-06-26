@@ -23,6 +23,7 @@ from requests.utils import DEFAULT_CA_BUNDLE_PATH
 from resilient import ensure_unicode
 from resilient_lib import IntegrationError
 from six import string_types
+from cachetools import TTLCache
 
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.action_message import (ActionMessage,
@@ -51,7 +52,7 @@ IDLE_TIMER_STOMP_INTERVAL = 3600
 _idle_timer_stomp = None
 
 # look for unrecoverable errors
-UNRECOVERABLE_ERRORS = ['Already subscribed']
+UNRECOVERABLE_ERRORS = ['Already subscribed', 'is not authorized to create queue']
 
 # Errors and Message Destination names will get appended when ran in selftest
 SELFTEST_ERRORS = []
@@ -393,6 +394,17 @@ class Actions(ResilientComponent):
         self._stomp_ack_delivery_failures = {}
         self._resilient_ack_delivery_failures = {}
         self._current_msgs_processing = {}
+        # create a TTL cache with 1 hour to live and max size 1000 to store all acks sent
+        # this is CRUCIAL for any acks that might fail without proper failure propogating
+        # to the client; in this case, the message will still be in the queue
+        # and we'll pick it up and compare it against this cache. When we determine
+        # that we've already attempted to ack it and failed, we'll try again
+        # To test this properly works, set a message on the queue that the client picks up
+        # and delay the response for 1 minute; in that minute bring down the stomp server
+        # and see that once it comes back online, the ack ID has changed but the messageID
+        # has not; the client will fail to ack the original item, but will succeed in acking
+        # the new ack ID
+        self._all_acks = TTLCache(maxsize=1000, ttl=60*60) # 1 hour should be more than enough
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
@@ -575,6 +587,10 @@ class Actions(ResilientComponent):
         elif msg_id in self._current_msgs_processing:
             LOG.info("Skipping reprocess of message '%s' because it is already in progress", msg_id)
             self._current_msgs_processing[msg_id] = event # save event here because ack destination will change slightly
+        elif msg_id in self._all_acks:
+            LOG.info("Reprocessing ACK for message %s because it likely failed because of a STOMP restart", msg_id)
+            self.fire(Ack(event.frame))
+            self._all_acks.pop(msg_id)
         else:
             LOG.debug("STOMP listener: message for %s", ".".join(queue))
 
@@ -995,6 +1011,7 @@ class Actions(ResilientComponent):
                 if not fevent.test:
                     LOG.debug("Exception raised.\nAcknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame))
+                    self._all_acks[message_id] = True
 
             elif fevent and isinstance(fevent, ActionMessageBase):
                 # For a ActionMessageBase type
@@ -1012,6 +1029,7 @@ class Actions(ResilientComponent):
                 if not fevent.test and self.stomp_component:
                     self.fire(Ack(fevent.frame, message_id=message_id))
                     LOG.debug("Ack %s", message_id)
+                    self._all_acks[message_id] = True
                 # Reply with error status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
@@ -1235,6 +1253,7 @@ class Actions(ResilientComponent):
                 if not fevent.test:
                     LOG.debug("Acknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame))
+                    self._all_acks[message_id] = True
             else:
                 value = fevent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
@@ -1307,6 +1326,7 @@ class Actions(ResilientComponent):
                 if not fevent.test:
                     LOG.debug("Ack %s", message_id)
                     self.fire(Ack(fevent.frame, message_id=message_id))
+                    self._all_acks[message_id] = True
                 # Reply with success status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
