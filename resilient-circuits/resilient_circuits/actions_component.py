@@ -726,36 +726,24 @@ class Actions(ResilientComponent):
 
         # Set up a STOMP connection to the Resilient action services
         stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
-        # build out all the extra parameters for the stomp connections
-        stomp_params = self.opts['resilient'].get('stomp_params')
+        stomp_kwargs = {
+            "host": stomp_host,
+            "port": self.opts["stomp_port"],
+            "username": stomp_email,
+            "password": stomp_password,
+            "heartbeats": (STOMP_CLIENT_HEARTBEAT, STOMP_SERVER_HEARTBEAT),
+            "connected_timeout": stomp_timeout,
+            "connect_timeout": stomp_timeout,
+            "ssl_context": context,
+            "ca_certs": ca_certs,  # For old ssl version
+            "stomp_max_connection_errors": self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS)
+        }
         if not self.stomp_component:
-            self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
-                                               username=stomp_email,
-                                               password=stomp_password,
-                                               heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                           STOMP_SERVER_HEARTBEAT),
-                                               connected_timeout=stomp_timeout,
-                                               connect_timeout=stomp_timeout,
-                                               ssl_context=context,
-                                               ca_certs=ca_certs,  # For old ssl version
-                                               stomp_params=stomp_params,
-                                               stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS),
-                                               **self._proxy_args)
+            self.stomp_component = StompClient(**stomp_kwargs, **self._proxy_args)
             self.stomp_component.register(self)
         else:
             # Component exists, just update it
-            self.stomp_component.init(stomp_host, self.opts["stomp_port"],
-                                      username=stomp_email,
-                                      password=stomp_password,
-                                      heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                  STOMP_SERVER_HEARTBEAT),
-                                      connected_timeout=stomp_timeout,
-                                      connect_timeout=stomp_timeout,
-                                      ssl_context=context,
-                                      ca_certs=ca_certs,  # For old ssl version
-                                      stomp_params=stomp_params,
-                                      stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS),
-                                      **self._proxy_args)
+            self.stomp_component.init(**stomp_kwargs, **self._proxy_args)
 
         # Other special options
         self.ignore_message_failure = self.opts["resilient"].get("ignore_message_failure") == "1"
