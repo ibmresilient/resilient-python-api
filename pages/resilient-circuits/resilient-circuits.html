@@ -497,6 +497,14 @@ that can be used to access the IBM SOAR REST API.</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
+<p><strong>2024-07: version 51.0.2.1</strong></p>
+<ul class="simple">
+<li><p>All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+SOAR libraries on earlier versions of Python, use v52.0.2.0.974</p></li>
+<li><p>Replace underlying stomp library (previously <code class="docutils literal notranslate"><span class="pre">stompest</span></code>) with modern library <code class="docutils literal notranslate"><span class="pre">stomp.py</span></code></p></li>
+<li><p>Remove stomp configuration option <code class="docutils literal notranslate"><span class="pre">stomp_params</span></code>. This is no longer supported with the new <code class="docutils literal notranslate"><span class="pre">stomp.py</span></code> library</p></li>
+<li><p>Fix for secret substitution when value starts with “^” but is not intended to be substituted</p></li>
+</ul>
 <p><strong>2024-05: version 51.0.2.0</strong></p>
 <ul class="simple">
 <li><p>Added official support for Python 3.12</p></li>
@@ -964,7 +972,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=bbb17d3d"></script>
+</div><script src="../../_static/documentation_options.js?v=00d69ed1"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=4e2eecee"></script>
