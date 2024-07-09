@@ -16,14 +16,15 @@ if sys.version_info.major < 3:
 else:
     from collections.abc import Callable
 
+import resilient
 from circuits import BaseComponent, Worker
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-from six import string_types
-
-import resilient
 from resilient import ensure_unicode
 from resilient_lib import IntegrationError
+from six import string_types
+from cachetools import TTLCache
+
 import resilient_circuits.actions_test_component as actions_test_component
 from resilient_circuits.action_message import (ActionMessage,
                                                ActionMessageBase,
@@ -44,11 +45,14 @@ RETRY_TIMER_INTERVAL = 60           # Retry failed deliveries every minute
 SUBSCRIBE_TO_QUEUES_TIMEOUT = 30    # connect event timeout
 
 # Global idle timer, fires after 10 minutes to reset the REST connection
-IDLE_TIMER_INTERVAL = 600
-_idle_timer = None
+IDLE_TIMER_REST_INTERVAL = 600
+_idle_timer_rest = None
+# Global idle timer for STOMP, fires after 60 minutes to reset the STOMP connection
+IDLE_TIMER_STOMP_INTERVAL = 3600
+_idle_timer_stomp = None
 
 # look for unrecoverable errors
-UNRECOVERABLE_ERRORS = ['Already subscribed']
+UNRECOVERABLE_ERRORS = ['Already subscribed', 'is not authorized to create queue']
 
 # Errors and Message Destination names will get appended when ran in selftest
 SELFTEST_ERRORS = []
@@ -279,15 +283,23 @@ class ResilientComponent(BaseComponent):
         return get_resilient_client(self.opts)
 
     def reset_idle_timer(self):
-        """Create an idle-timer that we can use to reset the REST connection"""
-        global _idle_timer
-        if _idle_timer is None:
-            LOG.debug("create idle timer")
-            _idle_timer = Timer(IDLE_TIMER_INTERVAL,
-                                Event.create("idle_reset"), persist=True)
-            _idle_timer.register(self)
+        """Create an idle-timer that we can use to reset the REST and STOMP connection"""
+        global _idle_timer_rest, _idle_timer_stomp
+        if _idle_timer_rest is None:
+            LOG.debug("create REST idle timer")
+            _idle_timer_rest = Timer(IDLE_TIMER_REST_INTERVAL,
+                                Event.create("idle_reset_rest"), persist=True)
+            _idle_timer_rest.register(self)
         else:
-            _idle_timer.reset()
+            _idle_timer_rest.reset()
+
+        if _idle_timer_stomp is None:
+            LOG.debug("create STOMP idle timer")
+            _idle_timer_stomp = Timer(IDLE_TIMER_STOMP_INTERVAL,
+                                Event.create("idle_reset_stomp"), persist=True)
+            _idle_timer_stomp.register(self)
+        else:
+            _idle_timer_stomp.reset()
 
     def get_incident_field(self, fieldname):
         """Get the definition of an incident-field"""
@@ -381,6 +393,18 @@ class Actions(ResilientComponent):
         # messages and acks that failed to send over stomp connection
         self._stomp_ack_delivery_failures = {}
         self._resilient_ack_delivery_failures = {}
+        self._current_msgs_processing = {}
+        # create a TTL cache with 1 hour to live and max size 1000 to store all acks sent
+        # this is CRUCIAL for any acks that might fail without proper failure propogating
+        # to the client; in this case, the message will still be in the queue
+        # and we'll pick it up and compare it against this cache. When we determine
+        # that we've already attempted to ack it and failed, we'll try again
+        # To test this properly works, set a message on the queue that the client picks up
+        # and delay the response for 1 minute; in that minute bring down the stomp server
+        # and see that once it comes back online, the ack ID has changed but the messageID
+        # has not; the client will fail to ack the original item, but will succeed in acking
+        # the new ack ID
+        self._all_acks = TTLCache(maxsize=1000, ttl=60*60) # 1 hour should be more than enough
 
         # Read the action definitions, into a dict indexed by id
         # we'll refer to them later when dispatching
@@ -543,44 +567,49 @@ class Actions(ResilientComponent):
         # Find the queue name from the subscription id (stomp_listener_xxx)
         msg_id = event.frame.headers.get("message-id")
         if not msg_id:
-            LOG.error("Received message with no message id. %s", event.frame.info())
+            LOG.error("Received message with no message id. %s", event.frame)
             raise ValueError("Stomp message with no message id received")
         elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
             # Don't process it again, just acknowledge it
-            LOG.info("Skipping reprocess of message %s.  Sending saved ack now.", msg_id)
+            LOG.info("Skipping reprocess of message '%s'. Sending saved ack now.", msg_id)
             failure_info = self._resilient_ack_delivery_failures.get(msg_id)
             if failure_info:
-                self.fire(Send(headers={'correlation-id': headers['correlation-id']},
+                self.fire(Send(headers={"correlation-id": headers["correlation-id"]},
                                body=failure_info["result"]["body"],
-                               destination=headers['reply-to'],
+                               destination=headers["reply-to"],
                                message_id=msg_id))
                 self._resilient_ack_delivery_failures.pop(msg_id)
             failure_info = self._stomp_ack_delivery_failures.get(msg_id)
             if failure_info:
                 self.fire(Ack(event.frame))
                 self._stomp_ack_delivery_failures.pop(msg_id)
-
+        elif msg_id in self._current_msgs_processing:
+            LOG.info("Skipping reprocess of message '%s' because it is already in progress", msg_id)
+            self._current_msgs_processing[msg_id] = event # save event here because ack destination will change slightly
+        elif msg_id in self._all_acks:
+            LOG.info("Reprocessing ACK for message %s because it likely failed because of a STOMP restart", msg_id)
+            self.fire(Ack(event.frame))
+            self._all_acks.pop(msg_id)
         else:
-            subscription = self.stomp_component.get_subscription(event.frame)
-            LOG.debug('STOMP listener: message for %s', subscription)
-            queue_name = subscription.split(".", 2)[2]
-            channel = "actions." + queue_name
+            LOG.debug("STOMP listener: message for %s", ".".join(queue))
 
-            LOG.debug("Got Message: %s", event.frame.info())
+            LOG.debug("Got Message: %s", event.frame)
+            self._current_msgs_processing[msg_id] = event
 
             try:
                 # Expect the message payload to always be UTF8 JSON.
                 # However, it may contain surrogate pairs, and in Python 3 that causes problems:
                 # - surrogate pairs are not allowed by the default (strict) utf8 decoder,
                 # - if we pass them, it will cause downstream issues, so we should re-encode.
-                try:
-                    mstr = message.decode('utf-8')
-                except UnicodeDecodeError:
-                    LOG.debug("Failed utf8 decode, trying surrogate")
-                    mstr = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
+                if hasattr(message, "decode"):
+                    try:
+                        message = message.decode('utf-8')
+                    except UnicodeDecodeError:
+                        LOG.debug("Failed utf8 decode, trying surrogate")
+                        message = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
 
-                message = json.loads(mstr)
+                message = json.loads(message)
                 # Construct a Circuits event with the message, and fire it on the channel
                 if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
                     channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
@@ -599,6 +628,7 @@ class Actions(ResilientComponent):
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
                 else:
+                    channel = "{0}.{1}".format("actions", queue[-1])
                     event = ActionMessage(source=self,
                                           headers=headers,
                                           message=message,
@@ -624,18 +654,31 @@ class Actions(ResilientComponent):
 
     # Circuits event handlers
 
-    @handler("idle_reset")
-    def idle_reset(self, event):
-        LOG.debug("Idle reset")
+    @handler("idle_reset_rest")
+    def idle_reset_rest(self, event):
+        LOG.debug("Idle reset REST connection")
         reset_resilient_client(self.opts) # send opts to know which client to reset
+
+    @handler("idle_reset_stomp")
+    def idle_reset_stomp(self, event):
+        LOG.debug("Idle reset STOMP connection")
+        self._reset_stomp()
+
+    def _reset_stomp(self):
+        self.fire(Disconnect(flush=True, reconnect=False))
+        yield self.wait("Disconnect_success")
+        self._setup_stomp()
+        yield self.wait("Connect_success")
+        subscribe_event = Event.create("subscribe_to_all")
+        self.fire(subscribe_event)
+        yield self.wait(subscribe_event)
 
     def _setup_stomp(self):
         if not is_multitenant(self.opts):
             rest_client = self.rest_client()
             if not rest_client.actions_enabled:
                 # Don't create stomp connection b/c action module is not enabled.
-                LOG.warning(("Resilient action module not enabled."
-                            "No stomp connection attempted."))
+                LOG.warning("Resilient action module not enabled. No stomp connection attempted.")
                 return
 
         self.resilient_mock = self.opts["resilient_mock"] or False
@@ -683,36 +726,24 @@ class Actions(ResilientComponent):
 
         # Set up a STOMP connection to the Resilient action services
         stomp_timeout = int(self.opts.get("stomp_timeout")) # default from app.py:DEFAULT_STOMP_TIMEOUT
-        # build out all the extra parameters for the stomp connections
-        stomp_params = self.opts['resilient'].get('stomp_params')
+        stomp_kwargs = {
+            "host": stomp_host,
+            "port": self.opts["stomp_port"],
+            "username": stomp_email,
+            "password": stomp_password,
+            "heartbeats": (STOMP_CLIENT_HEARTBEAT, STOMP_SERVER_HEARTBEAT),
+            "connected_timeout": stomp_timeout,
+            "connect_timeout": stomp_timeout,
+            "ssl_context": context,
+            "ca_certs": ca_certs,  # For old ssl version
+            "stomp_max_connection_errors": self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS)
+        }
         if not self.stomp_component:
-            self.stomp_component = StompClient(stomp_host, self.opts["stomp_port"],
-                                               username=stomp_email,
-                                               password=stomp_password,
-                                               heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                           STOMP_SERVER_HEARTBEAT),
-                                               connected_timeout=stomp_timeout,
-                                               connect_timeout=stomp_timeout,
-                                               ssl_context=context,
-                                               ca_certs=ca_certs,  # For old ssl version
-                                               stomp_params=stomp_params,
-                                               stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS),
-                                               **self._proxy_args)
+            self.stomp_component = StompClient(**stomp_kwargs, **self._proxy_args)
             self.stomp_component.register(self)
         else:
             # Component exists, just update it
-            self.stomp_component.init(stomp_host, self.opts["stomp_port"],
-                                      username=stomp_email,
-                                      password=stomp_password,
-                                      heartbeats=(STOMP_CLIENT_HEARTBEAT,
-                                                  STOMP_SERVER_HEARTBEAT),
-                                      connected_timeout=stomp_timeout,
-                                      connect_timeout=stomp_timeout,
-                                      ssl_context=context,
-                                      ca_certs=ca_certs,  # For old ssl version
-                                      stomp_params=stomp_params,
-                                      stomp_max_connection_errors=self.opts.get("stomp_max_connection_errors", constants.STOMP_MAX_CONNECTION_ERRORS),
-                                      **self._proxy_args)
+            self.stomp_component.init(**stomp_kwargs, **self._proxy_args)
 
         # Other special options
         self.ignore_message_failure = self.opts["resilient"].get("ignore_message_failure") == "1"
@@ -852,7 +883,7 @@ class Actions(ResilientComponent):
         elif self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
-            LOG.info("Subscribe to message destination '%s'", queue_name)
+            LOG.info("Subscribing to message destination '%s'", queue_name)
 
             if helpers.is_this_a_selftest(self):
                 SELFTEST_SUBSCRIPTIONS.append(queue_name)
@@ -883,19 +914,21 @@ class Actions(ResilientComponent):
         """Try (re)connect to the STOMP server"""
         if self.resilient_mock:
             return
-        if self.stomp_component and self.stomp_component.connected and self.stomp_component.socket_connected:
+        if self.stomp_component and self.stomp_component.connected:
             LOG.debug("STOMP reconnect requested when already connected")
-        elif self.opts["resilient"].get("stomp") == "0":
+            return
+        if self.opts["resilient"].get("stomp") == "0":
             LOG.info("STOMP connection is not enabled")
-        else:
-            if self.stomp_component.socket_connected:
-                LOG.warning("Disconnecting socket before Connect attempt")
-                disconnect_event = Disconnect(reconnect=False, flush=False)
-                self.fire(disconnect_event)
-                yield self.wait(disconnect_event)
+            return
 
-            LOG.info("STOMP attempting to connect")
-            self.fire(Connect(subscribe=subscribe))
+        if self.stomp_component.connected:
+            LOG.warning("Disconnecting socket before Connect attempt")
+            disconnect_event = Disconnect(reconnect=False, flush=False)
+            self.fire(disconnect_event)
+            yield self.wait(disconnect_event)
+
+        LOG.info("STOMP attempting to connect")
+        self.fire(Connect(subscribe=subscribe))
 
     @handler("Connect_success")
     def connected_succesfully(self, event, *args, **kwargs):
@@ -913,7 +946,8 @@ class Actions(ResilientComponent):
         # Try again later
         reloading = getattr(self.parent, "reloading", False)
         if event.reconnect and not reloading:
-            Timer(60, Event.create("reconnect")).register(self)
+            LOG.info("STOMP connection reset, disconnected, or failed. Connection will retry in %s seconds", constants.STOMP_RECONNECT_INITIAL_DELAY)
+            Timer(constants.STOMP_RECONNECT_INITIAL_DELAY, Event.create("reconnect")).register(self)
 
     @handler("exception")
     def exception(self, etype, value, traceback, handler=None, fevent=None):
@@ -958,9 +992,14 @@ class Actions(ResilientComponent):
             if isinstance(fevent, InboundMessage):
                 headers = fevent.hdr()
                 message_id = headers.get("message-id", None)
+                if message_id in self._current_msgs_processing:
+                    # if the event has popped up again (i.e. a stomp restart happened),
+                    # we need the new frame as that will hold any new ack message ID to use
+                    fevent.frame = self._current_msgs_processing.pop(message_id).frame
                 if not fevent.test:
                     LOG.debug("Exception raised.\nAcknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame))
+                    self._all_acks[message_id] = True
 
             elif fevent and isinstance(fevent, ActionMessageBase):
                 # For a ActionMessageBase type
@@ -971,9 +1010,14 @@ class Actions(ResilientComponent):
                 headers = fevent.hdr()
                 # Ack the message
                 message_id = headers.get('message-id')
+                if message_id in self._current_msgs_processing:
+                    # if the event has popped up again (i.e. a stomp restart happened),
+                    # we need the new frame as that will hold any new ack message ID to use
+                    fevent.frame = self._current_msgs_processing.pop(message_id).frame
                 if not fevent.test and self.stomp_component:
                     self.fire(Ack(fevent.frame, message_id=message_id))
                     LOG.debug("Ack %s", message_id)
+                    self._all_acks[message_id] = True
                 # Reply with error status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
@@ -997,18 +1041,30 @@ class Actions(ResilientComponent):
     @handler("Ack_failure")
     def _on_ack_failure(self, event, err, *args, **kwargs):
         """STOMP Ack failed to send, add to delivery failures"""
+        LOG.debug("Handling STOMP 'Ack' event failure")
+        retry_count = 1
+        from_prev_conn = False
+
         message_id = event.parent.message_id
         failure = self._stomp_ack_delivery_failures.get(message_id)
         if failure:
-            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
+            LOG.debug("STOMP message id '%s' already exists in ack retry queue")
+            retry_count = failure["retry_count"]
+            from_prev_conn = failure["from_prev_conn"]
+            if self.max_retry_count != 0 and retry_count > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of STOMP ACK for message %s",
-                          failure["retry_count"], message_id)
+                          retry_count, message_id)
                 self._stomp_ack_delivery_failures.pop(message_id)
-        else:
-            failure = {"retry_count": 1,
-                       "from_prev_conn": False,
-                       "message_frame": event.parent.frame}
-            self._stomp_ack_delivery_failures[message_id] = failure
+                return
+
+        # overwrite any existing failure object because there might be a new failure
+        # (i.e. a failed status message) could be immediately followed by a failed FunctionResult.
+        # but save the retry_count and from_prev_conn details from previous failure as the
+        # message_id is still the same
+        failure = {"retry_count": retry_count,
+                    "from_prev_conn": from_prev_conn,
+                    "message_frame": event.parent.frame}
+        self._stomp_ack_delivery_failures[message_id] = failure
 
         LOG.warning("Failed %d times to deliver stomp ack for message %s", failure["retry_count"], message_id)
 
@@ -1027,22 +1083,35 @@ class Actions(ResilientComponent):
     @handler("Send_failure")
     def _on_send_failure(self, event, err, *args, **kwargs):
         """Resilient Ack failed to send, add to delivery failures"""
+        LOG.debug("Handling STOMP 'Send' event failure")
+        retry_count = 1
+        from_prev_conn = False
+
         message_id = event.parent.message_id
 
         failure = self._resilient_ack_delivery_failures.get(message_id)
         if failure:
-            if self.max_retry_count != 0 and failure["retry_count"] > self.max_retry_count:
+            LOG.debug("STOMP message id '%s' already exists in send retry queue")
+            retry_count = failure["retry_count"]
+            from_prev_conn = failure["from_prev_conn"]
+            if self.max_retry_count != 0 and retry_count > self.max_retry_count:
                 LOG.error("Giving up after %d attempts on delivery of Resilient ACK for message %s",
-                          failure["retry_count"], message_id)
+                          retry_count, message_id)
                 self._resilient_ack_delivery_failures.pop(message_id)
-        else:
-            failure = {"retry_count": 1,
-                       "from_prev_conn": False,
-                       "result":  {"headers": event.parent.headers,
-                                   "body": event.parent.body,
-                                   "destination": event.parent.destination}}
-            self._resilient_ack_delivery_failures[message_id] = failure
-        LOG.warning("Failed %d times to deliver Resilient ack for message %s", failure["retry_count"], message_id)
+                return
+
+        # overwrite any existing failure object because there might be a new failure
+        # (i.e. a failed status message) could be immediately followed by a failed FunctionResult.
+        # but save the retry_count and from_prev_conn details from previous failure as the
+        # message_id is still the same
+        failure = {"retry_count": retry_count,
+                    "from_prev_conn": from_prev_conn,
+                    "result":  {
+                        "headers": event.parent.headers,
+                        "body": event.parent.body,
+                        "destination": event.parent.destination}}
+        self._resilient_ack_delivery_failures[message_id] = failure
+        LOG.warning("Failed %d times to deliver stomp send for message %s", failure["retry_count"], message_id)
 
     @handler("retry_failed_deliveries")
     def _retry_send_failures(self, event):
@@ -1051,23 +1120,23 @@ class Actions(ResilientComponent):
             # Retries not applicable, probably using a mocked appliance
             return
         if not self.stomp_component.connected:
-            LOG.info("Skipping retry of any failed messages because STOMP connection is down")
+            LOG.debug("Skipping retry of any failed messages because STOMP connection is down")
             return
 
         to_retry = {key: value for key, value in self._stomp_ack_delivery_failures.items()
                     if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
-            self._stomp_ack_delivery_failures[msgid]["retry_count"] = \
-                self._stomp_ack_delivery_failures[msgid]["retry_count"] + 1
+            self._stomp_ack_delivery_failures[msgid]["retry_count"] += 1
             LOG.info("Retrying failed STOMP ACK for message %s", msgid)
+            self._current_msgs_processing.pop(msgid, None) # make sure to remove from current processing list
             self.fire(Ack(failure_info["message_frame"]))
 
         to_retry = {key: value for key, value in self._resilient_ack_delivery_failures.items()
                     if not value["from_prev_conn"]}
         for msgid, failure_info in to_retry.items():
             LOG.info("Retrying failed Resilient ACK for message %s", msgid)
-            self._resilient_ack_delivery_failures[msgid]["retry_count"] = \
-                self._resilient_ack_delivery_failures[msgid]["retry_count"] + 1
+            self._current_msgs_processing.pop(msgid, None) # make sure to remove from current processing list
+            self._resilient_ack_delivery_failures[msgid]["retry_count"] += 1
             self.fire(Send(headers=failure_info["result"]["headers"],
                            body=failure_info["result"]["body"],
                            destination=failure_info["result"]["destination"],
@@ -1115,13 +1184,7 @@ class Actions(ResilientComponent):
         super(Actions, self).reload(event, opts)
         self._configure_opts(opts)
         if self.stomp_component:
-            self.fire(Disconnect(flush=True, reconnect=False))
-            yield self.wait("Disconnect_success")
-            self._setup_stomp()
-            yield self.wait("Connect_success")
-            subscribe_event = Event.create("subscribe_to_all")
-            self.fire(subscribe_event)
-            yield self.wait(subscribe_event)
+            self._reset_stomp()
         event.success = True
 
     @handler("StatusMessageEvent", "FunctionErrorEvent")
@@ -1166,6 +1229,10 @@ class Actions(ResilientComponent):
             fevent = event.parent
             headers = fevent.hdr()
             message_id = headers.get("message-id", None)
+            if message_id in self._current_msgs_processing:
+                # if the event has popped up again (i.e. a stomp restart happened),
+                # we need the new frame as that will hold any new ack message ID to use
+                fevent.frame = self._current_msgs_processing.pop(message_id).frame
 
             if fevent.deferred:
                 LOG.debug("Not acking deferred message %s", str(fevent))
@@ -1174,8 +1241,9 @@ class Actions(ResilientComponent):
                 if not fevent.test:
                     LOG.debug("Acknowledging InboundMessage: %s for queue: %s", message_id, headers.get("subscription", "Unknown"))
                     self.fire(Ack(fevent.frame))
+                    self._all_acks[message_id] = True
             else:
-                value = event.parent.value.getValue()
+                value = fevent.value.getValue()
                 LOG.debug("success! %s, %s", value, fevent)
                 fevent.stop()  # Stop further event processing
 
@@ -1246,6 +1314,7 @@ class Actions(ResilientComponent):
                 if not fevent.test:
                     LOG.debug("Ack %s", message_id)
                     self.fire(Ack(fevent.frame, message_id=message_id))
+                    self._all_acks[message_id] = True
                 # Reply with success status
                 reply_to = headers['reply-to']
                 correlation_id = headers['correlation-id']
