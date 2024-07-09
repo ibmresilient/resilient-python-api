@@ -1,3 +1,8 @@
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+
 **2024-05: version 51.0.2.0**
 
 * Added official support for Python 3.12

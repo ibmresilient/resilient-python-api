@@ -1,3 +1,11 @@
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Replace underlying stomp library (previously ``stompest``) with modern library ``stomp.py``
+* Remove stomp configuration option ``stomp_params``. This is no longer supported with the new ``stomp.py`` library
+* Fix for secret substitution when value starts with "^" but is not intended to be substituted
+
 **2024-05: version 51.0.2.0**
 
 * Added official support for Python 3.12
