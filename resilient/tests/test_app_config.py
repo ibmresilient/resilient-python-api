@@ -132,6 +132,12 @@ def test_keyring_value_not_found():
     # make sure original value of ^[0-9]+$ is still the value returned
     assert value == values.get("key")
 
+def test_replace_secret_in_config_value_none():
+    manager = {"key": None}
+    replaced = AppConfigManager.replace_secret_in_config("^key", manager, "^")
+
+    assert replaced == "^key"
+
 @pytest.mark.parametrize("item, prefix, expected", [
     # basic, old usage
     ("^item in keyring", "^", "MOCK"),
