@@ -265,9 +265,14 @@ class AppConfigManager(UserDict, ConfigDict):
             else:
                 LOG.debug("Value found for %s", original_item)
 
-            item = u"{0}{1}{2}".format(item[0:start], secret_value, item[end+1:])
+            if secret_value != None:
+                item = u"{0}{1}{2}".format(item[0:start], secret_value, item[end+1:])
 
-            # restart the search from the one beyond where we just subbed in the found value
-            length_secret = len(secret_value) if secret_value else 0
-            start = item.index(secret_prefix, start+length_secret) if secret_prefix in item[start+length_secret:] else len(item)
+                # restart the search from the one beyond where we just subbed in the found value
+                length_secret = len(secret_value) if secret_value else 0
+                start = item.index(secret_prefix, start+length_secret) if secret_prefix in item[start+length_secret:] else len(item)
+            else:
+                # if no value was returned, then skip ahead out of the loop and return the original item
+                start = len(item)
+
         return item

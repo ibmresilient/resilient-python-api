@@ -32,12 +32,6 @@ org=My Org
 #resource_prefix=/api/respond
 
 #stomp_timeout=120
-#stomp_max_retries=3
-
-# Optional parameters for stomp connections.....
-# Please refer to IBM Support for additional settings to those outlined below
-# format......     stomp_params=<param1=value1>,<,param2=value2>
-#stomp_params=startupMaxReconnectAttempts=3,maxReconnectAttempts=10,initialReconnectDelay=20
 
 # Directory containing additional components to load
 # componentsdir=components
