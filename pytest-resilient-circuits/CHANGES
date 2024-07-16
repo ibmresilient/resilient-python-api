@@ -1,3 +1,6 @@
+2024-07: version 51.0.2.2
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
 2024-07: version 51.0.2.1
 * All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12.
   To continue using SOAR libraries on earlier versions of Python, use v52.0.2.0.974
