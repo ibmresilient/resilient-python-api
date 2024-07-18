@@ -456,8 +456,8 @@ class SimpleClient(co3base.BaseClient):
 
         :param uri: Relative URI of the resource to post.
         :type uri: str
-        :param payload: A dictionary value to be posted.
-        :type payload: dict
+        :param payload: A dictionary or a string value to be posted.
+        :type payload: dict | list
         :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
@@ -743,7 +743,7 @@ class SimpleClient(co3base.BaseClient):
         :param uri: Relative URI of the resource to update.
         :type uri: str
         :param payload: The object to update.
-        :type payload: dict
+        :type payload: dict | list
         :param co3_context_token: The ``Co3ContextToken`` from an Action Module message, if available.
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
