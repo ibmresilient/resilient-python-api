@@ -8,6 +8,7 @@ import requests
 from deprecated import deprecated
 from resilient_lib.components.integration_errors import IntegrationError
 from resilient_lib.components.resilient_common import str_to_bool
+from resilient_lib.util.constants import CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON
 from retry.api import retry_call
 from six import PY2
 
@@ -467,6 +468,66 @@ class RequestsCommon(object):
             msg = str(err)
             log and log.error(msg)
             raise IntegrationError(msg)
+
+
+    def make_rest_call(self, allowed_status_codes:list=[200], **kwargs) -> requests.Response:
+        """
+        A wrapper function that makes the rest call and returns the response object. The callback function
+        allows the response to be returned if the status code is > 300 and in the allowed_status_codes list.
+
+        :param opts:  All configurations found in the app.config file
+        :type opts: dict
+        :param function_opts: All configurations found in the ``[my_function]`` section of the app.config file
+        :type function_opts: dict
+        :param allowed_status_codes: (Optional) List of allowed status codes. Default: ``[200]``.
+        :type allowed_status_code: list
+        :return: Response returned by the endpoints
+        :rtype: :class:`requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
+            or ``callback`` function.
+        """
+
+        def rest_callback(response:requests.Response):
+            '''
+            Callback function to check the response status code and return the response. if the status is < 300,
+            or in the allowed_status_codes list, then return the response, else raise an exception.
+
+            :return: Response returned by the endpoints
+            :rtype: :class:`requests.Response <https://docs.python-requests.org/en/latest/api/#requests.Response>`_ object
+                or ``callback`` function.
+
+            '''
+            LOG.debug("Checking response status_code")
+
+            # return response if status code is < 300
+            if response.status_code < 300:
+                LOG.debug("Valid response code, returning request")
+                return response
+
+            # return response if status codein allowed_status_codes list
+            elif int(response.status_code) in allowed_status_codes:
+                LOG.info("Response status_code '%s' falls under exempted status_codes, returning request", response.status_code)
+                return response
+
+            # raise exception for everything else
+            else:
+                response.raise_for_status()
+
+        # If the content-type is json, then use the json parameter, else use the data parameter
+        # Content-type is made case agnostic
+        _headers = kwargs.get("headers")
+
+        # Request body is assumed to be data
+        kwargs["data"]     = kwargs.pop("body", {})
+        kwargs["callback"] = rest_callback
+
+        if _headers:
+            for each_header in _headers:
+            # checking to see if header has content-type : application/json. If so, assigns body to data
+                if each_header.lower() == CONTENT_TYPE_HEADER and CONTENT_TYPE_JSON in _headers[each_header].lower():
+                    LOG.debug("Found %s : %s in request header. Payload will be json formatted", each_header, CONTENT_TYPE_JSON)
+                    kwargs["json"] = kwargs.pop("data")
+
+        return self.execute(**kwargs)
 
 class RequestsCommonWithoutSession(RequestsCommon):
     """
