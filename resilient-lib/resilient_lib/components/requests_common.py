@@ -475,10 +475,6 @@ class RequestsCommon(object):
         A wrapper function that makes the rest call and returns the response object. The callback function
         allows the response to be returned if the status code is > 300 and in the allowed_status_codes list.
 
-        :param opts:  All configurations found in the app.config file
-        :type opts: dict
-        :param function_opts: All configurations found in the ``[my_function]`` section of the app.config file
-        :type function_opts: dict
         :param allowed_status_codes: (Optional) List of allowed status codes. Default: ``[200]``.
         :type allowed_status_code: list
         :return: Response returned by the endpoints
