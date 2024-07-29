@@ -1012,8 +1012,6 @@ class TestMakeRestCall(unittest.TestCase):
 
     @parameterized.expand(REQUESTS_COMMON_CLASSES)
     def test_standard_request(self, RCObjectType):
-        # self.caplog.set_level(logging.DEBUG)
-        # with patch("resilient_lib.components.requests_common.RequestsCommon.execute") as 
         RequestsCommon.execute = self.MockRC.execute        # TODO: can this be a fixture?
         rc = RCObjectType()
         response = rc.make_rest_call(
@@ -1035,12 +1033,12 @@ class TestMakeRestCall(unittest.TestCase):
         assert response["url"] == self.url
         assert response["method"] == self.method
         assert response["verify"]
+        assert response["tries"] is None
+        assert response["delay"] is None
+        assert response["backoff"] is None
         self.assertDictEqual(response["headers"], {"key1" : "header1"})
         self.assertDictEqual(response["cookies"], {"key1" : "cookie1"})
         self.assertDictEqual(response["data"], {"key1" : "body1"})
-        self.assertEqual(response["tries"], None)
-        self.assertEqual(response["delay"], None)
-        self.assertEqual(response["backoff"], None)
         self.assertIsNone(response["json"])
         self.assertEqual(response["timeout"], 60)
         self.assertEqual(response["clientauth"], """ NOT A CERTIFICATE """)
