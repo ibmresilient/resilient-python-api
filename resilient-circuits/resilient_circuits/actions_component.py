@@ -747,6 +747,7 @@ class Actions(ResilientComponent):
                 names = ["{0}.{1}".format(constants.LOW_CODE_MSG_DEST_PREFIX, name) for name in comp_handler.names]
                 channels.update(set(names))
             elif comp_handler.channel:
+                # Low code
                 # normal functions will just state their queue name in the 'channel' they listen on
                 channels.update(comp_handler.channel.split(","))
         for channel in channels:

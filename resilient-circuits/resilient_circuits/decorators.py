@@ -390,6 +390,7 @@ class low_code_function(object):
 
         @wraps(fn)
         def low_code_decorator(itself, event, *args, **kwargs):
+            # TODO: maybe pull out the request_originator here. Right now we're assuming function inputs
             function_inputs = event.message.get("inputs", {})
             invoke_low_code_function = task(_invoke_low_code_function, event, itself, fn, **function_inputs)
             fn_result = yield itself.call(invoke_low_code_function, "functionworker")
@@ -409,6 +410,7 @@ def _invoke_low_code_function(event, app_fn_component_obj, the_function, **kwds)
 
     lc_payload = LowCodePayload(app_fn_component_obj.PACKAGE_NAME, version=constants.LOW_CODE_PAYLOAD_VERSION, **fn_inputs)
 
+    # TODO: consider changing the name from fn_inputs to something like request_payload to match lowcode message
     fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, app_fn_component_obj.opts)
 
     # Set evt.message in local thread storage
