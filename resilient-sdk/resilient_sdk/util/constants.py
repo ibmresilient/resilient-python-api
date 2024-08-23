@@ -18,8 +18,8 @@ ENV_VAR_DEV = "RES_SDK_DEV"
 ENV_VAR_APP_CONFIG_FILE = "APP_CONFIG_FILE"
 
 # UPDATE BEFORE RELEASING NEW VERSION
-RESILIENT_LIBRARIES_VERSION = "51.0.1.1.0"
-RESILIENT_LIBRARIES_VERSION_DEV = "51.0.1.1.0"
+RESILIENT_LIBRARIES_VERSION = "51.0.2.2.0"
+RESILIENT_LIBRARIES_VERSION_DEV = "51.0.2.2.0"
 
 RESILIENT_VERSION_WITH_PROXY_SUPPORT = (42, 0, 0)
 CURRENT_SOAR_SERVER_VERSION = None
@@ -137,6 +137,7 @@ CODEGEN_DEFAULT_SETUP_PY_URL = "<<your company url>>"
 CODEGEN_DEFAULT_SETUP_PY_LONG_DESC = "<<{}>> Enter a long description, including the key features of the App. \\\\\\nMultiple continuation lines are supported with a backslash. Line breaks are supported too:\\n<br>- This will be rendered like a list\\n<br>- once the App is installed in SOAR".format(DOCGEN_PLACEHOLDER_STRING)
 CODEGEN_DEFAULT_LICENSE_CONTENT = "<<PUT YOUR LICENSE TEXT HERE>>"
 CODEGEN_DEFAULT_COPYRIGHT_CONTENT = "<<PUT YOUR COPYRIGHT TEXT HERE>>"
+CODEGEN_PAYLOAD_SAMPLES_CLEAR_HOST_DEFAULT_VALUE = "my.app.host"
 
 # resilient-sdk init internal defaults
 INIT_INTERNAL_AUTHOR = "IBM SOAR"

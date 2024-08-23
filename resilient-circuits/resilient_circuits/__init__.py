@@ -1,9 +1,12 @@
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
 
-import pkg_resources
 try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except pkg_resources.DistributionNotFound:
+    from importlib.metadata import distribution, PackageNotFoundError
+except ImportError:
+    from importlib_metadata import distribution, PackageNotFoundError
+try:
+    __version__ = distribution(__name__).version
+except PackageNotFoundError:
     __version__ = None
 
 from .actions_component import ResilientComponent

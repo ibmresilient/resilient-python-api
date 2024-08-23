@@ -47,7 +47,7 @@ def _scrub_ansi(val):
     """
     Return a value with all all ansi color codes removed
     """
-    return re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", r"", val) 
+    return re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", r"", val)
 
 
 def _convert_to_code(val):
@@ -59,7 +59,7 @@ def _convert_to_code(val):
             $ pip install -U "resilient-circuits"
             ```
     """
-    return re.sub(r"'{3}(.*)'(.*)'(.*)'{3}", r'\n\n```shell\n$ \1"\2"\3\n```\n', val).replace("'", "`").replace("\t\t", "\t")
+    return re.sub(r"'{3}(.*?)'{3}", r'\n\n```shell\n$ \1\n```\n', val).replace("'", "`").replace("\t\t", "\t")
 
 
 def _defaults_to_code(val):

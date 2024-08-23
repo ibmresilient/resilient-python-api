@@ -1,3 +1,22 @@
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Improvements for docgen with poller apps
+* Added ``yum update`` to Dockerfile template
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+* Improved the ``docgen`` command for export files to eliminate duplicate objects
+* The ``gather-results`` feature of the ``codegen`` command now clears out sensitive host values
+* The ``validate`` command now checks apps for any playbooks which are dependent on SOAR objects
+  that might not have been included in during the ``codegen`` process. Developers should still be
+  sure to test their apps in a staging environments to ensure that all objects are properly packaged
+
 **2024-04: version 51.0.1.1**
 
 * No major changes. Just bumping build number to coincide with other builds

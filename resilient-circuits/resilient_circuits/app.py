@@ -60,6 +60,14 @@ class RedactingFilter(logging.Filter):
 
                 # keep first and third capturing groups, but replace inner group with "***"
                 record.msg = regex.sub(r"\1***\3", record.msg)
+
+            # The stomp.py library we use can leak passwords in the frame logs in certain situations.
+            # We can remove those by checking for the "sending frame" log message
+            # and then rendering the message to check if the passcode value is included.
+            # If so, then return False thus skipping this log record
+            if "sending frame:" in record.msg:
+                if "passcode" in record.getMessage():
+                    return False
         except Exception:
             return True
 

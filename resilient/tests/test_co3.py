@@ -48,7 +48,7 @@ def test_client_put(fx_simple_client):
 
     test_headers = {"content-type": "application/octet-stream"}
 
-    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)
 
     requests_adapter.register_uri('PUT',
                                   mock_uri,
@@ -73,7 +73,7 @@ def test_client_put_with_error(fx_simple_client):
 
     test_headers = {"content-type": "application/octet-stream"}
 
-    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)    
+    mock_uri = '{0}/rest/orgs/{1}/playbooks/imports'.format(base_client.base_url, base_client.org_id)
 
     requests_adapter.register_uri('PUT',
                                   mock_uri,
