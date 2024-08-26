@@ -27,6 +27,9 @@ MOCK_APP_FN_NAME_ONE = u"{0}_{1}".format(MOCK_APP_FUNCTION_PREFIX, "one")
 MOCK_APP_FN_NAME_CUSTOM_RESULT = u"{0}_{1}".format(MOCK_APP_FUNCTION_PREFIX, "custom_result")
 MOCK_APP_FN_NAME_EX = u"{0}_{1}".format(MOCK_APP_FUNCTION_PREFIX, "raise_exception")
 
+MOCK_LOW_CODEAPP_FUNCTION_PREFIX = "low_code_mock"
+MOCK_LOW_CODE_APP_FN_NAME_EX = u"{0}_{1}".format(MOCK_LOW_CODEAPP_FUNCTION_PREFIX, "raise_exception")
+
 RESILIENT_MOCK = u"pytest_resilient_circuits.BasicResilientMockNoRegisterLog"
 
 CONFIG_DATA = """[{0}]

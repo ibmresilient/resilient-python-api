@@ -6,12 +6,12 @@ import logging
 import os
 import pytest
 from resilient_circuits import (ResilientComponent, app_function, constants,
-                                inbound_app)
+                                inbound_app, LowCodeResult)
 from resilient_circuits.action_message import FunctionException_
 from resilient_lib import IntegrationError
 
 from tests import (AppFunctionMockComponent, MockFunctionComponent,
-                   MockInboundAppComponent, helpers, mock_constants)
+                   MockInboundAppComponent, helpers, mock_constants, LowCodeMockComponent)
 
 resilient_mock = mock_constants.RESILIENT_MOCK
 config_data = mock_constants.CONFIG_DATA
@@ -63,6 +63,58 @@ class TestInboundAppDecorator:
                 @inbound_app("mock_q_2", "mock_q_3")
                 def inbound_app_mock_2(self, message, headers, *args, **kwargs):
                     return
+
+class TestLowCodeFunctionDecorator:
+
+    def test_basic_decoration(self):
+        """
+        Simply test if @low_code_function decorator sets required function attributes for the LowCodeComponent
+        """
+        assert LowCodeMockComponent._low_code_function_mock_one.handler is True
+        assert LowCodeMockComponent._low_code_function_mock_one.low_code_handler is True
+        
+        # TODO: re-visit once queue name discovery is done
+        assert LowCodeMockComponent._low_code_function_mock_one.names == ("xyz.201.connectors.my_app",)
+        
+        assert LowCodeMockComponent._low_code_function_mock_one.priority == 0
+        assert LowCodeMockComponent._low_code_function_mock_one.channel == constants.LOW_CODE_MSG_DEST_PREFIX
+        assert LowCodeMockComponent._low_code_function_mock_one.override is False
+        assert LowCodeMockComponent._low_code_function_mock_one.event is True
+
+    def test_low_code_app_mock_runs(self, circuits_app):
+        """
+        Test if the low code component runs
+        """
+        LowCodeMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        # TODO: queue_name will change with queue name discovery:
+        queue_name = "xyz.201.connectors.my_app"
+        helpers.call_low_code_function(circuits_app, queue_name)
+
+        # TODO: Add an assertion? Based off of the app function decorator, we just want to check if it runs without issue
+
+    def test_handles_LowCodeResult(self, circuits_app):
+        """
+        Call low code function and confirm the expected properties of the LowCodeResult
+        """
+        LowCodeMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        # TODO: queue-name will change with queue name discovery
+        queue_name = "xyz.201.connectors.my_app"
+        
+        # grab the LowCodeResult which is the item at index 1 
+        mock_result_obj = helpers.call_low_code_function(circuits_app, queue_name)[1][0]
+
+        assert mock_result_obj.name == "xyz.201.connectors.my_app"
+        assert mock_result_obj.success is True
+        assert mock_result_obj.reason is None
+
+        mock_results = mock_result_obj.value
+        assert mock_results["content"]["malware"] is True       # TODO: will probably change
+        # TODO: check where request_originator is getting set to ''??
+
+    def test_low_code_app_mock_handles_Exception(self, circuits_app):
+        LowCodeMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
+        with pytest.raises(IntegrationError, match=r"mock error message with unicode"):
+            helpers.call_low_code_function(circuits_app, mock_constants.MOCK_LOW_CODE_APP_FN_NAME_EX)
 
 
 class TestAppFunctionDecorator:
