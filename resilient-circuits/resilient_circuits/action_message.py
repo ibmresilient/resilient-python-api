@@ -261,7 +261,7 @@ class InboundMessage(ActionMessageBase):
         if message and log_dir:
             self._log_message(log_dir)
 
-class LowCodeMessage(FunctionMessage):
+class LowCodeMessage(ActionMessageBase):
     """
     IMPORTANT: in actions_component where it checks ``isinstance(event.parent, FunctionMessage)``
     these should go through. So this has to inherit from FunctionMessage for now
@@ -319,7 +319,7 @@ class FunctionResult(object):
         self.custom_results = custom_results
 
 class LowCodeResult(FunctionResult):
-
+    # Should match RestAPIResponseDTO?
     def __init__(self, value, success=True, reason=None, name="Unknown", custom_results=False):
         super(LowCodeResult, self).__init__(value, success, reason, name, custom_results)
 

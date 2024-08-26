@@ -12,7 +12,7 @@ import uuid
 from circuits import Component, Event, handler
 from circuits.net.sockets import TCPServer
 from circuits.net.events import write
-from resilient_circuits.action_message import ActionMessage, FunctionMessage, InboundMessage
+from resilient_circuits.action_message import ActionMessage, FunctionMessage, InboundMessage, LowCodeMessage
 from resilient_circuits import constants, helpers
 
 
@@ -71,6 +71,65 @@ class SubmitTestInboundApp(Event):
             }
 
         super(SubmitTestInboundApp, self).__init__(queue_name=queue_name, msg_id=msg_id, message=message)
+
+class SubmitTestLowCodeApp(Event):
+
+    def __init__(self, queue_name, message=None):
+
+        msg_id = str(uuid.uuid4())
+
+        # TODO: mock out values
+        if not message:
+            message = {
+                "request_originator": {
+                    "request_uuid": str(uuid.uuid4()),
+                    "correlation_id": "invid:100",
+                    "function_programmatic_name": "createUsersWithListInput",
+                    "org_id":201,
+                    "object_id":2095,
+                    "object_type":"incident",
+                    "parent_object_id":2095,
+                    "playbook_id":3,
+                    "playbook_instance_id":100
+                },
+                "request_payload": {
+                    "server_url":"https://petstore.swagger.io/v2/user/createWithList",
+                    "method":"POST",
+                    "request_body": [ {
+                        "id":12,
+                        "email":"john3@email.com",
+                        "phone":"12345",
+                        "lastName":"Doe",
+                        "password":"12345",
+                        "username":"theUser",
+                        "firstName":"James",
+                        "userStatus":1
+                    } ] ,
+                    "request_content_type":"application/json",
+                    "response_content_type":"application/json",
+                    "custom_params":{
+                        "secureContext":"true"
+                    },
+                    "security":{
+                        "scheme":"APIKEY",
+                        "api_key_param_name":"api_key",
+                        "api_key":"*****",
+                        "api_key_in":"HEADER",
+                        "generate_bearer_token":False
+                    }
+                },
+                "response_acknowledgment":{
+                    "ack_url":"http://localhost:8080/rest/orgs/201/serverless/ack",
+                    "ack_security":{
+                        "scheme":"BASIC",
+                        "api_key":"*****",
+                        "api_key_secret":"*****",
+                        "generate_bearer_token":False
+                    }
+                }
+            }
+
+        super(SubmitTestLowCodeApp, self).__init__(queue_name=queue_name, msg_id=msg_id, message=message)
 
 
 class ResilientTestActions(Component):
@@ -188,6 +247,53 @@ class ResilientTestActions(Component):
 
         except Exception as e:
             LOG.exception("Failed to SubmitTestInboundApp <message_id: %s>", msg_id)
+            raise e
+    
+    @handler("SubmitTestLowCodeApp")
+    def _submit_low_code_message(self, event, queue_name, msg_id, message, channel="*"):
+        try:
+            message_id = "ID:resilient-54199-{msg_id}-6:2:12:1:1".format(msg_id=msg_id)
+            # TODO: might change depending on queue name
+            subscription = "{0}.{1}.{2}".format("actions", self.org_id, queue_name)
+            destination = "/queue/{0}".format(subscription)
+            queue = helpers.get_queue(destination)
+            reply_to = "/queue/acks.{org}.{queue}".format(org=self.org_id,
+                                                          queue=queue)
+
+            headers = {"reply-to": reply_to,
+                        "expires": "0",
+                        "timestamp": str(int(time.time()) * 1000),
+                        "destination": destination,
+                        "correlation-id": "invid:390",
+                        "persistent": "True",
+                        "priority": "4",
+                        "Co3MessagePayload": "ActionDataDTO",
+                        "Co3ContentType": "application/json",
+                        "message-id": message_id,
+                        "Co3ContextToken": "dummy",
+                        "subscription": "stomp-{queue}".format(queue=queue)}
+            
+            try:
+
+                if not isinstance(message, dict):
+                    message = json.loads(message)
+                    assert(isinstance(message, dict))
+
+            except Exception as e:
+                LOG.exception("Bad LowCodeMessage <message_id: %s>: %s", msg_id, message)
+                raise e
+
+            channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
+            action_event = LowCodeMessage(source=self,
+                                    queue_name=queue_name,
+                                    headers=headers,
+                                    message=message)
+
+            action_event.parent = event
+            self.fire(action_event, channel)
+
+        except Exception as e:
+            LOG.exception("Failed to SubmitTestLowCodeApp <message_id: %s>", msg_id)
             raise e
 
     @handler("read")

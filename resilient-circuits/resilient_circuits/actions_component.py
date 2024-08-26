@@ -576,7 +576,7 @@ class Actions(ResilientComponent):
                                            message=message,
                                            frame=event.frame,
                                            log_dir=self.logging_directory)
-                elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message
+                elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message or could be something in the queue name
                     channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
                     event = LowCodeMessage(source=self,
                                            queue_name=queue_name,
@@ -1211,7 +1211,7 @@ class Actions(ResilientComponent):
                     if not status_messages:
                         status_messages.append(StatusMessage(u"No handler returned a result for this action"))
 
-                if isinstance(event.parent, FunctionMessage):
+                if isinstance(event.parent, FunctionMessage) or isinstance(event.parent, LowCodeMessage):
                     # The first (and only the first!) FunctionResult is the result.
                     for val in value:
                         if isinstance(val, FunctionResult):
