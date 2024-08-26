@@ -8,7 +8,6 @@ import requests
 from deprecated import deprecated
 from resilient_lib.components.integration_errors import IntegrationError
 from resilient_lib.components.resilient_common import str_to_bool
-from resilient_lib.util.constants import CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON
 from retry.api import retry_call
 from six import PY2
 
