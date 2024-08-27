@@ -266,6 +266,38 @@ def test_sdk_settings_for_docgen(fx_copy_fn_main_mock_integration, fx_get_sub_pa
 
     assert "This is an IBM supported app" in "\n".join(readme_file)
 
+def test_sdk_settings_for_poller_read_by_docgen(fx_copy_fn_main_mock_integration, fx_get_sub_parser, fx_cmd_line_args_docgen):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    args = cmd_docgen.parser.parse_known_args()[0]
+    cmd_docgen.execute_command(args)
+
+    readme_file = sdk_helpers.read_file(os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_README))
+
+    assert "Poller Considerations" in "\n".join(readme_file)
+
+def test_sdk_settings_for_no_poller_read_by_docgen(fx_copy_fn_main_mock_integration_no_poller, fx_get_sub_parser, fx_cmd_line_args_docgen):
+
+    mock_integration_name = fx_copy_fn_main_mock_integration_no_poller[0]
+    path_fn_main_mock_integration = fx_copy_fn_main_mock_integration_no_poller[1]
+
+    # Replace cmd line arg "fn_main_mock_integration" with path to temp dir location
+    sys.argv[sys.argv.index(mock_integration_name)] = path_fn_main_mock_integration
+
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    args = cmd_docgen.parser.parse_known_args()[0]
+    cmd_docgen.execute_command(args)
+
+    readme_file = sdk_helpers.read_file(os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_README))
+
+    assert "Poller Considerations" not in "\n".join(readme_file)
+
 def test_get_export_paths_from_args(fx_copy_fn_main_mock_integration, caplog):
     path_fn_main_mock_integration = fx_copy_fn_main_mock_integration[1]
 
@@ -323,6 +355,17 @@ def test_get_app_package_docgen_details(fx_get_sub_parser, fx_cmd_line_args_docg
     assert "/payload_samples" in package_details[2]
     assert "/README.md" in package_details[3]
     assert all(req in package_details[4] for req in ("setup_py_attributes", "res_circuits_dep_str", "jinja_app_configs", "supported_app", "poller_templates"))
+    assert package_details[5]       # temp app contains poller/ directory, so we this arg should be set to True
+
+def test_get_app_package_docgen_details_no_poller(fx_get_sub_parser, fx_cmd_line_args_docgen, fx_copy_fn_main_mock_integration_no_poller):
+    '''
+    Test get_app_package_docgen_details if the app is not a poller app (this specifically affects package_details[5])
+    '''
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    fx_cmd_line_args_docgen[-1] = fx_copy_fn_main_mock_integration_no_poller[1]
+    package_details = cmd_docgen._get_app_package_docgen_details(cmd_docgen.parser.parse_known_args()[0])
+    assert package_details[5] is False
+
 
 def test_get_export_docgen_details_res_file(fx_get_sub_parser, fx_cmd_line_args_docgen):
     cmd_docgen = CmdDocgen(fx_get_sub_parser)
@@ -365,6 +408,17 @@ def test_execute_command_for_export(fx_get_sub_parser, fx_cmd_line_args_docgen_e
     cmd_docgen = CmdDocgen(fx_get_sub_parser)
     # create tmp directory so that we don't overwrite repo's default README when we run this locally
     fx_cmd_line_args_docgen_export_file.extend(["-o", os.path.join(fx_mk_os_tmp_dir, "README.md")])
+
+    cmd_docgen.execute_command(cmd_docgen.parser.parse_known_args()[0])
+
+    assert "Rendering README for" in caplog.text
+    assert "mock_xml_test_report.xml' was skipped for 'docgen --export' because it was not in the proper" in caplog.text
+    assert "Writing README to" in caplog.text
+
+def test_execute_command_for_two_exports(fx_get_sub_parser, fx_cmd_line_args_docgen_two_export_files, fx_mk_os_tmp_dir, caplog):
+    cmd_docgen = CmdDocgen(fx_get_sub_parser)
+    # create tmp directory so that we don't overwrite repo's default README when we run this locally
+    fx_cmd_line_args_docgen_two_export_files.extend(["-o", os.path.join(fx_mk_os_tmp_dir, "README.md")])
 
     cmd_docgen.execute_command(cmd_docgen.parser.parse_known_args()[0])
 

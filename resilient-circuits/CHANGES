@@ -1,3 +1,21 @@
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Replace underlying stomp library (previously ``stompest``) with modern library ``stomp.py``
+* Remove stomp configuration option ``stomp_params``. This is no longer supported with the new ``stomp.py`` library
+* Fix for secret substitution when value starts with "^" but is not intended to be substituted
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+* There is a known issue with running ``resilient-circuits`` as a service on Windows in Python 3.12. This is not a
+  problem with ``resilient-circuits``, however, the development team will continue to monitor this for a time when
+  Windows does support Python 3.12 services. Until then, please use Python 3.11 or 3.9 on Windows for integration servers
+
 **2024-04: version 51.0.1.1**
 
 * Updated selftest to better handle connection issues when running in App Host
@@ -5,7 +23,7 @@
   The prefetch limit can still be manually adjusted by changing ``stomp_prefetch_limit`` in the ``[resilient]``
   section of app.config if you desire the prefetch and workers to have different values
 * Inbound app decorator now expects headers as the second parameter for the decorated function. This is intended
-  for better debugging with mor inbound message information passed to the handler
+  for better debugging with more inbound message information passed to the handler
 
 **2024-02: version 51.0.1.0**
 

@@ -19,6 +19,7 @@ import zipfile
 from collections import defaultdict
 
 import pkg_resources
+from packaging.version import parse
 from resilient import ImportDefinition
 from resilient_sdk.util import constants, sdk_helpers
 from resilient_sdk.util.resilient_objects import (DEFAULT_INCIDENT_TYPE_UUID,
@@ -53,6 +54,7 @@ BASE_NAME_ENTRY_POINT = "entrypoint.sh"
 BASE_NAME_APIKEY_PERMS_FILE = "apikey_permissions.txt"
 BASE_NAME_DOC_DIR = "doc"
 BASE_NAME_README = "README.md"
+BASE_NAME_POLLER_DIR = "poller"
 BASE_NAME_VALIDATE_REPORT = "validate_report.md"
 BASE_NAME_POLLER_CREATE_CASE_TEMPLATE = "soar_create_case.jinja"
 BASE_NAME_POLLER_UPDATE_CASE_TEMPLATE = "soar_update_case.jinja"
@@ -1028,7 +1030,7 @@ def get_required_python_version(python_requires_str):
     """
     try:
         version_str = re.match(r"(?:>=)([0-9]+[\.0-9]*)", python_requires_str).groups()[0]
-        version = pkg_resources.parse_version(version_str)
+        version = parse(version_str)
 
         return sdk_helpers.parse_version_object(version)
     except AttributeError as e:
@@ -1221,7 +1223,7 @@ def print_latest_version_warning(current_version, latest_available_version):
 
     LOG.warning(w)
 
-def make_list_of_dicts_unique(list_of_dicts):
+def make_list_of_dicts_unique(list_of_dicts, uniqueness_key_func = None):
     """
     Creates temporary dictionary of schema str(dict):dict
     for each dict in the list, then captures the values
@@ -1233,10 +1235,15 @@ def make_list_of_dicts_unique(list_of_dicts):
 
     :param list_of_dicts: List of dictionaries to make unique
     :type list_of_dicts: list[dict]
+    :param uniqueness_key_func: key func to determine uniqueness of a given dict; defaults to str(x)
+    :type uniqueness_key_func: Callable
     :return: same list as started with with any extra duplicates removed
     :rtype: list[dict]
     """
+    if uniqueness_key_func is None:
+        # set default uniqueness function to: str(x)
+        uniqueness_key_func = str # no need for a lambda here as str(x) will work just fine
 
     # .values() only grabs each x from the unique, temporary dictionary created in-line
-    unique_list = list({str(x): x for x in list_of_dicts}.values())
+    unique_list = list({uniqueness_key_func(x): x for x in list_of_dicts}.values())
     return unique_list

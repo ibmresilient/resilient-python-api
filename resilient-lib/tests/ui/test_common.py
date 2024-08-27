@@ -22,7 +22,7 @@ class MockTab(Tab):
         Datatable('test'),
         Field('test'),
         Section(
-            element_list=[HTMLBlock("<h1>HTML Header</h1>"), Header("Built-in Header")],
+            element_list=[HTMLBlock("<h1>HTML Header</h1>"), Header("Built-in Header"), Header("Header show link True", show_link_header=True)],
             show_if=[Field("id").conditions.has_value()]
         )
     ]
@@ -38,9 +38,14 @@ class TestSubmittedData(object):
         create_tab(MockTab, OPTS)
 
         payload = json.loads(fx_soar_adapter.request_history[-1].text)
-        assert MockTab.exists_in(payload.get('content'))
+        assert MockTab.exists_in(payload.get("content"))
         for field in MockTab.CONTAINS:
-            assert field.exists_in(MockTab.get_from_tabs(payload.get('content')).get("fields"))
+            assert field.exists_in(MockTab.get_from_tabs(payload.get("content")).get("fields"))
+
+        # check for header 'show_link_header' settings properly applied.
+        # NOTE: this could be finicky if anything changes in the MockTab, beware
+        assert payload.get("content")[21].get("fields")[-1].get("fields")[1].get("show_link_header") is False
+        assert payload.get("content")[21].get("fields")[-1].get("fields")[2].get("show_link_header") is True
 
     def test_update_tab_disabled(self, fx_soar_adapter):
         create_tab(MockTab, OPTS)

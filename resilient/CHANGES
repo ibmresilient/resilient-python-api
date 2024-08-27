@@ -1,3 +1,16 @@
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Fix for secret substitution when value starts with "^" but is not intended to be substituted
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+
 **2024-04: version 51.0.1.1**
 
 * Updated ``jwcrypto`` dependency requirement to ``~= 1.5.6`` (for Python 3.9 and 3.11) to address CVE-2024-28102

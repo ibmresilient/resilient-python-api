@@ -134,10 +134,10 @@ selftest_attributes = [
         "name": "resilient-circuits selftest",
 
         "fail_msg": "'{0}=={1}' is not supported".format(constants.CIRCUITS_PACKAGE_NAME, "{0}"),
-        "fail_solution": "Upgrade '{0}' by running '''pip install -U '{0}>={1}''''".format(constants.CIRCUITS_PACKAGE_NAME, constants.RESILIENT_LIBRARIES_VERSION),
+        "fail_solution": "Upgrade '{0}' by running '''pip install -U {0}'''".format(constants.CIRCUITS_PACKAGE_NAME),
 
         "missing_msg": "'{0}' is not installed in your Python environment".format(constants.CIRCUITS_PACKAGE_NAME),
-        "missing_solution": "Install '{0}' by running '''pip install -U '{0}''''".format(constants.CIRCUITS_PACKAGE_NAME),
+        "missing_solution": "Install '{0}' by running '''pip install -U {0}'''".format(constants.CIRCUITS_PACKAGE_NAME),
 
         "severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
 
@@ -297,12 +297,33 @@ package_files = [
         "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "fail_solution": "Python 2 will soon no longer be supported in SOAR. Update the language of the script to Python 3, being careful to make sure that it is still fully functional",
 
-        "missing_msg": "'customize.py' not found in package at path '{0}'",
+        "missing_msg": "'customize.py' or 'export.res' not found in package at path '{0}'",
         "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
         "missing_solution": "Reload code using '''resilient-sdk codegen -p {0} --reload'''",
 
         "pass_msg": "Scripts in app use valid versions of Python",
         "pass_solution": "All scripts are written in Python 3. Be careful to make any new scripts in Python 3 only"
+    }),
+
+    ("export.res", {
+        "func": sdk_validate_helpers.package_files_validate_no_playbook_dependencies_missing,
+        "path": "{0}/util/customize.py",
+        "name": "'Playbooks dependencies'",
+
+        "fail_msg": u"App includes playbook '{0}' which references field(s) '{1}' that are not included in the package",
+        "fail_msg_functions": u"App includes playbook '{0}' which references function UUID(s) '{1}' that are not included in the package",
+        "fail_msg_scripts": u"App includes playbook '{0}' which references scripts UUIDs '{1}' that are not included in the package",
+        "fail_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "fail_solution": u"Reload your app to include the missing fields: '''resilient-sdk codegen -p {0} --reload --field {1}'''",
+        "fail_solution_functions": u"Reload your app to include the missing functions: '''resilient-sdk codegen -p {0} --reload'''",
+        "fail_solution_scripts": u"Reload your app to include the missing scripts: '''resilient-sdk codegen -p {0} --reload'''",
+
+        "missing_msg": u"'customize.py' or 'export.res' not found in package at path '{0}'",
+        "missing_severity": SDKValidateIssue.SEVERITY_LEVEL_CRITICAL,
+        "missing_solution": u"Reload code using '''resilient-sdk codegen -p {0} --reload'''",
+
+        "pass_msg": "App has no missing dependencies in its packaged playbooks",
+        "pass_solution": "All fields referenced in playbooks are included in the app. Be careful to include any new fields in the app when adding them to parts of the playbook"
     }),
 
     ("README.md", {

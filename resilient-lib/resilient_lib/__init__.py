@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import pkg_resources
-
 try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except pkg_resources.DistributionNotFound:
+    from importlib.metadata import distribution, PackageNotFoundError
+except ImportError:
+    from importlib_metadata import distribution, PackageNotFoundError
+try:
+    __version__ = distribution(__name__).version
+except PackageNotFoundError:
     __version__ = None
 
 pkg_resources.declare_namespace(__name__)

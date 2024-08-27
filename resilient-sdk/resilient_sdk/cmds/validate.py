@@ -37,7 +37,10 @@ SETUP_OPTIONAL_ATTRS = ("python_requires", "author_email")
 
 
 class CmdValidate(BaseCmd):
-    """TODO Docstring"""
+    """
+    Command to run SDK validate on a package. Provides static validations (file checks)
+    as well as dynamic validations (selftest, unit tests, etc...)
+    """
 
     CMD_NAME = "validate"
     CMD_HELP = "Tests the content of all files associated with the app, including code, before packaging it. Only Python >= 3.6 supported."
@@ -175,7 +178,7 @@ class CmdValidate(BaseCmd):
 
     def _run_main_validation(self, args):
         """
-        TODO: docstring, unit tests
+        Run all validations (no flags provided)
         """
         self._log(constants.VALIDATE_LOG_LEVEL_INFO, "{0}Running main validation{0}".format(constants.LOG_DIVIDER))
         self._validate(args)
@@ -491,7 +494,7 @@ class CmdValidate(BaseCmd):
 
         attributes = validation_configurations.package_files
 
-        for filename,attr_dict in attributes:
+        for filename, attr_dict in attributes:
 
             # if a specific path is required for this file, it will be specified in the "path" attribute
             if attr_dict.get("path"):
