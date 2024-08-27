@@ -17,8 +17,10 @@ stages:
     if: type != cron AND (branch =~ ^release\/.+ OR branch = master)
   - name: deploy documentation
     if: type != cron AND ( branch =~ ^pages\/.+ OR branch =~ ^release\/.+ OR branch = master )
-  - name: release to pypi and quay
+  - name: release to pypi
     if: tag =~ ^release\/pypi\/.+
+  - name: release to quay
+    if: tag =~ ^release\/pypi\/.+ OR ( type = cron AND branch = master )
   - name: sync public repo
     if: tag =~ ^release\/pypi\/.+
 
@@ -192,7 +194,7 @@ matrix:
         - echo "Installing and running Twistlock scan"
         - $PATH_COMMON_SCRIPTS_DIR/run_twistlock.sh "$DOCKER_IMAGE_NAME" "$TRAVIS_BUILD_DIR" "None" "$PATH_COMMON_SCRIPTS_DIR"
 
-    - stage: release to pypi and quay
+    - stage: release to pypi
       name: Release packages to PyPi
       install:
         - pip install twine build
@@ -202,7 +204,7 @@ matrix:
         - echo "Sending notification to Slack"
         - $PATH_COMMON_SCRIPTS_DIR/send_slack_notification.sh "Successfully released $NEW_VERSION to PyPi" "success"
 
-    - stage: release to pypi and quay
+    - stage: release to quay
       name: Deploy Docker base image to Quay.io
       services:
         - docker
