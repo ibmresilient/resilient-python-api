@@ -260,6 +260,7 @@ class ResilientTestActions(Component):
             reply_to = "/queue/acks.{org}.{queue}".format(org=self.org_id,
                                                           queue=queue)
 
+            # TODO: will this change?
             headers = {"reply-to": reply_to,
                         "expires": "0",
                         "timestamp": str(int(time.time()) * 1000),
@@ -274,7 +275,7 @@ class ResilientTestActions(Component):
                         "subscription": "stomp-{queue}".format(queue=queue)}
             
             try:
-
+                # convert message to JSON
                 if not isinstance(message, dict):
                     message = json.loads(message)
                     assert(isinstance(message, dict))

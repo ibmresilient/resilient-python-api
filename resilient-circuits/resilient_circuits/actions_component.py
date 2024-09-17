@@ -919,6 +919,8 @@ class Actions(ResilientComponent):
             if helpers.is_this_a_selftest(self):
                 SELFTEST_SUBSCRIPTIONS.append(queue_name)
 
+            # TODO: this might change depending on the connector/low code destination name. If so, we still need to support actions.
+            # TODO: we need to figure out some property to make the check against, lik fo r inbound dest we check the starting prefix
             destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))
         else:
