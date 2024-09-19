@@ -39,11 +39,6 @@ from resilient_circuits.rest_helper import (get_resilient_client,
                                             reset_resilient_client)
 from resilient_circuits.stomp_component import StompClient
 from resilient_circuits.stomp_events import *
-from resilient_lib import IntegrationError
-from six import string_types
-
-import resilient
-from resilient import ensure_unicode
 
 LOG = logging.getLogger(__name__)
 
@@ -600,9 +595,9 @@ class Actions(ResilientComponent):
             self.fire(Ack(event.frame))
             self._all_acks.pop(msg_id)
         else:
-            subscription = self.stomp_component.get_subscription(event.frame)
+            # subscription = self.stomp_component.get_subscription(event.frame)
             LOG.debug("STOMP listener: message for %s", ".".join(queue))
-            queue_name = subscription.split(".", 2)[2]
+            # queue_name = subscription.split(".", 2)[2]
 
             LOG.debug("Got Message: %s", event.frame)
             self._current_msgs_processing[msg_id] = event
@@ -632,7 +627,7 @@ class Actions(ResilientComponent):
                 elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message or could be something in the queue name
                     channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
                     event = LowCodeMessage(source=self,
-                                           queue_name=queue_name,
+                                           queue_name=queue[-1],
                                            headers=headers,
                                            message=message,
                                            frame=event.frame,
@@ -645,7 +640,8 @@ class Actions(ResilientComponent):
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
                 else:
-                    channel = "actions." + queue_name
+                    # channel = "actions." + queue_name
+                    channel = "{0}.{1}".format("actions", queue[-1])
                     event = ActionMessage(source=self,
                                           headers=headers,
                                           message=message,

@@ -391,7 +391,7 @@ class low_code_function(object):
         @wraps(fn)
         def low_code_decorator(itself, event, *args, **kwargs):
             # TODO: maybe pull out the request_originator here. Right now we're assuming function inputs
-            function_inputs = event.message
+            function_inputs = event.message.get("inputs", {})
             invoke_low_code_function = task(_invoke_low_code_function, event, itself, fn, **function_inputs)
             fn_result = yield itself.call(invoke_low_code_function, "functionworker")
             yield fn_result.value
