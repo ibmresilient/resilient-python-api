@@ -192,7 +192,7 @@ matrix:
         - echo "Building Docker base image and pushing to Artifactory"
         - $PATH_SCRIPTS_DIR/build_and_deploy_docker_base_image.sh "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}" "${NEW_VERSION}"
         - echo "Installing and running Twistlock scan"
-        - $PATH_COMMON_SCRIPTS_DIR/run_twistlock.sh "$DOCKER_IMAGE_NAME" "$TRAVIS_BUILD_DIR" "None" "$PATH_COMMON_SCRIPTS_DIR"
+        - $PATH_COMMON_SCRIPTS_DIR/run_twistlock.sh "$DOCKER_IMAGE_NAME" "$TRAVIS_BUILD_DIR" "None" "$PATH_COMMON_SCRIPTS_DIR" "$BUILD_TYPE"
 
     - stage: release to pypi
       name: Release packages to PyPi
