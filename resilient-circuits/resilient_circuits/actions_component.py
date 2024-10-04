@@ -625,10 +625,10 @@ class Actions(ResilientComponent):
                                            frame=event.frame,
                                            log_dir=self.logging_directory)
                 # elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message or could be something in the queue name
-                elif message.get("request_payload", None):      # TODO: still this may not be the best way -- will probably be a check for headers.co3messagepayload == RestAPIExecutionEventDTO
+                elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
                     channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
                     event = LowCodeMessage(source=self,
-                                           queue_name=queue[-1],
+                                           queue_name=queue[-1],        # TODO: should this change?
                                            headers=headers,
                                            message=message,
                                            frame=event.frame,
@@ -640,6 +640,11 @@ class Actions(ResilientComponent):
                                             message=message,
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
+                elif "connectors" in queue:     # TODO: change me too?
+                    # TODO: a check here if we need to Subscribe or Unsubscribe
+                    # A new connector queue has been added or removed
+                    event = Subscribe(destination=queue)
+                    # event = Unsubscribe(destination=queue)
                 else:
                     # channel = "actions." + queue_name
                     channel = "{0}.{1}".format("actions", queue[-1])
