@@ -615,47 +615,57 @@ class Actions(ResilientComponent):
                         message = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
 
                 message = json.loads(message)
-                # Construct a Circuits event with the message, and fire it on the channel
-                if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
-                    channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
-                    event = InboundMessage(source=self,
-                                           queue=queue,
-                                           headers=headers,
-                                           message=message,
-                                           frame=event.frame,
-                                           log_dir=self.logging_directory)
-                # elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message or could be something in the queue name
-                elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
-                    channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
-                    event = LowCodeMessage(source=self,
-                                           queue_name=queue[-1],        # TODO: should this change?
-                                           headers=headers,
-                                           message=message,
-                                           frame=event.frame,
-                                           log_dir=self.logging_directory)
-                elif message.get("function"):
-                    channel = "functions." + message["function"]["name"]
-                    event = FunctionMessage(source=self,
+                if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
+                    # TODO: test this...
+                    for q in message.get("subscribe"):
+                        # fire a Subscribe event
+                        event = Subscribe(destination=q)
+                        LOG.info("Fire Event: %s for new connector queue %s", event, q)
+                        self.fire(event)
+                else:
+                    # Construct a Circuits event with the message, and fire it on the channel
+                    if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                        channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
+                        event = InboundMessage(source=self,
+                                            queue=queue,
                                             headers=headers,
                                             message=message,
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
-                elif "connectors" in queue:     # TODO: change me too?
-                    # TODO: a check here if we need to Subscribe or Unsubscribe
-                    # A new connector queue has been added or removed
-                    event = Subscribe(destination=queue)
-                    # event = Unsubscribe(destination=queue)
-                else:
-                    # channel = "actions." + queue_name
-                    channel = "{0}.{1}".format("actions", queue[-1])
-                    event = ActionMessage(source=self,
-                                          headers=headers,
-                                          message=message,
-                                          frame=event.frame,
-                                          log_dir=self.logging_directory)
-                LOG.info("Event: %s Channel: %s", event, channel)
+                    # elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message or could be something in the queue name
+                    elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
+                        channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
+                        event = LowCodeMessage(source=self,
+                                            queue_name=queue[-1],        # TODO: should this change?
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                    elif message.get("function"):
+                        channel = "functions." + message["function"]["name"]
+                        event = FunctionMessage(source=self,
+                                                headers=headers,
+                                                message=message,
+                                                frame=event.frame,
+                                                log_dir=self.logging_directory)
+                    elif "connectors" in queue:     # TODO: change me too?
+                        # TODO: a check here if we need to Subscribe or Unsubscribe
+                        # A new message has come in on the main queue about a connector queue that been added or removed
+                        # TODO: pull out  the connector queue name and PASS IT AS THE DESTINATION for the subscribe event
+                        connector_queue = message.get("connector_queue")
+                        event = Subscribe(destination=connector_queue)
+                        # event = Unsubscribe(destination=queue)
+                    else:
+                        # channel = "actions." + queue_name
+                        channel = "{0}.{1}".format("actions", queue[-1])
+                        event = ActionMessage(source=self,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                    LOG.info("Event: %s Channel: %s", event, channel)
 
-                self.fire(event, channel)
+                    self.fire(event, channel)
             except Exception as exc:
                 LOG.exception(exc)
                 if not isinstance(message, dict):

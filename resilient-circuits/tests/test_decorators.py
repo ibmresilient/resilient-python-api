@@ -83,7 +83,7 @@ class TestLowCodeFunctionDecorator:
 
 
     # TODO: re-enable these tests when resilient-circuits is stable
-    def x_test_low_code_app_mock_runs(self, circuits_app):
+    def test_low_code_app_mock_runs(self, circuits_app):
         """
         Test if the low code component runs
         """
@@ -94,7 +94,7 @@ class TestLowCodeFunctionDecorator:
 
         # TODO: Add an assertion? Based off of the app function decorator, we just want to check if it runs without issue
 
-    def x_test_handles_LowCodeResult(self, circuits_app):
+    def test_handles_LowCodeResult(self, circuits_app):
         """
         Call low code function and confirm the expected properties of the LowCodeResult
         """
@@ -113,7 +113,7 @@ class TestLowCodeFunctionDecorator:
         assert mock_results["content"]["malware"] is True       # TODO: will probably change
         # TODO: check where request_originator is getting set to ''??
 
-    def x_test_low_code_app_mock_handles_Exception(self, circuits_app):
+    def test_low_code_app_mock_handles_Exception(self, circuits_app):
         LowCodeMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
         with pytest.raises(IntegrationError, match=r"mock error message with unicode"):
             helpers.call_low_code_function(circuits_app, mock_constants.MOCK_LOW_CODE_APP_FN_NAME_EX)

@@ -75,3 +75,4 @@ LOW_CODE_QUEUES_LIST_APP_CONFIG = "low_code_queues_list"
 LOW_CODE_HANDLER_VAR = "low_code_handler"
 STOMP_RECONNECT_INITIAL_DELAY = 20
 REST_REQUEST_DTO = "RestAPIExecutionEventDTO"
+SUBSCRIBE_DTO = "SubscribeDTO"
