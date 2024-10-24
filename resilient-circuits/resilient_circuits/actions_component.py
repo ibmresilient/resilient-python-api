@@ -616,7 +616,6 @@ class Actions(ResilientComponent):
 
                 message = json.loads(message)
                 if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
-                    # TODO: test this...
                     for q in message.get("subscribe"):
                         # fire a Subscribe event
                         event = Subscribe(destination=q)
@@ -636,7 +635,7 @@ class Actions(ResilientComponent):
                     elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
                         channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
                         event = LowCodeMessage(source=self,
-                                            queue_name=queue[-1],        # TODO: should this change?
+                                            queue_name=queue[-1],        # TODO: should this change? do we want the whole connectors.201.queue or just the queue?
                                             headers=headers,
                                             message=message,
                                             frame=event.frame,
@@ -648,10 +647,9 @@ class Actions(ResilientComponent):
                                                 message=message,
                                                 frame=event.frame,
                                                 log_dir=self.logging_directory)
-                    elif "connectors" in queue:     # TODO: change me too?
+                    elif "connectors" in queue:     # TODO: What will the name of the "main queue" be? This assumes that "connectors" is in it
                         # TODO: a check here if we need to Subscribe or Unsubscribe
                         # A new message has come in on the main queue about a connector queue that been added or removed
-                        # TODO: pull out  the connector queue name and PASS IT AS THE DESTINATION for the subscribe event
                         connector_queue = message.get("connector_queue")
                         event = Subscribe(destination=connector_queue)
                         # event = Unsubscribe(destination=queue)
@@ -931,7 +929,7 @@ class Actions(ResilientComponent):
             if helpers.is_this_a_selftest(self):
                 SELFTEST_SUBSCRIPTIONS.append(queue_name)
 
-            # TODO: this might change depending on the connector/low code destination name. If so, we still need to support actions.
+            # TODO: this will probably change depending on the connector/low code destination name. If so, we still need to support actions.
             # TODO: we need to figure out some property to make the check against, lik fo r inbound dest we check the starting prefix
             destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))

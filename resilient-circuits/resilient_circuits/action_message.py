@@ -320,7 +320,6 @@ class FunctionResult(object):
 
 class LowCodeResult(FunctionResult):
     # TODO: This might change in favor of only using FunctionResults instead of maintaining two types
-    # Should match RestAPIResponseDTO?
     def __init__(self, value, success=True, reason=None, name="Unknown", custom_results=False):
         super(LowCodeResult, self).__init__(value, success, reason, name, custom_results)
 

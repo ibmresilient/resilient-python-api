@@ -91,6 +91,7 @@ class ComponentLoader(Loader):
             return_list = []
 
             # TODO: low code queues might change depending on how we decide to consume the low code queue names
+            # likely will be reading from an environment variable
             low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
             lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
             # Loop entry points

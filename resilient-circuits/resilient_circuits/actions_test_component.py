@@ -260,7 +260,6 @@ class ResilientTestActions(Component):
             reply_to = "/queue/acks.{org}.{queue}".format(org=self.org_id,
                                                           queue=queue)
 
-            # TODO: will this change?
             headers = {"reply-to": reply_to,
                         "expires": "0",
                         "timestamp": str(int(time.time()) * 1000),
@@ -268,7 +267,7 @@ class ResilientTestActions(Component):
                         "correlation-id": "invid:390",
                         "persistent": "True",
                         "priority": "4",
-                        "Co3MessagePayload": "ActionDataDTO",
+                        "Co3MessagePayload": constants.REST_REQUEST_DTO,
                         "Co3ContentType": "application/json",
                         "message-id": message_id,
                         "Co3ContextToken": "dummy",
