@@ -117,6 +117,9 @@ class App(Component):
         # Make all components aware that we are in selftest mode
         ResilientComponent.IS_SELFTEST = self.IS_SELFTEST
 
+        # any additional queues to subscribe to as received by IBM SOAR /connectors/queues endpoint
+        connector_queue_names = []
+
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
@@ -129,6 +132,7 @@ class App(Component):
             self.action_component = loader.load(filename)
         else:
             self.action_component = Actions(self.opts)
+            connector_queue_names = self.action_component.get_connector_queues()
         self.action_component.register(self)
 
         # Register a `loader` to dynamically load
@@ -137,7 +141,7 @@ class App(Component):
             LOG.info("Components auto-load directory: %s",
                      self.opts["componentsdir"] or "(none)")
             if not self.component_loader:
-                self.component_loader = ComponentLoader(self.opts)
+                self.component_loader = ComponentLoader(self.opts, connector_queue_names)
             else:
                 LOG.info("Updating and re-registering ComponentLoader")
                 self.component_loader.opts = self.opts

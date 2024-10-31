@@ -49,8 +49,11 @@ def safe_but_noisy_import(name):
 class ComponentLoader(Loader):
     """A component to automatically load from the componentsdir directory"""
 
-    def __init__(self, opts):
+    def __init__(self, opts, connector_queues=[]):
         """Initialize the loader"""
+
+        """ connector_queues is list of additional connector queues to subscribe to"""
+
         self.opts = opts
         # Path where components should be found
         self.path = opts['componentsdir']
@@ -62,7 +65,7 @@ class ComponentLoader(Loader):
         self.finished = False
 
         # Load all installed components
-        installed_components = self.discover_installed_components()
+        installed_components = self.discover_installed_components(connector_queues)
         if installed_components:
             self._register_components(installed_components)
 
@@ -84,7 +87,13 @@ class ComponentLoader(Loader):
             self.finished = True
             self.fire(load_all_success())
 
-    def discover_installed_components(self):
+    def discover_installed_components(self, new_queues=[]):
+        """
+        :param new_queues: list of new low code queues to subscribe to. This is useful for connector queues which
+                            we will get info on from /connectors/queues endpoint or from a main subscription
+                            queue for low code
+        :type new_queues: list[str]
+        """
         entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
         ep = None
         try:
@@ -94,6 +103,7 @@ class ComponentLoader(Loader):
             # likely will be reading from an environment variable
             low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
             lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
+            new_queues = tuple(new_queues) if new_queues else ()
             # Loop entry points
             for ep in entry_points:
                 if ep.name not in self.noload:
@@ -137,7 +147,8 @@ class ComponentLoader(Loader):
 
                         # extend '.names' tuple with any additional queue names from the config
                         lc_names_from_handler = lc_handler_obj.names or ()
-                        lc_names = lc_names_from_handler + lc_names_from_config
+                        lc_names = lc_names_from_handler
+                        lc_names = lc_names + lc_names_from_config + new_queues
                         lc_handler_obj.names = lc_names
 
                         # if no names provided we need to disable the handler otherwise it will listen on all queues
@@ -146,8 +157,6 @@ class ComponentLoader(Loader):
                         if not lc_names:
                             LOG.debug("Low code handler for function '%s' in module '%s' was loaded but had no queues to subscribe to. Disabling handler...", lc_handler_obj.__name__, lc_handler_obj.__module__)
                             lc_handler_obj.handler = False
-
-
 
                     return_list.append(cmp_class)
             return return_list
@@ -169,6 +178,19 @@ class ComponentLoader(Loader):
                 self.fire(load_all_failure())
                 return False
         return True
+
+    # @handler("test", channel="loader")
+    # def test(self, new_queues):
+    #     # test a reload of the installed components with these new queues
+    #     # new_queues is a list of queues connectors.202.nfajfldkjlka
+    #     LOG.info("I made it into component loader")
+    #     installed_components = self.discover_installed_components(new_queues)
+    #     if installed_components:
+    #         self._register_components(installed_components)
+    #     if not self.pending_components:
+    #         # No components from directory, we are done loading
+    #         self.finished = True
+    #         self.fire(load_all_success())
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):

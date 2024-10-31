@@ -74,5 +74,7 @@ LOW_CODE_MSG_DEST_PREFIX = "low_code"       # TODO: change the name?
 LOW_CODE_QUEUES_LIST_APP_CONFIG = "low_code_queues_list"
 LOW_CODE_HANDLER_VAR = "low_code_handler"
 STOMP_RECONNECT_INITIAL_DELAY = 20
+CONNECTORS_QUEUE_PREFIX = "connectors"
 REST_REQUEST_DTO = "RestAPIExecutionEventDTO"
 SUBSCRIBE_DTO = "SubscribeDTO"
+CONNECTORS_ENDPOINT = "/connectors/queues"

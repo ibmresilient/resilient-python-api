@@ -23,7 +23,7 @@ from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 from resilient_circuits import constants, helpers
 from resilient import ensure_unicode
-from resilient_lib import IntegrationError
+from resilient_lib import IntegrationError, RequestsCommon
 from six import string_types
 from cachetools import TTLCache
 
@@ -616,11 +616,17 @@ class Actions(ResilientComponent):
 
                 message = json.loads(message)
                 if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
+                    # TODO: a check here if we need to Subscribe or Unsubscribe
+                    # TODO: IN PROGRESS working on properly updating actionscomponent and functioncomponent._app_function
+                    channel = "*"
                     for q in message.get("subscribe"):
+                        channel = "loader"
+                        event = Event.create("test", new_queues=[q])
+                        self.fire(event, channel)
                         # fire a Subscribe event
-                        event = Subscribe(destination=q)
-                        LOG.info("Fire Event: %s for new connector queue %s", event, q)
-                        self.fire(event)
+                        # event = Subscribe(destination=q)
+                        # LOG.info("Fire Event: %s for new connector queue %s", event, q)
+                        # self.fire(event)
                 else:
                     # Construct a Circuits event with the message, and fire it on the channel
                     if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
@@ -631,11 +637,17 @@ class Actions(ResilientComponent):
                                             message=message,
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
-                    # elif "low_code" in message.get("function", {}).get("name", ""): # TODO change; need something in the message itself to determine if this is a low_code message or could be something in the queue name
                     elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
                         channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
+                        
+                        # TODO: once we can safely assume that we can stop supporting connector messages on a message destinations (actions.202.x), we can remove this check:
+                        queue_name = queue[-1]
+                        if queue[0].startswith(constants.CONNECTORS_QUEUE_PREFIX):
+                            # if connectors queue, we have to use the whole queue name
+                            queue_name = ".".join(queue)
+                        
                         event = LowCodeMessage(source=self,
-                                            queue_name=queue[-1],        # TODO: should this change? do we want the whole connectors.201.queue or just the queue?
+                                            queue_name=queue_name,
                                             headers=headers,
                                             message=message,
                                             frame=event.frame,
@@ -647,12 +659,6 @@ class Actions(ResilientComponent):
                                                 message=message,
                                                 frame=event.frame,
                                                 log_dir=self.logging_directory)
-                    elif "connectors" in queue:     # TODO: What will the name of the "main queue" be? This assumes that "connectors" is in it
-                        # TODO: a check here if we need to Subscribe or Unsubscribe
-                        # A new message has come in on the main queue about a connector queue that been added or removed
-                        connector_queue = message.get("connector_queue")
-                        event = Subscribe(destination=connector_queue)
-                        # event = Unsubscribe(destination=queue)
                     else:
                         # channel = "actions." + queue_name
                         channel = "{0}.{1}".format("actions", queue[-1])
@@ -812,7 +818,6 @@ class Actions(ResilientComponent):
                 names = ["{0}.{1}".format(constants.LOW_CODE_MSG_DEST_PREFIX, name) for name in comp_handler.names]
                 channels.update(set(names))
             elif comp_handler.channel:
-                # Low code
                 # normal functions will just state their queue name in the 'channel' they listen on
                 channels.update(comp_handler.channel.split(","))
         for channel in channels:
@@ -861,6 +866,23 @@ class Actions(ResilientComponent):
             else:
                 self.listeners[queue_name] = set([component])
                 # Defer subscribing until all components are loaded
+
+    def get_connector_queues(self):
+        """ Request for existing connectors queues to subscribe to
+        returns: list of the QUEUE NAME (e.g. [connectors.201.xyz, connectors.201.abc])
+        """
+        # Get SOAR rest client
+        rc = self.rest_client()
+        LOG.info("Requesting existing queues for existing connectors")
+        results = rc.get(constants.CONNECTORS_ENDPOINT.format(self.org_id), skip_retry=[500])
+        
+        # pull out list
+        queues_list = results.get("queues")
+        names = [q.get("queue_name") for q in queues_list]
+        
+        LOG.debug("Got %s connector queue(s) to subscribe to: %s", len(queues_list), queues_list)
+
+        return names
 
     @handler("load_all_success", "subscribe_to_all")
     def subscribe_to_queues(self):
@@ -921,6 +943,10 @@ class Actions(ResilientComponent):
             LOG.info("Subscribe to inbound message destination '%s'", queue_name)
             self.fire(Subscribe(queue_name, additional_headers=self.subscribe_headers))
 
+        elif queue_name.startswith(constants.CONNECTORS_QUEUE_PREFIX):
+            LOG.info("Subscribe to connector queue '%s'", queue_name)
+            self.fire(Subscribe(queue_name, additional_headers=self.subscribe_headers))
+
         elif self.stomp_component and self.stomp_component.connected and self.listeners[queue_name]:
             if queue_name in self.stomp_component.subscribed:
                 LOG.info("Ignoring request to subscribe to %s.  Already subscribed", queue_name)
@@ -929,8 +955,6 @@ class Actions(ResilientComponent):
             if helpers.is_this_a_selftest(self):
                 SELFTEST_SUBSCRIPTIONS.append(queue_name)
 
-            # TODO: this will probably change depending on the connector/low code destination name. If so, we still need to support actions.
-            # TODO: we need to figure out some property to make the check against, lik fo r inbound dest we check the starting prefix
             destination = "actions.{0}.{1}".format(self.org_id, queue_name)
             self.fire(Subscribe(destination, additional_headers=self.subscribe_headers))
         else:

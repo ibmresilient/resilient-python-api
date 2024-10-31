@@ -22,7 +22,7 @@ class AppFunctionComponent(ResilientComponent):
     in the package's ``components`` directory
 
     Each :class:`AppFunctionComponent`, gets loaded into the ``resilient-circuits`` framework
-    and listens for messages on it's ``Message Destination``
+    and listens for messages on its ``Message Destination``
     """
 
     def __init__(self, opts, package_name, required_app_configs=[]):
