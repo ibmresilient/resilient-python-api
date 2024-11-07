@@ -95,9 +95,8 @@ class LowCodePayload(ResultPayload):
     def __init__(self, pkgname, version, **kwargs):
         self.metrics = LowCodeMetrics(pkgname)
         self.payload = {
-            "request_originator": "", # TODO
-            "version": version,
-            "inputs": kwargs
+            "request_originator": kwargs.get("request_originator"), # TODO
+            "version": version
         }
 
     def done(self, success, content, status_code=None, reason=None, content_type=None):
@@ -109,13 +108,14 @@ class LowCodePayload(ResultPayload):
         :param success: True|False
         :param content: json result to pass back
         :param reason: comment fields when success=False
+        :param content_type: request_payload.response_content_type result
         :return: completed payload in json
         """
         self.payload["success"] = success
         self.payload["reason"] = reason
-        self.payload["status_code"] = status_code # TODO
+        self.payload["status_code"] = status_code
         self.payload["content"] = content
-        self.payload["content_type"] = content_type # TODO
+        self.payload["content_type"] = content_type
         self.payload["metrics"] = self.metrics.finish()
 
         return self.payload
