@@ -435,9 +435,11 @@ def _invoke_low_code_function(event, app_fn_component_obj, the_function, **kwds)
             result.name = event.name
             if not result.custom_results:
                 result.value = lc_payload.done(
-                    content=result.value,
+                    content=result.value.get("content"),
                     success=result.success,
-                    reason=result.reason)
+                    reason=result.reason,
+                    content_type=fn_inputs.get("request_payload", {}).get("response_content_type", None),
+                    status_code=result.value.get("status_code"))
             LOG.info("[%s] Returning results", result.name)
             result_list.append(result)
 

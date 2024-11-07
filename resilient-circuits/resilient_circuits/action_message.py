@@ -268,6 +268,17 @@ class LowCodeMessage(ActionMessageBase):
     """
     def __init__(self, source=None, queue_name=None, headers=None, message=None,
                  test=False, test_msg_id=None, frame=None, log_dir=None):
+        """ Initialize a Low Code Message received from a connector queue
+
+        :param source (Actions Component): the component that fired the event (Actions)
+        :param queue_name (str): full connector queue name (e.g. connectors.202.my_connector_queue)
+        :param headers (dict): headers from incoming message
+        :param message (dict): RestAPIExecutionEventDTO event message from SOAR
+        :param test (bool): indicate if message is coming from a unit test
+        :param test_msg_id: dummy unit test message ID
+        :param frame: Circuits Event frame
+        :param log_dir: Log directory to log JSON message to
+        """
 
         super(LowCodeMessage, self).__init__(source=source, headers=headers, message=message,
                                              test=test, test_msg_id=test_msg_id, frame=frame, log_dir=log_dir)
@@ -319,7 +330,6 @@ class FunctionResult(object):
         self.custom_results = custom_results
 
 class LowCodeResult(FunctionResult):
-    # TODO: This might change in favor of only using FunctionResults instead of maintaining two types
     def __init__(self, value, success=True, reason=None, name="Unknown", custom_results=False):
         super(LowCodeResult, self).__init__(value, success, reason, name, custom_results)
 
