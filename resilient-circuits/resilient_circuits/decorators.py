@@ -390,10 +390,8 @@ class low_code_function(object):
 
         @wraps(fn)
         def low_code_decorator(itself, event, *args, **kwargs):
-            # TODO: maybe pull out the request_originator here. Right now we're assuming function inputs
-            # message WILL look like: {"request_originator": {}, "request_payload": {}, "response_acknowledgement": {}}
-            function_inputs = event.message
-            invoke_low_code_function = task(_invoke_low_code_function, event, itself, fn, **function_inputs)
+            low_code_message = event.message    # {"request_originator": {}, "request_payload": {}}
+            invoke_low_code_function = task(_invoke_low_code_function, event, itself, fn, **low_code_message)
             fn_result = yield itself.call(invoke_low_code_function, "functionworker")
             yield fn_result.value
 
@@ -405,20 +403,22 @@ def _invoke_low_code_function(event, app_fn_component_obj, the_function, **kwds)
     result_list = []
 
     # Validate the fn_inputs in the Message
-    fn_inputs = validate_fields([], kwds)
-    LOG.info("[%s] Validated function inputs", event.name)
-    LOG.debug("[%s] fn_inputs: %s", event.name, fn_inputs)
+    connector_inputs = validate_fields(["request_originator","request_payload"], kwds)
+    LOG.info("[%s] Validated connector inputs", event.name)
+    LOG.debug("[%s] connector_inputs: %s", event.name, connector_inputs)
 
-    lc_payload = LowCodePayload(app_fn_component_obj.PACKAGE_NAME, version=constants.LOW_CODE_PAYLOAD_VERSION, **fn_inputs)
+    lc_payload = LowCodePayload(app_fn_component_obj.PACKAGE_NAME, version=constants.LOW_CODE_PAYLOAD_VERSION, **connector_inputs)
 
-    # TODO: consider changing the name from fn_inputs to something like request_payload to match lowcode message
-    fn_inputs = helpers.sub_fn_inputs_from_protected_secrets(fn_inputs, app_fn_component_obj.opts)
+    connector_inputs = helpers.sub_fn_inputs_from_protected_secrets(connector_inputs, app_fn_component_obj.opts)
 
     # Set evt.message in local thread storage
     app_fn_component_obj.set_fn_msg(event.message)
 
+    # Pull out the request_payload, this is all we need to execute the request
+    low_code_request = connector_inputs.get("request_payload")
+
     # Invoke the actual Function
-    fn_results = the_function(app_fn_component_obj, fn_inputs)
+    fn_results = the_function(app_fn_component_obj, low_code_request)
 
     for result in fn_results:
         # if a FunctionResult comes through, convert it to a LowCodeResult
@@ -438,7 +438,7 @@ def _invoke_low_code_function(event, app_fn_component_obj, the_function, **kwds)
                     content=result.value.get("content"),
                     success=result.success,
                     reason=result.reason,
-                    content_type=fn_inputs.get("request_payload", {}).get("response_content_type", None),
+                    content_type=low_code_request.get("response_content_type", None),
                     status_code=result.value.get("status_code"))
             LOG.info("[%s] Returning results", result.name)
             result_list.append(result)

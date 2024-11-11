@@ -644,7 +644,7 @@ class Actions(ResilientComponent):
                         # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
                         channel = constants.LOW_CODE_MSG_DEST_PREFIX
                         # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
-                        queue_name = ".".join(queue)    
+                        queue_name = ".".join(queue)
                         event = LowCodeMessage(source=self,
                                             queue_name=queue_name,
                                             headers=headers,
