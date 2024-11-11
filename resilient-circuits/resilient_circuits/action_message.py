@@ -276,7 +276,7 @@ class LowCodeMessage(ActionMessageBase):
         :param message (dict): RestAPIExecutionEventDTO event message from SOAR
         :param test (bool): indicate if message is coming from a unit test
         :param test_msg_id: dummy unit test message ID
-        :param frame: Circuits Event frame
+        :param frame: stomp.utils.Frame from event
         :param log_dir: Log directory to log JSON message to
         """
 

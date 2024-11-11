@@ -53,7 +53,7 @@ class ResultPayload:
 
         if float(self.payload.get("version", 2.0)) < 2.0:
             try:
-                self.payload["raw"] = json.dumps(content)
+                self.payload["raw"] = ""
             except:
                 pass
 

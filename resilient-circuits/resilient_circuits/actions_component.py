@@ -616,10 +616,11 @@ class Actions(ResilientComponent):
 
                 message = json.loads(message)
                 if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
-                    # TODO: a check here if we need to Subscribe or Unsubscribe
+                    # New connector queue information - either need to subscribe or unsubscribe
                     # TODO: IN PROGRESS working on properly updating actionscomponent and functioncomponent._app_function
-                    channel = "*"
+                    # Iterate through the connector queues to subscribe t
                     for q in message.get("subscribe"):
+                        # Fire an event to the component loader channel to update functioncomponent._app_function
                         channel = "loader"
                         event = Event.create("test", new_queues=[q])
                         self.fire(event, channel)
@@ -627,9 +628,11 @@ class Actions(ResilientComponent):
                         # event = Subscribe(destination=q)
                         # LOG.info("Fire Event: %s for new connector queue %s", event, q)
                         # self.fire(event)
+                    # TODO: iterate through message.get("unsubscribe") and properly unsubscribe to the connector queues
                 else:
                     # Construct a Circuits event with the message, and fire it on the channel
                     if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                        # Messages from inbound message destination get fired to inbound_destinations.queue_name channel
                         channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
                         event = InboundMessage(source=self,
                                             queue=queue,
@@ -638,14 +641,10 @@ class Actions(ResilientComponent):
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
                     elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
-                        channel = constants.LOW_CODE_MSG_DEST_PREFIX # fire all low_code messages on the 'low_code' channel since they are all the same, no matter the queue they come from
-                        
-                        # TODO: once we can safely assume that we can stop supporting connector messages on a message destinations (actions.202.x), we can remove this check:
-                        queue_name = queue[-1]
-                        if queue[0].startswith(constants.CONNECTORS_QUEUE_PREFIX):
-                            # if connectors queue, we have to use the whole queue name
-                            queue_name = ".".join(queue)
-                        
+                        # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
+                        channel = constants.LOW_CODE_MSG_DEST_PREFIX
+                        # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
+                        queue_name = ".".join(queue)    
                         event = LowCodeMessage(source=self,
                                             queue_name=queue_name,
                                             headers=headers,
@@ -660,7 +659,7 @@ class Actions(ResilientComponent):
                                                 frame=event.frame,
                                                 log_dir=self.logging_directory)
                     else:
-                        # channel = "actions." + queue_name
+                        # Action messages get fired on actions.queue_name channel
                         channel = "{0}.{1}".format("actions", queue[-1])
                         event = ActionMessage(source=self,
                                             headers=headers,

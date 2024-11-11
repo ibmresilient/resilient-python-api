@@ -70,7 +70,7 @@ STOMP_MAX_CONNECTION_ERRORS = 1     # default number of errors when heartbeat is
 
 # LOW CODE constants
 LOW_CODE_PAYLOAD_VERSION = 0.1
-LOW_CODE_MSG_DEST_PREFIX = "low_code"       # TODO: change the name?
+LOW_CODE_MSG_DEST_PREFIX = "low_code"
 LOW_CODE_QUEUES_LIST_APP_CONFIG = "low_code_queues_list"
 LOW_CODE_HANDLER_VAR = "low_code_handler"
 STOMP_RECONNECT_INITIAL_DELAY = 20
