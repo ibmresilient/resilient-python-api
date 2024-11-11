@@ -95,7 +95,7 @@ class LowCodePayload(ResultPayload):
     def __init__(self, pkgname, version, **kwargs):
         self.metrics = LowCodeMetrics(pkgname)
         self.payload = {
-            "request_originator": kwargs.get("request_originator"), # TODO
+            "request_originator": kwargs.get("request_originator"),
             "version": version
         }
 
