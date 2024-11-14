@@ -618,12 +618,14 @@ class Actions(ResilientComponent):
                 if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
                     # New connector queue information - either need to subscribe or unsubscribe
                     # TODO: IN PROGRESS working on properly updating actionscomponent and functioncomponent._app_function
-                    # Iterate through the connector queues to subscribe t
+                    # Iterate through the connector queues to subscribe to
                     for q in message.get("subscribe"):
                         # Fire an event to the component loader channel to update functioncomponent._app_function
                         channel = "loader"
                         event = Event.create("test", new_queues=[q])
                         self.fire(event, channel)
+
+                        # LOG.info("back here with {}".format(self.listeners))
                         # fire a Subscribe event
                         # event = Subscribe(destination=q)
                         # LOG.info("Fire Event: %s for new connector queue %s", event, q)
