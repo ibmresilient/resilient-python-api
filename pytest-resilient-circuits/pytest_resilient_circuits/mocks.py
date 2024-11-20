@@ -422,6 +422,15 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json=data)
 
+    @resilient_endpoint("GET", "/connectors/queues")
+    def get_connector_queues(self, request):
+        """ Callback for GET to /connectors/queues """
+        LOG.debug("get connector queues")
+        data = test_data("200_JSON_GET__connectors.json")
+        return requests_mock.create_response(request,
+                                             status_code=200,
+                                             json=data)
+
 class BasicResilientMockNoRegisterLog(BasicResilientMock):
     def __init__(self, *args, **kwargs):
         kwargs["log_registration"] = False
