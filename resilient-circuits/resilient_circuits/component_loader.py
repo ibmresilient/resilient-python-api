@@ -99,11 +99,9 @@ class ComponentLoader(Loader):
         try:
             return_list = []
 
-            # TODO: low code queues might change depending on how we decide to consume the low code queue names
-            # likely will be reading from an environment variable
-            low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
-            lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
-            new_queues = tuple(new_queues) if new_queues else ()
+            # get low code queues names
+            low_code_queue_names = self.get_all_lc_queues(new_queues)
+
             # Loop entry points
             for ep in entry_points:
                 if ep.name not in self.noload:
@@ -137,26 +135,7 @@ class ComponentLoader(Loader):
 
                     # handle all low code handlers
                     for lc_handler in helpers.get_handlers(cmp_class, handler_type=constants.LOW_CODE_HANDLER_VAR):
-
-                        if sys.version_info.major < 3:
-                            # Handle PY < 3
-                            lc_handler_obj = lc_handler[1].__func__
-                        else:
-                            # Handle PY >= 3 specific imports
-                            lc_handler_obj = lc_handler[1]
-
-                        # extend '.names' tuple with any additional queue names from the config
-                        lc_names_from_handler = lc_handler_obj.names or ()
-                        lc_names = lc_names_from_handler
-                        lc_names = lc_names + lc_names_from_config + new_queues
-                        lc_handler_obj.names = lc_names
-
-                        # if no names provided we need to disable the handler otherwise it will listen on all queues
-                        # this is for a case where a low code handler exists in the components that are registered
-                        # but there are no low code queues to listen to
-                        if not lc_names:
-                            LOG.debug("Low code handler for function '%s' in module '%s' was loaded but had no queues to subscribe to. Disabling handler...", lc_handler_obj.__name__, lc_handler_obj.__module__)
-                            lc_handler_obj.handler = False
+                        self.update_low_code_handlers(lc_handler, low_code_queue_names)
 
                     return_list.append(cmp_class)
             return return_list
@@ -179,18 +158,26 @@ class ComponentLoader(Loader):
                 return False
         return True
 
-    # @handler("test", channel="loader")
-    # def test(self, new_queues):
-    #     # test a reload of the installed components with these new queues
-    #     # new_queues is a list of queues connectors.202.nfajfldkjlka
-    #     LOG.info("I made it into component loader")
-    #     installed_components = self.discover_installed_components(new_queues)
-    #     if installed_components:
-    #         self._register_components(installed_components)
-    #     if not self.pending_components:
-    #         # No components from directory, we are done loading
-    #         self.finished = True
-    #         self.fire(load_all_success())
+    # TODO: review if this is the best way to refresh component loader with new queues
+    # TODO: change name from test
+    @handler("test", channel="loader")
+    def test(self, new_queues):
+        """
+        The goal of this handler is to:
+        * receive a list of new connector queues to subscribe to
+        * re-discover the installed components so that we can add the connector queues to the Low Code FunctionComponent names
+        * re-register the components
+        """
+        # test a reload of the installed components with these new queues
+        # new_queues is a list of queues, like ['connectors.202.myconnectorqueue1', 'connectors.202.myconnectorqueue2']
+        LOG.info("Reloading component loader")
+        installed_components = self.discover_installed_components(new_queues)
+        if installed_components:
+            self._register_components(installed_components)
+        if not self.pending_components:
+            # No components from directory, we are done loading
+            self.finished = True
+            self.fire(load_all_success())
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):
@@ -218,3 +205,49 @@ class ComponentLoader(Loader):
             LOG.error("Failed to load component '%s'", cname)
             safe_but_noisy_import(cname)
             self.fire(load_all_failure())
+
+    def get_all_lc_queues(self, lc_new_queues):
+        """
+        Put all the low code connector queues together. As of now, this may come from app.config or from a subscription queue method.
+
+        :returns: tuple with the names of the queues to add to the low code handler
+        """
+        # TODO: low code queues might change depending on how we decide to consume the low code queue names
+        # get all the low code queues from app.config (LIKELY TO CHANGE)
+        low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
+        lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
+
+        # Any new connector queues that were discovered from the main subscription queue; we need it as a tuple to add to the handler
+        lc_new_queues = tuple(lc_new_queues) if lc_new_queues else ()
+
+        return tuple(set(lc_names_from_config + lc_new_queues)) # remove duplicates
+
+    def update_low_code_handlers(self, lc_handler, lc_queues):
+        """ Update the queue names associated with the low code handler
+
+        :param lc_handler: Low Code Handler
+        :type lc_handler: 
+        :param lc_names_from_config: low code queue names that are stored in constants.LOW_CODE_QUEUES_LIST_APP_CONFIG
+        :type lc_names_from_config: tuple
+        :param lc_new_queues: 
+        :type lc_new_queues: tuple
+        """
+        if sys.version_info.major < 3:
+            # Handle PY < 3
+            lc_handler_obj = lc_handler[1].__func__
+        else:
+            # Handle PY >= 3 specific imports
+            lc_handler_obj = lc_handler[1]
+
+        # extend '.names' tuple with any additional queue names from the config
+        lc_names_from_handler = lc_handler_obj.names or ()
+        lc_names = lc_names_from_handler
+        lc_names = lc_names + lc_queues
+        lc_handler_obj.names = tuple(set(lc_names)) # remove duplicates
+
+        # if no names provided we need to disable the handler otherwise it will listen on all queues
+        # this is for a case where a low code handler exists in the components that are registered
+        # but there are no low code queues to listen to
+        if not lc_names:
+            LOG.debug("Low code handler for function '%s' in module '%s' was loaded but had no queues to subscribe to. Disabling handler...", lc_handler_obj.__name__, lc_handler_obj.__module__)
+            lc_handler_obj.handler = False
