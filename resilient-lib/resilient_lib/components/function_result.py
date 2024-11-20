@@ -106,7 +106,7 @@ class LowCodePayload(ResultPayload):
         Also build the payload object and finish measuring the metrics.
 
         :param success: True|False
-        :param content: json result to pass back
+        :param content: string of json result to pass back
         :param reason: comment fields when success=False
         :param content_type: request_payload.response_content_type result
         :return: completed payload in json
