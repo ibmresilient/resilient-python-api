@@ -595,9 +595,7 @@ class Actions(ResilientComponent):
             self.fire(Ack(event.frame))
             self._all_acks.pop(msg_id)
         else:
-            # subscription = self.stomp_component.get_subscription(event.frame)
             LOG.debug("STOMP listener: message for %s", ".".join(queue))
-            # queue_name = subscription.split(".", 2)[2]
 
             LOG.debug("Got Message: %s", event.frame)
             self._current_msgs_processing[msg_id] = event
@@ -615,45 +613,59 @@ class Actions(ResilientComponent):
                         message = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
 
                 message = json.loads(message)
-                # Construct a Circuits event with the message, and fire it on the channel
-                if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
-                    # Messages from inbound message destination get fired to inbound_destinations.queue_name channel
-                    channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
-                    event = InboundMessage(source=self,
-                                        queue=queue,
-                                        headers=headers,
-                                        message=message,
-                                        frame=event.frame,
-                                        log_dir=self.logging_directory)
-                elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
-                    # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
-                    channel = constants.LOW_CODE_MSG_DEST_PREFIX
-                    # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
-                    queue_name = ".".join(queue)
-                    event = LowCodeMessage(source=self,
-                                        queue_name=queue_name,
-                                        headers=headers,
-                                        message=message,
-                                        frame=event.frame,
-                                        log_dir=self.logging_directory)
-                elif message.get("function"):
-                    channel = "functions." + message["function"]["name"]
-                    event = FunctionMessage(source=self,
+
+                if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
+                    # New connector queue information - either need to subscribe or unsubscribe
+                    subscribe_queues = message.get("subscribe")
+                    
+                    LOG.info("Subscribe to new connector queues: %s", subscribe_queues)
+
+                    # Fire an event to the component loader channel to update functioncomponent._app_function
+                    channel = "loader"
+                    event = Event.create("add_new_queue", new_queues=subscribe_queues)
+                    self.fire(event, channel)
+
+                    # TODO: properly unsubscribe to the connector queues in message.get("unsubscribe")
+                else:
+                    # Construct a Circuits event with the message, and fire it on the channel
+                    if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                        # Messages from inbound message destination get fired to inbound_destinations.queue_name channel
+                        channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
+                        event = InboundMessage(source=self,
+                                            queue=queue,
                                             headers=headers,
                                             message=message,
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
-                else:
-                    # Action messages get fired on actions.queue_name channel
-                    channel = "{0}.{1}".format("actions", queue[-1])
-                    event = ActionMessage(source=self,
-                                        headers=headers,
-                                        message=message,
-                                        frame=event.frame,
-                                        log_dir=self.logging_directory)
-                LOG.info("Event: %s Channel: %s", event, channel)
+                    elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
+                        # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
+                        channel = constants.LOW_CODE_MSG_DEST_PREFIX
+                        # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
+                        queue_name = ".".join(queue)
+                        event = LowCodeMessage(source=self,
+                                            queue_name=queue_name,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                    elif message.get("function"):
+                        channel = "functions." + message["function"]["name"]
+                        event = FunctionMessage(source=self,
+                                                headers=headers,
+                                                message=message,
+                                                frame=event.frame,
+                                                log_dir=self.logging_directory)
+                    else:
+                        # Action messages get fired on actions.queue_name channel
+                        channel = "{0}.{1}".format("actions", queue[-1])
+                        event = ActionMessage(source=self,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                    LOG.info("Event: %s Channel: %s", event, channel)
 
-                self.fire(event, channel)
+                    self.fire(event, channel)
             except Exception as exc:
                 LOG.exception(exc)
                 if not isinstance(message, dict):

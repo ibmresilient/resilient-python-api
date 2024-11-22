@@ -158,6 +158,25 @@ class ComponentLoader(Loader):
                 return False
         return True
 
+    @handler("add_new_queue", channel="loader")
+    def add_new_queue(self, new_queues):
+        """
+        The goal of this handler is to:
+        * receive a list of new connector queues to subscribe to
+        * re-discover the installed components so that we can add the connector queues to the Low Code FunctionComponent names
+        * re-register the components
+        """
+        # test a reload of the installed components with these new queues
+        # new_queues is a list of queues, like ['connectors.202.myconnectorqueue1', 'connectors.202.myconnectorqueue2']
+        LOG.info("Reloading component loader")
+        installed_components = self.discover_installed_components(new_queues)
+        if installed_components:
+            self._register_components(installed_components)
+        if not self.pending_components:
+            # No components from directory, we are done loading
+            self.finished = True
+            self.fire(load_all_success())
+
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):
         if not self.finished:

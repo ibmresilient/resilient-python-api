@@ -75,6 +75,7 @@ def test_actions_on_heartbeat_timeout_with_config_set(circuits_app, fx_simple_cl
         assert sys_exit.value.code == 34
 
 @pytest.mark.parametrize("message_headers, message, expected_log", [
+    ({"Co3MessagePayload": SUBSCRIBE_DTO}, '{"subscribe":["test_queue", "test_queue2"]}', ["new connector queue test_queue", "new connector queue test_queue2"]),       # Tests new connector message
     ({"Co3MessagePayload": REST_REQUEST_DTO}, '{"my":"test message"}', [f"Channel: {LOW_CODE_MSG_DEST_PREFIX}"])
 ])
 @patch("resilient_circuits.actions_component.helpers.get_fn_names", new=lambda x: [])
