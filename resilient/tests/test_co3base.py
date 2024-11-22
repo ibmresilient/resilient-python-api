@@ -210,6 +210,34 @@ def test_get_retry_skip(fx_base_client, caplog):
     with pytest.raises(BasicHTTPException, match=r"Response Code: 404"):
         base_client.get("/incidents/1001", skip_retry=[404])
 
+def test_get_put_skip_retry(fx_base_client, caplog):
+    """confirm that co3base implemented skip retry correctly
+
+    :param fx_base_client: _description_
+    :type fx_base_client: _type_
+    :param caplog: _description_
+    :type caplog: _type_
+    """
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    base_client.request_max_retries = 2
+    base_client.request_retry_backoff = 1
+    base_client.request_retry_delay = 1
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, 1001)
+    requests_adapter.register_uri('GET', mock_uri, status_code=404)
+
+    def change_description(json_data):
+        json_data["description"] = json_data.get("description") + ", test get_put method"
+
+    # 404 error retried
+    with pytest.raises(RetryHTTPException, match=r"Response Code: 404"):
+        base_client.get_put("/incidents/1001", change_description, skip_retry=[])
+
+    # 404 error not retried
+    with pytest.raises(BasicHTTPException, match=r"Response Code: 404"):
+        base_client.get_put("/incidents/1001", change_description, skip_retry=[404])
 
 def test_get_const_old_style_version(fx_base_client):
     base_client = fx_base_client[0]
