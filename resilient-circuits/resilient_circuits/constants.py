@@ -76,5 +76,5 @@ LOW_CODE_HANDLER_VAR = "low_code_handler"
 STOMP_RECONNECT_INITIAL_DELAY = 20
 CONNECTORS_QUEUE_PREFIX = "connectors"
 REST_REQUEST_DTO = "RestAPIExecutionEventDTO"
-SUBSCRIBE_DTO = "SubscribeDTO"
+SUBSCRIBE_DTO = "ConnectorSubscriptionUpdateDTO"
 CONNECTORS_ENDPOINT = "/connectors/queues"
