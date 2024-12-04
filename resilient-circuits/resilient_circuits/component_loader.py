@@ -65,7 +65,10 @@ class ComponentLoader(Loader):
         self.finished = False
 
         # Load all installed components
-        installed_components = self.discover_installed_components(connector_queues)
+        installed_components = self.discover_installed_components("resilient.circuits.components", connector_queues)
+        bg_installed_components = self.discover_installed_components("resilient.circuits.background", connector_queues)
+        installed_components.extend(bg_installed_components)
+
         if installed_components:
             self._register_components(installed_components)
 
@@ -87,14 +90,16 @@ class ComponentLoader(Loader):
             self.finished = True
             self.fire(load_all_success())
 
-    def discover_installed_components(self, new_queues=[]):
+    def discover_installed_components(self, entry_points, new_queues=[]):
         """
+        :param entry_points: string reference to the entry points to load
         :param new_queues: list of new low code queues to subscribe to. This is useful for connector queues which
                             we will get info on from /connectors/queues endpoint or from a main subscription
                             queue for low code
         :type new_queues: list[str]
         """
-        entry_points = pkg_resources.iter_entry_points('resilient.circuits.components')
+        entry_points = pkg_resources.iter_entry_points(entry_points)
+
         ep = None
         try:
             return_list = []
@@ -153,7 +158,7 @@ class ComponentLoader(Loader):
                 component_class(opts=self.opts).register(self)
                 LOG.debug("'%s.%s' loaded", component_class.__module__, component_class.__name__)
             except Exception as e:
-                LOG.error("Failed to load '%s.%s'", component_class.__module__, component_class.__name__, exc_info=1)
+                LOG.error("Failed to load '%s.%s' (%s)", component_class.__module__, component_class.__name__, e, exc_info=1)
                 self.fire(load_all_failure())
                 return False
         return True
