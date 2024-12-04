@@ -868,17 +868,20 @@ class Actions(ResilientComponent):
         returns: list of the QUEUE NAME (e.g. [connectors.201.xyz, connectors.201.abc])
         """
         # Get SOAR rest client
-        rc = self.rest_client()
-        LOG.info("Requesting existing queues for existing connectors")
-        results = rc.get(constants.CONNECTORS_ENDPOINT.format(self.org_id), skip_retry=[500])
-        
-        # pull out list
-        queues_list = results.get("queues")
-        names = [q.get("queue_name") for q in queues_list]
-        
-        LOG.debug("Got %s connector queue(s) to subscribe to: %s", len(queues_list), queues_list)
-
-        return names
+        try:
+            rc = self.rest_client()
+            LOG.info("Requesting existing queues for existing connectors")
+            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[500])
+            
+            # pull out list
+            queues_list = results.get("queues")
+            names = [q.get("queue_name") for q in queues_list]
+            
+            LOG.debug("Got %s connector queue(s) to subscribe to: %s", len(queues_list), queues_list)
+            return names
+        except resilient.SimpleHTTPException:
+            # this will trap older platforms
+            return []
 
     @handler("load_all_success", "subscribe_to_all")
     def subscribe_to_queues(self):
