@@ -218,7 +218,7 @@ class ComponentLoader(Loader):
         # TODO: low code queues might change depending on how we decide to consume the low code queue names
         # get all the low code queues from app.config (LIKELY TO CHANGE)
         low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
-        lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
+        lc_names_from_config = tuple([queue.strip() for queue in low_code_queues.split(",")]) if low_code_queues else ()
 
         # Any new connector queues that were discovered from the main subscription queue; we need it as a tuple to add to the handler
         lc_new_queues = tuple(lc_new_queues) if lc_new_queues else ()
