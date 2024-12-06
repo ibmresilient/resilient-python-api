@@ -130,7 +130,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           help="Directory for log files")
         self.add_argument("--loglevel",
                           type=str,
-                          default=default_log_level,
+                          default=os.environ.get("LOGLEVEL", default_log_level),
                           help="Log level")
         self.add_argument("--logfile",
                           type=str,

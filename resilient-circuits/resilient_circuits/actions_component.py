@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
+# pragma pylint: disable=line-too-long
 
 """Circuits component for Action Module subscription and message handling"""
 
@@ -16,18 +17,17 @@ if sys.version_info.major < 3:
 else:
     from collections.abc import Callable
 
-import resilient_circuits.actions_test_component as actions_test_component
 import resilient
 from circuits import BaseComponent, Worker
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-from resilient_circuits import constants, helpers
 from resilient import ensure_unicode
-from resilient_lib import IntegrationError, RequestsCommon
+from resilient_lib import IntegrationError
 from six import string_types
 from cachetools import TTLCache
 
 import resilient_circuits.actions_test_component as actions_test_component
+from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
                                                ActionMessageBase,
                                                BaseFunctionError,
@@ -459,8 +459,12 @@ class Actions(ResilientComponent):
             rest_client = self.rest_client()
             self.org_id = rest_client.org_id
 
-            list_action_defs = rest_client.get("/actions")["entities"]
-            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+            try:
+                list_action_defs = rest_client.get("/actions")
+                self.action_defs = dict((int(action["id"]), action) for action in list_action_defs["entities"])
+            except resilient.co3.SimpleHTTPException:
+                self.action_defs = {}
+
         else:
             self.org_id = "*"
 
@@ -471,6 +475,8 @@ class Actions(ResilientComponent):
 
     def action_name(self, action_id):
         """Get the name of an action, from its id"""
+        not_found = {"name": "_unnamed_"}
+
         if action_id is None:
             # Unnamed action, probably triggered from a v28 workflow
             LOG.info("Action: _unnamed_")
@@ -480,12 +486,16 @@ class Actions(ResilientComponent):
             defn = self.action_defs[action_id]
         else:
             LOG.warning("Action %s is unknown.", action_id)
-            # Refresh the list of action definitions
-            list_action_defs = self.rest_client().get("/actions")["entities"]
-            self.action_defs = dict((int(action["id"]),
-                                     action) for action in list_action_defs)
 
-            defn = self.action_defs.get(action_id, {"name": "_unnamed_"})
+            try:
+                # Refresh the list of action definitions
+                list_action_defs = self.rest_client().get("/actions")["entities"]
+                self.action_defs = dict((int(action["id"]),
+                                        action) for action in list_action_defs)
+
+                defn = self.action_defs.get(action_id, not_found)
+            except resilient.co3.SimpleHTTPException:
+                defn = not_found
 
         if defn:
             return defn.get("name", "_unnamed_")
@@ -572,7 +582,8 @@ class Actions(ResilientComponent):
         if not msg_id:
             LOG.error("Received message with no message id. %s", event.frame)
             raise ValueError("Stomp message with no message id received")
-        elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
+
+        if msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
             # Don't process it again, just acknowledge it
             LOG.info("Skipping reprocess of message '%s'. Sending saved ack now.", msg_id)
@@ -614,10 +625,10 @@ class Actions(ResilientComponent):
 
                 message = json.loads(message)
 
-                if headers.get("Co3MessagePayload") == constants.SUBSCRIBE_DTO:
+                if headers.get(constants.SUBSCRIBE_QUEUE_HEADER) == constants.SUBSCRIBE_DTO:
                     # New connector queue information - either need to subscribe or unsubscribe
                     subscribe_queues = message.get("subscribe")
-                    
+
                     LOG.info("Subscribe to new connector queues: %s", subscribe_queues)
 
                     # Fire an event to the component loader channel to update functioncomponent._app_function
@@ -637,7 +648,7 @@ class Actions(ResilientComponent):
                                             message=message,
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
-                    elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
+                    elif headers.get(constants.SUBSCRIBE_QUEUE_HEADER) == constants.REST_REQUEST_DTO:
                         # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
                         channel = constants.LOW_CODE_MSG_DEST_PREFIX
                         # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
@@ -872,11 +883,11 @@ class Actions(ResilientComponent):
             rc = self.rest_client()
             LOG.info("Requesting existing queues for existing connectors")
             results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[500])
-            
+
             # pull out list
             queues_list = results.get("queues")
             names = [q.get("queue_name") for q in queues_list]
-            
+
             LOG.debug("Got %s connector queue(s) to subscribe to: %s", len(queues_list), queues_list)
             return names
         except resilient.SimpleHTTPException:
