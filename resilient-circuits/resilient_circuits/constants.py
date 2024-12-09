@@ -77,7 +77,7 @@ STOMP_RECONNECT_INITIAL_DELAY = 20
 CONNECTORS_QUEUE_PREFIX = "connectors"
 REST_REQUEST_DTO = "RestAPIExecutionEventDTO"
 
-SUBSCRIBE_QUEUE_HEADER = "SubscribeDTO" #"Co3MessagePayload"
+SUBSCRIBE_QUEUE_HEADER = "Co3MessagePayload" #"SubscribeDTO"
 SUBSCRIBE_DTO = "ConnectorSubscriptionUpdateDTO"
 
 CONNECTORS_ENDPOINT = "/connectors/queues"
