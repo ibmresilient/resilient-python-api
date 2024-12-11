@@ -944,6 +944,20 @@ class Actions(ResilientComponent):
             self.listeners[queue_name] = comps
             LOG.debug("Listeners: %s", self.listeners)
 
+    @handler("SubscribeLowCode")
+    def subscribe_low_code(self, event, destination):
+        """This function handles new queues added during processing when new
+            connectors are added. A new listener will be added for that queue. 
+
+        :param event: event that triggered this function when a new subscription message is received 
+        :type event: object
+        :param low_code_queue: queue to listen on
+        :type low_code_queue: str
+        :return: None
+        :rtype: None
+        """
+        return self._subscribe(destination)
+
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""
         if self.resilient_mock:

@@ -10,6 +10,7 @@ import logging
 import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
+from resilient_circuits.stomp_events import SubscribeLowCode
 from resilient_circuits import constants, helpers
 
 LOG = logging.getLogger(__name__)
@@ -149,6 +150,10 @@ class ComponentLoader(Loader):
         if installed_components:
             self._register_components(installed_components)
 
+        # start the STOMP listeners for these new queues
+        for queue in connector_queues:
+            self.fire(SubscribeLowCode(queue))
+
     def _register_components(self, component_list):
         """ register all installed components and ones from componentsdir """
         LOG.info("Loading %d components", len(component_list))
@@ -257,10 +262,10 @@ class ComponentLoader(Loader):
         # extend '.names' tuple with any additional queue names from the config
         lc_names_from_handler = lc_handler_obj.names or ()
         lc_names = lc_names_from_handler
-        lc_names = lc_names + lc_queues
         # TODO how to handle unsubscribe message types
-        LOG.info("Adding queues: %s to handler: %s", lc_names, lc_handler)
-        lc_handler_obj.names = tuple(set(lc_names)) # remove duplicates
+        LOG.info("Adding new queues: %s with existing queues: %s to handler: %s", lc_queues, lc_names, lc_handler)
+
+        lc_handler_obj.names = tuple(set(lc_names + lc_queues)) # remove duplicates
 
         # if no names provided we need to disable the handler otherwise it will listen on all queues
         # this is for a case where a low code handler exists in the components that are registered
