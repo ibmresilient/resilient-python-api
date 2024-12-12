@@ -460,7 +460,7 @@ class Actions(ResilientComponent):
             self.org_id = rest_client.org_id
 
             try:
-                list_action_defs = rest_client.get("/actions")
+                list_action_defs = rest_client.get("/actions", skip_retry=[403]) # 403 = permission denied
                 self.action_defs = dict((int(action["id"]), action) for action in list_action_defs["entities"])
             except resilient.co3.SimpleHTTPException:
                 self.action_defs = {}
@@ -627,16 +627,17 @@ class Actions(ResilientComponent):
 
                 if headers.get(constants.SUBSCRIBE_QUEUE_HEADER) == constants.SUBSCRIBE_DTO:
                     # New connector queue information - either need to subscribe or unsubscribe
-                    subscribe_queues = message.get("subscribe")
+                    subscribe_queues = message.get("subscribe") if message.get("subscribe") else []
+                    unsubscribe_queues = message.get("unsubscribe") if message.get("unsubscribe") else []
 
-                    LOG.info("Subscribe to new connector queues: %s", subscribe_queues)
-
-                    # Fire an event to the component loader channel to update functioncomponent._app_function
-                    channel = "loader"
-                    event = Event.create("add_new_queue", new_queues=subscribe_queues)
-                    self.fire(event, channel)
-
-                    # TODO: properly unsubscribe to the connector queues in message.get("unsubscribe")
+                    LOG.info("Connector queue changes. New: %s Removed: %s", subscribe_queues, unsubscribe_queues)
+                    new_queue_event = Event.create("add_new_queue",
+                                                    new_queues=subscribe_queues,
+                                                    removed_queues=unsubscribe_queues)
+                    self.fire(new_queue_event, "loader")
+                    self.wait(new_queue_event)
+                    # ACK the message to remove from subscription queue
+                    self.fire(Ack(event.frame))
                 else:
                     # Construct a Circuits event with the message, and fire it on the channel
                     if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
@@ -882,10 +883,10 @@ class Actions(ResilientComponent):
         try:
             rc = self.rest_client()
             LOG.info("Requesting existing queues for existing connectors")
-            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[500])
+            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[404, 500])
 
             # pull out list
-            queues_list = results.get("queues")
+            queues_list = results.get("queues", [])
             names = [q.get("queue_name") for q in queues_list]
 
             LOG.debug("Got %s connector queue(s) to subscribe to: %s", len(queues_list), queues_list)
