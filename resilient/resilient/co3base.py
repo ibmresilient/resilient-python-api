@@ -773,7 +773,7 @@ class BaseClient(object):
         RetryHTTPException.raise_if_error(response, skip_retry=skip_retry)
         return None
 
-    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
+    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None, skip_retry=[]):
         """Performs a get, calls apply_func on the returned value, then calls self.put.
         If the put call returns a 409 error, then retry.
 
@@ -784,13 +784,14 @@ class BaseClient(object):
           co3_context_token - the Co3ContextToken from a CAF message (if the caller is
           a CAF message processor.
           timeout - number of seconds to wait for response
+          skip_retry: list of HTTP responses to skip throwing an exception
         Returns;
           The object returned by the put operation (converted from JSON to a Python dict).
         Raises:
           Exception if the get or put returns an unexpected status code.
         """
         while True:
-            obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout)
+            obj = self._get_put(uri, apply_func, co3_context_token=co3_context_token, timeout=timeout, skip_retry=skip_retry)
             if obj:
                 return obj
         return None

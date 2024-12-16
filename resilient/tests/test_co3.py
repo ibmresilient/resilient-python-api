@@ -163,6 +163,26 @@ def test_simple_client_get_content(fx_simple_client):
     r = base_client.cached_get("/incidents/{}".format(incident_id))
     assert r == {"content": "content"}
 
+def test_simple_client_get_put_skip_retry(fx_simple_client):
+    """this is a test that skip_retry is passed correctly through to co3base
+
+    :param fx_simple_client: _description_
+    :type fx_simple_client: _type_
+    """
+    base_client = fx_simple_client[0]
+    requests_adapter = fx_simple_client[1]
+    incident_id = 1001
+
+    mock_uri = '{0}/rest/orgs/{1}/incidents/{2}'.format(base_client.base_url, base_client.org_id, incident_id)
+    requests_adapter.register_uri('GET', mock_uri, status_code=200, content=json.dumps({"description": "get"}).encode("ascii"))
+    requests_adapter.register_uri('PUT', mock_uri, status_code=200, content=json.dumps({"description": "get_put"}).encode("ascii"))
+
+    def change_description(json_data):
+        json_data["description"] = json_data.get("description") + ", test get_put method"
+
+    r = base_client.get_put("/incidents/{}".format(incident_id), change_description, skip_retry=[404])
+    assert r == {"description": "get_put"}
+
 def test_simple_client_get_content_with_error(fx_simple_client):
     base_client = fx_simple_client[0]
     requests_adapter = fx_simple_client[1]
