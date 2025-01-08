@@ -20,10 +20,10 @@ class LowCodeMockComponent(AppFunctionComponent):
         super(LowCodeMockComponent, self).__init__(opts, package_name, required_app_configs)
 
     @low_code_function("xyz.201.connectors.my_app")
-    def _low_code_function_mock_one(self, fn_inputs):
+    def _low_code_function_mock_one(self, low_code_request):
         yield self.status_message(u"Mock զ է ը թ ժ ի լ StatusMessage 1")
         yield self.status_message(u"Mock StatusMessage 2")
-        yield self.status_message(fn_inputs.get("request_payload").get("server_url"))
+        yield self.status_message(low_code_request.get("server_url"))
 
         fn_msg = self.get_fn_msg()
 
@@ -31,6 +31,6 @@ class LowCodeMockComponent(AppFunctionComponent):
         yield LowCodeResult({"malware": True})  # TODO
 
     @low_code_function(mock_constants.MOCK_LOW_CODE_APP_FN_NAME_EX)
-    def _app_function_mock_raise_exception(self, fn_inputs):
+    def _app_function_mock_raise_exception(self, low_code_request):
         raise IntegrationError(u"mock error message with unicode զ է ը թ ժ ի լ խ")
     
